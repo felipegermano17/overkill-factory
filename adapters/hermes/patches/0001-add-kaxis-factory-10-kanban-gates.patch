@@ -1,0 +1,792 @@
+From d297c0c78900d6858384297895ef4392e6fb85b9 Mon Sep 17 00:00:00 2001
+From: Hermes VM <hermes-vm@local>
+Date: Fri, 5 Jun 2026 22:25:54 +0000
+Subject: [PATCH] Add KAXIS Factory 10 kanban gates
+
+---
+ hermes_cli/kanban_db.py                       | 347 ++++++++++++++++
+ hermes_cli/main.py                            |   4 +-
+ .../hermes_cli/test_kaxis_factory_v35_gate.py | 382 ++++++++++++++++++
+ 3 files changed, 732 insertions(+), 1 deletion(-)
+ create mode 100644 tests/hermes_cli/test_kaxis_factory_v35_gate.py
+
+diff --git a/hermes_cli/kanban_db.py b/hermes_cli/kanban_db.py
+index b2e03151b..e4e19ec59 100644
+--- a/hermes_cli/kanban_db.py
++++ b/hermes_cli/kanban_db.py
+@@ -158,6 +158,344 @@ _KAXIS_REVIEW_REQUIRED = [
+     "Felipe_gate_required",
+ ]
+ 
++# KAXIS v3.5 factory gate is opt-in. Existing v2 cards keep the historical
++# contract, while new factory cards can ask Hermes to enforce the stronger
++# Agent Workforce rules before ready/done.
++_KAXIS_V35_METHOD_VERSIONS = {
++    "KAXIS_V3_5_AGENT_WORKFORCE",
++    "KAXIS_V3_5_FACTORY_10",
++}
++_KAXIS_V35_REQUIRED = [
++    "factory_method_version",
++    "phase",
++    "surfaces",
++    "risk_initial",
++    "risk_effective",
++    "authority_max",
++    "owner_worker",
++    "executor_identity",
++    "reviewer_identity",
++    "runtime_decision",
++    "runtime_contract",
++    "security_contract",
++    "forbidden_actions",
++    "done_definition",
++    "transition_event_required",
++    "kanban_transition_event_ref",
++]
++_KAXIS_V35_RISKS = {"R0", "R1", "R2", "R3", "R4"}
++_KAXIS_V35_RISK_FROM_V2 = {
++    "R0-docs-only": "R0",
++    "R1-dev-safe": "R1",
++    "R2-product-sensitive": "R2",
++    "R3-financial-critical": "R3",
++    "R4-production-critical": "R4",
++}
++_KAXIS_V35_RISK_ORDER = {"R0": 0, "R1": 1, "R2": 2, "R3": 3, "R4": 4}
++_KAXIS_V35_PRODUCT_FACE_SURFACES = {"ux", "frontend", "mobile", "wallet-ui"}
++_KAXIS_V35_ONCHAIN_SURFACES = {
++    "solana-quasar",
++    "account-pda",
++    "cpi",
++    "compute-units",
++    "token-kx",
++    "custody",
++    "signer-authority",
++    "defi-oracle",
++    "funds",
++    "mainnet",
++}
++_KAXIS_V35_SECURITY_SURFACES = {
++    "security",
++    "cybersecurity",
++    "prompt-injection",
++    "agent-runtime",
++    "external-tool",
++    "supply-chain",
++    "secrets",
++    "iam",
++    "dns",
++    "kms",
++}
++_KAXIS_V35_SECURITY_TOOL_MARKERS = {
++    "codex-security",
++    "codex_security",
++    "codex security",
++    "cybersecurity",
++    "cibersecurity",
++}
++
++
++def _kaxis_is_v35_card(card: dict[str, Any]) -> bool:
++    version = str(card.get("factory_method_version") or "").strip()
++    return version in _KAXIS_V35_METHOD_VERSIONS
++
++
++def _kaxis_non_empty_dict(value: object) -> bool:
++    return isinstance(value, dict) and bool(value)
++
++
++def _kaxis_v35_surfaces(card: dict[str, Any]) -> set[str]:
++    raw = card.get("surfaces")
++    if not isinstance(raw, list):
++        return set()
++    return {str(item).strip().lower() for item in raw if str(item).strip()}
++
++
++def _kaxis_v35_has_human_waiver(value: object) -> bool:
++    if not isinstance(value, dict):
++        return False
++    owner = value.get("human_owner") or value.get("owner") or value.get("human_gate_ref")
++    reason = value.get("reason")
++    return _kaxis_non_empty_string(owner) and _kaxis_non_empty_string(reason, 10)
++
++
++def _kaxis_v35_has_security_tool(value: object) -> bool:
++    values = value if isinstance(value, list) else [value]
++    for item in values:
++        normalized = str(item or "").strip().lower()
++        if not normalized:
++            continue
++        if any(marker in normalized for marker in _KAXIS_V35_SECURITY_TOOL_MARKERS):
++            return True
++    return False
++
++
++def _kaxis_v35_requires_security_scan(
++    card: dict[str, Any],
++    surfaces: set[str],
++    risk_effective: str,
++) -> bool:
++    if card.get("security_scan_packet_required") is True:
++        return True
++    return bool(
++        risk_effective in {"R3", "R4"}
++        or surfaces & _KAXIS_V35_ONCHAIN_SURFACES
++        or surfaces & _KAXIS_V35_SECURITY_SURFACES
++    )
++
++
++def _kaxis_validate_v35_card(card: dict[str, Any], risk_class: object) -> list[str]:
++    if not _kaxis_is_v35_card(card):
++        return []
++    errors: list[str] = []
++    missing = [key for key in _KAXIS_V35_REQUIRED if key not in card]
++    if missing:
++        errors.append("v3.5 missing " + ", ".join(missing))
++
++    for key in ("phase", "risk_initial", "risk_effective"):
++        if key in card and not _kaxis_non_empty_string(card.get(key), 2):
++            errors.append(f"v3.5 {key} must be a non-empty string")
++
++    for key in (
++        "authority_max",
++        "owner_worker",
++        "executor_identity",
++        "reviewer_identity",
++        "runtime_decision",
++        "done_definition",
++        "kanban_transition_event_ref",
++    ):
++        if key in card and not _kaxis_non_empty_string(card.get(key)):
++            errors.append(f"v3.5 {key} must be a non-empty string")
++
++    surfaces = _kaxis_v35_surfaces(card)
++    if not surfaces:
++        errors.append("v3.5 surfaces must be a non-empty string array")
++
++    risk_initial = str(card.get("risk_initial") or "").strip()
++    risk_effective = str(card.get("risk_effective") or "").strip()
++    if risk_initial and risk_initial not in _KAXIS_V35_RISKS:
++        errors.append("v3.5 risk_initial must be one of R0, R1, R2, R3, R4")
++    if risk_effective and risk_effective not in _KAXIS_V35_RISKS:
++        errors.append("v3.5 risk_effective must be one of R0, R1, R2, R3, R4")
++    mapped_v2 = _KAXIS_V35_RISK_FROM_V2.get(str(risk_class or ""))
++    if mapped_v2 and risk_effective in _KAXIS_V35_RISKS:
++        if _KAXIS_V35_RISK_ORDER[risk_effective] < _KAXIS_V35_RISK_ORDER[mapped_v2]:
++            errors.append("v3.5 risk_effective cannot be lower than risk_class")
++
++    if not _kaxis_non_empty_string_list(card.get("forbidden_actions")):
++        errors.append("v3.5 forbidden_actions must be a non-empty string array")
++    if not isinstance(card.get("transition_event_required"), bool):
++        errors.append("v3.5 transition_event_required must be boolean")
++
++    executor = str(card.get("executor_identity") or "").strip().lower()
++    reviewer = str(card.get("reviewer_identity") or "").strip().lower()
++    if executor and reviewer and executor == reviewer:
++        errors.append("v3.5 executor_identity and reviewer_identity must be distinct")
++
++    if not _kaxis_non_empty_dict(card.get("runtime_contract")):
++        errors.append("v3.5 runtime_contract must be an object")
++    if not _kaxis_non_empty_dict(card.get("security_contract")):
++        errors.append("v3.5 security_contract must be an object")
++
++    if surfaces & _KAXIS_V35_PRODUCT_FACE_SURFACES:
++        packet = card.get("product_face_packet")
++        if not _kaxis_non_empty_dict(packet):
++            errors.append("v3.5 product_face_packet is required for UX/frontend/mobile/wallet surfaces")
++        else:
++            required = [
++                "screen_inventory",
++                "state_matrix",
++                "design_contract_ref",
++                "mobile_breakpoints",
++                "a11y_acceptance",
++                "performance_budget",
++                "visual_evidence_plan",
++            ]
++            if "wallet-ui" in surfaces:
++                required.append("wallet_flow_matrix")
++            missing_packet = [key for key in required if key not in packet or not packet.get(key)]
++            if missing_packet:
++                errors.append("v3.5 product_face_packet missing " + ", ".join(missing_packet))
++
++    onchain = surfaces & _KAXIS_V35_ONCHAIN_SURFACES
++    if onchain:
++        package = card.get("onchain_work_package")
++        if not _kaxis_non_empty_dict(package):
++            errors.append("v3.5 onchain_work_package is required for onchain surfaces")
++        else:
++            required = [
++                "quasar_source_ref",
++                "framework_default",
++                "account_map",
++                "instruction_abi",
++                "pda_derivation",
++                "cpi_allowlist",
++                "compute_unit_budget",
++            ]
++            missing_package = [key for key in required if key not in package or package.get(key) in (None, "", [])]
++            if missing_package:
++                errors.append("v3.5 onchain_work_package missing " + ", ".join(missing_package))
++            if risk_effective in {"R3", "R4"}:
++                waiver = package.get("auditor_waiver") or card.get("auditor_waiver")
++                if package.get("auditor_required") is not True and not _kaxis_v35_has_human_waiver(waiver):
++                    errors.append("v3.5 onchain R3/R4 requires auditor_required=true or human auditor_waiver")
++
++    if surfaces & _KAXIS_V35_SECURITY_SURFACES and risk_effective in {"R3", "R4"}:
++        separation = card.get("security_role_separation")
++        exception = card.get("security_role_separation_exception")
++        if separation is not True and not _kaxis_non_empty_dict(exception):
++            errors.append("v3.5 R3/R4 security surfaces require role separation or explicit exception")
++
++    if _kaxis_v35_requires_security_scan(card, surfaces, risk_effective):
++        packet = card.get("security_scan_packet")
++        if not _kaxis_non_empty_dict(packet):
++            errors.append("v3.5 security_scan_packet is required for R3/R4, onchain or security surfaces")
++        else:
++            required = ["security_owner", "scanner_agent", "scan_timing"]
++            missing_scan = [
++                key for key in required
++                if not _kaxis_non_empty_string(packet.get(key), 4)
++            ]
++            if missing_scan:
++                errors.append("v3.5 security_scan_packet missing " + ", ".join(missing_scan))
++            if not _kaxis_non_empty_string_list(packet.get("scan_scope")):
++                errors.append("v3.5 security_scan_packet scan_scope must be a non-empty string array")
++            if not _kaxis_non_empty_string_list(packet.get("required_tools")):
++                errors.append("v3.5 security_scan_packet required_tools must be a non-empty string array")
++            elif not _kaxis_v35_has_security_tool(packet.get("required_tools")):
++                errors.append("v3.5 security_scan_packet required_tools must include Codex Security or cybersecurity")
++            if not _kaxis_non_empty_dict(packet.get("acceptance_policy")):
++                errors.append("v3.5 security_scan_packet acceptance_policy must be an object")
++
++    if risk_effective == "R4" or risk_class == "R4-production-critical":
++        gate = card.get("r4_gate")
++        if not _kaxis_non_empty_dict(gate):
++            errors.append("v3.5 R4 requires r4_gate")
++        else:
++            required = ["human_approval_ref", "rollback_plan", "risk_owner", "security_owner"]
++            missing_gate = [key for key in required if not _kaxis_non_empty_string(gate.get(key), 4)]
++            if missing_gate:
++                errors.append("v3.5 r4_gate missing " + ", ".join(missing_gate))
++
++    return errors
++
++
++def _kaxis_validate_v35_completion(card: dict[str, Any], metadata: Optional[dict]) -> list[str]:
++    if not _kaxis_is_v35_card(card):
++        return []
++    errors: list[str] = []
++    if not isinstance(metadata, dict):
++        return ["v3.5 completion requires metadata"]
++
++    receipt = metadata.get("receipt_five")
++    if not _kaxis_non_empty_dict(receipt):
++        errors.append("v3.5 receipt_five metadata is required")
++    else:
++        required = [
++            "changed",
++            "artifact_paths",
++            "verification_commands",
++            "verification_result",
++            "reviewer_required",
++            "next_action",
++        ]
++        missing_receipt = [key for key in required if key not in receipt or receipt.get(key) in (None, "", [])]
++        if missing_receipt:
++            errors.append("v3.5 receipt_five missing " + ", ".join(missing_receipt))
++        if receipt.get("reviewer_required") is True and not receipt.get("reviewer_result"):
++            errors.append("v3.5 receipt_five reviewer_result required when reviewer_required=true")
++
++    event = metadata.get("kanban_transition_event")
++    if not _kaxis_non_empty_dict(event):
++        errors.append("v3.5 kanban_transition_event metadata is required")
++    else:
++        required = ["from_status", "to_status", "actor", "worker", "receipt_refs", "artifact_refs"]
++        missing_event = [key for key in required if key not in event or event.get(key) in (None, "", [])]
++        if missing_event:
++            errors.append("v3.5 kanban_transition_event missing " + ", ".join(missing_event))
++
++    if card.get("promotion_packet_required") is True:
++        packet = metadata.get("promotion_packet")
++        if not _kaxis_non_empty_dict(packet):
++            errors.append("v3.5 promotion_packet metadata is required")
++        else:
++            required = [
++                "promotion_packet_id",
++                "slice_id",
++                "included_work_packages",
++                "evidence_refs",
++                "residual_risk",
++                "rollback",
++                "monitoring",
++                "decision_requested",
++            ]
++            missing_packet = [key for key in required if key not in packet or packet.get(key) in (None, "", [])]
++            if missing_packet:
++                errors.append("v3.5 promotion_packet missing " + ", ".join(missing_packet))
++
++    surfaces = _kaxis_v35_surfaces(card)
++    risk_effective = str(card.get("risk_effective") or "").strip()
++    if _kaxis_v35_requires_security_scan(card, surfaces, risk_effective):
++        scan = metadata.get("security_scan_result")
++        if not _kaxis_non_empty_dict(scan):
++            errors.append("v3.5 security_scan_result metadata is required")
++        else:
++            required = ["scanner_agent", "tool", "result", "findings_summary"]
++            missing_scan = [
++                key for key in required
++                if not _kaxis_non_empty_string(scan.get(key), 4)
++            ]
++            if missing_scan:
++                errors.append("v3.5 security_scan_result missing " + ", ".join(missing_scan))
++            if not _kaxis_non_empty_string_list(scan.get("scope")):
++                errors.append("v3.5 security_scan_result scope must be a non-empty string array")
++            if not _kaxis_non_empty_string_list(scan.get("evidence_refs")):
++                errors.append("v3.5 security_scan_result evidence_refs must be a non-empty string array")
++            if not _kaxis_v35_has_security_tool([
++                scan.get("scanner_agent"),
++                scan.get("tool"),
++            ]):
++                errors.append("v3.5 security_scan_result must reference Codex Security or cybersecurity")
++            result = str(scan.get("result") or "").strip().upper()
++            if result not in {"PASS", "WAIVED"}:
++                errors.append("v3.5 security_scan_result result must be PASS or WAIVED")
++            if scan.get("blocking_findings") is True and not _kaxis_non_empty_dict(metadata.get("security_exception")):
++                errors.append("v3.5 security_scan_result blocking findings require security_exception")
++
++    return errors
++
+ 
+ def _kaxis_extract_card(body: object) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+     raw = str(body or "").strip()
+@@ -256,6 +594,8 @@ def _kaxis_validate_card_v2(card: dict[str, Any], assignee: object) -> list[str]
+     if risk == "R4-production-critical" and card.get("codex_mode") != "required":
+         errors.append("codex_mode must be required for R4-production-critical")
+ 
++    errors.extend(_kaxis_validate_v35_card(card, risk))
++
+     return errors
+ 
+ 
+@@ -411,6 +751,13 @@ def _kaxis_completion_gate_error(
+             shown += f"; +{len(errors) - 8} more"
+         return "KAXIS v2 completion gate: " + shown
+ 
++    v35_completion_errors = _kaxis_validate_v35_completion(card, metadata)
++    if v35_completion_errors:
++        shown = "; ".join(v35_completion_errors[:8])
++        if len(v35_completion_errors) > 8:
++            shown += f"; +{len(v35_completion_errors) - 8} more"
++        return "KAXIS v3.5 completion gate: " + shown
++
+     risk = card.get("risk_class")
+     if risk in {"R0-docs-only", "R1-dev-safe"}:
+         return None
+diff --git a/hermes_cli/main.py b/hermes_cli/main.py
+index 08e610d17..19584507e 100644
+--- a/hermes_cli/main.py
++++ b/hermes_cli/main.py
+@@ -15940,9 +15940,11 @@ Examples:
+ 
+     # Execute the command
+     if hasattr(args, "func"):
+-        args.func(args)
++        code = args.func(args)
++        return int(code or 0)
+     else:
+         parser.print_help()
++        return 2
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/tests/hermes_cli/test_kaxis_factory_v35_gate.py b/tests/hermes_cli/test_kaxis_factory_v35_gate.py
+new file mode 100644
+index 000000000..e71b1de0a
+--- /dev/null
++++ b/tests/hermes_cli/test_kaxis_factory_v35_gate.py
+@@ -0,0 +1,382 @@
++"""Regression tests for the opt-in KAXIS Factory v3.5 Kanban gate.
++
++The gate is intentionally machine-checkable: KAXIS factory cards must not
++advance because an agent writes convincing prose. They must carry enough
++structured context for autonomous workers, reviewers, security scanners, and
++human gates to make the next transition safely.
++"""
++
++from __future__ import annotations
++
++import json
++import sys
++from pathlib import Path
++
++import pytest
++
++from hermes_cli import kanban_db as kb
++
++
++@pytest.fixture
++def kanban_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
++    home = tmp_path / ".hermes"
++    home.mkdir()
++    monkeypatch.setenv("HERMES_HOME", str(home))
++    monkeypatch.delenv("HERMES_KANBAN_DB", raising=False)
++    monkeypatch.delenv("HERMES_KANBAN_HOME", raising=False)
++    monkeypatch.setattr(Path, "home", lambda: tmp_path)
++    db_path = kb.kanban_db_path(board="default")
++    kb._INITIALIZED_PATHS.discard(str(db_path.resolve()))
++    kb.init_db(board="default")
++    return home
++
++
++def _body(card: dict) -> str:
++    return "```json\n" + json.dumps(card, ensure_ascii=False) + "\n```"
++
++
++def _review(*, risk: str) -> dict[str, bool]:
++    required = risk in {
++        "R2-product-sensitive",
++        "R3-financial-critical",
++        "R4-production-critical",
++    }
++    high = risk in {"R3-financial-critical", "R4-production-critical"}
++    return {
++        "QA_required": required,
++        "independent_review_required": required,
++        "security_review_required": required,
++        "cybersecurity_review_required": high,
++        "CTO_gate_required": high,
++        "Felipe_gate_required": high,
++    }
++
++
++def _product_face_packet() -> dict:
++    return {
++        "screen_inventory": ["factory status", "evidence detail"],
++        "state_matrix": {
++            "loading": "shown",
++            "error": "shown",
++            "success": "shown",
++        },
++        "design_contract_ref": "design-contract-test",
++        "mobile_breakpoints": ["375", "768", "1440"],
++        "wallet_flow_matrix": {
++            "sign": "not_applicable_test",
++            "reject": "not_applicable_test",
++        },
++        "a11y_acceptance": ["keyboard", "focus", "contrast"],
++        "performance_budget": {"render": "not_applicable_test"},
++        "visual_evidence_plan": ["desktop screenshot", "mobile screenshot"],
++    }
++
++
++def _security_scan_packet() -> dict:
++    return {
++        "security_owner": "kaxis-security",
++        "scanner_agent": "kaxis-cybersecurity",
++        "scan_timing": "before_done",
++        "scan_scope": ["card contract", "agent handoff", "runtime boundary"],
++        "required_tools": ["codex-security:security-scan", "cybersecurity-review"],
++        "acceptance_policy": {
++            "blocking_findings_allowed": False,
++            "waiver_requires_human": True,
++            "evidence_required": True,
++        },
++    }
++
++
++def _onchain_package(*, auditor_required: bool = True) -> dict:
++    return {
++        "quasar_source_ref": "quasar-docs",
++        "framework_default": "quasar_non_anchor",
++        "account_map": ["test_account"],
++        "instruction_abi": ["test_instruction"],
++        "pda_derivation": ["seed:test"],
++        "cpi_allowlist": ["none"],
++        "compute_unit_budget": "test_only",
++        "auditor_required": auditor_required,
++    }
++
++
++def _r4_gate() -> dict:
++    return {
++        "human_approval_ref": "felipe-approval-test",
++        "rollback_plan": "restore previous release and block dispatcher",
++        "risk_owner": "kaxis-cto",
++        "security_owner": "kaxis-security",
++    }
++
++
++def _base_card(
++    *,
++    owner: str = "kaxis-frontend",
++    surfaces: list[str] | None = None,
++    risk: str = "R1-dev-safe",
++    risk_effective: str | None = None,
++    codex_mode: str | None = None,
++    phase: str = "F5",
++) -> dict:
++    effective = risk_effective or {
++        "R0-docs-only": "R0",
++        "R1-dev-safe": "R1",
++        "R2-product-sensitive": "R2",
++        "R3-financial-critical": "R3",
++        "R4-production-critical": "R4",
++    }[risk]
++    card = {
++        "card_id": "KFP-V35-TEST",
++        "slice_id": "KAXIS_FACTORY_V35_TEST",
++        "owner_profile": owner,
++        "source_refs": ["KAXIS Factory v3.5 regression test"],
++        "source_state": "compiled",
++        "outcome": "Validate KAXIS Factory 10 Kanban gate behavior in a deterministic test.",
++        "acceptance_criteria": ["gate returns the expected transition decision"],
++        "scope_in": ["unit test only"],
++        "scope_out": ["deploy", "secret access", "funds", "mainnet"],
++        "target_repo_paths": ["tests/hermes_cli"],
++        "conflict_set": ["agent prose is not transition evidence"],
++        "risk_class": risk,
++        "why_this_class": "The test exercises the local Kanban gate without sensitive runtime action.",
++        "codex_mode": codex_mode or ("required" if risk == "R4-production-critical" else "advisory"),
++        "why_codex_mode": "Codex is only validating the local Kanban transition contract.",
++        "product_security_checks": ["no product approval"],
++        "code_security_checks": ["no code execution outside the test"],
++        "system_security_checks": ["no infrastructure mutation"],
++        "process_security_checks": ["structured transition evidence required"],
++        "verify_commands": ["pytest tests/hermes_cli/test_kaxis_factory_v35_gate.py"],
++        "evidence_expected": ["expected gate decision is observed"],
++        "review": _review(risk=risk),
++        "factory_method_version": "KAXIS_V3_5_FACTORY_10",
++        "phase": phase,
++        "surfaces": surfaces or ["ux", "frontend"],
++        "risk_initial": effective,
++        "risk_effective": effective,
++        "authority_max": "validate_gate_only",
++        "owner_worker": "KAXIS Test Worker",
++        "executor_identity": owner,
++        "reviewer_identity": "kaxis-reviewer",
++        "runtime_decision": "hermes_test_runtime",
++        "runtime_contract": {"mode": "unit_test"},
++        "security_contract": {"security_boundary": "no_sensitive_action"},
++        "forbidden_actions": ["deploy", "secret_access", "funds", "mainnet"],
++        "done_definition": "The gate returns the expected transition decision.",
++        "transition_event_required": True,
++        "kanban_transition_event_ref": "unit-test-transition",
++    }
++    if set(card["surfaces"]) & {"ux", "frontend", "mobile", "wallet-ui"}:
++        card["product_face_packet"] = _product_face_packet()
++    if risk in {"R3-financial-critical", "R4-production-critical"}:
++        card["rollback_or_recovery"] = "Keep the task blocked until a human approves the gate."
++        card["protected_assets"] = ["KAXIS runtime", "KAXIS authority boundary"]
++    return card
++
++
++def _receipt_metadata(*, include_scan: bool = False) -> dict:
++    metadata = {
++        "receipt_five": {
++            "changed": "Validated the KAXIS Factory v3.5 gate test card.",
++            "artifact_paths": ["tests/hermes_cli/test_kaxis_factory_v35_gate.py"],
++            "verification_commands": ["pytest tests/hermes_cli/test_kaxis_factory_v35_gate.py"],
++            "verification_result": "PASS",
++            "reviewer_required": True,
++            "reviewer_result": "PASS by test reviewer",
++            "next_action": "Keep the transition evidence attached to the run.",
++        },
++        "kanban_transition_event": {
++            "from_status": "ready",
++            "to_status": "done",
++            "actor": "pytest",
++            "worker": "kaxis-security",
++            "receipt_refs": ["receipt_five"],
++            "artifact_refs": ["tests/hermes_cli/test_kaxis_factory_v35_gate.py"],
++        },
++    }
++    if include_scan:
++        metadata["security_scan_result"] = {
++            "scanner_agent": "kaxis-cybersecurity",
++            "tool": "codex-security:security-scan",
++            "scope": ["card contract", "agent handoff", "runtime boundary"],
++            "result": "PASS",
++            "findings_summary": "No blocking finding in deterministic gate test.",
++            "blocking_findings": False,
++            "evidence_refs": ["tests/hermes_cli/test_kaxis_factory_v35_gate.py"],
++        }
++    return metadata
++
++
++def test_v35_product_face_surfaces_require_product_face_packet() -> None:
++    card = _base_card(surfaces=["ux", "frontend"])
++    card.pop("product_face_packet")
++
++    error = kb._kaxis_ready_gate_error("frontend", _body(card), "kaxis-frontend")
++
++    assert error is not None
++    assert "v3.5 product_face_packet is required" in error
++
++
++def test_v35_rejects_executor_reviewing_own_work() -> None:
++    card = _base_card(owner="kaxis-frontend", surfaces=["ux", "frontend"])
++    card["reviewer_identity"] = "kaxis-frontend"
++
++    error = kb._kaxis_ready_gate_error("self-review", _body(card), "kaxis-frontend")
++
++    assert error is not None
++    assert "executor_identity and reviewer_identity must be distinct" in error
++
++
++def test_v35_security_surface_requires_codex_security_scan_packet() -> None:
++    card = _base_card(owner="kaxis-security", surfaces=["security"], phase="F8")
++
++    error = kb._kaxis_ready_gate_error("security", _body(card), "kaxis-security")
++
++    assert error is not None
++    assert "v3.5 security_scan_packet is required" in error
++
++
++def test_v35_security_scan_completion_requires_scan_result(kanban_home: Path) -> None:
++    card = _base_card(owner="kaxis-security", surfaces=["security"], phase="F8")
++    card["security_scan_packet_required"] = True
++    card["security_scan_packet"] = _security_scan_packet()
++
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="security scan fixture",
++            body=_body(card),
++            assignee="kaxis-security",
++            initial_status="blocked",
++        )
++        ok, err = kb.promote_task(conn, tid, actor="pytest")
++        assert ok is True
++        assert err is None
++
++        with pytest.raises(ValueError, match="security_scan_result metadata is required"):
++            kb.complete_task(
++                conn,
++                tid,
++                result="missing scan",
++                summary="Receipt Five exists but scan result is missing",
++                metadata=_receipt_metadata(include_scan=False),
++            )
++        assert kb.get_task(conn, tid).status == "ready"
++
++        assert kb.complete_task(
++            conn,
++            tid,
++            result="scan passed",
++            summary="Receipt Five and security scan result accepted",
++            metadata=_receipt_metadata(include_scan=True),
++        )
++        assert kb.get_task(conn, tid).status == "done"
++
++
++def test_v35_onchain_r3_requires_auditor_or_human_waiver() -> None:
++    card = _base_card(
++        owner="kaxis-protocol",
++        surfaces=["solana-quasar", "account-pda", "cpi", "compute-units"],
++        risk="R3-financial-critical",
++        phase="F7",
++    )
++    card["onchain_work_package"] = _onchain_package(auditor_required=False)
++    card["security_scan_packet"] = _security_scan_packet()
++
++    error = kb._kaxis_ready_gate_error("onchain", _body(card), "kaxis-protocol")
++
++    assert error is not None
++    assert "onchain R3/R4 requires auditor_required=true" in error
++
++
++def test_v35_onchain_r3_with_auditor_and_scan_can_reach_ready(kanban_home: Path) -> None:
++    card = _base_card(
++        owner="kaxis-protocol",
++        surfaces=["solana-quasar", "account-pda", "cpi", "compute-units"],
++        risk="R3-financial-critical",
++        phase="F7",
++    )
++    card["onchain_work_package"] = _onchain_package(auditor_required=True)
++    card["security_scan_packet"] = _security_scan_packet()
++
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="onchain auditor fixture",
++            body=_body(card),
++            assignee="kaxis-protocol",
++            initial_status="blocked",
++        )
++        ok, err = kb.promote_task(conn, tid, actor="pytest")
++
++        assert ok is True
++        assert err is None
++        assert kb.get_task(conn, tid).status == "ready"
++
++
++def test_v35_r4_requires_explicit_human_gate() -> None:
++    card = _base_card(
++        owner="kaxis-devops",
++        surfaces=["release"],
++        risk="R4-production-critical",
++        phase="F12",
++    )
++    card["security_scan_packet"] = _security_scan_packet()
++
++    error = kb._kaxis_ready_gate_error("release", _body(card), "kaxis-devops")
++
++    assert error is not None
++    assert "v3.5 R4 requires r4_gate" in error
++
++
++def test_v35_r4_with_gate_satisfies_ready_contract() -> None:
++    card = _base_card(
++        owner="kaxis-devops",
++        surfaces=["release"],
++        risk="R4-production-critical",
++        phase="F12",
++    )
++    card["security_scan_packet"] = _security_scan_packet()
++    card["r4_gate"] = _r4_gate()
++
++    error = kb._kaxis_ready_gate_error("release", _body(card), "kaxis-devops")
++
++    assert error is None
++
++
++def test_main_propagates_kanban_command_exit_code(
++    kanban_home: Path,
++    monkeypatch: pytest.MonkeyPatch,
++) -> None:
++    card = _base_card(owner="kaxis-frontend", surfaces=["ux", "frontend"])
++    card["reviewer_identity"] = "kaxis-frontend"
++
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="main exit-code fixture",
++            body=_body(card),
++            assignee="kaxis-frontend",
++            initial_status="blocked",
++        )
++
++    import hermes_cli.main as main_mod
++
++    monkeypatch.setattr(main_mod, "_prepare_agent_startup", lambda _args: None)
++    monkeypatch.setattr(main_mod, "_try_termux_fast_tui_launch", lambda: False)
++    monkeypatch.setattr(main_mod, "_try_termux_fast_cli_launch", lambda: False)
++    monkeypatch.setattr(
++        sys,
++        "argv",
++        [
++            "hermes",
++            "kanban",
++            "--board",
++            "default",
++            "promote",
++            tid,
++            "exit-code proof",
++            "--json",
++        ],
++    )
++
++    assert main_mod.main() == 1
+-- 
+2.43.0
+

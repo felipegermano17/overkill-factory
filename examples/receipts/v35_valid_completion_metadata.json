@@ -1,0 +1,19 @@
+{
+  "receipt_five": {
+    "changed": "Validated V3.5 Product Face positive test card through ready and done gates.",
+    "artifact_paths": ["docs/kaxis/factory-v35-10/evidence.md"],
+    "verification_commands": ["hermes kanban promote --dry-run", "hermes kanban complete --metadata"],
+    "verification_result": "PASS",
+    "reviewer_required": true,
+    "reviewer_result": "PASS by codex-operator test reviewer",
+    "next_action": "Record factory 10 runtime evidence."
+  },
+  "kanban_transition_event": {
+    "from_status": "ready",
+    "to_status": "done",
+    "actor": "codex-operator",
+    "worker": "kaxis-frontend",
+    "receipt_refs": ["receipt_five"],
+    "artifact_refs": ["docs/kaxis/factory-v35-10/evidence.md"]
+  }
+}

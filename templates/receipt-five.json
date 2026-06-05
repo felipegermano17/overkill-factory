@@ -1,0 +1,19 @@
+{
+  "receipt_five": {
+    "changed": "What changed.",
+    "artifact_paths": ["path/to/artifact"],
+    "verification_commands": ["command that was run"],
+    "verification_result": "PASS",
+    "reviewer_required": true,
+    "reviewer_result": "PASS by independent reviewer",
+    "next_action": "What should happen next."
+  },
+  "kanban_transition_event": {
+    "from_status": "ready",
+    "to_status": "done",
+    "actor": "worker-or-operator",
+    "worker": "executor-profile",
+    "receipt_refs": ["receipt_five"],
+    "artifact_refs": ["path/to/artifact"]
+  }
+}

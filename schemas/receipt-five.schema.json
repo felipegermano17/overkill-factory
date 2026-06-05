@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
+  "title": "Receipt Five Metadata",
+  "type": "object",
+  "required": ["receipt_five", "kanban_transition_event"],
+  "properties": {
+    "receipt_five": {
+      "type": "object",
+      "required": [
+        "changed",
+        "artifact_paths",
+        "verification_commands",
+        "verification_result",
+        "reviewer_required",
+        "next_action"
+      ],
+      "properties": {
+        "changed": { "type": "string", "minLength": 3 },
+        "artifact_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "verification_commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "verification_result": { "type": "string" },
+        "reviewer_required": { "type": "boolean" },
+        "reviewer_result": { "type": "string" },
+        "next_action": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "kanban_transition_event": {
+      "type": "object",
+      "required": ["from_status", "to_status", "actor", "worker", "receipt_refs", "artifact_refs"],
+      "additionalProperties": true
+    },
+    "security_scan_result": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
