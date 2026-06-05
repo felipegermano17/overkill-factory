@@ -31,6 +31,15 @@
   },
   "rollback_or_recovery": "Keep ready for test only; real done requires existing evidence, sandbox invariants, rollback and approvals.",
   "protected_assets": ["KAXIS program", "KX token authority", "signer authority"],
+  "human_gate_packet": {
+    "gate_type": "R3_onchain_sensitive",
+    "required_approvers": ["Felipe", "CTO"],
+    "decision_state": "pending_before_execution",
+    "risk_owner": "Felipe",
+    "security_owner": "kaxis-security",
+    "rollback_owner": "kaxis-protocol",
+    "waiver_policy": "no waiver without explicit human record"
+  },
   "factory_method_version": "KAXIS_V3_5_FACTORY_10",
   "phase": "F7",
   "surfaces": ["solana-quasar", "account-pda", "cpi", "compute-units"],

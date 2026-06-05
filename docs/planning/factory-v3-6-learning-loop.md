@@ -34,3 +34,6 @@ Each V3.6 change must include:
 - updated Hermes adapter tests
 - updated Codex skill
 - updated Whimsical/Mermaid map
+
+Use `templates/v3-6-learning-record.md` during the pilot so learning is
+captured as evidence, not memory.

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-05T23:00:51+00:00",
+  "source_card_path": "examples\\cards\\v35_valid_product_face.md",
+  "worker": {
+    "id": "solana-quasar-auditor",
+    "name": "Solana/Quasar Auditor Runner",
+    "factory_phase": "F7/F13",
+    "tool_required": "solanabr/Auditor with Quasar-aware onchain package"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "no onchain surface detected",
+    "timing": "after onchain_work_package and before any onchain ready/done promotion",
+    "blocking_policy": "Solana/Quasar work cannot advance as complete until Auditor evidence or an explicit human waiver is attached. Anchor assumptions are forbidden."
+  },
+  "card_ref": {
+    "card_id": "KFP-V35-POS-PF",
+    "slice_id": "KAXIS_FACTORY_V35_10",
+    "phase": "F5",
+    "risk_effective": "R2",
+    "surfaces": [
+      "ux",
+      "frontend",
+      "wallet-ui"
+    ],
+    "executor_identity": "kaxis-frontend",
+    "reviewer_identity": "kaxis-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "onchain_work_package",
+      "target_repo_paths",
+      "risk_effective"
+    ],
+    "missing_fields": [
+      "onchain_work_package"
+    ],
+    "target_repo_paths": [
+      "docs/kaxis/factory-v35-10"
+    ],
+    "authority_max": "validate_gate_only",
+    "forbidden_actions": [
+      "code_edit",
+      "deploy",
+      "secret_access",
+      "wallet_signing"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "auditor_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

@@ -68,6 +68,8 @@ def validate_card(data: dict) -> list[str]:
             errors.append("auditor_required=true required for R3/R4 onchain work")
     if risk in {"R3", "R4"} and not data.get("security_scan_packet"):
         errors.append("security_scan_packet required for R3/R4 work")
+    if risk in {"R3", "R4"} and not data.get("human_gate_packet"):
+        errors.append("human_gate_packet required for R3/R4 work")
     if risk == "R4" and not data.get("r4_gate"):
         errors.append("r4_gate required for R4 work")
     return errors

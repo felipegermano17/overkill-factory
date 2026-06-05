@@ -28,10 +28,10 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
 - The Overkill Factory methodology.
 - Machine-checkable card and receipt contracts.
 - Hermes/Kanban adapter patches.
-- Example cards and Receipt Five metadata.
+- Example cards, worker packets, gate reports, and Receipt Five metadata.
 - A Codex skill for operating the factory.
-- A roadmap for critical factory workers: Product Face, Codex Security,
-  Solana/Quasar Auditor, independent reviewer, and R3/R4 human approval.
+- Initial automation for critical factory workers: Product Face, Codex Security,
+  Solana/Quasar Auditor, independent reviewer, and human gate clerk.
 
 ## Why Hermes Is Required
 
@@ -66,9 +66,32 @@ Read these in order:
 
 1. `docs/methodology/overkill-factory-v0.md`
 2. `docs/planning/execution-plan.md`
-3. `adapters/hermes/README.md`
-4. `agents/worker-roster.md`
-5. `docs/maps/factory-10-flow.mmd`
+3. `docs/automation/worker-automation-v0.md`
+4. `adapters/hermes/README.md`
+5. `agents/worker-roster.md`
+6. `docs/maps/factory-10-flow.mmd`
+
+Run the local preflight:
+
+```bash
+python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md
+python scripts/factoryctl.py gate-report --card examples/cards/v35_valid_onchain_auditor_scan.md
+python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
+```
+
+After a specialist really runs, write structured evidence metadata:
+
+```bash
+python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor kaxis-cybersecurity --evidence-ref reports/security-scan.md
+python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor Felipe --evidence-ref decisions/r3-human-approval.md
+```
+
+## Current Boundaries
+
+The repo prepares contracts and worker packets. It does not fake scanner output,
+Auditor results, screenshots, independent approval, or human decisions.
+
+The first real pilot still needs a real raw product paper.
 
 ## License
 

@@ -12,6 +12,8 @@ one completed Hermes slice.
 - Human owner for decisions.
 - Hermes board/workspace.
 
+Use `templates/pilot-input-paper.md` if the paper needs a stable intake shape.
+
 ## Required Outputs
 
 1. Source ledger.
@@ -31,6 +33,16 @@ one completed Hermes slice.
 15. Independent review.
 16. Pilot retrospective for V3.6.
 
+## Prepared Templates
+
+- `templates/pilot-input-paper.md`
+- `templates/product-sot.md`
+- `templates/architecture-review-packet.md`
+- `templates/factory-card.json`
+- `templates/receipt-five.json`
+- `templates/human-gate-record.json`
+- `templates/v3-6-learning-record.md`
+
 ## Pass Criteria
 
 - No execution card bypasses ready gates.
@@ -46,3 +58,9 @@ one completed Hermes slice.
 - Onchain work is treated as generic backend.
 - Security is summarized but not evidenced.
 - Kanban state diverges from artifact truth.
+
+## Current Blocker
+
+This pilot cannot honestly run until a real product paper is selected. Running
+the pilot on synthetic input would improve formatting, but it would not prove
+that the factory survives messy real material.

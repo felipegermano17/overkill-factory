@@ -42,6 +42,22 @@
     "security_scan_result": {
       "type": "object",
       "additionalProperties": true
+    },
+    "auditor_result": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "product_face_result": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "independent_review_result": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "human_gate_record": {
+      "type": "object",
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

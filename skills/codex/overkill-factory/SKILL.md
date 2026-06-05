@@ -67,11 +67,20 @@ Load only what is needed:
 - `references/factory-line.md` for the full phase model and gates.
 - `references/hermes-adapter.md` for Hermes/Kanban coupling and patch status.
 - `references/card-contract.md` for card and Receipt Five field rules.
+- `references/automation.md` for critical worker packets and `factoryctl.py`.
 
 ## Scripts
 
+When inside the `overkill-factory` repository, prefer the repo-level
+`scripts/factoryctl.py`:
+
+```bash
+python scripts/factoryctl.py gate-report --card path/to/card.md
+python scripts/factoryctl.py worker-packet --worker all --card path/to/card.md --out path/to/output-dir
+```
+
 Use `scripts/validate_factory_contract.py` to sanity-check a card or receipt
-JSON file outside Hermes:
+JSON file outside Hermes or outside the repo:
 
 ```bash
 python scripts/validate_factory_contract.py path/to/card.json

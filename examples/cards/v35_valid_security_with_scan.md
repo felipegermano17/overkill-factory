@@ -42,6 +42,15 @@
   },
   "rollback_or_recovery": "Keep blocked if scan result is missing or has blocking findings.",
   "protected_assets": ["Hermes agent runtime", "Kanban promotion boundary"],
+  "human_gate_packet": {
+    "gate_type": "R3_security_sensitive",
+    "required_approvers": ["Felipe", "CTO"],
+    "decision_state": "pending_before_execution",
+    "risk_owner": "Felipe",
+    "security_owner": "kaxis-security",
+    "rollback_owner": "kaxis-security",
+    "waiver_policy": "no waiver without explicit human record"
+  },
   "factory_method_version": "KAXIS_V3_5_FACTORY_10",
   "phase": "F8",
   "surfaces": ["security", "agent-runtime", "prompt-injection"],

@@ -59,7 +59,9 @@ Enters at F14. Reviews work produced by another worker. Cannot be the executor.
 
 ## Human Gate Clerk
 
-Enters at F9 and F15. Prepares approval packets and records human decisions.
+Enters at F9, F15, and F16. Prepares approval packets and records human
+decisions. R3/R4 requires `human_gate_packet`; R4 additionally requires
+`r4_gate`.
 
 ## Release Operator
 

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/human-gate-record.schema.json",
+  "record_type": "human_gate_record",
+  "gate_type": "architecture|R3|R4|promotion",
+  "card_id": "TBD",
+  "decision": "approved|rejected|changes_requested",
+  "human_actor": "TBD",
+  "decision_at": "TBD",
+  "approved_scope": [],
+  "forbidden_scope": [],
+  "required_changes": [],
+  "risk_owner": "TBD",
+  "security_owner": "TBD",
+  "rollback_owner": "TBD",
+  "evidence_refs": [],
+  "notes": "TBD"
+}

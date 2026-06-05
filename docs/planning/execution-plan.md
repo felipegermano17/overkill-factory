@@ -80,8 +80,18 @@ Acceptance:
 
 ## Immediate Next Work Order
 
-1. Publish Overkill Factory repository.
-2. Install the Codex skill locally.
-3. Create or update the Whimsical flow map.
-4. Start worker automation specs.
-5. Choose the first real product paper for the pilot.
+1. Publish Overkill Factory repository. Done.
+2. Install the Codex skill locally. Done.
+3. Create or update the Whimsical flow map. Mermaid source updated; Whimsical
+   MCP is still required for the editable Whimsical board.
+4. Start worker automation specs. Done as `scripts/factoryctl.py`,
+   `docs/automation/worker-automation-v0.md`, worker packet schema, gate report
+   schema, and generated examples.
+5. Choose the first real product paper for the pilot. Waiting for input paper.
+
+## Current Remaining External Inputs
+
+- Whimsical MCP/tool access for the editable board.
+- A real raw product paper for the first pilot.
+- Hermes runtime hook that calls `factoryctl.py` automatically when cards move
+  toward `ready` or `done`.

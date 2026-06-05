@@ -1,0 +1,41 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+  "report_type": "factory_gate_preflight",
+  "created_at": "2026-06-05T23:00:51+00:00",
+  "card_id": "KFP-V35-POS-ONCHAIN-AUDITOR",
+  "risk_effective": "R3",
+  "surfaces": [
+    "solana-quasar",
+    "account-pda",
+    "cpi",
+    "compute-units"
+  ],
+  "card_validation_errors": [],
+  "workers": {
+    "codex-security": {
+      "required": true,
+      "reason": "risk or sensitive surface requires security evidence",
+      "status": "requires_execution"
+    },
+    "solana-quasar-auditor": {
+      "required": true,
+      "reason": "onchain/Solana/Quasar surface detected",
+      "status": "requires_execution"
+    },
+    "product-face": {
+      "required": false,
+      "reason": "no visible product surface detected",
+      "status": "not_required_by_current_card"
+    },
+    "independent-reviewer": {
+      "required": true,
+      "reason": "R2+ or explicit independent review required",
+      "status": "requires_execution"
+    },
+    "human-gate-clerk": {
+      "required": true,
+      "reason": "architecture/high-risk/human gate detected",
+      "status": "requires_execution"
+    }
+  }
+}

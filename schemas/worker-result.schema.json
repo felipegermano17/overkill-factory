@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "title": "Overkill Factory Worker Result",
+  "type": "object",
+  "required": [
+    "record_type",
+    "created_at",
+    "worker",
+    "card_ref",
+    "result",
+    "blocking_findings",
+    "findings_summary",
+    "tool_or_profile",
+    "executed_by",
+    "evidence_refs",
+    "next_action"
+  ],
+  "properties": {
+    "record_type": {
+      "enum": [
+        "security_scan_result",
+        "auditor_result",
+        "product_face_result",
+        "independent_review_result"
+      ]
+    },
+    "result": {
+      "enum": ["PASS", "FAIL", "WAIVED", "PENDING"]
+    },
+    "blocking_findings": {
+      "type": "boolean"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,32 +1,76 @@
 flowchart LR
-  F0["F0 Source Intake<br/>Collect the raw paper and every source without judging too early."]
-  F1["F1 Source Resolution<br/>Separate raw facts, claims, conflicts, decisions, and guesses."]
-  F2["F2 Product SOT<br/>Create the product source of truth agents must obey."]
-  F3["F3 Understanding Alignment<br/>Ask only questions that change risk, architecture, product, or execution."]
-  F4["F4 Architecture Candidate<br/>Design the product from the SOT and constraints."]
-  F5["F5 Product Face<br/>Define screens, states, wallet flows, mobile, a11y, performance, and visual evidence."]
-  F6["F6 Specialist Reviews<br/>Security, cyber, Solana, frontend, backend, QA, DevOps, CTO review the architecture."]
-  F7["F7 Onchain Package<br/>For Solana/Quasar: accounts, ABI, PDA, CPI, compute units, authorities, Auditor."]
-  F8["F8 Security Scan Plan<br/>Define scan timing, scope, owner, tools, acceptance, and blocking policy."]
-  F9["F9 Human Architecture Gate<br/>Human approves, rejects, or sends architecture back to revision."]
-  F10["F10 Documentation OS<br/>Turn architecture into specs, decisions, contracts, diagrams, and evidence paths."]
-  F11["F11 Decomposition<br/>Create gated Hermes cards with owner, executor, reviewer, risk, surfaces, and done contract."]
-  F12["F12 Execution<br/>Agents execute bounded work without expanding authority."]
-  F13["F13 Verification<br/>Run tests, scans, screenshots, Auditor, and domain checks."]
-  F14["F14 Independent Review<br/>A different reviewer validates the work and evidence."]
-  F15["F15 Human R3/R4 Gate<br/>High-risk work needs explicit human approval and rollback ownership."]
-  F16["F16 Promotion<br/>Promote only when evidence, review, security, rollback, and monitoring are ready."]
-  F17["F17 Production Monitoring<br/>Watch runtime health, product behavior, and release safety."]
-  F18["F18 Learning Loop<br/>Convert pilot lessons into Factory VNext."]
+  F0["F0 Source Intake<br/>Receives the raw paper and all attached material without judging too early."]
+  F1["F1 Source Resolution<br/>Separates facts, claims, conflicts, guesses, and decisions so agents know what is real."]
+  F2["F2 Product SOT<br/>Creates the product source of truth that every later agent must obey."]
+  F3["F3 Understanding Alignment<br/>Asks only questions that change product, risk, architecture, execution, or authority."]
+  F4["F4 Architecture Candidate<br/>Turns the SOT into a system design with constraints, tradeoffs, and boundaries."]
+  F5["F5 Product Face<br/>Defines screens, states, wallet flows, mobile, a11y, performance, and visual evidence."]
+  F6["F6 Specialist Reviews<br/>Security, cyber, Solana, frontend, backend, QA, DevOps, and architecture critique the plan."]
+  F7["F7 Onchain Package<br/>For Solana/Quasar: accounts, ABI, PDA, CPI, compute units, authorities, and Auditor scope."]
+  F8["F8 Security Scan Plan<br/>Defines scan timing, scope, owner, tools, acceptance rules, and blocking policy."]
+  F9["F9 Human Architecture Gate<br/>A human approves, rejects, or sends architecture back before decomposition."]
+  F10["F10 Documentation OS<br/>Turns approved architecture into specs, decisions, contracts, diagrams, and evidence paths."]
+  F11["F11 Decomposition<br/>Creates gated Hermes cards with owner, executor, reviewer, risk, surfaces, and done contract."]
+  F12["F12 Execution<br/>Agents execute bounded work without expanding their authority."]
+  F13["F13 Verification<br/>Runs tests, scans, screenshots, Auditor checks, and domain-specific validation."]
+  F14["F14 Independent Review<br/>A different reviewer validates the work, evidence, and Receipt Five."]
+  F15["F15 Human R3/R4 Gate<br/>High-risk work needs explicit human risk ownership, waiver control, and rollback ownership."]
+  F16["F16 Promotion<br/>Promotes only when evidence, review, security, rollback, monitoring, and human gates are ready."]
+  F17["F17 Production Monitoring<br/>Watches runtime health, product behavior, security signals, and release safety."]
+  F18["F18 Learning Loop<br/>Converts pilot evidence into Factory VNext instead of relying on opinion."]
+  V36["VNext / Factory V3.6<br/>Removes what was heavy, tightens what was vague, and updates contracts after real use."]
 
-  F0 --> F1 --> F2 --> F3 --> F4 --> F5 --> F6 --> F7 --> F8 --> F9 --> F10 --> F11 --> F12 --> F13 --> F14 --> F15 --> F16 --> F17 --> F18
+  F0 --> F1 --> F2 --> F3 --> F4 --> F5 --> F6 --> F7 --> F8 --> F9 --> F10 --> F11 --> F12 --> F13 --> F14 --> F15 --> F16 --> F17 --> F18 --> V36
 
-  H["Hermes Adapter<br/>Kanban gates enforce transitions; agents cannot bypass weak cards or missing receipts."]
-  G1["Ready Gate<br/>Blocks missing Product Face, Auditor, security scan packet, R4 gate, or distinct reviewer."]
-  G2["Done Gate<br/>Requires Receipt Five, transition event, scan results, and risk-class evidence."]
-  G3["Exit Code Enforcement<br/>Blocked transitions return non-zero so scripts cannot treat failure as success."]
+  subgraph W["Critical Worker Lane<br/>Specialists receive explicit packets instead of vague instructions."]
+    WPF["Product Face Validator<br/>Checks visible product quality: screens, states, mobile, wallet UI, a11y, and screenshots."]
+    WAUD["Solana/Quasar Auditor Runner<br/>Uses the Auditor path for accounts, PDA, CPI, compute, authorities, and Quasar-specific risk."]
+    WSEC["Codex Security Runner<br/>Runs security/cyber checks at the declared timing and writes scan evidence."]
+    WREV["Independent Reviewer<br/>Prevents self-approval by reviewing the work with a different identity."]
+    WHUM["Human Gate Clerk<br/>Records real human architecture, R3/R4, and promotion decisions without faking approval."]
+  end
 
-  F11 --> H
-  H --> G1
-  H --> G2
-  H --> G3
+  F5 --> WPF
+  F7 --> WAUD
+  F8 --> WSEC
+  F13 --> WPF
+  F13 --> WAUD
+  F13 --> WSEC
+  F14 --> WREV
+  F9 --> WHUM
+  F15 --> WHUM
+  F16 --> WHUM
+
+  subgraph R["Hermes Runtime Lane<br/>The factory floor that turns methodology into enforceable movement."]
+    R0["factoryctl gate-report<br/>Preflights the card and tells Hermes which workers are required."]
+    R1["Worker Packets<br/>Machine-readable requests with trigger, inputs, output field, and blocking policy."]
+    R2["Hermes Ready Gate<br/>Blocks weak cards before agents start execution."]
+    R3["Hermes Done Gate<br/>Blocks completion when Receipt Five or required evidence is missing."]
+    R4["Receipt Five<br/>Captures changed work, artifacts, verification, reviewer result, next action, and transition event."]
+    R5["Exit-Code Enforcement<br/>Blocked transitions return non-zero so scripts cannot treat failure as success."]
+  end
+
+  F11 --> R0 --> R1 --> R2 --> F12
+  F13 --> R3 --> R4 --> F14
+  R2 --> R5
+  R3 --> R5
+
+  subgraph G["Hard Gates<br/>These are stricter than normal project management ceremonies."]
+    G1["Product Face Gate<br/>Visible product surfaces need Product Face Packet before ready and product_face_result before done."]
+    G2["Auditor Gate<br/>Solana/Quasar work needs onchain package and Auditor evidence or explicit human waiver."]
+    G3["Security Gate<br/>R3/R4 and sensitive surfaces need Codex Security/Cybersecurity evidence."]
+    G4["Anti-Self-Review Gate<br/>Executor and reviewer identities must be different."]
+    G5["R3/R4 Human Gate<br/>R3/R4 need human_gate_packet; R4 additionally needs r4_gate."]
+  end
+
+  WPF --> G1
+  WAUD --> G2
+  WSEC --> G3
+  WREV --> G4
+  WHUM --> G5
+
+  G1 --> R2
+  G2 --> R2
+  G3 --> R3
+  G4 --> R3
+  G5 --> F15

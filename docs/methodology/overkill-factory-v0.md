@@ -108,7 +108,9 @@ Break work into Kanban cards with owner worker, executor, reviewer, surfaces,
 risk, runtime contract, security contract, forbidden actions, done definition,
 verification, and expected evidence.
 
-Output: gated Kanban card graph.
+Run `factoryctl.py gate-report` against each card before it reaches execution.
+
+Output: gated Kanban card graph and required worker packets.
 
 ### F12 Execution
 
@@ -164,6 +166,32 @@ Every done transition must include:
 3. What was verified.
 4. Who reviewed or why review is not required.
 5. What happens next.
+
+## Critical Worker Packets
+
+Factory cards are decomposed into worker packets for the specialists that must
+act before execution, verification, review, or promotion.
+
+The packet includes:
+
+- why the worker is required;
+- which phase it belongs to;
+- which fields are missing;
+- which evidence field the worker must produce;
+- which gate must remain blocked until real evidence exists.
+
+This is better than assigning a generic task because the runtime can inspect the
+contract before an agent starts work.
+
+## R3/R4 Human Rule
+
+R3 and R4 require `human_gate_packet`.
+
+R4 additionally requires `r4_gate`.
+
+That distinction is intentional. R3 needs explicit human risk ownership and
+waiver control. R4 needs the stronger production/promotion gate with rollback,
+risk owner, security owner, and release authority.
 
 ## Why This Beats a Normal Agile Board
 

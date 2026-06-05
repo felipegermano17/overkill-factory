@@ -1,0 +1,40 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+  "report_type": "factory_gate_preflight",
+  "created_at": "2026-06-05T23:00:51+00:00",
+  "card_id": "KFP-V35-POS-PF",
+  "risk_effective": "R2",
+  "surfaces": [
+    "ux",
+    "frontend",
+    "wallet-ui"
+  ],
+  "card_validation_errors": [],
+  "workers": {
+    "codex-security": {
+      "required": false,
+      "reason": "no R3/R4 or sensitive surface detected",
+      "status": "not_required_by_current_card"
+    },
+    "solana-quasar-auditor": {
+      "required": false,
+      "reason": "no onchain surface detected",
+      "status": "not_required_by_current_card"
+    },
+    "product-face": {
+      "required": true,
+      "reason": "visible product surface detected",
+      "status": "requires_execution"
+    },
+    "independent-reviewer": {
+      "required": true,
+      "reason": "R2+ or explicit independent review required",
+      "status": "requires_execution"
+    },
+    "human-gate-clerk": {
+      "required": false,
+      "reason": "no human gate trigger detected",
+      "status": "not_required_by_current_card"
+    }
+  }
+}

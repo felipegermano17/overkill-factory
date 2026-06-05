@@ -55,6 +55,7 @@
     "product_face_packet": { "type": "object" },
     "onchain_work_package": { "type": "object" },
     "security_scan_packet": { "type": "object" },
+    "human_gate_packet": { "type": "object" },
     "r4_gate": { "type": "object" }
   },
   "additionalProperties": true
