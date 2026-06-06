@@ -426,6 +426,7 @@ class FactoryCtlTest(unittest.TestCase):
     def test_transition_plan_ready_blocks_missing_worker_inputs(self) -> None:
         card_path = ROOT / "validation" / "cards" / "product-face-saas-r2.md"
         card = factoryctl.load_json_like(card_path)
+        card.pop("security_scan_packet", None)
 
         plan = factoryctl.build_transition_plan(
             card,

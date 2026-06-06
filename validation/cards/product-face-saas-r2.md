@@ -23,6 +23,14 @@
   "runtime_decision": "browser proof required",
   "runtime_contract": {"local_browser_ok": true},
   "security_contract": {"no_secrets": true},
+  "security_scan_packet": {
+    "security_owner": "appsec-reviewer",
+    "scanner_agent": "appsec-owasp-specialist",
+    "scan_timing": "before_done",
+    "scan_scope": ["frontend states", "browser surface", "accessibility labels", "auth-adjacent UI assumptions"],
+    "required_tools": ["OWASP ASVS checklist", "codex-security advisory scan"],
+    "acceptance_policy": {"blocking_findings": "must_fix_or_human_waiver"}
+  },
   "forbidden_actions": ["deploy", "secret_access", "payment_action"],
   "done_definition": ["Product Face evidence exists", "independent review result exists"],
   "transition_event_required": true,
