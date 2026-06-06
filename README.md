@@ -34,8 +34,10 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
   onchain auditor, independent reviewer, and human gate clerk.
 - Factory 11 hardening: public source policy, security control matrix, worker
   registry, Hermes update safety, public-safety scan and CI.
-- Heavy validation battery artifacts with Product Face, security, onchain,
-  release, agentic and public-repo stress scenarios.
+- Live Hermes Kanban adapter evidence: real board, main card, required worker
+  cards, dependency links, negative done block, positive done reconciliation.
+- Multi-context validation battery artifacts with Product Face, security,
+  onchain, release, agentic and public-repo stress scenarios.
 
 ## Why Hermes Is Required
 
@@ -49,9 +51,11 @@ project, but the Hermes adapter is a first-class and required integration.
 
 ## Current Status
 
-Factory 10 has been validated in a real Hermes runtime.
+Factory 10 has been validated in a real Hermes runtime and in a multi-context
+offline battery.
 
 The portable Hermes adapter patch is kept under `adapters/hermes/patches/`.
+The live adapter entrypoint is `adapters/hermes/live_kanban_adapter.py`.
 
 The first dry pilot is complete and kept under:
 
@@ -88,6 +92,7 @@ python scripts/factoryctl.py gate-report --card examples/cards/v35_valid_onchain
 python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
 python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
 python scripts/factoryctl.py validate-completion --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json
+python scripts/factory_battery.py
 python adapters/hermes/compatibility-check.py
 python scripts/public_safety_scan.py
 python -m unittest discover -s tests -p "test_*.py" -q
@@ -108,6 +113,11 @@ Auditor results, screenshots, independent approval, or human decisions.
 The dry pilot proves the factory process and Hermes gates. It does not prove
 production readiness, deploy readiness, real onchain program safety, wallet
 signing, devnet/mainnet behavior, funds movement, or custody safety.
+
+The live Hermes smoke proves that the adapter can materialize a synthetic
+Solana/Quasar R3 card into real Hermes Kanban tasks and block/allow completion
+based on worker results. The smoke worker results are intentionally marked as
+synthetic and cannot be reused as real product evidence.
 
 The first production-intent pilot still needs a real raw product paper.
 

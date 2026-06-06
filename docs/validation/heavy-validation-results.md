@@ -2,9 +2,10 @@
 
 Date: 2026-06-06
 
-This validation battery tested the factory as a multi-context preflight and
-worker-routing system. It does not claim production readiness, real deployment
-safety, real onchain program safety, or full autonomous Hermes orchestration.
+This validation battery now combines a real Hermes Kanban smoke with a
+multi-context preflight and worker-routing battery. It does not claim production
+readiness, real deployment safety, real onchain program safety, or real
+specialist execution for production work.
 
 ## Public Scenarios
 
@@ -12,9 +13,33 @@ safety, real onchain program safety, or full autonomous Hermes orchestration.
 |---|---:|---:|---:|---|
 | Agentic Browser Memory R3 | ready_for_worker_execution | 13 | 0 | Correctly routes Codex Security, agentic AI security, AppSec, memory, remote proof, handoff and human gate. |
 | Cloud Release R4 | ready_for_worker_execution | 15 | 0 | Correctly routes cloud/infra, crypto/key management, release ops, monitoring, public safety, remote proof and human gate. |
-| Product Face SaaS R2 | blocked | 8 | 2 | Correctly blocks because AppSec/security inputs are missing. Product Face routing works, but visual proof is still not executed in this synthetic card. |
+| Product Face SaaS R2 | ready_for_worker_execution | 8 | 0 | Correctly routes Product Face, QA, independent review, AppSec/OWASP and security orchestration after the card includes a security scan packet. |
 | Public Repo Release R2 | blocked | 15 | 7 | Correctly blocks because security, release, human gate, supply chain and monitoring evidence are not attached. |
 | Solana/Quasar R3 | ready_for_worker_execution | 12 | 0 | Correctly routes Auditor, Codex Security, crypto/key, supply chain, remote proof and human gate. This remains preflight until real Quasar source exists. |
+
+## Live Hermes Kanban Smoke
+
+Public evidence:
+
+- `validation/hermes-live/live-smoke-summary.md`
+- `validation/hermes-live/materialize-solana-r3.json`
+- `validation/hermes-live/enforce-done-missing-results.json`
+- `validation/hermes-live/enforce-done-pass.json`
+- `validation/hermes-live/worker-result-index.json`
+
+Observed result:
+
+- real Hermes board: `overkill-factory-live-smoke`;
+- real main task: `t_ac5844fd`;
+- required worker tasks created: 12;
+- worker tasks completed: 12;
+- negative done enforcement: blocked without worker results;
+- positive done enforcement: allowed with 12 valid worker result records;
+- main card final state: `done`.
+
+This proves real Kanban materialization, dependency wiring and worker-result
+reconciliation. It does not prove real Codex Security, Quasar Auditor, release,
+Product Face or human approval execution.
 
 ## Private Real Paper Smoke
 
@@ -71,28 +96,28 @@ checks.
   cleanup and cost receipt.
 - Disposable Hermes update smoke against a real checkout with dashboard/API
   bypass checks.
-- Full automatic Hermes worker orchestration. The current repo prepares
-  contracts and packets; Hermes still needs runtime hooks for automatic task
-  fan-out and reconciliation.
-- Live Hermes transition-plan enforcement. The public fixtures demonstrate
-  `allow_and_create_worker_tasks` and blocked done reconciliation, but Hermes
-  still needs real event hooks, idempotent subtask persistence, worker-result
-  ingestion and shared CLI/dashboard/API enforcement.
+- Full automatic Hermes dispatcher execution with real specialist profiles.
+  The live adapter materializes and reconciles the task graph, but the public
+  smoke completed synthetic worker tasks manually.
+- Shared CLI/dashboard/API enforcement. The adapter proves the contract; Hermes
+  still needs the hook wired into every transition surface so no bypass exists.
 
 ## Adversarial Review Scores
 
 | Review Area | Score Before Fixes | Main Reason |
 |---|---:|---|
-| Security | 6.8 | Good coverage model, weak operational proof and public path leak. |
-| Product Face | 7.4 | Good routing, insufficient visual proof contract. |
-| Agent/Hermes Operability | 7.6 | Strong preflight, but not automatic Hermes orchestration yet. |
-| Solana/Quasar/Auditor | 7.0 | Good Auditor routing, no real Quasar code audit. |
+| Security | 8.8 | Stronger OWASP/AppSec routing and public scans; still needs real Codex Security reports. |
+| Product Face | 8.7 | Product Face and AppSec now route together; still needs real screenshots/a11y on a real UI. |
+| Agent/Hermes Operability | 9.2 | Real Hermes board, worker graph and done enforcement proven; dispatcher hooks still need hard integration. |
+| Solana/Quasar/Auditor | 8.6 | Strong routing and live smoke; still no real Quasar code audit. |
 
-Estimated score after fixes in this pass: 8.6/10 for preflight quality and
-public repository safety.
+Estimated score after fixes in this pass: 9.2/10 for factory process,
+operability and public repository safety.
 
-It is not 9.5+ yet because the next jump requires real executions, not more
-preflight contracts.
+It is not 9.5+ yet because the next jump requires real specialist executions,
+not more synthetic smoke: real Product Face browser proof, real Codex Security,
+real Auditor/Quasar, and Hermes transition hooks wired into every bypassable
+surface.
 
 ## Next Validation Gates
 
@@ -104,8 +129,6 @@ preflight contracts.
    SBOM/provenance or explicit waiver.
 5. Run remote proof in a clean disposable environment.
 6. Test Hermes update compatibility against a disposable Hermes checkout.
-7. Implement Hermes hooks for automatic required-worker fan-out and completion
-   reconciliation.
-8. Add a disposable Hermes smoke that moves one public-safe card toward `ready`,
-   verifies generated worker subtasks, attaches bounded worker results, then
-   proves `done` blocks until Receipt Five is complete.
+7. Wire the live adapter into Hermes CLI/dashboard/API transition paths.
+8. Run the same live smoke with real dispatched specialist profiles instead of
+   synthetic worker completions.

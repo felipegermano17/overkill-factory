@@ -10,12 +10,16 @@ small black operator character. Messy paper enters a factory machine on the
 left. The machine passes through checkpoints:
 
 ```text
-paper -> SOT -> architecture -> Product Face -> security -> review -> Receipt Five -> stable product
+paper -> SOT -> architecture -> Product Face -> security -> Hermes workers -> review -> Receipt Five -> stable product
 ```
 
 Small worker hands inspect screens, locks, code and onchain modules. A human
 approval window appears near the Receipt Five gate. A stable product exits on
 the right with a green status monitor.
+
+Add a small Kanban rail under the machine: one main card connected to specialist
+worker cards. One red stop sign should show "missing result" before Receipt
+Five, and one green pass sign should show "12 workers reconciled".
 
 Short annotations:
 

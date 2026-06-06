@@ -20,10 +20,14 @@ It includes:
 - F0-F19 full product factory path.
 - Product Face before decomposition.
 - Specialist reviews before human architecture approval.
+- Hermes live adapter as the runtime bridge from factory card to real Kanban
+  task graph.
 - Worker packets, Hermes Ready Gate, worker results and closure summary.
-- Receipt Five and Hermes Done Gate.
+- Receipt Five, missing-result done block, positive done reconciliation and
+  Hermes Done Gate.
 - Factory 10 + Hermes V3.5 + Hermes V2 completion compatibility.
-- Critical workers and agent misread warnings.
+- Critical workers, worker-role explanations and agent misread warnings.
+- Multi-context validation battery as the learning-loop proof surface.
 
 ## Supporting Diagram
 
@@ -32,3 +36,10 @@ It includes:
 This supporting diagram is a strict mind-map chain: phase -> explanation ->
 next phase. It is useful for review and regeneration when the editable board is
 updated.
+
+## Current Update Note
+
+The public source diagram now includes live Hermes materialization, worker
+dependency graph, negative/positive done enforcement and the multi-context
+factory battery. If the editable Whimsical board is updated manually, mirror
+those four additions from `docs/maps/factory-10-flow.mmd`.

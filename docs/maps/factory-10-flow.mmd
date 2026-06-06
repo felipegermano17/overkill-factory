@@ -55,8 +55,9 @@ flowchart LR
   F10 --> F11
 
   F11["F11 Hermes Ready Gate"]:::gate
-  F11D["Bloqueia card sem contrato, Product Face, security, Auditor, reviewer ou autoridade correta."]:::desc
+  F11D["Bloqueia card sem contrato, Product Face, AppSec/OWASP, security, Auditor, reviewer ou autoridade correta."]:::desc
   F11 -.-> F11D
+  F11 --> H1["Hermes live adapter | cria card principal, operarios obrigatorios e dependencias reais no Kanban"]:::worker
   F11 --> F12
 
   F12["F12 Execucao agentica"]:::execution
@@ -85,8 +86,9 @@ flowchart LR
   F16 --> F17
 
   F17["F17 Hermes Done Gate"]:::gate
-  F17D["Done so passa com contrato, Receipt Five, evento Kanban e evidencias obrigatorias."]:::desc
+  F17D["Done so passa com Receipt Five, evento Kanban, resultados de workers e reconciliacao sem faltas."]:::desc
   F17 -.-> F17D
+  F17 --> H2["Negative/positive enforcement | sem resultados bloqueia; com 12 workers validos libera"]:::worker
   F17 --> F18
 
   F18["F18 Release ou bloqueio"]:::release
@@ -102,6 +104,7 @@ flowchart LR
   F20["F20 Learning loop"]:::learning
   F20D["Falhas viram teste, schema, worker, skill, checklist ou simplificacao."]:::desc
   F20 -.-> F20D
+  F20 --> H3["Battery multi-contexto | Product Face, Solana/Quasar, cloud R4, public repo e agentic memory"]:::worker
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker
