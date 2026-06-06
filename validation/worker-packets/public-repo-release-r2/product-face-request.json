@@ -1,0 +1,64 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:21+00:00",
+  "source_card_path": "validation/cards/public-repo-release-r2.md",
+  "worker": {
+    "id": "product-face",
+    "name": "Product Face Validator",
+    "factory_phase": "F5/F13",
+    "tool_required": "browser screenshot/a11y/mobile validation runner"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "no visible product surface detected",
+    "timing": "after product_face_packet and before product-facing done",
+    "blocking_policy": "Frontend, UX, mobile, wallet UI, or visible product work cannot be declared complete without screen/state/mobile/a11y evidence."
+  },
+  "card_ref": {
+    "card_id": "VAL-PUBLIC-REPO-RELEASE-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_05",
+    "phase": "F16",
+    "risk_effective": "R2",
+    "surfaces": [
+      "public",
+      "docs",
+      "code",
+      "ci",
+      "supply-chain"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "product_face_packet",
+      "target_repo_paths",
+      "acceptance_criteria"
+    ],
+    "missing_fields": [
+      "product_face_packet"
+    ],
+    "target_repo_paths": [
+      "README.md",
+      "docs",
+      "scripts",
+      "agents"
+    ],
+    "authority_max": "no publish without review",
+    "forbidden_actions": [
+      "publish",
+      "push",
+      "merge",
+      "private_path_leak"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "product_face_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

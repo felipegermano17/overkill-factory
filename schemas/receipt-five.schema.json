@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
+  "title": "Receipt Five Metadata",
+  "type": "object",
+  "required": ["receipt_five", "kanban_transition_event"],
+  "properties": {
+    "receipt_five": {
+      "type": "object",
+      "required": [
+        "changed",
+        "artifact_paths",
+        "verification_commands",
+        "verification_result",
+        "reviewer_required",
+        "next_action"
+      ],
+      "properties": {
+        "changed": { "type": "string", "minLength": 3 },
+        "artifact_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "verification_commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "verification_result": { "type": "string" },
+        "reviewer_required": { "type": "boolean" },
+        "reviewer_result": { "type": "string" },
+        "next_action": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "kanban_transition_event": {
+      "type": "object",
+      "required": ["from_status", "to_status", "actor", "worker", "receipt_refs", "artifact_refs"],
+      "additionalProperties": true
+    },
+    "hermes_legacy_completion_required": {
+      "type": "boolean"
+    },
+    "evidence_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["passed", "commands"],
+      "additionalProperties": true
+    },
+    "sandbox": {
+      "type": "object",
+      "required": ["passed", "invariants"],
+      "additionalProperties": true
+    },
+    "rollback": {
+      "type": "object",
+      "required": ["verified", "evidence"],
+      "additionalProperties": true
+    },
+    "approvals": {
+      "type": "object",
+      "required": [
+        "qa",
+        "independent_review",
+        "security_review",
+        "cybersecurity_review",
+        "cto_gate",
+        "human_gate"
+      ],
+      "additionalProperties": true
+    },
+    "security_scan_result": {
+      "type": "object",
+      "required": ["scanner_agent", "tool", "scope", "result", "findings_summary", "evidence_refs"],
+      "properties": {
+        "scanner_agent": { "type": "string", "minLength": 4 },
+        "tool": { "type": "string", "minLength": 4 },
+        "scope": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "result": { "enum": ["PASS", "WAIVED"] },
+        "findings_summary": { "type": "string", "minLength": 3 },
+        "blocking_findings": { "type": "boolean" },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "auditor_result": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "result",
+        "audit_mode",
+        "tool_or_profile",
+        "executed_by",
+        "blocking_findings",
+        "findings_summary",
+        "evidence_refs",
+        "next_action"
+      ],
+      "additionalProperties": true
+    },
+    "product_face_result": {
+      "type": "object",
+      "required": [
+        "result",
+        "tool_or_profile",
+        "executed_by",
+        "screenshots",
+        "viewports",
+        "checked_states",
+        "user_journeys_checked",
+        "a11y",
+        "overlap_check",
+        "performance_note",
+        "blocking_findings",
+        "evidence_refs",
+        "next_action"
+      ],
+      "additionalProperties": true
+    },
+    "independent_review_result": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "human_gate_record": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

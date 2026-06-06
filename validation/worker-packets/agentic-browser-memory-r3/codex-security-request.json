@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:20+00:00",
+  "source_card_path": "validation/cards/agentic-browser-memory-r3.md",
+  "worker": {
+    "id": "codex-security",
+    "name": "Codex Security Runner",
+    "factory_phase": "F8/F13",
+    "tool_required": "Codex Security plugin or Hermes cybersecurity profile"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "risk, code, public, agentic or sensitive surface requires security evidence",
+    "timing": "after a security_scan_packet exists and before done/promotion",
+    "blocking_policy": "R3/R4, security, onchain, wallet, funds, mainnet, API, auth, or infra work cannot be completed without a real scan result or explicit human waiver."
+  },
+  "card_ref": {
+    "card_id": "VAL-AGENTIC-BROWSER-MEMORY-R3",
+    "slice_id": "VAL_FACTORY_HEAVY_02",
+    "phase": "F14",
+    "risk_effective": "R3",
+    "surfaces": [
+      "agent",
+      "llm",
+      "browser",
+      "tools",
+      "memory",
+      "security"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "security_scan_packet",
+      "target_repo_paths",
+      "forbidden_actions"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/agentic-browser-memory-r3.md"
+    ],
+    "authority_max": "no external mutation",
+    "forbidden_actions": [
+      "credential_use",
+      "external_mutation",
+      "private_profile_use"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "security_scan_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

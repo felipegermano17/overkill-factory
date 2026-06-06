@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/human-gate-record.schema.json",
+  "title": "Overkill Factory Human Gate Record",
+  "type": "object",
+  "required": [
+    "record_type",
+    "gate_type",
+    "card_id",
+    "decision",
+    "human_actor",
+    "decision_at",
+    "approved_scope",
+    "forbidden_scope",
+    "risk_owner",
+    "security_owner",
+    "rollback_owner",
+    "evidence_refs"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "human_gate_record"
+    },
+    "gate_type": {
+      "enum": ["architecture", "R3", "R4", "promotion"]
+    },
+    "decision": {
+      "enum": ["approved", "rejected", "changes_requested"]
+    },
+    "human_actor": {
+      "type": "string",
+      "minLength": 2
+    },
+    "approved_scope": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "forbidden_scope": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

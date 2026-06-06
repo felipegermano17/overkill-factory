@@ -1,0 +1,64 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:57:48+00:00",
+  "source_card_path": "validation/cards/cloud-release-r4.md",
+  "worker": {
+    "id": "supply-chain-gate",
+    "name": "Supply Chain Gate",
+    "factory_phase": "F11/F13/F16",
+    "tool_required": "dependency, CI, secret, SBOM and provenance checks"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "code/dependency/high-risk supply-chain trigger detected",
+    "timing": "before ready/done/release for code, dependency, CI or package work",
+    "blocking_policy": "Code and dependency work needs reproducible tests, secret scan and dependency risk checks."
+  },
+  "card_ref": {
+    "card_id": "VAL-CLOUD-RELEASE-R4",
+    "slice_id": "VAL_FACTORY_HEAVY_04",
+    "phase": "F16",
+    "risk_effective": "R4",
+    "surfaces": [
+      "release",
+      "production",
+      "cloud",
+      "infra",
+      "iam",
+      "kms",
+      "dns",
+      "monitoring",
+      "secrets"
+    ],
+    "executor_identity": "release-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "target_repo_paths",
+      "runtime_contract",
+      "security_scan_packet"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/cloud-release-r4.md"
+    ],
+    "authority_max": "no real release",
+    "forbidden_actions": [
+      "deploy",
+      "iam_change",
+      "dns_change",
+      "secret_access",
+      "production_release"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "supply_chain_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

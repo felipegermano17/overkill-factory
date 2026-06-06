@@ -1,0 +1,57 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:21+00:00",
+  "source_card_path": "validation/cards/product-face-saas-r2.md",
+  "worker": {
+    "id": "product-architect",
+    "name": "Product Architect",
+    "factory_phase": "F4-F6",
+    "tool_required": "architecture review tools and domain-specific references"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "not an architecture phase",
+    "timing": "after Product SOT and before decomposition",
+    "blocking_policy": "Architecture cannot move to decomposition until specialist and human gates are satisfied."
+  },
+  "card_ref": {
+    "card_id": "VAL-PRODUCT-FACE-SAAS-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_01",
+    "phase": "F13",
+    "risk_effective": "R2",
+    "surfaces": [
+      "frontend",
+      "mobile",
+      "product-face"
+    ],
+    "executor_identity": "frontend-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "scope_in",
+      "scope_out",
+      "risk_class",
+      "runtime_contract"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/product-face-saas-r2.md"
+    ],
+    "authority_max": "local validation only",
+    "forbidden_actions": [
+      "deploy",
+      "secret_access",
+      "payment_action"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "architecture_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

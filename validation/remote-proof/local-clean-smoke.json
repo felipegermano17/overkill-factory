@@ -1,0 +1,72 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-06T06:05:30+00:00",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "REMOTE-PROOF-SMOKE",
+    "slice_id": "LOCAL_CLEAN_SMOKE",
+    "phase": "F13",
+    "risk_effective": "R2",
+    "surfaces": [
+      "code",
+      "ci",
+      "public",
+      "remote-proof"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Local clean-environment fallback proof passed.",
+  "tool_or_profile": "local-tempdir-clean-proof-fallback",
+  "executed_by": "remote-proof-runner",
+  "environment": {
+    "provider": "local-tempdir",
+    "secrets_allowed": false,
+    "ttl_minutes": 30,
+    "cost_owner": "repo-maintainer",
+    "cleanup": "temporary directory removed by context manager"
+  },
+  "commands": [
+    {
+      "command": "python -m unittest discover -s tests -p \"test_*.py\" -q",
+      "returncode": 0,
+      "stdout_tail": "Wrote <temp>\\codex-security-request.json\nWrote <temp>\\solana-quasar-auditor-request.json\nWrote <temp>\\independent-reviewer-request.json\nWrote <temp>\\human-gate-clerk-request.json\nWrote <temp>\\factory-orchestrator-request.json\nWrote <temp>\\qa-verification-worker-request.json\nWrote <temp>\\autoreview-gate-request.json\nWrote <temp>\\security-orchestrator-request.json\nWrote <temp>\\crypto-key-management-specialist-request.json\nWrote <temp>\\remote-proof-runner-request.json\nWrote <temp>\\handoff-packer-request.json\nWrote <temp>\\supply-chain-gate-request.json\n",
+      "stderr_tail": "----------------------------------------------------------------------\nRan 34 tests in 0.162s\n\nOK\n"
+    },
+    {
+      "command": "python adapters/hermes/compatibility-check.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": "python scripts/validate_public_json_artifacts.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": "python scripts/secret_safety_scan.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": "python scripts/public_safety_scan.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    }
+  ],
+  "evidence_refs": [
+    "validation/remote-proof/local-clean-smoke.json"
+  ],
+  "next_action": "Use Crabbox/Testbox for provider-backed remote proof when available."
+}

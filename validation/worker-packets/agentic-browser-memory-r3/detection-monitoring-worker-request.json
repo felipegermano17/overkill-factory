@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:20+00:00",
+  "source_card_path": "validation/cards/agentic-browser-memory-r3.md",
+  "worker": {
+    "id": "detection-monitoring-worker",
+    "name": "Detection and Monitoring Worker",
+    "factory_phase": "F16-F17",
+    "tool_required": "logs, metrics, alerting, incident and rollback evidence"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "no detection/monitoring trigger",
+    "timing": "before production promotion and after release smoke",
+    "blocking_policy": "Stable production requires observability, alerting, incident owner and rollback evidence."
+  },
+  "card_ref": {
+    "card_id": "VAL-AGENTIC-BROWSER-MEMORY-R3",
+    "slice_id": "VAL_FACTORY_HEAVY_02",
+    "phase": "F14",
+    "risk_effective": "R3",
+    "surfaces": [
+      "agent",
+      "llm",
+      "browser",
+      "tools",
+      "memory",
+      "security"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "rollback_or_recovery",
+      "security_contract",
+      "done_definition"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/agentic-browser-memory-r3.md"
+    ],
+    "authority_max": "no external mutation",
+    "forbidden_actions": [
+      "credential_use",
+      "external_mutation",
+      "private_profile_use"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "detection_monitoring_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

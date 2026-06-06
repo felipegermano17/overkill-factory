@@ -1,0 +1,31 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-update-receipt.schema.json",
+  "record_type": "hermes_update_receipt",
+  "created_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "before": {
+    "hermes_version": "unknown",
+    "commit": "unknown"
+  },
+  "after": {
+    "hermes_version": "unknown",
+    "commit": "unknown"
+  },
+  "adapter_patch": {
+    "path": "adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch",
+    "sha256": "TBD",
+    "apply_result": "PENDING"
+  },
+  "checks": {
+    "compatibility_check": "PENDING",
+    "unit_tests": "PENDING",
+    "public_safety_scan": "PENDING",
+    "disposable_runtime_smoke": "PENDING",
+    "dashboard_api_smoke": "PENDING"
+  },
+  "decision": {
+    "real_runtime_update": "blocked_until_checked",
+    "risk_owner": "product-owner",
+    "rollback_plan": "restore previous Hermes runtime and adapter patch state"
+  },
+  "evidence_refs": []
+}

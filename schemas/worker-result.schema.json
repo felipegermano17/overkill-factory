@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "title": "Overkill Factory Worker Result",
+  "type": "object",
+  "required": [
+    "record_type",
+    "created_at",
+    "worker",
+    "card_ref",
+    "result",
+    "blocking_findings",
+    "findings_summary",
+    "tool_or_profile",
+    "executed_by",
+    "evidence_refs",
+    "next_action"
+  ],
+  "properties": {
+    "record_type": {
+      "enum": [
+        "security_scan_result",
+        "auditor_result",
+        "product_face_result",
+        "independent_review_result",
+        "human_gate_record",
+        "orchestration_result",
+        "source_ledger_result",
+        "product_sot_result",
+        "architecture_result",
+        "documentation_os_result",
+        "decomposition_result",
+        "implementation_result",
+        "qa_verification_result",
+        "autoreview_result",
+        "security_orchestration_result",
+        "appsec_owasp_result",
+        "agentic_ai_security_result",
+        "cloud_infra_security_result",
+        "crypto_key_management_result",
+        "remote_proof_result",
+        "release_ops_result",
+        "handoff_packet_result",
+        "memory_steward_result",
+        "skill_eval_result",
+        "public_safety_result",
+        "supply_chain_result",
+        "detection_monitoring_result"
+      ]
+    },
+    "result": {
+      "enum": ["PASS", "FAIL", "WAIVED", "PENDING"]
+    },
+    "blocking_findings": {
+      "type": "boolean"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:21+00:00",
+  "source_card_path": "validation/cards/public-repo-release-r2.md",
+  "worker": {
+    "id": "cloud-infra-security-specialist",
+    "name": "Cloud and Infrastructure Security Specialist",
+    "factory_phase": "F7/F14/F16",
+    "tool_required": "cloud/IaC/IAM/KMS/CI/CD posture checks"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "cloud/infra/IaC/deploy surface detected",
+    "timing": "before release for infra, deploy, IAM, KMS, CI/CD, DNS or cloud surfaces",
+    "blocking_policy": "Infrastructure and deploy work require least privilege, rollback, logs and ownership."
+  },
+  "card_ref": {
+    "card_id": "VAL-PUBLIC-REPO-RELEASE-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_05",
+    "phase": "F16",
+    "risk_effective": "R2",
+    "surfaces": [
+      "public",
+      "docs",
+      "code",
+      "ci",
+      "supply-chain"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "security_scan_packet",
+      "runtime_contract",
+      "rollback_or_recovery"
+    ],
+    "missing_fields": [
+      "security_scan_packet",
+      "rollback_or_recovery"
+    ],
+    "target_repo_paths": [
+      "README.md",
+      "docs",
+      "scripts",
+      "agents"
+    ],
+    "authority_max": "no publish without review",
+    "forbidden_actions": [
+      "publish",
+      "push",
+      "merge",
+      "private_path_leak"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "cloud_infra_security_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "blocked_missing_inputs"
+}

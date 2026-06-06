@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        run: python -m unittest discover -s tests -p "test_*.py" -q
+      - name: Hermes transition plan smoke
+        run: python scripts/factoryctl.py transition-plan --card validation/cards/solana-quasar-r3.md --from-status draft --to-status ready
+      - name: Hermes transition hook smoke
+        run: |
+          mkdir -p "$RUNNER_TEMP/overkill-hook"
+          python adapters/hermes/transition_hook.py \
+            --card validation/cards/solana-quasar-r3.md \
+            --from-status draft \
+            --to-status ready \
+            --ledger "$RUNNER_TEMP/overkill-hook/worker-ledger.json" \
+            --out "$RUNNER_TEMP/overkill-hook/ready-hook-result.json"
+          python adapters/hermes/transition_hook.py \
+            --card validation/cards/solana-quasar-r3.md \
+            --from-status ready \
+            --to-status done \
+            --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json \
+            --worker-results-dir pilots/quasar-vault-guard-test/worker-results \
+            --ledger "$RUNNER_TEMP/overkill-hook/worker-ledger.json" \
+            --out "$RUNNER_TEMP/overkill-hook/done-hook-blocked.json"
+          if python adapters/hermes/transition_hook.py \
+            --card validation/cards/solana-quasar-r3.md \
+            --from-status ready \
+            --to-status done \
+            --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json \
+            --worker-results-dir pilots/quasar-vault-guard-test/worker-results \
+            --ledger "$RUNNER_TEMP/overkill-hook/worker-ledger.json" \
+            --out "$RUNNER_TEMP/overkill-hook/done-hook-enforced-block.json" \
+            --enforce; then
+            echo "Expected blocked done transition to fail under --enforce"
+            exit 1
+          fi
+      - name: Hermes adapter compatibility check
+        run: python adapters/hermes/compatibility-check.py
+      - name: Public JSON artifact validation
+        run: python scripts/validate_public_json_artifacts.py
+      - name: Secret safety scan
+        run: python scripts/secret_safety_scan.py
+      - name: Public safety scan
+        run: python scripts/public_safety_scan.py

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+  "title": "Overkill Factory Gate Report",
+  "type": "object",
+  "required": [
+    "report_type",
+    "created_at",
+    "card_id",
+    "risk_effective",
+    "surfaces",
+    "gate_status",
+    "required_workers",
+    "blocked_workers",
+    "card_validation_errors",
+    "workers"
+  ],
+  "properties": {
+    "report_type": {
+      "const": "factory_gate_preflight"
+    },
+    "gate_status": {
+      "enum": ["blocked", "ready_for_worker_execution", "pass_no_workers_required"]
+    },
+    "required_workers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "blocked_workers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "card_validation_errors": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "workers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["required", "reason", "status"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

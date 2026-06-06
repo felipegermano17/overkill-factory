@@ -1,0 +1,41 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "product_face_result",
+  "created_at": "2026-06-06T02:11:27+00:00",
+  "worker": {
+    "id": "product-face",
+    "name": "Product Face Validator",
+    "factory_phase": "F5/F13"
+  },
+  "card_ref": {
+    "card_id": "QVG-PILOT-FIRST-SLICE",
+    "slice_id": "QVG_DRY_PILOT_001",
+    "phase": "F11",
+    "risk_effective": "R3",
+    "surfaces": [
+      "ux",
+      "frontend",
+      "mobile",
+      "wallet-ui",
+      "security",
+      "agent-runtime",
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units"
+    ],
+    "executor_identity": "codex-overkill-factory",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Desktop and mobile Product Face evidence captured; signing disabled; six states covered.",
+  "tool_or_profile": "playwright-static-prototype-validation",
+  "executed_by": "product-face-validator",
+  "evidence_refs": [
+    "pilots/quasar-vault-guard-test/evidence/product-face-validation-report.md",
+    "pilots/quasar-vault-guard-test/evidence/screenshots/desktop.png",
+    "pilots/quasar-vault-guard-test/evidence/screenshots/mobile.png"
+  ],
+  "next_action": "Keep Product Face evidence required for future visible surfaces."
+}

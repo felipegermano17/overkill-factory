@@ -1,0 +1,64 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:20+00:00",
+  "source_card_path": "validation/cards/cloud-release-r4.md",
+  "worker": {
+    "id": "public-safety-gate",
+    "name": "Public Safety Gate",
+    "factory_phase": "F16/F17",
+    "tool_required": "public repository redaction and forbidden-term scan"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "public artifact or release surface detected",
+    "timing": "before publishing, release, PR or public artifact generation",
+    "blocking_policy": "Public artifacts cannot contain private paths, internal names, raw study extraction or private board links."
+  },
+  "card_ref": {
+    "card_id": "VAL-CLOUD-RELEASE-R4",
+    "slice_id": "VAL_FACTORY_HEAVY_04",
+    "phase": "F16",
+    "risk_effective": "R4",
+    "surfaces": [
+      "release",
+      "production",
+      "cloud",
+      "infra",
+      "iam",
+      "kms",
+      "dns",
+      "monitoring",
+      "secrets"
+    ],
+    "executor_identity": "release-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "target_repo_paths",
+      "forbidden_actions",
+      "done_definition"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/cloud-release-r4.md"
+    ],
+    "authority_max": "no real release",
+    "forbidden_actions": [
+      "deploy",
+      "iam_change",
+      "dns_change",
+      "secret_access",
+      "production_release"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "public_safety_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

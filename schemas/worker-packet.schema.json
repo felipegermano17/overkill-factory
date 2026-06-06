@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "title": "Overkill Factory Worker Packet",
+  "type": "object",
+  "required": [
+    "packet_type",
+    "created_at",
+    "worker",
+    "trigger",
+    "card_ref",
+    "input_contract",
+    "output_contract",
+    "status"
+  ],
+  "properties": {
+    "packet_type": {
+      "const": "worker_execution_request"
+    },
+    "worker": {
+      "type": "object",
+      "required": ["id", "name", "factory_phase", "tool_required"],
+      "properties": {
+        "id": {
+          "enum": [
+            "codex-security",
+            "solana-quasar-auditor",
+            "product-face",
+            "independent-reviewer",
+            "human-gate-clerk",
+            "factory-orchestrator",
+            "source-ledger-worker",
+            "product-sot-planner",
+            "product-architect",
+            "docs-os-worker",
+            "decomposition-planner",
+            "implementation-worker",
+            "qa-verification-worker",
+            "autoreview-gate",
+            "security-orchestrator",
+            "appsec-owasp-specialist",
+            "agentic-ai-security-specialist",
+            "cloud-infra-security-specialist",
+            "crypto-key-management-specialist",
+            "remote-proof-runner",
+            "release-ops-worker",
+            "handoff-packer",
+            "memory-steward",
+            "skill-eval-distiller",
+            "public-safety-gate",
+            "supply-chain-gate",
+            "detection-monitoring-worker"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["required", "reason", "timing", "blocking_policy"],
+      "additionalProperties": true
+    },
+    "card_ref": {
+      "type": "object",
+      "required": ["card_id", "slice_id", "phase", "risk_effective", "surfaces"],
+      "additionalProperties": true
+    },
+    "input_contract": {
+      "type": "object",
+      "required": ["required_fields", "missing_fields", "authority_max", "forbidden_actions"],
+      "additionalProperties": true
+    },
+    "output_contract": {
+      "type": "object",
+      "required": [
+        "receipt_field",
+        "must_attach_artifact_refs",
+        "must_state_blocking_findings",
+        "must_record_tool_or_profile"
+      ],
+      "additionalProperties": true
+    },
+    "status": {
+      "enum": [
+        "requires_execution",
+        "blocked_missing_inputs",
+        "not_required_by_current_card"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

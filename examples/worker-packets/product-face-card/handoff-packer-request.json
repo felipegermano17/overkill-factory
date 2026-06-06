@@ -1,0 +1,56 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:50:52+00:00",
+  "source_card_path": "examples/cards/v35_valid_product_face.md",
+  "worker": {
+    "id": "handoff-packer",
+    "name": "Handoff Packer",
+    "factory_phase": "F9-F15",
+    "tool_required": "path-free handoff workflow with state, constraints, evidence and replay notes"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "phase or risk requires portable handoff",
+    "timing": "at worker transfer, context compaction, pause, phase change or R2+ handoff",
+    "blocking_policy": "Handoff is not a pretty summary; it must preserve constraints, evidence, decisions and next action."
+  },
+  "card_ref": {
+    "card_id": "KFP-V35-POS-PF",
+    "slice_id": "OVERKILL_FACTORY_V35_10",
+    "phase": "F5",
+    "risk_effective": "R2",
+    "surfaces": [
+      "ux",
+      "frontend",
+      "wallet-ui"
+    ],
+    "executor_identity": "frontend-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "target_repo_paths",
+      "done_definition"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "docs/factory/factory-v35-10"
+    ],
+    "authority_max": "validate_gate_only",
+    "forbidden_actions": [
+      "code_edit",
+      "deploy",
+      "secret_access",
+      "wallet_signing"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "handoff_packet_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

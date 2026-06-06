@@ -1,0 +1,56 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:21+00:00",
+  "source_card_path": "validation/cards/product-face-saas-r2.md",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16",
+    "tool_required": "Crabbox/Testbox/container with artifact, cost, TTL and cleanup contract"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "local proof is sufficient by current card",
+    "timing": "when local proof is insufficient or parity/heavy validation is required",
+    "blocking_policy": "Remote proof cannot receive secrets by default and must return logs, artifacts and cleanup evidence."
+  },
+  "card_ref": {
+    "card_id": "VAL-PRODUCT-FACE-SAAS-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_01",
+    "phase": "F13",
+    "risk_effective": "R2",
+    "surfaces": [
+      "frontend",
+      "mobile",
+      "product-face"
+    ],
+    "executor_identity": "frontend-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "runtime_contract",
+      "target_repo_paths",
+      "done_definition"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/product-face-saas-r2.md"
+    ],
+    "authority_max": "local validation only",
+    "forbidden_actions": [
+      "deploy",
+      "secret_access",
+      "payment_action"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "remote_proof_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-card.schema.json",
+  "title": "Overkill Factory Card",
+  "type": "object",
+  "required": [
+    "card_id",
+    "slice_id",
+    "owner_profile",
+    "source_refs",
+    "source_state",
+    "outcome",
+    "acceptance_criteria",
+    "scope_in",
+    "scope_out",
+    "risk_class",
+    "codex_mode",
+    "review",
+    "factory_method_version",
+    "phase",
+    "surfaces",
+    "risk_initial",
+    "risk_effective",
+    "authority_max",
+    "owner_worker",
+    "executor_identity",
+    "reviewer_identity",
+    "runtime_decision",
+    "runtime_contract",
+    "security_contract",
+    "forbidden_actions",
+    "done_definition",
+    "transition_event_required",
+    "kanban_transition_event_ref"
+  ],
+  "properties": {
+    "factory_method_version": {
+      "enum": ["OVERKILL_V3_5_AGENT_WORKFORCE", "OVERKILL_V3_5_FACTORY_10"]
+    },
+    "source_state": {
+      "enum": ["backlog", "compiled", "inference", "promoted", "raw", "rejected"]
+    },
+    "risk_initial": {
+      "enum": ["R0", "R1", "R2", "R3", "R4"]
+    },
+    "risk_effective": {
+      "enum": ["R0", "R1", "R2", "R3", "R4"]
+    },
+    "surfaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "executor_identity": { "type": "string", "minLength": 3 },
+    "reviewer_identity": { "type": "string", "minLength": 3 },
+    "runtime_contract": { "type": "object" },
+    "security_contract": { "type": "object" },
+    "security_role_separation": { "type": "boolean" },
+    "security_role_separation_exception": { "type": "string" },
+    "product_face_packet": { "type": "object" },
+    "onchain_work_package": { "type": "object" },
+    "security_scan_packet": { "type": "object" },
+    "human_gate_packet": { "type": "object" },
+    "r4_gate": { "type": "object" }
+  },
+  "additionalProperties": true
+}

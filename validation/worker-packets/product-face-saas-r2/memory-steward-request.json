@@ -1,0 +1,56 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:21+00:00",
+  "source_card_path": "validation/cards/product-face-saas-r2.md",
+  "worker": {
+    "id": "memory-steward",
+    "name": "Memory Steward",
+    "factory_phase": "F0/F1/F18",
+    "tool_required": "memory trust-tier and poisoning-control review"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "no memory stewardship trigger",
+    "timing": "when persistent context, memory, source reuse or learning-loop updates are proposed",
+    "blocking_policy": "Memory cannot become truth without source, freshness, trust tier and poisoning controls."
+  },
+  "card_ref": {
+    "card_id": "VAL-PRODUCT-FACE-SAAS-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_01",
+    "phase": "F13",
+    "risk_effective": "R2",
+    "surfaces": [
+      "frontend",
+      "mobile",
+      "product-face"
+    ],
+    "executor_identity": "frontend-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "source_refs",
+      "source_state",
+      "security_contract"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/product-face-saas-r2.md"
+    ],
+    "authority_max": "local validation only",
+    "forbidden_actions": [
+      "deploy",
+      "secret_access",
+      "payment_action"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "memory_steward_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}
