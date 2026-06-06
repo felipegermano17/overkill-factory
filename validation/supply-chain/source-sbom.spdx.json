@@ -2,13 +2,13 @@
   "$schema": "https://overkill-factory.dev/schemas/spdx-sbom.schema.json",
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-06T15:32:35+00:00",
+    "created": "2026-06-06T15:49:21+00:00",
     "creators": [
       "Tool: scripts/supply_chain_proof.py"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://overkill-factory.dev/sbom/56de7536df6f987968485713459eacf2f17286daf2ce3e228984d8c6e086c6d3",
+  "documentNamespace": "https://overkill-factory.dev/sbom/6aaaf50cd1feb21c17aef47178f6d369520c4f05843c98d21bd349a53d1d2d16",
   "files": [
     {
       "SPDXID": "SPDXRef-File-.gitattributes",
@@ -65,7 +65,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "cd83f489e2171186e711574c58508c23cc6b9cc5288db77060f529ed140ade8e"
+          "checksumValue": "a2eb857d2e87c3d40f21c3ded7b31a96643b2202223e99007d72b6dba0a93532"
         }
       ],
       "fileName": "README.md"
@@ -265,7 +265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2c6534a97305d51ad7ead5419053b9e1f4cb7b15da85d949cf1fdaab71527c5d"
+          "checksumValue": "01e5867728501a0e58592dbc828573557f57c48fd175fee4a2cffee8c27daa1c"
         }
       ],
       "fileName": "docs/maps/factory-10-flow.mmd"
@@ -285,27 +285,27 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3f438033961861731f0c4cbf2873b92949d29e57d20e5a6dfd6bdd3ebfe9a1b4"
+          "checksumValue": "51b95f1aff926fa9618845b22b66dab254628252edcb7a896aa5608480e66da4"
         }
       ],
       "fileName": "docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png"
     },
     {
-      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f46-snapshot.png",
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f47-snapshot.png",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "1fb43ad093a05d3e2e5f71040d34875c84cfa8a3e3b0b68b9361ff3d87ba9bf0"
+          "checksumValue": "e5ad106e0826ec8cad9bc5c4e680cc454159545c9f805ec18893bf4bebbcb4b9"
         }
       ],
-      "fileName": "docs/maps/overkill-factory-hardening-f27-f46-snapshot.png"
+      "fileName": "docs/maps/overkill-factory-hardening-f27-f47-snapshot.png"
     },
     {
       "SPDXID": "SPDXRef-File-docs-maps-whimsical-board.md",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4f1c00535faa8c400789d34645aa911848ad678e1df0a666c59066f2447a31ee"
+          "checksumValue": "9f9584b86976a3bcf1a6239d1e806ddac288b27c41522280a6197c306f7fc668"
         }
       ],
       "fileName": "docs/maps/whimsical-board.md"
@@ -515,7 +515,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4ead9445d4a79691f79d4f19b13108cb25972862e864ea2112f46f4f6f25f745"
+          "checksumValue": "7606f501abca175419b7188bcdff7f1bd0c9e612b8a578c679bdb2d438782602"
         }
       ],
       "fileName": "docs/validation/factory-10-practical-hardening-2026-06-06.md"
@@ -535,7 +535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b84850c2d55cdb8f9284f4ac30bef276366f2ccfb5f6a7d0b9aec8f27157fbc3"
+          "checksumValue": "d57dc04bc5eef4454281f268ffd30a4e89297588179520e5c2ac6994b8d1be1d"
         }
       ],
       "fileName": "docs/validation/heavy-validation-results.md"
@@ -1695,7 +1695,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5b711a015817d68660d1c8211b17d5cffb44378d07e812ce58f121a2345a92ba"
+          "checksumValue": "3f809ed6c5c73c55d47a2d713497e47b6222852fb302abb8d50267cd6c328305"
         }
       ],
       "fileName": "scripts/factory_completion_audit.py"
@@ -1719,6 +1719,16 @@
         }
       ],
       "fileName": "scripts/full_product_worker_graph.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-managed-remote-proof-probe.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "418b6a1c9206b0ee00a2b1b95fb8602600d4fe87737f2e49582eb812ddd8ae17"
+        }
+      ],
+      "fileName": "scripts/managed_remote_proof_probe.py"
     },
     {
       "SPDXID": "SPDXRef-File-scripts-product-face-proof.py",
@@ -2011,6 +2021,16 @@
       "fileName": "tests/test_hermes_transition_hook.py"
     },
     {
+      "SPDXID": "SPDXRef-File-tests-test-managed-remote-proof-probe.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2f106994fd0a687ea4de9ef381b7b5192748b9cf514ac148d07137155601455d"
+        }
+      ],
+      "fileName": "tests/test_managed_remote_proof_probe.py"
+    },
+    {
       "SPDXID": "SPDXRef-File-tests-test-product-face-proof.py",
       "checksums": [
         {
@@ -2135,7 +2155,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "8b1283e15f1082f3d639a60fd2fdf6ab0706a0108e1df6fc4b48e454a59c74b7"
+          "checksumValue": "6fb10faf3fcb1fb1b3d83d07db4ef2f0bad33592cb029eb7c548f29caa746e9e"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.json"
@@ -3141,6 +3161,16 @@
       "fileName": "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.md"
     },
     {
+      "SPDXID": "SPDXRef-File-validation-remote-proof-hermes-managed-remote-proof-probe-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "857088e12f75fc54c9fa3271285e20253c20820c46019ed20be2a05a4ac40fea"
+        }
+      ],
+      "fileName": "validation/remote-proof/hermes-managed-remote-proof-probe-summary.md"
+    },
+    {
       "SPDXID": "SPDXRef-File-validation-remote-proof-local-clean-smoke.json",
       "checksums": [
         {
@@ -3149,6 +3179,26 @@
         }
       ],
       "fileName": "validation/remote-proof/local-clean-smoke.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-remote-proof-managed-remote-proof-probe.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cc0f0be1800152b4ec0f028f52ae39b3ec9ebb04b7fdf5ee0ee9c4c59e98005a"
+        }
+      ],
+      "fileName": "validation/remote-proof/managed-remote-proof-probe.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-remote-proof-managed-remote-proof-probe.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "af72283f6d0e892bd340a318f7f7936528f1f629c90073547ac722f0659b7142"
+        }
+      ],
+      "fileName": "validation/remote-proof/managed-remote-proof-probe.md"
     },
     {
       "SPDXID": "SPDXRef-File-validation-security-bandit-scripts-adapters.json",
@@ -5178,7 +5228,7 @@
       "filesAnalyzed": true,
       "name": "overkill-factory",
       "packageVerificationCode": {
-        "packageVerificationCodeValue": "56de7536df6f987968485713459eacf2f17286daf2ce3e228984d8c6e086c6d3"
+        "packageVerificationCodeValue": "6aaaf50cd1feb21c17aef47178f6d369520c4f05843c98d21bd349a53d1d2d16"
       }
     }
   ],

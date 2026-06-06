@@ -291,7 +291,10 @@ def build_requirements() -> list[dict[str, Any]]:
             bounded_requirement(
                 "managed_remote_proof",
                 "Managed Crabbox/Testbox remote proof",
-                ["validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json"],
+                [
+                    "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
+                    "validation/remote-proof/managed-remote-proof-probe.json",
+                ],
                 "Static SSH proof is useful, but managed remote proof validates the intended provider-backed heavy gate.",
                 "Run managed Crabbox broker or Blacksmith Testbox with approved credentials and cleanup receipt.",
             )

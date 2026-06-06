@@ -132,6 +132,19 @@ factory pass for one product context. It is still not production approval:
 `reusable_for_product=false`, `completion_claim_allowed=false`, and stale
 Receipt Five refs remain visible as `stale_evidence_refs`.
 
+### Managed Remote Proof Probe
+
+`scripts/managed_remote_proof_probe.py` now checks readiness for managed
+Crabbox broker and Blacksmith Testbox proof without exposing values.
+
+The probe records only booleans for config/env presence and redacted command
+tails. In the current Hermes run it returned `PENDING` because no managed
+provider credentials or Testbox run exist.
+
+This is better than a vague blocker because future workers know exactly what
+must appear before `managed_remote_proof` can move from bounded/static SSH to
+provider-backed evidence.
+
 ## Still Not 10/10
 
 - Product-specific Codex Security scans still need to run per real
@@ -154,6 +167,8 @@ Receipt Five refs remain visible as `stale_evidence_refs`.
   names still require real product/provider execution.
 - QVG full product graph now passes as bounded public validation, but production
   completion still requires a production target with reusable lane evidence.
+- Managed remote proof readiness is explicit now, but the managed provider run
+  itself still needs approved credentials, transcript, artifacts and cleanup.
 - Current Git history still contains old private/internal markers from earlier
   commits; public launch should use an orphan branch, new repository or
   coordinated history rewrite.

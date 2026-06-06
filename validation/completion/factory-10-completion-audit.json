@@ -10,7 +10,7 @@
     "full_product_specific_worker_graph"
   ],
   "completion_claim_allowed": false,
-  "created_at": "2026-06-06T15:32:35+00:00",
+  "created_at": "2026-06-06T15:46:43+00:00",
   "policy_decision": "Do not mark Overkill Factory as practical 10/10 until every blocking requirement has product-specific or provider-backed evidence.",
   "requirements": [
     {
@@ -78,7 +78,8 @@
       "blocking": true,
       "boundary": "Run managed Crabbox broker or Blacksmith Testbox with approved credentials and cleanup receipt.",
       "evidence_refs": [
-        "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json"
+        "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
+        "validation/remote-proof/managed-remote-proof-probe.json"
       ],
       "id": "managed_remote_proof",
       "next_action": "Run managed Crabbox broker or Blacksmith Testbox with approved credentials and cleanup receipt.",

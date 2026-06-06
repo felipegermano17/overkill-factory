@@ -50,6 +50,9 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
 - Bounded full product worker graph evidence: QVG now reconciles ten real lanes
   into one product-specific public validation graph while preserving
   `reusable_for_product=false` and `completion_claim_allowed=false`.
+- Managed remote-proof readiness probe: Hermes `remote-proof-runner` confirmed
+  managed Crabbox broker / Blacksmith Testbox proof remains `PENDING` without
+  configured provider credentials, while public output stays redacted.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -112,6 +115,7 @@ python scripts/factory_battery.py
 python adapters/hermes/compatibility-check.py
 python scripts/supply_chain_proof.py --check --no-write
 python scripts/full_product_worker_graph.py --require-pass
+python scripts/managed_remote_proof_probe.py
 python scripts/factory_completion_audit.py
 python scripts/public_safety_scan.py
 python -m unittest discover -s tests -p "test_*.py" -q
@@ -164,6 +168,11 @@ The QVG full product graph now proves bounded product-specific reconciliation
 across Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,
 Independent Review, Human Gate, Release Ops, Supply Chain and Receipt Five. It
 is intentionally not reusable as production approval.
+
+The managed remote-proof probe records the current provider gap explicitly:
+static SSH proof exists, but managed Crabbox broker / Blacksmith Testbox still
+needs credentials, a provider-backed run handle, transcript, artifacts and
+cleanup evidence.
 
 ## Public Repository Safety
 

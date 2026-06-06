@@ -66,6 +66,9 @@ Public evidence:
 - `validation/product-specific/qvg-full-product-worker-graph.json`
 - `validation/product-specific/qvg-full-product-worker-graph.md`
 - `validation/product-specific/hermes-full-product-worker-graph-summary.md`
+- `validation/remote-proof/managed-remote-proof-probe.json`
+- `validation/remote-proof/managed-remote-proof-probe.md`
+- `validation/remote-proof/hermes-managed-remote-proof-probe-summary.md`
 
 Observed result:
 
@@ -148,6 +151,12 @@ Observed result:
   `completion_claim_allowed=false`, six production blockers, five stale
   Receipt Five refs preserved as `stale_evidence_refs`, and reran public JSON,
   public-safety, secret-safety, 74 tests and `git diff --check` with `PASS`;
+- managed remote proof probe dispatch: a real Hermes `remote-proof-runner`
+  worker reviewed and reran the managed provider readiness probe, confirmed
+  `PENDING`, `managed_remote_proof_ready=false`,
+  `reusable_for_product=false`, no managed Crabbox broker / Blacksmith Testbox
+  execution, no credential or private endpoint leakage, and reran public JSON,
+  public-safety, secret-safety, 77 tests and `git diff --check` with `PASS`;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -339,6 +348,10 @@ checks.
   proof, Remote Proof, Independent Review, Human Gate, Release Ops, Supply
   Chain and Receipt Five in one graph, while preserving `reusable_for_product`
   as `false` and keeping stale historical Receipt Five refs visible.
+- Managed remote proof readiness is now explicitly probed. The Hermes
+  `remote-proof-runner` confirmed the current state is `PENDING` because no
+  managed Crabbox broker or Blacksmith Testbox credentials/run exist; the probe
+  captures only boolean config presence and redacted command tails.
 
 ### Still Not Proven
 
@@ -353,8 +366,9 @@ checks.
   source-hash reconciliation and `513` deterministic cases, but production real
   CU measurement, SVM/client transaction flow and economic safety remain open.
 - Managed Crabbox broker or Blacksmith Testbox proof. Crabbox static-SSH remote
-  proof now passes, but managed broker/Testbox credentials were not available
-  and must not be simulated.
+  proof now passes and managed readiness is probed, but managed broker/Testbox
+  credentials, provider-backed run handle, transcript, artifacts and cleanup
+  evidence were not available and must not be simulated.
 - Product-specific dependency audits, lockfiles and provenance still repeat per
   real product. The public factory repo has CI/SBOM proof now, but future
   product/runtime dependencies must add their own audit evidence.

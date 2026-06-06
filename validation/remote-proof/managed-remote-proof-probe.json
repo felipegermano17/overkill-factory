@@ -1,0 +1,98 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "blocking_findings": true,
+  "card_ref": {
+    "card_id": "MANAGED-REMOTE-PROOF-PROBE",
+    "executor_identity": "remote-proof-runner",
+    "phase": "F16",
+    "reviewer_identity": "independent-reviewer",
+    "risk_effective": "R3",
+    "slice_id": "PUBLIC_FACTORY_MANAGED_REMOTE_PROOF",
+    "surfaces": [
+      "remote-proof",
+      "provider",
+      "crabbox",
+      "testbox",
+      "public"
+    ]
+  },
+  "created_at": "2026-06-06T15:46:43+00:00",
+  "evidence_kind": "real",
+  "evidence_refs": [
+    "https://github.com/openclaw/crabbox",
+    "https://crabbox.sh/getting-started.html",
+    "https://crabbox.sh/providers/blacksmith-testbox.html"
+  ],
+  "executed_by": "remote-proof-runner",
+  "findings_summary": "Managed remote proof is not ready: crabbox CLI is not available on PATH; Crabbox broker/provider credentials are not configured for aws/azure/gcp/hetzner; Blacksmith Testbox CLI/config is not ready",
+  "managed_remote_proof_ready": false,
+  "next_action": "Run a managed Crabbox broker or Blacksmith Testbox proof and emit a PASS remote_proof_result with cleanup evidence.",
+  "probe": {
+    "blacksmith_version": {
+      "available": false,
+      "command": "blacksmith",
+      "exit_code": null,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    "config_presence": {
+      "blacksmith_config_present": false,
+      "broker_token_present": false,
+      "broker_url_present": false,
+      "provider_present": false,
+      "user_config_present": false
+    },
+    "crabbox_doctor": {
+      "available": false,
+      "command": "crabbox",
+      "exit_code": null,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    "crabbox_version": {
+      "available": false,
+      "command": "crabbox",
+      "exit_code": null,
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    "env_presence": {
+      "CRABBOX_BLACKSMITH_JOB": false,
+      "CRABBOX_BLACKSMITH_ORG": false,
+      "CRABBOX_BLACKSMITH_REF": false,
+      "CRABBOX_BLACKSMITH_WORKFLOW": false,
+      "CRABBOX_BROKER_TOKEN": false,
+      "CRABBOX_BROKER_URL": false,
+      "CRABBOX_COORDINATOR": false,
+      "CRABBOX_PROVIDER": false
+    }
+  },
+  "production_boundary": "This probe does not lease a managed runner, run product tests, collect provider cleanup evidence, or satisfy managed_remote_proof.",
+  "provider_capabilities_from_sources": {
+    "brokered_cloud_providers": [
+      "aws",
+      "azure",
+      "gcp",
+      "hetzner"
+    ],
+    "delegated_testbox_provider": "blacksmith-testbox",
+    "static_ssh_is_not_managed": true
+  },
+  "record_type": "remote_proof_result",
+  "required_for_completion": [
+    "crabbox broker or blacksmith-testbox credentials",
+    "provider-backed run handle",
+    "remote command transcript",
+    "artifact refs",
+    "cleanup or stop evidence",
+    "public-safe PASS remote_proof_result reusable only for the product target"
+  ],
+  "result": "PENDING",
+  "reusable_for_product": false,
+  "tool_or_profile": "crabbox-managed-provider-probe",
+  "worker": {
+    "factory_phase": "F13-F16",
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner"
+  }
+}

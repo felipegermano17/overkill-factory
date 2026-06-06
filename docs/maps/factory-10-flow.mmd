@@ -205,6 +205,11 @@ flowchart LR
   F46["F46 Full product graph bounded PASS"]:::learning
   F46D["Grafo QVG reconciliou 10 lanes reais, preservou stale refs visiveis e manteve reusable_for_product=false sem declarar producao."]:::desc
   F46 -.-> F46D
+  F46 --> F47
+
+  F47["F47 Managed remote proof probe"]:::review
+  F47D["Hermes remote-proof-runner confirmou PENDING: sem Crabbox broker/Testbox, sem credencial, sem lease, sem cleanup; sem vazamento publico."]:::desc
+  F47 -.-> F47D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker
