@@ -31,6 +31,7 @@ Public evidence:
 - `validation/hermes-live/worker-dispatched-done-gate-smoke.md`
 - `validation/hermes-live/real-profile-dispatch-smoke.md`
 - `validation/hermes-live/official-main-patch-smoke.md`
+- `validation/hermes-live/official-head-recheck-2026-06-06.md`
 
 Observed result:
 
@@ -55,6 +56,8 @@ Observed result:
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
+- official HEAD recheck: live `git ls-remote` still points to the same tested
+  commit, so no new disposable compatibility smoke was required in this pass;
 - main card final state: `done`.
 
 This proves real Kanban materialization, dependency wiring and worker-result
