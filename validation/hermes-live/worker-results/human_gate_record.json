@@ -1,0 +1,42 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/human-gate-record.schema.json",
+  "record_type": "human_gate_record",
+  "gate_type": "R3",
+  "card_id": "VAL-SOLANA-QUASAR-R3",
+  "card_ref": {
+    "card_id": "VAL-SOLANA-QUASAR-R3",
+    "slice_id": "VAL_FACTORY_HEAVY_03",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units",
+      "funds"
+    ],
+    "executor_identity": "onchain-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "decision": "approved",
+  "human_actor": "authorized-test-operator",
+  "decision_at": "2026-06-06T06:23:07+00:00",
+  "approved_scope": [
+    "synthetic Hermes smoke card only"
+  ],
+  "forbidden_scope": [
+    "deploy",
+    "devnet_write",
+    "mainnet_write",
+    "signing",
+    "funds"
+  ],
+  "required_changes": [],
+  "risk_owner": "test-risk-owner",
+  "security_owner": "test-security-owner",
+  "rollback_owner": "test-rollback-owner",
+  "evidence_refs": [
+    "validation/hermes-live/evidence/human-gate-clerk.md"
+  ],
+  "notes": "Smoke-only approval for synthetic validation card; not reusable for real product work."
+}
