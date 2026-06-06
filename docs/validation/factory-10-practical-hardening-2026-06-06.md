@@ -201,13 +201,13 @@ release or human gates.
 - Supply-chain posture now has public CI/SBOM proof for this repository, but
   product-specific dependency review, lockfiles and provenance still repeat per
   real implementation.
-- Completion audit now blocks false practical-10 claims, but the four remaining
+- Completion audit now blocks false practical-10 claims, but the three remaining
   blockers it names still require real product/provider execution.
 - Production-like Product Face is now achieved for the named QVG public
   validation product lane. It is still not full WCAG, production performance,
   deployed-production proof or a substitute for the other product lanes.
 - QVG full product graph now passes as bounded public validation with reusable
-  Product Face and Quasar Auditor lanes, but production completion still
+  Product Face, Quasar Auditor and CU/SVM/economic lanes, but production completion still
   requires the remaining critical lanes to become reusable.
 - Managed remote proof readiness is explicit now, but the managed provider run
   itself still needs approved credentials, transcript, artifacts and cleanup.

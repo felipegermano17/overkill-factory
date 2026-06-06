@@ -78,6 +78,109 @@ def production_worker_result(rel_path: str, *, record_type: str | None = None) -
     return True
 
 
+def production_cu_svm_economic_result(rel_path: str) -> bool:
+    path = ROOT / rel_path
+    if not path.exists():
+        return False
+    try:
+        data = load_json(path)
+    except json.JSONDecodeError:
+        return False
+    if not production_worker_result(rel_path):
+        return False
+    return cu_svm_economic_scope_is_valid(data)
+
+
+def cu_svm_economic_scope_is_valid(data: dict[str, Any]) -> bool:
+    if data.get("record_type") != "cu_svm_economic_proof":
+        return False
+    if data.get("proof_kind") != "production_quasar_cu_svm_economic":
+        return False
+    if data.get("blocking_findings") is True:
+        return False
+
+    target = data.get("product_target")
+    if not isinstance(target, dict):
+        return False
+    source_ref = str(target.get("source_ref") or "")
+    source_sha256 = str(target.get("source_sha256") or "")
+    if not source_ref.startswith("products/") or len(source_sha256) != 64:
+        return False
+    if data.get("source_target") != source_ref or data.get("source_sha256") != source_sha256:
+        return False
+    if target.get("environment_class") not in {"production-validation-quasar-svm", "production-quasar-svm"}:
+        return False
+
+    compute = data.get("compute_unit_profile")
+    if not isinstance(compute, dict):
+        return False
+    if compute.get("profile_kind") != "runtime_svm_measurement" or compute.get("real_solana_cu_measured") is not True:
+        return False
+    budget = compute.get("compute_budget_units")
+    if not isinstance(budget, int) or budget <= 0:
+        return False
+    instruction_profile = compute.get("instruction_profile")
+    if not isinstance(instruction_profile, dict):
+        return False
+    required_instructions = {"review_vault_instruction", "record_audit_receipt", "block_instruction"}
+    if not required_instructions.issubset(instruction_profile):
+        return False
+    for name in required_instructions:
+        item = instruction_profile.get(name)
+        if not isinstance(item, dict):
+            return False
+        cu = item.get("compute_units_consumed")
+        if not isinstance(cu, int) or cu <= 0 or cu >= budget:
+            return False
+        if item.get("within_budget") is not True or item.get("status") != "PASS":
+            return False
+
+    flow = data.get("svm_or_client_flow_coverage")
+    if not isinstance(flow, dict):
+        return False
+    if flow.get("real_svm_transaction_harness") is not True or flow.get("quasar_test_passed") is not True:
+        return False
+    flow_names = {str(item.get("name") or "") for item in flow.get("flows") or [] if isinstance(item, dict)}
+    required_flows = required_instructions | {"sequential_review_record_block"}
+    if not required_flows.issubset(flow_names):
+        return False
+
+    negative = data.get("negative_case_coverage")
+    if not isinstance(negative, dict):
+        return False
+    for name in ("review_zero_hash", "record_zero_hash", "block_zero_reason"):
+        item = negative.get(name)
+        if not isinstance(item, dict) or item.get("status") != "PASS":
+            return False
+
+    economic = data.get("economic_safety")
+    if not isinstance(economic, dict):
+        return False
+    if economic.get("overall_verdict") != "PASS":
+        return False
+    if economic.get("funds_movement") is not False:
+        return False
+    if economic.get("persistent_state_writes") is not False:
+        return False
+    if economic.get("authority_changes") is not False:
+        return False
+    if economic.get("cpi_calls") != 0:
+        return False
+    observed = economic.get("svm_observed")
+    if not isinstance(observed, dict):
+        return False
+    for name in ("lamports_unchanged", "pda_data_unchanged"):
+        item = observed.get(name)
+        if not isinstance(item, dict) or item.get("status") != "PASS":
+            return False
+
+    properties = data.get("property_fuzz_coverage")
+    if not isinstance(properties, dict) or int(properties.get("total_cases") or 0) < 518:
+        return False
+
+    return True
+
+
 def reusable_product_scope_is_valid(data: dict[str, Any], *, record_type: str | None = None) -> bool:
     target = data.get("product_target")
     if not isinstance(target, dict):
@@ -289,7 +392,7 @@ def build_requirements() -> list[dict[str, Any]]:
             )
         )
 
-    if production_worker_result("validation/production/quasar/cu-svm-economic-proof.json"):
+    if production_cu_svm_economic_result("validation/production/quasar/cu-svm-economic-proof.json"):
         requirements.append(
             achieved_requirement(
                 "production_cu_svm_economic",

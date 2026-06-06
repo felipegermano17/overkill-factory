@@ -77,6 +77,9 @@ Public evidence:
 - `validation/production/quasar/auditor-result.json`
 - `validation/production/quasar/qvg-production-auditor-report.md`
 - `validation/production/quasar/hermes-production-quasar-auditor-summary.md`
+- `validation/production/quasar/cu-svm-economic-proof.json`
+- `validation/production/quasar/cu-svm-economic-report.md`
+- `validation/production/quasar/cu-svm-economic-harness.rs`
 
 Observed result:
 
@@ -156,7 +159,7 @@ Observed result:
 - full product worker graph dispatch: a real Hermes `independent-reviewer`
   worker reviewed the QVG graph in a clean public clone, confirmed ten lanes
   pass, confirmed `reusable_for_product=false`,
-  `completion_claim_allowed=false`, six production blockers, five stale
+  `completion_claim_allowed=false`, initial production blockers, five stale
   Receipt Five refs preserved as `stale_evidence_refs`, and reran public JSON,
   public-safety, secret-safety, 74 tests and `git diff --check` with `PASS`;
 - managed remote proof probe dispatch: a real Hermes `remote-proof-runner`
@@ -181,7 +184,19 @@ Observed result:
   reran public JSON, public-safety, secret-safety, focused tests and
   `git diff --check`; the completion audit now marks
   `production_quasar_auditor` as `ACHIEVED` and blocks the full completion
-  claim with four remaining lanes;
+  claim with four remaining lanes before the later CU/SVM/economic proof;
+- production-validation Quasar CU/SVM/economic proof: a clean Docker QuasarSVM
+  run on the QVG public validation product source under `products/` built the
+  program, executed success and negative transaction flows, measured real CU
+  for `review_vault_instruction` (`1501`), `record_audit_receipt` (`1121`) and
+  `block_instruction` (`779`), verified no CPI/funds/persistent-write/authority
+  mutation surface, wrote reusable product-scoped evidence for the named source
+  hash and reduced completion blockers to three;
+- full product worker graph refresh: the graph now points its CU/SVM/economic
+  lane at `validation/production/quasar/cu-svm-economic-proof.json`, marks
+  Product Face, Quasar Auditor and CU/SVM/economic lanes reusable for the named
+  source hash, and keeps only managed remote proof, production release/human
+  gate and full production reusable graph as remaining blockers;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -192,9 +207,10 @@ Observed result:
 This proves real Kanban materialization, dependency wiring, worker-result
 reconciliation and multiple specialist-profile execution paths. It also proves
 that Product Face can run as real browser-backed evidence in Hermes and that
-the named QVG public validation product source can clear a scoped Quasar Auditor
-lane. It does not prove real CU/SVM/economic safety, release,
-provider-backed remote proof or human approval execution.
+the named QVG public validation product source can clear scoped Quasar Auditor
+and CU/SVM/economic lanes. It does not prove release, provider-backed remote
+proof, human approval execution or a full production graph with every critical
+lane reusable.
 
 ## Real Codex Security Scan
 
@@ -454,8 +470,8 @@ product graph with all critical lanes reusable.
 1. Rerun Product Face proof for every new product/deployed UI. The QVG public
    validation product lane is scoped reusable; that does not transfer to other
    products or releases.
-2. Rerun Quasar Auditor whenever product source changes, then add real CU
-   profiling, SVM/client transactions and economic fuzz/property tests.
+2. Rerun Quasar Auditor and CU/SVM/economic proof whenever product source
+   changes.
 3. Rerun supply-chain CI/SBOM proof after every workflow/dependency change; add
    dependency audit, lockfile and provenance evidence as soon as runtime
    dependencies exist.
@@ -465,7 +481,7 @@ product graph with all critical lanes reusable.
 6. Run release and human-gate worker profiles on product-specific production
    targets with real rollback, smoke, monitoring and approval evidence.
 7. Only allow `factory_completion_audit.py --require-complete` to pass after
-   the four remaining product-specific/provider-backed blockers have direct
+   the three remaining product-specific/provider-backed blockers have direct
    evidence.
 8. Promote the bounded QVG graph to a production graph only after a production
    target exists and every critical lane can truthfully set

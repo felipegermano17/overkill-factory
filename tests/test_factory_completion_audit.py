@@ -21,11 +21,10 @@ class FactoryCompletionAuditTests(unittest.TestCase):
 
         self.assertNotIn("production_product_face", blockers)
         self.assertNotIn("production_quasar_auditor", blockers)
-        self.assertIn("production_cu_svm_economic", blockers)
         self.assertIn("managed_remote_proof", blockers)
         self.assertIn("production_release_human_gate", blockers)
         self.assertIn("full_product_specific_worker_graph", blockers)
-        self.assertEqual(len(blockers), 4)
+        self.assertEqual(len(blockers), 3)
 
     def test_product_face_and_quasar_auditor_can_be_achieved_while_other_public_proofs_remain_bounded(self):
         result = audit.build_audit()
@@ -33,8 +32,25 @@ class FactoryCompletionAuditTests(unittest.TestCase):
 
         self.assertEqual(by_id["production_product_face"]["status"], "ACHIEVED")
         self.assertEqual(by_id["production_quasar_auditor"]["status"], "ACHIEVED")
+        self.assertEqual(by_id["production_cu_svm_economic"]["status"], "ACHIEVED")
         self.assertEqual(by_id["managed_remote_proof"]["status"], "BOUNDED_PUBLIC_PROOF")
         self.assertEqual(by_id["full_product_specific_worker_graph"]["status"], "BOUNDED_PUBLIC_PROOF")
+
+    def test_symbolic_cu_svm_result_cannot_clear_production_scope(self):
+        proof_path = audit.ROOT / "validation" / "production" / "quasar" / "qvg-quasar-cu-fuzz-property-proof.json"
+        symbolic = json.loads(proof_path.read_text(encoding="utf-8"))
+        symbolic["record_type"] = "cu_svm_economic_proof"
+        symbolic["proof_kind"] = "production_quasar_cu_svm_economic"
+        symbolic["product_target"] = {
+            "product_id": "qvg-public-validation-product",
+            "environment_class": "production-validation-quasar-svm",
+            "source_ref": symbolic["source_target"],
+            "source_sha256": symbolic["source_sha256"],
+            "approval_scope": "Production-validation CU/SVM/economic lane",
+        }
+        symbolic["reusable_for_product"] = True
+
+        self.assertFalse(audit.cu_svm_economic_scope_is_valid(symbolic))
 
     def test_shallow_auditor_result_cannot_clear_production_scope(self):
         proof_path = audit.ROOT / "validation" / "production" / "quasar" / "auditor-result.json"

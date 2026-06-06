@@ -39,8 +39,9 @@ LANES: tuple[dict[str, Any], ...] = (
     },
     {
         "lane_id": "cu_svm_economic",
-        "proof_kind": "product_like_quasar_cu_fuzz_property",
-        "path": "validation/production/quasar/qvg-quasar-cu-fuzz-property-proof.json",
+        "record_type": "cu_svm_economic_proof",
+        "proof_kind": "production_quasar_cu_svm_economic",
+        "path": "validation/production/quasar/cu-svm-economic-proof.json",
         "scope": "product",
     },
     {
@@ -88,7 +89,6 @@ LANES: tuple[dict[str, Any], ...] = (
 
 
 PRODUCTION_BLOCKERS = [
-    "production CU/SVM/economic proof still needs real CU measurement and SVM/client transaction flow",
     "managed remote proof still needs Crabbox broker or Blacksmith Testbox credentials and cleanup evidence",
     "production release still needs a fresh R4 human gate, rollback proof, release smoke and monitoring evidence",
     "one real production product still needs the same graph with every remaining critical lane reusable_for_product=true",
@@ -233,10 +233,10 @@ def build_graph() -> dict[str, Any]:
         "evidence_refs": [str(lane["path"]) for lane in LANES],
         "policy_decision": (
             "This proves product-specific worker-graph reconciliation for the public QVG validation product, "
-            "including reusable Product Face and Quasar Auditor lanes. It is not reusable as production approval because "
+            "including reusable Product Face, Quasar Auditor and CU/SVM/economic lanes. It is not reusable as production approval because "
             "the remaining critical lanes intentionally preserve production boundaries."
         ),
-        "next_action": "Add real CU/SVM/economic proof, managed remote proof, product-specific release/human evidence and a fully reusable graph before practical 10/10 completion.",
+        "next_action": "Add managed remote proof, product-specific release/human evidence and a fully reusable graph before practical 10/10 completion.",
     }
 
 

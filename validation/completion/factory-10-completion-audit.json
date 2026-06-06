@@ -2,13 +2,12 @@
   "$schema": "https://overkill-factory.dev/schemas/factory-completion-audit.schema.json",
   "audit_kind": "factory_10_practical_completion",
   "blocking_summary": [
-    "production_cu_svm_economic",
     "managed_remote_proof",
     "production_release_human_gate",
     "full_product_specific_worker_graph"
   ],
   "completion_claim_allowed": false,
-  "created_at": "2026-06-06T16:50:51+00:00",
+  "created_at": "2026-06-06T18:16:23+00:00",
   "policy_decision": "Do not mark Overkill Factory as practical 10/10 until every blocking requirement has product-specific or provider-backed evidence.",
   "requirements": [
     {
@@ -59,14 +58,13 @@
       "why_it_matters": "The public product-like audit is useful, but production approval needs the actual product program."
     },
     {
-      "blocking": true,
-      "boundary": "Run real CU profiling, SVM/client transactions and economic fuzz/property tests on production source.",
+      "blocking": false,
       "evidence_refs": [
-        "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"
+        "validation/production/quasar/cu-svm-economic-proof.json"
       ],
       "id": "production_cu_svm_economic",
-      "next_action": "Run real CU profiling, SVM/client transactions and economic fuzz/property tests on production source.",
-      "status": "BOUNDED_PUBLIC_PROOF",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
       "title": "Production CU, SVM/client flow and economic safety",
       "why_it_matters": "Onchain code can pass unit tests and still fail through compute, transaction flow or economic edge cases."
     },
@@ -122,9 +120,9 @@
       "why_it_matters": "The goal is a factory that carries a real product through all required workers, not isolated prooflets."
     }
   ],
-  "requirements_achieved": 5,
-  "requirements_blocking": 4,
-  "requirements_bounded": 4,
+  "requirements_achieved": 6,
+  "requirements_blocking": 3,
+  "requirements_bounded": 3,
   "requirements_total": 9,
   "score_estimate": "9.996/10",
   "status": "NOT_COMPLETE"

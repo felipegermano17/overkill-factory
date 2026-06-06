@@ -123,7 +123,7 @@ flowchart LR
   F29 --> F30
 
   F30["F30 Ainda nao e 10 pratico"]:::alert
-  F30D["Agora faltam provas product-specific/provider-backed: CU/SVM/economic real, UI deployed/full WCAG/perf, managed Testbox/broker, release, gate humano e grafo reutilizavel."]:::desc
+  F30D["Agora faltam provas product-specific/provider-backed: managed Testbox/broker, release/gate humano R4 e grafo final reutilizavel."]:::desc
   F30 -.-> F30D
   F30 --> F31
 
@@ -218,8 +218,13 @@ flowchart LR
   F48 --> F49
 
   F49["F49 Quasar Auditor production-validation PASS"]:::review
-  F49D["Hermes solana-quasar-auditor validou source em products, Quasar Docker build/test, corpus Auditor, 513 casos e reusable Auditor lane; audit caiu para 4 blockers."]:::desc
+  F49D["Hermes solana-quasar-auditor validou source em products, Quasar Docker build/test, corpus Auditor, 513 casos e reusable Auditor lane; audit caiu para 4 blockers antes do F50."]:::desc
   F49 -.-> F49D
+  F49 --> F50
+
+  F50["F50 Quasar CU/SVM/economic PASS"]:::learning
+  F50D["QuasarSVM real rodou no source em products, mediu CU por instrucao, testou sucesso/erro, provou sem CPI/fundos/escrita e audit caiu para 3 blockers."]:::desc
+  F50 -.-> F50D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

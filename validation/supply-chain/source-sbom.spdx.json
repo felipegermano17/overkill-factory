@@ -2,13 +2,13 @@
   "$schema": "https://overkill-factory.dev/schemas/spdx-sbom.schema.json",
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-06T17:02:25+00:00",
+    "created": "2026-06-06T18:16:15+00:00",
     "creators": [
       "Tool: scripts/supply_chain_proof.py"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://overkill-factory.dev/sbom/4eb874dee2d1144614ed1d5b18342edaad4202b77a8136b2f53f8e83ad4cc2cc",
+  "documentNamespace": "https://overkill-factory.dev/sbom/47b4e1d9ada791125febeb51f55af754691480fb543bd75ac32bf354b5cbebc1",
   "files": [
     {
       "SPDXID": "SPDXRef-File-.gitattributes",
@@ -65,7 +65,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a3864bafc6c83f34762383e56375c6581b02ee7b99300f79114fd5c32ea14dae"
+          "checksumValue": "de502e2b8b47a1750e6594c24a09b3a56f311b6d8c32c28568604af73d449a89"
         }
       ],
       "fileName": "README.md"
@@ -265,7 +265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9a802a48dfc4242845a85c9aa446165a4a11e2ce43414a42f0e61b047830c345"
+          "checksumValue": "fa8b3e8d25115a7359603cf23b319c1858350c4e306ef0ae3a9f3b2bd77d7d3f"
         }
       ],
       "fileName": "docs/maps/factory-10-flow.mmd"
@@ -285,27 +285,27 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "06c2a4c9cd5773fdfe8c257c56e003e7308a5ad90e1a100fd85d64ef6900c3d8"
+          "checksumValue": "e1364c521eda4ae64cc3850fca2d4b4c49636b58c585151caa95ba64b6854c45"
         }
       ],
       "fileName": "docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png"
     },
     {
-      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f49-snapshot.png",
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f50-snapshot.png",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "94902fdb5be5eff2bca12a63c51b495095a47f20622131d5ff5df96ba10eae97"
+          "checksumValue": "fa77dbdb86645fc4ea8f7bfdcdec48608d9b45e21f7dab02c49377bee773705b"
         }
       ],
-      "fileName": "docs/maps/overkill-factory-hardening-f27-f49-snapshot.png"
+      "fileName": "docs/maps/overkill-factory-hardening-f27-f50-snapshot.png"
     },
     {
       "SPDXID": "SPDXRef-File-docs-maps-whimsical-board.md",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e8bf191a7f578f63bddfa8770dfdf56c50be56ad5d4e9dccb03e479a6af0a68d"
+          "checksumValue": "50147be075a887db0b1cc118959ddc0127289f22388fe56f9ba945550502b269"
         }
       ],
       "fileName": "docs/maps/whimsical-board.md"
@@ -465,7 +465,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "726db5624aed7fba598959aa50ee4f6cd1bb0534b8c79f1ec67cff1f821601ae"
+          "checksumValue": "a5decd1886c2964a608edd00269fca8aed0f33f1c15f3c8e8c9f4a93eefa305c"
         }
       ],
       "fileName": "docs/roadmap/factory-11-action-plan.md"
@@ -515,7 +515,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e3495ca3ffd8321fc18920644ccc60f64c3f4154dd55679827585d89d220832f"
+          "checksumValue": "97598ccd83b8919b214e0876c8fb44e57a493e2c3969bbff670a69a2308c3bea"
         }
       ],
       "fileName": "docs/validation/factory-10-practical-hardening-2026-06-06.md"
@@ -535,7 +535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5e9e6751a8eb2f2730cb505368327f7d36aac53e6c62b44f04c1856d8ca3ab54"
+          "checksumValue": "0f7b4c1ec960b34d59cb28b39d9c1d6e4e62cec0842f8e3e378b1608e4965c05"
         }
       ],
       "fileName": "docs/validation/heavy-validation-results.md"
@@ -1641,6 +1641,16 @@
       "fileName": "schemas/product-face-static-summary.schema.json"
     },
     {
+      "SPDXID": "SPDXRef-File-schemas-quasar-cu-svm-economic-proof.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "09692cad81b770c809f59c86192c6165aa4ae184076c1b2181a620d4bfe05c31"
+        }
+      ],
+      "fileName": "schemas/quasar-cu-svm-economic-proof.schema.json"
+    },
+    {
       "SPDXID": "SPDXRef-File-schemas-quasar-property-proof.schema.json",
       "checksums": [
         {
@@ -1735,7 +1745,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a9e6b40033d33f85eb41ee5ee2887bff99a344f4b1f16d4f31d13f6c4ac2d5f1"
+          "checksumValue": "24dda1e04748a69ee02179b0e1fded024d13d3d181eb669ad7b12306e3a9fe09"
         }
       ],
       "fileName": "scripts/factory_completion_audit.py"
@@ -1755,7 +1765,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "74527d749ca160c2a31dbae2c3a3efc3634cc2cebbe9923eae7e855c11604288"
+          "checksumValue": "97d0ed83109d96f2676d5563f989cf5401b2cf09d5385abe5d0de0083b3b6f77"
         }
       ],
       "fileName": "scripts/full_product_worker_graph.py"
@@ -1821,6 +1831,16 @@
       "fileName": "scripts/qvg_quasar_cu_fuzz_property_proof.py"
     },
     {
+      "SPDXID": "SPDXRef-File-scripts-qvg-quasar-cu-svm-economic-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d6239c7006ebd8629811048545bab90d6b7dc188af32547243ea88f89b177f41"
+        }
+      ],
+      "fileName": "scripts/qvg_quasar_cu_svm_economic_proof.py"
+    },
+    {
       "SPDXID": "SPDXRef-File-scripts-remote-proof-smoke.py",
       "checksums": [
         {
@@ -1835,7 +1855,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6b59969f9e60d3fc417238604f32dc88e8a6526e0d8286d71707b3402f11c1b1"
+          "checksumValue": "ecf6fda98a43315162b0c9a4ce581fc177d8bb18a9a3c3035d982237dbb86b5b"
         }
       ],
       "fileName": "scripts/secret_safety_scan.py"
@@ -2015,7 +2035,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6cf7e44554350229026adce71d83a5681ca2eed5b6ea4bcdd3c6352e822cee9a"
+          "checksumValue": "2f0d4345b769c084e728cab3dd98ed291aaf63ce8340436e5cc314f8f0650756"
         }
       ],
       "fileName": "tests/test_factory_completion_audit.py"
@@ -2035,7 +2055,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4e4e7e674c4fcc0b7ac6ff69135ef6f31ad5ae352647c2902401f204ff4429da"
+          "checksumValue": "e95227432aaac1c2345e16dd64ced8831726426c70707da642ad775b98a8c3a5"
         }
       ],
       "fileName": "tests/test_full_product_worker_graph.py"
@@ -2099,6 +2119,26 @@
         }
       ],
       "fileName": "tests/test_qvg_quasar_cu_fuzz_property_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-qvg-quasar-cu-svm-economic-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9aeff8a7abe17d171054ba760eb8edff7136a1470a7d1c2c6078e6c128a791a0"
+        }
+      ],
+      "fileName": "tests/test_qvg_quasar_cu_svm_economic_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-secret-safety-scan.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "661b7801c61d6665c2d8fe36264fc09d12025c77ecfa11207040ef707efe8891"
+        }
+      ],
+      "fileName": "tests/test_secret_safety_scan.py"
     },
     {
       "SPDXID": "SPDXRef-File-tests-test-supply-chain-proof.py",
@@ -2195,7 +2235,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "32277d3bb974e04b423e2d10b77b0e730c36178f514ac0d2fb9a6c77e0bfb5ff"
+          "checksumValue": "02830faa865694799574c5db541350d3fdb82df9e557e4a364525522b1c8925c"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.json"
@@ -2205,7 +2245,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "254e74fb856bfcd92ec86764a36f8e93ed9d05dc4931215249a1af706882fe86"
+          "checksumValue": "edd185e94a37aa415352640c57505306f50ca69efd12078928a1744f272ac0ab"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.md"
@@ -2965,7 +3005,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "8b6e5192178adc56110b19012bfb62b7aebd88d72955d4823902bd95250fc61d"
+          "checksumValue": "5a93eee7132d7cfcdbeefd39ad19e359f966d08531fa7a4e743594b0e777c792"
         }
       ],
       "fileName": "validation/product-specific/qvg-full-product-worker-graph.json"
@@ -2975,7 +3015,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e07622a1c6dc9cb6d1c901edca9c7d5086955788959a1ace40acf34ab1617ef8"
+          "checksumValue": "760e7fe5bce40ae45f9f9fa89cba2844afe7a05c6ea29e0bd8f16983d9aa72f7"
         }
       ],
       "fileName": "validation/product-specific/qvg-full-product-worker-graph.md"
@@ -3059,6 +3099,36 @@
         }
       ],
       "fileName": "validation/production/quasar/auditor-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-quasar-cu-svm-economic-harness.rs",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3020e19e8474a33c4fd915a0820a9b2070dfb55dd214c95b7ea710d176718bd7"
+        }
+      ],
+      "fileName": "validation/production/quasar/cu-svm-economic-harness.rs"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-quasar-cu-svm-economic-proof.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "93c745363aa4f3c125ea3942d1b5bab260a5e43269b26d9bfee45c4a36778eac"
+        }
+      ],
+      "fileName": "validation/production/quasar/cu-svm-economic-proof.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-quasar-cu-svm-economic-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f9193256b74c4b5802d9858d3613f2f59bb42c3cd579d6e81655124ffb765fec"
+        }
+      ],
+      "fileName": "validation/production/quasar/cu-svm-economic-report.md"
     },
     {
       "SPDXID": "SPDXRef-File-validation-production-quasar-hermes-production-quasar-auditor-summary.md",
@@ -5388,7 +5458,7 @@
       "filesAnalyzed": true,
       "name": "overkill-factory",
       "packageVerificationCode": {
-        "packageVerificationCodeValue": "4eb874dee2d1144614ed1d5b18342edaad4202b77a8136b2f53f8e83ad4cc2cc"
+        "packageVerificationCodeValue": "47b4e1d9ada791125febeb51f55af754691480fb543bd75ac32bf354b5cbebc1"
       }
     }
   ],

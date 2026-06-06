@@ -11,7 +11,7 @@ Local snapshot:
 
 Hardening block snapshot:
 
-`docs/maps/overkill-factory-hardening-f27-f49-snapshot.png`
+`docs/maps/overkill-factory-hardening-f27-f50-snapshot.png`
 
 ## Why This Is The Primary Map
 
@@ -33,7 +33,7 @@ It includes:
 - Critical workers, worker-role explanations and agent misread warnings.
 - Map-reading legend for colors, side explanations and primary/lateral arrows.
 - Multi-context validation battery as the learning-loop proof surface.
-- F27-F49 operational hardening: real Codex Security, stricter gates, clean
+- F27-F50 operational hardening: real Codex Security, stricter gates, clean
   remote proof, remaining nota-10 gaps, a durable Whimsical MCP fallback,
   stricter Auditor/Quasar contracts, source-pinned Quasar runtime proof and
   dashboard ready/done, worker-style done no-bypass, real profile dispatch and
@@ -42,8 +42,9 @@ It includes:
   proof, product-like Quasar CU/fuzz/property proof, real supply-chain CI/SBOM
   proof, the completion audit guard that blocks false practical-10 claims and
   the bounded full product worker graph proof, plus managed remote-proof
-  readiness probe, a scoped production-like Product Face reusable proof and a
-  scoped production-validation Quasar Auditor reusable proof.
+  readiness probe, a scoped production-like Product Face reusable proof, a
+  scoped production-validation Quasar Auditor reusable proof and real
+  product-scoped QuasarSVM CU/economic proof.
 - Official-main patch compatibility: the public Hermes adapter patch applies to
   the tested official Hermes main commit and passes focused regression tests.
 
@@ -59,14 +60,14 @@ updated.
 
 The public source diagram now includes live Hermes materialization, worker
 dependency graph, negative/positive done enforcement, the multi-context factory
-battery, the F27-F49 hardening block and the same map-reading legend added to
+battery, the F27-F50 hardening block and the same map-reading legend added to
 the editable Whimsical board. The editable board was updated through the local
 Whimsical MCP and now contains three clean official flowchart blocks plus one
 legend block:
 
 - `Lki1eW`: main F0-F19 factory spine;
 - `8kQkhJ`: F20-F26 hardening bridge;
-- `AyHQAj`: F27-F49 operational hardening block.
+- `AyHQAj`: F27-F50 operational hardening block.
 
 Important current IDs in `AyHQAj`:
 
@@ -99,6 +100,8 @@ Important current IDs in `AyHQAj`:
 - F48 description id: `Przjmg`.
 - F49 node id: `W6EBVW`;
 - F49 description id: `TMZmrX`.
+- F50 node id: `QDE4YJ`;
+- F50 description id: `Faf5hW`.
 - Map legend node id: `GBGPXU`.
 
 If the editable Whimsical board is updated manually, mirror those additions
@@ -142,7 +145,11 @@ confirmed the QVG public validation product source under `products/` has a
 scoped production-validation Auditor proof with `PASS`, `evidence_kind=real`,
 `reusable_for_product=true`, source hash, Auditor corpus/checklist coverage,
 Quasar Docker build/test proof and completion audit reduced to four remaining
-blockers.
+blockers before F50.
+It was then extended to F50 after product-scoped QuasarSVM proof confirmed
+`PASS`, real CU measurements for review/record/block instructions, success and
+negative SVM flows, no CPI/funds/persistent-write/authority mutation surface
+and completion audit reduced to three remaining blockers.
 
 Latest MCP validation:
 
@@ -155,19 +162,24 @@ Latest MCP validation:
 - 2026-06-06 recheck: `board-read --grep "F49"` returned the F49 node in the
   F27-F49 block, and direct `board_read` on `AyHQAj` + `GBGPXU` showed a
   160px vertical gap with no overlap markers.
+- 2026-06-06 recheck: `board-read --grep "F50"` returned the F50 node after
+  the CU/SVM/economic update. `flexbox_compose` removed the post-insert overlap
+  between the F27-F50 block and map legend; current reported gap is 0px with no
+  overlap markers.
 - The editable board was updated through `flowchart_edit` and verified with
   `board-read --grep "F39" --grep "F40"`, `board-read --grep "F41"` and
   `board-read --grep "F42"`, `board-read --grep "F43"` and
   `board-read --grep "F44"`, `board-read --grep "F45"` and
   `board-read --grep "F46"`, `board-read --grep "F47"`,
-  `board-read --grep "F48"` and `board-read --grep "F49"`.
-- The public snapshot was refreshed through the MCP after the F49 update.
-- A dedicated F27-F49 hardening snapshot was generated through the MCP because
+  `board-read --grep "F48"`, `board-read --grep "F49"` and
+  `board-read --grep "F50"`.
+- The public snapshot was refreshed through the MCP after the F50 update.
+- A dedicated F27-F50 hardening snapshot was generated through the MCP because
   the full-board snapshot is useful for orientation but too compressed for
   detailed review.
-- The F27-F49 hardening block and map legend were verified after the F49
-  insertion; `board_read` reports the hardening block above the legend with a
-  160px gap.
+- The F27-F50 hardening block and map legend were verified after the F50
+  insertion; `board_read` reports the hardening block above the legend without
+  overlap.
 
 ## Durable MCP Fallback
 

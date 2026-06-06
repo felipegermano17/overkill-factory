@@ -23,11 +23,14 @@ SECRET_PATTERNS = [
     re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
     re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b"),
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
-    re.compile(r"\b(?:api[_-]?key|secret|token|password|passwd)\b\s*[:=]\s*['\"]?[^'\"\s]{16,}", re.IGNORECASE),
+    re.compile(
+        r"\b(?:api[_-]?key|secret|token|password|passwd)\b\s*(?::(?!:)|=)\s*['\"]?[^'\"\s]{16,}",
+        re.IGNORECASE,
+    ),
 ]
 
 ASSIGNMENT_RE = re.compile(
-    r"\b(?:api[_-]?key|secret|token|password|passwd|private[_-]?key)\b\s*[:=]\s*['\"]?([A-Za-z0-9_./+=-]{24,})",
+    r"\b(?:api[_-]?key|secret|token|password|passwd|private[_-]?key)\b\s*(?::(?!:)|=)\s*['\"]?([A-Za-z0-9_./+=-]{24,})",
     re.IGNORECASE,
 )
 

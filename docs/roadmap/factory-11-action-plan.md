@@ -37,8 +37,9 @@ Still reserved for the next goal:
 - real product pilots;
 - disposable Hermes update smoke;
 - live dashboard/API bypass testing;
-- real remote proof run;
-- real Quasar implementation audit.
+- managed remote proof run;
+- product-specific release/human R4 gate;
+- full production worker graph with every critical lane reusable.
 - product-specific dependency audit/provenance once real runtime dependencies
   exist.
 

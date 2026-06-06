@@ -6,7 +6,6 @@ Score estimate: `9.996/10`
 
 ## Blocking Requirements
 
-- `production_cu_svm_economic`: Run real CU profiling, SVM/client transactions and economic fuzz/property tests on production source.
 - `managed_remote_proof`: Run managed Crabbox broker or Blacksmith Testbox with approved credentials and cleanup receipt.
 - `production_release_human_gate`: Run product-specific R4 human gate, rollback proof, release smoke and monitoring evidence before any production claim.
 - `full_product_specific_worker_graph`: Rerun the same graph on a production product target and require every critical lane to be reusable_for_product=true before practical 10/10 completion.

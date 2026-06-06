@@ -61,6 +61,10 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
   validated the QVG public validation product source under `products/` with a
   clean Docker Quasar build/test, Auditor corpus/checklist coverage and a
   scoped reusable Auditor lane.
+- Production-validation Quasar CU/SVM/economic proof: the QVG public validation
+  product source under `products/` now has a clean QuasarSVM transaction
+  harness with real CU measurements, success/error flows, economic no-mutation
+  checks and scoped reusable evidence for that source hash.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -167,11 +171,12 @@ the compatibility manifest.
 The first production-intent pilot still needs a real raw product paper.
 
 The completion audit currently blocks practical 10/10 because the repository
-does not yet contain production CU/SVM/economic proof, managed remote proof,
-production release human gate evidence or a production product graph with every
-critical lane marked `reusable_for_product=true`. Production-like Product Face
-and production-validation Quasar Auditor are now achieved only for the named
-QVG public validation product lanes.
+does not yet contain managed remote proof, production release human gate
+evidence or a production product graph with every critical lane marked
+`reusable_for_product=true`. Production-like Product Face,
+production-validation Quasar Auditor and production-validation Quasar
+CU/SVM/economic proof are now achieved only for the named QVG public validation
+product lanes.
 
 The QVG full product graph now proves bounded product-specific reconciliation
 across Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,
