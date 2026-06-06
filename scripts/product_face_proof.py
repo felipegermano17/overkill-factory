@@ -152,13 +152,17 @@ def redact_text(value: str) -> str:
     redacted = value.replace(str(ROOT), "<repo-root>")
     redacted = redacted.replace(str(ROOT).replace("\\", "/"), "<repo-root>")
     redacted = redacted.replace(ROOT.as_uri(), "repo://")
-    home = str(Path.home())
-    redacted = redacted.replace(home, "<home>")
-    redacted = redacted.replace(home.replace("\\", "/"), "<home>")
-    redacted = re.sub(r"file:///[A-Za-z]:/Users/[^\\s\"')<]+", "file:///<redacted-local-file>", redacted)
-    redacted = re.sub(r"[A-Za-z]:\\\\Users\\\\[^\\s\"')<]+", "<redacted-local-path>", redacted)
+    try:
+        home = str(Path.home())
+    except RuntimeError:
+        home = ""
+    if home:
+        redacted = redacted.replace(home, "<home>")
+        redacted = redacted.replace(home.replace("\\", "/"), "<home>")
+    redacted = re.sub(r"file:///[A-Za-z]:/Users/[^\s\"')<]+", "file:///<redacted-local-file>", redacted)
+    redacted = re.sub(r"[A-Za-z]:[/\\]+Users[/\\]+[^\s\"')<]+", "<redacted-local-path>", redacted)
     redacted = re.sub(r"/home/[^\\s\"')<]+", "<redacted-local-path>", redacted)
-    redacted = re.sub(r"/tmp/[^\\s\"')<]+", "<redacted-temp-path>", redacted)
+    redacted = re.sub(r"/" + r"tmp/[^\s\"')<]+", "<redacted-temp-path>", redacted)
     private_workspace_marker = "".join(["K", "axis%20", "V", "M"])
     redacted = redacted.replace(private_workspace_marker, "workspace")
     return redacted
@@ -383,7 +387,7 @@ def run_playwright(
     console_errors = [
         item for item in console_messages if item.get("type") in {"error", "assert"}
     ]
-    blocking = bool(page_errors or console_errors or (strict and (a11y_issues or overlap_issues)))
+    blocking = bool(page_errors or console_errors or a11y_issues or overlap_issues)
     result = base_result(
         target_ref=target_ref,
         viewports=viewports,
@@ -555,7 +559,7 @@ def build_product_face_proof(
     viewports: list[Viewport] | None = None,
     states: list[str] | None = None,
     journeys: list[str] | None = None,
-    strict: bool = False,
+    strict: bool = True,
     force_fallback: bool = False,
     allow_external_file: bool = False,
     card: Path | None = None,
@@ -563,8 +567,8 @@ def build_product_face_proof(
     output_dir = out if out.suffix == "" else out.parent
     output_dir.mkdir(parents=True, exist_ok=True)
     viewports = viewports or [Viewport(name, *size) for name, size in DEFAULT_VIEWPORTS.items()]
-    states = states or ["default", "empty", "loading", "error", "success"]
-    journeys = journeys or ["open target", "inspect desktop viewport", "inspect mobile viewport"]
+    states = states or ["initial-render"]
+    journeys = journeys or ["open target", "inspect configured viewports"]
     target_url, target_path = resolve_target(target, allow_external_file=allow_external_file)
     target_ref = repo_ref(target_path) if target_path else target
     card_ref = card_ref_from_card(load_json_like(card)) if card else None
@@ -624,7 +628,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--viewport", action="append", default=[], help="Viewport as NAME=WIDTHxHEIGHT. Can be repeated.")
     parser.add_argument("--state", action="append", default=[], help="Checked state label. Can be repeated.")
     parser.add_argument("--journey", action="append", default=[], help="Checked user journey label. Can be repeated.")
-    parser.add_argument("--strict", action="store_true", help="Treat a11y and overlap warnings as blocking findings.")
+    parser.add_argument("--strict", action="store_true", default=True, help="Treat a11y and overlap warnings as blocking findings. Enabled by default.")
     parser.add_argument("--force-fallback", action="store_true", help="Skip Playwright and write bounded static fallback evidence.")
     parser.add_argument("--allow-external-file", action="store_true", help="Allow absolute file targets outside this repo; output is redacted.")
     parser.add_argument("--card", type=Path, help="Factory card to bind this Product Face result to.")

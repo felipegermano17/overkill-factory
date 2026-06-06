@@ -51,7 +51,7 @@ def worker_result(record_type: str, *, result: str = "PASS") -> dict:
         "findings_summary": "Synthetic passing fixture.",
         "tool_or_profile": "fixture-tool",
         "executed_by": "fixture-runner",
-        "evidence_refs": ["reports/fixture.md"],
+        "evidence_refs": ["README.md"],
         "evidence_kind": "synthetic",
         "reusable_for_product": False,
         "next_action": "none",
@@ -78,9 +78,9 @@ def worker_result(record_type: str, *, result: str = "PASS") -> dict:
             "owner": "fixture-owner",
             "reason": "Synthetic fixture boundary.",
             "expires_at": "2026-12-31T00:00:00+00:00",
-            "reviewer_or_human_gate_ref": "reports/fixture.md",
+            "reviewer_or_human_gate_ref": "README.md",
             "compensating_controls": ["run real worker before production"],
-            "evidence_refs": ["reports/fixture.md"],
+            "evidence_refs": ["README.md"],
         }
     return payload
 
@@ -102,7 +102,7 @@ def human_gate_record() -> dict:
         "risk_owner": "product-owner",
         "security_owner": "security-owner",
         "rollback_owner": "release-owner",
-        "evidence_refs": ["decisions/r3.md"],
+        "evidence_refs": ["README.md"],
         "evidence_kind": "synthetic",
         "reusable_for_product": False,
     }
@@ -296,8 +296,8 @@ class FactoryCtlTest(unittest.TestCase):
                 "viewports": ["1440x900", "390x844"],
                 "checked_states": ["empty", "loading", "success", "error"],
                 "user_journeys_checked": ["dashboard to detail", "settings save"],
-                "a11y": {"keyboard": "pass", "labels": "pass", "contrast": "pass"},
-                "overlap_check": {"desktop": "pass", "mobile": "pass"},
+                "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
+                "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
                 "performance_note": "static validation scenario only",
                 "blocking_findings": False,
                 "evidence_refs": ["reports/product-face.md"],
@@ -306,6 +306,30 @@ class FactoryCtlTest(unittest.TestCase):
         }
 
         self.assertEqual(factoryctl.validate_completion(card, receipt), [])
+
+    def test_product_face_pass_rejects_blocking_or_warning_result(self) -> None:
+        result = {
+            "result": "PASS",
+            "tool_or_profile": "browser-proof-runner",
+            "executed_by": "product-face-validator",
+            "screenshots": ["not-captured: fake"],
+            "viewports": ["1440x900"],
+            "checked_states": ["initial-render"],
+            "user_journeys_checked": ["open target"],
+            "a11y": {"status": "warn", "issues": ["missing label"]},
+            "overlap_check": {"status": "warn", "issues": ["overlap"]},
+            "performance_note": "static validation scenario only",
+            "blocking_findings": True,
+            "evidence_refs": ["reports/product-face.md"],
+            "next_action": "fix UI",
+        }
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn("product_face_result PASS requires blocking_findings=false", errors)
+        self.assertIn("product_face_result screenshots must reference captured artifacts", errors)
+        self.assertIn("product_face_result PASS requires a11y.status=pass", errors)
+        self.assertIn("product_face_result PASS requires overlap_check.status=pass", errors)
 
     def test_auditor_preflight_cannot_claim_pass(self) -> None:
         bad = {
@@ -393,6 +417,74 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(result["scanner_agent"], "codex-security-runner")
         self.assertEqual(result["tool"], "codex-security:scoped-security-scan")
         self.assertIn("Product SOT", result["scope"])
+
+    def test_duplicate_worker_result_records_do_not_satisfy_gate(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md")
+        result = factoryctl.build_worker_result(
+            "codex-security",
+            card,
+            result="PASS",
+            tool_or_profile="codex-security:security-scan",
+            executed_by="codex-security-runner",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="No blocking finding.",
+            next_action="continue",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            results_dir = Path(tmp)
+            (results_dir / "a-security.json").write_text(json.dumps(result), encoding="utf-8")
+            (results_dir / "z-security.json").write_text(json.dumps(result), encoding="utf-8")
+
+            records = factoryctl.collect_worker_result_fields(card, results_dir)
+
+        self.assertFalse(records["security_scan_result"]["valid"])
+        self.assertTrue(
+            any("duplicate worker result records for security_scan_result" in error for error in records["security_scan_result"]["validation_errors"])
+        )
+
+    def test_inline_worker_result_requires_existing_evidence_ref_for_done(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        receipt = {
+            "receipt_five": {
+                "changed": "validated onchain gate",
+                "artifact_paths": ["validation/cards/solana-quasar-r3.md"],
+                "verification_commands": ["python scripts/factoryctl.py gate-report --card validation/cards/solana-quasar-r3.md"],
+                "verification_result": "PASS",
+                "reviewer_required": False,
+                "next_action": "continue",
+            },
+            "kanban_transition_event": {
+                "from_status": "ready",
+                "to_status": "done",
+                "actor": "factory-orchestrator",
+                "worker": "factory-orchestrator",
+                "receipt_refs": ["receipt_five", "security_scan_result"],
+                "artifact_refs": ["validation/cards/solana-quasar-r3.md"],
+            },
+            "security_scan_result": worker_result("security_scan_result"),
+            "auditor_result": worker_result("auditor_result", result="WAIVED"),
+            "independent_review_result": worker_result("independent_review_result"),
+            "human_gate_record": human_gate_record(),
+            "qa_verification_result": worker_result("qa_verification_result"),
+            "autoreview_result": worker_result("autoreview_result"),
+            "security_orchestration_result": worker_result("security_orchestration_result"),
+            "remote_proof_result": worker_result("remote_proof_result"),
+            "handoff_packet_result": worker_result("handoff_packet_result"),
+            "supply_chain_result": worker_result("supply_chain_result"),
+        }
+
+        plan = factoryctl.build_transition_plan(
+            card,
+            ROOT / "validation" / "cards" / "solana-quasar-r3.md",
+            from_status="ready",
+            to_status="done",
+            receipt=receipt,
+        )
+
+        self.assertEqual(plan["transition_action"], "block_transition")
+        self.assertTrue(any("codex-security result is invalid before done" in reason for reason in plan["blocked_reasons"]))
 
     def test_receipt_security_result_requires_hermes_completion_gate_fields(self) -> None:
         bad_receipt = {

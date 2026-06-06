@@ -38,8 +38,29 @@ Observed result:
 - main card final state: `done`.
 
 This proves real Kanban materialization, dependency wiring and worker-result
-reconciliation. It does not prove real Codex Security, Quasar Auditor, release,
+reconciliation. It does not prove real Quasar Auditor, release, production
 Product Face or human approval execution.
+
+## Real Codex Security Scan
+
+Public evidence:
+
+- `validation/security/codex-security-full-scan-2026-06-06.md`
+- `validation/security/codex-security-full-scan-2026-06-06.html`
+- `validation/security/bandit-scripts-adapters.json`
+
+Observed result:
+
+- threat model: generated for the public factory repository;
+- discovery: parent review plus three parallel specialist reviews;
+- fixed during scan: 9 security/readiness issues;
+- remaining reportable findings after fixes: 0;
+- Bandit scope: `scripts` and `adapters`;
+- Bandit findings after fixes: 0.
+
+This proves that Codex Security has now been used as a real factory worker for
+the factory/gate code. It does not prove product-specific security for a future
+real implementation, deploy path, signing path or Quasar source.
 
 ## Real Product Face Proof
 
@@ -123,14 +144,13 @@ checks.
 
 ### Still Not Proven
 
-- Full Codex Security scan with threat model, discovery, validation,
-  attack-path analysis and final report.
 - Production Product Face execution on a real UI. The current proof is browser
   backed but limited to the static Quasar Vault Guard prototype.
 - Real Auditor execution against real Quasar source.
 - Real Solana/Quasar build, tests, compute profiling and fuzz/property tests.
-- Real remote proof in Crabbox/Testbox or a clean container with artifact,
-  cleanup and cost receipt.
+- Provider-backed remote proof in Crabbox/Testbox. Local clean-environment
+  remote proof now passes with sanitized environment, artifact and cleanup
+  receipt.
 - Disposable Hermes update smoke against a real checkout with dashboard/API
   bypass checks.
 - Full automatic Hermes dispatcher execution with real specialist profiles.
@@ -143,28 +163,28 @@ checks.
 
 | Review Area | Score Before Fixes | Main Reason |
 |---|---:|---|
-| Security | 8.8 | Stronger OWASP/AppSec routing and public scans; still needs real Codex Security reports. |
-| Product Face | 9.3 | Browser-backed proof exists for the static prototype; production UI proof and full a11y remain open. |
-| Agent/Hermes Operability | 9.2 | Real Hermes board, worker graph and done enforcement proven; dispatcher hooks still need hard integration. |
+| Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
+| Product Face | 9.4 | Browser-backed proof exists and weak PASS is now blocked; production UI proof and full WCAG remain open. |
+| Agent/Hermes Operability | 9.4 | Real Hermes board, worker graph, stronger evidence reconciliation and done enforcement proven; dashboard/API hooks still need hard integration. |
 | Solana/Quasar/Auditor | 8.6 | Strong routing and live smoke; still no real Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.5/10 for factory process,
+Estimated score after fixes in this pass: 9.7/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires real specialist executions,
-not more synthetic smoke: real Codex Security, real Auditor/Quasar, real remote
-proof, and Hermes transition hooks wired into every bypassable surface.
+not more synthetic smoke: real Auditor/Quasar, provider-backed remote proof, a
+production Product Face target and Hermes transition hooks wired into every
+bypassable surface.
 
 ## Next Validation Gates
 
-1. Run a full Codex Security scan and persist markdown/HTML reports.
-2. Run Product Face proof against the next production-like UI, not only the
+1. Run Product Face proof against the next production-like UI, not only the
    static prototype.
-3. Build or import a small Quasar program and run the real Auditor path.
-4. Add supply-chain CI: workflow permissions, secret scan, dependency audit,
+2. Build or import a small Quasar program and run the real Auditor path.
+3. Add supply-chain CI: workflow permissions, secret scan, dependency audit,
    SBOM/provenance or explicit waiver.
-5. Run remote proof in a clean disposable environment.
-6. Test Hermes update compatibility against a disposable Hermes checkout.
-7. Wire the live adapter into Hermes CLI/dashboard/API transition paths.
-8. Run the same live smoke with real dispatched specialist profiles instead of
+4. Run provider-backed remote proof in Crabbox/Testbox.
+5. Test Hermes update compatibility against a disposable Hermes checkout.
+6. Wire the live adapter into Hermes CLI/dashboard/API transition paths.
+7. Run the same live smoke with real dispatched specialist profiles instead of
    synthetic worker completions.

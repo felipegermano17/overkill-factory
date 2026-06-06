@@ -54,11 +54,26 @@
     },
     "a11y": {
       "type": "object",
-      "minProperties": 1
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail"] }
+      },
+      "additionalProperties": true
     },
     "overlap_check": {
       "type": "object",
-      "minProperties": 1
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail"] }
+      },
+      "additionalProperties": true
+    },
+    "console": {
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail"] }
+      },
+      "additionalProperties": true
     },
     "performance_note": {
       "type": "string",

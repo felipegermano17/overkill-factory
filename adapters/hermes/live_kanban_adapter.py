@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 import re
-import subprocess
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 from typing import Any, Callable
@@ -25,7 +25,7 @@ def default_runner(argv: list[str]) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.setdefault("HOME", str(Path.home()))
     env.setdefault("HERMES_HOME", env["HOME"])
-    return subprocess.run(argv, text=True, capture_output=True, env=env)
+    return subprocess.run(argv, text=True, capture_output=True, env=env)  # nosec B603
 
 
 def run_checked(argv: list[str], runner: Runner = default_runner) -> subprocess.CompletedProcess[str]:
@@ -40,6 +40,10 @@ def run_checked(argv: list[str], runner: Runner = default_runner) -> subprocess.
             + (completed.stderr or "")
         )
     return completed
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def parse_task_id(output: str) -> str:
@@ -62,6 +66,33 @@ def parse_task_id(output: str) -> str:
 
 def hermes_kanban(hermes_bin: str, board: str, *args: str) -> list[str]:
     return [hermes_bin, "kanban", "--board", board, *args]
+
+
+def record_live_binding(
+    *,
+    ledger_path: Path,
+    card_id: str,
+    board: str,
+    main_task_id: str,
+    worker_task_ids: dict[str, str],
+) -> None:
+    ledger = load_json(ledger_path)
+    bindings = ledger.setdefault("live_bindings", {})
+    bindings[card_id] = {
+        "board": board,
+        "main_task_id": main_task_id,
+        "worker_task_ids": worker_task_ids,
+    }
+    write_json(ledger_path, ledger)
+
+
+def validate_live_binding(*, ledger_path: Path, card_id: str, board: str, main_task_id: str) -> None:
+    ledger = load_json(ledger_path)
+    binding = (ledger.get("live_bindings") or {}).get(card_id)
+    if not isinstance(binding, dict):
+        raise RuntimeError(f"missing live binding for card {card_id}; refuse to complete arbitrary Hermes task")
+    if binding.get("board") != board or binding.get("main_task_id") != main_task_id:
+        raise RuntimeError("main task id does not match the live binding for this card and board")
 
 
 def ensure_board(
@@ -201,6 +232,14 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         worker_task_ids[worker_id] = task_id
         run_checked(hermes_kanban(args.hermes_bin, args.board, "link", task_id, main_task_id), runner)
 
+    record_live_binding(
+        ledger_path=ledger_path,
+        card_id=card_id,
+        board=args.board,
+        main_task_id=main_task_id,
+        worker_task_ids=worker_task_ids,
+    )
+
     envelope = {
         "$schema": LIVE_ADAPTER_SCHEMA,
         "mode": "materialize",
@@ -239,7 +278,14 @@ def enforce_done(args: argparse.Namespace, runner: Runner = default_runner) -> d
     if blocked:
         return envelope
     if args.complete_main:
-        metadata = json.dumps(result["plan"].get("receipt") or {}, ensure_ascii=True)
+        card_id = str(result.get("plan", {}).get("event", {}).get("card_id") or args.card.stem)
+        validate_live_binding(
+            ledger_path=args.ledger.resolve(),
+            card_id=card_id,
+            board=args.board,
+            main_task_id=args.main_task_id,
+        )
+        metadata = json.dumps(load_json(args.receipt.resolve()), ensure_ascii=True)
         run_checked(
             hermes_kanban(
                 args.hermes_bin,

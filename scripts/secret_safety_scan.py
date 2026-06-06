@@ -68,12 +68,12 @@ def main() -> int:
         rel = path.relative_to(ROOT).as_posix()
         text = path.read_text(encoding="utf-8", errors="replace")
         for lineno, line in enumerate(text.splitlines(), start=1):
-            if allowed_fixture_line(line):
-                continue
             for pattern in SECRET_PATTERNS:
                 if pattern.search(line):
                     findings.append(f"{rel}:{lineno}: secret-like pattern")
                     break
+            if allowed_fixture_line(line):
+                continue
             for match in ASSIGNMENT_RE.finditer(line):
                 candidate = match.group(1)
                 if len(candidate) >= 32 and entropy(candidate) >= 4.2:

@@ -515,12 +515,25 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
         errors.append("product_face_result missing " + ", ".join(missing_string))
     if str(result.get("result") or "").upper() not in {"PASS", "WAIVED"}:
         errors.append("product_face_result result must be PASS or WAIVED")
+    is_pass = str(result.get("result") or "").upper() == "PASS"
+    if is_pass and result.get("blocking_findings") is not False:
+        errors.append("product_face_result PASS requires blocking_findings=false")
     for field in ("screenshots", "viewports", "checked_states", "user_journeys_checked", "evidence_refs"):
         if not _non_empty_string_list(result.get(field)):
             errors.append(f"product_face_result {field} must be a non-empty string array")
+    screenshots = result.get("screenshots") if isinstance(result.get("screenshots"), list) else []
+    for screenshot in screenshots:
+        normalized = str(screenshot).strip().lower()
+        if normalized.startswith(("not-captured", "missing", "placeholder", "fake")):
+            errors.append("product_face_result screenshots must reference captured artifacts")
     for field in ("a11y", "overlap_check"):
         if not isinstance(result.get(field), dict) or not result.get(field):
             errors.append(f"product_face_result {field} must be an object")
+        elif is_pass and str(result[field].get("status") or "").lower() != "pass":
+            errors.append(f"product_face_result PASS requires {field}.status=pass")
+    console = result.get("console")
+    if is_pass and isinstance(console, dict) and str(console.get("status") or "").lower() != "pass":
+        errors.append("product_face_result PASS requires console.status=pass")
     if result.get("blocking_findings") is True and not str(result.get("next_action") or "").strip():
         errors.append("product_face_result blocking findings require next_action")
     return errors
@@ -576,8 +589,20 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
         errors.append("missing receipt_five fields: " + ", ".join(missing))
     if receipt.get("reviewer_required") is True and not receipt.get("reviewer_result"):
         errors.append("reviewer_result required when reviewer_required=true")
-    if not isinstance(data.get("kanban_transition_event"), dict):
+    transition_event = data.get("kanban_transition_event")
+    if not isinstance(transition_event, dict):
         errors.append("kanban_transition_event object is required")
+    else:
+        required_event = ("from_status", "to_status", "actor", "worker", "receipt_refs", "artifact_refs")
+        missing_event = [field for field in required_event if field not in transition_event]
+        if missing_event:
+            errors.append("kanban_transition_event missing " + ", ".join(missing_event))
+        for field in ("from_status", "to_status", "actor", "worker"):
+            if field in transition_event and not str(transition_event.get(field) or "").strip():
+                errors.append(f"kanban_transition_event.{field} must be non-empty")
+        for field in ("receipt_refs", "artifact_refs"):
+            if field in transition_event and not _non_empty_string_list(transition_event.get(field)):
+                errors.append(f"kanban_transition_event.{field} must be a non-empty string array")
     scan = data.get("security_scan_result")
     if isinstance(scan, dict):
         required = ["scanner_agent", "tool", "result", "findings_summary"]
@@ -646,6 +671,23 @@ def validate_completion(card: dict[str, Any], metadata: dict[str, Any]) -> list[
             errors.append("product_face_result metadata is required for product-facing completion")
         else:
             errors.extend(validate_product_face_result(product_face))
+    return errors
+
+
+def validate_transition_event_matches(
+    metadata: dict[str, Any],
+    *,
+    from_status: str,
+    to_status: str,
+) -> list[str]:
+    event = metadata.get("kanban_transition_event")
+    if not isinstance(event, dict):
+        return []
+    errors: list[str] = []
+    if str(event.get("from_status") or "").strip().lower() != from_status.strip().lower():
+        errors.append("kanban_transition_event.from_status must match requested transition")
+    if str(event.get("to_status") or "").strip().lower() != to_status.strip().lower():
+        errors.append("kanban_transition_event.to_status must match requested transition")
     return errors
 
 
@@ -1104,6 +1146,7 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
     if results_dir is None or not results_dir.exists():
         return {}
     records: dict[str, dict[str, Any]] = {}
+    paths_by_record_type: dict[str, list[str]] = {}
     for path in sorted(results_dir.glob("*.json")):
         try:
             data = load_json_like(path)
@@ -1111,6 +1154,7 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             continue
         record_type = str(data.get("record_type") or "").strip()
         if record_type:
+            paths_by_record_type.setdefault(record_type, []).append(source_card_ref(path))
             expected_worker_id = _worker_id_for_output_field(record_type)
             errors = validate_worker_result_record(
                 data,
@@ -1125,10 +1169,22 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
                 "valid": not errors,
                 "validation_errors": errors,
             }
+    for record_type, paths in paths_by_record_type.items():
+        if len(paths) > 1 and record_type in records:
+            records[record_type]["valid"] = False
+            records[record_type]["validation_errors"] = [
+                *records[record_type].get("validation_errors", []),
+                f"duplicate worker result records for {record_type}: {', '.join(paths)}",
+            ]
     return records
 
 
-def receipt_result_fields(card: dict[str, Any], metadata: dict[str, Any]) -> dict[str, dict[str, Any]]:
+def receipt_result_fields(
+    card: dict[str, Any],
+    metadata: dict[str, Any],
+    *,
+    evidence_root: Path | None = None,
+) -> dict[str, dict[str, Any]]:
     fields: dict[str, dict[str, Any]] = {}
     for worker_id, worker in WORKERS.items():
         value = metadata.get(worker.output_field)
@@ -1138,6 +1194,7 @@ def receipt_result_fields(card: dict[str, Any], metadata: dict[str, Any]) -> dic
                 expected_field=worker.output_field,
                 expected_worker_id=worker_id,
                 card=card,
+                evidence_root=evidence_root,
             )
             fields[worker.output_field] = {
                 "evidence_ref": None,
@@ -1170,7 +1227,7 @@ def build_worker_closure(
     results_dir: Path | None,
 ) -> dict[str, Any]:
     metadata = metadata or {}
-    present_fields = receipt_result_fields(card, metadata)
+    present_fields = receipt_result_fields(card, metadata, evidence_root=ROOT)
     result_files = collect_worker_result_fields(card, results_dir)
     present_fields.update(result_files)
     rows: dict[str, dict[str, Any]] = {}
@@ -1251,6 +1308,13 @@ def build_transition_plan(
             completion = build_worker_closure(card, {}, worker_results_dir)
         else:
             blocked_reasons.extend(validate_completion(card, receipt))
+            blocked_reasons.extend(
+                validate_transition_event_matches(
+                    receipt,
+                    from_status=from_status,
+                    to_status=to_status,
+                )
+            )
             completion = build_worker_closure(card, receipt, worker_results_dir)
             for worker_id in completion["missing_blocking_workers"]:
                 blocked_reasons.append(f"{worker_id} result is required before done")

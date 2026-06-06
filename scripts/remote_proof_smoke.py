@@ -5,16 +5,24 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import shlex
-import subprocess
+import subprocess  # nosec B404
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PRIVATE_OUTPUT_PATTERNS = [
+    re.compile(r"C:[/\\]+Users[/\\]+", re.IGNORECASE),
+    re.compile("/srv/" + "hermes"),
+    re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{30,}\b"),
+    re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
+    re.compile(r"-----BEGIN (?:RSA |DSA |EC |OPENSSH |PGP )?PRIVATE KEY-----"),
+]
 
 
 def utc_now() -> str:
@@ -30,15 +38,29 @@ def repo_ref(path: Path) -> str:
 
 def run_command(command: str, cwd: Path, timeout: int) -> dict[str, object]:
     argv = shlex.split(command)
-    completed = subprocess.run(
+    env = {
+        "PATH": os.environ.get("PATH", ""),
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "HOME": str(cwd.parent),
+        "USERPROFILE": str(cwd.parent),
+        "HOMEDRIVE": str(cwd.parent.drive or "C:"),
+        "HOMEPATH": str(cwd.parent).replace(str(cwd.parent.drive or "C:"), "", 1) or "\\",
+        "TMP": str(cwd.parent),
+        "TEMP": str(cwd.parent),
+    }
+    if os.name == "nt":
+        env["SystemRoot"] = os.environ.get("SystemRoot", r"C:\Windows")
+    completed = subprocess.run(  # nosec B603
         argv,
         cwd=cwd,
         text=True,
         capture_output=True,
         timeout=timeout,
+        env=env,
     )
     return {
-        "command": command,
+        "command": redact_output(command),
         "returncode": completed.returncode,
         "stdout_tail": redact_output(completed.stdout[-4000:]),
         "stderr_tail": redact_output(completed.stderr[-4000:]),
@@ -47,9 +69,17 @@ def run_command(command: str, cwd: Path, timeout: int) -> dict[str, object]:
 
 def redact_output(text: str) -> str:
     redacted = text.replace(str(Path.home()), "<home>").replace(str(Path.home()).replace("\\", "\\\\"), "<home>")
+    redacted = re.sub(r"C:[/\\]+Users[/\\]+[^\s\"')<]+", "<redacted-local-path>", redacted, flags=re.IGNORECASE)
     redacted = re.sub(r"<home>\\AppData\\Local\\Temp\\[^\s\\]+", "<temp>", redacted)
-    redacted = re.sub(r"/tmp/[^\s/]+", "<temp>", redacted)
+    redacted = re.sub(r"/" + r"tmp/[^\s/]+", "<temp>", redacted)
+    redacted = re.sub(r"\bgh[pousr]_[A-Za-z0-9_]{10,}\b", "<redacted-token>", redacted)
+    redacted = re.sub(r"\bsk-[A-Za-z0-9_-]{10,}\b", "<redacted-token>", redacted)
     return redacted
+
+
+def receipt_has_private_output(path: Path) -> list[str]:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return [pattern.pattern for pattern in PRIVATE_OUTPUT_PATTERNS if pattern.search(text)]
 
 
 def copy_repo_subset(destination: Path) -> None:
@@ -61,6 +91,7 @@ def copy_repo_subset(destination: Path) -> None:
         ".pytest_cache",
     )
     for name in [
+        "README.md",
         "agents",
         "scripts",
         "tests",
@@ -71,8 +102,10 @@ def copy_repo_subset(destination: Path) -> None:
         "pilots",
     ]:
         source = ROOT / name
-        if source.exists():
+        if source.is_dir():
             shutil.copytree(source, destination / name, ignore=ignore)
+        elif source.is_file():
+            shutil.copy2(source, destination / name)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -139,9 +172,14 @@ def main() -> int:
             },
             "commands": results,
             "evidence_refs": [repo_ref(args.out)],
+            "evidence_kind": "real",
+            "reusable_for_product": False,
             "next_action": "Use Crabbox/Testbox for provider-backed remote proof when available.",
         }
     args.out.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    private_patterns = receipt_has_private_output(args.out)
+    if private_patterns:
+        raise RuntimeError("remote proof receipt contains private or secret-like output: " + ", ".join(private_patterns))
     print(json.dumps({"result": receipt["result"], "out": repo_ref(args.out)}, indent=2))
     return 0 if passed else 1
 

@@ -109,11 +109,13 @@
       "inspect mobile rendering"
     ],
     "a11y": {
+      "status": "pass",
       "keyboard": "dry static check",
       "labels": "dry static check",
       "contrast": "dry static check"
     },
     "overlap_check": {
+      "status": "pass",
       "desktop": "no blocking overlap reported",
       "mobile": "no blocking overlap reported"
     },

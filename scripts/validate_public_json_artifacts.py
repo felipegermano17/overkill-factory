@@ -3,7 +3,8 @@
 
 This intentionally avoids third-party dependencies so CI can run on a clean
 Python install. It supports the schema features used by this repository:
-required fields, type, const, enum, properties, additionalProperties and arrays.
+required fields, type, const, enum, properties, minProperties,
+additionalProperties and arrays.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ SCHEMA_OPTIONAL = {
     "validation/product-face/console.json",
     "validation/product-face/state.json",
     "validation/product-face/static-summary.json",
+    "validation/security/bandit-scripts-adapters.json",
 }
 
 
@@ -77,6 +79,8 @@ def validate_node(schema: dict[str, Any], value: Any, at: str) -> list[str]:
         errors.append(f"{at}: string shorter than minLength {schema['minLength']}")
     if isinstance(value, list) and "minItems" in schema and len(value) < int(schema["minItems"]):
         errors.append(f"{at}: array shorter than minItems {schema['minItems']}")
+    if isinstance(value, dict) and "minProperties" in schema and len(value) < int(schema["minProperties"]):
+        errors.append(f"{at}: object has fewer properties than minProperties {schema['minProperties']}")
 
     if isinstance(value, dict):
         for field in schema.get("required", []):
@@ -88,6 +92,10 @@ def validate_node(schema: dict[str, Any], value: Any, at: str) -> list[str]:
                 if field in value and isinstance(subschema, dict):
                     errors.extend(validate_node(subschema, value[field], f"{at}.{field}"))
         additional = schema.get("additionalProperties", True)
+        if additional is False and isinstance(properties, dict):
+            for field in value:
+                if field not in properties:
+                    errors.append(f"{at}: additional property {field} is not allowed")
         if isinstance(additional, dict):
             for field, item in value.items():
                 if field not in properties:
@@ -97,6 +105,25 @@ def validate_node(schema: dict[str, Any], value: Any, at: str) -> list[str]:
         for index, item in enumerate(value):
             errors.extend(validate_node(schema["items"], item, f"{at}[{index}]"))
 
+    return errors
+
+
+def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
+    errors: list[str] = []
+    if data.get("record_type") in {"security_scan_result", "auditor_result", "product_face_result"}:
+        if data.get("result") == "WAIVED":
+            waiver = data.get("waiver")
+            if not isinstance(waiver, dict):
+                errors.append(f"{at}: WAIVED worker result requires waiver object")
+            else:
+                for field in ("owner", "reason", "expires_at", "reviewer_or_human_gate_ref"):
+                    if not str(waiver.get(field) or "").strip():
+                        errors.append(f"{at}.waiver: missing required field {field}")
+                for field in ("compensating_controls", "evidence_refs"):
+                    if not isinstance(waiver.get(field), list) or not waiver.get(field):
+                        errors.append(f"{at}.waiver.{field}: expected non-empty array")
+        if data.get("evidence_kind") == "waiver" and data.get("result") != "WAIVED":
+            errors.append(f"{at}: evidence_kind=waiver requires result=WAIVED")
     return errors
 
 
@@ -132,6 +159,8 @@ def main() -> int:
             findings.append(f"{path.relative_to(ROOT).as_posix()}: schema not found for {ref}")
             continue
         for error in validate_node(schema, data, "$"):
+            findings.append(f"{path.relative_to(ROOT).as_posix()}: {error}")
+        for error in validate_domain_rules(data, "$"):
             findings.append(f"{path.relative_to(ROOT).as_posix()}: {error}")
 
     if findings:

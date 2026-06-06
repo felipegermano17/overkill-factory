@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
   "record_type": "remote_proof_result",
-  "created_at": "2026-06-06T06:05:30+00:00",
+  "created_at": "2026-06-06T07:49:04+00:00",
   "worker": {
     "id": "remote-proof-runner",
     "name": "Remote Proof Runner",
@@ -37,8 +37,8 @@
     {
       "command": "python -m unittest discover -s tests -p \"test_*.py\" -q",
       "returncode": 0,
-      "stdout_tail": "Wrote <temp>\\codex-security-request.json\nWrote <temp>\\solana-quasar-auditor-request.json\nWrote <temp>\\independent-reviewer-request.json\nWrote <temp>\\human-gate-clerk-request.json\nWrote <temp>\\factory-orchestrator-request.json\nWrote <temp>\\qa-verification-worker-request.json\nWrote <temp>\\autoreview-gate-request.json\nWrote <temp>\\security-orchestrator-request.json\nWrote <temp>\\crypto-key-management-specialist-request.json\nWrote <temp>\\remote-proof-runner-request.json\nWrote <temp>\\handoff-packer-request.json\nWrote <temp>\\supply-chain-gate-request.json\n",
-      "stderr_tail": "----------------------------------------------------------------------\nRan 34 tests in 0.162s\n\nOK\n"
+      "stdout_tail": "Wrote <temp>\\tmpawu_xw2g\\codex-security-request.json\nWrote <temp>\\tmpawu_xw2g\\solana-quasar-auditor-request.json\nWrote <temp>\\tmpawu_xw2g\\independent-reviewer-request.json\nWrote <temp>\\tmpawu_xw2g\\human-gate-clerk-request.json\nWrote <temp>\\tmpawu_xw2g\\factory-orchestrator-request.json\nWrote <temp>\\tmpawu_xw2g\\qa-verification-worker-request.json\nWrote <temp>\\tmpawu_xw2g\\autoreview-gate-request.json\nWrote <temp>\\tmpawu_xw2g\\security-orchestrator-request.json\nWrote <temp>\\tmpawu_xw2g\\crypto-key-management-specialist-request.json\nWrote <temp>\\tmpawu_xw2g\\remote-proof-runner-request.json\nWrote <temp>\\tmpawu_xw2g\\handoff-packer-request.json\nWrote <temp>\\tmpawu_xw2g\\supply-chain-gate-request.json\n",
+      "stderr_tail": "----------------------------------------------------------------------\nRan 43 tests in 0.396s\n\nOK\n"
     },
     {
       "command": "python adapters/hermes/compatibility-check.py",
@@ -68,7 +68,7 @@
   "evidence_refs": [
     "validation/remote-proof/local-clean-smoke.json"
   ],
-  "next_action": "Use Crabbox/Testbox for provider-backed remote proof when available.",
   "evidence_kind": "real",
-  "reusable_for_product": false
+  "reusable_for_product": false,
+  "next_action": "Use Crabbox/Testbox for provider-backed remote proof when available."
 }

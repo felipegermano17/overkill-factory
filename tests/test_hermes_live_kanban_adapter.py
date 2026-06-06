@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import subprocess
 import sys
 import tempfile
@@ -90,6 +91,19 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         self.assertTrue(result["dry_run"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+
+    def test_complete_main_requires_materialized_live_binding(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.json"
+            ledger.write_text(json.dumps({"tasks": {}}), encoding="utf-8")
+
+            with self.assertRaisesRegex(RuntimeError, "missing live binding"):
+                adapter.validate_live_binding(
+                    ledger_path=ledger,
+                    card_id="CARD-001",
+                    board=TEST_BOARD,
+                    main_task_id="t_" + "deadbeef",
+                )
 
 
 if __name__ == "__main__":
