@@ -1,0 +1,112 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/quasar-property-proof.schema.json",
+  "type": "object",
+  "required": [
+    "$schema",
+    "result",
+    "proof_kind",
+    "created_at",
+    "source_target",
+    "runtime_proof_ref",
+    "property_fuzz_coverage",
+    "compute_unit_profile",
+    "svm_or_client_flow_coverage",
+    "evidence_refs",
+    "evidence_kind",
+    "reusable_for_product",
+    "policy_decision"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "result": {
+      "enum": ["PASS", "FAIL"]
+    },
+    "proof_kind": {
+      "const": "product_like_quasar_cu_fuzz_property"
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "source_target": {
+      "type": "string",
+      "minLength": 3
+    },
+    "runtime_proof_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "property_fuzz_coverage": {
+      "type": "object",
+      "required": ["total_cases", "cases"],
+      "properties": {
+        "total_cases": {
+          "type": "integer"
+        },
+        "cases": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "compute_unit_profile": {
+      "type": "object",
+      "required": ["profile_kind", "real_solana_cu_measured", "instruction_profile"],
+      "properties": {
+        "profile_kind": {
+          "type": "string",
+          "minLength": 3
+        },
+        "real_solana_cu_measured": {
+          "type": "boolean"
+        },
+        "instruction_profile": {
+          "type": "object",
+          "minProperties": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "svm_or_client_flow_coverage": {
+      "type": "object",
+      "required": ["quasar_test_passed", "flows", "real_svm_transaction_harness"],
+      "properties": {
+        "quasar_test_passed": {
+          "type": "boolean"
+        },
+        "flows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object"
+          }
+        },
+        "real_svm_transaction_harness": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "evidence_kind": {
+      "enum": ["real", "synthetic", "waiver"]
+    },
+    "reusable_for_product": {
+      "type": "boolean"
+    },
+    "policy_decision": {
+      "type": "string",
+      "minLength": 3
+    }
+  },
+  "additionalProperties": true
+}

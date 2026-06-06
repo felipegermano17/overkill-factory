@@ -42,9 +42,11 @@ Public evidence:
 - `validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json`
 - `validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.md`
 - `validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json`
+- `validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json`
 - `validation/quasar-product-like-proof/qvg-product-like-auditor-result.json`
 - `validation/quasar-product-like-proof/qvg-product-like-auditor-report.md`
 - `validation/quasar-product-like-proof/hermes-qvg-code-audit-summary.md`
+- `validation/quasar-product-like-proof/hermes-cu-fuzz-property-summary.md`
 - `validation/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json`
 - `validation/quasar-product-like-proof/product-face/hermes-product-face-summary.md`
 - `validation/quasar-product-like-proof/product-face/screenshots/desktop.png`
@@ -102,6 +104,12 @@ Observed result:
   the QVG product-like Quasar target in Docker, generated a bounded
   `auditor_result audit_mode=code_audit`, validated it with `factoryctl`, and
   closed with `PASS`;
+- product-like CU/fuzz/property dispatch: a real Hermes
+  `solana-quasar-auditor` worker reran the Docker-backed Quasar proof after
+  adding deterministic property tests, verified the runtime proof source hash
+  matched the current source, produced `513` deterministic property/fuzz cases,
+  attached a static/symbolic compute profile and kept
+  `real_solana_cu_measured=false` so production CU remains a separate gate;
 - updated product-like Product Face dispatch: after the Quasar/Auditor evidence
   changed the prototype copy, a real Hermes `product-face` worker reran desktop
   and mobile browser capture on commit `bb03115b77a65caecb557a7e00473cc5742c2ec7`,
@@ -273,6 +281,10 @@ checks.
   Hermes `solana-quasar-auditor` worker in a clean Docker container. The same
   worker cloned `solanabr/Auditor`, generated a bounded code-audit result and
   passed deep `factoryctl.validate_auditor_result` validation.
+- QVG product-like CU/fuzz/property proof now exists and was run by a real
+  Hermes `solana-quasar-auditor` worker. It adds deterministic Rust property
+  tests, source-hash reconciliation with the runtime proof, `513` cases,
+  public JSON validation and an explicit static/symbolic CU boundary.
 - QVG Product Face evidence was rerun after the product-like Quasar/Auditor
   update by a real Hermes `product-face` worker, with fresh desktop/mobile
   screenshots, console/state/report artifacts and repository safety scans.
@@ -294,8 +306,9 @@ checks.
   source now has a bounded code-audit PASS, but production source still needs a
   separate run.
 - Product-specific Solana/Quasar compute profiling, SVM/client flows and
-  fuzz/property tests. Product-like build/test now passes, but production
-  compute/economic safety remains open.
+  fuzz/property tests. Product-like CU/fuzz/property smoke now passes with
+  source-hash reconciliation and `513` deterministic cases, but production real
+  CU measurement, SVM/client transaction flow and economic safety remain open.
 - Managed Crabbox broker or Blacksmith Testbox proof. Crabbox static-SSH remote
   proof now passes, but managed broker/Testbox credentials were not available
   and must not be simulated.
@@ -313,9 +326,9 @@ checks.
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.8 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including the updated product-like audit state; production UI proof and full WCAG remain open. |
 | Agent/Hermes Operability | 9.995 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof and release/human dry-run gate dispatch are now smoke-proven. |
-| Solana/Quasar/Auditor | 9.65 | Product-like Quasar source now builds/tests in Docker and has a bounded Auditor code-audit PASS from a real Hermes worker; production source, CU profiling and fuzz/property tests remain open. |
+| Solana/Quasar/Auditor | 9.72 | Product-like Quasar source now builds/tests in Docker, has bounded Auditor code-audit PASS and product-like CU/fuzz/property smoke from real Hermes workers; production source, real CU/SVM flow and economic fuzz/property tests remain open. |
 
-Estimated score after fixes in this pass: 9.985/10 for factory process,
+Estimated score after fixes in this pass: 9.99/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or

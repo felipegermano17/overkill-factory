@@ -185,6 +185,11 @@ flowchart LR
   F42["F42 Release/Human dry-run PASS"]:::human
   F42D["Hermes real rodou human-gate-clerk e release-ops-worker; dry-run passou, producao ficou bloqueada sem gate R4, rollback, smoke e monitoramento reais."]:::desc
   F42 -.-> F42D
+  F42 --> F43
+
+  F43["F43 Quasar CU/fuzz/property PASS"]:::learning
+  F43D["Hermes solana-quasar-auditor rerodou Quasar em Docker, conferiu hash do source, cobriu 513 casos e marcou CU como simbolico, nao producao."]:::desc
+  F43 -.-> F43D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

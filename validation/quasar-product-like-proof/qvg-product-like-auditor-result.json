@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/auditor-result.schema.json",
   "record_type": "auditor_result",
-  "created_at": "2026-06-06T12:37:05+00:00",
+  "created_at": "2026-06-06T13:59:43+00:00",
   "worker": {
     "id": "solana-quasar-auditor",
     "name": "Solana/Quasar Auditor Runner",
@@ -29,7 +29,7 @@
   },
   "result": "PASS",
   "blocking_findings": false,
-  "findings_summary": "Product-like QVG Quasar target built/tested and Auditor corpus checklist coverage was applied with no blocking finding.",
+  "findings_summary": "Product-like QVG Quasar target built/tested, deterministic property/fuzz coverage was applied, and Auditor corpus checklist coverage found no blocking issue.",
   "tool_or_profile": "solanabr/Auditor corpus plus Quasar product-like build/test proof",
   "executed_by": "solana-quasar-auditor",
   "audit_mode": "code_audit",
@@ -388,9 +388,10 @@
     "test_status": "PASS",
     "proof_kind": "containerized_product_like_quasar_build_test",
     "source_target": "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src",
-    "source_sha256": "8c2adb476b639adedfd396e6e86775c2a911cf81d954c8f9ce6ec08a44633576",
+    "source_sha256": "d01eaf425d01e02480620cf1d18a27cc0833ff4246e14462794556ec117d67ed",
     "evidence_refs": [
-      "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json"
+      "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json",
+      "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"
     ]
   },
   "findings": [
@@ -408,6 +409,18 @@
   ],
   "evidence_kind": "real",
   "reusable_for_product": false,
-  "next_action": "Rerun this same Auditor code-audit path on real production Quasar source before product approval.",
-  "boundary": "Real code-audit contract over a public product-like Quasar target. Not reusable for production approval."
+  "next_action": "Rerun this same Auditor code-audit plus real CU/SVM/fuzz/property path on production Quasar source before product approval.",
+  "boundary": "Real code-audit contract over a public product-like Quasar target. CU profile is static/symbolic, not production CU. Not reusable for production approval.",
+  "compute_fuzz_property_proof": {
+    "proof_kind": "product_like_quasar_cu_fuzz_property",
+    "result": "PASS",
+    "runtime_proof_ref": "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json",
+    "total_cases": 513,
+    "compute_profile_kind": "static_symbolic_upper_bound",
+    "real_solana_cu_measured": false,
+    "real_svm_transaction_harness": false,
+    "evidence_refs": [
+      "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"
+    ]
+  }
 }

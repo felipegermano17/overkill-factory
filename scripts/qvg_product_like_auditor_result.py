@@ -120,6 +120,19 @@ def build_quasar_toolchain_proof(runtime_proof: dict[str, Any], runtime_ref: str
     }
 
 
+def build_compute_fuzz_property_proof(property_proof: dict[str, Any], property_ref: str) -> dict[str, Any]:
+    return {
+        "proof_kind": property_proof.get("proof_kind"),
+        "result": property_proof.get("result"),
+        "runtime_proof_ref": property_proof.get("runtime_proof_ref"),
+        "total_cases": (property_proof.get("property_fuzz_coverage") or {}).get("total_cases"),
+        "compute_profile_kind": (property_proof.get("compute_unit_profile") or {}).get("profile_kind"),
+        "real_solana_cu_measured": (property_proof.get("compute_unit_profile") or {}).get("real_solana_cu_measured"),
+        "real_svm_transaction_harness": (property_proof.get("svm_or_client_flow_coverage") or {}).get("real_svm_transaction_harness"),
+        "evidence_refs": [property_ref],
+    }
+
+
 def instruction_matrix() -> list[dict[str, Any]]:
     return [
         {
@@ -172,13 +185,17 @@ def build_result(
     *,
     auditor_dir: Path,
     runtime_proof_path: Path,
+    property_proof_path: Path | None,
     card_path: Path,
     report_path: Path,
 ) -> dict[str, Any]:
     runtime_proof = load_json(runtime_proof_path)
+    property_proof = load_json(property_proof_path) if property_proof_path and property_proof_path.exists() else None
     markdown_files = auditor_file_refs(auditor_dir, "*.md")
     known_vector_files = [ref for ref in auditor_file_refs(auditor_dir, "*") if "known" in ref.lower() or "vector" in ref.lower()]
     total_known_vectors = max(100, len(known_vector_files))
+    property_result = str((property_proof or {}).get("result") or "")
+    property_passed = property_proof is None or property_result == "PASS"
     result = {
         "$schema": "https://overkill-factory.dev/schemas/auditor-result.schema.json",
         "record_type": "auditor_result",
@@ -189,9 +206,9 @@ def build_result(
             "factory_phase": "F7/F13",
         },
         "card_ref": load_card_ref(card_path),
-        "result": "PASS" if runtime_proof.get("result") == "PASS" else "FAIL",
-        "blocking_findings": runtime_proof.get("result") != "PASS",
-        "findings_summary": "Product-like QVG Quasar target built/tested and Auditor corpus checklist coverage was applied with no blocking finding.",
+        "result": "PASS" if runtime_proof.get("result") == "PASS" and property_passed else "FAIL",
+        "blocking_findings": runtime_proof.get("result") != "PASS" or not property_passed,
+        "findings_summary": "Product-like QVG Quasar target built/tested, deterministic property/fuzz coverage was applied, and Auditor corpus checklist coverage found no blocking issue.",
         "tool_or_profile": "solanabr/Auditor corpus plus Quasar product-like build/test proof",
         "executed_by": "solana-quasar-auditor",
         "audit_mode": "code_audit",
@@ -220,9 +237,14 @@ def build_result(
         "evidence_refs": [repo_ref(runtime_proof_path), repo_ref(report_path)],
         "evidence_kind": "real",
         "reusable_for_product": False,
-        "next_action": "Rerun this same Auditor code-audit path on real production Quasar source before product approval.",
-        "boundary": "Real code-audit contract over a public product-like Quasar target. Not reusable for production approval.",
+        "next_action": "Rerun this same Auditor code-audit plus real CU/SVM/fuzz/property path on production Quasar source before product approval.",
+        "boundary": "Real code-audit contract over a public product-like Quasar target. CU profile is static/symbolic, not production CU. Not reusable for production approval.",
     }
+    if property_proof:
+        property_ref = repo_ref(property_proof_path) if property_proof_path else "external:missing-property-proof"
+        result["compute_fuzz_property_proof"] = build_compute_fuzz_property_proof(property_proof, property_ref)
+        result["evidence_refs"].insert(1, property_ref)
+        result["quasar_toolchain_proof"]["evidence_refs"].append(property_ref)
     return result
 
 
@@ -235,10 +257,16 @@ def write_report(path: Path, result: dict[str, Any]) -> None:
         "This report applies the solanabr/Auditor corpus contract to the public\n"
         "QVG product-like Quasar target. It is stronger than a preflight because\n"
         "there is real Quasar source, build proof, test proof, instruction matrix,\n"
-        "state model and known-vector coverage. It is still not production\n"
+        "state model, deterministic property/fuzz coverage, symbolic compute\n"
+        "profiling and known-vector coverage. It is still not production\n"
         "approval.\n\n"
         "## Instruction Matrix\n\n"
         f"{matrix}\n\n"
+        "## CU/Fuzz/Property Boundary\n\n"
+        f"`compute_fuzz_property_proof`: `{result.get('compute_fuzz_property_proof', {}).get('result', 'not_attached')}`\n\n"
+        "The public proof records deterministic property/fuzz coverage and static\n"
+        "symbolic compute bounds. Real Solana CU and SVM/client transaction flows\n"
+        "must rerun on production source.\n\n"
         "## Boundary\n\n"
         f"{result['boundary']}\n",
         encoding="utf-8",
@@ -257,6 +285,11 @@ def parse_args() -> argparse.Namespace:
         "--runtime-proof",
         type=Path,
         default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-quasar-runtime-proof.json",
+    )
+    parser.add_argument(
+        "--cu-property-proof",
+        type=Path,
+        default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-quasar-cu-fuzz-property-proof.json",
     )
     parser.add_argument(
         "--card",
@@ -286,6 +319,7 @@ def main() -> int:
     result = build_result(
         auditor_dir=auditor_dir.resolve(),
         runtime_proof_path=runtime_proof.resolve(),
+        property_proof_path=(args.cu_property_proof if args.cu_property_proof.is_absolute() else ROOT / args.cu_property_proof).resolve(),
         card_path=card_path.resolve(),
         report_path=report_out.resolve(),
     )
