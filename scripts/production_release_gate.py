@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -15,10 +16,10 @@ ROOT = Path(__file__).resolve().parents[1]
 PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
 DEFAULT_OUT = ROOT / "validation" / "production" / "release"
 VALIDATION_COMMANDS = [
-    ["python", "scripts/validate_public_json_artifacts.py"],
-    ["python", "scripts/secret_safety_scan.py"],
-    ["python", "scripts/public_safety_scan.py"],
-    ["python", "scripts/full_product_worker_graph.py", "--require-pass"],
+    [sys.executable, "scripts/validate_public_json_artifacts.py"],
+    [sys.executable, "scripts/secret_safety_scan.py"],
+    [sys.executable, "scripts/public_safety_scan.py"],
+    [sys.executable, "scripts/full_product_worker_graph.py", "--require-pass"],
 ]
 
 
