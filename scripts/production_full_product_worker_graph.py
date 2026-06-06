@@ -22,6 +22,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "factory-orchestrator",
         "path": "validation/hermes-live/multi-profile-dispatch-summary.md",
         "kind": "file",
+        "scope": "supporting",
         "reusable_policy": "supporting",
     },
     {
@@ -29,6 +30,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "product-face",
         "path": "validation/production/product-face/product-face-result.json",
         "record_type": "product_face_result",
+        "scope": "product",
         "reusable_policy": "strict",
     },
     {
@@ -36,6 +38,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "codex-security",
         "path": "validation/security/codex-security-full-scan-2026-06-06.md",
         "kind": "file",
+        "scope": "supporting",
         "reusable_policy": "supporting",
     },
     {
@@ -43,6 +46,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "solana-quasar-auditor",
         "path": "validation/production/quasar/auditor-result.json",
         "record_type": "auditor_result",
+        "scope": "product",
         "reusable_policy": "strict",
     },
     {
@@ -50,6 +54,8 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "solana-quasar-auditor",
         "path": "validation/production/quasar/cu-svm-economic-proof.json",
         "record_type": "cu_svm_economic_proof",
+        "proof_kind": "production_quasar_cu_svm_economic",
+        "scope": "product",
         "reusable_policy": "strict",
     },
     {
@@ -57,6 +63,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "remote-proof-runner",
         "path": "validation/production/remote-proof/managed-testbox-result.json",
         "record_type": "remote_proof_result",
+        "scope": "supporting",
         "reusable_policy": "strict",
     },
     {
@@ -64,6 +71,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "human-gate-clerk",
         "path": "validation/production/release/human-gate-record.json",
         "record_type": "human_gate_record",
+        "scope": "supporting",
         "reusable_policy": "strict",
     },
     {
@@ -71,6 +79,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "release-ops-worker",
         "path": "validation/production/release/release-ops-result.json",
         "record_type": "release_ops_result",
+        "scope": "supporting",
         "reusable_policy": "strict",
     },
     {
@@ -78,6 +87,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "worker_id": "supply-chain-gate",
         "path": "validation/supply-chain/supply-chain-proof.json",
         "record_type": "supply_chain_result",
+        "scope": "supporting",
         "reusable_policy": "supporting",
     },
 )
@@ -147,12 +157,18 @@ def validate_lane(lane: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "lane_id": lane["lane_id"],
+        "scope": lane["scope"],
         "worker_id": lane.get("worker_id"),
         "record_type": lane.get("record_type"),
+        "proof_kind": lane.get("proof_kind"),
+        "receipt_type": None,
         "evidence_ref": rel_path,
-        "reusable_policy": lane.get("reusable_policy"),
+        "card_id": str(data.get("card_ref", {}).get("card_id") or lane["lane_id"]) if data else lane["lane_id"],
         "result": data.get("result") if data else ("PASS" if path.exists() else "FAIL"),
+        "evidence_kind": data.get("evidence_kind") if data else "real",
         "reusable_for_product": bool(data.get("reusable_for_product")) if data else lane.get("reusable_policy") == "supporting",
+        "evidence_ref_count": len(data.get("evidence_refs") or []) if data else 1 if path.exists() else 0,
+        "stale_evidence_refs": [],
         "status": "PASS" if not errors else "FAIL",
         "validation_errors": errors,
     }
@@ -181,8 +197,12 @@ def build_graph() -> dict[str, Any]:
         "completion_claim_allowed": passed,
         "lanes_total": len(lanes),
         "lanes_passed": sum(1 for lane in lanes if lane["status"] == "PASS"),
+        "product_lanes_total": sum(1 for lane in lanes if lane["scope"] == "product"),
+        "supporting_lanes_total": sum(1 for lane in lanes if lane["scope"] == "supporting"),
+        "reusable_for_product_lanes": sum(1 for lane in lanes if lane["reusable_for_product"]),
         "lanes": lanes,
         "blocking_summary": blocking,
+        "production_blockers": blocking or ["none"],
         "evidence_refs": [str(lane["path"]) for lane in LANES],
         "policy_decision": (
             "The public validation product has a reconciled production-scoped worker graph."

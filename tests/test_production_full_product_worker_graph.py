@@ -36,6 +36,7 @@ class ProductionFullProductWorkerGraphTest(unittest.TestCase):
             "worker_id": "remote-proof-runner",
             "path": "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
             "record_type": "remote_proof_result",
+            "scope": "supporting",
             "reusable_policy": "strict",
         }
 

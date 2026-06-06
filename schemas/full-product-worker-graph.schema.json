@@ -45,6 +45,9 @@
     "product_name": {
       "type": "string"
     },
+    "product_target": {
+      "type": "object"
+    },
     "result": {
       "enum": ["PASS", "FAIL"]
     },
