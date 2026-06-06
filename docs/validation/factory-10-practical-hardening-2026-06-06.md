@@ -118,6 +118,20 @@ This is better than an optimistic score because autonomous agents need a hard
 release boundary. A high score can guide prioritization, but it cannot authorize
 production claims without product-specific or provider-backed evidence.
 
+### Bounded Full Product Graph
+
+`scripts/full_product_worker_graph.py` now reconciles QVG as one
+product-specific public validation graph.
+
+It reads Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,
+Independent Review, Human Gate, Release Ops, Supply Chain and Receipt Five
+evidence, then writes `validation/product-specific/qvg-full-product-worker-graph.json`.
+
+This is better than isolated prooflets because a reviewer can see the whole
+factory pass for one product context. It is still not production approval:
+`reusable_for_product=false`, `completion_claim_allowed=false`, and stale
+Receipt Five refs remain visible as `stale_evidence_refs`.
+
 ## Still Not 10/10
 
 - Product-specific Codex Security scans still need to run per real
@@ -138,6 +152,8 @@ production claims without product-specific or provider-backed evidence.
   real implementation.
 - Completion audit now blocks false practical-10 claims, but the blockers it
   names still require real product/provider execution.
+- QVG full product graph now passes as bounded public validation, but production
+  completion still requires a production target with reusable lane evidence.
 - Current Git history still contains old private/internal markers from earlier
   commits; public launch should use an orphan branch, new repository or
   coordinated history rewrite.

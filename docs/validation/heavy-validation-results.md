@@ -63,6 +63,9 @@ Public evidence:
 - `validation/completion/factory-10-completion-audit.json`
 - `validation/completion/factory-10-completion-audit.md`
 - `validation/completion/hermes-completion-audit-summary.md`
+- `validation/product-specific/qvg-full-product-worker-graph.json`
+- `validation/product-specific/qvg-full-product-worker-graph.md`
+- `validation/product-specific/hermes-full-product-worker-graph-summary.md`
 
 Observed result:
 
@@ -139,6 +142,12 @@ Observed result:
   `completion_claim_allowed=false`, confirmed the six remaining blockers, and
   verified that `--require-complete` exits non-zero while public JSON,
   public-safety, secret-safety, unit tests and `git diff --check` pass;
+- full product worker graph dispatch: a real Hermes `independent-reviewer`
+  worker reviewed the QVG graph in a clean public clone, confirmed ten lanes
+  pass, confirmed `reusable_for_product=false`,
+  `completion_claim_allowed=false`, six production blockers, five stale
+  Receipt Five refs preserved as `stale_evidence_refs`, and reran public JSON,
+  public-safety, secret-safety, 74 tests and `git diff --check` with `PASS`;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -325,6 +334,11 @@ checks.
   `10/10` completion claims until production Product Face, production Quasar
   Auditor, production CU/SVM/economic proof, managed remote proof, production
   release human gate evidence and a full product-specific worker graph exist.
+- Full product worker graph proof now exists for QVG as bounded public
+  validation. It reconciles Product Face, Security, Auditor, CU/SVM/economic
+  proof, Remote Proof, Independent Review, Human Gate, Release Ops, Supply
+  Chain and Receipt Five in one graph, while preserving `reusable_for_product`
+  as `false` and keeping stale historical Receipt Five refs visible.
 
 ### Still Not Proven
 
@@ -347,9 +361,10 @@ checks.
 - Future Hermes releases still need the same disposable compatibility smoke
   rerun before an update is accepted.
 - Full multi-specialist Hermes execution on product work. Product Face,
-  Security, Auditor preflight, Remote Proof, Release Ops and Human Gate profile
-  dispatch are proven on public/dry-run pilots, but still need product-specific
-  execution against real release targets before production use.
+  Security, Auditor, Remote Proof, Release Ops, Human Gate and the bounded
+  full-product graph are proven on public/dry-run pilots, but still need
+  production target execution with all critical lanes marked
+  `reusable_for_product=true`.
 - The completion audit correctly blocks a practical `10/10` claim. This is a
   release-safety improvement, not a substitute for clearing the blockers it
   reports.
@@ -360,11 +375,12 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.8 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including the updated product-like audit state; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.997 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof, release/human dry-run, supply-chain gate dispatch and completion-claim blocking are now smoke-proven. |
+| Agent/Hermes Operability | 9.997 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof, release/human dry-run, supply-chain gate dispatch, completion-claim blocking and bounded full-product graph review are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.72 | Product-like Quasar source now builds/tests in Docker, has bounded Auditor code-audit PASS and product-like CU/fuzz/property smoke from real Hermes workers; production source, real CU/SVM flow and economic fuzz/property tests remain open. |
 
 Estimated score after fixes in this pass: 9.992/10 for factory process,
-operability, completion-claim discipline and public repository safety.
+operability, completion-claim discipline, bounded product-graph reconciliation
+and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or
 provider-backed execution, not more public-pilot smoke: production Quasar
@@ -388,3 +404,6 @@ production-scoped human gate evidence.
    targets with real rollback, smoke, monitoring and approval evidence.
 7. Only allow `factory_completion_audit.py --require-complete` to pass after
    the six product-specific/provider-backed blockers have direct evidence.
+8. Promote the bounded QVG graph to a production graph only after a production
+   target exists and every critical lane can truthfully set
+   `reusable_for_product=true`.

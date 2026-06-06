@@ -32,6 +32,7 @@ class FactoryCompletionAuditTests(unittest.TestCase):
         self.assertEqual(by_id["production_product_face"]["status"], "BOUNDED_PUBLIC_PROOF")
         self.assertEqual(by_id["production_quasar_auditor"]["status"], "BOUNDED_PUBLIC_PROOF")
         self.assertEqual(by_id["managed_remote_proof"]["status"], "BOUNDED_PUBLIC_PROOF")
+        self.assertEqual(by_id["full_product_specific_worker_graph"]["status"], "BOUNDED_PUBLIC_PROOF")
 
     def test_require_complete_returns_nonzero_while_blocked(self):
         exit_code = audit.main(["--no-write", "--require-complete"])

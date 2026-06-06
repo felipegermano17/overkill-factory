@@ -47,6 +47,9 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
 - Completion audit guard: Hermes `independent-reviewer` confirmed the public
   evidence is still `NOT_COMPLETE` for practical 10/10 and that
   `--require-complete` blocks until production/provider-backed evidence exists.
+- Bounded full product worker graph evidence: QVG now reconciles ten real lanes
+  into one product-specific public validation graph while preserving
+  `reusable_for_product=false` and `completion_claim_allowed=false`.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -108,6 +111,7 @@ python scripts/factoryctl.py validate-completion --card pilots/quasar-vault-guar
 python scripts/factory_battery.py
 python adapters/hermes/compatibility-check.py
 python scripts/supply_chain_proof.py --check --no-write
+python scripts/full_product_worker_graph.py --require-pass
 python scripts/factory_completion_audit.py
 python scripts/public_safety_scan.py
 python -m unittest discover -s tests -p "test_*.py" -q
@@ -153,7 +157,13 @@ The first production-intent pilot still needs a real raw product paper.
 The completion audit currently blocks practical 10/10 because the repository
 does not yet contain production Product Face, production Quasar Auditor,
 production CU/SVM/economic proof, managed remote proof, production release human
-gate evidence or a full product-specific worker graph.
+gate evidence or a production product graph with every critical lane marked
+`reusable_for_product=true`.
+
+The QVG full product graph now proves bounded product-specific reconciliation
+across Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,
+Independent Review, Human Gate, Release Ops, Supply Chain and Receipt Five. It
+is intentionally not reusable as production approval.
 
 ## Public Repository Safety
 

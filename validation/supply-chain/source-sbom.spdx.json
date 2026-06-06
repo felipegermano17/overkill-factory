@@ -2,13 +2,13 @@
   "$schema": "https://overkill-factory.dev/schemas/spdx-sbom.schema.json",
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-06T15:11:45+00:00",
+    "created": "2026-06-06T15:32:35+00:00",
     "creators": [
       "Tool: scripts/supply_chain_proof.py"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://overkill-factory.dev/sbom/186a1684d965b2251a69c2d612aeba175789bddc10af588a122f1b4c03d9bec3",
+  "documentNamespace": "https://overkill-factory.dev/sbom/56de7536df6f987968485713459eacf2f17286daf2ce3e228984d8c6e086c6d3",
   "files": [
     {
       "SPDXID": "SPDXRef-File-.gitattributes",
@@ -65,7 +65,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "218edfaf85b0a9b74ed252cd962ecf5a7bfd5250464a9b17065c548d943b98b5"
+          "checksumValue": "cd83f489e2171186e711574c58508c23cc6b9cc5288db77060f529ed140ade8e"
         }
       ],
       "fileName": "README.md"
@@ -265,7 +265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "db4cf8785c6962f53afdc0119b4b2b832791ccc31a16cb0c50fb03370a1b84e0"
+          "checksumValue": "2c6534a97305d51ad7ead5419053b9e1f4cb7b15da85d949cf1fdaab71527c5d"
         }
       ],
       "fileName": "docs/maps/factory-10-flow.mmd"
@@ -285,27 +285,27 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "73011405e5a2817d9786b2018e61c5bee9755587956a03f085ffa7c79e680ad1"
+          "checksumValue": "3f438033961861731f0c4cbf2873b92949d29e57d20e5a6dfd6bdd3ebfe9a1b4"
         }
       ],
       "fileName": "docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png"
     },
     {
-      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f45-snapshot.png",
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f46-snapshot.png",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f21f65101afb444a5becbe1946f1912d7be99ba2b25b99511af96ba7bc4086ee"
+          "checksumValue": "1fb43ad093a05d3e2e5f71040d34875c84cfa8a3e3b0b68b9361ff3d87ba9bf0"
         }
       ],
-      "fileName": "docs/maps/overkill-factory-hardening-f27-f45-snapshot.png"
+      "fileName": "docs/maps/overkill-factory-hardening-f27-f46-snapshot.png"
     },
     {
       "SPDXID": "SPDXRef-File-docs-maps-whimsical-board.md",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "96a072bbc6f738b97b8e31c439243a0c5aa1676e65d72db09ae71f5813f24f96"
+          "checksumValue": "4f1c00535faa8c400789d34645aa911848ad678e1df0a666c59066f2447a31ee"
         }
       ],
       "fileName": "docs/maps/whimsical-board.md"
@@ -515,7 +515,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0677a4769c60177b86140f7a6c073be35f9254c8983bf477f70aa8a2f2a488e6"
+          "checksumValue": "4ead9445d4a79691f79d4f19b13108cb25972862e864ea2112f46f4f6f25f745"
         }
       ],
       "fileName": "docs/validation/factory-10-practical-hardening-2026-06-06.md"
@@ -535,7 +535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "1ebc6f0e6cb1e3ee918c64a0ddab353ec9aba94e3f163a4fa5db68e028bb743b"
+          "checksumValue": "b84850c2d55cdb8f9284f4ac30bef276366f2ccfb5f6a7d0b9aec8f27157fbc3"
         }
       ],
       "fileName": "docs/validation/heavy-validation-results.md"
@@ -1481,6 +1481,16 @@
       "fileName": "schemas/factory-completion-audit.schema.json"
     },
     {
+      "SPDXID": "SPDXRef-File-schemas-full-product-worker-graph.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "727ad47f93144340d5155025b31c103e7daa55b1c0161c3f61a0ddabea0d684b"
+        }
+      ],
+      "fileName": "schemas/full-product-worker-graph.schema.json"
+    },
+    {
       "SPDXID": "SPDXRef-File-schemas-gate-report.schema.json",
       "checksums": [
         {
@@ -1685,7 +1695,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ce7434c030693801f7cd369896fd9f0138548f9080f33a6171c76d304830ac6b"
+          "checksumValue": "5b711a015817d68660d1c8211b17d5cffb44378d07e812ce58f121a2345a92ba"
         }
       ],
       "fileName": "scripts/factory_completion_audit.py"
@@ -1699,6 +1709,16 @@
         }
       ],
       "fileName": "scripts/factoryctl.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-full-product-worker-graph.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "44094c212e5a630ceca65a12d63dd0c8651f2c56ffaa6058abd96717709f7976"
+        }
+      ],
+      "fileName": "scripts/full_product_worker_graph.py"
     },
     {
       "SPDXID": "SPDXRef-File-scripts-product-face-proof.py",
@@ -1945,7 +1965,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d467406854d5b2f1ea738728c3d3ba4cebe11fcbf8d1a2315f9d9608dc24c473"
+          "checksumValue": "60c353918ac528fc86be7a913a077225e03c20665dbee1a1c2144bc26b6ea30b"
         }
       ],
       "fileName": "tests/test_factory_completion_audit.py"
@@ -1959,6 +1979,16 @@
         }
       ],
       "fileName": "tests/test_factoryctl.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-full-product-worker-graph.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1f45ac23072668856abf29af2a0103eb10040c12b25adf1796e8a5a03c13cbbd"
+        }
+      ],
+      "fileName": "tests/test_full_product_worker_graph.py"
     },
     {
       "SPDXID": "SPDXRef-File-tests-test-hermes-live-kanban-adapter.py",
@@ -2105,7 +2135,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9ca2f725fd52877c441999d8807649c575a9bc0d0542ecb2a60189e8a74e8a61"
+          "checksumValue": "8b1283e15f1082f3d639a60fd2fdf6ab0706a0108e1df6fc4b48e454a59c74b7"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.json"
@@ -2115,7 +2145,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "df35317b1a5e0be16065af233b144cb3d97b2911a3b2fca33bbd99f48d0cf095"
+          "checksumValue": "bfc218ea8bf88bf02b99f546f3f27e33381e360c627016485414a31a3476ae9d"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.md"
@@ -2859,6 +2889,36 @@
         }
       ],
       "fileName": "validation/product-face/static-summary.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-specific-hermes-full-product-worker-graph-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e87ecdebcfa9dbb33fa3876ac732b4b2bbb92c3ef49517221af26d6c20a29c30"
+        }
+      ],
+      "fileName": "validation/product-specific/hermes-full-product-worker-graph-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-specific-qvg-full-product-worker-graph.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "98da76fac577894c26201e04dce30383f3e71b5c07d7df1c4c5c1a1e529fb057"
+        }
+      ],
+      "fileName": "validation/product-specific/qvg-full-product-worker-graph.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-specific-qvg-full-product-worker-graph.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7737daa685040c2b784daf1ab115d8eda7d7324c0988c1f5eabe8e6bdd1ab232"
+        }
+      ],
+      "fileName": "validation/product-specific/qvg-full-product-worker-graph.md"
     },
     {
       "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-hermes-cu-fuzz-property-summary.md",
@@ -5118,7 +5178,7 @@
       "filesAnalyzed": true,
       "name": "overkill-factory",
       "packageVerificationCode": {
-        "packageVerificationCodeValue": "186a1684d965b2251a69c2d612aeba175789bddc10af588a122f1b4c03d9bec3"
+        "packageVerificationCodeValue": "56de7536df6f987968485713459eacf2f17286daf2ce3e228984d8c6e086c6d3"
       }
     }
   ],

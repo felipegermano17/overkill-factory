@@ -385,6 +385,16 @@ def build_requirements() -> list[dict[str, Any]]:
                 "The goal is a factory that carries a real product through all required workers, not isolated prooflets.",
             )
         )
+    elif public_proof("validation/product-specific/qvg-full-product-worker-graph.json"):
+        requirements.append(
+            bounded_requirement(
+                "full_product_specific_worker_graph",
+                "Full product-specific multi-specialist execution",
+                ["validation/product-specific/qvg-full-product-worker-graph.json"],
+                "The goal is a factory that carries a real product through all required workers, not isolated prooflets.",
+                "Rerun the same graph on a production product target and require every critical lane to be reusable_for_product=true before practical 10/10 completion.",
+            )
+        )
     else:
         requirements.append(
             blocked_requirement(

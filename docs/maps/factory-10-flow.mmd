@@ -200,6 +200,11 @@ flowchart LR
   F45["F45 Completion audit guard"]:::gate
   F45D["Hermes independent-reviewer validou NOT_COMPLETE, bloqueou require-complete e confirmou 6 blockers product-specific/provider-backed."]:::desc
   F45 -.-> F45D
+  F45 --> F46
+
+  F46["F46 Full product graph bounded PASS"]:::learning
+  F46D["Grafo QVG reconciliou 10 lanes reais, preservou stale refs visiveis e manteve reusable_for_product=false sem declarar producao."]:::desc
+  F46 -.-> F46D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

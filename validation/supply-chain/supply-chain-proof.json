@@ -15,7 +15,7 @@
       "opensource"
     ]
   },
-  "created_at": "2026-06-06T15:11:45+00:00",
+  "created_at": "2026-06-06T15:32:35+00:00",
   "evidence_kind": "real",
   "evidence_refs": [
     ".github/workflows/ci.yml",
@@ -40,7 +40,7 @@
       "format": "SPDX-2.3 JSON",
       "path": "validation/supply-chain/source-sbom.spdx.json",
       "scope": "source file inventory excluding generated validation/supply-chain outputs",
-      "sha256": "f39d26e80436759c548cd9314c44ed8578a9644f912a0397b0f20b3a0e0065f9"
+      "sha256": "4c1c41a5099c5259bf7477d0e3710ff97db2c452cf802157fb727770582c0f1e"
     },
     "workflow_security": {
       "findings": [],
