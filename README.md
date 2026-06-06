@@ -44,6 +44,9 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
 - Real supply-chain gate evidence: Hermes `supply-chain-gate` validated
   least-privilege CI permissions, commit-pinned GitHub Actions, public scans,
   source SBOM and unit tests on a clean public clone.
+- Completion audit guard: Hermes `independent-reviewer` confirmed the public
+  evidence is still `NOT_COMPLETE` for practical 10/10 and that
+  `--require-complete` blocks until production/provider-backed evidence exists.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -105,9 +108,15 @@ python scripts/factoryctl.py validate-completion --card pilots/quasar-vault-guar
 python scripts/factory_battery.py
 python adapters/hermes/compatibility-check.py
 python scripts/supply_chain_proof.py --check --no-write
+python scripts/factory_completion_audit.py
 python scripts/public_safety_scan.py
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
+
+For release gating, `python scripts/factory_completion_audit.py --no-write
+--require-complete` is expected to fail until the remaining production and
+provider-backed blockers are cleared. That failure is the guardrail, not a test
+flake.
 
 After a specialist really runs, write structured evidence metadata:
 
@@ -140,6 +149,11 @@ does not prove future Hermes releases will remain compatible without rerunning
 the compatibility manifest.
 
 The first production-intent pilot still needs a real raw product paper.
+
+The completion audit currently blocks practical 10/10 because the repository
+does not yet contain production Product Face, production Quasar Auditor,
+production CU/SVM/economic proof, managed remote proof, production release human
+gate evidence or a full product-specific worker graph.
 
 ## Public Repository Safety
 

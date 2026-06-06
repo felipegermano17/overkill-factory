@@ -2,13 +2,13 @@
   "$schema": "https://overkill-factory.dev/schemas/spdx-sbom.schema.json",
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-06T14:50:44+00:00",
+    "created": "2026-06-06T15:11:45+00:00",
     "creators": [
       "Tool: scripts/supply_chain_proof.py"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://overkill-factory.dev/sbom/b6edeee4681c4ede9c91c2c17fee1aa73c66bbf2b6e888fab564cf900972681d",
+  "documentNamespace": "https://overkill-factory.dev/sbom/186a1684d965b2251a69c2d612aeba175789bddc10af588a122f1b4c03d9bec3",
   "files": [
     {
       "SPDXID": "SPDXRef-File-.gitattributes",
@@ -65,7 +65,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "eee0838b413856025d18f9f7129cebe969c874c33348281aa8e269851bc5c68f"
+          "checksumValue": "218edfaf85b0a9b74ed252cd962ecf5a7bfd5250464a9b17065c548d943b98b5"
         }
       ],
       "fileName": "README.md"
@@ -265,7 +265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "73121739595550f382a529329479a9f460599af6c1af9686073dcaa3d0cc7355"
+          "checksumValue": "db4cf8785c6962f53afdc0119b4b2b832791ccc31a16cb0c50fb03370a1b84e0"
         }
       ],
       "fileName": "docs/maps/factory-10-flow.mmd"
@@ -285,27 +285,27 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "78ba83960af978e404582213b6797e903b9d882cabf19e00f60793eb9a413e90"
+          "checksumValue": "73011405e5a2817d9786b2018e61c5bee9755587956a03f085ffa7c79e680ad1"
         }
       ],
       "fileName": "docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png"
     },
     {
-      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f44-snapshot.png",
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f45-snapshot.png",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0e2ff7624c00e0e7d96a3932606f9f06438d83240ba2f6ee36ff9a864b55a2b1"
+          "checksumValue": "f21f65101afb444a5becbe1946f1912d7be99ba2b25b99511af96ba7bc4086ee"
         }
       ],
-      "fileName": "docs/maps/overkill-factory-hardening-f27-f44-snapshot.png"
+      "fileName": "docs/maps/overkill-factory-hardening-f27-f45-snapshot.png"
     },
     {
       "SPDXID": "SPDXRef-File-docs-maps-whimsical-board.md",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f258dc02f3e80d069004467700c3efcf3840fca56e4f544c36a492fd7247a70e"
+          "checksumValue": "96a072bbc6f738b97b8e31c439243a0c5aa1676e65d72db09ae71f5813f24f96"
         }
       ],
       "fileName": "docs/maps/whimsical-board.md"
@@ -365,7 +365,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a1d01f813f45448fcf74ff8b24a0631fbec8445e3c4fcb1f6d7bef3d0c22ce8e"
+          "checksumValue": "a0633df25e94650e63b39909427bc93af7c3c5a54b249d62d2658ddbbe15ce8e"
         }
       ],
       "fileName": "docs/methodology/overkill-factory-v3-6.md"
@@ -375,7 +375,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "1a3150ff39ecb7db60eade8a0e8bcfb95628ae59393bf2c6eea24012a4582b5e"
+          "checksumValue": "876f3007dea4b1b2558fd433e978c638c1d938b966fd77124475b40f9076a77b"
         }
       ],
       "fileName": "docs/pilots/first-real-product-pilot.md"
@@ -385,7 +385,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "012eff5a8dfed5ce4a0751a4e76b38f4dbcb73ca0df1efa10c120a7b3fbbe780"
+          "checksumValue": "4f9b0d3390b1702f991872609ac8cfc250139aa90ccaa71e60f290f4b637baa5"
         }
       ],
       "fileName": "docs/planning/execution-plan.md"
@@ -395,7 +395,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "44106ae4b3eaa595b8d24287e8e32da8ab91ff8c4a95d596c7dd2ad8e16cccfb"
+          "checksumValue": "604afcb6f6a0b7437889c8e904cf5b8f2865c7317fc2f58c7a6c89a7f8f33878"
         }
       ],
       "fileName": "docs/planning/factory-v3-6-learning-loop.md"
@@ -515,7 +515,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "032ea8e065e37706072230288edf83e3ebf75edfccab6ec8cb488addcec7b4b4"
+          "checksumValue": "0677a4769c60177b86140f7a6c073be35f9254c8983bf477f70aa8a2f2a488e6"
         }
       ],
       "fileName": "docs/validation/factory-10-practical-hardening-2026-06-06.md"
@@ -535,7 +535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "095d75505d3df0510a92f39ee6a74d68054187a290440469ad2f19a993a3b8ff"
+          "checksumValue": "1ebc6f0e6cb1e3ee918c64a0ddab353ec9aba94e3f163a4fa5db68e028bb743b"
         }
       ],
       "fileName": "docs/validation/heavy-validation-results.md"
@@ -665,7 +665,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2703e0cce534f9ffd7c9e4f3533354af33e72a73823d1083f69cd9ab041c62cf"
+          "checksumValue": "5269d7710b278eda9e253714aceb98044c00b053ed96c5169b2418b12f00650b"
         }
       ],
       "fileName": "examples/gate-reports/onchain-card.json"
@@ -675,7 +675,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "70dc3a949858a1f154d08447dc7132fe2f89f8c9debcc49a2e71907f0ec37425"
+          "checksumValue": "b7ce80acbe3b32a88aafb7fcc95ea66c42b749f17ddef82defff4be58b362f0f"
         }
       ],
       "fileName": "examples/gate-reports/product-face-card.json"
@@ -705,7 +705,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "46cbaf1addce71423c7dfe1a9a460cffb24a063730d48ae79532e1cf7846f4e0"
+          "checksumValue": "a4da0494f73edd230a0639c20ca7d66f3778909fbbc48de569cc5a00e6d85b7e"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/autoreview-gate-request.json"
@@ -715,7 +715,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "31d9e3354d0a11385cbe8f3ae591e2b85c82cc12efb891301639463268268c2d"
+          "checksumValue": "704d6d23a788c71ae84dcd94b53d0f3cb07ee33d3c8c55126603f1fdf6e749b7"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/codex-security-request.json"
@@ -725,7 +725,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0de42abcc6a5667c8f7fe242202f15ad978011686bd340d5a33db5951ee6ac8e"
+          "checksumValue": "322e3580f48632986d101f0a151161d0ad9e8c5e83d29de308710dac833c5fd5"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/factory-orchestrator-request.json"
@@ -735,7 +735,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ed28c11771dcaa739f88222f2dc0a0be8cd35b8eaa13e7e95874fe17064d4f22"
+          "checksumValue": "04fa5dfeb93458b78178e9490f87f1e5e0ae7276fba74af3bbba3f92be8cdcac"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/handoff-packer-request.json"
@@ -745,7 +745,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f5824ee81a6746854f005efbb7d8ef595d05418228febb4e6f302c11f12f1d6e"
+          "checksumValue": "2b099b5c675a82d646876a0b105197849c602f4654482d30130da793eb79ded4"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/human-gate-clerk-request.json"
@@ -755,7 +755,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "af48347f4979e3976adade3795187a0deeee6e9e6838e6ceb455fb4e366d781c"
+          "checksumValue": "3fba5cc32bae9ab704ceb6cc6cd89c0ac92b21f18a640c62ca03d13328fedf41"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/independent-reviewer-request.json"
@@ -765,7 +765,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "491bfead00eec579529a659e5e31c2353958d04b16b63f4da500170aee7b1e6a"
+          "checksumValue": "18ef342ecee36e5ba3afda0dd07ec1191cf3cafd44b7537936347320e14bb7f6"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/qa-verification-worker-request.json"
@@ -775,7 +775,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "980048f26fdc8e2af4bc373a8655be9ccad1c58f262d90aed3bdb3e3bc576a9a"
+          "checksumValue": "30772a44965d3b9a9fb0ed992309b3da13fdc58796ed3b58f94d012124abca18"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/remote-proof-runner-request.json"
@@ -785,7 +785,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "de5839f51f8a9b5154cdb385ef248d515e56ad36564c184f3108bc8d8965f3e1"
+          "checksumValue": "09fede3fb8f77b0f403565a2984cbc4123bcc86c3062da77f67d5c831aa0ae00"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/security-orchestrator-request.json"
@@ -795,7 +795,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "45ed51964e05448e2df61940d25b78413f7c6ce6e8a1d661fa64f020ba393d7e"
+          "checksumValue": "40570fb6c756f1a56a754adbfd71bcf46d14fa738abc47b532c6d0d37aa1ec43"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/solana-quasar-auditor-request.json"
@@ -805,7 +805,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fb97d4882530d75a064f664338871c24eb7d53af9ecaa36774c5630a7a8e9b69"
+          "checksumValue": "8d0b721ecbab15518e1b020694180d3b634f84cce7ae13a53b9f6b5659088046"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/source-ledger-worker-request.json"
@@ -815,7 +815,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c55e8cf8218531559e6672c5b19b14d71ec91ddb18ad7595690a0ded5a92d54c"
+          "checksumValue": "b3345d3acf1d0f2766c4437c291c497a090944508f4e6b18c540973ba91ac472"
         }
       ],
       "fileName": "examples/worker-packets/onchain-card/supply-chain-gate-request.json"
@@ -825,7 +825,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "02d1e0b561bf516b9e2d7b08fc997a8f2926bff9d4f8c21e006274e1d96abb96"
+          "checksumValue": "6865d7cc9f4b38b770b4a314cebb4a23da1d10e6c933ccd41b1bc37c0bc43e90"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/appsec-owasp-specialist-request.json"
@@ -835,7 +835,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4dfb51addf46f40ecf5e2cd955faaf0728a2784c43f53003fc396c229b5779c5"
+          "checksumValue": "b791a545a0421a5058679cf7fafd0d397291c9d13803c325c2de32dae1bc24a5"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/autoreview-gate-request.json"
@@ -845,7 +845,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "059cd1a92621046c5d1565627b0f74480023ea17b6852306fb52bcdb9bbaa4c1"
+          "checksumValue": "0dd261f21c44ab4db864641da25ef40d6f07f2a84e237cac03dfe3f5d511164c"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/factory-orchestrator-request.json"
@@ -855,7 +855,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "66b33877efdf73786067dd21f915f85e6493e47c3ee7e182717bb46151420aba"
+          "checksumValue": "a8daaf426e7108f4152987fdf2b26f217945902c19a901f16c3031291068e72e"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/handoff-packer-request.json"
@@ -865,7 +865,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6e399980cbf3604f5f09d3843aaabba59e615a4ba825a6c39555ae035ebd9fb6"
+          "checksumValue": "375fac8fea23478b169da3d0acb6443d19a28b10e3143e4ab4f6b86c8cc6bb06"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/independent-reviewer-request.json"
@@ -875,7 +875,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e7c6951b81290d08d1e4d7428c555329ff79582eca1887367aea12e6b43f650a"
+          "checksumValue": "13e3d335b6bdc96ab340ec1ceb46193a33e2c75c1a167bb57f4aaf962e8b9c8b"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/product-architect-request.json"
@@ -885,7 +885,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a671b414b77d8b6575a790020f353ca2af8bf9c4470f8276ee7d303fa6395ec0"
+          "checksumValue": "5a9d4f21f4152887a8076e48b6a03cbe2df842b8201f8ff1ef8e1a45bf383ef4"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/product-face-request.json"
@@ -895,7 +895,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "dd8b8af9758c234d215cdea7a35578b40c5d1ddbee2b6fe7eac408843e5a7836"
+          "checksumValue": "0682570a0e7e1ed8d59066b63ea2df473cc519a27c6158b1290ddc8aaedd0483"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/qa-verification-worker-request.json"
@@ -905,7 +905,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2c08f6fdbb92c1a2c549b15131d982648d3fd6d4f9367e171cf54c317dc7a538"
+          "checksumValue": "73fe2a843ac3a5bad75749a247f48a5f59bed6c4f11d5ab57ed73c59eafcba8f"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/security-orchestrator-request.json"
@@ -915,7 +915,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fc7c79846cca8887a19d501e587c444924b27a68ad10739cf4d47de17e6d7855"
+          "checksumValue": "e3a364d990316326592d15f3bfa04caf1ff46515e6bcfafacf2e713e48889090"
         }
       ],
       "fileName": "examples/worker-packets/product-face-card/source-ledger-worker-request.json"
@@ -1085,7 +1085,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "cb180f69631d8755124aaa8d820588016866cf1be16d96def752840ec5c20b36"
+          "checksumValue": "45efee6684be94f548205e1e019068857049f338e35df02d3eb8a923b9eca2d2"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/evidence/gate-report-first-slice.json"
@@ -1145,7 +1145,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7ee02c13c13a1a179d0c6a33b2732598da1dbd8249cda6fd78e7fdb758759041"
+          "checksumValue": "ae369aa57f1a1f04b48e20965cf3854731682f234229d3a9e7c283e5798c612e"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/evidence/human-gate-record.json"
@@ -1175,7 +1175,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f4e936336963036e2851ce81cbd8c0c40493d54c608d87b3dc94944caded5d07"
+          "checksumValue": "23f8fca9e62958b782d163f14486d6df1ae1f0cc4f1b37711aef5cbda66aa987"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json"
@@ -1305,7 +1305,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "10a20872c9cd65e1b6713e54f86806df6656d860b55d5a88960b2214196dff5c"
+          "checksumValue": "348de7ebd9b7085ae2a4f93e9ec1018d7755dd9cfd453ff484c7af3f803b6675"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-packets/codex-security-request.json"
@@ -1315,7 +1315,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "37dce17f673f84d2deb079eec5373e867eb91c4c26aa0cc8bb5e58cdfe88f58d"
+          "checksumValue": "b3597537efce12a30f2b3dcc477b0f7ecd8141ae2b3fc48aa89f6f5f000e5da6"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-packets/human-gate-clerk-request.json"
@@ -1325,7 +1325,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ddedb7ebdaa9650f0fc65cfddfa31b5d0cb64aef239ccb17e1832c3ba8cdd376"
+          "checksumValue": "62b98de1a0e71489113625a683429980eb50fc9f414298c908fbd9961b3918d7"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-packets/independent-reviewer-request.json"
@@ -1335,7 +1335,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4ff2be68032949659e4e8ba58da0648513cd1c139cb35776dc60220c1cfe04de"
+          "checksumValue": "f2b9e4ba3c73004e04ea5a2b559c9cef860a6b00b6a1ef651563394512383dec"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-packets/product-face-request.json"
@@ -1345,7 +1345,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "368628c551af99ec976487ab28b0fc19bb9d0969ddab23392d8f344088d17a60"
+          "checksumValue": "b84be8c094fd85b2af67555c8931dd4c982b933858582f33718b0b2688791f41"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-packets/solana-quasar-auditor-request.json"
@@ -1355,7 +1355,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d926749e8685848ddd85a64731c3c5e8eccfbf600791c4c585a1f0b2f1d40538"
+          "checksumValue": "ea1e7c8d00d07a116b02aa2fa6b15fa3de3af5036207ad93d82215c218439783"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-results/auditor-result.json"
@@ -1365,7 +1365,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "1ff9e9b76aae3790225b087e47b93061ce7c024003f3efa29f4155b35bf2f3c7"
+          "checksumValue": "9f77f236dbd9e125f68fdd19d2d5ac29bb303d0b89d8d64948951fad49d3caae"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-results/console.json"
@@ -1375,7 +1375,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6ddcf4bbde87ad5a5162aebf4452f38756c48aa8107937d61a227802a780c15f"
+          "checksumValue": "845f3e307ccb69672e89f5d932186919b88702ebe3c7c5202ebcc094572bb968"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-results/independent-review-result.json"
@@ -1385,7 +1385,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "79d7b68171c5c169ab0bc8a7b74aa4b47c95def6da1a81e0d84eb1a4ae8bc481"
+          "checksumValue": "c11065c76d421c07cefd0cfe8ed7a3676a6c0f6f758796ec0b96e302d9d10521"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-results/product-face-report.md"
@@ -1395,7 +1395,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a02283c6c1a89afe4c47082bdab358707527854272473d8fd2ad8457871a87dd"
+          "checksumValue": "c73d7e1c295fa813375db37a6a6f0c64e782bd37ece506e388b1dd01342ab674"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-results/product-face-result.json"
@@ -1425,7 +1425,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f1296033709a1c540de6e5fd9a3609fbe2d49ae6730718efdd0bdf9351881dfc"
+          "checksumValue": "765090f5d1a9e6521fc0d3109642aa4ba7f07c999b0e3f8bca5bc310c227b377"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-results/security-scan-result.json"
@@ -1435,7 +1435,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "db7a7414c3577e0eb814328980f99e2c9c7ab0642f18414984cc09cc65729cc6"
+          "checksumValue": "d267d9b970da5b13cd0bb68bfc391535c8f194d840e83cd8e5385f516323a6b5"
         }
       ],
       "fileName": "pilots/quasar-vault-guard-test/worker-results/state.json"
@@ -1469,6 +1469,16 @@
         }
       ],
       "fileName": "schemas/factory-card.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-factory-completion-audit.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6e2cb52585995c0e74eb35b853acce767cf9e03a4996ab63731d20f7029657c5"
+        }
+      ],
+      "fileName": "schemas/factory-completion-audit.schema.json"
     },
     {
       "SPDXID": "SPDXRef-File-schemas-gate-report.schema.json",
@@ -1671,6 +1681,16 @@
       "fileName": "scripts/factory_battery.py"
     },
     {
+      "SPDXID": "SPDXRef-File-scripts-factory-completion-audit.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ce7434c030693801f7cd369896fd9f0138548f9080f33a6171c76d304830ac6b"
+        }
+      ],
+      "fileName": "scripts/factory_completion_audit.py"
+    },
+    {
       "SPDXID": "SPDXRef-File-scripts-factoryctl.py",
       "checksums": [
         {
@@ -1795,7 +1815,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "60a32f05a7321a1ec4c0616f736e2e6ba8906bc38b40200c0853ce0f96497fad"
+          "checksumValue": "fa34ffbd8363ced3698de9877efe6a329a588c44f58ef70d94c538947b7281c8"
         }
       ],
       "fileName": "skills/codex/overkill-factory/agents/openai.yaml"
@@ -1875,7 +1895,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e82158f0ef306180fd3ceb358f74e3226047385df587b576554a0ee1a9e32737"
+          "checksumValue": "1339ecdcfbcc04b96d4a72da987ba2f310cc0b0691066c198b4f1fb14f43bf13"
         }
       ],
       "fileName": "templates/human-gate-record.json"
@@ -1919,6 +1939,16 @@
         }
       ],
       "fileName": "templates/v3-6-learning-record.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-factory-completion-audit.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d467406854d5b2f1ea738728c3d3ba4cebe11fcbf8d1a2315f9d9608dc24c473"
+        }
+      ],
+      "fileName": "tests/test_factory_completion_audit.py"
     },
     {
       "SPDXID": "SPDXRef-File-tests-test-factoryctl.py",
@@ -2005,7 +2035,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e31b555e61a972181836080375c951f1350fb64f0b4c4ddff61e913f3789fa47"
+          "checksumValue": "15956dda8d274ea445fc52a869b0f569b9fa1cf96a36fc3c77ffcd55682b645f"
         }
       ],
       "fileName": "validation/battery/factory-battery-results.json"
@@ -2015,7 +2045,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "57aaa36c4a5cfd939c4884468454159be2bbe807ad28699ec26b6639e43343ce"
+          "checksumValue": "84f71ad33b0244a5b3072329300af4f354b14c8e2fad508e4625d1bf59a57b9b"
         }
       ],
       "fileName": "validation/battery/factory-battery-summary.md"
@@ -2071,11 +2101,41 @@
       "fileName": "validation/cards/solana-quasar-r3.md"
     },
     {
+      "SPDXID": "SPDXRef-File-validation-completion-factory-10-completion-audit.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9ca2f725fd52877c441999d8807649c575a9bc0d0542ecb2a60189e8a74e8a61"
+        }
+      ],
+      "fileName": "validation/completion/factory-10-completion-audit.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-completion-factory-10-completion-audit.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "df35317b1a5e0be16065af233b144cb3d97b2911a3b2fca33bbd99f48d0cf095"
+        }
+      ],
+      "fileName": "validation/completion/factory-10-completion-audit.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-completion-hermes-completion-audit-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "226fc83673fc674a7767b44ebe6524ac7261edd538aefed1f1d97a357d29a26d"
+        }
+      ],
+      "fileName": "validation/completion/hermes-completion-audit-summary.md"
+    },
+    {
       "SPDXID": "SPDXRef-File-validation-gate-reports-agentic-browser-memory-r3.json",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6c9a6275a5fc2e9bca10be8a1eb45055a4924d4e8bf2f7d9aa59e4e944314f00"
+          "checksumValue": "7874717ef89ddb427a0d493873c8fd88890afc8baa1f71a5c6a070eb0fa3550b"
         }
       ],
       "fileName": "validation/gate-reports/agentic-browser-memory-r3.json"
@@ -2085,7 +2145,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "076e4e37260118a26274e4fd6c88ed261028c625a65f30682865c70ce09bdc30"
+          "checksumValue": "fe44160e472a2ddc1f59d2e9dfd76e320dac483fd9be0050aed45b1cf689547e"
         }
       ],
       "fileName": "validation/gate-reports/cloud-release-r4.json"
@@ -2095,7 +2155,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3905ca0e462de46a9280a233b4c7b379821820a6633a8b1a047355d7536aa32e"
+          "checksumValue": "f9054a3c4f9ed0768a9c81940173ca6f0f89b83525b8440d5bdf711a2ee3d6a6"
         }
       ],
       "fileName": "validation/gate-reports/product-face-saas-r2.json"
@@ -2105,7 +2165,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "99ccb805de18353dd869a8e0ebdd1c14d50411af3fc3c69ed423266da0dce6e6"
+          "checksumValue": "5ae17ee5bddfe8e92e6388b8218466fefa4193bb97bd0ed2f08f2af07a6fb42c"
         }
       ],
       "fileName": "validation/gate-reports/public-repo-release-r2.json"
@@ -2115,7 +2175,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e83f9baf77f4833ebc0b68af362b02c25f67e28ac6ec3591ad91768d7912ffa1"
+          "checksumValue": "032cc88dc197f6eee036bb6b4d977b73d0081a1863e268992e12b93ec996c1a0"
         }
       ],
       "fileName": "validation/gate-reports/solana-quasar-r3.json"
@@ -2125,7 +2185,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c39df36b47179ea0ebadf0bb70e608136e25e9bf8ec5e8cf94607d33e0da5b72"
+          "checksumValue": "51fe7853964920b4b50289d83a1b6bd63082b9774f3e531ecfa236aca6c866b3"
         }
       ],
       "fileName": "validation/hermes-hook/done-hook-blocked.json"
@@ -2135,7 +2195,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "55aa7b502cde140437631f4079ad40f4fd77a16086ca0ca20d32980994560198"
+          "checksumValue": "4acfc61ac2973e2342c2ed9c5cfdce1be24106db3a45ec967e7a6b2f56d6903d"
         }
       ],
       "fileName": "validation/hermes-hook/ready-hook-result.json"
@@ -2145,7 +2205,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "99941896f74eb8ba47e32001614f94b3e76d8dc432fceb9d199f8603e28ba1e9"
+          "checksumValue": "a05ee66553dbbfd51390526d273c6d3241b683dc9a2abd8239eb620dcaa430d1"
         }
       ],
       "fileName": "validation/hermes-hook/worker-ledger.json"
@@ -2175,7 +2235,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "96b7fa4024906b9226106fab3834e0dfd336f6259d32746e39f8553f9bfa2f69"
+          "checksumValue": "5329d7fc0f4e4fd73a1f6c34bb4543b8a2b84015b0f486b12d963ec3a29609c5"
         }
       ],
       "fileName": "validation/hermes-live/enforce-done-missing-results.json"
@@ -2185,7 +2245,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b027b3d3ab2503ac28c3cb0595270012348b20f65e7e9d8c882c2d77a3f18e6c"
+          "checksumValue": "3bca24753c0cc40995af12d1c93e1e7600e58e38108a215fbba7a0273c65e76f"
         }
       ],
       "fileName": "validation/hermes-live/enforce-done-pass.json"
@@ -2195,7 +2255,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "490d1156b8f779a085f310ba0728c51c3042bff2032a8459d422a5c199cb4c8f"
+          "checksumValue": "362d251ff6119e8f067bfe7ca0d6c45d6bb9fcf2dcb648ba616c28d668933f43"
         }
       ],
       "fileName": "validation/hermes-live/evidence/autoreview-gate.md"
@@ -2205,7 +2265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a959487f8c903d324d279f2b5206548ce51d6e1dc8c9eda6b93e24546e50d680"
+          "checksumValue": "76170eb36b3bf7af3b835c8d742a3e354ebbb4d3a999db65b13b25d49574b293"
         }
       ],
       "fileName": "validation/hermes-live/evidence/codex-security.md"
@@ -2215,7 +2275,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "530316fbac06e7f18d8037e256c7b81e695c1f28ceaa20672a22cd4c03db174f"
+          "checksumValue": "a7274c4edaf4c76fc4b89c560731f7d9569c08e6254b328842bed3bff762f523"
         }
       ],
       "fileName": "validation/hermes-live/evidence/crypto-key-management-specialist.md"
@@ -2225,7 +2285,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5aaccf8388b2c182f782126b335f54c69d96eea989bf6a5609fa6bcca2669453"
+          "checksumValue": "2ce3378e40a08c47bd98b2651abba1d435f240a0524313c9bb4b796611b5f715"
         }
       ],
       "fileName": "validation/hermes-live/evidence/factory-orchestrator.md"
@@ -2235,7 +2295,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4b6e9cb2573548a8e061df634fa8484a5e48d60d9fec88eda0d333fec4b26333"
+          "checksumValue": "f48edbd0ffab2d3f4c14cafb22e878d8f89cbfd41f8b0a23caea3a88e55b57d0"
         }
       ],
       "fileName": "validation/hermes-live/evidence/handoff-packer.md"
@@ -2245,7 +2305,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fff24f652c1563290d994fd3328041329de568c43a177c62461c98301c72030a"
+          "checksumValue": "f04a91e86da4d39923b828d50991382e1c68049d0db146133ec463a2c7ae4907"
         }
       ],
       "fileName": "validation/hermes-live/evidence/human-gate-clerk.md"
@@ -2255,7 +2315,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3b12c01c95bcb929fd7b068f28576d610c34a9a01fe66bf54c34783c9031619f"
+          "checksumValue": "ad13f7bbc98fea6d492ff33c08088195bb078a548543013ef7a89ce8190eedb8"
         }
       ],
       "fileName": "validation/hermes-live/evidence/independent-reviewer.md"
@@ -2265,7 +2325,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "51c5e32ecf3dfe2987fc8373829329ee242215b3d31e28894336027a0f5cf2f2"
+          "checksumValue": "f539d78695c8cf933651fe994e2d8d9e24eb4ad35e79ee85c5053809d24c78b9"
         }
       ],
       "fileName": "validation/hermes-live/evidence/qa-verification-worker.md"
@@ -2275,7 +2335,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "44a874a95660aafd471c4afbf437084d8cea39892f23367c3b608238d8d95230"
+          "checksumValue": "edf48da1feb2118bfd08418b2e31a46496999b5cadbc14a2cee5a70da3494527"
         }
       ],
       "fileName": "validation/hermes-live/evidence/remote-proof-runner.md"
@@ -2285,7 +2345,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6f23dc6f733e443f245ed10c8c24e8db81ff07894a493b857ba85c86309b1383"
+          "checksumValue": "797a3ff2556fb885f024b29221bd049d3029c3735defa2bc2e8cde98945c8365"
         }
       ],
       "fileName": "validation/hermes-live/evidence/security-orchestrator.md"
@@ -2295,7 +2355,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c925b974e134e2cb5e8c7327fc7cb92a84b196247b841050a48ce7f94355dc2e"
+          "checksumValue": "aedcd8c57e1cfa57013df580a74b87c765ccb7a723bd22e6ea9429dc3ff8bea5"
         }
       ],
       "fileName": "validation/hermes-live/evidence/solana-quasar-auditor.md"
@@ -2305,7 +2365,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6d67208097a76497e4d84ab5b7ae22fc88514c09024bb1001cb9d4abaa892a6d"
+          "checksumValue": "353b2afa847b033ef6241e668dd90eed6438958cf1028d14cbe9c99740609742"
         }
       ],
       "fileName": "validation/hermes-live/evidence/supply-chain-gate.md"
@@ -2315,7 +2375,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "550acd4be69aab3cc8572c0ae515ef9195e40ee808c34af8478e166b5712467f"
+          "checksumValue": "574f3b92a9c1e49dac8f527e0db71d0e2646fa728bf3df1633a63065cc2f38c3"
         }
       ],
       "fileName": "validation/hermes-live/live-smoke-summary.md"
@@ -2325,7 +2385,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f9d5a33759c964d7ca355984d7051f767714acabdc75a90cc237bef608fd1a6b"
+          "checksumValue": "5e3f368f3bf378d151700f8604573aada8820054a568954f6da0a7391da5464e"
         }
       ],
       "fileName": "validation/hermes-live/materialize-solana-r3.json"
@@ -2545,7 +2605,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "889c155a962aad1b035a3c41daa144f9a2ff2d34d07c6bc85f1bb262855205be"
+          "checksumValue": "77c7da7d1c040e860c078ab479999e26c69569b59cb8667894558489abcbe041"
         }
       ],
       "fileName": "validation/hermes-live/worker-ledger.json"
@@ -2555,7 +2615,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7e0aa402ab00a38768c047801d39ccff33989b2813e00151a36226b9bb9d7944"
+          "checksumValue": "e1e05802222408566454c1a69f2b9f9395529c3fcd42b5f88ff9ace35e32bc89"
         }
       ],
       "fileName": "validation/hermes-live/worker-result-index.json"
@@ -2565,7 +2625,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3829c89213f92d5b41d9a880fafdc2676afeb8e4c7beb051590643b926b6b506"
+          "checksumValue": "dae522440783bc2da709a7dc463aa2985aca04838d99c58d8ca1651d472e2e6f"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/auditor_result.json"
@@ -2575,7 +2635,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f732dd9d50357d30fe90b442f253fa7ed0c2f098305ecd2be1846329cb91c7b5"
+          "checksumValue": "0ac62c63241ce962bc1a0de895eda8ca5d037b09a6e337d7f68c54f80ff2a0e4"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/autoreview_result.json"
@@ -2585,7 +2645,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "bc0db8fafb04f50dee0c522fddb75f0d5c900d46a60ade277d332344502ce5cb"
+          "checksumValue": "0358e290d05037906dd21001bd4acb6c91071869bf68c702a15d8f06e2a856d0"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/crypto_key_management_result.json"
@@ -2595,7 +2655,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "36726705a5b603f81030429792522e46c39e07940f0472be5f9cdd6a813c06cd"
+          "checksumValue": "bc17cb9dd99231e30f591a7f1fa9e6d0c50593d211e3ce2b2aa8d894335d5110"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/handoff_packet_result.json"
@@ -2605,7 +2665,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7358841cfbe2d89d399a1314d30bf8c9ae3133ed6321990375846440e3043765"
+          "checksumValue": "4a37faa82ea9599ca10ad861f149fe392012c5824ce4ada5db4cc5946a36598b"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/human_gate_record.json"
@@ -2615,7 +2675,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "35375b984c934b327b68f4ad3a1b9b43b7c8f79ef74ca4ca2b9b053846c58c04"
+          "checksumValue": "1b95e655b46272960c77cdaf81f24f6dc020ba09b8febc3d80761bef65d876fa"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/independent_review_result.json"
@@ -2625,7 +2685,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4f8a12d52978f8966c30f2402a10f4deb56f6c83a2566d3ab7abc9d6cb3fcf12"
+          "checksumValue": "7668827b092b5ae5c16a1190219e5c1090c315884dd3e5acb66863bd84ba8a8b"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/orchestration_result.json"
@@ -2635,7 +2695,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "267c485d5140be034a97c2cbc7aadc785380b965b83934a01f6d6ac7fe7b8283"
+          "checksumValue": "633716fa89b05cc8eb91aeb37b646b7ce93c6d7b62286de967d6b2b6718524d9"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/qa_verification_result.json"
@@ -2645,7 +2705,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "57e8c33d4cdafb20082b293a3802e5e4c18e40aa07f270a8dee5a8da39b2e59e"
+          "checksumValue": "a4e26264482f7494f5cc1a78b6f2fb5d80a76739b3255111fe99feaeebc9c94d"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/remote_proof_result.json"
@@ -2655,7 +2715,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fa9a0bd940aef8464e9891e0c69bc5d41a339fc1e2ed75894fe407bcfa4ba6bb"
+          "checksumValue": "0f3d04768068d22d6ac0986ef323ce0fe9e5bab39a6ddc40b04b7bf5ec783b3e"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/security_orchestration_result.json"
@@ -2665,7 +2725,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "70b718a03e8b130be0dc3bb6933c6f0f9457b5e4ff14e555f7d036563f4fd054"
+          "checksumValue": "2b4bdf1e5142c806f51c1d97ba9cfda5e23aa1d94567296a8a3a0008e2c24ba0"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/security_scan_result.json"
@@ -2675,7 +2735,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "250bab0596bb3638bc4f4657b9f6bbee176ad7c972d43c1ec14861cc3ff6e0fb"
+          "checksumValue": "ffd7612d26e79bdf9ff7793d59e33a15acc0b4d3fb73b9afddc494036105b7ca"
         }
       ],
       "fileName": "validation/hermes-live/worker-results/supply_chain_result.json"
@@ -2685,7 +2745,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fbfde0009aa31b1d6ec1b056f8d8cf3d0878685694a5108b95be46ea55d30b53"
+          "checksumValue": "2cc3c904fc0ed47ab040e96dc02b16a9b3995ce2458af5f7b0ea9f50757b14dd"
         }
       ],
       "fileName": "validation/hermes-transition-plans/solana-quasar-r3-done-blocked.json"
@@ -2695,7 +2755,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fe94e6a3718efd7d946c50ad167bcc5756c9a8be6e6071780d60318a2dfaffba"
+          "checksumValue": "e1dc8683536a1c1aeb556132987d2b65ff4ba9f2eab9f1cb92e497531b709875"
         }
       ],
       "fileName": "validation/hermes-transition-plans/solana-quasar-r3-ready.json"
@@ -2705,7 +2765,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "1ff9e9b76aae3790225b087e47b93061ce7c024003f3efa29f4155b35bf2f3c7"
+          "checksumValue": "9f77f236dbd9e125f68fdd19d2d5ac29bb303d0b89d8d64948951fad49d3caae"
         }
       ],
       "fileName": "validation/product-face/console.json"
@@ -2715,7 +2775,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6feeda769668908ea635ce1f7823443435b62fb77a01fb2f0cd736b79a9472a8"
+          "checksumValue": "0fd4f58467a31a5a3fc349d5449c4b1929ae98dc9dfd5dc7954ae6741885d5fc"
         }
       ],
       "fileName": "validation/product-face/fallback-limit.md"
@@ -2745,7 +2805,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9f0a84b4316adb871b532ca50d14c5b22a4e3920f6d7544bf016d135fb3da31b"
+          "checksumValue": "002d52436bb40a7ac5ed2b97a8827c9fb1fa7016a5f4d2908ff5d1aead7315dd"
         }
       ],
       "fileName": "validation/product-face/product-face-report.md"
@@ -2755,7 +2815,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e11cec4424e0af040f8827a04f2c6f3fe12009108b0190ea86cf65bb717d3679"
+          "checksumValue": "fcf77fb7a96ddd7e4b84b12e79e93ded5597a39ff51653db02a49bda4ba1f0ed"
         }
       ],
       "fileName": "validation/product-face/qvg-product-face-result.json"
@@ -2785,7 +2845,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e9d91a06a11545ccaf30336a3914153e50cba918386e05bf676831a65b5b2df8"
+          "checksumValue": "734bc46f5462525ed2327bdd24874ab6d186c057330c9764ff4c332fd9015ad1"
         }
       ],
       "fileName": "validation/product-face/state.json"
@@ -2795,7 +2855,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b6812282ebd00aff07cb01fea462bcb9dc90a2be3234fbcd9770c1cd2c816beb"
+          "checksumValue": "c6ae24c0196237c2972125ff5dd93a522215e3cf445a55245188b36ed3b9f1a3"
         }
       ],
       "fileName": "validation/product-face/static-summary.json"
@@ -2815,7 +2875,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "acbb4e78426e248257a6d541ef2aef191ba5344675d15d14c1fc43fa5ac1aa5c"
+          "checksumValue": "9609ebbc72a8f5cf2922ae71207f247b5aabb590fb5db019d45c0e11ca2f4589"
         }
       ],
       "fileName": "validation/quasar-product-like-proof/hermes-qvg-code-audit-summary.md"
@@ -2915,7 +2975,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e19b73e1021b59ee968e2beb7936f84ce4ba563f465e66b511271ffc604df08b"
+          "checksumValue": "620f78796d02bea1122a7c9ada04b91b06485a5aef4613611d58c4bf5632a119"
         }
       ],
       "fileName": "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"
@@ -3025,7 +3085,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "28a2f5fab12bd182149305981b7237ac9f5b5d0c96097bc83797fb11a9e9715d"
+          "checksumValue": "bc64092f49aef38c4d48972a364f3bc0b9eb4756649e03c6058a2fbec9645a7f"
         }
       ],
       "fileName": "validation/remote-proof/local-clean-smoke.json"
@@ -3035,7 +3095,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ade77c1e680b5ed063e22138ca110a89725075cd568b6fc9fbb558ec3da69de3"
+          "checksumValue": "e9c0635cb1e2e6859ac247dfb44f41e23230f1fb5bdc66039eedaf54958b0c4d"
         }
       ],
       "fileName": "validation/security/bandit-scripts-adapters.json"
@@ -3075,7 +3135,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d31e98abc47dd8706550700a552c06324d5d2ba080fc4f2ca6c2c51b735e2cd5"
+          "checksumValue": "b2bf762295e078a657665cd75dddf9a566265badeb1d5df1522a31c7f63acd1f"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/agentic-ai-security-specialist-request.json"
@@ -3085,7 +3145,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f13a4d197d0487611a1d2639e2bcaf664b934c81bb659a3bfbd76052e6a74cc1"
+          "checksumValue": "6353ea0fc1294440fa17ab82612580574275df04b2f4a8661ceaea25b04b47b8"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/appsec-owasp-specialist-request.json"
@@ -3095,7 +3155,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "01acf1a42ec18b092bc9886389de78a516e1eb4b52aca5f5bb8fb46cd86b5e28"
+          "checksumValue": "4a759c2b64f8a1687675968dc631627eaa87ad8afb3aa028d5f4d0e8f9684c95"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/autoreview-gate-request.json"
@@ -3105,7 +3165,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "76beba4fa42422960fa1b88fb474ce4a8bdfcec0dc3091a23febb561513e21da"
+          "checksumValue": "d085a47a7b4fe3abccfcada97a86e21253a50f661c3c7ce550f17932d2d2e8e4"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/codex-security-request.json"
@@ -3115,7 +3175,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a20e088a07b48fe124bbaf3b65e126ece467004f8307c6cae6ff22657794ed20"
+          "checksumValue": "d94cebf980512ded6b8f27d7f614d8437ab9053e9f1947f56add8a9187c4d14f"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/factory-orchestrator-request.json"
@@ -3125,7 +3185,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f88561a023eb0b1c31a2d46955bb6a20231e0dc6f9a6693833301efd3eb5c974"
+          "checksumValue": "4b21f43183b01ed446c113ae79c4169fe0e817391e575a2dc531ac7d48518a4c"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/handoff-packer-request.json"
@@ -3135,7 +3195,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ff17955656a2d99b1c2c4cc467bb5a59391220e3ffe63b5846af0467c49835fc"
+          "checksumValue": "6f6fcb569ef55e160f9187c22eba17d759f0bd228f5ed81374d1a2a950db1310"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/human-gate-clerk-request.json"
@@ -3145,7 +3205,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "badcc1e84453f349b0a589f7f954e0559547f53408bab24f59b95c3f86fbf601"
+          "checksumValue": "60e55be1a5d40a418ff5757b7a3aefd305ba9adb4b2f792ad94819d535c818a7"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/independent-reviewer-request.json"
@@ -3155,7 +3215,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "db6ef08c345af99f67f7c7f615aca5980fe8317b26b197cf202077d377aa2712"
+          "checksumValue": "669e0e03b61c7428b330db2294440a295af9ec61692308fc9514cefde1419763"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/memory-steward-request.json"
@@ -3165,7 +3225,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d2cf118e5144ef84dbb03d8c685420c893ff4347cc54b30c3742745e0a59ca27"
+          "checksumValue": "65157feaf12a6154e4aff88dd8f8fc90694e0338118f744c526260fe0fd14b12"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/qa-verification-worker-request.json"
@@ -3175,7 +3235,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5be3605949c389ea5788b0b31ffcad99e07ae148da6d3086cad34bcf0d63a367"
+          "checksumValue": "6ab0b057098d91ed790b4a66ded089c532d8bf62fd850601dfc2f949d9335b1c"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/remote-proof-runner-request.json"
@@ -3185,7 +3245,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "49305f4ee12e4fe15075c6619fff7bb50eb5f605d3d585e84881f081aa3eb14f"
+          "checksumValue": "98b588e10dd1ec6a79797f1a8f2d4e7655e71d7f455a7a68fa2fd3b29e0a8533"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/security-orchestrator-request.json"
@@ -3195,7 +3255,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f8d4e19074f92a13045b434b0d936adb125a9666089d6e5cfa23a6fb249e91bd"
+          "checksumValue": "abe59878353b130a472067b63dcc4362aef55660d76b85c2c94789f2c979218e"
         }
       ],
       "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/supply-chain-gate-request.json"
@@ -3205,7 +3265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c2930f389b9d0e0c53a2b5a562d8e31dde5feb9be125cf10ea6de9b00260acd8"
+          "checksumValue": "b4f03276632b905ab4ab1b15e884fb9f68949d20c43246a7ff20d4b292a58b38"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/autoreview-gate-request.json"
@@ -3215,7 +3275,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6f2f6807504c9aee71e4cb4f0912e6b870524d43550e5265ffad7d89edef07ba"
+          "checksumValue": "ff029eb02af5b9e183b63702b37eecaa70301cd58ed0a41c7b452472ab1895dd"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/cloud-infra-security-specialist-request.json"
@@ -3225,7 +3285,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0c677e94f53c8854268bb0e1952b3a05af6d2fd329f1898eda9601d12801f03c"
+          "checksumValue": "766b498b51f6303848ece63c36a071565d9f16efb763ad1373359661a8fb34db"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/codex-security-request.json"
@@ -3235,7 +3295,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d7cc2bbe2524ae4c97af2f03eb6eb03fc872cc72addee282287faae06267c6f4"
+          "checksumValue": "5e2cbbcbc7592c3b4cd3bd43a6d9a2a0e647dccfffaf7fd36fd33bacc290ebaa"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/crypto-key-management-specialist-request.json"
@@ -3245,7 +3305,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "248b03b0e74a28c58d926471536ed4329677d856caa9d2ce5f55837f74c7c9ac"
+          "checksumValue": "aeb0a8f09d8a3ff020eb273cf11fd0cb913c82da672dc2f8e99942005ea8f65c"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/detection-monitoring-worker-request.json"
@@ -3255,7 +3315,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "afceadf2ce3a6c58b72dcdd22cc79b4af33e378567993eabe1f4d7052fefeee8"
+          "checksumValue": "d7520913acb3a6cd54d86758aa804decbdce17c781ab2afeec162b320e83a916"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/factory-orchestrator-request.json"
@@ -3265,7 +3325,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c70d39e98771be1be8408d24cde9361d83894b33b86bd965ec64ca6e09ce10ac"
+          "checksumValue": "4e7a05a95ca05c473a8ee830ae8f1bcc03174e7727ef8a80e3ce6a4103748b4f"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/handoff-packer-request.json"
@@ -3275,7 +3335,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e13de5efed9730fd676978192383850b381d7e18ebe95e407027ff48d2a1921d"
+          "checksumValue": "b40f7e93ee6d62a9fa1e6b9273e55a6f6966604e707d61abaf90b0c225cae209"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/human-gate-clerk-request.json"
@@ -3285,7 +3345,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ea6db4db0014dc5ba20156b6b99cdb259e005168aa75bf4e87793fb734d32e9a"
+          "checksumValue": "3dff62ac43ebd3de401c4c2d3359a0031738af711ec2a5564b4767b29770329f"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/independent-reviewer-request.json"
@@ -3295,7 +3355,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "96f5d51017a4afeeaa2d420519ebc4179711521f6e9ae20cb63996eecac30b57"
+          "checksumValue": "da8609a88198e79f9c849d53cb72863ea10a7c36616052a941d0671b59900a41"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/public-safety-gate-request.json"
@@ -3305,7 +3365,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9a113a8b4843e929900733436fffcc36f9f1a8df106a2daa5c373f38c5e24839"
+          "checksumValue": "4d1ef42f1ec659c1c46ad9fe145c24023fa4593ef30f9415396a2a60d2261d92"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/qa-verification-worker-request.json"
@@ -3315,7 +3375,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "348bde86cad9a8a2a34bf151114aa86142b0123b364f3d9ca3042ec2ea03f95e"
+          "checksumValue": "dc4708bd6d9484a762347b0751583a5a32cdb10edb11c648a4314bfce7f10cb3"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/release-ops-worker-request.json"
@@ -3325,7 +3385,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a782c3321a2814902fff5f364e3fe3b8e2d1cfefd946a7d1ce4018f00bde1158"
+          "checksumValue": "0ef809abc0614052ee9857241b08a6eaefd19c4424d5be2274b622a87ab28cad"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/remote-proof-runner-request.json"
@@ -3335,7 +3395,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "989a07b1ef7477e4bfaee9e8fb8d1ba911d9abe2950611f1ca67c315b93df405"
+          "checksumValue": "7824e7d871207a23b7f79bf2677c977bf8082693e3709bb57eb092c385db168b"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/security-orchestrator-request.json"
@@ -3345,7 +3405,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5eb0643f9675fc84aed28da685885911a7b823ff4c19f709980fa46af196c223"
+          "checksumValue": "c43ff0ab601bee874c2a294e8272b5d910dcf1091b1b474daca86c3522c8ab98"
         }
       ],
       "fileName": "validation/worker-packets-required/cloud-release-r4/supply-chain-gate-request.json"
@@ -3355,7 +3415,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c295e0140282c04a55ce064eabd8fc3a60e7ab4a55aa9ff4ac0d8c37b90622a3"
+          "checksumValue": "9738deafe12c36bd275332311834550c8352d1116f3c10b5d6f54042c9be5a08"
         }
       ],
       "fileName": "validation/worker-packets-required/product-face-saas-r2/appsec-owasp-specialist-request.json"
@@ -3365,7 +3425,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "28b2ad55d2ba4600e021f04aca029a5041d877b4a661e7b44cd9de55527394c1"
+          "checksumValue": "2ce6d1b31dc368b4185fe616649b151537060b9768dc59e8868fcfcd61aafac0"
         }
       ],
       "fileName": "validation/worker-packets-required/product-face-saas-r2/autoreview-gate-request.json"
@@ -3375,7 +3435,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "57b8d5f278bfeba0e83fd3f0e55b8a50fc4a11b29ddc635eff877394726ca1d0"
+          "checksumValue": "26478d241a48ef02f6ac653ae6bae009eb3d548d1b7b4bc36c01e274f279a30f"
         }
       ],
       "fileName": "validation/worker-packets-required/product-face-saas-r2/factory-orchestrator-request.json"
@@ -3385,7 +3445,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "681e77a185f8b6bae4f4571a3c85e5b4d23a87edd4ac0d7333181a331de8a44a"
+          "checksumValue": "c2d0c1d939a0bcf0103197d6be51cee7facaba1d81b88db726895a50f8691230"
         }
       ],
       "fileName": "validation/worker-packets-required/product-face-saas-r2/handoff-packer-request.json"
@@ -3395,7 +3455,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "067caff2ef6650f96f9c6a8e7bbc46307cad7011a6286d132d4f5cddaf18ea19"
+          "checksumValue": "32119fe19a4642eae8cf85d85b48f67a275ee321e4eb2e3a3e4fad2d5e4e0461"
         }
       ],
       "fileName": "validation/worker-packets-required/product-face-saas-r2/independent-reviewer-request.json"
@@ -3405,7 +3465,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fe7cdf2c2803a2a833cbcde5460c9fab29d1add29502e192fe8f33909e91a212"
+          "checksumValue": "c00a2b54edbf77899a5de8ea3a079a58e54b7d819267d11d0cb6ba8996c83348"
         }
       ],
       "fileName": "validation/worker-packets-required/product-face-saas-r2/product-face-request.json"
@@ -3415,7 +3475,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e9245b2fda1b37588e92f76be34c276cc30bb8a0eb1fcf021dcbee33dfb30cf2"
+          "checksumValue": "2c1aff73b4449bc80f73377f8343d32435213b5e500ebd6f6d2d196581b9c50c"
         }
       ],
       "fileName": "validation/worker-packets-required/product-face-saas-r2/qa-verification-worker-request.json"
@@ -3425,7 +3485,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "21dd9497f9ef289435e835fca2c8bd0a0e9176c2d4be5f6d148f482b2de92f12"
+          "checksumValue": "fd3c26bed2273acb02d86986cd236d624d3bf226b92c893844cee6947d1350d5"
         }
       ],
       "fileName": "validation/worker-packets-required/product-face-saas-r2/security-orchestrator-request.json"
@@ -3435,7 +3495,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a16d9f25d5829a8934ae687f8d00b3f54abb6af99f7bcb56a98e878673d48633"
+          "checksumValue": "b0cc7478d8a083fdf1e9ca7139a78270b71b0ec4b661996bda367cfed68f25a8"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/autoreview-gate-request.json"
@@ -3445,7 +3505,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a0b4958f8c709b2e8cadc2bf8b608da4ce85528dcfda5a082057afca608afa41"
+          "checksumValue": "d14e6b4d37fef0565f210b106186bc9c8d23b047d93beb8b02a0a366e9baa475"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/cloud-infra-security-specialist-request.json"
@@ -3455,7 +3515,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9781e1d013a282f243ce534e8c18c0c464b6ddc5097651930f69418d8b356e8e"
+          "checksumValue": "36b4c9afc17d97870a57eb4d1f32e8bc1dc7bb5429f6dc787a1089d75d9a42ab"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/codex-security-request.json"
@@ -3465,7 +3525,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c830bb6769c7386b0d65600d46ced3202e841b9c1519b9c7ec675a2281738c5b"
+          "checksumValue": "54ffcd7fd1b9727df7fedecc99c81adaa6e8603272a4017c65bde77e8214fbbc"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/detection-monitoring-worker-request.json"
@@ -3475,7 +3535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "79790f757139c99071c0672c7ce6efdc65b2a339611451c4985b20d5f9810095"
+          "checksumValue": "add508bbef992b10e079c7fabe62b8af46b6b4312ff32ac5e51cf8c2e85a3bbb"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/docs-os-worker-request.json"
@@ -3485,7 +3545,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5f209112cf7bb7c1cf83a270dde9e66c8f0288378a71605a0526a4ed53eaf27a"
+          "checksumValue": "f6eb13774834a0be4e3d087344fbd0a264b25440781ec95b39bb69df9da26580"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/factory-orchestrator-request.json"
@@ -3495,7 +3555,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "42f458da46eea45dd045197ce52e12ce77b67c048c5ea352ad52281c6f838d0b"
+          "checksumValue": "2ae0102a43832b7beee28c6e2302811776245d78f06c58360ec717c93c5ded35"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/handoff-packer-request.json"
@@ -3505,7 +3565,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6297465999d11bb5451be87e79ab229408534419d2b4ba5a2a7bf56d0a65a860"
+          "checksumValue": "959d47f057e7175a3fbe57aaa25b584fccf89441ecd39c855bb92ff7ab330035"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/human-gate-clerk-request.json"
@@ -3515,7 +3575,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "de1102abe5c8b971aaf9650e8030f8e3761cad53d7dd4ef7fbdc97c79ce7e14e"
+          "checksumValue": "5ff37b0929cada552b135a812147c29b5d380d10cdb8f831303cc019f9833c6a"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/implementation-worker-request.json"
@@ -3525,7 +3585,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d486b318f2724e5498eae74d85b322c906227c48ab20d93a35993ced1c76d5a7"
+          "checksumValue": "9a13dd5d61a9d6f24eeb3803d9dbd6069b839c32f6feb916f10c974656715e64"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/independent-reviewer-request.json"
@@ -3535,7 +3595,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4723bc9507ba01327c63280e201a734f962dfe5ea9eedefedb8cfa203e4ddd5b"
+          "checksumValue": "8a5b53b2ad472d01cb6b095a7653bce45adfde930d4d94456299bb258671f570"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/public-safety-gate-request.json"
@@ -3545,7 +3605,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b0a9d399125be6d57d273f00740c70315de618bcdb1329b85a9152ffa064f8b4"
+          "checksumValue": "185087af77126efb25a66c771ad286f0a1bb6ce4927094d6e19f649d5deda5a6"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/qa-verification-worker-request.json"
@@ -3555,7 +3615,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ca28f49b69e145cd171b31354bdf7201cc4d05d1bd67fdc7e50bfec4254ac9dd"
+          "checksumValue": "52b6248f33a4b39aa975de05a6a57f1fb843855bc3867ec635a6f16c4fa5bbd4"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/release-ops-worker-request.json"
@@ -3565,7 +3625,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4f36b532f33bac7edc761cbf33f202236b10e826644ce63543e6987b48563e00"
+          "checksumValue": "3f2dd5b40a429acc5e8ecedab5df284ff245abbff5b7fa26b7c9006ebe3aa24e"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/security-orchestrator-request.json"
@@ -3575,7 +3635,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4f3ca13c5f1861c50d4714b5af8a442f89be129c636c7aea8b9238638c24c049"
+          "checksumValue": "6f65c401c4ce78d40bf5548abbfcdf618ce46c29bb90ef633a9767a835921c7f"
         }
       ],
       "fileName": "validation/worker-packets-required/public-repo-release-r2/supply-chain-gate-request.json"
@@ -3585,7 +3645,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "09042db4bd3eb750cfad81af98970cf8f33cf728b4d3ab1a8d7e5e209c7a6ae9"
+          "checksumValue": "dc1f66574eabae8c7c7fe2c7a9a13cd2451f394d311e008bc969ac01d7da7bca"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/autoreview-gate-request.json"
@@ -3595,7 +3655,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2719a36ea07d299847e2a67e20026559cc9f8d7f8150c18ef741a9986529f3c4"
+          "checksumValue": "e77b2fe11b36e6ab140e00d397d13034acce4e18246e3c81cd5af7ccdd9eb0ba"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/codex-security-request.json"
@@ -3605,7 +3665,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "56686043cc1455ef65ab03d87cdbc85a57bc1679ed616fdb3310023e37ea062d"
+          "checksumValue": "15f9d255f691b5cb7757453fd9e79c4797ad994f9037d84b33ab5d34bf8de9a1"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/crypto-key-management-specialist-request.json"
@@ -3615,7 +3675,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "cde5ce0e4338bd611a3654872a257d16ba596209c81943baf79c2a23e1c6fcc8"
+          "checksumValue": "d8b82d36794697dc3383e18062fdf6396da8ec9698e5d195d0856b62de1f3588"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/factory-orchestrator-request.json"
@@ -3625,7 +3685,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "78d46207423180d56a7d18df328b5584644e946d34676458d3f4529dd6719961"
+          "checksumValue": "173b632e658e81ea62ba564b716cb17d9d01fad9389a58a2348cecbb9359f945"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/handoff-packer-request.json"
@@ -3635,7 +3695,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4c0348258fdfc480155dce3e002198cf1839c39bcfd20056c73d05b3ea0a2f39"
+          "checksumValue": "9df4d630210120617a6e5e6ec7289dfd2e7fa46fdf696b5b542f750438bd780d"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/human-gate-clerk-request.json"
@@ -3645,7 +3705,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a1184e7d1e4d3611d9f7ad898312a28ff4bd476d11a088b1f3c1458a24bef2e8"
+          "checksumValue": "d0a6ee24862991ac4b8446bd8e200a7185af62e385e47213db69bfce13216718"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/independent-reviewer-request.json"
@@ -3655,7 +3715,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ca02d7146a0cdea9b3b72f26c7fe55a0a4d022914e1fffff1f2b839ca5f9437f"
+          "checksumValue": "de0f2185ee890f1ec2adc0eee50beeb3e1e8ef32f77ebd56e0351dd46cef696a"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/qa-verification-worker-request.json"
@@ -3665,7 +3725,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2cdbf4613fe07615ede671ea3eaf3fd2fc231052f95ab387536d6f4646042e7b"
+          "checksumValue": "55c5f2e33235c0e4856c2361b4fd6233fe7e5d9c8da6c190147f1611cda0631e"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/remote-proof-runner-request.json"
@@ -3675,7 +3735,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "49c740a4ca1250bd14d9edd17c2e28a3e62b63b8984fa7bdaf52e13fe2e0687f"
+          "checksumValue": "b9c32443127e3061ff609e28f3ed915d2a2b361d12b19e6409f9ed481cb0ddec"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/security-orchestrator-request.json"
@@ -3685,7 +3745,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0da5209d3459b3e0121200829d826351ffe63269325606950aca972c0df6b90b"
+          "checksumValue": "105fdc437e40bce6e2e79fa46500c5adab840f4b4065d71275fbdcd1e03d7770"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/solana-quasar-auditor-request.json"
@@ -3695,7 +3755,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "197a997347ae501b1574ba77b392b5a4f1812888942c1cbeba2d463c2d5d3915"
+          "checksumValue": "198ea4dcc630f8ec08e57034a4ca7d655b3f6972290e96e09577e22c94231d54"
         }
       ],
       "fileName": "validation/worker-packets-required/solana-quasar-r3/supply-chain-gate-request.json"
@@ -3705,7 +3765,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "502a62957889f328618ba0c3db236fb5939cc4fb8b055adb2e4868e92a519c94"
+          "checksumValue": "fbe9ac396797723aeba2d919a13325a588f44d634e064de6b67b663259de2621"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/agentic-ai-security-specialist-request.json"
@@ -3715,7 +3775,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7b07f3642d807685154f52dd97acf5b5bb822da5499ff813802326a217aa33b4"
+          "checksumValue": "f53929af195decc056cb7e41702ec1162efb3db6e5433281343cce01db240501"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/appsec-owasp-specialist-request.json"
@@ -3725,7 +3785,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b772a5fdac5c8700328840bdc9c7e97be3f37ef8280c558a7d968463ff3093fc"
+          "checksumValue": "5a1a1d05b9da38ca37f23ed535c061a829514153a452042dba133ca8bd2ba09b"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/autoreview-gate-request.json"
@@ -3735,7 +3795,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "60d440aed1ca464747bae4b922f940cfb1057c45af73dc34103883eeb276657a"
+          "checksumValue": "ea928707d3af3cb13650ce312c7170d40e99739b9ddf30e7569259efac91d1de"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/cloud-infra-security-specialist-request.json"
@@ -3745,7 +3805,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "dca185935a2eda5c7a8ab77302ed62a31d7377d4ec24e36d97308cea59e92991"
+          "checksumValue": "d195cebfaf1eff1313ec05568550baf90649243a85df1f6bc5ecf1763777de01"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/codex-security-request.json"
@@ -3755,7 +3815,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "766fd342979325c563da229f78468235b25c9ecae66b871257a4adb23e2a8060"
+          "checksumValue": "e9bc2cc8a58e04e32cc284239a52bd110c510e1e0a511d5caea362b08ef66283"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/crypto-key-management-specialist-request.json"
@@ -3765,7 +3825,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f360fad5781802c0fd4adf3a4c7452b920a2cabb769077393b6288feda45cc4a"
+          "checksumValue": "b2755a1c58c9981dc4e8e65ac6884a5232485a1e3f1ca4d4536d4fcc487a6583"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/decomposition-planner-request.json"
@@ -3775,7 +3835,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7aa4e951da49dcd03bafba6dcafc2a411f6784484df71750c2216712960beee7"
+          "checksumValue": "428906b95a8f22b755c74fe77e893867c5a1f184fc0cfde567e96657de8b6456"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/detection-monitoring-worker-request.json"
@@ -3785,7 +3845,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4c10b867eb3b933513a2c894a072d3a7c9e62d69ce19c22b9ea154c6670ce4ec"
+          "checksumValue": "1aaf3050d687321f0724e74d434385f8884192bf23911be1eb7a2a78807bdda1"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/docs-os-worker-request.json"
@@ -3795,7 +3855,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2a2936f3b9ac5d57201776119b53899bd6779a99ec9cbbb741f9ddb21fb509e3"
+          "checksumValue": "6c713de29d771fead5ee5a6c0d7685a68fea40bf36c86bd169c291394dd982df"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/factory-orchestrator-request.json"
@@ -3805,7 +3865,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "39a1e9fe4bb2e32b8bdbd2066fcdcb93cec28563d1b488af2effa292de2a3663"
+          "checksumValue": "68df9342b68bf5f73fa6de9bd05f42991192229c0e7d08dde96286756e006418"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/handoff-packer-request.json"
@@ -3815,7 +3875,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "91bf11ef8e375830145ee2ecd2233b164771a2be272d7583ec1f7a65ef95544d"
+          "checksumValue": "3b0ca64b78bb4cc584427ef3eabe748f7f3cfd1468f093ea2aa5af712d5daf3e"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/human-gate-clerk-request.json"
@@ -3825,7 +3885,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fa2b0247d52c29cdea171e91ac25a67b5bc8371249cb4ed4febe9275612c9502"
+          "checksumValue": "f7007f7d5cb4544e815f1e875b3b28319e7cea654dedc82638c67b5842395705"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/implementation-worker-request.json"
@@ -3835,7 +3895,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3d5122644ede766b2d463270da22a9605a2b6e63c4534a10c8b777df6ab1b5f8"
+          "checksumValue": "b74489c7c4998b1666bada4684a282542576a5332ce59149e97fdc280e4cb6c8"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/independent-reviewer-request.json"
@@ -3845,7 +3905,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "86c241038a12dcb4815bb7c60f3bc9b23270c72acaa21ba8252c704db9a3d1de"
+          "checksumValue": "a410e2fca4d219e8fe548c8bf6e0632880c4d240793b9e97c86aa6d432593bc5"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/memory-steward-request.json"
@@ -3855,7 +3915,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "32b4abe8f2404578ec7ef912ec176b90989a7bd4bbbc2da925e6a6d93b68560b"
+          "checksumValue": "0da94a84976058ec7090f905a59e9553f93ae3049c186010995923673e5c00b0"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/product-architect-request.json"
@@ -3865,7 +3925,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4dcfa653f25a185e37a5be280c02c8d4b3fb0be4fdcd8e4f0f61eb55b25ee0c8"
+          "checksumValue": "7164890f5f1376fb053c63264946ab8a13d0e2561f785ad32ea150e107a9809e"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/product-face-request.json"
@@ -3875,7 +3935,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4201f84cf9c4f0f05020497ecdba2ee0f718304f2f5989471f34ce25dc4274c7"
+          "checksumValue": "954d88a61677339be4f50d88d82262043e570780d33588f6d808566dc24f2613"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/product-sot-planner-request.json"
@@ -3885,7 +3945,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6e5e3c4e188db62927dd113dbf2fb0cadc20a924d28d0a380461f059ed6c0083"
+          "checksumValue": "3ddf4940c33054feb5a8d96e481e13df3045a4886bb725795ba94f37ca967c27"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/public-safety-gate-request.json"
@@ -3895,7 +3955,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "85bd15dcf26354512b69b3c1df2fee559670d7fdf7be932ea928caaae25fc633"
+          "checksumValue": "1e430aedcf28a6f10c4d446c2bf4e10caa1cfa11070f1d8746e44d15211dc3bf"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/qa-verification-worker-request.json"
@@ -3905,7 +3965,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a3500b0280f887256fb0333a9fd33ca98f4ab7e0dd98cc2872cbcf4b2c4a0648"
+          "checksumValue": "bcb0f649d37d59fbb4b18b2ba29be3cc1cbf8921d2298e72d4738ef0db961aec"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/release-ops-worker-request.json"
@@ -3915,7 +3975,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "63a9564d8d206d073a47f23060b3d513b10277cdacd811cc0359e0127d2e9541"
+          "checksumValue": "aaec1a1e29478021620e8cb7e45bff20777e84cb5ba80b3e80694dbcc7b2ea2c"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/remote-proof-runner-request.json"
@@ -3925,7 +3985,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d6749c6a49a7d0abf9d584683e2302d66786e49cb719d8769a8e14090c5ce267"
+          "checksumValue": "88e8c718f9267827c4ac4e7ef8caa8c6611a369ba40e614ea6fea0f37a4b1620"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/security-orchestrator-request.json"
@@ -3935,7 +3995,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a24a46f5678b466de02955a83f0b64350aeabf11ae9ac238ce78b65871a2c8d4"
+          "checksumValue": "3ab29c3df96caa7be582bf073ae301dc73ce14e578f1cbc0723455473f14d79b"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/skill-eval-distiller-request.json"
@@ -3945,7 +4005,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "28eca494a50c15749b1f2ee2a1fb68dedf74320a71ffb5f288c00d75d1a0c249"
+          "checksumValue": "3780c9ff18b39436f7a593d13b8152fc1eca3fcc0a28cd029a78a28f6d9e298d"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/solana-quasar-auditor-request.json"
@@ -3955,7 +4015,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "95a1aa070c16f10aaf95d0bf168e366cd769c6b563e35f42c9d514cf0caeff3a"
+          "checksumValue": "8baebcbe41bb448e1a28df0fe8dcfa8a7cf8122429aaa3a914acc4d3c953ad1d"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/source-ledger-worker-request.json"
@@ -3965,7 +4025,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4190c9504033a73b2f5fef4575eadbd25c660fd886fb32cd2ab0d9907c803f7d"
+          "checksumValue": "be5a453c1a801976406d65e98edc2d08d2db7df9ca0c4bf61503782192755c63"
         }
       ],
       "fileName": "validation/worker-packets/agentic-browser-memory-r3/supply-chain-gate-request.json"
@@ -3975,7 +4035,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ea658bbbc90c5aaf933b9bc657c0a35bae3d83d37196a7ba4d3c597ba0991c5e"
+          "checksumValue": "2fa56dd35082a84982d8df15866cdaecb920ae9cd69dba515094b9d35985a0ca"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/agentic-ai-security-specialist-request.json"
@@ -3985,7 +4045,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ced1a382b9b00f1baf98a268b3f9920d1a56e6be7649d76a18cea01f85383e55"
+          "checksumValue": "e6334bb01e2809aaf867b9d483fcd048aee49dea49480acc4e23ce33f4ae06cf"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/appsec-owasp-specialist-request.json"
@@ -3995,7 +4055,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "114dea15eb5ac8b3f7350f665d07923f567a888b3f84f23d11da02ba920878aa"
+          "checksumValue": "cfba0790fd52af68075bc0af9d1fec8cc85edc6c260117d2522480daf7f11487"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/autoreview-gate-request.json"
@@ -4005,7 +4065,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "225cf08531efcccd9e54a781d5f0f39c532168e33f5855a449103293c3b1d79e"
+          "checksumValue": "869f97fe7fdb03f48e4cc00191b177ccfea32d9fb9699024226ec584ea753746"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/cloud-infra-security-specialist-request.json"
@@ -4015,7 +4075,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "16c066264e78719664330ec2c8b5a78477f569f12f13431926ca1247e042414e"
+          "checksumValue": "d24a19281ca7a41767fbe7ecc89bebb1e0f999073bc57eba3f05615dc9c72641"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/codex-security-request.json"
@@ -4025,7 +4085,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "95b52afdf5c4e050338bad4ce198230c190c52805549cc205f95c3dea309fa3f"
+          "checksumValue": "9eebcec5dd488f23ea1122f75818679731c25abc39cd5fb18103f89d1a607f58"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/crypto-key-management-specialist-request.json"
@@ -4035,7 +4095,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ee573bf678fbff830cbd3532c124da8bb94d2c69cb9da7d08f68f791c07271f3"
+          "checksumValue": "28e080ffbadeba0d187de1adf6c91b7a4dea222ad45003240da84ea51ec05fea"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/decomposition-planner-request.json"
@@ -4045,7 +4105,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f78c301fa29ae4adf28f28e125243241976aa43b123e6f3ff23433e1680c48c5"
+          "checksumValue": "76b11c683a5d95695281810be246309e9ca379b193753f3f7fb2ba7d2d486d32"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/detection-monitoring-worker-request.json"
@@ -4055,7 +4115,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "76b1cc0069792b5a44eb106229ab2bc12ee07402995b6d3c692f589fac45cc5b"
+          "checksumValue": "f15ada64708b456891a9bef09f0daef3a19012beee62ee645726543a5a8ece46"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/docs-os-worker-request.json"
@@ -4065,7 +4125,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f690fe4591a3d224f04fe4aa124f3d6e0e32dd414c2e05ca76e14ea34ff1ef83"
+          "checksumValue": "78fb5a178007c8df4396ba3bd6ef9489c8b6ef701b70fa5790d8ea0e303cbc31"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/factory-orchestrator-request.json"
@@ -4075,7 +4135,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c329ca8c474824ff022c4db3da1502f545a8afe7e4c66b3db72a202ef5c2d0fb"
+          "checksumValue": "94d8c9be73a4492b2bf3e910279d7c1ddc8b48ae5ac3b90894d84e05544129bc"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/handoff-packer-request.json"
@@ -4085,7 +4145,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9447354e3d9db4fd2fc042f69b5424a66101979db32301d68a42162414753420"
+          "checksumValue": "9e6b718572002c1bed47b637cec3ff0a43281519646406e2b3da37d70b9d7101"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/human-gate-clerk-request.json"
@@ -4095,7 +4155,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "428e7b37dc1855e6ed8e5f24e2e7f1fd531b1b9ec99614a009d2b301ad7f86f7"
+          "checksumValue": "f85cd6ad2c3d5e1c240c540ac0f49d6ff52dc61fd130aac8b8ab9fc0ac518e9a"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/implementation-worker-request.json"
@@ -4105,7 +4165,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "76602a90067fb5b0508baa5336dff9fad48bdb6644630aa19245f7ee53881b75"
+          "checksumValue": "c7dc21746da5f88ee94ebd0f810918f81160dd588c5ebf968d2bb30084074565"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/independent-reviewer-request.json"
@@ -4115,7 +4175,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "97de511d395b34afd9751f0add0d41d811b5b72cf5940e6bac080fb3f02dbd71"
+          "checksumValue": "bbbc4872fcd7558482e4f9f3a10815d93d022293b0509b3d1add9c166225268c"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/memory-steward-request.json"
@@ -4125,7 +4185,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a6c569f35f6f3e188220b634c8aeddeb8ce343638cbfcf18c318d48ae630ed6c"
+          "checksumValue": "85a11d15b7e21249525d78bb6e1ec218e5f5846311735abc9bff1b454fb03b6a"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/product-architect-request.json"
@@ -4135,7 +4195,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "85f1f08ad71841286bdab158f18465dc8c00e4958ea6e35586d4877f1d72d36a"
+          "checksumValue": "74fb4c0f2cd9ddecc9dc1425f709d57453c9adb4902bbac53b90971f5ee9d5d2"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/product-face-request.json"
@@ -4145,7 +4205,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c4f7944869a21144eb0941ce17f4607529eef1af4ca84d8fe3365f51259ec32a"
+          "checksumValue": "d1a70abc370c680383c79de87adb56b9896328224e83a35e535a8add47158ea6"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/product-sot-planner-request.json"
@@ -4155,7 +4215,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "88110d70e2d198c009be5f41330999409f74b25363c6b386997bfe884e24f4ab"
+          "checksumValue": "d6472874c5940def112c248f7d3fd2e8f2d8ba5d70eab8fcd363c3eecc191493"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/public-safety-gate-request.json"
@@ -4165,7 +4225,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9b25e30e216374d60004cc6486cc160df39b548fa068fe5a14fc1d18299f0ce7"
+          "checksumValue": "1313cd05aa1f4030189b641fbb23943c900c2a9054c084e92f643dee46d02ea6"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/qa-verification-worker-request.json"
@@ -4175,7 +4235,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b38bcaf429cf0eeb0e94de8185c88691080043e6810ea55d06c1784e14d0b274"
+          "checksumValue": "3afc3b9cd8d9e1dadd2c4535a0329db4ca1e456d711864d715a8c3a80e27b545"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/release-ops-worker-request.json"
@@ -4185,7 +4245,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "1579bd1be7b950518393762d8dfeed3bf543a928b63a5e6e225e5b0651f31fc6"
+          "checksumValue": "2df32cc9a3abf32aa27f550486df6301a74eaa2f8a0575fada6be6df22c9aaf9"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/remote-proof-runner-request.json"
@@ -4195,7 +4255,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "61009e37b9989c1ec8e2eb4a522453bf3d064e68df24bf10f21cbfba74fcd3a5"
+          "checksumValue": "689eff48e7f407d3c4c47f8d01c3b5ab177a01f794b853dd7606cdb50308b3d7"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/security-orchestrator-request.json"
@@ -4205,7 +4265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5c84ff0e63b67e27f59c1028f26917247b163eb8736950f418585d72fe91ebc7"
+          "checksumValue": "fb9de7b6a5bcada0ba916f7149b1f6676bd95396e48f23e97797e9bc52ff7ae0"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/skill-eval-distiller-request.json"
@@ -4215,7 +4275,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "521de05c1a240937f6958b863b91a1a43807cb5d8dccd11d9432b495ab81db47"
+          "checksumValue": "ef2ac76fc54064b5f6af7ee18a32990b64fed6349a559c0ca58424b382d992ac"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/solana-quasar-auditor-request.json"
@@ -4225,7 +4285,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "cbf1742a04a3a80b12417f4c46270d92cfa39b1575baf19bd7ba8727f6063772"
+          "checksumValue": "c9d6f138538844bbb91d561388144f8506a68da57ffa1f96577a205525241946"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/source-ledger-worker-request.json"
@@ -4235,7 +4295,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3c224b0255e2322154c47da05f8bc6bcd12ce2fea0d8f2e85edb9c5fe17079b2"
+          "checksumValue": "9d13be463c8fb16c5ba305344857afc92f5528ec2f6c76fbb724d9013c533be6"
         }
       ],
       "fileName": "validation/worker-packets/cloud-release-r4/supply-chain-gate-request.json"
@@ -4245,7 +4305,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b4d6f5e85fc2f00c4e07efe00ac2e0d0a04aa9a4a38b4af46c228d5192a381eb"
+          "checksumValue": "8a15453c078cb2614585081d4e7ab14515d4eb572309668d291adc9be26bf37e"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/agentic-ai-security-specialist-request.json"
@@ -4255,7 +4315,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a20845dccb251741eb7914f5ebb97f2f3f4f399e24c35690017e9f9956e29bff"
+          "checksumValue": "2f73135f19c197e74a502951c082ccc05f139551f454e65c1d7954d3a4bf736f"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/appsec-owasp-specialist-request.json"
@@ -4265,7 +4325,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9127adf1adaaf7306410c77e13ba9c4f50079ff9437d84bdf8c30293321e6a0c"
+          "checksumValue": "c502e4a81f7fc9d0b81f96fa19e3bbe60046e8275ec8af86da6b346e5dd9a757"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/autoreview-gate-request.json"
@@ -4275,7 +4335,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c817034e8b034c008ee5a7a114e84c8ce230624cbda6eb911afc1a884a59a024"
+          "checksumValue": "34291276cb8e538b0c5221e465418faef3fc7da7367ab439db2612679f233b9e"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/cloud-infra-security-specialist-request.json"
@@ -4285,7 +4345,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ebc0a0cd515d5bc624765c66a201d3e0ad9384cd962fe715ad76d6baba2ff04b"
+          "checksumValue": "ad9b2c093f3113acd0311a4925a3e77e837e66c6a86002cd50ce205228999b24"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/codex-security-request.json"
@@ -4295,7 +4355,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "434cdf81b80213568e343c1cf7edbcc27e495156313397da4a8e6e1d564f5d36"
+          "checksumValue": "aeeef2fd78daf78782441644f18aa562229b4d128e1b818926ccb8b2dd7a509c"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/crypto-key-management-specialist-request.json"
@@ -4305,7 +4365,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7f43b6cf014780f20ee636943a7718e82b9a216080334edfd7d3ce14f7026450"
+          "checksumValue": "7048e850b096e7881baaa7767ba078b6fb8baa9b650eaf44e156c0e4d541ea56"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/decomposition-planner-request.json"
@@ -4315,7 +4375,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "82f9bd2561709fd9d8ff01cb4a382a6b1a7bd9741a103acbc5a262f01c177bcf"
+          "checksumValue": "2f0fb4629c9a83eb31d7490d5ac0158f2e062d8e8a1a4e92f1000352345bf017"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/detection-monitoring-worker-request.json"
@@ -4325,7 +4385,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "8121629ddf38062c5347b6c950b43a39e1b32a287eed1ada9cdf68cd1326d4ad"
+          "checksumValue": "0bf85ddd68ac0eeb06d6826cb61b722efe44ae838524f875cabccdae367901d3"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/docs-os-worker-request.json"
@@ -4335,7 +4395,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a00ba32531653ded1b5c90a0bc42f1cf3d3ef9e24aa17d944214647fa817e105"
+          "checksumValue": "715245af2ae7500c0c6889da8fff5dcd94605860e62d64bfec1486c0f9b5ea0b"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/factory-orchestrator-request.json"
@@ -4345,7 +4405,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fd0d2adc8de2566ba6597c7931e913066cdd79694ec557eb904e0e1b92332451"
+          "checksumValue": "a80e2e14e58805f140bb2bd7d02f7d57e1b923d3c189bab2934030b300b71059"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/handoff-packer-request.json"
@@ -4355,7 +4415,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ea04e084776d35ed037ba452a99fcc7cf9e182b71189a9a02bf45ec30fc3cefc"
+          "checksumValue": "1b83592c345fb33bfb42539ccb2131eb384f72804f4eed1b8530778cf6c27b36"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/human-gate-clerk-request.json"
@@ -4365,7 +4425,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4e4bf985deff3209da76c829cb7e19389a8c1f0da3e1c75e3fc68fe0c2c3a57a"
+          "checksumValue": "e11fd69da8564d1c0dafb3bdd5c75d368aed3e75a2c35f2885aae1f24b6bcd65"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/implementation-worker-request.json"
@@ -4375,7 +4435,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "36e0260fcfea6634db65cd340316a9fe35186262d35fc4a7c41c5c10053eb096"
+          "checksumValue": "9c539110ef58b89bb9c90841c264fbbd35e00ae2f068e56c47bc4b4a864847aa"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/independent-reviewer-request.json"
@@ -4385,7 +4445,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b48770ccb5726a687ec501d46f950479b00f570e6d1633b2265a7aed3b022537"
+          "checksumValue": "4924033a1a5c7887c4f1631b6690b99f78f3eb3070dcaa0c7deb1db41f27d311"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/memory-steward-request.json"
@@ -4395,7 +4455,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ae07293ca26a5218d78053db75da3f51a9b0de0e97588e014a514e02b14c2c6d"
+          "checksumValue": "8c642214d64f635d443648e3e30802a46b499691187eed1f4844b5eb2128cd9a"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/product-architect-request.json"
@@ -4405,7 +4465,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b4c2a32ebb20b02f5e2991e476945419f803e1f46f4f8624c197765a932d3dff"
+          "checksumValue": "bbbd2734916e779c3cbe9dab8adbdde91c5489472acac0f1062c4645f2371838"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/product-face-request.json"
@@ -4415,7 +4475,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4f37987a66793a2a179fb9a2dc1e87c288803beccff7a232709b27d5d6a98468"
+          "checksumValue": "a5359fae0535d542a99e4c9295155008e36665b3749159c12fce7081d244abef"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/product-sot-planner-request.json"
@@ -4425,7 +4485,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f67a2932c89374b28bc74ec6475247df8e8ee0e10d2aae02f4ea1370853eb845"
+          "checksumValue": "86b5f5e65f863c47e74498895b9da0cf69cd2a7a95b9f08ed43c12be3f23d682"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/public-safety-gate-request.json"
@@ -4435,7 +4495,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "1a8fc2e4c0888beee29d3184b8c60066d79d9fddd83613f7aa42c41852a7985d"
+          "checksumValue": "8104f895efaec956377ceb40cbc3800854ed4a86dfa4cb3703f013e2e594a44a"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/qa-verification-worker-request.json"
@@ -4445,7 +4505,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2ceec765a296f14cc7a36b98432131024dfe5faff19d13ece6b8bb6f315a05d9"
+          "checksumValue": "99bbfcc515eb40c1b355f2b5f5d4d45cd521228af8f92b4360a85987fe253d38"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/release-ops-worker-request.json"
@@ -4455,7 +4515,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "893dd5c402c7bad78b8f6e0d23ef3a11fdb6a07bf0aceaf0435235e25feacc8c"
+          "checksumValue": "55aa6227a1eea80dbb14fc22b4a05737b0b27c77ae771e7c4a36295b09b39564"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/remote-proof-runner-request.json"
@@ -4465,7 +4525,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6f663baf78c988d0755ce192f7c1d02d82f0c8fc87c3437b6a7bf2adbf62d85d"
+          "checksumValue": "cdd6f974b21f67de9863ddf4b3417094f3c105b24c7eb0df4c4b2fc5fe18e28c"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/security-orchestrator-request.json"
@@ -4475,7 +4535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "50ac8fa9c2d0b0e757fe2c1f9d08aebbaf6755aaa7384a88871257acb06ce6e3"
+          "checksumValue": "2b37dfe6b7f2a68157ee4ef97d9d2d7cf91d95e239299f7be5d05a5075bb0213"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/skill-eval-distiller-request.json"
@@ -4485,7 +4545,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5abfb50995943b594ed3e76dbfdac843745121b27b744f29576814a9f61c093e"
+          "checksumValue": "827d043b35b431ee8ed8577728db9148a88adaa6f239a499e9cb0451139a663b"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/solana-quasar-auditor-request.json"
@@ -4495,7 +4555,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "adf4252f6bcb7c9da403a79f2368d89e2ddf4a9291c9398d1e7ab2858d5271fa"
+          "checksumValue": "0f32d242f8521d9518d5a82805084a040305e909d4f535632dcc339ddeb997a5"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/source-ledger-worker-request.json"
@@ -4505,7 +4565,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "86ca7ea02a3b0f2ebf326d438ed66b3458c0c05939832c9e6ebdd10785d5d321"
+          "checksumValue": "8beec3a9c8eb6ab60a000a8164723b1ca06432bb6ed582c026fab8399abcd4c8"
         }
       ],
       "fileName": "validation/worker-packets/product-face-saas-r2/supply-chain-gate-request.json"
@@ -4515,7 +4575,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0f69a252abb4e6eb95a308ac69a9d31aeda29171f6fccd4814009efc40ce4010"
+          "checksumValue": "753a8565f36cd4efeb91732e28451ec7b6ffc43c7a44a087a77271b887199ab7"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/agentic-ai-security-specialist-request.json"
@@ -4525,7 +4585,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d2d8a9141daece66102f01ce13792ce9be3eac1b520adc5c19fe1cf003a11adc"
+          "checksumValue": "82863f38619c7e95fc8fa1822e34bebe3d1d146139d4d7f876a9f2df5006e810"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/appsec-owasp-specialist-request.json"
@@ -4535,7 +4595,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f62d1cf9561a31a908e91b2dcc991c2581d4afb476192e4460e2214ee7cd5771"
+          "checksumValue": "01b29ee2b0e0c7f9af0695cc5fdf842f2088e9c0c1c3f7d6c94476d38456176d"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/autoreview-gate-request.json"
@@ -4545,7 +4605,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0e503f602252e6b37948f6621b3ce0674612cbefe1fd685a78d92c23857c4b48"
+          "checksumValue": "749b725d68e675f58b62386937fb33f81ba4ebc31a996012f772fa60fff59587"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/cloud-infra-security-specialist-request.json"
@@ -4555,7 +4615,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "aaf1752500a67ad02d98f3d486ca04bee54449f3ca8e145f15fe231957ef9d71"
+          "checksumValue": "236f87ce9b5ea166c8e17143ed9c415a30da415bd4e39f1f67f3536fd1539625"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/codex-security-request.json"
@@ -4565,7 +4625,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "8cbf8477b80d8db52c8153f3a5e5d2e3454d5380f64ce28b7982235f143a2f6a"
+          "checksumValue": "889e8052fc1925d32712f86a74bb0bc8865b3862a5789910313abda982005462"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/crypto-key-management-specialist-request.json"
@@ -4575,7 +4635,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2ec3b9a08e0ebfed31b55419ee6726b10234a9277c0a49d8801ed8a18036d06b"
+          "checksumValue": "2124cf6ce35be3c32441a4d028a4606c0995f6f28ebdaf6003b9f31acef645da"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/decomposition-planner-request.json"
@@ -4585,7 +4645,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "8a257f9bb67febace68e66294d51ca06da382d79fafea0a00386c1f622f4feca"
+          "checksumValue": "76b47a25daac4fec4c2853449bd25126326fb96c1a8bd2bcdaa8d8927e97f2a5"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/detection-monitoring-worker-request.json"
@@ -4595,7 +4655,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "456a29ae6a72378fc657abfac3c274c5eb2f412e44f106ad7ea488880e770011"
+          "checksumValue": "947e3fdfe79dc7c3cb77d37032e79bd688fdbf0ccf3ce4736ef737e426533296"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/docs-os-worker-request.json"
@@ -4605,7 +4665,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "232e4a95736a17a06c9c2f83058799db31dbc6c8eab7c2e110ccc82bf0a96687"
+          "checksumValue": "12ab2dc6f92c4122472aeb33ffe64463de2504fd75fcac0986b97a8e8dcfd231"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/factory-orchestrator-request.json"
@@ -4615,7 +4675,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "08fb13e35a3ff908b140ef78ce3c934abb9e628f73a07f3a4cb6dee89b61df31"
+          "checksumValue": "3376bfa8b3bef7b85bd44a941af2b8d9e29c7ae7f785b9ccff9bd72ad35ccffd"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/handoff-packer-request.json"
@@ -4625,7 +4685,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "062488a88ba8519e6ca819348662a53578d6317374aed868baae9a2d6a701e47"
+          "checksumValue": "2e23df2a7e93dc93cfe98a01d7f86b7ab6b86bcb6ee5613395c5a7167487d258"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/human-gate-clerk-request.json"
@@ -4635,7 +4695,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a77072fdd9658a5ce2f39cc28f43966698b026127b0a70244c7505020bc72b45"
+          "checksumValue": "9f98c801b2fa9951eb3e62c1f6161e0502ead5458e0174a89810319e1ecad3b7"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/implementation-worker-request.json"
@@ -4645,7 +4705,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "657a311bf1147012198854e81819361237dcffb366c7b37b23f9766ee2c59a34"
+          "checksumValue": "3988bd9a12179d00fdc877df89eaba7c928fbf2c7a5970bc60aabe05ff6e6576"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/independent-reviewer-request.json"
@@ -4655,7 +4715,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b4dfacca718f985baa1dbce272bb2aa5b04ec3dbcdffb1dd26de0ddf9df77372"
+          "checksumValue": "8ffab82f31ca9ed245e63aa6606864aa13da8c7f931a10a022b91f568461f183"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/memory-steward-request.json"
@@ -4665,7 +4725,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "66badb149ac575c7fc7ba52f920e0b8700abc4a0649be212b0f08fce7ac58901"
+          "checksumValue": "aee5cb8df026d08d54a17775f932e177e25e1c73fc2e6a997382d2e61be7ba9e"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/product-architect-request.json"
@@ -4675,7 +4735,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f080e40d6696028bddcbd32753a3bd0971d1aace887e814c9eb2d8a94c0b4705"
+          "checksumValue": "6c0aa9161b9ffe9cf2abc937930149cbd5cf178fdbeb916f6e185ee2aceaa0e4"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/product-face-request.json"
@@ -4685,7 +4745,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7d5e6022f49c83c5e080f31df9b7f3dd54aab1559c2d87d15e33f0697f23b2db"
+          "checksumValue": "4f733d2bc183972b48b832e6dd2d189c12c9986fe862156f5ddda3c554e3af35"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/product-sot-planner-request.json"
@@ -4695,7 +4755,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "02430e027e1ac553960098d9e5858d0511109dedbcb05e1e40bfed964a0fdb8d"
+          "checksumValue": "fca065bc8fcccbe780cd1a9c5cffe5888d9be37d254243cfa4e0010960170642"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/public-safety-gate-request.json"
@@ -4705,7 +4765,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "64db7514354ec86856053ac11d9ac21981ce62c0ad4d0b510f74c680ddc4c836"
+          "checksumValue": "9ada67eff28cccfe8b48c82547f962cba936c9d404a34f148dc75b4aff8b6208"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/qa-verification-worker-request.json"
@@ -4715,7 +4775,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2a39c751852777ac79b630a31afae8ba2d091c7359a519f3a1717e62e9cf633d"
+          "checksumValue": "593eb30b8572beb998f663f46aa841e3d3c31721cf5516a87a56a7130d3583cf"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/release-ops-worker-request.json"
@@ -4725,7 +4785,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d08ad5c3205934d5aa034a2485ecb605d32fece173d82893b0ff86fce0016061"
+          "checksumValue": "f68f28041e97fde5d698b246eecc7cbe227dd3bd1125848f08606dca2543d3f3"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/remote-proof-runner-request.json"
@@ -4735,7 +4795,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4521b40578742a0784e57298e956d6ed525b5ddef1d4ec513335847a67090dbe"
+          "checksumValue": "766a9fa98fdcdae4ca60731dd9aed741a33f26fc6e03cec9a4a08f110ffe237a"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/security-orchestrator-request.json"
@@ -4745,7 +4805,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d80146b2e7d7f203fc93dc133e784ae46812e67c64c6bddbab4431e2a6d47f27"
+          "checksumValue": "95106309831ae5031d1e2d186d33ebe6460c076843f9f5de49fe3ed404534242"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/skill-eval-distiller-request.json"
@@ -4755,7 +4815,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d324c65acf6ed8e68c4371901e6cca4ce94e7815957a64fb511e9346bd19efb3"
+          "checksumValue": "53f7edff2103b4bee6cda12dc7d2ed121f6dd3504feeb82b704cf972f0cc2f44"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/solana-quasar-auditor-request.json"
@@ -4765,7 +4825,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fd63483b45726818abb999449a3dfb40cead02215cebc8d2239de7d8ad2f2ef7"
+          "checksumValue": "d3445c58cc46b9d46f44c3befc32cac754e643d53f5f09a74d05047db6c06615"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/source-ledger-worker-request.json"
@@ -4775,7 +4835,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4b25db8083110e848dbb00005a6de0a9c8cea8b631a49da5e556b1df9b262fc5"
+          "checksumValue": "40c85598c116393980cb0a2df007a771129b31925abd267a243750f717a52f4d"
         }
       ],
       "fileName": "validation/worker-packets/public-repo-release-r2/supply-chain-gate-request.json"
@@ -4785,7 +4845,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d0d551c488d38d890dc705c33dbdfaabbd3187b0a7a4b7971ed194c5544bdc31"
+          "checksumValue": "4f3393e5594b9570fea197d3e01f4f1ca5c01dd2f487a8782335f3c788389dd3"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/agentic-ai-security-specialist-request.json"
@@ -4795,7 +4855,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "bad35ad2dacb28ef3023072b78ef47fdac5c66947712881503aa7fe5a07b87c7"
+          "checksumValue": "4d5c7426e51b02803aad5ca15125f26420f88bb09a88981a5d7fa90899303ac2"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/appsec-owasp-specialist-request.json"
@@ -4805,7 +4865,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0184edd5608d562c80558ed6f1b8189a12b1f5d78fbc3dac41a4ff8b76db9fa3"
+          "checksumValue": "628af833f769da3e0020dfdeec7abdc0ecf978b858ffae1a0e7a163d9a46b92b"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/autoreview-gate-request.json"
@@ -4815,7 +4875,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2c06a3d9bf6665990b2eeddd18278b4e513b1f2b065fc711a0f9dbe6445ebed1"
+          "checksumValue": "218d0c0c103f87d555be664a000a2c555481d0f299c9cfe9b62da1496177beb1"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/cloud-infra-security-specialist-request.json"
@@ -4825,7 +4885,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fcca45b4df1595b4bc31b4c3421e77f702b3c7e65f6b2652465d15f57044e42b"
+          "checksumValue": "f863a4cddacf42160b6925faf5494de2828f7eb2a152e3f2dc3ec0ef57be48e0"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/codex-security-request.json"
@@ -4835,7 +4895,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "df005cae64a01df07138da8c805bda469e17bcb807f88f2304c7dd604edb807c"
+          "checksumValue": "8912355249c55a22921c094a6b11e641544805a638a2fa418ad84164fc81f574"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/crypto-key-management-specialist-request.json"
@@ -4845,7 +4905,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d740dab467b5d74db1365191f617382895124e94e14eca3b84d7ef0ad5f634c3"
+          "checksumValue": "06afd28235d57e76b44ca97f22de355d6516376c08574824d109c5a7ea5021cf"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/decomposition-planner-request.json"
@@ -4855,7 +4915,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3950abd9bb8bae0d7c21f5e0b1daf17d630e824406248222da4cf38839f80c73"
+          "checksumValue": "221c9999f0695d1a648d1a9613f0c8122edf5d4b5277f21713aa4016855c90f8"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/detection-monitoring-worker-request.json"
@@ -4865,7 +4925,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "784bff60d36e09fc9bfd8212fb4b0a525f901dde10694314f229c8683f3bac45"
+          "checksumValue": "fa15c273f28d3c93337ee3f82e8bf65996cb66de5e2e255217dd362c6b9b01c9"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/docs-os-worker-request.json"
@@ -4875,7 +4935,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e195ab003398d6f23e0ba779c9a5e68098ae89012335fba660cb7e612cabda55"
+          "checksumValue": "91b03c545bd4c6128d28a5a729a36105bd29aa58cbb49f1a6240ba851a555663"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/factory-orchestrator-request.json"
@@ -4885,7 +4945,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f0a096bc0f769013fdb05d056fc135c4fcd0a5e43088a805f9e97d545f0f7925"
+          "checksumValue": "7e060eda339197999c299fce93ae880d4a697997ec4d458332b9ba2c8e51747f"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/handoff-packer-request.json"
@@ -4895,7 +4955,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "c836792bc80df2d827ee0e033316d81c1a8b852cc6e96d4029f854c83009ac6b"
+          "checksumValue": "73b4a1922d7b313467953217ad897abd4f7c435ad964d3ba09f7da3438c8ad78"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/human-gate-clerk-request.json"
@@ -4905,7 +4965,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f55e2dbe3e9b13a48d71e85da4c8cdfb6c0e27715d1e6b0b329409c3873f23f5"
+          "checksumValue": "2f1a3dd3b877991aff84140f9c608d8957ce6f6934c95130ce82f1c024d34675"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/implementation-worker-request.json"
@@ -4915,7 +4975,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "606aca35d1c5b7579b210708e54dec95de31c6ffccad30a580de418cebb1f5ef"
+          "checksumValue": "938695b92f47056a751cff0ea146c92d2500c9fd79519c4162a5fa8e87ed0fdc"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/independent-reviewer-request.json"
@@ -4925,7 +4985,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d78fdcf7d3a49c74e5143d567c3e864a120e2f2d1e5ca3ee167218ed1c80e7f3"
+          "checksumValue": "794184e8ae1ac34e36123493985077983d5d5c5af2c6682ce3349ac17e455c7f"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/memory-steward-request.json"
@@ -4935,7 +4995,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3d22f50d1b69477209771cd74ee57d7a8b35509f2b404cfe26330c127d74c582"
+          "checksumValue": "d773d9abe301c76374db44df3029874de50dd00c5f7db4f71869a381012660c3"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/product-architect-request.json"
@@ -4945,7 +5005,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "323ca49399b3af03fb83ad37edfc28557e9b9aa4bd2b5c50ebc1ccb41b1dcf34"
+          "checksumValue": "4f3aaeb9801786042006738e66911337991114c4b0429a0ff661f4b9a13e79cc"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/product-face-request.json"
@@ -4955,7 +5015,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9d937ab22e151be1f3241cc67e0d9a9203a8c51009451a4056dbbd1e3d49383e"
+          "checksumValue": "f3de4f1270217002204d918b626c3596eb76b13fc3fa3aeefbf42de24ed3b57b"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/product-sot-planner-request.json"
@@ -4965,7 +5025,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0cef8f05f92aa69c08af24b2b821ff62b2cec1528a789592885ac5a3868ebb78"
+          "checksumValue": "9bb136d51ec08d6b2b6d218f4a49b58259d3f7d5eefc48bc12e2da951b885019"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/public-safety-gate-request.json"
@@ -4975,7 +5035,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a82699e0e3366d8d47c43d0619ea690e739174301161b9a704140606c5949db7"
+          "checksumValue": "1532ffab44256f0bb716a2e35edb3d1a223b384cfccab052a1ca4818b1d49421"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/qa-verification-worker-request.json"
@@ -4985,7 +5045,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0b10a88b1ca2283ab1f67708188996d1093fb60847bf50aeea1871a27c3fea80"
+          "checksumValue": "ebf9c72803723f54deb2a54d1c3dca69ee2901c53feefa23e7b1ad4af254260b"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/release-ops-worker-request.json"
@@ -4995,7 +5055,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9eaa118339a8b8f8bf690d4c74a15272cf1291d1b08baadf4b4914e8bb13bfe3"
+          "checksumValue": "480f90decf9503e3239f3b1a5d6e8d0c411dc3e044c1a8f7a0d6d948321715dd"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/remote-proof-runner-request.json"
@@ -5005,7 +5065,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "59dd8ebd34d635b614c6601345e31a723cfb337af3d2d3719a84586c0b23e4b1"
+          "checksumValue": "28785282afff8b5633eed4b28f18c019d9c95682584126e37f825556e5ef6fb7"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/security-orchestrator-request.json"
@@ -5015,7 +5075,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "be705e713908b9eb7ad1103e27c63a3f400fb558dfd7dd131667861e3064c072"
+          "checksumValue": "ab7fae2dfcd77bfae20692f0998dae49b1d76585ecd5bdc4da6286a3269efc32"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/skill-eval-distiller-request.json"
@@ -5025,7 +5085,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f28ee7c69ee445c1bfe97f4ece8d47da986c6cb1381db364ca2a96c0c148734f"
+          "checksumValue": "286eaa8e8742d93e1fe1a42a0e8cf38d3635e6aeb2c00cf66e590498f41c5942"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/solana-quasar-auditor-request.json"
@@ -5035,7 +5095,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5b0674066ef6af2506731f5ea24fbd90d6aff05e6905be11e8d73b9468b19769"
+          "checksumValue": "799da8a22eceb729267621595e5a8d5acf090fa71886e13d39ddc281de1d67c4"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/source-ledger-worker-request.json"
@@ -5045,7 +5105,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "cd7a46d46d8a24b3985f34e55f7fbf04ea7c9dd1666397b5d9bdf9476a71710c"
+          "checksumValue": "d618da09afb997eb0d089f1d184ba440e3ddcaacb96eb29a8be22bdaee49e5a6"
         }
       ],
       "fileName": "validation/worker-packets/solana-quasar-r3/supply-chain-gate-request.json"
@@ -5058,7 +5118,7 @@
       "filesAnalyzed": true,
       "name": "overkill-factory",
       "packageVerificationCode": {
-        "packageVerificationCodeValue": "b6edeee4681c4ede9c91c2c17fee1aa73c66bbf2b6e888fab564cf900972681d"
+        "packageVerificationCodeValue": "186a1684d965b2251a69c2d612aeba175789bddc10af588a122f1b4c03d9bec3"
       }
     }
   ],

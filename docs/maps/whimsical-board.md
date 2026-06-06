@@ -11,7 +11,7 @@ Local snapshot:
 
 Hardening block snapshot:
 
-`docs/maps/overkill-factory-hardening-f27-f44-snapshot.png`
+`docs/maps/overkill-factory-hardening-f27-f45-snapshot.png`
 
 ## Why This Is The Primary Map
 
@@ -33,14 +33,14 @@ It includes:
 - Critical workers, worker-role explanations and agent misread warnings.
 - Map-reading legend for colors, side explanations and primary/lateral arrows.
 - Multi-context validation battery as the learning-loop proof surface.
-- F27-F44 operational hardening: real Codex Security, stricter gates, clean
+- F27-F45 operational hardening: real Codex Security, stricter gates, clean
   remote proof, remaining nota-10 gaps, a durable Whimsical MCP fallback,
   stricter Auditor/Quasar contracts, source-pinned Quasar runtime proof and
   dashboard ready/done, worker-style done no-bypass, real profile dispatch and
   official Hermes patch smokes, product-like Quasar/Auditor proof, updated
   Product Face proof, Crabbox static-SSH proof and release/human dry-run gate
-  proof, product-like Quasar CU/fuzz/property proof and real supply-chain
-  CI/SBOM proof.
+  proof, product-like Quasar CU/fuzz/property proof, real supply-chain CI/SBOM
+  proof and the completion audit guard that blocks false practical-10 claims.
 - Official-main patch compatibility: the public Hermes adapter patch applies to
   the tested official Hermes main commit and passes focused regression tests.
 
@@ -56,14 +56,14 @@ updated.
 
 The public source diagram now includes live Hermes materialization, worker
 dependency graph, negative/positive done enforcement, the multi-context factory
-battery, the F27-F44 hardening block and the same map-reading legend added to
+battery, the F27-F45 hardening block and the same map-reading legend added to
 the editable Whimsical board. The editable board was updated through the local
 Whimsical MCP and now contains three clean official flowchart blocks plus one
 legend block:
 
 - `Lki1eW`: main F0-F19 factory spine;
 - `8kQkhJ`: F20-F26 hardening bridge;
-- `AyHQAj`: F27-F44 operational hardening block.
+- `AyHQAj`: F27-F45 operational hardening block.
 
 Important current IDs in `AyHQAj`:
 
@@ -86,6 +86,8 @@ Important current IDs in `AyHQAj`:
 - F43 description id: `KLR2R5`.
 - F44 node id: `7LJc4P`;
 - F44 description id: `KZ1QBd`.
+- F45 node id: `E47LN4`;
+- F45 description id: `3Wd8dT`.
 - Map legend node id: `GBGPXU`.
 
 If the editable Whimsical board is updated manually, mirror those additions
@@ -109,7 +111,10 @@ not overlap the map-reading legend. It was then extended to F43 after real
 Hermes `solana-quasar-auditor` evidence added source-hash-matched
 CU/fuzz/property product-like proof. It was then extended to F44 after real
 Hermes `supply-chain-gate` evidence added CI permissions, action pinning,
-SPDX SBOM and public scanner/test proof.
+SPDX SBOM and public scanner/test proof. It was then extended to F45 after real
+Hermes `independent-reviewer` evidence confirmed the completion audit remains
+`NOT_COMPLETE`, blocks `--require-complete` and preserves the six remaining
+product-specific/provider-backed blockers.
 
 Latest MCP validation:
 
@@ -119,9 +124,9 @@ Latest MCP validation:
 - The editable board was updated through `flowchart_edit` and verified with
   `board-read --grep "F39" --grep "F40"`, `board-read --grep "F41"` and
   `board-read --grep "F42"`, `board-read --grep "F43"` and
-  `board-read --grep "F44"`.
-- The public snapshot was refreshed through the MCP after the F44 update.
-- A dedicated F27-F44 hardening snapshot was generated through the MCP because
+  `board-read --grep "F44"` and `board-read --grep "F45"`.
+- The public snapshot was refreshed through the MCP after the F45 update.
+- A dedicated F27-F45 hardening snapshot was generated through the MCP because
   the full-board snapshot is useful for orientation but too compressed for
   detailed review.
 

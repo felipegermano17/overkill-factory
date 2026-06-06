@@ -60,6 +60,9 @@ Public evidence:
 - `validation/supply-chain/source-sbom.spdx.json`
 - `validation/supply-chain/supply-chain-proof.md`
 - `validation/supply-chain/hermes-supply-chain-summary.md`
+- `validation/completion/factory-10-completion-audit.json`
+- `validation/completion/factory-10-completion-audit.md`
+- `validation/completion/hermes-completion-audit-summary.md`
 
 Observed result:
 
@@ -130,6 +133,12 @@ Observed result:
   structured `supply_chain_result`, produced an SPDX 2.3 source SBOM, confirmed
   GitHub Actions are commit-pinned with `contents: read`, and reran public JSON,
   public-safety, secret-safety, unit tests and `git diff --check` with `PASS`;
+- completion audit dispatch: a real Hermes `independent-reviewer` worker ran
+  the schema-backed completion audit against a clean public clone with the
+  current diff applied, confirmed status `NOT_COMPLETE`, confirmed
+  `completion_claim_allowed=false`, confirmed the six remaining blockers, and
+  verified that `--require-complete` exits non-zero while public JSON,
+  public-safety, secret-safety, unit tests and `git diff --check` pass;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -311,6 +320,11 @@ checks.
   full-SHA-pinned external actions, dependency-manifest posture and SPDX source
   inventory, then reruns public JSON, public-safety, secret-safety, tests and
   diff-check.
+- Factory completion audit now exists as a schema-backed release boundary.
+  A real Hermes `independent-reviewer` worker confirmed it blocks practical
+  `10/10` completion claims until production Product Face, production Quasar
+  Auditor, production CU/SVM/economic proof, managed remote proof, production
+  release human gate evidence and a full product-specific worker graph exist.
 
 ### Still Not Proven
 
@@ -336,6 +350,9 @@ checks.
   Security, Auditor preflight, Remote Proof, Release Ops and Human Gate profile
   dispatch are proven on public/dry-run pilots, but still need product-specific
   execution against real release targets before production use.
+- The completion audit correctly blocks a practical `10/10` claim. This is a
+  release-safety improvement, not a substitute for clearing the blockers it
+  reports.
 
 ## Adversarial Review Scores
 
@@ -343,11 +360,11 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.8 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including the updated product-like audit state; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.996 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof, release/human dry-run and supply-chain gate dispatch are now smoke-proven. |
+| Agent/Hermes Operability | 9.997 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof, release/human dry-run, supply-chain gate dispatch and completion-claim blocking are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.72 | Product-like Quasar source now builds/tests in Docker, has bounded Auditor code-audit PASS and product-like CU/fuzz/property smoke from real Hermes workers; production source, real CU/SVM flow and economic fuzz/property tests remain open. |
 
 Estimated score after fixes in this pass: 9.992/10 for factory process,
-operability and public repository safety.
+operability, completion-claim discipline and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or
 provider-backed execution, not more public-pilot smoke: production Quasar
@@ -369,3 +386,5 @@ production-scoped human gate evidence.
 5. Rerun Hermes update compatibility on every future Hermes release.
 6. Run release and human-gate worker profiles on product-specific production
    targets with real rollback, smoke, monitoring and approval evidence.
+7. Only allow `factory_completion_audit.py --require-complete` to pass after
+   the six product-specific/provider-backed blockers have direct evidence.

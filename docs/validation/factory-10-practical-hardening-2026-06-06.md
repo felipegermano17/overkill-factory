@@ -106,6 +106,18 @@ without `$schema` fail unless it is explicitly raw capture data.
 This is better than relying on a green scanner that skips risky files, because
 the scanner now represents the real public policy more closely.
 
+### Completion Audit Guard
+
+`scripts/factory_completion_audit.py` now creates a schema-backed completion
+audit in `validation/completion/`.
+
+The audit currently returns `NOT_COMPLETE` and `completion_claim_allowed=false`.
+With `--require-complete`, it exits non-zero while blockers remain.
+
+This is better than an optimistic score because autonomous agents need a hard
+release boundary. A high score can guide prioritization, but it cannot authorize
+production claims without product-specific or provider-backed evidence.
+
 ## Still Not 10/10
 
 - Product-specific Codex Security scans still need to run per real
@@ -124,6 +136,8 @@ the scanner now represents the real public policy more closely.
 - Supply-chain posture now has public CI/SBOM proof for this repository, but
   product-specific dependency review, lockfiles and provenance still repeat per
   real implementation.
+- Completion audit now blocks false practical-10 claims, but the blockers it
+  names still require real product/provider execution.
 - Current Git history still contains old private/internal markers from earlier
   commits; public launch should use an orphan branch, new repository or
   coordinated history rewrite.
@@ -132,12 +146,12 @@ the scanner now represents the real public policy more closely.
 
 ## Current Practical Score
 
-Estimated public-factory score after this pass: 9.94/10 for contracts,
+Estimated public-factory score after this pass: 9.992/10 for contracts,
 preflight, executable Hermes hook, stricter worker-result reconciliation,
 Product Face proof, dashboard/API no-bypass smokes, worker-style completion
 no-bypass, official-main patch compatibility, real public-safety profile
-dispatch, local remote proof, action pinning, supply-chain CI/SBOM proof and
-public-safety controls.
+dispatch, Crabbox static-SSH proof, action pinning, supply-chain CI/SBOM proof,
+completion-claim blocking and public-safety controls.
 
 It is not 10 because the missing items above require real runtime integration or
 real target code, plus a clean public publication path for Git history.

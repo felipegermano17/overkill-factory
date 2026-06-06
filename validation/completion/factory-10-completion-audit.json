@@ -1,0 +1,134 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-completion-audit.schema.json",
+  "audit_kind": "factory_10_practical_completion",
+  "blocking_summary": [
+    "production_product_face",
+    "production_quasar_auditor",
+    "production_cu_svm_economic",
+    "managed_remote_proof",
+    "production_release_human_gate",
+    "full_product_specific_worker_graph"
+  ],
+  "completion_claim_allowed": false,
+  "created_at": "2026-06-06T15:12:02+00:00",
+  "policy_decision": "Do not mark Overkill Factory as practical 10/10 until every blocking requirement has product-specific or provider-backed evidence.",
+  "requirements": [
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/hermes-live/real-profile-dispatch-smoke.md",
+        "validation/hermes-live/multi-profile-dispatch-summary.md",
+        "validation/hermes-live/worker-dispatched-done-gate-smoke.md"
+      ],
+      "id": "hermes_real_worker_orchestration",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Hermes real worker orchestration",
+      "why_it_matters": "The factory floor must be Hermes, not only local scripts or chat plans."
+    },
+    {
+      "blocking": true,
+      "boundary": "Run Product Face against a deployed or production-like target and mark it reusable_for_product=true only if it is product-specific.",
+      "evidence_refs": [
+        "validation/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json"
+      ],
+      "id": "production_product_face",
+      "next_action": "Run Product Face against a deployed or production-like target and mark it reusable_for_product=true only if it is product-specific.",
+      "status": "BOUNDED_PUBLIC_PROOF",
+      "title": "Production-like Product Face proof",
+      "why_it_matters": "A product is not complete until its real face works across states, mobile, a11y and performance boundaries."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/security/codex-security-full-scan-2026-06-06.md",
+        "validation/security/bandit-scripts-adapters.json"
+      ],
+      "id": "factory_security_scan",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Factory code security scan",
+      "why_it_matters": "The factory code that gates autonomous work must itself pass security review."
+    },
+    {
+      "blocking": true,
+      "boundary": "Run solana-quasar-auditor plus Auditor corpus/checklists against production Quasar source.",
+      "evidence_refs": [
+        "validation/quasar-product-like-proof/qvg-product-like-auditor-result.json"
+      ],
+      "id": "production_quasar_auditor",
+      "next_action": "Run solana-quasar-auditor plus Auditor corpus/checklists against production Quasar source.",
+      "status": "BOUNDED_PUBLIC_PROOF",
+      "title": "Production Quasar Auditor code audit",
+      "why_it_matters": "The public product-like audit is useful, but production approval needs the actual product program."
+    },
+    {
+      "blocking": true,
+      "boundary": "Run real CU profiling, SVM/client transactions and economic fuzz/property tests on production source.",
+      "evidence_refs": [
+        "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"
+      ],
+      "id": "production_cu_svm_economic",
+      "next_action": "Run real CU profiling, SVM/client transactions and economic fuzz/property tests on production source.",
+      "status": "BOUNDED_PUBLIC_PROOF",
+      "title": "Production CU, SVM/client flow and economic safety",
+      "why_it_matters": "Onchain code can pass unit tests and still fail through compute, transaction flow or economic edge cases."
+    },
+    {
+      "blocking": true,
+      "boundary": "Run managed Crabbox broker or Blacksmith Testbox with approved credentials and cleanup receipt.",
+      "evidence_refs": [
+        "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json"
+      ],
+      "id": "managed_remote_proof",
+      "next_action": "Run managed Crabbox broker or Blacksmith Testbox with approved credentials and cleanup receipt.",
+      "status": "BOUNDED_PUBLIC_PROOF",
+      "title": "Managed Crabbox/Testbox remote proof",
+      "why_it_matters": "Static SSH proof is useful, but managed remote proof validates the intended provider-backed heavy gate."
+    },
+    {
+      "blocking": true,
+      "boundary": "Run product-specific R4 human gate, rollback proof, release smoke and monitoring evidence before any production claim.",
+      "evidence_refs": [
+        "validation/release-human-gate/qvg-release-ops-result.json",
+        "validation/release-human-gate/qvg-human-gate-record.json"
+      ],
+      "id": "production_release_human_gate",
+      "next_action": "Run product-specific R4 human gate, rollback proof, release smoke and monitoring evidence before any production claim.",
+      "status": "BOUNDED_PUBLIC_PROOF",
+      "title": "Production release and human R4 gate",
+      "why_it_matters": "Production release authority must be explicit, reviewed and reversible."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/supply-chain/supply-chain-proof.json",
+        "validation/supply-chain/source-sbom.spdx.json",
+        "validation/supply-chain/hermes-supply-chain-summary.md"
+      ],
+      "id": "public_supply_chain_ci_sbom",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Public repository supply-chain CI/SBOM",
+      "why_it_matters": "An open factory must be reproducible and safe to accept contributions."
+    },
+    {
+      "blocking": true,
+      "evidence_refs": [],
+      "expected_evidence_refs": [
+        "validation/production/full-product-worker-graph.json"
+      ],
+      "id": "full_product_specific_worker_graph",
+      "next_action": "Run one real product through Product Face, Security, Auditor, Remote Proof, QA, review, release and human gates with reconciled worker results.",
+      "status": "BLOCKED_MISSING_EVIDENCE",
+      "title": "Full product-specific multi-specialist execution",
+      "why_it_matters": "The goal is a factory that carries a real product through all required workers, not isolated prooflets."
+    }
+  ],
+  "requirements_achieved": 3,
+  "requirements_blocking": 6,
+  "requirements_bounded": 5,
+  "requirements_total": 9,
+  "score_estimate": "9.992/10",
+  "status": "NOT_COMPLETE"
+}
