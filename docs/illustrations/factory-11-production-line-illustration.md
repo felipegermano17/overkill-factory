@@ -5,6 +5,10 @@ line for autonomous agents.
 
 ## Generated Shot
 
+Image:
+
+`docs/illustrations/factory-11-production-line.png`
+
 16:9 editorial illustration, white background, hand-drawn black line art with a
 small black operator character. Messy paper enters a factory machine on the
 left. The machine passes through checkpoints:
