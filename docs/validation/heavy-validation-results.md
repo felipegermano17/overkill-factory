@@ -43,6 +43,10 @@ Public evidence:
 - `validation/quasar-product-like-proof/qvg-product-like-auditor-result.json`
 - `validation/quasar-product-like-proof/qvg-product-like-auditor-report.md`
 - `validation/quasar-product-like-proof/hermes-qvg-code-audit-summary.md`
+- `validation/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json`
+- `validation/quasar-product-like-proof/product-face/hermes-product-face-summary.md`
+- `validation/quasar-product-like-proof/product-face/screenshots/desktop.png`
+- `validation/quasar-product-like-proof/product-face/screenshots/mobile.png`
 
 Observed result:
 
@@ -87,6 +91,12 @@ Observed result:
   the QVG product-like Quasar target in Docker, generated a bounded
   `auditor_result audit_mode=code_audit`, validated it with `factoryctl`, and
   closed with `PASS`;
+- updated product-like Product Face dispatch: after the Quasar/Auditor evidence
+  changed the prototype copy, a real Hermes `product-face` worker reran desktop
+  and mobile browser capture on commit `bb03115b77a65caecb557a7e00473cc5742c2ec7`,
+  produced screenshots/console/state/report artifacts, passed DOM-level a11y and
+  overlap checks, and reran public JSON, public-safety and secret scans with
+  `OK`;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -131,6 +141,12 @@ Public evidence:
 - `validation/product-face/console.json`
 - `validation/product-face/screenshots/desktop.png`
 - `validation/product-face/screenshots/mobile.png`
+- `validation/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json`
+- `validation/quasar-product-like-proof/product-face/product-face-report.md`
+- `validation/quasar-product-like-proof/product-face/state.json`
+- `validation/quasar-product-like-proof/product-face/console.json`
+- `validation/quasar-product-like-proof/product-face/screenshots/desktop.png`
+- `validation/quasar-product-like-proof/product-face/screenshots/mobile.png`
 
 Observed result:
 
@@ -142,6 +158,11 @@ Observed result:
 - overlap basis: DOM rectangle intersection scan;
 - evidence kind: real static prototype proof;
 - reusable for production product approval: `false`.
+- latest rerun basis: real Hermes `product-face` worker after product-like
+  Quasar/Auditor copy changes, commit
+  `bb03115b77a65caecb557a7e00473cc5742c2ec7`;
+- latest rerun validations: public JSON artifacts, public safety scan and
+  secret safety scan all returned `OK`.
 
 This proves that Product Face is no longer just a contract in the factory: the
 runner can produce browser-backed evidence. It still does not prove production
@@ -234,6 +255,9 @@ checks.
   Hermes `solana-quasar-auditor` worker in a clean Docker container. The same
   worker cloned `solanabr/Auditor`, generated a bounded code-audit result and
   passed deep `factoryctl.validate_auditor_result` validation.
+- QVG Product Face evidence was rerun after the product-like Quasar/Auditor
+  update by a real Hermes `product-face` worker, with fresh desktop/mobile
+  screenshots, console/state/report artifacts and repository safety scans.
 - Hermes update compatibility now has a disposable official-main smoke: the
   public patch is parseable, applies to the tested official Hermes main commit,
   and passes focused Kanban/dashboard regression tests.
@@ -263,7 +287,7 @@ checks.
 | Review Area | Score Before Fixes | Main Reason |
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
-| Product Face | 9.7 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence; production UI proof and full WCAG remain open. |
+| Product Face | 9.8 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including the updated product-like audit state; production UI proof and full WCAG remain open. |
 | Agent/Hermes Operability | 9.98 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply and multi-profile dispatch are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.65 | Product-like Quasar source now builds/tests in Docker and has a bounded Auditor code-audit PASS from a real Hermes worker; production source, CU profiling and fuzz/property tests remain open. |
 
