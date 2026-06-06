@@ -23,6 +23,7 @@ PATTERNS = [
     re.compile(r"\boverkill-factory-live-smoke\b"),
     re.compile(r"\bHermes task:\s*t_[a-f0-9]{8}\b", re.IGNORECASE),
     re.compile(r"\bWhimsical primary board:\s*[A-Za-z0-9_-]{4,}\b"),
+    re.compile(r"--board-id\s+(?!<)[A-Za-z0-9_-]{4,}\b"),
     re.compile(r"C:\\Users"),
     re.compile(r"C:\\\\Users"),
     re.compile(r"OneDrive"),

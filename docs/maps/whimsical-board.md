@@ -11,7 +11,7 @@ Local snapshot:
 
 Hardening block snapshot:
 
-`docs/maps/overkill-factory-hardening-f27-f41-snapshot.png`
+`docs/maps/overkill-factory-hardening-f27-f42-snapshot.png`
 
 ## Why This Is The Primary Map
 
@@ -33,12 +33,13 @@ It includes:
 - Critical workers, worker-role explanations and agent misread warnings.
 - Map-reading legend for colors, side explanations and primary/lateral arrows.
 - Multi-context validation battery as the learning-loop proof surface.
-- F27-F41 operational hardening: real Codex Security, stricter gates, clean
+- F27-F42 operational hardening: real Codex Security, stricter gates, clean
   remote proof, remaining nota-10 gaps, a durable Whimsical MCP fallback,
   stricter Auditor/Quasar contracts, source-pinned Quasar runtime proof and
   dashboard ready/done, worker-style done no-bypass, real profile dispatch and
   official Hermes patch smokes, product-like Quasar/Auditor proof, updated
-  Product Face proof and Crabbox static-SSH proof.
+  Product Face proof, Crabbox static-SSH proof and release/human dry-run gate
+  proof.
 - Official-main patch compatibility: the public Hermes adapter patch applies to
   the tested official Hermes main commit and passes focused regression tests.
 
@@ -54,14 +55,14 @@ updated.
 
 The public source diagram now includes live Hermes materialization, worker
 dependency graph, negative/positive done enforcement, the multi-context factory
-battery, the F27-F41 hardening block and the same map-reading legend added to
+battery, the F27-F42 hardening block and the same map-reading legend added to
 the editable Whimsical board. The editable board was updated through the local
 Whimsical MCP and now contains three clean official flowchart blocks plus one
 legend block:
 
 - `Lki1eW`: main F0-F19 factory spine;
 - `8kQkhJ`: F20-F26 hardening bridge;
-- `AyHQAj`: F27-F41 operational hardening block.
+- `AyHQAj`: F27-F42 operational hardening block.
 
 Important current IDs in `AyHQAj`:
 
@@ -78,6 +79,8 @@ Important current IDs in `AyHQAj`:
 - F40 description id: `SePcVQ`.
 - F41 node id: `MyT6hD`;
 - F41 description id: `BXFFri`.
+- F42 node id: `FGTyHX`;
+- F42 description id: `QYKicT`.
 - Map legend node id: `GBGPXU`.
 
 If the editable Whimsical board is updated manually, mirror those additions
@@ -93,7 +96,11 @@ visually distinguishable. A separate map-reading legend was then added with
 `flowchart_create` so users can understand colors, side explanations and
 primary/lateral arrows without chat context. The F27-F38 hardening block was
 then extended to F41 with `flowchart_edit` after product-like Quasar/Auditor,
-updated Product Face and Crabbox static-SSH evidence passed.
+updated Product Face and Crabbox static-SSH evidence passed. It was then
+extended to F42 after real Hermes `human-gate-clerk` and `release-ops-worker`
+dry-run evidence passed while keeping production blocked. The F27-F42 hardening
+block and legend were then reflowed with `flexbox_compose` so the new node did
+not overlap the map-reading legend.
 
 Latest MCP validation:
 
@@ -101,9 +108,10 @@ Latest MCP validation:
 - The live Desktop MCP accepted direct JSON-RPC calls even when native Codex
   tool namespaces were not exposed.
 - The editable board was updated through `flowchart_edit` and verified with
-  `board-read --grep "F39" --grep "F40"` and `board-read --grep "F41"`.
-- The public snapshot was refreshed through the MCP after the F39/F40/F41 update.
-- A dedicated F27-F41 hardening snapshot was generated through the MCP because
+  `board-read --grep "F39" --grep "F40"`, `board-read --grep "F41"` and
+  `board-read --grep "F42"`.
+- The public snapshot was refreshed through the MCP after the F42 update.
+- A dedicated F27-F42 hardening snapshot was generated through the MCP because
   the full-board snapshot is useful for orientation but too compressed for
   detailed review.
 
@@ -117,7 +125,7 @@ memory:
 python scripts/whimsical_mcp.py health
 python scripts/whimsical_mcp.py inspect-state
 python scripts/whimsical_mcp.py board-read --grep "Factory 10" --format simple
-python scripts/whimsical_mcp.py snapshot --board-id XVvfzk --scale 2 --out docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png
+python scripts/whimsical_mcp.py snapshot --board-id <private-board-id> --scale 2 --out docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png
 ```
 
 Use `tool-call` for precise edits after inspecting the current board:

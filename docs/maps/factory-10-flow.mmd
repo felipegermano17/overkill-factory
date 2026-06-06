@@ -180,6 +180,11 @@ flowchart LR
   F41["F41 Crabbox static-SSH PASS"]:::learning
   F41D["Crabbox v0.26.0 sincronizou clone publico por ssh+rsync, rodou scanners em runner externo e voltou exit 0; managed Testbox ainda falta."]:::desc
   F41 -.-> F41D
+  F41 --> F42
+
+  F42["F42 Release/Human dry-run PASS"]:::human
+  F42D["Hermes real rodou human-gate-clerk e release-ops-worker; dry-run passou, producao ficou bloqueada sem gate R4, rollback, smoke e monitoramento reais."]:::desc
+  F42 -.-> F42D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

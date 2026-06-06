@@ -49,6 +49,11 @@ Public evidence:
 - `validation/quasar-product-like-proof/product-face/hermes-product-face-summary.md`
 - `validation/quasar-product-like-proof/product-face/screenshots/desktop.png`
 - `validation/quasar-product-like-proof/product-face/screenshots/mobile.png`
+- `validation/release-human-gate/qvg-human-gate-record.json`
+- `validation/release-human-gate/qvg-human-gate-record.md`
+- `validation/release-human-gate/qvg-release-ops-result.json`
+- `validation/release-human-gate/qvg-release-ops-result.md`
+- `validation/release-human-gate/hermes-release-human-summary.md`
 
 Observed result:
 
@@ -103,6 +108,11 @@ Observed result:
   produced screenshots/console/state/report artifacts, passed DOM-level a11y and
   overlap checks, and reran public JSON, public-safety and secret scans with
   `OK`;
+- release/human dry-run gate dispatch: a real disposable Hermes board spawned
+  `human-gate-clerk`, then promoted and spawned dependent `release-ops-worker`;
+  both completed with public-safe worker result artifacts, `PASS` for dry-run
+  evidence only, `reusable_for_product=false`, explicit production block status
+  and public JSON, public-safety and secret scans returning `OK`;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -232,8 +242,9 @@ checks.
   even when native MCP tools are not exposed in a future Codex session.
 - Whimsical Desktop MCP was exercised live through JSON-RPC, with health,
   board read, flowchart edit and snapshot capture passing. The editable board
-  now includes F39 Quasar/Auditor product-like PASS and F40 updated Product Face
-  PASS, and the public map snapshot was refreshed after that update.
+  now includes F39 Quasar/Auditor product-like PASS, F40 updated Product Face
+  PASS, F41 Crabbox static-SSH PASS and F42 release/human dry-run PASS, and the
+  public map snapshot was refreshed after that update.
 - Auditor result handling is stricter: `code_audit` now requires corpus count,
   checklists 01-07, known-vector coverage, instruction matrix and state model.
   The worker-result validator now blocks shallow real Auditor PASS records.
@@ -268,6 +279,11 @@ checks.
 - Hermes update compatibility now has a disposable official-main smoke: the
   public patch is parseable, applies to the tested official Hermes main commit,
   and passes focused Kanban/dashboard regression tests.
+- Hermes release/human gate dry-run is now profile-proven: `human-gate-clerk`
+  recorded only a bounded dry-run decision, `release-ops-worker` prepared the
+  release-control packet, and both artifacts keep production blocked until a
+  fresh product-specific R4 gate, rollback proof, smoke and monitoring evidence
+  exist.
 
 ### Still Not Proven
 
@@ -286,9 +302,9 @@ checks.
 - Future Hermes releases still need the same disposable compatibility smoke
   rerun before an update is accepted.
 - Full multi-specialist Hermes execution on product work. Product Face,
-  Security, Auditor preflight and Remote Proof profile dispatch are proven on
-  the public pilot, but release and human gate profiles still need
-  product-specific runs.
+  Security, Auditor preflight, Remote Proof, Release Ops and Human Gate profile
+  dispatch are proven on public/dry-run pilots, but still need product-specific
+  execution against real release targets before production use.
 
 ## Adversarial Review Scores
 
@@ -296,17 +312,17 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.8 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including the updated product-like audit state; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.99 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch and Crabbox static-SSH remote proof are now smoke-proven. |
+| Agent/Hermes Operability | 9.995 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof and release/human dry-run gate dispatch are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.65 | Product-like Quasar source now builds/tests in Docker and has a bounded Auditor code-audit PASS from a real Hermes worker; production source, CU profiling and fuzz/property tests remain open. |
 
-Estimated score after fixes in this pass: 9.98/10 for factory process,
+Estimated score after fixes in this pass: 9.985/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or
 provider-backed execution, not more public-pilot smoke: production Quasar
 source with CU/fuzz/property depth, managed Testbox/broker remote proof, a
-production-like Product Face target, release profile execution and human gate
-evidence.
+production-like Product Face target, production release execution and
+production-scoped human gate evidence.
 
 ## Next Validation Gates
 
@@ -319,4 +335,5 @@ evidence.
 4. Run managed Crabbox broker or Blacksmith Testbox remote proof with approved
    credentials; static SSH fallback is already proven.
 5. Rerun Hermes update compatibility on every future Hermes release.
-6. Run release and human-gate worker profiles on product-specific tasks.
+6. Run release and human-gate worker profiles on product-specific production
+   targets with real rollback, smoke, monitoring and approval evidence.
