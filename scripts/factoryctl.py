@@ -14,7 +14,7 @@ import json
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 
@@ -426,10 +426,16 @@ def source_card_ref(source_path: Path) -> str:
         if not label or "/" in label or ":" in label:
             return "external:source-card"
         return f"external:{label}"
+    raw_normalized = raw.replace("\\", "/")
+    windows_path = PureWindowsPath(raw)
+    if windows_path.is_absolute() and not source_path.is_absolute():
+        return f"external:{windows_path.name or 'source-card'}"
     try:
         resolved = source_path.resolve()
         return resolved.relative_to(ROOT).as_posix()
     except (OSError, ValueError):
+        if windows_path.is_absolute() or (len(raw_normalized) >= 2 and raw_normalized[1] == ":"):
+            return f"external:{windows_path.name or 'source-card'}"
         return f"external:{source_path.name or 'source-card'}"
 
 
