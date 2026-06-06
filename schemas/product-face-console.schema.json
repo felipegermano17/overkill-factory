@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-face-console.schema.json",
+  "title": "Overkill Factory Product Face Console Evidence",
+  "type": "object",
+  "required": ["$schema", "messages", "page_errors"],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/product-face-console.schema.json"
+    },
+    "messages": {
+      "type": "array"
+    },
+    "page_errors": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": true
+}

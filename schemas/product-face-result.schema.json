@@ -16,6 +16,8 @@
     "performance_note",
     "blocking_findings",
     "evidence_refs",
+    "evidence_kind",
+    "reusable_for_product",
     "next_action"
   ],
   "properties": {
@@ -70,10 +72,15 @@
       "minItems": 1,
       "items": { "type": "string", "minLength": 1 }
     },
+    "evidence_kind": {
+      "enum": ["real", "synthetic", "waiver"]
+    },
+    "reusable_for_product": {
+      "type": "boolean"
+    },
     "next_action": {
       "type": "string"
     }
   },
   "additionalProperties": true
 }
-

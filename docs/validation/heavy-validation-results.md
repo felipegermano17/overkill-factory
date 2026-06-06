@@ -41,6 +41,32 @@ This proves real Kanban materialization, dependency wiring and worker-result
 reconciliation. It does not prove real Codex Security, Quasar Auditor, release,
 Product Face or human approval execution.
 
+## Real Product Face Proof
+
+Public evidence:
+
+- `validation/product-face/qvg-product-face-result.json`
+- `validation/product-face/product-face-report.md`
+- `validation/product-face/state.json`
+- `validation/product-face/console.json`
+- `validation/product-face/screenshots/desktop.png`
+- `validation/product-face/screenshots/mobile.png`
+
+Observed result:
+
+- target: `pilots/quasar-vault-guard-test/product-face/prototype.html`;
+- result: `PASS`;
+- screenshots: desktop and mobile;
+- console: no browser console/page errors;
+- a11y basis: DOM-level accessible-name, title, language, image-alt and landmark checks;
+- overlap basis: DOM rectangle intersection scan;
+- evidence kind: real static prototype proof;
+- reusable for production product approval: `false`.
+
+This proves that Product Face is no longer just a contract in the factory: the
+runner can produce browser-backed evidence. It still does not prove production
+UI quality, full WCAG compliance or runtime performance.
+
 ## Private Real Paper Smoke
 
 A private real product-paper smoke was executed outside the public repository.
@@ -99,8 +125,8 @@ checks.
 
 - Full Codex Security scan with threat model, discovery, validation,
   attack-path analysis and final report.
-- Real Product Face execution with Playwright/browser screenshots, console
-  checks, accessibility checks and overlap checks on a real UI.
+- Production Product Face execution on a real UI. The current proof is browser
+  backed but limited to the static Quasar Vault Guard prototype.
 - Real Auditor execution against real Quasar source.
 - Real Solana/Quasar build, tests, compute profiling and fuzz/property tests.
 - Real remote proof in Crabbox/Testbox or a clean container with artifact,
@@ -118,23 +144,22 @@ checks.
 | Review Area | Score Before Fixes | Main Reason |
 |---|---:|---|
 | Security | 8.8 | Stronger OWASP/AppSec routing and public scans; still needs real Codex Security reports. |
-| Product Face | 8.7 | Product Face and AppSec now route together; still needs real screenshots/a11y on a real UI. |
+| Product Face | 9.3 | Browser-backed proof exists for the static prototype; production UI proof and full a11y remain open. |
 | Agent/Hermes Operability | 9.2 | Real Hermes board, worker graph and done enforcement proven; dispatcher hooks still need hard integration. |
 | Solana/Quasar/Auditor | 8.6 | Strong routing and live smoke; still no real Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.4/10 for factory process,
+Estimated score after fixes in this pass: 9.5/10 for factory process,
 operability and public repository safety.
 
-It is not 9.5+ yet because the next jump requires real specialist executions,
-not more synthetic smoke: real Product Face browser proof, real Codex Security,
-real Auditor/Quasar, and Hermes transition hooks wired into every bypassable
-surface.
+It is not 10 yet because the next jump requires real specialist executions,
+not more synthetic smoke: real Codex Security, real Auditor/Quasar, real remote
+proof, and Hermes transition hooks wired into every bypassable surface.
 
 ## Next Validation Gates
 
 1. Run a full Codex Security scan and persist markdown/HTML reports.
-2. Build or select a small real UI and run Product Face proof with browser
-   screenshots, mobile viewport, a11y, console and overlap evidence.
+2. Run Product Face proof against the next production-like UI, not only the
+   static prototype.
 3. Build or import a small Quasar program and run the real Auditor path.
 4. Add supply-chain CI: workflow permissions, secret scan, dependency audit,
    SBOM/provenance or explicit waiver.

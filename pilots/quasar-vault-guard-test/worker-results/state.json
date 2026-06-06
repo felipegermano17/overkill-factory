@@ -33,9 +33,9 @@
         "items": []
       },
       "performance": {
-        "duration_ms": 8,
-        "dom_content_loaded_ms": 7,
-        "load_event_ms": 8,
+        "duration_ms": 9,
+        "dom_content_loaded_ms": 8,
+        "load_event_ms": 9,
         "dom_nodes": 102
       }
     },

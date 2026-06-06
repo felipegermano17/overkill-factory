@@ -11,7 +11,7 @@ Tool: `playwright-static-product-face-proof`
 - `validation/product-face/screenshots/desktop.png`
 - `validation/product-face/screenshots/mobile.png`
 - `validation/product-face/product-face-report.md`
-- `validation/product-face/product-face-result.json`
+- `validation/product-face/qvg-product-face-result.json`
 
 ## Findings
 
@@ -19,7 +19,7 @@ Tool: `playwright-static-product-face-proof`
 - A11y: `pass`
 - Overlap: `pass`
 - Console: `pass`
-- Performance: desktop render duration 7 ms, dom nodes 102; mobile render duration 6 ms, dom nodes 102; browser-local static proof only, not a production performance benchmark
+- Performance: desktop render duration 8 ms, dom nodes 102; mobile render duration 6 ms, dom nodes 102; browser-local static proof only, not a production performance benchmark
 
 ## Next Action
 

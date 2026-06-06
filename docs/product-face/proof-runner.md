@@ -48,7 +48,11 @@ The public schema is `schemas/product-face-result.schema.json`.
 Use the repo runner for static HTML or a local/public URL:
 
 ```bash
-python scripts/product_face_proof.py --target pilots/quasar-vault-guard-test/product-face/prototype.html --out validation/product-face/product-face-result.json
+python scripts/product_face_proof.py \
+  --target pilots/quasar-vault-guard-test/product-face/prototype.html \
+  --out validation/product-face/qvg-product-face-result.json \
+  --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md \
+  --strict
 ```
 
 Useful options:
@@ -58,6 +62,8 @@ Useful options:
 - `--journey "open target" --journey "inspect mobile viewport"`
 - `--strict` to treat accessibility and overlap warnings as blocking.
 - `--force-fallback` to register bounded static evidence without a browser.
+- `--card` to bind the result to the exact factory card/slice that will later
+  be reconciled by the Hermes `done` gate.
 
 With Python Playwright available, the runner captures screenshots, console
 messages, DOM state, accessibility basics, overlap scan and a browser-local
@@ -75,7 +81,11 @@ is proof.
 Use:
 
 ```bash
-python scripts/product_face_proof.py --target pilots/quasar-vault-guard-test/product-face/prototype.html --out validation/product-face/product-face-result.json
+python scripts/product_face_proof.py \
+  --target pilots/quasar-vault-guard-test/product-face/prototype.html \
+  --out pilots/quasar-vault-guard-test/worker-results/product-face-result.json \
+  --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md \
+  --strict
 ```
 
 If Python Playwright and its browser are available, the runner captures rendered
@@ -88,8 +98,15 @@ blocked until real browser evidence exists.
 
 ## Current Boundary
 
-The current public validation includes static fallback evidence and partial
-in-app browser screenshot attempts. It does not claim full Product Face PASS.
+The current public validation includes browser-backed Product Face evidence for
+the static Quasar Vault Guard prototype:
+
+- `validation/product-face/qvg-product-face-result.json`
+- `pilots/quasar-vault-guard-test/worker-results/product-face-result.json`
+
+This is a real Product Face proof for the static prototype. It is not a
+production UI approval, a full WCAG audit, or a production performance
+benchmark.
 
 Full Product Face PASS requires:
 

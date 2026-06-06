@@ -123,6 +123,31 @@ def write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(redact_public_artifact(data), indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
 
+def load_json_like(path: Path) -> dict[str, Any]:
+    text = path.read_text(encoding="utf-8")
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        stripped = "\n".join(lines).strip()
+    return json.loads(stripped)
+
+
+def card_ref_from_card(card: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "card_id": card.get("card_id"),
+        "slice_id": card.get("slice_id"),
+        "phase": card.get("phase"),
+        "risk_effective": card.get("risk_effective"),
+        "surfaces": card.get("surfaces", []),
+        "executor_identity": card.get("executor_identity"),
+        "reviewer_identity": card.get("reviewer_identity"),
+    }
+
+
 def redact_text(value: str) -> str:
     redacted = value.replace(str(ROOT), "<repo-root>")
     redacted = redacted.replace(str(ROOT).replace("\\", "/"), "<repo-root>")
@@ -234,6 +259,7 @@ def base_result(
     states: list[str],
     journeys: list[str],
     tool_or_profile: str,
+    card_ref: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "$schema": "https://overkill-factory.dev/schemas/product-face-result.schema.json",
@@ -244,7 +270,7 @@ def base_result(
             "name": "Product Face Validator",
             "factory_phase": "F5/F13",
         },
-        "card_ref": {
+        "card_ref": card_ref or {
             "card_id": "PRODUCT-FACE-PROOF",
             "phase": "F5",
             "risk_effective": "R2",
@@ -260,10 +286,15 @@ def base_result(
         "viewports": [viewport.label for viewport in viewports],
         "checked_states": states,
         "user_journeys_checked": journeys,
+        "journeys": journeys,
         "a11y": {},
+        "accessibility": {},
         "overlap_check": {},
+        "overlap": {},
         "performance_note": "",
         "evidence_refs": [],
+        "evidence_kind": "real",
+        "reusable_for_product": False,
         "next_action": "Attach product_face_result to the completion receipt.",
     }
 
@@ -277,6 +308,7 @@ def run_playwright(
     states: list[str],
     journeys: list[str],
     strict: bool,
+    card_ref: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     try:
         from playwright.sync_api import sync_playwright
@@ -320,8 +352,21 @@ def run_playwright(
 
     console_path = output_dir / "console.json"
     state_path = output_dir / "state.json"
-    write_json(console_path, {"messages": console_messages, "page_errors": page_errors})
-    write_json(state_path, viewport_results)
+    write_json(
+        console_path,
+        {
+            "$schema": "https://overkill-factory.dev/schemas/product-face-console.schema.json",
+            "messages": console_messages,
+            "page_errors": page_errors,
+        },
+    )
+    write_json(
+        state_path,
+        {
+            "$schema": "https://overkill-factory.dev/schemas/product-face-state.schema.json",
+            "viewports": viewport_results,
+        },
+    )
 
     a11y_issues = []
     overlap_issues = []
@@ -345,6 +390,7 @@ def run_playwright(
         states=states,
         journeys=journeys,
         tool_or_profile="playwright-static-product-face-proof",
+        card_ref=card_ref,
     )
     result.update(
         {
@@ -361,7 +407,17 @@ def run_playwright(
                 "issues": a11y_issues,
                 "basis": "DOM-level accessible-name, title, lang, image alt and landmark checks; not a full WCAG audit.",
             },
+            "accessibility": {
+                "status": "warn" if a11y_issues else "pass",
+                "issues": a11y_issues,
+                "basis": "DOM-level accessible-name, title, lang, image alt and landmark checks; not a full WCAG audit.",
+            },
             "overlap_check": {
+                "status": "warn" if overlap_issues else "pass",
+                "issues": overlap_issues[:25],
+                "basis": "DOM rectangle intersection scan; nested parent-child overlaps are ignored.",
+            },
+            "overlap": {
                 "status": "warn" if overlap_issues else "pass",
                 "issues": overlap_issues[:25],
                 "basis": "DOM rectangle intersection scan; nested parent-child overlaps are ignored.",
@@ -502,6 +558,7 @@ def build_product_face_proof(
     strict: bool = False,
     force_fallback: bool = False,
     allow_external_file: bool = False,
+    card: Path | None = None,
 ) -> dict[str, Any]:
     output_dir = out if out.suffix == "" else out.parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -510,6 +567,7 @@ def build_product_face_proof(
     journeys = journeys or ["open target", "inspect desktop viewport", "inspect mobile viewport"]
     target_url, target_path = resolve_target(target, allow_external_file=allow_external_file)
     target_ref = repo_ref(target_path) if target_path else target
+    card_ref = card_ref_from_card(load_json_like(card)) if card else None
 
     if force_fallback:
         result = build_fallback_result(
@@ -521,6 +579,8 @@ def build_product_face_proof(
             journeys=journeys,
             reason="forced fallback",
         )
+        if card_ref:
+            result["card_ref"] = card_ref
     else:
         try:
             result = run_playwright(
@@ -531,6 +591,7 @@ def build_product_face_proof(
                 states=states,
                 journeys=journeys,
                 strict=strict,
+                card_ref=card_ref,
             )
         except PlaywrightUnavailable as exc:
             result = build_fallback_result(
@@ -542,9 +603,14 @@ def build_product_face_proof(
                 journeys=journeys,
                 reason=str(exc),
             )
+            if card_ref:
+                result["card_ref"] = card_ref
 
     result_path = out if out.suffix else output_dir / "product-face-result.json"
     report_path = output_dir / "product-face-report.md"
+    result["journeys"] = result.get("user_journeys_checked", [])
+    result["accessibility"] = result.get("a11y", {})
+    result["overlap"] = result.get("overlap_check", {})
     result["evidence_refs"] = [*result["evidence_refs"], repo_ref(report_path), repo_ref(result_path)]
     write_json(result_path, result)
     write_report(report_path, result)
@@ -561,6 +627,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--strict", action="store_true", help="Treat a11y and overlap warnings as blocking findings.")
     parser.add_argument("--force-fallback", action="store_true", help="Skip Playwright and write bounded static fallback evidence.")
     parser.add_argument("--allow-external-file", action="store_true", help="Allow absolute file targets outside this repo; output is redacted.")
+    parser.add_argument("--card", type=Path, help="Factory card to bind this Product Face result to.")
     return parser.parse_args(argv)
 
 
@@ -577,6 +644,7 @@ def main(argv: list[str] | None = None) -> int:
             strict=args.strict,
             force_fallback=args.force_fallback,
             allow_external_file=args.allow_external_file,
+            card=args.card,
         )
     except Exception as exc:
         print(f"product_face_proof failed: {exc}", file=sys.stderr)

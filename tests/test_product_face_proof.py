@@ -89,6 +89,44 @@ class ProductFaceProofTest(unittest.TestCase):
         self.assertTrue(result["a11y"])
         self.assertTrue(result["overlap_check"])
 
+    def test_card_binding_and_factory_alias_fields_are_present(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            tmp_path = Path(tmp)
+            html_path = tmp_path / "prototype.html"
+            html_path.write_text("<html lang='en'><title>Proof</title><main>Ok</main></html>", encoding="utf-8")
+            card_path = tmp_path / "card.md"
+            card_path.write_text(
+                "```json\n"
+                + json.dumps(
+                    {
+                        "card_id": "CARD-001",
+                        "slice_id": "SLICE-001",
+                        "phase": "F13",
+                        "risk_effective": "R2",
+                        "surfaces": ["frontend"],
+                        "executor_identity": "executor",
+                        "reviewer_identity": "reviewer",
+                    }
+                )
+                + "\n```\n",
+                encoding="utf-8",
+            )
+
+            result = product_face_proof.build_product_face_proof(
+                target=str(html_path),
+                out=tmp_path / "result.json",
+                force_fallback=True,
+                card=card_path,
+            )
+
+        self.assertEqual(result["card_ref"]["card_id"], "CARD-001")
+        self.assertEqual(result["card_ref"]["slice_id"], "SLICE-001")
+        self.assertEqual(result["journeys"], result["user_journeys_checked"])
+        self.assertEqual(result["accessibility"], result["a11y"])
+        self.assertEqual(result["overlap"], result["overlap_check"])
+        self.assertEqual(result["evidence_kind"], "real")
+        self.assertFalse(result["reusable_for_product"])
+
 
 if __name__ == "__main__":
     unittest.main()

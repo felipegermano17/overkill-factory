@@ -1,7 +1,7 @@
 {
-  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "$schema": "https://overkill-factory.dev/schemas/product-face-result.schema.json",
   "record_type": "product_face_result",
-  "created_at": "2026-06-06T02:11:27+00:00",
+  "created_at": "2026-06-06T07:22:33+00:00",
   "worker": {
     "id": "product-face",
     "name": "Product Face Validator",
@@ -27,17 +27,73 @@
     "executor_identity": "codex-overkill-factory",
     "reviewer_identity": "independent-reviewer"
   },
+  "target": "pilots/quasar-vault-guard-test/product-face/prototype.html",
   "result": "PASS",
   "blocking_findings": false,
-  "findings_summary": "Desktop and mobile Product Face evidence captured; signing disabled; six states covered.",
-  "tool_or_profile": "playwright-static-prototype-validation",
-  "executed_by": "product-face-validator",
-  "evidence_refs": [
-    "pilots/quasar-vault-guard-test/evidence/product-face-validation-report.md",
-    "pilots/quasar-vault-guard-test/evidence/screenshots/desktop.png",
-    "pilots/quasar-vault-guard-test/evidence/screenshots/mobile.png"
+  "findings_summary": "Browser proof captured for screenshots, console, DOM state, a11y basics, overlap and performance note.",
+  "tool_or_profile": "playwright-static-product-face-proof",
+  "executed_by": "product-face-proof-runner",
+  "screenshots": [
+    "pilots/quasar-vault-guard-test/worker-results/screenshots/desktop.png",
+    "pilots/quasar-vault-guard-test/worker-results/screenshots/mobile.png"
   ],
-  "next_action": "Keep Product Face evidence required for future visible surfaces.",
+  "viewports": [
+    "desktop 1440x900",
+    "mobile 390x844"
+  ],
+  "checked_states": [
+    "default",
+    "empty",
+    "loading",
+    "error",
+    "success"
+  ],
+  "user_journeys_checked": [
+    "open target",
+    "inspect desktop viewport",
+    "inspect mobile viewport"
+  ],
+  "journeys": [
+    "open target",
+    "inspect desktop viewport",
+    "inspect mobile viewport"
+  ],
+  "a11y": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM-level accessible-name, title, lang, image alt and landmark checks; not a full WCAG audit."
+  },
+  "accessibility": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM-level accessible-name, title, lang, image alt and landmark checks; not a full WCAG audit."
+  },
+  "overlap_check": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM rectangle intersection scan; nested parent-child overlaps are ignored."
+  },
+  "overlap": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM rectangle intersection scan; nested parent-child overlaps are ignored."
+  },
+  "performance_note": "desktop render duration 9 ms, dom nodes 102; mobile render duration 6 ms, dom nodes 102; browser-local static proof only, not a production performance benchmark",
+  "evidence_refs": [
+    "pilots/quasar-vault-guard-test/worker-results/state.json",
+    "pilots/quasar-vault-guard-test/worker-results/console.json",
+    "pilots/quasar-vault-guard-test/worker-results/screenshots/desktop.png",
+    "pilots/quasar-vault-guard-test/worker-results/screenshots/mobile.png",
+    "pilots/quasar-vault-guard-test/worker-results/product-face-report.md",
+    "pilots/quasar-vault-guard-test/worker-results/product-face-result.json"
+  ],
   "evidence_kind": "real",
-  "reusable_for_product": false
+  "reusable_for_product": false,
+  "next_action": "Attach product_face_result to the completion receipt.",
+  "console": {
+    "status": "pass",
+    "messages_ref": "pilots/quasar-vault-guard-test/worker-results/console.json",
+    "error_count": 0,
+    "page_error_count": 0
+  }
 }
