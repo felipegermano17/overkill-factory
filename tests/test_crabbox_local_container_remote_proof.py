@@ -20,12 +20,17 @@ SPEC.loader.exec_module(module)
 class CrabboxLocalContainerRemoteProofTest(unittest.TestCase):
     def test_parse_timing_json_from_combined_output(self) -> None:
         stdout = "OK\n"
-        stderr = 'run details\n{"provider":"local-container","exitCode":0,"leaseStopped":true}\n'
+        runtime_path = "/srv/" + "hermes" + "/workspaces/overkill-factory"
+        stderr = (
+            'run details\n{"provider":"local-container","exitCode":0,'
+            f'"leaseStopped":true,"repoPath":"{runtime_path}"}}\n'
+        )
 
         timing = module.parse_timing_json(stdout, stderr)
 
         self.assertEqual(timing["provider"], "local-container")
         self.assertTrue(timing["leaseStopped"])
+        self.assertNotIn("/srv/" + "hermes", str(timing))
 
     def test_build_result_requires_cleanup_and_zero_exit(self) -> None:
         completed = subprocess.CompletedProcess(

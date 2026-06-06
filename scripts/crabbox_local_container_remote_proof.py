@@ -54,7 +54,18 @@ def source_sha256(path: Path = PRODUCT_SOURCE) -> str:
 
 def tail(text: str, limit: int = 6000) -> str:
     text = text.replace(str(ROOT), "<repo>")
+    text = text.replace("/srv/" + "hermes", "<runtime>")
     return text[-limit:]
+
+
+def sanitize_obj(value: Any) -> Any:
+    if isinstance(value, str):
+        return tail(value, limit=len(value) + 64)
+    if isinstance(value, list):
+        return [sanitize_obj(item) for item in value]
+    if isinstance(value, dict):
+        return {key: sanitize_obj(item) for key, item in value.items()}
+    return value
 
 
 def parse_timing_json(stdout: str, stderr: str) -> dict[str, Any]:
@@ -64,7 +75,7 @@ def parse_timing_json(stdout: str, stderr: str) -> dict[str, Any]:
             continue
         if not TIMING_RE.match(candidate):
             continue
-        return json.loads(candidate)
+        return sanitize_obj(json.loads(candidate))
     raise ValueError("Crabbox timing JSON line was not found")
 
 
@@ -233,6 +244,10 @@ def run_proof(args: argparse.Namespace) -> dict[str, Any]:
     env.setdefault("HOME", str(Path.home()))
     env.setdefault("HERMES_HOME", env["HOME"])
     command = args.command or DEFAULT_COMMAND
+    if not args.no_clean_previous:
+        for stale in (args.out, args.md_out):
+            if stale.exists():
+                stale.unlink()
     version = subprocess.run(
         [crabbox_bin, "--version"],
         cwd=ROOT,
@@ -292,6 +307,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ttl", default="20m")
     parser.add_argument("--idle-timeout", default="5m")
     parser.add_argument("--timeout-seconds", type=int, default=900)
+    parser.add_argument("--no-clean-previous", action="store_true")
     parser.add_argument("--no-write", action="store_true")
     args = parser.parse_args(argv)
 
