@@ -1,0 +1,69 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T02:15:29+00:00",
+  "source_card_path": "pilots\\quasar-vault-guard-test\\cards\\qvg-first-slice.md",
+  "worker": {
+    "id": "solana-quasar-auditor",
+    "name": "Solana/Quasar Auditor Runner",
+    "factory_phase": "F7/F13",
+    "tool_required": "solanabr/Auditor with Quasar-aware onchain package"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "onchain/Solana/Quasar surface detected",
+    "timing": "after onchain_work_package and before any onchain ready/done promotion",
+    "blocking_policy": "Solana/Quasar work cannot advance as complete until Auditor evidence or an explicit human waiver is attached. Anchor assumptions are forbidden."
+  },
+  "card_ref": {
+    "card_id": "QVG-PILOT-FIRST-SLICE",
+    "slice_id": "QVG_DRY_PILOT_001",
+    "phase": "F11",
+    "risk_effective": "R3",
+    "surfaces": [
+      "ux",
+      "frontend",
+      "mobile",
+      "wallet-ui",
+      "security",
+      "agent-runtime",
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units"
+    ],
+    "executor_identity": "codex-overkill-factory",
+    "reviewer_identity": "kaxis-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "onchain_work_package",
+      "target_repo_paths",
+      "risk_effective"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "pilots/quasar-vault-guard-test"
+    ],
+    "authority_max": "dry_pilot_artifacts_only",
+    "forbidden_actions": [
+      "deploy",
+      "quasar_compile_with_real_keys",
+      "devnet_write",
+      "mainnet_write",
+      "wallet_signing",
+      "secret_access",
+      "funds_movement",
+      "custody_action",
+      "production_release"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "auditor_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

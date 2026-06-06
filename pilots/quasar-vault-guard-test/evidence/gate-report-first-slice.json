@@ -1,0 +1,47 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+  "report_type": "factory_gate_preflight",
+  "created_at": "2026-06-06T02:38:31+00:00",
+  "card_id": "QVG-PILOT-FIRST-SLICE",
+  "risk_effective": "R3",
+  "surfaces": [
+    "ux",
+    "frontend",
+    "mobile",
+    "wallet-ui",
+    "security",
+    "agent-runtime",
+    "solana-quasar",
+    "account-pda",
+    "cpi",
+    "compute-units"
+  ],
+  "card_validation_errors": [],
+  "workers": {
+    "codex-security": {
+      "required": true,
+      "reason": "risk or sensitive surface requires security evidence",
+      "status": "requires_execution"
+    },
+    "solana-quasar-auditor": {
+      "required": true,
+      "reason": "onchain/Solana/Quasar surface detected",
+      "status": "requires_execution"
+    },
+    "product-face": {
+      "required": true,
+      "reason": "visible product surface detected",
+      "status": "requires_execution"
+    },
+    "independent-reviewer": {
+      "required": true,
+      "reason": "R2+ or explicit independent review required",
+      "status": "requires_execution"
+    },
+    "human-gate-clerk": {
+      "required": true,
+      "reason": "architecture/high-risk/human gate detected",
+      "status": "requires_execution"
+    }
+  }
+}

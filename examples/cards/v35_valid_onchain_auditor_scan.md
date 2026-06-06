@@ -31,6 +31,7 @@
   },
   "rollback_or_recovery": "Keep ready for test only; real done requires existing evidence, sandbox invariants, rollback and approvals.",
   "protected_assets": ["KAXIS program", "KX token authority", "signer authority"],
+  "security_role_separation": true,
   "human_gate_packet": {
     "gate_type": "R3_onchain_sensitive",
     "required_approvers": ["Felipe", "CTO"],
@@ -58,6 +59,7 @@
   "kanban_transition_event_ref": "required_before_ready",
   "onchain_work_package": {
     "quasar_source_ref": "quasar_docs",
+    "quasar_required": true,
     "framework_default": "quasar_non_anchor",
     "account_map": ["test_account"],
     "instruction_abi": ["test_instruction"],

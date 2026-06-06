@@ -1,6 +1,18 @@
 # Factory V3.6 Learning Loop
 
-V3.6 must be generated only after the first real product pilot.
+V3.6 must be generated only after pilot evidence, not opinion.
+
+The first completed pilot is a dry pilot, not a production product:
+
+```text
+pilot: pilots/quasar-vault-guard-test
+Hermes board: overkill-factory-pilot-10
+Hermes task: t_a09d1c2e
+status: done
+```
+
+This is enough to promote contract and process learnings. It is not enough to
+claim production readiness or Quasar program safety.
 
 ## Questions To Answer
 
@@ -37,3 +49,65 @@ Each V3.6 change must include:
 
 Use `templates/v3-6-learning-record.md` during the pilot so learning is
 captured as evidence, not memory.
+
+## Dry-Pilot Learnings Already Promoted
+
+### 1. Local Validator Must Fail Before Hermes Fails
+
+Problem observed: Hermes blocked completion twice after local validation passed.
+
+Evidence:
+
+- first block: `security_scan_result` lacked `scanner_agent`, `tool`, `scope`
+  and Codex Security reference;
+- second block: Hermes V2 completion metadata lacked evidence paths,
+  verification, sandbox, rollback and scoped approval records.
+
+Change:
+
+- `factoryctl.py`, schemas and Codex skill validators now validate the compound
+  Factory 10 + Hermes V3.5 + Hermes V2 receipt contract.
+
+Why better: agents get a local, deterministic failure before they mutate Kanban
+state.
+
+### 2. Portable Pilot Package
+
+Problem observed: Hermes reviewers could not re-run `factoryctl.py` inside the
+context-lock pilot package.
+
+Change:
+
+- the pilot package now includes `tools/factoryctl.py`;
+- README and Receipt Five include portable commands.
+
+Why better: a reviewer does not need hidden repo context to verify a package.
+
+### 3. Gate Report Is Preflight, Not Final Status
+
+Problem observed: Hermes reviewers repeatedly flagged that
+`gate-report-first-slice.json` still says workers `requires_execution` even
+after worker results exist.
+
+Change:
+
+- the pilot now has `evidence/worker-closure-summary.json`;
+- methodology now includes `preflight -> packet -> result -> closure summary ->
+  Receipt Five`.
+
+Why better: agents stop reading a preflight artifact as a final completion
+state.
+
+### 4. Dry Pilot Approval Is Not Production Approval
+
+Problem observed: every Hermes reviewer passed the dry pilot only with hard
+boundaries.
+
+Change:
+
+- approvals in Receipt Five are scoped to `dry pilot only`;
+- forbidden authority is repeated in human gate, worker summary, receipt and
+  Hermes comments.
+
+Why better: the factory can close process tests without accidentally granting
+deploy, signing, funds, devnet or mainnet authority.

@@ -80,6 +80,47 @@ the scanner, Auditor, browser validation, reviewer, or human actor.
 
 Approved human records and PASS/WAIVED worker results require evidence refs.
 
+## Closure Summary
+
+After workers run, create a closure summary before Receipt Five.
+
+This is separate from the gate report:
+
+- gate report says which workers are required before execution;
+- worker packets tell specialists what to do;
+- worker results prove what happened;
+- closure summary reconciles required workers against delivered evidence;
+- Receipt Five closes the Kanban transition.
+
+This avoids a common agent error: treating `requires_execution` in a preflight
+gate report as either proof of failure or proof of completion.
+
+## Hermes V2/V3.5 Completion Metadata
+
+For high-risk Hermes/KAXIS completion, Receipt Five must carry both the Factory
+10 fields and the legacy Hermes V2 fields.
+
+Required V3.5 security result fields:
+
+- `scanner_agent`
+- `tool`
+- `scope`
+- `result`
+- `findings_summary`
+- `evidence_refs`
+
+Required V2 metadata when `hermes_kaxis_v2_completion_required=true`:
+
+- `evidence_paths`
+- `verification.passed=true`
+- `sandbox.passed=true`
+- `rollback.verified=true`
+- approval records for QA, independent review, security, cybersecurity, CTO
+  and Felipe gate
+
+This is intentionally stricter than a normal task receipt. Hermes should reject
+weak completion before agents can mark high-risk work done.
+
 ## Next Runtime Hook
 
 Hermes should call `factoryctl.py gate-report` when a card is created or moved

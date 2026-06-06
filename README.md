@@ -60,16 +60,31 @@ The portable patch is available at:
 adapters/hermes/patches/0001-add-kaxis-factory-10-kanban-gates.patch
 ```
 
+The first dry pilot is complete:
+
+```text
+pilot: pilots/quasar-vault-guard-test
+Hermes board: overkill-factory-pilot-10
+Hermes task: t_a09d1c2e
+status: done
+```
+
+Primary Whimsical map:
+
+[Overkill Factory - Factory 10+ Fluxo Linear Legivel](https://whimsical.com/felipe-s-workspace2684/overkill-factory-factory-10-fluxo-linear-legivel-XVvfzkVyVEwiPMQM9TNP84)
+
 ## Quick Start
 
 Read these in order:
 
 1. `docs/methodology/overkill-factory-v0.md`
-2. `docs/planning/execution-plan.md`
-3. `docs/automation/worker-automation-v0.md`
-4. `adapters/hermes/README.md`
-5. `agents/worker-roster.md`
-6. `docs/maps/factory-10-flow.mmd`
+2. `docs/methodology/overkill-factory-v3-6.md`
+3. `docs/planning/execution-plan.md`
+4. `docs/automation/worker-automation-v0.md`
+5. `adapters/hermes/README.md`
+6. `agents/worker-roster.md`
+7. `docs/maps/whimsical-board.md`
+8. `pilots/quasar-vault-guard-test/README.md`
 
 Run the local preflight:
 
@@ -91,7 +106,11 @@ python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_o
 The repo prepares contracts and worker packets. It does not fake scanner output,
 Auditor results, screenshots, independent approval, or human decisions.
 
-The first real pilot still needs a real raw product paper.
+The dry pilot proves the factory process and Hermes gates. It does not prove
+production readiness, deploy readiness, real Quasar program safety, wallet
+signing, devnet/mainnet behavior, funds movement, or custody safety.
+
+The first production-intent pilot still needs a real raw product paper.
 
 ## License
 

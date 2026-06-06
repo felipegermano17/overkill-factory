@@ -1,5 +1,20 @@
 # First Real Product Pilot
 
+## Current Baseline
+
+A dry pilot already ran on a synthetic paper:
+
+```text
+pilot: pilots/quasar-vault-guard-test
+Hermes board: overkill-factory-pilot-10
+Hermes task: t_a09d1c2e
+status: done
+```
+
+That dry pilot proved the factory process and Hermes gates. It did not prove a
+real product, real Quasar code, real wallet behavior, devnet/mainnet behavior,
+funds movement, custody, or production readiness.
+
 ## Objective
 
 Run one real product paper through Overkill Factory from raw input to at least
@@ -61,6 +76,5 @@ Use `templates/pilot-input-paper.md` if the paper needs a stable intake shape.
 
 ## Current Blocker
 
-This pilot cannot honestly run until a real product paper is selected. Running
-the pilot on synthetic input would improve formatting, but it would not prove
-that the factory survives messy real material.
+This production-intent pilot cannot honestly run until a real product paper is
+selected.

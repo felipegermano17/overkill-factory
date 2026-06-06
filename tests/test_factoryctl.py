@@ -40,6 +40,10 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(report["workers"]["independent-reviewer"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["human-gate-clerk"]["status"], "requires_execution")
 
+    def test_pilot_card_matches_hermes_ready_gate_constraints(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md")
+        self.assertEqual(factoryctl.validate_card(card), [])
+
     def test_r3_without_scan_and_human_packet_is_invalid(self) -> None:
         card = load_card("v35_invalid_security_no_scan.md")
         errors = factoryctl.validate_card(card)
@@ -82,6 +86,52 @@ class FactoryCtlTest(unittest.TestCase):
                 findings_summary="blocking issue",
                 next_action="fix",
             )
+
+    def test_codex_security_result_matches_hermes_completion_gate_fields(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md")
+        result = factoryctl.build_worker_result(
+            "codex-security",
+            card,
+            result="PASS",
+            tool_or_profile="codex-security:scoped-security-scan",
+            executed_by="codex-security-runner",
+            evidence_refs=["pilots/quasar-vault-guard-test/evidence/security-scan-report.md"],
+            blocking_findings=False,
+            findings_summary="No blocking dry-pilot finding.",
+            next_action="Run full scan before production.",
+        )
+
+        self.assertEqual(result["scanner_agent"], "codex-security-runner")
+        self.assertEqual(result["tool"], "codex-security:scoped-security-scan")
+        self.assertIn("Product SOT", result["scope"])
+
+    def test_receipt_security_result_requires_hermes_completion_gate_fields(self) -> None:
+        bad_receipt = {
+            "receipt_five": {
+                "changed": "x",
+                "artifact_paths": ["artifact"],
+                "verification_commands": ["verify"],
+                "verification_result": "PASS",
+                "reviewer_required": False,
+                "next_action": "none",
+            },
+            "kanban_transition_event": {},
+            "security_scan_result": {
+                "record_type": "security_scan_result",
+                "result": "PASS",
+                "evidence_refs": ["security.md"],
+            },
+        }
+
+        errors = factoryctl.validate_receipt(bad_receipt)
+        self.assertIn("security_scan_result missing scanner_agent, tool, findings_summary", errors)
+        self.assertIn("security_scan_result scope must be a non-empty string array", errors)
+
+    def test_pilot_receipt_matches_hermes_completion_gates(self) -> None:
+        receipt = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "evidence" / "receipt-five-first-slice.json")
+        self.assertEqual(factoryctl.validate_receipt(receipt), [])
+        self.assertTrue(receipt["hermes_kaxis_v2_completion_required"])
+        self.assertIn("cto_gate", receipt["approvals"])
 
     def test_human_approval_requires_evidence(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")

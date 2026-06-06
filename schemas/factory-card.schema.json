@@ -37,6 +37,9 @@
     "factory_method_version": {
       "enum": ["KAXIS_V3_5_AGENT_WORKFORCE", "KAXIS_V3_5_FACTORY_10"]
     },
+    "source_state": {
+      "enum": ["backlog", "compiled", "inference", "promoted", "raw", "rejected"]
+    },
     "risk_initial": {
       "enum": ["R0", "R1", "R2", "R3", "R4"]
     },
@@ -52,6 +55,8 @@
     "reviewer_identity": { "type": "string", "minLength": 3 },
     "runtime_contract": { "type": "object" },
     "security_contract": { "type": "object" },
+    "security_role_separation": { "type": "boolean" },
+    "security_role_separation_exception": { "type": "string" },
     "product_face_packet": { "type": "object" },
     "onchain_work_package": { "type": "object" },
     "security_scan_packet": { "type": "object" },

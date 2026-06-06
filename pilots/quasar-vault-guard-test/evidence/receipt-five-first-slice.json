@@ -1,0 +1,377 @@
+{
+  "receipt_five": {
+    "changed": "Created and executed the Quasar Vault Guard dry pilot first slice: source resolution, Product SOT, architecture, Product Face prototype, worker packets, worker results, human gate and Hermes-ready evidence.",
+    "artifact_paths": [
+      "pilots\\quasar-vault-guard-test\\00-raw-paper.md",
+      "pilots\\quasar-vault-guard-test\\02-product-sot.md",
+      "pilots\\quasar-vault-guard-test\\04-architecture-candidate.md",
+      "pilots\\quasar-vault-guard-test\\05-product-face-packet.md",
+      "pilots\\quasar-vault-guard-test\\07-onchain-work-package.md",
+      "pilots\\quasar-vault-guard-test\\08-security-scan-packet.md",
+      "pilots\\quasar-vault-guard-test\\cards\\qvg-first-slice.md",
+      "pilots\\quasar-vault-guard-test\\product-face\\prototype.html",
+      "pilots\\quasar-vault-guard-test\\evidence\\screenshots\\desktop.png",
+      "pilots\\quasar-vault-guard-test\\evidence\\screenshots\\mobile.png",
+      "pilots\\quasar-vault-guard-test\\evidence\\security-scan-report.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\auditor-preflight-report.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\independent-review-report.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\human-gate-record.json",
+      "pilots\\quasar-vault-guard-test\\tools\\factoryctl.py",
+      "pilots\\quasar-vault-guard-test\\evidence\\worker-closure-summary.json",
+      "pilots\\quasar-vault-guard-test\\evidence\\v2-completion-gate-evidence.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-qa-review.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-security-review.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-cybersecurity-review.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-cto-review.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-reviewer-review.md"
+    ],
+    "verification_commands": [
+      "python tools/factoryctl.py validate-card cards/qvg-first-slice.md",
+      "python tools/factoryctl.py gate-report --card cards/qvg-first-slice.md --out evidence/gate-report-first-slice.json",
+      "python tools/factoryctl.py validate-receipt evidence/receipt-five-first-slice.json",
+      "python scripts/factoryctl.py validate-card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md",
+      "python scripts/factoryctl.py validate-receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json",
+      "python -m unittest discover -s tests -v",
+      "Playwright desktop/mobile screenshot capture for product-face/prototype.html",
+      "Hermes profile reviews: kaxis-qa, kaxis-security, kaxis-cybersecurity, kaxis-cto, kaxis-reviewer"
+    ],
+    "verification_result": "PASS_WITH_BOUNDARIES: dry pilot complete; Hermes profile reviews passed for dry pilot only; no production, signing, key, funds, devnet or mainnet authority granted.",
+    "reviewer_required": true,
+    "reviewer_result": "APPROVE_WITH_BOUNDARIES: see independent-review-result.json and independent-review-report.md",
+    "next_action": "Promote V3.6 learning items, keep portable pilot tooling, and wire Hermes automatic worker execution hooks."
+  },
+  "kanban_transition_event": {
+    "from_status": "ready",
+    "to_status": "done",
+    "actor": "codex-overkill-factory",
+    "worker": "Pilot Decomposition Planner",
+    "receipt_refs": [
+      "pilots\\quasar-vault-guard-test\\evidence\\receipt-five-first-slice.json"
+    ],
+    "artifact_refs": [
+      "pilots\\quasar-vault-guard-test\\cards\\qvg-first-slice.md"
+    ]
+  },
+  "product_face_result": {
+    "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+    "record_type": "product_face_result",
+    "created_at": "2026-06-05T23:11:27-03:00",
+    "worker": {
+      "id": "product-face",
+      "name": "Product Face Validator",
+      "factory_phase": "F5/F13"
+    },
+    "card_ref": {
+      "card_id": "QVG-PILOT-FIRST-SLICE",
+      "slice_id": "QVG_DRY_PILOT_001",
+      "phase": "F11",
+      "risk_effective": "R3",
+      "surfaces": [
+        "ux",
+        "frontend",
+        "mobile",
+        "wallet-ui",
+        "security",
+        "agent-runtime",
+        "solana-quasar",
+        "account-pda",
+        "cpi",
+        "compute-units"
+      ],
+      "executor_identity": "codex-overkill-factory",
+      "reviewer_identity": "kaxis-reviewer"
+    },
+    "result": "PASS",
+    "blocking_findings": false,
+    "findings_summary": "Desktop and mobile Product Face evidence captured; signing disabled; six states covered.",
+    "tool_or_profile": "playwright-static-prototype-validation",
+    "executed_by": "product-face-validator",
+    "evidence_refs": [
+      "pilots/quasar-vault-guard-test/evidence/product-face-validation-report.md",
+      "pilots/quasar-vault-guard-test/evidence/screenshots/desktop.png",
+      "pilots/quasar-vault-guard-test/evidence/screenshots/mobile.png"
+    ],
+    "next_action": "Keep Product Face evidence required for future visible surfaces."
+  },
+  "security_scan_result": {
+    "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+    "record_type": "security_scan_result",
+    "created_at": "2026-06-05T23:23:22-03:00",
+    "worker": {
+      "id": "codex-security",
+      "name": "Codex Security Runner",
+      "factory_phase": "F8/F13"
+    },
+    "card_ref": {
+      "card_id": "QVG-PILOT-FIRST-SLICE",
+      "slice_id": "QVG_DRY_PILOT_001",
+      "phase": "F11",
+      "risk_effective": "R3",
+      "surfaces": [
+        "ux",
+        "frontend",
+        "mobile",
+        "wallet-ui",
+        "security",
+        "agent-runtime",
+        "solana-quasar",
+        "account-pda",
+        "cpi",
+        "compute-units"
+      ],
+      "executor_identity": "codex-overkill-factory",
+      "reviewer_identity": "kaxis-reviewer"
+    },
+    "result": "PASS",
+    "blocking_findings": false,
+    "findings_summary": "No blocking dry-pilot finding; production authority remains blocked.",
+    "tool_or_profile": "codex-security:scoped-security-scan",
+    "executed_by": "codex-security-runner",
+    "evidence_refs": [
+      "pilots/quasar-vault-guard-test/evidence/security-scan-report.md",
+      "pilots/quasar-vault-guard-test/evidence/security-scan-report.html"
+    ],
+    "next_action": "Run full scan on real implementation before any deploy or signing path.",
+    "scanner_agent": "codex-security-runner",
+    "tool": "codex-security:scoped-security-scan",
+    "scope": [
+      "Product SOT",
+      "architecture",
+      "Product Face prototype",
+      "onchain work package",
+      "worker packets",
+      "human gate",
+      "Receipt Five",
+      "authority boundaries"
+    ]
+  },
+  "auditor_result": {
+    "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+    "record_type": "auditor_result",
+    "created_at": "2026-06-05T23:11:27-03:00",
+    "worker": {
+      "id": "solana-quasar-auditor",
+      "name": "Solana/Quasar Auditor Runner",
+      "factory_phase": "F7/F13"
+    },
+    "card_ref": {
+      "card_id": "QVG-PILOT-FIRST-SLICE",
+      "slice_id": "QVG_DRY_PILOT_001",
+      "phase": "F11",
+      "risk_effective": "R3",
+      "surfaces": [
+        "ux",
+        "frontend",
+        "mobile",
+        "wallet-ui",
+        "security",
+        "agent-runtime",
+        "solana-quasar",
+        "account-pda",
+        "cpi",
+        "compute-units"
+      ],
+      "executor_identity": "codex-overkill-factory",
+      "reviewer_identity": "kaxis-reviewer"
+    },
+    "result": "PASS",
+    "blocking_findings": false,
+    "findings_summary": "Auditor path used as preflight; no Quasar code audit pass claimed.",
+    "tool_or_profile": "solanabr/Auditor-preflight",
+    "executed_by": "solana-quasar-auditor-runner",
+    "evidence_refs": [
+      "pilots/quasar-vault-guard-test/evidence/auditor-preflight-report.md"
+    ],
+    "next_action": "Run Auditor against real Quasar source in future onchain implementation card."
+  },
+  "independent_review_result": {
+    "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+    "record_type": "independent_review_result",
+    "created_at": "2026-06-05T23:11:27-03:00",
+    "worker": {
+      "id": "independent-reviewer",
+      "name": "Independent Reviewer",
+      "factory_phase": "F14"
+    },
+    "card_ref": {
+      "card_id": "QVG-PILOT-FIRST-SLICE",
+      "slice_id": "QVG_DRY_PILOT_001",
+      "phase": "F11",
+      "risk_effective": "R3",
+      "surfaces": [
+        "ux",
+        "frontend",
+        "mobile",
+        "wallet-ui",
+        "security",
+        "agent-runtime",
+        "solana-quasar",
+        "account-pda",
+        "cpi",
+        "compute-units"
+      ],
+      "executor_identity": "codex-overkill-factory",
+      "reviewer_identity": "kaxis-reviewer"
+    },
+    "result": "PASS",
+    "blocking_findings": false,
+    "findings_summary": "Dry pilot approved with boundaries; does not prove production readiness.",
+    "tool_or_profile": "independent-review",
+    "executed_by": "kaxis-reviewer",
+    "evidence_refs": [
+      "pilots/quasar-vault-guard-test/evidence/independent-review-report.md"
+    ],
+    "next_action": "Promote V3.6 learning items."
+  },
+  "human_gate_record": {
+    "$schema": "https://overkill-factory.dev/schemas/human-gate-record.schema.json",
+    "record_type": "human_gate_record",
+    "gate_type": "R3",
+    "card_id": "QVG-PILOT-FIRST-SLICE",
+    "card_ref": {
+      "card_id": "QVG-PILOT-FIRST-SLICE",
+      "slice_id": "QVG_DRY_PILOT_001",
+      "phase": "F11",
+      "risk_effective": "R3",
+      "surfaces": [
+        "ux",
+        "frontend",
+        "mobile",
+        "wallet-ui",
+        "security",
+        "agent-runtime",
+        "solana-quasar",
+        "account-pda",
+        "cpi",
+        "compute-units"
+      ],
+      "executor_identity": "codex-overkill-factory",
+      "reviewer_identity": "kaxis-reviewer"
+    },
+    "decision": "approved",
+    "human_actor": "Felipe",
+    "decision_at": "2026-06-05T23:11:27-03:00",
+    "approved_scope": [
+      "dry pilot artifacts and Hermes test completion"
+    ],
+    "forbidden_scope": [
+      "production deploy",
+      "devnet/mainnet write",
+      "wallet signing",
+      "key or fund access"
+    ],
+    "required_changes": [],
+    "risk_owner": "Felipe",
+    "security_owner": "kaxis-cybersecurity",
+    "rollback_owner": "codex-overkill-factory",
+    "evidence_refs": [
+      "Codex chat 2026-06-05 user authorization for test goal"
+    ],
+    "notes": "Approved for dry pilot only; not production authority."
+  },
+  "hermes_kaxis_v2_completion_required": true,
+  "evidence_paths": [
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/receipt-five-first-slice.json",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/v2-completion-gate-evidence.md",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/worker-closure-summary.json",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/security-scan-report.md",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/auditor-preflight-report.md",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/independent-review-report.md",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/human-gate-record.json",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-qa-review.md",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-security-review.md",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-cybersecurity-review.md",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-cto-review.md",
+    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-reviewer-review.md"
+  ],
+  "verification": {
+    "passed": true,
+    "commands": [
+      "python tools/factoryctl.py validate-card cards/qvg-first-slice.md",
+      "python tools/factoryctl.py gate-report --card cards/qvg-first-slice.md --out evidence/gate-report-first-slice.json",
+      "python tools/factoryctl.py validate-receipt evidence/receipt-five-first-slice.json",
+      "python scripts/factoryctl.py validate-card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md",
+      "python scripts/factoryctl.py validate-receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json",
+      "python -m unittest discover -s tests -v",
+      "Playwright desktop/mobile screenshot capture for product-face/prototype.html",
+      "Hermes profile reviews: kaxis-qa, kaxis-security, kaxis-cybersecurity, kaxis-cto, kaxis-reviewer"
+    ],
+    "result": "PASS_WITH_BOUNDARIES"
+  },
+  "sandbox": {
+    "passed": true,
+    "invariants": [
+      "no production deployment",
+      "no devnet or mainnet write",
+      "no wallet signing",
+      "no secret or key access",
+      "no funds movement",
+      "no custody action",
+      "no Quasar program safety claim"
+    ]
+  },
+  "rollback": {
+    "verified": true,
+    "evidence": "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/v2-completion-gate-evidence.md",
+    "plan": "Archive or supersede the Hermes card and rerun the dry pilot from the raw paper if any evidence record is missing or contradictory."
+  },
+  "approvals": {
+    "qa": {
+      "approved": true,
+      "actor": "kaxis-qa",
+      "at": "2026-06-06T02:36:32+00:00",
+      "scope": "dry pilot only",
+      "evidence_refs": [
+        "evidence/hermes-kaxis-qa-review.md"
+      ]
+    },
+    "independent_review": {
+      "approved": true,
+      "actor": "kaxis-reviewer",
+      "at": "2026-06-06T02:36:32+00:00",
+      "scope": "dry pilot only",
+      "evidence_refs": [
+        "evidence/hermes-kaxis-reviewer-review.md",
+        "evidence/independent-review-report.md"
+      ]
+    },
+    "security_review": {
+      "approved": true,
+      "actor": "kaxis-security",
+      "at": "2026-06-06T02:36:32+00:00",
+      "scope": "dry pilot only",
+      "evidence_refs": [
+        "evidence/hermes-kaxis-security-review.md",
+        "evidence/security-scan-report.md"
+      ]
+    },
+    "cybersecurity_review": {
+      "approved": true,
+      "actor": "kaxis-cybersecurity",
+      "at": "2026-06-06T02:36:32+00:00",
+      "scope": "dry pilot only",
+      "evidence_refs": [
+        "evidence/hermes-kaxis-cybersecurity-review.md",
+        "evidence/security-threat-model.md"
+      ]
+    },
+    "cto_gate": {
+      "approved": true,
+      "actor": "kaxis-cto",
+      "at": "2026-06-06T02:36:32+00:00",
+      "scope": "dry pilot only",
+      "evidence_refs": [
+        "evidence/hermes-kaxis-cto-review.md"
+      ]
+    },
+    "felipe_gate": {
+      "approved": true,
+      "actor": "Felipe",
+      "at": "2026-06-06T02:36:32+00:00",
+      "scope": "dry pilot only, based on explicit Codex chat authorization for this goal",
+      "evidence_refs": [
+        "evidence/human-gate-record.json"
+      ]
+    }
+  }
+}

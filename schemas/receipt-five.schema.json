@@ -39,8 +39,60 @@
       "required": ["from_status", "to_status", "actor", "worker", "receipt_refs", "artifact_refs"],
       "additionalProperties": true
     },
+    "hermes_kaxis_v2_completion_required": {
+      "type": "boolean"
+    },
+    "evidence_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["passed", "commands"],
+      "additionalProperties": true
+    },
+    "sandbox": {
+      "type": "object",
+      "required": ["passed", "invariants"],
+      "additionalProperties": true
+    },
+    "rollback": {
+      "type": "object",
+      "required": ["verified", "evidence"],
+      "additionalProperties": true
+    },
+    "approvals": {
+      "type": "object",
+      "required": [
+        "qa",
+        "independent_review",
+        "security_review",
+        "cybersecurity_review",
+        "cto_gate",
+        "felipe_gate"
+      ],
+      "additionalProperties": true
+    },
     "security_scan_result": {
       "type": "object",
+      "required": ["scanner_agent", "tool", "scope", "result", "findings_summary", "evidence_refs"],
+      "properties": {
+        "scanner_agent": { "type": "string", "minLength": 4 },
+        "tool": { "type": "string", "minLength": 4 },
+        "scope": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "result": { "enum": ["PASS", "WAIVED"] },
+        "findings_summary": { "type": "string", "minLength": 3 },
+        "blocking_findings": { "type": "boolean" },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
       "additionalProperties": true
     },
     "auditor_result": {

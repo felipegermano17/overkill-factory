@@ -1,0 +1,70 @@
+{
+  "record_type": "worker_closure_summary",
+  "scope": "dry_pilot_only",
+  "important_note": "gate-report-first-slice.json is a preflight report. It correctly marks critical workers as requires_execution before results exist. This closure summary records the post-execution state.",
+  "workers": {
+    "product-face": {
+      "required_by_gate_report": true,
+      "result": "PASS",
+      "evidence_refs": [
+        "evidence/product-face-validation-report.md",
+        "evidence/screenshots/desktop.png",
+        "evidence/screenshots/mobile.png"
+      ]
+    },
+    "codex-security": {
+      "required_by_gate_report": true,
+      "result": "PASS",
+      "evidence_refs": [
+        "evidence/security-scan-report.md",
+        "evidence/security-scan-report.html",
+        "worker-results/security-scan-result.json"
+      ]
+    },
+    "solana-quasar-auditor": {
+      "required_by_gate_report": true,
+      "result": "PASS_WITH_BOUNDARIES",
+      "evidence_refs": [
+        "evidence/auditor-preflight-report.md",
+        "worker-results/auditor-result.json"
+      ],
+      "boundary": "No Quasar source code exists yet, so this is Auditor preflight evidence, not a real program audit."
+    },
+    "independent-reviewer": {
+      "required_by_gate_report": true,
+      "result": "PASS_WITH_BOUNDARIES",
+      "evidence_refs": [
+        "evidence/independent-review-report.md",
+        "worker-results/independent-review-result.json",
+        "evidence/hermes-kaxis-reviewer-review.md"
+      ]
+    },
+    "human-gate-clerk": {
+      "required_by_gate_report": true,
+      "result": "APPROVED_DRY_PILOT_ONLY",
+      "evidence_refs": [
+        "evidence/human-gate-record.json"
+      ],
+      "boundary": "Felipe authorization is limited to the dry pilot and does not approve production."
+    }
+  },
+  "hermes_profile_reviews": [
+    "evidence/hermes-kaxis-qa-review.md",
+    "evidence/hermes-kaxis-security-review.md",
+    "evidence/hermes-kaxis-cybersecurity-review.md",
+    "evidence/hermes-kaxis-cto-review.md",
+    "evidence/hermes-kaxis-reviewer-review.md"
+  ],
+  "result": "PASS_WITH_BOUNDARIES",
+  "forbidden_authority": [
+    "production",
+    "deploy",
+    "devnet",
+    "mainnet",
+    "wallet_signing",
+    "keys",
+    "funds",
+    "custody",
+    "real_quasar_program_safety_claim"
+  ]
+}
