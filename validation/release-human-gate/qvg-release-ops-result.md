@@ -1,5 +1,8 @@
 # QVG Release Operations Result
 
+Historical dry-run evidence. The current production release-control lane is
+recorded in `validation/production/release/release-ops-result.md`.
+
 Record type: `release_ops_result`
 Worker: `release-ops-worker`
 Card: `QVG-RELEASE-GATE-DRY-RUN`
@@ -80,7 +83,7 @@ Required real-release monitoring before unblock:
 
 ## Production blockers
 
-Production remains blocked by:
+At this dry-run stage, production remained blocked by:
 
 - real production human gate missing;
 - rollback evidence missing;

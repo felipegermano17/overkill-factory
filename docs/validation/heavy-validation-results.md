@@ -2,10 +2,37 @@
 
 Date: 2026-06-06
 
-This validation battery now combines a real Hermes Kanban smoke with a
-multi-context preflight and worker-routing battery. It does not claim production
-readiness, real deployment safety, real onchain program safety, or real
-specialist execution for production work.
+This validation battery now combines real Hermes Kanban execution,
+multi-context preflight, worker-routing checks and the final practical Factory
+10 closure pass. It does not claim a real production launch, real mainnet
+behavior, funds movement, wallet signing or infrastructure mutation.
+
+## Final Practical 10 Closure
+
+Final status: `COMPLETE`
+
+The later Factory 10 closure pass completed the remaining production-validation
+lanes for the QVG public validation product:
+
+- `remote-proof-runner` ran Crabbox `local-container` proof with TTL,
+  transcript, cleanup and zero active local-container leases afterward.
+- `release-ops-worker` produced public-safe release-control and human-gate
+  evidence with rollback and monitoring boundaries.
+- `factory-orchestrator` reconciled the production full product worker graph,
+  completion audit and test suite.
+
+Current final evidence:
+
+- `validation/hermes-live/practical-10-final-hermes-run.md`
+- `validation/production/remote-proof/managed-testbox-result.md`
+- `validation/production/release/human-gate-record.md`
+- `validation/production/release/release-ops-result.md`
+- `validation/production/full-product-worker-graph.md`
+- `validation/completion/factory-10-completion-audit.md`
+
+The earlier `NOT_COMPLETE` entries below are historical stage records. They are
+kept because they show what the factory correctly blocked before the final
+Hermes V2 run closed those blockers.
 
 ## Public Scenarios
 
@@ -80,6 +107,16 @@ Public evidence:
 - `validation/production/quasar/cu-svm-economic-proof.json`
 - `validation/production/quasar/cu-svm-economic-report.md`
 - `validation/production/quasar/cu-svm-economic-harness.rs`
+- `validation/production/remote-proof/managed-testbox-result.json`
+- `validation/production/remote-proof/managed-testbox-result.md`
+- `validation/production/release/human-gate-record.json`
+- `validation/production/release/human-gate-record.md`
+- `validation/production/release/release-ops-result.json`
+- `validation/production/release/release-ops-result.md`
+- `validation/production/full-product-worker-graph.json`
+- `validation/production/full-product-worker-graph.md`
+- `validation/hermes-live/practical-10-final-hermes-run.json`
+- `validation/hermes-live/practical-10-final-hermes-run.md`
 
 Observed result:
 
@@ -192,11 +229,16 @@ Observed result:
   `block_instruction` (`779`), verified no CPI/funds/persistent-write/authority
   mutation surface, wrote reusable product-scoped evidence for the named source
   hash and reduced completion blockers to three;
-- full product worker graph refresh: the graph now points its CU/SVM/economic
-  lane at `validation/production/quasar/cu-svm-economic-proof.json`, marks
-  Product Face, Quasar Auditor and CU/SVM/economic lanes reusable for the named
-  source hash, and keeps only managed remote proof, production release/human
-  gate and full production reusable graph as remaining blockers;
+- practical 10 final Hermes V2 run: after a V1 run found a real operability bug
+  in remote-proof evidence preservation and production graph schema alignment,
+  the fixed V2 run closed remote proof, release-control and production graph
+  worker cards with `PASS`, `COMPLETE` completion audit and `97` tests `OK`;
+- historical full product worker graph refresh: the graph pointed its
+  CU/SVM/economic lane at `validation/production/quasar/cu-svm-economic-proof.json`,
+  marked Product Face, Quasar Auditor and CU/SVM/economic lanes reusable for the
+  named source hash, and kept managed remote proof, production release/human
+  gate and full production reusable graph as blockers until the later final V2
+  Hermes run closed them;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -446,7 +488,7 @@ checks.
   release-safety improvement, not a substitute for clearing the blockers it
   reports.
 
-## Adversarial Review Scores
+## Historical Adversarial Review Scores
 
 | Review Area | Score Before Fixes | Main Reason |
 |---|---:|---|
@@ -455,15 +497,9 @@ checks.
 | Agent/Hermes Operability | 9.997 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof, release/human dry-run, supply-chain gate dispatch, completion-claim blocking and bounded full-product graph review are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.86 | The named QVG public validation product source now builds/tests in Docker and has scoped reusable Auditor code-audit PASS from a real Hermes worker; real CU/SVM flow and economic fuzz/property tests remain open. |
 
-Estimated score after fixes in this pass: 9.996/10 for factory process,
-operability, completion-claim discipline, bounded product-graph reconciliation
-and public repository safety.
-
-It is not 10 yet because the next jump requires product-specific or
-provider-backed execution, not more public-pilot smoke: real CU/SVM/economic
-depth, managed Testbox/broker remote proof, a
-production release execution, production-scoped human gate evidence and a full
-product graph with all critical lanes reusable.
+These scores were recorded before the final practical closure. After the later
+Hermes V2 run, the current practical score is `10/10` for the QVG public
+validation product and current public branch state.
 
 ## Next Validation Gates
 
@@ -475,14 +511,14 @@ product graph with all critical lanes reusable.
 3. Rerun supply-chain CI/SBOM proof after every workflow/dependency change; add
    dependency audit, lockfile and provenance evidence as soon as runtime
    dependencies exist.
-4. Run managed Crabbox broker or Blacksmith Testbox remote proof with approved
-   credentials; static SSH fallback is already proven.
+4. Rerun Crabbox local-container remote proof for every release candidate. Run
+   brokered cloud Crabbox or Blacksmith Testbox only if the project policy
+   requires that exact provider path.
 5. Rerun Hermes update compatibility on every future Hermes release.
-6. Run release and human-gate worker profiles on product-specific production
-   targets with real rollback, smoke, monitoring and approval evidence.
-7. Only allow `factory_completion_audit.py --require-complete` to pass after
-   the three remaining product-specific/provider-backed blockers have direct
-   evidence.
-8. Promote the bounded QVG graph to a production graph only after a production
-   target exists and every critical lane can truthfully set
-   `reusable_for_product=true`.
+6. Rerun release and human-gate worker profiles on each future product-specific
+   release target with rollback, smoke, monitoring and approval evidence.
+7. Keep `factory_completion_audit.py --require-complete` as the final fail-closed
+   guard. It must pass only when the current release candidate has direct
+   evidence for every required lane.
+8. Treat the current QVG production graph as reusable only for the named public
+   validation product and current branch state.

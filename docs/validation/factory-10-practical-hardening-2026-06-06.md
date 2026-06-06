@@ -1,9 +1,31 @@
 # Factory 10 Practical Hardening - 2026-06-06
 
 This pass moved the public factory from strong preflight toward practical
-operation. It still does not claim complete autonomous production execution.
+operation. A later final Hermes V2 run closed the remaining practical Factory 10
+blockers for the QVG public validation product and current public branch state.
+It still does not claim a real production launch.
 
 ## What Improved
+
+### Final Practical 10 Closure
+
+After the hardening work below, a real Hermes V2 run completed the remaining
+remote proof, release-control and production graph lanes.
+
+Evidence:
+
+- `validation/hermes-live/practical-10-final-hermes-run.md`
+- `validation/production/remote-proof/managed-testbox-result.md`
+- `validation/production/release/human-gate-record.md`
+- `validation/production/release/release-ops-result.md`
+- `validation/production/full-product-worker-graph.md`
+- `validation/completion/factory-10-completion-audit.md`
+
+Result: `COMPLETE`, `completion_claim_allowed=true`, score estimate `10/10`.
+
+Boundary: no deploy, funds movement, wallet signing, secret disclosure,
+infrastructure mutation, DNS change, IAM change, KMS change or history rewrite
+was performed.
 
 ### Hermes Transition Plan
 
@@ -111,8 +133,10 @@ the scanner now represents the real public policy more closely.
 `scripts/factory_completion_audit.py` now creates a schema-backed completion
 audit in `validation/completion/`.
 
-The audit currently returns `NOT_COMPLETE` and `completion_claim_allowed=false`.
-With `--require-complete`, it exits non-zero while blockers remain.
+At this hardening stage the audit returned `NOT_COMPLETE` and
+`completion_claim_allowed=false`. With `--require-complete`, it exited non-zero
+while blockers remained. The later final Factory 10 run closed those blockers
+and the current audit returns `COMPLETE`.
 
 This is better than an optimistic score because autonomous agents need a hard
 release boundary. A high score can guide prioritization, but it cannot authorize
@@ -181,13 +205,12 @@ bound to a named product source hash and approval scope. It clears the Auditor
 lane for that source without pretending to clear CU/SVM/economic proof, deploy,
 release or human gates.
 
-## Still Not 10/10
+## Remaining Boundaries After 10/10 Practical Closure
 
-- Product-specific Codex Security scans still need to run per real
+- Product-specific Codex Security scans still need to rerun per real
   implementation.
-- Quasar Auditor is now achieved for the named QVG public validation product
-  source. Future product source changes must rerun it, and it still does not
-  clear CU/SVM/economic proof.
+- Quasar Auditor and CU/SVM/economic proof are achieved for the named QVG public
+  validation product source. Future product source changes must rerun them.
 - Hermes dashboard `ready` parity is live-smoke proven. Dashboard/API `done`
   parity is live-smoke proven for missing Product Face result and weak Auditor
   preflight. Worker-style CLI completion is now live-smoke proven for missing
@@ -197,20 +220,21 @@ release or human gates.
   passes focused regression tests. Hermes still needs live wiring from Kanban
   events to the public hook, automatic result ingestion and product-specific
   specialist profile execution.
-- Remote Proof is local-clean fallback, not provider-backed Crabbox/Testbox.
+- Remote Proof is a real Crabbox-managed local-container lease, not brokered
+  cloud Crabbox or Blacksmith Testbox.
 - Supply-chain posture now has public CI/SBOM proof for this repository, but
   product-specific dependency review, lockfiles and provenance still repeat per
   real implementation.
-- Completion audit now blocks false practical-10 claims, but the three remaining
-  blockers it names still require real product/provider execution.
+- Completion audit now allows the practical Factory 10 claim for the QVG public
+  validation context and must fail closed again if future evidence regresses.
 - Production-like Product Face is now achieved for the named QVG public
   validation product lane. It is still not full WCAG, production performance,
   deployed-production proof or a substitute for the other product lanes.
-- QVG full product graph now passes as bounded public validation with reusable
-  Product Face, Quasar Auditor and CU/SVM/economic lanes, but production completion still
-  requires the remaining critical lanes to become reusable.
-- Managed remote proof readiness is explicit now, but the managed provider run
-  itself still needs approved credentials, transcript, artifacts and cleanup.
+- QVG production full product graph now passes with reusable lanes for the named
+  validation product.
+- Brokered cloud Crabbox or Blacksmith Testbox still needs approved credentials,
+  transcript, artifacts and cleanup if a future policy requires that exact
+  provider path.
 - Current Git history still contains old private/internal markers from earlier
   commits; public launch should use an orphan branch, new repository or
   coordinated history rewrite.
@@ -219,15 +243,8 @@ release or human gates.
 
 ## Current Practical Score
 
-Estimated public-factory score after this pass: 9.996/10 for contracts,
-preflight, executable Hermes hook, stricter worker-result reconciliation,
-Product Face proof, dashboard/API no-bypass smokes, worker-style completion
-no-bypass, official-main patch compatibility, real public-safety profile
-dispatch, Crabbox static-SSH proof, action pinning, supply-chain CI/SBOM proof,
-completion-claim blocking, production-validation Quasar Auditor proof and
-public-safety controls.
+Estimated public-factory score after the final practical closure: 10/10 for the
+QVG public validation product and current public branch state.
 
-It is not 10 because the remaining missing items require real CU/SVM/economic
-evidence, managed provider-backed remote proof, release/human-gate evidence, a
-full reusable product graph, and a clean public publication path for Git
-history.
+This is not a production-launch claim. It is the strongest practical factory
+validation state currently supported by the public evidence.

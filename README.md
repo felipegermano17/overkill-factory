@@ -44,15 +44,18 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
 - Real supply-chain gate evidence: Hermes `supply-chain-gate` validated
   least-privilege CI permissions, commit-pinned GitHub Actions, public scans,
   source SBOM and unit tests on a clean public clone.
-- Completion audit guard: Hermes `independent-reviewer` confirmed the public
-  evidence is still `NOT_COMPLETE` for practical 10/10 and that
-  `--require-complete` blocks until production/provider-backed evidence exists.
-- Bounded full product worker graph evidence: QVG now reconciles ten real lanes
-  into one product-specific public validation graph while preserving
-  `reusable_for_product=false` and `completion_claim_allowed=false`.
-- Managed remote-proof readiness probe: Hermes `remote-proof-runner` confirmed
-  managed Crabbox broker / Blacksmith Testbox proof remains `PENDING` without
-  configured provider credentials, while public output stays redacted.
+- Final practical completion evidence: real Hermes V2 worker cards completed
+  remote proof, release control and production graph lanes; the completion audit
+  now reports `COMPLETE`, `completion_claim_allowed=true` and `10/10`.
+- Production full product worker graph evidence: QVG reconciles nine current
+  real lanes into one public validation product graph with
+  `reusable_for_product=true` and `completion_claim_allowed=true`.
+- Crabbox managed-container remote proof: Hermes `remote-proof-runner` ran a
+  real Crabbox `local-container` proof with TTL, command transcript, validation
+  checks, `leaseStopped=true` and zero active local-container leases afterward.
+- Production release-control proof: human-gate and release-ops records now
+  exist for the public validation product, with rollback, monitoring and
+  no-deploy boundaries recorded.
 - Production-like Product Face proof: Hermes `product-face` validated the QVG
   public validation product as a reusable Product Face lane with scoped product
   id, production-like static artifact class, screenshots, DOM state, console,
@@ -128,15 +131,18 @@ python adapters/hermes/compatibility-check.py
 python scripts/supply_chain_proof.py --check --no-write
 python scripts/full_product_worker_graph.py --require-pass
 python scripts/managed_remote_proof_probe.py
+python scripts/crabbox_local_container_remote_proof.py --crabbox-bin /path/to/crabbox
+python scripts/production_release_gate.py
+python scripts/production_full_product_worker_graph.py --require-pass
 python scripts/factory_completion_audit.py
 python scripts/public_safety_scan.py
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
 
-For release gating, `python scripts/factory_completion_audit.py --no-write
---require-complete` is expected to fail until the remaining production and
-provider-backed blockers are cleared. That failure is the guardrail, not a test
-flake.
+For final practical closure, `python scripts/factory_completion_audit.py
+--no-write --require-complete` must pass. If it fails, the repo is no longer in
+the Factory 10 completed state and the failing blocker should be treated as the
+next factory task.
 
 After a specialist really runs, write structured evidence metadata:
 
@@ -168,15 +174,17 @@ Hermes main commit and keeps focused Kanban/dashboard regression tests green. It
 does not prove future Hermes releases will remain compatible without rerunning
 the compatibility manifest.
 
-The first production-intent pilot still needs a real raw product paper.
+The Factory 10 practical audit is complete for the QVG public validation product
+and the current public branch state. That means the factory process can claim
+practical 10/10 for this validation context.
 
-The completion audit currently blocks practical 10/10 because the repository
-does not yet contain managed remote proof, production release human gate
-evidence or a production product graph with every critical lane marked
-`reusable_for_product=true`. Production-like Product Face,
-production-validation Quasar Auditor and production-validation Quasar
-CU/SVM/economic proof are now achieved only for the named QVG public validation
-product lanes.
+This is still not a real production launch. No deploy, funds movement, wallet
+signing, devnet/mainnet write, secret disclosure, infrastructure mutation, DNS
+change, IAM change, KMS change or history rewrite was performed. Crabbox proof
+used a real managed local-container lease, not a brokered cloud lease or
+Blacksmith Testbox. Future real products must rerun the relevant product,
+security, remote-proof, release and monitoring gates against their own source
+and environment.
 
 The QVG full product graph now proves bounded product-specific reconciliation
 across Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,

@@ -7,7 +7,7 @@ Result: `PASS`
 - Workflow security: `PASS`
 - Dependency posture: `PASS`
 - SBOM: `validation/supply-chain/source-sbom.spdx.json`
-- SBOM SHA-256: `9ebb0fa1cb0b32f930e971d3b077a2037296f25244d471b5e57846f24624a36e`
+- SBOM SHA-256: `841fd06f71446565cc1508e309dcff1f2702752c86e1b94bb48a9594ebfd405f`
 
 ## Boundary
 

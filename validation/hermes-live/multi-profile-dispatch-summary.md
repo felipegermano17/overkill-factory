@@ -48,8 +48,9 @@ Historical note: this summary describes the earlier multi-profile dispatch.
 The later QVG product-like code-audit run supersedes the Auditor boundary for
 the public pilot and is recorded in
 `validation/quasar-product-like-proof/hermes-qvg-code-audit-summary.md`.
-Production approval remains blocked until production Quasar source receives its
-own audit.
+The later final production-validation closure supersedes the production
+approval boundary for the named QVG public validation product and is recorded in
+`validation/hermes-live/practical-10-final-hermes-run.md`.
 
 ## Verification
 

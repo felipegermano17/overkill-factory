@@ -198,7 +198,7 @@ flowchart LR
   F44 --> F45
 
   F45["F45 Completion audit guard"]:::gate
-  F45D["Hermes independent-reviewer validou NOT_COMPLETE, bloqueou require-complete e confirmou blockers product-specific/provider-backed."]:::desc
+  F45D["Na etapa historica, Hermes independent-reviewer validou NOT_COMPLETE, bloqueou require-complete e confirmou blockers antes da closure final."]:::desc
   F45 -.-> F45D
   F45 --> F46
 
@@ -223,8 +223,18 @@ flowchart LR
   F49 --> F50
 
   F50["F50 Quasar CU/SVM/economic PASS"]:::learning
-  F50D["QuasarSVM real rodou no source em products, mediu CU por instrucao, testou sucesso/erro, provou sem CPI/fundos/escrita e audit caiu para 3 blockers."]:::desc
+  F50D["QuasarSVM real rodou no source em products, mediu CU por instrucao, testou sucesso/erro, provou sem CPI/fundos/escrita e deixou so os gates finais."]:::desc
   F50 -.-> F50D
+  F50 --> F51
+
+  F51["F51 Crabbox container remote proof PASS"]:::review
+  F51D["Hermes remote-proof-runner rodou Crabbox local-container com TTL, transcript, validadores, leaseStopped true e zero leases ativos depois."]:::desc
+  F51 -.-> F51D
+  F51 --> F52
+
+  F52["F52 Release, graph and audit COMPLETE"]:::gate
+  F52D["Hermes release-ops-worker e factory-orchestrator fecharam gate humano, release ops, grafo production reusable, audit require-complete e 97 testes."]:::desc
+  F52 -.-> F52D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

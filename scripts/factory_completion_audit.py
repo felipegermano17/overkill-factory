@@ -657,6 +657,18 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def write_markdown(path: Path, audit: dict[str, Any]) -> None:
+    if audit["status"] == "COMPLETE":
+        boundary = (
+            "This audit is a completion guard. It does not create production evidence; "
+            "it confirms that the current evidence set is sufficient for a practical "
+            "Factory 10 completion claim in this validation context."
+        )
+    else:
+        boundary = (
+            "This audit is a completion guard. It does not create production evidence; "
+            "it prevents the factory from claiming practical 10/10 before "
+            "product-specific and provider-backed evidence exists."
+        )
     lines = [
         "# Factory 10 Completion Audit",
         "",
@@ -681,7 +693,7 @@ def write_markdown(path: Path, audit: dict[str, Any]) -> None:
             "",
             "## Boundary",
             "",
-            "This audit is a completion guard. It does not create production evidence; it prevents the factory from claiming practical 10/10 before product-specific and provider-backed evidence exists.",
+            boundary,
             "",
         ]
     )

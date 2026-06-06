@@ -2,13 +2,13 @@
   "$schema": "https://overkill-factory.dev/schemas/spdx-sbom.schema.json",
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-06T18:16:15+00:00",
+    "created": "2026-06-06T19:09:43+00:00",
     "creators": [
       "Tool: scripts/supply_chain_proof.py"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://overkill-factory.dev/sbom/47b4e1d9ada791125febeb51f55af754691480fb543bd75ac32bf354b5cbebc1",
+  "documentNamespace": "https://overkill-factory.dev/sbom/7de6e5b4ca0e8528713fa758477fcd95ee1a232f05c3dc75fb9c48500746d7c9",
   "files": [
     {
       "SPDXID": "SPDXRef-File-.gitattributes",
@@ -65,7 +65,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "de502e2b8b47a1750e6594c24a09b3a56f311b6d8c32c28568604af73d449a89"
+          "checksumValue": "b53722dafb23f4ca6ab3b9b2d5b2d12139dd48d8565bef9ab63959dd5d91c64d"
         }
       ],
       "fileName": "README.md"
@@ -265,7 +265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "fa8b3e8d25115a7359603cf23b319c1858350c4e306ef0ae3a9f3b2bd77d7d3f"
+          "checksumValue": "d009a312c2e31eb5191e30a6ab4afdbe5130a9fb821d475bc3c3afd106f1cf89"
         }
       ],
       "fileName": "docs/maps/factory-10-flow.mmd"
@@ -285,7 +285,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e1364c521eda4ae64cc3850fca2d4b4c49636b58c585151caa95ba64b6854c45"
+          "checksumValue": "515762c1327e3f8bde59662e78258e5c2359f8a60b1e8fea95a05d620058d42b"
         }
       ],
       "fileName": "docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png"
@@ -301,11 +301,21 @@
       "fileName": "docs/maps/overkill-factory-hardening-f27-f50-snapshot.png"
     },
     {
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f52-snapshot.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dc8cbdaa224df3f7b0bbde44de5e3751f8992d17707856f1f3fe7e21d749ea84"
+        }
+      ],
+      "fileName": "docs/maps/overkill-factory-hardening-f27-f52-snapshot.png"
+    },
+    {
       "SPDXID": "SPDXRef-File-docs-maps-whimsical-board.md",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "50147be075a887db0b1cc118959ddc0127289f22388fe56f9ba945550502b269"
+          "checksumValue": "b59b6c26b06494885cc8488c259299eab09c370175e1ae10eb76d2e82c954298"
         }
       ],
       "fileName": "docs/maps/whimsical-board.md"
@@ -475,7 +485,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "03f1727e62f7432b81fb1a91a49bcdc7ed575ff6c4daa8792f5f44a398578c21"
+          "checksumValue": "a90bd8f0acff2b3c0cbde2602c8cff27050899ced16c984a385744ba8d9bffe6"
         }
       ],
       "fileName": "docs/security/factory-11-security-review.md"
@@ -515,7 +525,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "97598ccd83b8919b214e0876c8fb44e57a493e2c3969bbff670a69a2308c3bea"
+          "checksumValue": "6c0ff1323c5e1ae66fa9f4b1592fbba726a0919aeffdc21a6175be92fd28c442"
         }
       ],
       "fileName": "docs/validation/factory-10-practical-hardening-2026-06-06.md"
@@ -535,7 +545,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0f7b4c1ec960b34d59cb28b39d9c1d6e4e62cec0842f8e3e378b1608e4965c05"
+          "checksumValue": "9ffeed0db87a957ebd3cdc93ab3b2f5995d64524fced7b8f958a4af51b5bf375"
         }
       ],
       "fileName": "docs/validation/heavy-validation-results.md"
@@ -1525,7 +1535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "727ad47f93144340d5155025b31c103e7daa55b1c0161c3f61a0ddabea0d684b"
+          "checksumValue": "4a3fa0f766ed37b754bfc17a6a1cdba87c380c3d6261a36a6a1bc7afac14e8e6"
         }
       ],
       "fileName": "schemas/full-product-worker-graph.schema.json"
@@ -1731,6 +1741,16 @@
       "fileName": "schemas/worker-result.schema.json"
     },
     {
+      "SPDXID": "SPDXRef-File-scripts-crabbox-local-container-remote-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "331c68cef665cdbdfad83e0a10e41c6e91679382d692e6c76a23f86a63da2ffa"
+        }
+      ],
+      "fileName": "scripts/crabbox_local_container_remote_proof.py"
+    },
+    {
       "SPDXID": "SPDXRef-File-scripts-factory-battery.py",
       "checksums": [
         {
@@ -1745,7 +1765,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "24dda1e04748a69ee02179b0e1fded024d13d3d181eb669ad7b12306e3a9fe09"
+          "checksumValue": "ef39b5517ddbfd08419d7e11df1e26e7b18c8c2455e72f87717145b98ccf2d2e"
         }
       ],
       "fileName": "scripts/factory_completion_audit.py"
@@ -1789,6 +1809,26 @@
         }
       ],
       "fileName": "scripts/product_face_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-production-full-product-worker-graph.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1a5e44b4a7894318a86d9de1cbb56fc24fe4b0e834d5b2ab60730186ce1d5595"
+        }
+      ],
+      "fileName": "scripts/production_full_product_worker_graph.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-production-release-gate.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ec6e8004329992c86c13260dddd79c6a16a706ad9d41403777b2f611daecc458"
+        }
+      ],
+      "fileName": "scripts/production_release_gate.py"
     },
     {
       "SPDXID": "SPDXRef-File-scripts-public-safety-scan.py",
@@ -2031,11 +2071,21 @@
       "fileName": "templates/v3-6-learning-record.md"
     },
     {
+      "SPDXID": "SPDXRef-File-tests-test-crabbox-local-container-remote-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4e8d21fc0683f77250e29ffb97ed1e5b6a6d76ac4829a057fd74e9a960abfead"
+        }
+      ],
+      "fileName": "tests/test_crabbox_local_container_remote_proof.py"
+    },
+    {
       "SPDXID": "SPDXRef-File-tests-test-factory-completion-audit.py",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "2f0d4345b769c084e728cab3dd98ed291aaf63ce8340436e5cc314f8f0650756"
+          "checksumValue": "7f56ec9f14a6783bce2428ef1bcde24385dacffd57e81e85f527e87cb4120d36"
         }
       ],
       "fileName": "tests/test_factory_completion_audit.py"
@@ -2099,6 +2149,26 @@
         }
       ],
       "fileName": "tests/test_product_face_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-production-full-product-worker-graph.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d8fd8a43dd793a3d72e9c6c413cdcd5ec239abdee09d3e413993c6e0c7795fba"
+        }
+      ],
+      "fileName": "tests/test_production_full_product_worker_graph.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-production-release-gate.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cd61590cedd8f281764ac0317c251a63ecd53f3ebfc4798972c433849d51c000"
+        }
+      ],
+      "fileName": "tests/test_production_release_gate.py"
     },
     {
       "SPDXID": "SPDXRef-File-tests-test-public-safety-scan.py",
@@ -2235,7 +2305,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "02830faa865694799574c5db541350d3fdb82df9e557e4a364525522b1c8925c"
+          "checksumValue": "bd720b8b82f00ae87dbc2c001c9f2d95a397a4bcbfef0bce3017533de734d130"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.json"
@@ -2245,7 +2315,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "edd185e94a37aa415352640c57505306f50ca69efd12078928a1744f272ac0ab"
+          "checksumValue": "6ade9ed8d86ded3433d9ab732fd3d9ec236f5fd8e4b54a70f64a7c8558f571e5"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.md"
@@ -2255,7 +2325,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5b4e4b41fdf89605249ab7b84db24edf28ba34b3a751faf24537b40df737a516"
+          "checksumValue": "97dc2474b1854ba758830e3dd3ff692fd78f1cf1abbcc5afd7193944a061109e"
         }
       ],
       "fileName": "validation/completion/hermes-completion-audit-summary.md"
@@ -2685,7 +2755,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "17f1521ff8aa9c2ca05190ef60f9f9e4d25087e379aa731833b22db72c8e1723"
+          "checksumValue": "c9916fa53028cc98131670d862e469a9dd76b579c6367047bec0dcae3d4460cd"
         }
       ],
       "fileName": "validation/hermes-live/multi-profile-dispatch-summary.md"
@@ -2709,6 +2779,26 @@
         }
       ],
       "fileName": "validation/hermes-live/official-main-patch-smoke.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-practical-10-final-hermes-run.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1231a807e088dc72688f2f6cbb9e6db8e8b846c95276c6024e87f45f99cb6cd5"
+        }
+      ],
+      "fileName": "validation/hermes-live/practical-10-final-hermes-run.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-practical-10-final-hermes-run.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1121aa75aca9edb8a446731ca347969d165b412efc7aeac720459643ac38a94b"
+        }
+      ],
+      "fileName": "validation/hermes-live/practical-10-final-hermes-run.md"
     },
     {
       "SPDXID": "SPDXRef-File-validation-hermes-live-real-profile-dispatch-smoke.md",
@@ -2995,7 +3085,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "35fa51fb917b4aa77b6950a2518c3fc5a8616e781ac5da9c568b1d3fbd169fab"
+          "checksumValue": "24cf79fade264fa22d2d37eb340f5eb216cb161fe8525c34f41bf17d28ec5a14"
         }
       ],
       "fileName": "validation/product-specific/hermes-full-product-worker-graph-summary.md"
@@ -3005,7 +3095,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "5a93eee7132d7cfcdbeefd39ad19e359f966d08531fa7a4e743594b0e777c792"
+          "checksumValue": "d969b5898fbc186332d5bb66ec8947dafe63172b4f6f8caafeef9507f81719e7"
         }
       ],
       "fileName": "validation/product-specific/qvg-full-product-worker-graph.json"
@@ -3019,6 +3109,26 @@
         }
       ],
       "fileName": "validation/product-specific/qvg-full-product-worker-graph.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-full-product-worker-graph.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d2a3e28ccc4b473cb06c6e92219c8134a21ceb4f207dd669f001dce9bce51172"
+        }
+      ],
+      "fileName": "validation/production/full-product-worker-graph.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-full-product-worker-graph.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "339c36ed28e11637f98c3e778d577b630680daa4e736df3abb5dc08f18443137"
+        }
+      ],
+      "fileName": "validation/production/full-product-worker-graph.md"
     },
     {
       "SPDXID": "SPDXRef-File-validation-production-product-face-console.json",
@@ -3035,7 +3145,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "1372016d78201e7383366c4392f25069a7d57f973f9c4e0e85b51f2363316b74"
+          "checksumValue": "91a1d2829ee47c5754cbcd4f5b283ba857bacfac6a74f133c6749406d8ac4ed9"
         }
       ],
       "fileName": "validation/production/product-face/hermes-production-product-face-summary.md"
@@ -3135,7 +3245,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "46ff4090c2e81ffc55c77d369510adf1d1ad3ba37c5485b9058a2945dc220835"
+          "checksumValue": "2d42ebb8329e9a2c389ccc9a23f7b7f93c839fb9f995033c798902de023b744c"
         }
       ],
       "fileName": "validation/production/quasar/hermes-production-quasar-auditor-summary.md"
@@ -3169,6 +3279,66 @@
         }
       ],
       "fileName": "validation/production/quasar/qvg-quasar-runtime-proof.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-release-human-gate-record.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "06d82cda48131a8a6f0834756a4dee5867220677ea9b85795b7e6bc48f8c6178"
+        }
+      ],
+      "fileName": "validation/production/release/human-gate-record.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-release-human-gate-record.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "82a4fe5a0538cdc06efdc8ab9eced6b0bb702043310065b62a70c8ab2a98b510"
+        }
+      ],
+      "fileName": "validation/production/release/human-gate-record.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-release-release-ops-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b91f5d452c7573dd816edd6e68af17cd372ae0c18ecdcfa40d0f726ef06f2f87"
+        }
+      ],
+      "fileName": "validation/production/release/release-ops-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-release-release-ops-result.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f78182c1666d56d5f0281d0434d01f9844d1d9d29aa48125fe8490a7904cbef5"
+        }
+      ],
+      "fileName": "validation/production/release/release-ops-result.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-remote-proof-managed-testbox-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fef149acdce38005f64f871f61f3264e0595828a0a6a9a990cbcdd41afa050eb"
+        }
+      ],
+      "fileName": "validation/production/remote-proof/managed-testbox-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-remote-proof-managed-testbox-result.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "07c1c6f16e11ed1fbac47f6ca48b14028afd26f8113a26f43c5ea79a2126643c"
+        }
+      ],
+      "fileName": "validation/production/remote-proof/managed-testbox-result.md"
     },
     {
       "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-hermes-cu-fuzz-property-summary.md",
@@ -3365,7 +3535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "235e4a2992d87f4d8ba698e61a75b9f0da698f135fa650959e14581a9771ad81"
+          "checksumValue": "ace2fa543298049c87b31f0d78bc56e4bbd1c221eec9fe4aef00029040bdf274"
         }
       ],
       "fileName": "validation/release-human-gate/qvg-release-ops-result.md"
@@ -5458,7 +5628,7 @@
       "filesAnalyzed": true,
       "name": "overkill-factory",
       "packageVerificationCode": {
-        "packageVerificationCodeValue": "47b4e1d9ada791125febeb51f55af754691480fb543bd75ac32bf354b5cbebc1"
+        "packageVerificationCodeValue": "7de6e5b4ca0e8528713fa758477fcd95ee1a232f05c3dc75fb9c48500746d7c9"
       }
     }
   ],

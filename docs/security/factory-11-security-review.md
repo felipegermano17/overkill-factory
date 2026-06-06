@@ -43,23 +43,24 @@ They are not acceptable when they contain:
 - private board or task links;
 - raw source extraction.
 
-## Remaining Security Work
+## Later Security Closure
 
-This review is not a full Codex Security repository-wide scan. A full scan
-requires its own threat-model, discovery, validation, attack-path analysis and
-final report artifacts.
+This review predates the later full Codex Security repository-wide scan. Current
+full-scan evidence is recorded in:
+
+- `validation/security/codex-security-full-scan-2026-06-06.md`
+- `validation/security/codex-security-full-scan-2026-06-06.html`
+- `validation/security/bandit-scripts-adapters.json`
 
 The heavy validation pass improved security routing but still did not complete
 a full scan. It did fix public path leakage in worker packets, worker-registry
 drift, and under-routing of Codex Security for public/code/CI/supply-chain
 cards.
 
-The next validation goal should run:
+The remaining security posture is repeat-per-product rather than missing
+factory evidence:
 
-- full Codex Security scan for the public repo;
-- supply-chain/dependency scan;
-- public-safety scan in CI;
-- Hermes adapter patch compatibility tests;
-- remote proof smoke;
-- Product Face browser proof;
-- Solana/Quasar Auditor against real implementation source when available.
+- product-specific Codex Security scan for future product source;
+- product-specific dependency and provenance review;
+- environment-specific release, monitoring and incident-response validation;
+- Solana/Quasar Auditor rerun whenever future product source changes.
