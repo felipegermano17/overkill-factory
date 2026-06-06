@@ -90,6 +90,20 @@ ALLOWED_SOURCE_STATES = {"backlog", "compiled", "inference", "promoted", "raw", 
 AUDITOR_MIN_CORPUS_FILES = 120
 AUDITOR_PROGRAM_CHECKLIST_PREFIXES = ("01", "02", "03", "04", "05", "06", "07")
 AUDITOR_MIN_KNOWN_VECTORS = 100
+QUASAR_TOOLCHAIN_PROOF_REQUIRED = (
+    "install_source",
+    "source_head",
+    "rustc",
+    "cargo",
+    "solana",
+    "quasar",
+    "init_command",
+    "build_command",
+    "test_command",
+    "build_status",
+    "test_status",
+    "evidence_refs",
+)
 
 
 @dataclass(frozen=True)
@@ -569,6 +583,38 @@ def _known_vector_count(coverage: object) -> int:
     return len(coverage)
 
 
+def _status_is_pass(value: object) -> bool:
+    if value is True:
+        return True
+    if isinstance(value, int):
+        return value == 0
+    if isinstance(value, str):
+        return value.strip().upper() in {"0", "OK", "PASS", "PASSED", "SUCCESS"}
+    return False
+
+
+def validate_quasar_toolchain_proof(proof: object) -> list[str]:
+    if not isinstance(proof, dict):
+        return ["auditor_result quasar_toolchain_proof object is required for code_audit"]
+    errors: list[str] = []
+    missing = [field for field in QUASAR_TOOLCHAIN_PROOF_REQUIRED if proof.get(field) in (None, "", [], {})]
+    if missing:
+        errors.append("auditor_result quasar_toolchain_proof missing " + ", ".join(missing))
+    install_source = str(proof.get("install_source") or "").lower()
+    source_head = str(proof.get("source_head") or "").strip()
+    if "crates.io" in install_source and not source_head:
+        errors.append("auditor_result quasar_toolchain_proof cannot rely on crates.io quasar-cli without a source_head pin")
+    if source_head and len(source_head) < 7:
+        errors.append("auditor_result quasar_toolchain_proof source_head must be a commit-like pin")
+    if proof.get("build_status") not in (None, "") and not _status_is_pass(proof.get("build_status")):
+        errors.append("auditor_result quasar_toolchain_proof build_status must be PASS")
+    if proof.get("test_status") not in (None, "") and not _status_is_pass(proof.get("test_status")):
+        errors.append("auditor_result quasar_toolchain_proof test_status must be PASS")
+    if "evidence_refs" in proof and not _non_empty_string_list(proof.get("evidence_refs")):
+        errors.append("auditor_result quasar_toolchain_proof evidence_refs must be a non-empty string array")
+    return errors
+
+
 def validate_auditor_result(result: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     audit_mode = str(result.get("audit_mode") or "").strip()
@@ -592,6 +638,7 @@ def validate_auditor_result(result: dict[str, Any]) -> list[str]:
         "known_vectors_coverage",
         "instruction_matrix",
         "state_model",
+        "quasar_toolchain_proof",
     ]
     missing = [field for field in required_non_empty_fields if result.get(field) in (None, "", [], {})]
     required_present_fields = [
@@ -613,6 +660,7 @@ def validate_auditor_result(result: dict[str, Any]) -> list[str]:
         errors.append("auditor_result findings must be an array")
     if "waivers" in result and not isinstance(result.get("waivers"), list):
         errors.append("auditor_result waivers must be an array")
+    errors.extend(validate_quasar_toolchain_proof(result.get("quasar_toolchain_proof")))
     return errors
 
 

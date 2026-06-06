@@ -1,0 +1,44 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/quasar-runtime-proof.schema.json",
+  "type": "object",
+  "required": [
+    "$schema",
+    "result",
+    "proof_kind",
+    "install_source",
+    "policy_decision"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "result": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "proof_kind": {
+      "type": "string",
+      "minLength": 1
+    },
+    "install_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_head": {
+      "type": "string"
+    },
+    "build_status": {
+      "type": "string"
+    },
+    "test_status": {
+      "type": "string"
+    },
+    "policy_decision": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": true
+}

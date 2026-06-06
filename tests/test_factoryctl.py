@@ -369,6 +369,20 @@ class FactoryCtlTest(unittest.TestCase):
             "known_vectors_coverage": {"total": 2},
             "instruction_matrix": [{"instruction": "deposit"}],
             "state_model": {"accounts": ["vault"]},
+            "quasar_toolchain_proof": {
+                "install_source": "github:blueshift-gg/quasar",
+                "source_head": "a89a9329f05740a20520607608b2b3b78c74f7c4",
+                "rustc": "rustc 1.96.0",
+                "cargo": "cargo 1.96.0",
+                "solana": "solana-cli 4.0.1",
+                "quasar": "quasar 0.0.0",
+                "init_command": "quasar init factory-quasar-proof --yes --toolchain solana --test-language rust --rust-framework quasar-svm --template minimal --no-git",
+                "build_command": "quasar build",
+                "test_command": "quasar test",
+                "build_status": "PASS",
+                "test_status": "PASS",
+                "evidence_refs": ["validation/quasar-real-proof/quasar-source-proof-result.json"],
+            },
             "findings": [],
             "waivers": [],
         }
@@ -399,11 +413,48 @@ class FactoryCtlTest(unittest.TestCase):
             "known_vectors_coverage": {"total": 100},
             "instruction_matrix": [{"instruction": "deposit"}],
             "state_model": {"accounts": ["vault"], "pdas": ["vault"]},
+            "quasar_toolchain_proof": {
+                "install_source": "github:blueshift-gg/quasar",
+                "source_head": "a89a9329f05740a20520607608b2b3b78c74f7c4",
+                "rustc": "rustc 1.96.0",
+                "cargo": "cargo 1.96.0",
+                "solana": "solana-cli 4.0.1",
+                "quasar": "quasar 0.0.0",
+                "init_command": "quasar init factory-quasar-proof --yes --toolchain solana --test-language rust --rust-framework quasar-svm --template minimal --no-git",
+                "build_command": "quasar build",
+                "test_command": "quasar test",
+                "build_status": "PASS",
+                "test_status": "PASS",
+                "evidence_refs": ["validation/quasar-real-proof/quasar-source-proof-result.json"],
+            },
             "findings": [],
             "waivers": [],
         }
 
         self.assertEqual(factoryctl.validate_auditor_result(complete), [])
+
+    def test_auditor_code_audit_rejects_unpinned_quasar_crates_io_proof(self) -> None:
+        proof = {
+            "install_source": "crates.io:quasar-cli",
+            "source_head": "",
+            "rustc": "rustc 1.96.0",
+            "cargo": "cargo 1.96.0",
+            "solana": "solana-cli 4.0.1",
+            "quasar": "quasar 0.0.0",
+            "init_command": "quasar init factory-quasar-proof --toolchain solana --framework quasarsvm-rust --template minimal",
+            "build_command": "quasar build",
+            "test_command": "quasar test",
+            "build_status": "PASS",
+            "test_status": "PASS",
+            "evidence_refs": ["validation/quasar-real-proof/quasar-crates-proof-result.json"],
+        }
+
+        errors = factoryctl.validate_quasar_toolchain_proof(proof)
+
+        self.assertIn(
+            "auditor_result quasar_toolchain_proof cannot rely on crates.io quasar-cli without a source_head pin",
+            errors,
+        )
 
     def test_real_auditor_worker_result_uses_deep_validation(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")

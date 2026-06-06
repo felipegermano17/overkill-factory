@@ -20,9 +20,11 @@ Primary public references:
 - https://quasar-lang.com/docs/getting-started/installation
 
 The Quasar docs also show that a real build path needs a Rust/Solana/Quasar
-toolchain. The current validation environment did not expose `cargo`, `rustc`
-or `quasar`, so the factory cannot honestly claim Quasar build, Quasar test,
-SBF output, CU profiling or deploy validation from this pass.
+toolchain. The host runtime did not expose `cargo`, `rustc` or `quasar`, so the
+factory used a clean container proof instead of pretending the host was ready.
+That proof found an important source conflict: the crates.io CLI path generated
+a project that did not build, while the source-pinned `blueshift-gg/quasar`
+path passed `quasar init`, `quasar build` and `quasar test`.
 
 Auditor is not an executable CLI. It is a security-audit skill/corpus: a
 structured set of markdown instructions, checklists, discovery commands,
@@ -58,16 +60,24 @@ governance and known-vector coverage.
 - non-empty state model;
 - explicit `findings` array, which may be empty for a clean audit;
 - explicit `waivers` array, which may be empty when no waiver exists.
+- explicit `quasar_toolchain_proof` with source pin, versions, init/build/test
+  commands, build PASS, test PASS and evidence refs.
 
 Synthetic smoke remains allowed only as `evidence_kind=synthetic` and
 `reusable_for_product=false`. It cannot be reused as product approval.
 
+Public Quasar runtime receipts are recorded in:
+
+- `docs/validation/quasar-runtime-proof-2026-06-06.md`
+- `validation/quasar-real-proof/quasar-crates-proof-result.json`
+- `validation/quasar-real-proof/quasar-source-proof-result.json`
+
 ## Remaining Gate To Reach Real Nota 10
 
 1. Provide or scaffold real Quasar source.
-2. Run Quasar build/test/profile in a toolchain that has Rust, Solana and
-   Quasar available.
-3. Run Auditor over that Quasar source with corpus coverage, checklist coverage,
+2. Run Quasar build/test/profile against the real product program, not only a
+   generated minimal proof.
+3. Run Auditor over that product Quasar source with corpus coverage, checklist coverage,
    instruction matrix, state model, known-vector results and findings.
 4. Attach the Auditor report as `auditor_result audit_mode=code_audit`.
 5. Keep promotion blocked if Auditor is preflight, synthetic or waived without

@@ -133,8 +133,13 @@ flowchart LR
   F31 --> F32
 
   F32["F32 Auditor/Quasar contrato forte"]:::review
-  F32D["Code audit so vale com corpus Auditor, checklists 01-07, 100 vetores, matriz de instrucoes e modelo de estado."]:::desc
+  F32D["Code audit so vale com corpus Auditor, checklists 01-07, 100 vetores, matriz de instrucoes, modelo de estado e prova Quasar."]:::desc
   F32 -.-> F32D
+  F32 --> F33
+
+  F33["F33 Quasar runtime proof"]:::execution
+  F33D["Crates.io falhou no build; source pinado do Quasar passou init, build e test em container limpo."]:::desc
+  F33 -.-> F33D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

@@ -15,7 +15,7 @@ specialist execution for production work.
 | Cloud Release R4 | ready_for_worker_execution | 15 | 0 | Correctly routes cloud/infra, crypto/key management, release ops, monitoring, public safety, remote proof and human gate. |
 | Product Face SaaS R2 | ready_for_worker_execution | 8 | 0 | Correctly routes Product Face, QA, independent review, AppSec/OWASP and security orchestration after the card includes a security scan packet. |
 | Public Repo Release R2 | blocked | 15 | 7 | Correctly blocks because security, release, human gate, supply chain and monitoring evidence are not attached. |
-| Solana/Quasar R3 | ready_for_worker_execution | 12 | 0 | Correctly routes Auditor, Codex Security, crypto/key, supply chain, remote proof and human gate. This remains preflight until real Quasar source exists. |
+| Solana/Quasar R3 | ready_for_worker_execution | 12 | 0 | Correctly routes Auditor, Codex Security, crypto/key, supply chain, remote proof and human gate. Quasar source toolchain proof now exists; product-specific Auditor execution remains open. |
 
 ## Live Hermes Kanban Smoke
 
@@ -149,13 +149,19 @@ checks.
   The worker-result validator now blocks shallow real Auditor PASS records.
 - The Solana/Quasar source-resolution note is recorded in
   `docs/validation/auditor-quasar-source-resolution-2026-06-06.md`.
+- Quasar runtime proof is now container-backed. The crates.io CLI path failed
+  build, while the source-pinned `blueshift-gg/quasar` path passed init, build
+  and test. `auditor_result audit_mode=code_audit` now requires a
+  `quasar_toolchain_proof` before it can be considered valid.
 
 ### Still Not Proven
 
 - Production Product Face execution on a real UI. The current proof is browser
   backed but limited to the static Quasar Vault Guard prototype.
-- Real Auditor execution against real Quasar source.
-- Real Solana/Quasar build, tests, compute profiling and fuzz/property tests.
+- Real Auditor execution against product Quasar source.
+- Product-specific Solana/Quasar build, tests, compute profiling and
+  fuzz/property tests. The generated minimal source proof now passes, but that
+  is not product safety.
 - Provider-backed remote proof in Crabbox/Testbox. Local clean-environment
   remote proof now passes with sanitized environment, artifact and cleanup
   receipt.
@@ -174,9 +180,9 @@ checks.
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.4 | Browser-backed proof exists and weak PASS is now blocked; production UI proof and full WCAG remain open. |
 | Agent/Hermes Operability | 9.4 | Real Hermes board, worker graph, stronger evidence reconciliation and done enforcement proven; dashboard/API hooks still need hard integration. |
-| Solana/Quasar/Auditor | 8.6 | Strong routing and live smoke; still no real Quasar code audit. |
+| Solana/Quasar/Auditor | 9.0 | Source-pinned Quasar init/build/test proof now exists and shallow Auditor PASS is blocked; still no real product Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.7/10 for factory process,
+Estimated score after fixes in this pass: 9.75/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires real specialist executions,
@@ -188,7 +194,7 @@ bypassable surface.
 
 1. Run Product Face proof against the next production-like UI, not only the
    static prototype.
-2. Build or import a small Quasar program and run the real Auditor path.
+2. Build or import a product-like Quasar program and run the real Auditor path.
 3. Add supply-chain CI: workflow permissions, secret scan, dependency audit,
    SBOM/provenance or explicit waiver.
 4. Run provider-backed remote proof in Crabbox/Testbox.

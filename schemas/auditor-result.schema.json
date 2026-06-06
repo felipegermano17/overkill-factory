@@ -31,6 +31,42 @@
       "items": { "type": "object" }
     },
     "state_model": { "type": "object" },
+    "quasar_toolchain_proof": {
+      "type": "object",
+      "required": [
+        "install_source",
+        "source_head",
+        "rustc",
+        "cargo",
+        "solana",
+        "quasar",
+        "init_command",
+        "build_command",
+        "test_command",
+        "build_status",
+        "test_status",
+        "evidence_refs"
+      ],
+      "properties": {
+        "install_source": { "type": "string", "minLength": 1 },
+        "source_head": { "type": "string", "minLength": 7 },
+        "rustc": { "type": "string", "minLength": 1 },
+        "cargo": { "type": "string", "minLength": 1 },
+        "solana": { "type": "string", "minLength": 1 },
+        "quasar": { "type": "string", "minLength": 1 },
+        "init_command": { "type": "string", "minLength": 1 },
+        "build_command": { "type": "string", "minLength": 1 },
+        "test_command": { "type": "string", "minLength": 1 },
+        "build_status": { "type": "string", "minLength": 1 },
+        "test_status": { "type": "string", "minLength": 1 },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
     "findings": {
       "type": "array",
       "items": { "type": "object" }
