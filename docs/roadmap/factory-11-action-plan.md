@@ -23,6 +23,8 @@ Materialized in this Factory 11 pass:
 - expanded worker routing in `scripts/factoryctl.py`
 - security control matrix: `docs/security/security-control-matrix.md`
 - Product Face proof: `docs/product-face/proof-runner.md`
+- supply-chain CI/SBOM proof: `scripts/supply_chain_proof.py` and
+  `validation/supply-chain/`
 - context spine: `docs/memory/context-spine.md`
 - risk register: `docs/risks/future-risk-register.md`
 - map source refresh: `docs/maps/factory-10-flow.mmd`
@@ -37,6 +39,8 @@ Still reserved for the next goal:
 - live dashboard/API bypass testing;
 - real remote proof run;
 - real Quasar implementation audit.
+- product-specific dependency audit/provenance once real runtime dependencies
+  exist.
 
 ## Rules For This Version
 

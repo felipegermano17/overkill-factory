@@ -1,0 +1,5066 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/spdx-sbom.schema.json",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "creationInfo": {
+    "created": "2026-06-06T14:50:44+00:00",
+    "creators": [
+      "Tool: scripts/supply_chain_proof.py"
+    ]
+  },
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://overkill-factory.dev/sbom/b6edeee4681c4ede9c91c2c17fee1aa73c66bbf2b6e888fab564cf900972681d",
+  "files": [
+    {
+      "SPDXID": "SPDXRef-File-.gitattributes",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "941495bfbbb3d363b2f8103f8d2bc67ebd2226a5d2671ea904ec1cc064a9d8b5"
+        }
+      ],
+      "fileName": ".gitattributes"
+    },
+    {
+      "SPDXID": "SPDXRef-File-.github-workflows-ci.yml",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "650a18fbffcffa02881a89a9a4021d8fe3eaf40f6c0d88e28ee24dab17bbc8c4"
+        }
+      ],
+      "fileName": ".github/workflows/ci.yml"
+    },
+    {
+      "SPDXID": "SPDXRef-File-.gitignore",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cf514444bdd66a44741e1f681852192211ecdb1dcd9ba16f1ba89d886ee8170a"
+        }
+      ],
+      "fileName": ".gitignore"
+    },
+    {
+      "SPDXID": "SPDXRef-File-LICENSE",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e093db1d80bafa7e80b0c8d739d69b6ca94318e78dc75df0b2d10561c0bff043"
+        }
+      ],
+      "fileName": "LICENSE"
+    },
+    {
+      "SPDXID": "SPDXRef-File-NOTICE.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b8e006a44b831c1f713f15b8a9210c3d85dbf77873aeb124411fcad886c1dddc"
+        }
+      ],
+      "fileName": "NOTICE.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-README.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "eee0838b413856025d18f9f7129cebe969c874c33348281aa8e269851bc5c68f"
+        }
+      ],
+      "fileName": "README.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-adapters-hermes-README.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "41dc386b0957d59455d3d4e42077c1c71eab71f9cbd4b0fe9dc70b8fc224e453"
+        }
+      ],
+      "fileName": "adapters/hermes/README.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-adapters-hermes-compatibility-check.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d184bb3928250e987ee901c19e2a9179ade1e674d3eade6afd25fbfe9adfe14d"
+        }
+      ],
+      "fileName": "adapters/hermes/compatibility-check.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-adapters-hermes-compatibility-manifest.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e3630f4832faae31afb3bb7f801307d658bb04fb29484a979c82897d34caba76"
+        }
+      ],
+      "fileName": "adapters/hermes/compatibility-manifest.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-adapters-hermes-live-kanban-adapter.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cf5769f3627bd5c0682a4ab7464271ff07440515ba52da6bdff1ff9c2be8d7b7"
+        }
+      ],
+      "fileName": "adapters/hermes/live_kanban_adapter.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-adapters-hermes-patches-0001-overkill-factory-v35-gates-official-main.patch",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2c8fc71dca0bc3fe3695b738b91804523a2a3eb8b490606b74017136d2029959"
+        }
+      ],
+      "fileName": "adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch"
+    },
+    {
+      "SPDXID": "SPDXRef-File-adapters-hermes-transition-hook.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8de6b2406cdb9f741fecdba636907e85aa34e80ca25c2da2cd1ab684dd563fa8"
+        }
+      ],
+      "fileName": "adapters/hermes/transition_hook.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-adapters-hermes-update-receipt.template.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ad26dbead0111570fe04737c18b8db232d810d5a7c1d20436669cdfed6b063a1"
+        }
+      ],
+      "fileName": "adapters/hermes/update-receipt.template.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-adapters-hermes-update-runbook.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f7885dc3e4bc71837512032d53150dce74c9f2ba7e02c606596b6f0649f8764d"
+        }
+      ],
+      "fileName": "adapters/hermes/update-runbook.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-agents-critical-workers-codex-security-runner.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bdafb9b60ad2a0b73ae1a279044baa60a2f651d349178bbd922e498c84fa7812"
+        }
+      ],
+      "fileName": "agents/critical-workers/codex-security-runner.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-agents-critical-workers-human-gate-clerk.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dac85edd23e3d71d9564e54c3be500f64f3ac91626286f0b30ba4ee7a29bf173"
+        }
+      ],
+      "fileName": "agents/critical-workers/human-gate-clerk.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-agents-critical-workers-independent-reviewer.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bf2f22576e534835dc9051cbd637e3378ca2ca2a08b483eff6482fd28ffdf716"
+        }
+      ],
+      "fileName": "agents/critical-workers/independent-reviewer.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-agents-critical-workers-product-face-validator.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c77a9a0afb8912aae9451382fb0ec1febc89bc3ab4d3884de9bf2776766d45ce"
+        }
+      ],
+      "fileName": "agents/critical-workers/product-face-validator.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-agents-critical-workers-solana-quasar-auditor-runner.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3443fb7cc133d8fc68932511f69fa4db5552b53282524385517eddb3329a7f29"
+        }
+      ],
+      "fileName": "agents/critical-workers/solana-quasar-auditor-runner.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-agents-worker-contract.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c7eace197fb582b2f182c46e1a27dd9f29e5498beaa07059e20368783d7565cb"
+        }
+      ],
+      "fileName": "agents/worker-contract.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-agents-worker-registry.public.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "97380a4bc1066029f9160a3ad6e95cbf5940aa3a05d09c2291d388c5d076b554"
+        }
+      ],
+      "fileName": "agents/worker-registry.public.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-agents-worker-roster.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a758fe15d3bb01af15231eedf41ab1b686713f75c8c729c5395b8bee8fa43560"
+        }
+      ],
+      "fileName": "agents/worker-roster.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-automation-worker-automation-v0.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "19144d1eff52c55856a0071dbe1084b6bbb0eb5bc3f852a3963b9d89477c85d2"
+        }
+      ],
+      "fileName": "docs/automation/worker-automation-v0.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-illustrations-factory-11-production-line-illustration.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f784aa796774011674c61ede0638236af032c5d6a6dbe1a56a06a20d0f466fbf"
+        }
+      ],
+      "fileName": "docs/illustrations/factory-11-production-line-illustration.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-illustrations-factory-11-production-line.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "903eace89c01f43924219d5fdc632e9956f7705fa40cc6e224595304bf876058"
+        }
+      ],
+      "fileName": "docs/illustrations/factory-11-production-line.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-maps-factory-10-flow.mmd",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "73121739595550f382a529329479a9f460599af6c1af9686073dcaa3d0cc7355"
+        }
+      ],
+      "fileName": "docs/maps/factory-10-flow.mmd"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-factory-10-linear-snapshot.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a97fa6bc8c50df9d377350bf15ceec8b83311039746807326aaf8027dd993746"
+        }
+      ],
+      "fileName": "docs/maps/overkill-factory-factory-10-linear-snapshot.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-factory-10-readable-flow-snapshot.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "78ba83960af978e404582213b6797e903b9d882cabf19e00f60793eb9a413e90"
+        }
+      ],
+      "fileName": "docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f44-snapshot.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0e2ff7624c00e0e7d96a3932606f9f06438d83240ba2f6ee36ff9a864b55a2b1"
+        }
+      ],
+      "fileName": "docs/maps/overkill-factory-hardening-f27-f44-snapshot.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-maps-whimsical-board.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f258dc02f3e80d069004467700c3efcf3840fca56e4f544c36a492fd7247a70e"
+        }
+      ],
+      "fileName": "docs/maps/whimsical-board.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-memory-context-spine.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4ce442daa85a5b987aa42c76ac3f96a213813058045216834da25b305d4d3d14"
+        }
+      ],
+      "fileName": "docs/memory/context-spine.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-methodology-factory-10-durability-addendum.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "df1f978223d6341a0072e1676347a674687e2193dae67671f6f99b926a1767fc"
+        }
+      ],
+      "fileName": "docs/methodology/factory-10-durability-addendum.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-methodology-factory-10-runtime-closure.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9c467c64564045dec4f800e28265efe96902689ef6c40cc719def124b8a07082"
+        }
+      ],
+      "fileName": "docs/methodology/factory-10-runtime-closure.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-methodology-factory-11-operational-hardening.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "618d93f014babe72b450caed512b1f48d20a68d97e740c8de1343eecea2ffbfe"
+        }
+      ],
+      "fileName": "docs/methodology/factory-11-operational-hardening.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-methodology-overkill-factory-v0.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "828fa2ddc890dfa755a5e9ec2775e2b77b55f8c5fc3035e865b4bd4f0ad95dcb"
+        }
+      ],
+      "fileName": "docs/methodology/overkill-factory-v0.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-methodology-overkill-factory-v3-6.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a1d01f813f45448fcf74ff8b24a0631fbec8445e3c4fcb1f6d7bef3d0c22ce8e"
+        }
+      ],
+      "fileName": "docs/methodology/overkill-factory-v3-6.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-pilots-first-real-product-pilot.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1a3150ff39ecb7db60eade8a0e8bcfb95628ae59393bf2c6eea24012a4582b5e"
+        }
+      ],
+      "fileName": "docs/pilots/first-real-product-pilot.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-planning-execution-plan.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "012eff5a8dfed5ce4a0751a4e76b38f4dbcb73ca0df1efa10c120a7b3fbbe780"
+        }
+      ],
+      "fileName": "docs/planning/execution-plan.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-planning-factory-v3-6-learning-loop.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "44106ae4b3eaa595b8d24287e8e32da8ab91ff8c4a95d596c7dd2ad8e16cccfb"
+        }
+      ],
+      "fileName": "docs/planning/factory-v3-6-learning-loop.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-product-face-proof-runner.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d9a6260d7e3911f8db717279f3444453122f59f5abe8eaf58ef90c11b88b65fd"
+        }
+      ],
+      "fileName": "docs/product-face/proof-runner.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-research-factory-11-source-resolution.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b0e65bcc99a1bc66d5e7348d54a35590627d3c2eb7f996efad48187fc0d1f24f"
+        }
+      ],
+      "fileName": "docs/research/factory-11-source-resolution.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-research-source-capture-policy.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e2aa17a4c1fbef93dca3a795987c19d331e537d26d025df8276c146ec0af0595"
+        }
+      ],
+      "fileName": "docs/research/source-capture-policy.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-reviews-factory-11-critical-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "be7cbe6932f41ed80a5898370370fac90ddeea5548ae7fb5a3f8ae8f083f7351"
+        }
+      ],
+      "fileName": "docs/reviews/factory-11-critical-review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-reviews-heavy-validation-adversarial-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f0ee83f612c8dd602e28fa583e933499250043b669b5e2ce138940d3fca88c40"
+        }
+      ],
+      "fileName": "docs/reviews/heavy-validation-adversarial-review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-risks-future-risk-register.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "49151a9b2619eefd74111c9d336e01257aac395ef6381eafbc39131ec2e81a9e"
+        }
+      ],
+      "fileName": "docs/risks/future-risk-register.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-roadmap-factory-11-action-plan.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "726db5624aed7fba598959aa50ee4f6cd1bb0534b8c79f1ec67cff1f821601ae"
+        }
+      ],
+      "fileName": "docs/roadmap/factory-11-action-plan.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-security-factory-11-security-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "03f1727e62f7432b81fb1a91a49bcdc7ed575ff6c4daa8792f5f44a398578c21"
+        }
+      ],
+      "fileName": "docs/security/factory-11-security-review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-security-public-repo-security-review-2026-06-06.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f7af458d93636dff3e304e062e51be26d3a8b8dbe5ca934a6bea8181034828d8"
+        }
+      ],
+      "fileName": "docs/security/public-repo-security-review-2026-06-06.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-security-security-control-matrix.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e05a5b231dcd2643fc4caa81c7527b62de60f7352553ffc840c24326c5c29243"
+        }
+      ],
+      "fileName": "docs/security/security-control-matrix.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-validation-auditor-quasar-source-resolution-2026-06-06.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7e9367c100dc4351506f4ecf6f5274ef818b64ff0da0e79c27f703316c3fbf98"
+        }
+      ],
+      "fileName": "docs/validation/auditor-quasar-source-resolution-2026-06-06.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-validation-factory-10-practical-hardening-2026-06-06.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "032ea8e065e37706072230288edf83e3ebf75edfccab6ec8cb488addcec7b4b4"
+        }
+      ],
+      "fileName": "docs/validation/factory-10-practical-hardening-2026-06-06.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-validation-heavy-validation-battery.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8030e81f260d387aabcfc25eaa1a586cd01feb1e1ad7935b2a672ba7e62500d6"
+        }
+      ],
+      "fileName": "docs/validation/heavy-validation-battery.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-validation-heavy-validation-results.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "095d75505d3df0510a92f39ee6a74d68054187a290440469ad2f19a993a3b8ff"
+        }
+      ],
+      "fileName": "docs/validation/heavy-validation-results.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-validation-hermes-transition-plan.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1c53e116f1dc8fd4722388174f1eb9ccf7ea66731c39f91c4f0a5e298247667f"
+        }
+      ],
+      "fileName": "docs/validation/hermes-transition-plan.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-validation-live-hermes-kanban-smoke.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "aca76831412e4dcbf968bab9e321d832c202474b8ba225c1d45ad316e260475c"
+        }
+      ],
+      "fileName": "docs/validation/live-hermes-kanban-smoke.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-docs-validation-quasar-runtime-proof-2026-06-06.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e4452161d2e8e7b298a2488ab3edd9d399e57d6c72bd72fba47965c118c25b02"
+        }
+      ],
+      "fileName": "docs/validation/quasar-runtime-proof-2026-06-06.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-invalid-onchain-no-auditor.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0af66d1a3f6eb0797a0b4cd16bf8829be478324b2a769956aca67db0a758bf24"
+        }
+      ],
+      "fileName": "examples/cards/v35_invalid_onchain_no_auditor.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-invalid-product-face.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c7b78d6539b9bec3054a85c78dd83863ada7369b8da1992c9196bc3bdb116316"
+        }
+      ],
+      "fileName": "examples/cards/v35_invalid_product_face.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-invalid-r4-no-gate.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "649dfcc069e2afce91dc55ee55410dca0f099bc1a65861efb34c044c163baf67"
+        }
+      ],
+      "fileName": "examples/cards/v35_invalid_r4_no_gate.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-invalid-security-no-scan.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "19f02153bfb104a10ebc0ca28b460124c235fd383f30f2922cc910df5d770536"
+        }
+      ],
+      "fileName": "examples/cards/v35_invalid_security_no_scan.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-invalid-self-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1e0b81ad1ea511b53d4e954c2a56bfe1e1a4959a01e2e0b38f050cb00aa78da3"
+        }
+      ],
+      "fileName": "examples/cards/v35_invalid_self_review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-valid-onchain-auditor-scan.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "37231b1b645722efe346ac7f7ba1706a8a49dea68b3b4ae2dc2736ed400b05b3"
+        }
+      ],
+      "fileName": "examples/cards/v35_valid_onchain_auditor_scan.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-valid-product-face.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8e773d8e82a6d4ee0b262d49e254c94c28a65a08bdf7e0b3ce65e1920f999f7e"
+        }
+      ],
+      "fileName": "examples/cards/v35_valid_product_face.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-valid-security-with-scan.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fc4c0abbf7125f7b2271b4d8b8bd89ca12805d528774a3d3a7fceee9434b0f49"
+        }
+      ],
+      "fileName": "examples/cards/v35_valid_security_with_scan.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-cards-v35-valid-security-with-scan-r1.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f08b0691cbbc8bfd9a22ab43e6289d4ab90cb76067c41c4d7b4d10f9bf69296a"
+        }
+      ],
+      "fileName": "examples/cards/v35_valid_security_with_scan_r1.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-gate-reports-onchain-card.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2703e0cce534f9ffd7c9e4f3533354af33e72a73823d1083f69cd9ab041c62cf"
+        }
+      ],
+      "fileName": "examples/gate-reports/onchain-card.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-gate-reports-product-face-card.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "70dc3a949858a1f154d08447dc7132fe2f89f8c9debcc49a2e71907f0ec37425"
+        }
+      ],
+      "fileName": "examples/gate-reports/product-face-card.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-receipts-v35-valid-completion-metadata.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3be7654f195c7586ae2210899afbef4699a827ba4aa76821d2a2729d85bc09c1"
+        }
+      ],
+      "fileName": "examples/receipts/v35_valid_completion_metadata.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-receipts-v35-valid-security-completion-metadata.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "554ea2d18c295984da3c549100d5901212cbb94cb8f579150827bcd4de1bbc57"
+        }
+      ],
+      "fileName": "examples/receipts/v35_valid_security_completion_metadata.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "46cbaf1addce71423c7dfe1a9a460cffb24a063730d48ae79532e1cf7846f4e0"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "31d9e3354d0a11385cbe8f3ae591e2b85c82cc12efb891301639463268268c2d"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0de42abcc6a5667c8f7fe242202f15ad978011686bd340d5a33db5951ee6ac8e"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ed28c11771dcaa739f88222f2dc0a0be8cd35b8eaa13e7e95874fe17064d4f22"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f5824ee81a6746854f005efbb7d8ef595d05418228febb4e6f302c11f12f1d6e"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "af48347f4979e3976adade3795187a0deeee6e9e6838e6ceb455fb4e366d781c"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "491bfead00eec579529a659e5e31c2353958d04b16b63f4da500170aee7b1e6a"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "980048f26fdc8e2af4bc373a8655be9ccad1c58f262d90aed3bdb3e3bc576a9a"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "de5839f51f8a9b5154cdb385ef248d515e56ad36564c184f3108bc8d8965f3e1"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-solana-quasar-auditor-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "45ed51964e05448e2df61940d25b78413f7c6ce6e8a1d661fa64f020ba393d7e"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/solana-quasar-auditor-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-source-ledger-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fb97d4882530d75a064f664338871c24eb7d53af9ecaa36774c5630a7a8e9b69"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/source-ledger-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-onchain-card-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c55e8cf8218531559e6672c5b19b14d71ec91ddb18ad7595690a0ded5a92d54c"
+        }
+      ],
+      "fileName": "examples/worker-packets/onchain-card/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-appsec-owasp-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "02d1e0b561bf516b9e2d7b08fc997a8f2926bff9d4f8c21e006274e1d96abb96"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/appsec-owasp-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4dfb51addf46f40ecf5e2cd955faaf0728a2784c43f53003fc396c229b5779c5"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "059cd1a92621046c5d1565627b0f74480023ea17b6852306fb52bcdb9bbaa4c1"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "66b33877efdf73786067dd21f915f85e6493e47c3ee7e182717bb46151420aba"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6e399980cbf3604f5f09d3843aaabba59e615a4ba825a6c39555ae035ebd9fb6"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-product-architect-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e7c6951b81290d08d1e4d7428c555329ff79582eca1887367aea12e6b43f650a"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/product-architect-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-product-face-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a671b414b77d8b6575a790020f353ca2af8bf9c4470f8276ee7d303fa6395ec0"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/product-face-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dd8b8af9758c234d215cdea7a35578b40c5d1ddbee2b6fe7eac408843e5a7836"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2c08f6fdbb92c1a2c549b15131d982648d3fd6d4f9367e171cf54c317dc7a538"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-examples-worker-packets-product-face-card-source-ledger-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fc7c79846cca8887a19d501e587c444924b27a68ad10739cf4d47de17e6d7855"
+        }
+      ],
+      "fileName": "examples/worker-packets/product-face-card/source-ledger-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-00-raw-paper.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "55d53904f0d01f63583533e840eee32f841707f3cdd0118a8f3fe66017dac2db"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/00-raw-paper.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-01-source-ledger.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8af5b2d49213dee4cad5fe37e020b959d289e7077fae0404035a733552ccc46b"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/01-source-ledger.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-02-product-sot.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4534abf7d9e379d0ea0047a20474c6b789acd4f32490aa273087c824bb538593"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/02-product-sot.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-03-alignment-questions.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8eb159b74b3af9cad375b05700f42cdb47c9b7a6e1b88114135f10ed526ecaae"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/03-alignment-questions.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-04-architecture-candidate.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f7ac1d1faf53fcbe0f23ad08ba945fff9549bf3b266fe4397262b02168ea5beb"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/04-architecture-candidate.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-05-product-face-packet.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "99db6a8331a16a45a1728aa37848ce604b835931a6d22081716a13b4833cc3ee"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/05-product-face-packet.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-06-specialist-review-matrix.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9f74fca578465503aba22368699704d4ff42934b3ec67d61f1cc26ac49d0d837"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/06-specialist-review-matrix.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-07-onchain-work-package.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e12ca70e6cc7ae66b50046e53069a176a995e499ea174761fd4aaef57c5628f2"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/07-onchain-work-package.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-08-security-scan-packet.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b5f49bcd7a92e7daa5a7a140beb05acd22bead164d69902bd59654931f96e0bd"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/08-security-scan-packet.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-09-human-architecture-gate.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e9358f362e6635e793fdfd99f9122dbf69e77a6980da970bdb6ddfc26a2d0623"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/09-human-architecture-gate.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-10-documentation-os.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "027cd23414c66a6ba5451c4952a2c10d1bf00f9401f5bf484e6e1591557e3fb1"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/10-documentation-os.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-11-decomposition-card-graph.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "724e97d683fdd2c14d678db993acc4f295220399dd35dd961c84618fc5bd7a35"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/11-decomposition-card-graph.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-12-pilot-retrospective-v3-6.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "257914f99e2a3ede1af2e448ac8a5021f1db5994b3e2b844f938da3fd73c846e"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/12-pilot-retrospective-v3-6.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-README.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "879f78b95c13eb7b3382be8307794181bab91f6ac9d37b18e2234e97c87416ec"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/README.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-cards-qvg-first-slice.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2b9416dfc3076d78fc261e2e7476c3d4081ea7cff3164b7486b2503dc44cab0a"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/cards/qvg-first-slice.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-auditor-preflight-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bc6b14421863d61a6ec9412e4de8450bf525509a31de118c72866a77061ca841"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/auditor-preflight-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-gate-report-first-slice.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cb180f69631d8755124aaa8d820588016866cf1be16d96def752840ec5c20b36"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/gate-report-first-slice.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-hermes-factory-cto-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dcfc27a1e5702dfac4e715bde3fdccba6daf1b3b5c4b20cdfdad6d80db30cdf3"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/hermes-factory-cto-review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-hermes-factory-cybersecurity-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f4f89c867389e114b5b3ae28b20cab40fe2692f597e5d3f981b9a0ed512d5161"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/hermes-factory-cybersecurity-review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-hermes-factory-qa-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c3b6e18f59121ae3defa51a28df8cd3c6d05609830b1f09903a2a78035658a1e"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/hermes-factory-qa-review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-hermes-factory-reviewer-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e0ac50c88c7b0ab637a0a15692ff5727a7b3d09672ca0939e46f5cb36bada36d"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/hermes-factory-reviewer-review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-hermes-factory-security-review.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bc0309b30f13d13be60a309c41c2baa59c9dc65d373cd6dc4b686464835a52f8"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/hermes-factory-security-review.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-human-gate-record.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7ee02c13c13a1a179d0c6a33b2732598da1dbd8249cda6fd78e7fdb758759041"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/human-gate-record.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-independent-review-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bc74682b2dd2ab22578d7671501fa4e70a949d6826161aaf9f5167b32ee05e56"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/independent-review-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-product-face-validation-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5bdabe80652148f794f7ef08b985c702af93056c410e625e8c817de7a579afe0"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/product-face-validation-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-receipt-five-first-slice.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f4e936336963036e2851ce81cbd8c0c40493d54c608d87b3dc94944caded5d07"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-screenshots-desktop.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "647083099c7d938ff4e284581dfadc6fae8d24e144a781a419218fbc814dbbc8"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/screenshots/desktop.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-screenshots-mobile.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3f7de576741c9c86263477a9e7b0354a2d74d09a3d113121ddcde7962358d6c1"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/screenshots/mobile.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-security-scan-report.html",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d3ba1ae783e55b28889e4d91c2e8db8db18303ed88395fe352bea7ff33700244"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/security-scan-report.html"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-security-scan-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "98df9ca817f68395736d0142a702414401585f617b0d5fd341e2845d5e0b56dd"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/security-scan-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-security-threat-model.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9896e322aa83cfc1e450c042f01eb90998a84276694b4e071afc13f87f341d78"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/security-threat-model.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-v2-completion-gate-evidence.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e2d4b8897e6e06b3fb33e6c1e50cd12429038be159f87e8f13b5400a3e2e2dc5"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/v2-completion-gate-evidence.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-evidence-worker-closure-summary.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8f2f7054fb3aec051dce7c609843f99e79828aac59d5bf8440204ce12d869207"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/evidence/worker-closure-summary.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-onchain-qvg-product-like-README.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "02af8433d809604088974f209762e63f2e909a8f408413822293887ff86fe1bf"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/onchain/qvg-product-like/README.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-onchain-qvg-product-like-src-lib.rs",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "810b4599127c06dfdc8804d583c63b11cf6c8617d694746d1be5cfa10e9cdd6c"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src/lib.rs"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-onchain-qvg-product-like-src-tests.rs",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9eda12ad777f59da666d075f128deb3204a0a1fe2e89e60c080ff57b10684181"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src/tests.rs"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-product-face-prototype.html",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b3d81d4d0fbba292ffc18ce62535b09e3d1f2617f4e46b7f4e28f86b76313926"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/product-face/prototype.html"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-tools-factoryctl.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "48df99bf9db9d8f2700319aacd63a66b80f8064072937adb1e2b7dc71df67251"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/tools/factoryctl.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-packets-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "10a20872c9cd65e1b6713e54f86806df6656d860b55d5a88960b2214196dff5c"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-packets/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-packets-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "37dce17f673f84d2deb079eec5373e867eb91c4c26aa0cc8bb5e58cdfe88f58d"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-packets/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-packets-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ddedb7ebdaa9650f0fc65cfddfa31b5d0cb64aef239ccb17e1832c3ba8cdd376"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-packets/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-packets-product-face-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4ff2be68032949659e4e8ba58da0648513cd1c139cb35776dc60220c1cfe04de"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-packets/product-face-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-packets-solana-quasar-auditor-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "368628c551af99ec976487ab28b0fc19bb9d0969ddab23392d8f344088d17a60"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-packets/solana-quasar-auditor-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-auditor-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d926749e8685848ddd85a64731c3c5e8eccfbf600791c4c585a1f0b2f1d40538"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/auditor-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-console.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1ff9e9b76aae3790225b087e47b93061ce7c024003f3efa29f4155b35bf2f3c7"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/console.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-independent-review-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6ddcf4bbde87ad5a5162aebf4452f38756c48aa8107937d61a227802a780c15f"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/independent-review-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-product-face-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "79d7b68171c5c169ab0bc8a7b74aa4b47c95def6da1a81e0d84eb1a4ae8bc481"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/product-face-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-product-face-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a02283c6c1a89afe4c47082bdab358707527854272473d8fd2ad8457871a87dd"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/product-face-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-screenshots-desktop.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "407b5b2f8d428e47629f4c4531fa207aab7d3616f15bfebebb3c24ba9a37d12d"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/screenshots/desktop.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-screenshots-mobile.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dc88396b5a8fc01582ed7be22b3b1309af164541528823c3820a27dc9a8d0ea9"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/screenshots/mobile.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-security-scan-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f1296033709a1c540de6e5fd9a3609fbe2d49ae6730718efdd0bdf9351881dfc"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/security-scan-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-pilots-quasar-vault-guard-test-worker-results-state.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "db7a7414c3577e0eb814328980f99e2c9c7ab0642f18414984cc09cc65729cc6"
+        }
+      ],
+      "fileName": "pilots/quasar-vault-guard-test/worker-results/state.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-auditor-result.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fd4c2bb0d07325b1ef9e644d861ff2c9c97a8f13a3aa74fcf1677b98150d3be1"
+        }
+      ],
+      "fileName": "schemas/auditor-result.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-factory-battery-result.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "842be173c148d04640dad119e9b590e25db0fa73591df911a00d0679efd97aeb"
+        }
+      ],
+      "fileName": "schemas/factory-battery-result.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-factory-card.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bf934a38a829fc4797a0da0ef4f1ad81e07d7a2dcfb5deafba78579ac4163f5d"
+        }
+      ],
+      "fileName": "schemas/factory-card.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-gate-report.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b64557ad9f0582c5d202313a0ca8b098f5dc77219b03fbd3cf79c4134a4d805d"
+        }
+      ],
+      "fileName": "schemas/gate-report.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-hermes-live-adapter-result.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "df75f9b377c710ef736410f8735ede8fbb831b7bad4acfcbdcdff31bb13b8262"
+        }
+      ],
+      "fileName": "schemas/hermes-live-adapter-result.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-hermes-transition-hook.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "898130f5ffae3b24411ebe2fa7ea9908608ef7eac40c2f72eb246ebbc6d19dd6"
+        }
+      ],
+      "fileName": "schemas/hermes-transition-hook.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-hermes-transition-plan.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d0258108aba983442e7694229142bbf1481cec93f0a3d327ae06b8b0ef15d777"
+        }
+      ],
+      "fileName": "schemas/hermes-transition-plan.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-hermes-worker-ledger.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fe0f4a26934045e4a1d87cc9390770b8353bad18adec389998dfa6daa3300ba4"
+        }
+      ],
+      "fileName": "schemas/hermes-worker-ledger.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-hermes-worker-result-index.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "323525d203955c8d8fd8df6447e3a9850d149d16c9f0c573e63a5d965baf9cb3"
+        }
+      ],
+      "fileName": "schemas/hermes-worker-result-index.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-human-gate-record.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "33e3986f796151627f46248e54fee8e181cb9270366936a146fe44413ffa7398"
+        }
+      ],
+      "fileName": "schemas/human-gate-record.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-product-face-console.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d243ba01ad88c9b0e893a92e79dd490e463413b4de9281b461296e0279c27255"
+        }
+      ],
+      "fileName": "schemas/product-face-console.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-product-face-result.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6ee9e88cc4912991727a3aff83ed936c439c3b7b27008379e8441392a2976d7f"
+        }
+      ],
+      "fileName": "schemas/product-face-result.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-product-face-state.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "81596518c4e8b4597947f82db60aabc54eb945f7dabfa2946bfa4a6c588a27a5"
+        }
+      ],
+      "fileName": "schemas/product-face-state.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-product-face-static-summary.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4199084361e9ef9ca4ee083c46a4374666e8d8fb17e590d57e704c434cf6a4b7"
+        }
+      ],
+      "fileName": "schemas/product-face-static-summary.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-quasar-property-proof.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7f1d1625032053461b3b6a61afb8d0559f53154440bb99f269f12aa84fb0308a"
+        }
+      ],
+      "fileName": "schemas/quasar-property-proof.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-quasar-runtime-proof.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0e6e72bfe7744622b2f4b8e2719cb7886d624f7518f6143511a78e2220fe790c"
+        }
+      ],
+      "fileName": "schemas/quasar-runtime-proof.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-receipt-five.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1d97d13dd4c71d29461ca5ea74e1b7eb770f2bbfe1b535855dd72e3927cc539d"
+        }
+      ],
+      "fileName": "schemas/receipt-five.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-spdx-sbom.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "366b5b4c3ef7ef8a32b950f5aadd2207782d009ecd39ec50461b30627a36971e"
+        }
+      ],
+      "fileName": "schemas/spdx-sbom.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-worker-closure-summary.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "95e60481df5850dea909109de24577999bbae5f91f11d9cccdbb4cebd33be0ac"
+        }
+      ],
+      "fileName": "schemas/worker-closure-summary.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-worker-packet.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5d1d3ee6fe6492b687a97e88bcfc112076c60c040cc95c712361be312b28da02"
+        }
+      ],
+      "fileName": "schemas/worker-packet.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-worker-registry.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3b61a1913591dd5172394cfa9e0066bcea4a7fc0b8b50625e2ca49674aabfafa"
+        }
+      ],
+      "fileName": "schemas/worker-registry.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-schemas-worker-result.schema.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6038e2d5492cff68c93a3d0eb5bb1ca79b3dee06896a21d7eae124388604751b"
+        }
+      ],
+      "fileName": "schemas/worker-result.schema.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-factory-battery.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1aa9a00ee823dbb1a773f5e1bc32fd94c56b6420e9b51cd9bfbd4d99725a04dd"
+        }
+      ],
+      "fileName": "scripts/factory_battery.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-factoryctl.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e0e1ff357ca0453d87281eba471d19a041f256dd4bfd30884a7f8c52e6515255"
+        }
+      ],
+      "fileName": "scripts/factoryctl.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-product-face-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "107cb3d16588d9245acc922c80a463f822add31848eb5238db61578b0a75ec3c"
+        }
+      ],
+      "fileName": "scripts/product_face_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-public-safety-scan.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4b650dfb5ea3148ae7016d4ade2e5990ff63cb19b413a019a4a1e565e72737a6"
+        }
+      ],
+      "fileName": "scripts/public_safety_scan.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-quasar-product-like-container-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c68b9296ecb0cd77c836472435c39c9ddad45e48540116bf6b5ff5d6c01f3986"
+        }
+      ],
+      "fileName": "scripts/quasar_product_like_container_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-qvg-product-like-auditor-result.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2f47e57ab8aed3af87a852ff37caea358f26a3c8c12256476e7c00ef3b1ee487"
+        }
+      ],
+      "fileName": "scripts/qvg_product_like_auditor_result.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-qvg-quasar-cu-fuzz-property-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9eebedd8444a14190cf9c7eb7641a48b06ad8aa8dfa43e73c84ce5e88538e62e"
+        }
+      ],
+      "fileName": "scripts/qvg_quasar_cu_fuzz_property_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-remote-proof-smoke.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9ae3f6ee2c869a485175c5342201bcfdd2bd95dab509ed5e9fabc5d125d70f54"
+        }
+      ],
+      "fileName": "scripts/remote_proof_smoke.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-secret-safety-scan.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6b59969f9e60d3fc417238604f32dc88e8a6526e0d8286d71707b3402f11c1b1"
+        }
+      ],
+      "fileName": "scripts/secret_safety_scan.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-supply-chain-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f2e660caa70f5855b8ac913be17fd7cea9a18136cd28b239c6f0ee1dbb9408f5"
+        }
+      ],
+      "fileName": "scripts/supply_chain_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-validate-public-json-artifacts.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a32604ff82f8436043195d49af92477458f8feae5850655dc036c3dcf85ee096"
+        }
+      ],
+      "fileName": "scripts/validate_public_json_artifacts.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-scripts-whimsical-mcp.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7be32f75e49fbeaa6b00b1adbbeb3fed6c8ce22b41405934f715f33b2d247104"
+        }
+      ],
+      "fileName": "scripts/whimsical_mcp.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-skills-codex-overkill-factory-SKILL.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d440f435023c7340bddb99e511d58da93e8d6d3baf7ff970509060e6af820c01"
+        }
+      ],
+      "fileName": "skills/codex/overkill-factory/SKILL.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-skills-codex-overkill-factory-agents-openai.yaml",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "60a32f05a7321a1ec4c0616f736e2e6ba8906bc38b40200c0853ce0f96497fad"
+        }
+      ],
+      "fileName": "skills/codex/overkill-factory/agents/openai.yaml"
+    },
+    {
+      "SPDXID": "SPDXRef-File-skills-codex-overkill-factory-references-automation.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "348fbd5e9656740e46c228770dab2393dede8bc1e921958f5fe2f1637204fa92"
+        }
+      ],
+      "fileName": "skills/codex/overkill-factory/references/automation.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-skills-codex-overkill-factory-references-card-contract.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e9d614194b4e9088664e62375add106c1b2adad7e2523e7a193babc2c9267d57"
+        }
+      ],
+      "fileName": "skills/codex/overkill-factory/references/card-contract.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-skills-codex-overkill-factory-references-factory-line.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a1c77ec5f760e3628245e3edeccf566db110fc8643ad8eb8cf180ffa840ffe2d"
+        }
+      ],
+      "fileName": "skills/codex/overkill-factory/references/factory-line.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-skills-codex-overkill-factory-references-hermes-adapter.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4d044b4fee07d4c9ac151e8698b23b26168301c6a1adafd4835df97250e2420b"
+        }
+      ],
+      "fileName": "skills/codex/overkill-factory/references/hermes-adapter.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-skills-codex-overkill-factory-scripts-validate-factory-contract.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fd31b83a75c7ce600ed5acd5ee14ae4e6138890355b32d49b179c468aa2ee4a1"
+        }
+      ],
+      "fileName": "skills/codex/overkill-factory/scripts/validate_factory_contract.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-templates-architecture-review-packet.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8df7eb551d4316949031e1a85cbb3ffc83ad72b36ff9dca86f4ffb8dafea25a9"
+        }
+      ],
+      "fileName": "templates/architecture-review-packet.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-templates-factory-card.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c1d752c50cb5e2a8bcbb0e9656d8ca4ac4b37d4f7fff8191853dc0e92526ebf9"
+        }
+      ],
+      "fileName": "templates/factory-card.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-templates-human-gate-record.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e82158f0ef306180fd3ceb358f74e3226047385df587b576554a0ee1a9e32737"
+        }
+      ],
+      "fileName": "templates/human-gate-record.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-templates-pilot-input-paper.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a3d234f4afc33a4a5229a7e947f8c8ab7adbea6a76e3a73cda74d2c7b706afa9"
+        }
+      ],
+      "fileName": "templates/pilot-input-paper.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-templates-product-sot.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5d42d5396460d76fc6216d9778028ce0d5969caff07d964d29b1463a6ab89a73"
+        }
+      ],
+      "fileName": "templates/product-sot.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-templates-receipt-five.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "67b6e166968392452653843377f8b8d5e3c6f8280382a3293674d6446d4801c0"
+        }
+      ],
+      "fileName": "templates/receipt-five.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-templates-v3-6-learning-record.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "89e2bab932c4a099b34c17ba85f7b6df85b074ea1313b4780565a1eae6a6272d"
+        }
+      ],
+      "fileName": "templates/v3-6-learning-record.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-factoryctl.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e899fddd4fc801cedf22cedca11650a874effbc108f615e82e076dd35ecbbc3a"
+        }
+      ],
+      "fileName": "tests/test_factoryctl.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-hermes-live-kanban-adapter.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b039b78d94616b2a7b2deff4d29698bdda673cac7df2111c7d866cf1d3940a96"
+        }
+      ],
+      "fileName": "tests/test_hermes_live_kanban_adapter.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-hermes-transition-hook.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c853640dedfd00b7dfe38e50efff9a2f425aeb4215646a1b29949ac0109cecc5"
+        }
+      ],
+      "fileName": "tests/test_hermes_transition_hook.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-product-face-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b64fbd3f672b99d5d56774ee2a4b1843ac43af708629374b0dcfe4449eca82a9"
+        }
+      ],
+      "fileName": "tests/test_product_face_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-public-safety-scan.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6e977d1ef07ab465922e8a6795b117e6dea0d644ccd5244cda1c0fb7f70ee0a9"
+        }
+      ],
+      "fileName": "tests/test_public_safety_scan.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-qvg-quasar-cu-fuzz-property-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d3a4180198968610c12c9a70233c83d516200268ddaeba26ca4fd34d226d4150"
+        }
+      ],
+      "fileName": "tests/test_qvg_quasar_cu_fuzz_property_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-supply-chain-proof.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "692ab702e5a83c49b023cb8b14812ee21e88fd398fda22e5803cd63ccf0040c5"
+        }
+      ],
+      "fileName": "tests/test_supply_chain_proof.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-tests-test-whimsical-mcp.py",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e221c48bb5bd0db7eda9ca08e2ba62e607f7bededa9a51ccb2ff13730498eccb"
+        }
+      ],
+      "fileName": "tests/test_whimsical_mcp.py"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-battery-factory-battery-results.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e31b555e61a972181836080375c951f1350fb64f0b4c4ddff61e913f3789fa47"
+        }
+      ],
+      "fileName": "validation/battery/factory-battery-results.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-battery-factory-battery-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "57aaa36c4a5cfd939c4884468454159be2bbe807ad28699ec26b6639e43343ce"
+        }
+      ],
+      "fileName": "validation/battery/factory-battery-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-cards-agentic-browser-memory-r3.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3cf8d5bb82e62458729a8efdad1bbf0e32081dabafcc9d46303809173548819d"
+        }
+      ],
+      "fileName": "validation/cards/agentic-browser-memory-r3.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-cards-cloud-release-r4.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a0447eb2e37ff149ad940b3c763f9e78b87043f16245a4a447b2e040169a6534"
+        }
+      ],
+      "fileName": "validation/cards/cloud-release-r4.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-cards-product-face-saas-r2.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c8ac25c74d0b027b3ac74b4685ca66b5ccac617b6c61278e9bc1b7988a7c72c3"
+        }
+      ],
+      "fileName": "validation/cards/product-face-saas-r2.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-cards-public-repo-release-r2.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f96f93adfe0cc96ea9405209fa695387c07d1ac9108d298a70c7c76c7b1184d7"
+        }
+      ],
+      "fileName": "validation/cards/public-repo-release-r2.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-cards-solana-quasar-r3.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "13a0ff7ecca5196e9a881db605ed4ed70a99927443420ed35d67462bcca4221f"
+        }
+      ],
+      "fileName": "validation/cards/solana-quasar-r3.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-gate-reports-agentic-browser-memory-r3.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6c9a6275a5fc2e9bca10be8a1eb45055a4924d4e8bf2f7d9aa59e4e944314f00"
+        }
+      ],
+      "fileName": "validation/gate-reports/agentic-browser-memory-r3.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-gate-reports-cloud-release-r4.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "076e4e37260118a26274e4fd6c88ed261028c625a65f30682865c70ce09bdc30"
+        }
+      ],
+      "fileName": "validation/gate-reports/cloud-release-r4.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-gate-reports-product-face-saas-r2.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3905ca0e462de46a9280a233b4c7b379821820a6633a8b1a047355d7536aa32e"
+        }
+      ],
+      "fileName": "validation/gate-reports/product-face-saas-r2.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-gate-reports-public-repo-release-r2.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "99ccb805de18353dd869a8e0ebdd1c14d50411af3fc3c69ed423266da0dce6e6"
+        }
+      ],
+      "fileName": "validation/gate-reports/public-repo-release-r2.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-gate-reports-solana-quasar-r3.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e83f9baf77f4833ebc0b68af362b02c25f67e28ac6ec3591ad91768d7912ffa1"
+        }
+      ],
+      "fileName": "validation/gate-reports/solana-quasar-r3.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-hook-done-hook-blocked.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c39df36b47179ea0ebadf0bb70e608136e25e9bf8ec5e8cf94607d33e0da5b72"
+        }
+      ],
+      "fileName": "validation/hermes-hook/done-hook-blocked.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-hook-ready-hook-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "55aa7b502cde140437631f4079ad40f4fd77a16086ca0ca20d32980994560198"
+        }
+      ],
+      "fileName": "validation/hermes-hook/ready-hook-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-hook-worker-ledger.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "99941896f74eb8ba47e32001614f94b3e76d8dc432fceb9d199f8603e28ba1e9"
+        }
+      ],
+      "fileName": "validation/hermes-hook/worker-ledger.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-dashboard-done-gate-smoke.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "71608889bcc0b6c7202295c2d9b5f00e385186a571cf3c6f0469c4410f1af8f7"
+        }
+      ],
+      "fileName": "validation/hermes-live/dashboard-done-gate-smoke.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-dashboard-ready-gate-smoke.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ee2faf33a2d131c3427a4f9dc15fa3692e99db60730b28d72b604a16d9e82c0d"
+        }
+      ],
+      "fileName": "validation/hermes-live/dashboard-ready-gate-smoke.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-enforce-done-missing-results.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "96b7fa4024906b9226106fab3834e0dfd336f6259d32746e39f8553f9bfa2f69"
+        }
+      ],
+      "fileName": "validation/hermes-live/enforce-done-missing-results.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-enforce-done-pass.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b027b3d3ab2503ac28c3cb0595270012348b20f65e7e9d8c882c2d77a3f18e6c"
+        }
+      ],
+      "fileName": "validation/hermes-live/enforce-done-pass.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-autoreview-gate.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "490d1156b8f779a085f310ba0728c51c3042bff2032a8459d422a5c199cb4c8f"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/autoreview-gate.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-codex-security.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a959487f8c903d324d279f2b5206548ce51d6e1dc8c9eda6b93e24546e50d680"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/codex-security.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-crypto-key-management-specialist.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "530316fbac06e7f18d8037e256c7b81e695c1f28ceaa20672a22cd4c03db174f"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/crypto-key-management-specialist.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-factory-orchestrator.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5aaccf8388b2c182f782126b335f54c69d96eea989bf6a5609fa6bcca2669453"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/factory-orchestrator.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-handoff-packer.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4b6e9cb2573548a8e061df634fa8484a5e48d60d9fec88eda0d333fec4b26333"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/handoff-packer.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-human-gate-clerk.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fff24f652c1563290d994fd3328041329de568c43a177c62461c98301c72030a"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/human-gate-clerk.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-independent-reviewer.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3b12c01c95bcb929fd7b068f28576d610c34a9a01fe66bf54c34783c9031619f"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/independent-reviewer.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-qa-verification-worker.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "51c5e32ecf3dfe2987fc8373829329ee242215b3d31e28894336027a0f5cf2f2"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/qa-verification-worker.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-remote-proof-runner.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "44a874a95660aafd471c4afbf437084d8cea39892f23367c3b608238d8d95230"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/remote-proof-runner.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-security-orchestrator.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6f23dc6f733e443f245ed10c8c24e8db81ff07894a493b857ba85c86309b1383"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/security-orchestrator.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-solana-quasar-auditor.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c925b974e134e2cb5e8c7327fc7cb92a84b196247b841050a48ce7f94355dc2e"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/solana-quasar-auditor.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-evidence-supply-chain-gate.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6d67208097a76497e4d84ab5b7ae22fc88514c09024bb1001cb9d4abaa892a6d"
+        }
+      ],
+      "fileName": "validation/hermes-live/evidence/supply-chain-gate.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-live-smoke-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "550acd4be69aab3cc8572c0ae515ef9195e40ee808c34af8478e166b5712467f"
+        }
+      ],
+      "fileName": "validation/hermes-live/live-smoke-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-materialize-solana-r3.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f9d5a33759c964d7ca355984d7051f767714acabdc75a90cc237bef608fd1a6b"
+        }
+      ],
+      "fileName": "validation/hermes-live/materialize-solana-r3.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-browser-product-face-console.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1ff9e9b76aae3790225b087e47b93061ce7c024003f3efa29f4155b35bf2f3c7"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-browser/product-face/console.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-browser-product-face-product-face-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f6ec54f404453d5750436df7247931e49e54dc185902a4d2bf4e349c29f498e2"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-browser/product-face/product-face-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-browser-product-face-qvg-product-face-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6c74fcf9d96a415315bd7a3c1da835501c85ecca58e05314954a4e4b1a32037e"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-browser/product-face/qvg-product-face-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-browser-product-face-screenshots-desktop.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "97234a9c7b49660b46bba965b0bcc51c57598cdc2ea8b3f10226d980e1313433"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-browser/product-face/screenshots/desktop.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-browser-product-face-screenshots-mobile.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "87884cb6b49a59eca73f7fff5a2bdf147346b0c82700c6f2abef12857003cfdb"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-browser/product-face/screenshots/mobile.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-browser-product-face-state.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5da088f8841b769a72255d081547f90ac92824ba9ea4733467b59f6b37b805cc"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-browser/product-face/state.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-browser-remote-proof-remote-proof-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "05c105989aa52c9ec68cde786a097891a730b7b3f60284e9a137b7f563c25b93"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-browser/remote-proof/remote-proof-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-auditor-auditor-quasar-evidence.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ceffcbf92e5654665dd3d4e92826b8ee55bc208d9d43a96958e5461de443fd35"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/auditor/auditor-quasar-evidence.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-auditor-auditor-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c4e8d922d6f002b29a2392c22b7dc6f17f1a613aa346cf6c7f28dc59ff883dc6"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/auditor/auditor_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-product-face-fallback-limit.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6feeda769668908ea635ce1f7823443435b62fb77a01fb2f0cd736b79a9472a8"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/product-face/fallback-limit.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-product-face-product-face-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "04df51b3e0eec72dac718174bea055e28121042deb93f63c0dfb9b7e318f7972"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/product-face/product-face-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-product-face-qvg-product-face-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d0e32e3ce88f18a7056840fb3271cab1b21b780de28bd8305426e5cb54bbb4d5"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/product-face/qvg-product-face-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-product-face-static-summary.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cc461cb21d39ae2629f38163986dc669fa99a1b94add6fbf2f10096d18c4304a"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/product-face/static-summary.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-remote-proof-remote-proof-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4290d31344193978cb0eb544f03fb59cfd33111b14c7970061f79b29aa536d5b"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/remote-proof/remote-proof-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-security-security-evidence.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1b7492aefce054a0a0d4cb49ffa6f6b750d0d6ec2a742be94bb1467343d4ed51"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/security/security-evidence.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-fixed-security-security-scan-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "63468f09d1bfd76c72c49f45961ce9dfd19a1af3bc888a77be0380aa045b1253"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-fixed/security/security_scan_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-multi-profile-dispatch-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "17f1521ff8aa9c2ca05190ef60f9f9e4d25087e379aa731833b22db72c8e1723"
+        }
+      ],
+      "fileName": "validation/hermes-live/multi-profile-dispatch-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-official-head-recheck-2026-06-06.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f649c6dee21906b4b81a6c2f6978ff8d6de3e32d3ddbf4de84108947db14c0e0"
+        }
+      ],
+      "fileName": "validation/hermes-live/official-head-recheck-2026-06-06.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-official-main-patch-smoke.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "61a667333f44eef4cc1d3648a46ec705a5cbf3aaa3c6f0d48adbe9d1f4d99cc6"
+        }
+      ],
+      "fileName": "validation/hermes-live/official-main-patch-smoke.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-real-profile-dispatch-smoke.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "410ebbbb74d62eb9f4dcd277ed6746299789841b4dfcc805f3655ac34924f442"
+        }
+      ],
+      "fileName": "validation/hermes-live/real-profile-dispatch-smoke.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-dispatched-done-gate-smoke.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "075e813fe50fb6ce26d8d511e3cd8359a5445149315a70358c658ed22b24224f"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-dispatched-done-gate-smoke.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-ledger.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "889c155a962aad1b035a3c41daa144f9a2ff2d34d07c6bc85f1bb262855205be"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-ledger.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-result-index.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7e0aa402ab00a38768c047801d39ccff33989b2813e00151a36226b9bb9d7944"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-result-index.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-auditor-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3829c89213f92d5b41d9a880fafdc2676afeb8e4c7beb051590643b926b6b506"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/auditor_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-autoreview-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f732dd9d50357d30fe90b442f253fa7ed0c2f098305ecd2be1846329cb91c7b5"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/autoreview_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-crypto-key-management-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bc0db8fafb04f50dee0c522fddb75f0d5c900d46a60ade277d332344502ce5cb"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/crypto_key_management_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-handoff-packet-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "36726705a5b603f81030429792522e46c39e07940f0472be5f9cdd6a813c06cd"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/handoff_packet_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-human-gate-record.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7358841cfbe2d89d399a1314d30bf8c9ae3133ed6321990375846440e3043765"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/human_gate_record.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-independent-review-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "35375b984c934b327b68f4ad3a1b9b43b7c8f79ef74ca4ca2b9b053846c58c04"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/independent_review_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-orchestration-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4f8a12d52978f8966c30f2402a10f4deb56f6c83a2566d3ab7abc9d6cb3fcf12"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/orchestration_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-qa-verification-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "267c485d5140be034a97c2cbc7aadc785380b965b83934a01f6d6ac7fe7b8283"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/qa_verification_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-remote-proof-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "57e8c33d4cdafb20082b293a3802e5e4c18e40aa07f270a8dee5a8da39b2e59e"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/remote_proof_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-security-orchestration-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fa9a0bd940aef8464e9891e0c69bc5d41a339fc1e2ed75894fe407bcfa4ba6bb"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/security_orchestration_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-security-scan-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "70b718a03e8b130be0dc3bb6933c6f0f9457b5e4ff14e555f7d036563f4fd054"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/security_scan_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-live-worker-results-supply-chain-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "250bab0596bb3638bc4f4657b9f6bbee176ad7c972d43c1ec14861cc3ff6e0fb"
+        }
+      ],
+      "fileName": "validation/hermes-live/worker-results/supply_chain_result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-transition-plans-solana-quasar-r3-done-blocked.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fbfde0009aa31b1d6ec1b056f8d8cf3d0878685694a5108b95be46ea55d30b53"
+        }
+      ],
+      "fileName": "validation/hermes-transition-plans/solana-quasar-r3-done-blocked.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-hermes-transition-plans-solana-quasar-r3-ready.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fe94e6a3718efd7d946c50ad167bcc5756c9a8be6e6071780d60318a2dfaffba"
+        }
+      ],
+      "fileName": "validation/hermes-transition-plans/solana-quasar-r3-ready.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-console.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1ff9e9b76aae3790225b087e47b93061ce7c024003f3efa29f4155b35bf2f3c7"
+        }
+      ],
+      "fileName": "validation/product-face/console.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-fallback-limit.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6feeda769668908ea635ce1f7823443435b62fb77a01fb2f0cd736b79a9472a8"
+        }
+      ],
+      "fileName": "validation/product-face/fallback-limit.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-iab-qvg-screenshots-default.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9aa35742bd01cbb733204e9352d32908c3e4e3b1b136a34dda9a47f87e404172"
+        }
+      ],
+      "fileName": "validation/product-face/iab-qvg/screenshots/default.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-iab-qvg-screenshots-desktop.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b9ff15df6bfed72ac93036ea70ddef91e4357276df8aea010a635928ef2d37e1"
+        }
+      ],
+      "fileName": "validation/product-face/iab-qvg/screenshots/desktop.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-product-face-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9f0a84b4316adb871b532ca50d14c5b22a4e3920f6d7544bf016d135fb3da31b"
+        }
+      ],
+      "fileName": "validation/product-face/product-face-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-qvg-product-face-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e11cec4424e0af040f8827a04f2c6f3fe12009108b0190ea86cf65bb717d3679"
+        }
+      ],
+      "fileName": "validation/product-face/qvg-product-face-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-screenshots-desktop.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "407b5b2f8d428e47629f4c4531fa207aab7d3616f15bfebebb3c24ba9a37d12d"
+        }
+      ],
+      "fileName": "validation/product-face/screenshots/desktop.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-screenshots-mobile.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dc88396b5a8fc01582ed7be22b3b1309af164541528823c3820a27dc9a8d0ea9"
+        }
+      ],
+      "fileName": "validation/product-face/screenshots/mobile.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-state.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e9d91a06a11545ccaf30336a3914153e50cba918386e05bf676831a65b5b2df8"
+        }
+      ],
+      "fileName": "validation/product-face/state.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-product-face-static-summary.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b6812282ebd00aff07cb01fea462bcb9dc90a2be3234fbcd9770c1cd2c816beb"
+        }
+      ],
+      "fileName": "validation/product-face/static-summary.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-hermes-cu-fuzz-property-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "39a20fcfab71a6ddbf8ccbad4031df16f22d6d07d0cd3a346ca3e63fa132b79e"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/hermes-cu-fuzz-property-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-hermes-qvg-code-audit-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "acbb4e78426e248257a6d541ef2aef191ba5344675d15d14c1fc43fa5ac1aa5c"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/hermes-qvg-code-audit-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-product-face-console.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1ff9e9b76aae3790225b087e47b93061ce7c024003f3efa29f4155b35bf2f3c7"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/product-face/console.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-product-face-hermes-product-face-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7e0abc645859358d2dda2b28ee7f5ced48292c72e6076295262af13fccc3ca7e"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/product-face/hermes-product-face-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-product-face-product-face-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6eda4e61cd2c14098947c0de9e79fde8a3dcafe8ca71a803666615e1e488f9a6"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/product-face/product-face-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-product-face-qvg-product-like-product-face-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "afcf7c72ee307d61019442c82d1abe5672f0d9ddce327c5de1949cf897a3aabc"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-product-face-screenshots-desktop.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "30369a1ee95ea05255672469ec725aedcaf75800862709a4246e448462ee369a"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/product-face/screenshots/desktop.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-product-face-screenshots-mobile.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3dc836e7cf1daf55d634e1264dfa5f09d2984ee26a71e63d41ad4424ed165319"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/product-face/screenshots/mobile.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-product-face-state.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f837f9b0c164680f95d76ec2cb7a553198feebb4d497a375d06c5968d9cae18a"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/product-face/state.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-qvg-product-like-auditor-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bdb4eef3852e13c76943f5ed3c7f9ed6d38dd2bae3f99088cfe0dc89fda75349"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/qvg-product-like-auditor-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-qvg-product-like-auditor-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2774476736f7c271bdfe2ead9371d6b49e7e355e9fd112846c96f28ecada494c"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/qvg-product-like-auditor-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-qvg-quasar-cu-fuzz-property-proof.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e19b73e1021b59ee968e2beb7936f84ce4ba563f465e66b511271ffc604df08b"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-qvg-quasar-runtime-proof.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7f1130feb031be65e5d7fdfd7be908c9cf964c3e9b04bfcdd1a54aadf8ebbd9a"
+        }
+      ],
+      "fileName": "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-real-proof-quasar-crates-proof-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "eb6632be7f5a6127961ad3f93f18e2abfb4e60dae8be202fcf05862adca28f65"
+        }
+      ],
+      "fileName": "validation/quasar-real-proof/quasar-crates-proof-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-quasar-real-proof-quasar-source-proof-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a9736f79e814a12b5ea6acde9adf9b1e349037361d88a5d35c6d26441c110579"
+        }
+      ],
+      "fileName": "validation/quasar-real-proof/quasar-source-proof-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-release-human-gate-hermes-release-human-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b63b31f99f980657cff2ff1719de40dfc7f14e3b299c3c6a53481691ccd47724"
+        }
+      ],
+      "fileName": "validation/release-human-gate/hermes-release-human-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-release-human-gate-qvg-human-gate-record.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c0cf363cad33161697e1da72d23e9f35c3cb00a63a34e11d1ccbe4bfcd53934c"
+        }
+      ],
+      "fileName": "validation/release-human-gate/qvg-human-gate-record.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-release-human-gate-qvg-human-gate-record.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ac81103a9d3703df5d17b23782e4da8964f8c363d3a8e5a207c495bb1b82af22"
+        }
+      ],
+      "fileName": "validation/release-human-gate/qvg-human-gate-record.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-release-human-gate-qvg-release-ops-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "193ff6e451bb90d3c49149caf9b4e680a29eedee84178012893d7cb4bc5087f1"
+        }
+      ],
+      "fileName": "validation/release-human-gate/qvg-release-ops-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-release-human-gate-qvg-release-ops-result.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "235e4a2992d87f4d8ba698e61a75b9f0da698f135fa650959e14581a9771ad81"
+        }
+      ],
+      "fileName": "validation/release-human-gate/qvg-release-ops-result.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-remote-proof-crabbox-static-ssh-proof-2026-06-06.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5d80ecaecf7dd336271350998c2e62043094c610cee3da7fef35230434da1b10"
+        }
+      ],
+      "fileName": "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-remote-proof-crabbox-static-ssh-proof-2026-06-06.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "817c295b8f3e41b8fa0de856baad5751cb2454178d6ae459694cde1ce845d9eb"
+        }
+      ],
+      "fileName": "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-remote-proof-local-clean-smoke.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "28a2f5fab12bd182149305981b7237ac9f5b5d0c96097bc83797fb11a9e9715d"
+        }
+      ],
+      "fileName": "validation/remote-proof/local-clean-smoke.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-security-bandit-scripts-adapters.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ade77c1e680b5ed063e22138ca110a89725075cd568b6fc9fbb558ec3da69de3"
+        }
+      ],
+      "fileName": "validation/security/bandit-scripts-adapters.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-security-codex-security-full-scan-2026-06-06.html",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "269ee0006dab17107fe244521b6932b2bb885567647b470b39119e39e1dede93"
+        }
+      ],
+      "fileName": "validation/security/codex-security-full-scan-2026-06-06.html"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-security-codex-security-full-scan-2026-06-06.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a1b2a79d7b59f8862a02bfc52428b41f91469bd9111373bf96344ca4c11e307f"
+        }
+      ],
+      "fileName": "validation/security/codex-security-full-scan-2026-06-06.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-security-public-repo-security-review-2026-06-06-evidence.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a8a9d597d45e67737384d5511d42f4acef13d6bf5b17a19668942a4bccfcd901"
+        }
+      ],
+      "fileName": "validation/security/public-repo-security-review-2026-06-06-evidence.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-agentic-ai-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d31e98abc47dd8706550700a552c06324d5d2ba080fc4f2ca6c2c51b735e2cd5"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/agentic-ai-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-appsec-owasp-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f13a4d197d0487611a1d2639e2bcaf664b934c81bb659a3bfbd76052e6a74cc1"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/appsec-owasp-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "01acf1a42ec18b092bc9886389de78a516e1eb4b52aca5f5bb8fb46cd86b5e28"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "76beba4fa42422960fa1b88fb474ce4a8bdfcec0dc3091a23febb561513e21da"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a20e088a07b48fe124bbaf3b65e126ece467004f8307c6cae6ff22657794ed20"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f88561a023eb0b1c31a2d46955bb6a20231e0dc6f9a6693833301efd3eb5c974"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ff17955656a2d99b1c2c4cc467bb5a59391220e3ffe63b5846af0467c49835fc"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "badcc1e84453f349b0a589f7f954e0559547f53408bab24f59b95c3f86fbf601"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-memory-steward-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "db6ef08c345af99f67f7c7f615aca5980fe8317b26b197cf202077d377aa2712"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/memory-steward-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d2cf118e5144ef84dbb03d8c685420c893ff4347cc54b30c3742745e0a59ca27"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5be3605949c389ea5788b0b31ffcad99e07ae148da6d3086cad34bcf0d63a367"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "49305f4ee12e4fe15075c6619fff7bb50eb5f605d3d585e84881f081aa3eb14f"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-agentic-browser-memory-r3-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f8d4e19074f92a13045b434b0d936adb125a9666089d6e5cfa23a6fb249e91bd"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/agentic-browser-memory-r3/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c2930f389b9d0e0c53a2b5a562d8e31dde5feb9be125cf10ea6de9b00260acd8"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-cloud-infra-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6f2f6807504c9aee71e4cb4f0912e6b870524d43550e5265ffad7d89edef07ba"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/cloud-infra-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0c677e94f53c8854268bb0e1952b3a05af6d2fd329f1898eda9601d12801f03c"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-crypto-key-management-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d7cc2bbe2524ae4c97af2f03eb6eb03fc872cc72addee282287faae06267c6f4"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/crypto-key-management-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-detection-monitoring-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "248b03b0e74a28c58d926471536ed4329677d856caa9d2ce5f55837f74c7c9ac"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/detection-monitoring-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "afceadf2ce3a6c58b72dcdd22cc79b4af33e378567993eabe1f4d7052fefeee8"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c70d39e98771be1be8408d24cde9361d83894b33b86bd965ec64ca6e09ce10ac"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e13de5efed9730fd676978192383850b381d7e18ebe95e407027ff48d2a1921d"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ea6db4db0014dc5ba20156b6b99cdb259e005168aa75bf4e87793fb734d32e9a"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-public-safety-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "96f5d51017a4afeeaa2d420519ebc4179711521f6e9ae20cb63996eecac30b57"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/public-safety-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9a113a8b4843e929900733436fffcc36f9f1a8df106a2daa5c373f38c5e24839"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-release-ops-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "348bde86cad9a8a2a34bf151114aa86142b0123b364f3d9ca3042ec2ea03f95e"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/release-ops-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a782c3321a2814902fff5f364e3fe3b8e2d1cfefd946a7d1ce4018f00bde1158"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "989a07b1ef7477e4bfaee9e8fb8d1ba911d9abe2950611f1ca67c315b93df405"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-cloud-release-r4-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5eb0643f9675fc84aed28da685885911a7b823ff4c19f709980fa46af196c223"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/cloud-release-r4/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-product-face-saas-r2-appsec-owasp-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c295e0140282c04a55ce064eabd8fc3a60e7ab4a55aa9ff4ac0d8c37b90622a3"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/product-face-saas-r2/appsec-owasp-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-product-face-saas-r2-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "28b2ad55d2ba4600e021f04aca029a5041d877b4a661e7b44cd9de55527394c1"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/product-face-saas-r2/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-product-face-saas-r2-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "57b8d5f278bfeba0e83fd3f0e55b8a50fc4a11b29ddc635eff877394726ca1d0"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/product-face-saas-r2/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-product-face-saas-r2-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "681e77a185f8b6bae4f4571a3c85e5b4d23a87edd4ac0d7333181a331de8a44a"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/product-face-saas-r2/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-product-face-saas-r2-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "067caff2ef6650f96f9c6a8e7bbc46307cad7011a6286d132d4f5cddaf18ea19"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/product-face-saas-r2/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-product-face-saas-r2-product-face-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fe7cdf2c2803a2a833cbcde5460c9fab29d1add29502e192fe8f33909e91a212"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/product-face-saas-r2/product-face-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-product-face-saas-r2-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e9245b2fda1b37588e92f76be34c276cc30bb8a0eb1fcf021dcbee33dfb30cf2"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/product-face-saas-r2/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-product-face-saas-r2-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "21dd9497f9ef289435e835fca2c8bd0a0e9176c2d4be5f6d148f482b2de92f12"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/product-face-saas-r2/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a16d9f25d5829a8934ae687f8d00b3f54abb6af99f7bcb56a98e878673d48633"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-cloud-infra-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a0b4958f8c709b2e8cadc2bf8b608da4ce85528dcfda5a082057afca608afa41"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/cloud-infra-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9781e1d013a282f243ce534e8c18c0c464b6ddc5097651930f69418d8b356e8e"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-detection-monitoring-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c830bb6769c7386b0d65600d46ced3202e841b9c1519b9c7ec675a2281738c5b"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/detection-monitoring-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-docs-os-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "79790f757139c99071c0672c7ce6efdc65b2a339611451c4985b20d5f9810095"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/docs-os-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5f209112cf7bb7c1cf83a270dde9e66c8f0288378a71605a0526a4ed53eaf27a"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "42f458da46eea45dd045197ce52e12ce77b67c048c5ea352ad52281c6f838d0b"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6297465999d11bb5451be87e79ab229408534419d2b4ba5a2a7bf56d0a65a860"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-implementation-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "de1102abe5c8b971aaf9650e8030f8e3761cad53d7dd4ef7fbdc97c79ce7e14e"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/implementation-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d486b318f2724e5498eae74d85b322c906227c48ab20d93a35993ced1c76d5a7"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-public-safety-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4723bc9507ba01327c63280e201a734f962dfe5ea9eedefedb8cfa203e4ddd5b"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/public-safety-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b0a9d399125be6d57d273f00740c70315de618bcdb1329b85a9152ffa064f8b4"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-release-ops-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ca28f49b69e145cd171b31354bdf7201cc4d05d1bd67fdc7e50bfec4254ac9dd"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/release-ops-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4f36b532f33bac7edc761cbf33f202236b10e826644ce63543e6987b48563e00"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-public-repo-release-r2-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4f3ca13c5f1861c50d4714b5af8a442f89be129c636c7aea8b9238638c24c049"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/public-repo-release-r2/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "09042db4bd3eb750cfad81af98970cf8f33cf728b4d3ab1a8d7e5e209c7a6ae9"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2719a36ea07d299847e2a67e20026559cc9f8d7f8150c18ef741a9986529f3c4"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-crypto-key-management-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "56686043cc1455ef65ab03d87cdbc85a57bc1679ed616fdb3310023e37ea062d"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/crypto-key-management-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cde5ce0e4338bd611a3654872a257d16ba596209c81943baf79c2a23e1c6fcc8"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "78d46207423180d56a7d18df328b5584644e946d34676458d3f4529dd6719961"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4c0348258fdfc480155dce3e002198cf1839c39bcfd20056c73d05b3ea0a2f39"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a1184e7d1e4d3611d9f7ad898312a28ff4bd476d11a088b1f3c1458a24bef2e8"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ca02d7146a0cdea9b3b72f26c7fe55a0a4d022914e1fffff1f2b839ca5f9437f"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2cdbf4613fe07615ede671ea3eaf3fd2fc231052f95ab387536d6f4646042e7b"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "49c740a4ca1250bd14d9edd17c2e28a3e62b63b8984fa7bdaf52e13fe2e0687f"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-solana-quasar-auditor-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0da5209d3459b3e0121200829d826351ffe63269325606950aca972c0df6b90b"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/solana-quasar-auditor-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-required-solana-quasar-r3-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "197a997347ae501b1574ba77b392b5a4f1812888942c1cbeba2d463c2d5d3915"
+        }
+      ],
+      "fileName": "validation/worker-packets-required/solana-quasar-r3/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-agentic-ai-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "502a62957889f328618ba0c3db236fb5939cc4fb8b055adb2e4868e92a519c94"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/agentic-ai-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-appsec-owasp-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7b07f3642d807685154f52dd97acf5b5bb822da5499ff813802326a217aa33b4"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/appsec-owasp-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b772a5fdac5c8700328840bdc9c7e97be3f37ef8280c558a7d968463ff3093fc"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-cloud-infra-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "60d440aed1ca464747bae4b922f940cfb1057c45af73dc34103883eeb276657a"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/cloud-infra-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dca185935a2eda5c7a8ab77302ed62a31d7377d4ec24e36d97308cea59e92991"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-crypto-key-management-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "766fd342979325c563da229f78468235b25c9ecae66b871257a4adb23e2a8060"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/crypto-key-management-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-decomposition-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f360fad5781802c0fd4adf3a4c7452b920a2cabb769077393b6288feda45cc4a"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/decomposition-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-detection-monitoring-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7aa4e951da49dcd03bafba6dcafc2a411f6784484df71750c2216712960beee7"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/detection-monitoring-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-docs-os-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4c10b867eb3b933513a2c894a072d3a7c9e62d69ce19c22b9ea154c6670ce4ec"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/docs-os-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2a2936f3b9ac5d57201776119b53899bd6779a99ec9cbbb741f9ddb21fb509e3"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "39a1e9fe4bb2e32b8bdbd2066fcdcb93cec28563d1b488af2effa292de2a3663"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "91bf11ef8e375830145ee2ecd2233b164771a2be272d7583ec1f7a65ef95544d"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-implementation-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fa2b0247d52c29cdea171e91ac25a67b5bc8371249cb4ed4febe9275612c9502"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/implementation-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3d5122644ede766b2d463270da22a9605a2b6e63c4534a10c8b777df6ab1b5f8"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-memory-steward-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "86c241038a12dcb4815bb7c60f3bc9b23270c72acaa21ba8252c704db9a3d1de"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/memory-steward-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-product-architect-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "32b4abe8f2404578ec7ef912ec176b90989a7bd4bbbc2da925e6a6d93b68560b"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/product-architect-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-product-face-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4dcfa653f25a185e37a5be280c02c8d4b3fb0be4fdcd8e4f0f61eb55b25ee0c8"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/product-face-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-product-sot-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4201f84cf9c4f0f05020497ecdba2ee0f718304f2f5989471f34ce25dc4274c7"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/product-sot-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-public-safety-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6e5e3c4e188db62927dd113dbf2fb0cadc20a924d28d0a380461f059ed6c0083"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/public-safety-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "85bd15dcf26354512b69b3c1df2fee559670d7fdf7be932ea928caaae25fc633"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-release-ops-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a3500b0280f887256fb0333a9fd33ca98f4ab7e0dd98cc2872cbcf4b2c4a0648"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/release-ops-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "63a9564d8d206d073a47f23060b3d513b10277cdacd811cc0359e0127d2e9541"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d6749c6a49a7d0abf9d584683e2302d66786e49cb719d8769a8e14090c5ce267"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-skill-eval-distiller-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a24a46f5678b466de02955a83f0b64350aeabf11ae9ac238ce78b65871a2c8d4"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/skill-eval-distiller-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-solana-quasar-auditor-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "28eca494a50c15749b1f2ee2a1fb68dedf74320a71ffb5f288c00d75d1a0c249"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/solana-quasar-auditor-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-source-ledger-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "95a1aa070c16f10aaf95d0bf168e366cd769c6b563e35f42c9d514cf0caeff3a"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/source-ledger-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-agentic-browser-memory-r3-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4190c9504033a73b2f5fef4575eadbd25c660fd886fb32cd2ab0d9907c803f7d"
+        }
+      ],
+      "fileName": "validation/worker-packets/agentic-browser-memory-r3/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-agentic-ai-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ea658bbbc90c5aaf933b9bc657c0a35bae3d83d37196a7ba4d3c597ba0991c5e"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/agentic-ai-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-appsec-owasp-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ced1a382b9b00f1baf98a268b3f9920d1a56e6be7649d76a18cea01f85383e55"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/appsec-owasp-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "114dea15eb5ac8b3f7350f665d07923f567a888b3f84f23d11da02ba920878aa"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-cloud-infra-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "225cf08531efcccd9e54a781d5f0f39c532168e33f5855a449103293c3b1d79e"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/cloud-infra-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "16c066264e78719664330ec2c8b5a78477f569f12f13431926ca1247e042414e"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-crypto-key-management-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "95b52afdf5c4e050338bad4ce198230c190c52805549cc205f95c3dea309fa3f"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/crypto-key-management-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-decomposition-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ee573bf678fbff830cbd3532c124da8bb94d2c69cb9da7d08f68f791c07271f3"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/decomposition-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-detection-monitoring-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f78c301fa29ae4adf28f28e125243241976aa43b123e6f3ff23433e1680c48c5"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/detection-monitoring-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-docs-os-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "76b1cc0069792b5a44eb106229ab2bc12ee07402995b6d3c692f589fac45cc5b"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/docs-os-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f690fe4591a3d224f04fe4aa124f3d6e0e32dd414c2e05ca76e14ea34ff1ef83"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c329ca8c474824ff022c4db3da1502f545a8afe7e4c66b3db72a202ef5c2d0fb"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9447354e3d9db4fd2fc042f69b5424a66101979db32301d68a42162414753420"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-implementation-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "428e7b37dc1855e6ed8e5f24e2e7f1fd531b1b9ec99614a009d2b301ad7f86f7"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/implementation-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "76602a90067fb5b0508baa5336dff9fad48bdb6644630aa19245f7ee53881b75"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-memory-steward-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "97de511d395b34afd9751f0add0d41d811b5b72cf5940e6bac080fb3f02dbd71"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/memory-steward-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-product-architect-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a6c569f35f6f3e188220b634c8aeddeb8ce343638cbfcf18c318d48ae630ed6c"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/product-architect-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-product-face-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "85f1f08ad71841286bdab158f18465dc8c00e4958ea6e35586d4877f1d72d36a"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/product-face-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-product-sot-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c4f7944869a21144eb0941ce17f4607529eef1af4ca84d8fe3365f51259ec32a"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/product-sot-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-public-safety-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "88110d70e2d198c009be5f41330999409f74b25363c6b386997bfe884e24f4ab"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/public-safety-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9b25e30e216374d60004cc6486cc160df39b548fa068fe5a14fc1d18299f0ce7"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-release-ops-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b38bcaf429cf0eeb0e94de8185c88691080043e6810ea55d06c1784e14d0b274"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/release-ops-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1579bd1be7b950518393762d8dfeed3bf543a928b63a5e6e225e5b0651f31fc6"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "61009e37b9989c1ec8e2eb4a522453bf3d064e68df24bf10f21cbfba74fcd3a5"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-skill-eval-distiller-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5c84ff0e63b67e27f59c1028f26917247b163eb8736950f418585d72fe91ebc7"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/skill-eval-distiller-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-solana-quasar-auditor-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "521de05c1a240937f6958b863b91a1a43807cb5d8dccd11d9432b495ab81db47"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/solana-quasar-auditor-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-source-ledger-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cbf1742a04a3a80b12417f4c46270d92cfa39b1575baf19bd7ba8727f6063772"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/source-ledger-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-cloud-release-r4-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3c224b0255e2322154c47da05f8bc6bcd12ce2fea0d8f2e85edb9c5fe17079b2"
+        }
+      ],
+      "fileName": "validation/worker-packets/cloud-release-r4/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-agentic-ai-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b4d6f5e85fc2f00c4e07efe00ac2e0d0a04aa9a4a38b4af46c228d5192a381eb"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/agentic-ai-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-appsec-owasp-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a20845dccb251741eb7914f5ebb97f2f3f4f399e24c35690017e9f9956e29bff"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/appsec-owasp-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9127adf1adaaf7306410c77e13ba9c4f50079ff9437d84bdf8c30293321e6a0c"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-cloud-infra-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c817034e8b034c008ee5a7a114e84c8ce230624cbda6eb911afc1a884a59a024"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/cloud-infra-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ebc0a0cd515d5bc624765c66a201d3e0ad9384cd962fe715ad76d6baba2ff04b"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-crypto-key-management-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "434cdf81b80213568e343c1cf7edbcc27e495156313397da4a8e6e1d564f5d36"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/crypto-key-management-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-decomposition-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7f43b6cf014780f20ee636943a7718e82b9a216080334edfd7d3ce14f7026450"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/decomposition-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-detection-monitoring-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "82f9bd2561709fd9d8ff01cb4a382a6b1a7bd9741a103acbc5a262f01c177bcf"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/detection-monitoring-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-docs-os-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8121629ddf38062c5347b6c950b43a39e1b32a287eed1ada9cdf68cd1326d4ad"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/docs-os-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a00ba32531653ded1b5c90a0bc42f1cf3d3ef9e24aa17d944214647fa817e105"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fd0d2adc8de2566ba6597c7931e913066cdd79694ec557eb904e0e1b92332451"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ea04e084776d35ed037ba452a99fcc7cf9e182b71189a9a02bf45ec30fc3cefc"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-implementation-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4e4bf985deff3209da76c829cb7e19389a8c1f0da3e1c75e3fc68fe0c2c3a57a"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/implementation-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "36e0260fcfea6634db65cd340316a9fe35186262d35fc4a7c41c5c10053eb096"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-memory-steward-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b48770ccb5726a687ec501d46f950479b00f570e6d1633b2265a7aed3b022537"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/memory-steward-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-product-architect-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ae07293ca26a5218d78053db75da3f51a9b0de0e97588e014a514e02b14c2c6d"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/product-architect-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-product-face-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b4c2a32ebb20b02f5e2991e476945419f803e1f46f4f8624c197765a932d3dff"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/product-face-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-product-sot-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4f37987a66793a2a179fb9a2dc1e87c288803beccff7a232709b27d5d6a98468"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/product-sot-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-public-safety-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f67a2932c89374b28bc74ec6475247df8e8ee0e10d2aae02f4ea1370853eb845"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/public-safety-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1a8fc2e4c0888beee29d3184b8c60066d79d9fddd83613f7aa42c41852a7985d"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-release-ops-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2ceec765a296f14cc7a36b98432131024dfe5faff19d13ece6b8bb6f315a05d9"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/release-ops-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "893dd5c402c7bad78b8f6e0d23ef3a11fdb6a07bf0aceaf0435235e25feacc8c"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6f663baf78c988d0755ce192f7c1d02d82f0c8fc87c3437b6a7bf2adbf62d85d"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-skill-eval-distiller-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "50ac8fa9c2d0b0e757fe2c1f9d08aebbaf6755aaa7384a88871257acb06ce6e3"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/skill-eval-distiller-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-solana-quasar-auditor-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5abfb50995943b594ed3e76dbfdac843745121b27b744f29576814a9f61c093e"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/solana-quasar-auditor-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-source-ledger-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "adf4252f6bcb7c9da403a79f2368d89e2ddf4a9291c9398d1e7ab2858d5271fa"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/source-ledger-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-product-face-saas-r2-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "86ca7ea02a3b0f2ebf326d438ed66b3458c0c05939832c9e6ebdd10785d5d321"
+        }
+      ],
+      "fileName": "validation/worker-packets/product-face-saas-r2/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-agentic-ai-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0f69a252abb4e6eb95a308ac69a9d31aeda29171f6fccd4814009efc40ce4010"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/agentic-ai-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-appsec-owasp-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d2d8a9141daece66102f01ce13792ce9be3eac1b520adc5c19fe1cf003a11adc"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/appsec-owasp-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f62d1cf9561a31a908e91b2dcc991c2581d4afb476192e4460e2214ee7cd5771"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-cloud-infra-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0e503f602252e6b37948f6621b3ce0674612cbefe1fd685a78d92c23857c4b48"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/cloud-infra-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "aaf1752500a67ad02d98f3d486ca04bee54449f3ca8e145f15fe231957ef9d71"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-crypto-key-management-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8cbf8477b80d8db52c8153f3a5e5d2e3454d5380f64ce28b7982235f143a2f6a"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/crypto-key-management-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-decomposition-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2ec3b9a08e0ebfed31b55419ee6726b10234a9277c0a49d8801ed8a18036d06b"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/decomposition-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-detection-monitoring-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8a257f9bb67febace68e66294d51ca06da382d79fafea0a00386c1f622f4feca"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/detection-monitoring-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-docs-os-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "456a29ae6a72378fc657abfac3c274c5eb2f412e44f106ad7ea488880e770011"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/docs-os-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "232e4a95736a17a06c9c2f83058799db31dbc6c8eab7c2e110ccc82bf0a96687"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "08fb13e35a3ff908b140ef78ce3c934abb9e628f73a07f3a4cb6dee89b61df31"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "062488a88ba8519e6ca819348662a53578d6317374aed868baae9a2d6a701e47"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-implementation-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a77072fdd9658a5ce2f39cc28f43966698b026127b0a70244c7505020bc72b45"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/implementation-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "657a311bf1147012198854e81819361237dcffb366c7b37b23f9766ee2c59a34"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-memory-steward-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b4dfacca718f985baa1dbce272bb2aa5b04ec3dbcdffb1dd26de0ddf9df77372"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/memory-steward-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-product-architect-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "66badb149ac575c7fc7ba52f920e0b8700abc4a0649be212b0f08fce7ac58901"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/product-architect-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-product-face-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f080e40d6696028bddcbd32753a3bd0971d1aace887e814c9eb2d8a94c0b4705"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/product-face-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-product-sot-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7d5e6022f49c83c5e080f31df9b7f3dd54aab1559c2d87d15e33f0697f23b2db"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/product-sot-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-public-safety-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "02430e027e1ac553960098d9e5858d0511109dedbcb05e1e40bfed964a0fdb8d"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/public-safety-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "64db7514354ec86856053ac11d9ac21981ce62c0ad4d0b510f74c680ddc4c836"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-release-ops-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2a39c751852777ac79b630a31afae8ba2d091c7359a519f3a1717e62e9cf633d"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/release-ops-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d08ad5c3205934d5aa034a2485ecb605d32fece173d82893b0ff86fce0016061"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4521b40578742a0784e57298e956d6ed525b5ddef1d4ec513335847a67090dbe"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-skill-eval-distiller-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d80146b2e7d7f203fc93dc133e784ae46812e67c64c6bddbab4431e2a6d47f27"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/skill-eval-distiller-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-solana-quasar-auditor-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d324c65acf6ed8e68c4371901e6cca4ce94e7815957a64fb511e9346bd19efb3"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/solana-quasar-auditor-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-source-ledger-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fd63483b45726818abb999449a3dfb40cead02215cebc8d2239de7d8ad2f2ef7"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/source-ledger-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-public-repo-release-r2-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4b25db8083110e848dbb00005a6de0a9c8cea8b631a49da5e556b1df9b262fc5"
+        }
+      ],
+      "fileName": "validation/worker-packets/public-repo-release-r2/supply-chain-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-agentic-ai-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d0d551c488d38d890dc705c33dbdfaabbd3187b0a7a4b7971ed194c5544bdc31"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/agentic-ai-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-appsec-owasp-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bad35ad2dacb28ef3023072b78ef47fdac5c66947712881503aa7fe5a07b87c7"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/appsec-owasp-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-autoreview-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0184edd5608d562c80558ed6f1b8189a12b1f5d78fbc3dac41a4ff8b76db9fa3"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/autoreview-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-cloud-infra-security-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2c06a3d9bf6665990b2eeddd18278b4e513b1f2b065fc711a0f9dbe6445ebed1"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/cloud-infra-security-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-codex-security-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fcca45b4df1595b4bc31b4c3421e77f702b3c7e65f6b2652465d15f57044e42b"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/codex-security-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-crypto-key-management-specialist-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "df005cae64a01df07138da8c805bda469e17bcb807f88f2304c7dd604edb807c"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/crypto-key-management-specialist-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-decomposition-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d740dab467b5d74db1365191f617382895124e94e14eca3b84d7ef0ad5f634c3"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/decomposition-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-detection-monitoring-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3950abd9bb8bae0d7c21f5e0b1daf17d630e824406248222da4cf38839f80c73"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/detection-monitoring-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-docs-os-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "784bff60d36e09fc9bfd8212fb4b0a525f901dde10694314f229c8683f3bac45"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/docs-os-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-factory-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e195ab003398d6f23e0ba779c9a5e68098ae89012335fba660cb7e612cabda55"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/factory-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-handoff-packer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f0a096bc0f769013fdb05d056fc135c4fcd0a5e43088a805f9e97d545f0f7925"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/handoff-packer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-human-gate-clerk-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c836792bc80df2d827ee0e033316d81c1a8b852cc6e96d4029f854c83009ac6b"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/human-gate-clerk-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-implementation-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f55e2dbe3e9b13a48d71e85da4c8cdfb6c0e27715d1e6b0b329409c3873f23f5"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/implementation-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-independent-reviewer-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "606aca35d1c5b7579b210708e54dec95de31c6ffccad30a580de418cebb1f5ef"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/independent-reviewer-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-memory-steward-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d78fdcf7d3a49c74e5143d567c3e864a120e2f2d1e5ca3ee167218ed1c80e7f3"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/memory-steward-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-product-architect-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3d22f50d1b69477209771cd74ee57d7a8b35509f2b404cfe26330c127d74c582"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/product-architect-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-product-face-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "323ca49399b3af03fb83ad37edfc28557e9b9aa4bd2b5c50ebc1ccb41b1dcf34"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/product-face-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-product-sot-planner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9d937ab22e151be1f3241cc67e0d9a9203a8c51009451a4056dbbd1e3d49383e"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/product-sot-planner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-public-safety-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0cef8f05f92aa69c08af24b2b821ff62b2cec1528a789592885ac5a3868ebb78"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/public-safety-gate-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-qa-verification-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a82699e0e3366d8d47c43d0619ea690e739174301161b9a704140606c5949db7"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/qa-verification-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-release-ops-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0b10a88b1ca2283ab1f67708188996d1093fb60847bf50aeea1871a27c3fea80"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/release-ops-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-remote-proof-runner-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9eaa118339a8b8f8bf690d4c74a15272cf1291d1b08baadf4b4914e8bb13bfe3"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/remote-proof-runner-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-security-orchestrator-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "59dd8ebd34d635b614c6601345e31a723cfb337af3d2d3719a84586c0b23e4b1"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/security-orchestrator-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-skill-eval-distiller-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "be705e713908b9eb7ad1103e27c63a3f400fb558dfd7dd131667861e3064c072"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/skill-eval-distiller-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-solana-quasar-auditor-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f28ee7c69ee445c1bfe97f4ece8d47da986c6cb1381db364ca2a96c0c148734f"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/solana-quasar-auditor-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-source-ledger-worker-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5b0674066ef6af2506731f5ea24fbd90d6aff05e6905be11e8d73b9468b19769"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/source-ledger-worker-request.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-worker-packets-solana-quasar-r3-supply-chain-gate-request.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cd7a46d46d8a24b3985f34e55f7fbf04ea7c9dd1666397b5d9bdf9476a71710c"
+        }
+      ],
+      "fileName": "validation/worker-packets/solana-quasar-r3/supply-chain-gate-request.json"
+    }
+  ],
+  "name": "overkill-factory-source-sbom",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-overkill-factory",
+      "filesAnalyzed": true,
+      "name": "overkill-factory",
+      "packageVerificationCode": {
+        "packageVerificationCodeValue": "b6edeee4681c4ede9c91c2c17fee1aa73c66bbf2b6e888fab564cf900972681d"
+      }
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}

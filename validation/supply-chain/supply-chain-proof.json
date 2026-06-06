@@ -1,0 +1,80 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "blocking_findings": false,
+  "card_ref": {
+    "card_id": "OVERKILL-PUBLIC-SUPPLY-CHAIN-CI",
+    "executor_identity": "factory-maintainer",
+    "phase": "F16",
+    "reviewer_identity": "supply-chain-gate",
+    "risk_effective": "R2",
+    "slice_id": "PUBLIC_FACTORY_SUPPLY_CHAIN",
+    "surfaces": [
+      "public",
+      "ci",
+      "supply-chain",
+      "opensource"
+    ]
+  },
+  "created_at": "2026-06-06T14:50:44+00:00",
+  "evidence_kind": "real",
+  "evidence_refs": [
+    ".github/workflows/ci.yml",
+    "validation/supply-chain/source-sbom.spdx.json",
+    "validation/supply-chain/supply-chain-proof.md"
+  ],
+  "executed_by": "supply-chain-gate",
+  "findings_summary": "Public supply-chain CI proof passed: workflow permissions are least-privilege, external actions are commit-pinned, no dependency manifest needs audit yet, and a source SBOM was generated.",
+  "next_action": "Run this gate in CI and rerun via Hermes supply-chain-gate after workflow or dependency changes.",
+  "record_type": "supply_chain_result",
+  "result": "PASS",
+  "reusable_for_product": false,
+  "reusable_for_public_repo_release": true,
+  "supply_chain_controls": {
+    "dependency_posture": {
+      "detected_manifests": [],
+      "interpretation": "No package dependency manifest is present; public CI and proof runners rely on Python standard library plus pinned GitHub Actions. Future runtime dependencies must add lockfile/audit evidence before release.",
+      "requires_followup": false,
+      "result": "PASS"
+    },
+    "sbom": {
+      "format": "SPDX-2.3 JSON",
+      "path": "validation/supply-chain/source-sbom.spdx.json",
+      "scope": "source file inventory excluding generated validation/supply-chain outputs",
+      "sha256": "ae31aa843994a01830f8ce57550637c290bc4368ffd43ffe5f7670dc0dd39f72"
+    },
+    "workflow_security": {
+      "findings": [],
+      "result": "PASS",
+      "workflows": [
+        {
+          "actions": [
+            {
+              "action": "actions/checkout",
+              "line": "16",
+              "pin_status": "pinned-sha",
+              "sha": "34e114876b0b11c390a56381ad16ebd13914f8d5",
+              "uses": "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5"
+            },
+            {
+              "action": "actions/setup-python",
+              "line": "17",
+              "pin_status": "pinned-sha",
+              "sha": "a26af69be951a213d495a4c3e4e4022e16d87065",
+              "uses": "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065"
+            }
+          ],
+          "findings": [],
+          "permissions_summary": "contents: read",
+          "result": "PASS",
+          "workflow": ".github/workflows/ci.yml"
+        }
+      ]
+    }
+  },
+  "tool_or_profile": "scripts/supply_chain_proof.py",
+  "worker": {
+    "factory_phase": "F11/F13/F16",
+    "id": "supply-chain-gate",
+    "name": "Supply Chain Gate"
+  }
+}

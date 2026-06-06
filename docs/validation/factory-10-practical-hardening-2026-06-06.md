@@ -59,6 +59,8 @@ Public CI now has:
 
 - least-privilege workflow permissions;
 - GitHub Actions pinned by commit SHA;
+- supply-chain proof gate with workflow validation, dependency-manifest posture
+  and SPDX source SBOM generation;
 - unit tests;
 - Hermes transition-plan smoke;
 - Hermes transition-hook smoke with enforced block check;
@@ -119,7 +121,9 @@ the scanner now represents the real public policy more closely.
   events to the public hook, automatic result ingestion and product-specific
   specialist profile execution.
 - Remote Proof is local-clean fallback, not provider-backed Crabbox/Testbox.
-- Supply-chain posture still lacks dependency review and SBOM/provenance.
+- Supply-chain posture now has public CI/SBOM proof for this repository, but
+  product-specific dependency review, lockfiles and provenance still repeat per
+  real implementation.
 - Current Git history still contains old private/internal markers from earlier
   commits; public launch should use an orphan branch, new repository or
   coordinated history rewrite.
@@ -132,7 +136,8 @@ Estimated public-factory score after this pass: 9.94/10 for contracts,
 preflight, executable Hermes hook, stricter worker-result reconciliation,
 Product Face proof, dashboard/API no-bypass smokes, worker-style completion
 no-bypass, official-main patch compatibility, real public-safety profile
-dispatch, local remote proof, action pinning and public-safety controls.
+dispatch, local remote proof, action pinning, supply-chain CI/SBOM proof and
+public-safety controls.
 
 It is not 10 because the missing items above require real runtime integration or
 real target code, plus a clean public publication path for Git history.

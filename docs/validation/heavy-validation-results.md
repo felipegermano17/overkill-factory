@@ -56,6 +56,10 @@ Public evidence:
 - `validation/release-human-gate/qvg-release-ops-result.json`
 - `validation/release-human-gate/qvg-release-ops-result.md`
 - `validation/release-human-gate/hermes-release-human-summary.md`
+- `validation/supply-chain/supply-chain-proof.json`
+- `validation/supply-chain/source-sbom.spdx.json`
+- `validation/supply-chain/supply-chain-proof.md`
+- `validation/supply-chain/hermes-supply-chain-summary.md`
 
 Observed result:
 
@@ -121,6 +125,11 @@ Observed result:
   both completed with public-safe worker result artifacts, `PASS` for dry-run
   evidence only, `reusable_for_product=false`, explicit production block status
   and public JSON, public-safety and secret scans returning `OK`;
+- supply-chain gate dispatch: a real Hermes `supply-chain-gate` worker ran
+  against a clean public clone with the current diff applied, generated a
+  structured `supply_chain_result`, produced an SPDX 2.3 source SBOM, confirmed
+  GitHub Actions are commit-pinned with `contents: read`, and reran public JSON,
+  public-safety, secret-safety, unit tests and `git diff --check` with `PASS`;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -296,6 +305,12 @@ checks.
   release-control packet, and both artifacts keep production blocked until a
   fresh product-specific R4 gate, rollback proof, smoke and monitoring evidence
   exist.
+- Supply-chain CI/SBOM proof now exists and was run by a real Hermes
+  `supply-chain-gate` worker. CI now includes `scripts/supply_chain_proof.py
+  --check --no-write`; the proof validates least-privilege workflow permissions,
+  full-SHA-pinned external actions, dependency-manifest posture and SPDX source
+  inventory, then reruns public JSON, public-safety, secret-safety, tests and
+  diff-check.
 
 ### Still Not Proven
 
@@ -312,6 +327,9 @@ checks.
 - Managed Crabbox broker or Blacksmith Testbox proof. Crabbox static-SSH remote
   proof now passes, but managed broker/Testbox credentials were not available
   and must not be simulated.
+- Product-specific dependency audits, lockfiles and provenance still repeat per
+  real product. The public factory repo has CI/SBOM proof now, but future
+  product/runtime dependencies must add their own audit evidence.
 - Future Hermes releases still need the same disposable compatibility smoke
   rerun before an update is accepted.
 - Full multi-specialist Hermes execution on product work. Product Face,
@@ -325,10 +343,10 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.8 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including the updated product-like audit state; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.995 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof and release/human dry-run gate dispatch are now smoke-proven. |
+| Agent/Hermes Operability | 9.996 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof, release/human dry-run and supply-chain gate dispatch are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.72 | Product-like Quasar source now builds/tests in Docker, has bounded Auditor code-audit PASS and product-like CU/fuzz/property smoke from real Hermes workers; production source, real CU/SVM flow and economic fuzz/property tests remain open. |
 
-Estimated score after fixes in this pass: 9.99/10 for factory process,
+Estimated score after fixes in this pass: 9.992/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or
@@ -343,8 +361,9 @@ production-scoped human gate evidence.
    static prototype.
 2. Replace public product-like Quasar proof with production Quasar source when
    the production product exists, then add CU profiling and fuzz/property tests.
-3. Add supply-chain CI: workflow permissions, secret scan, dependency audit,
-   SBOM/provenance or explicit waiver.
+3. Rerun supply-chain CI/SBOM proof after every workflow/dependency change; add
+   dependency audit, lockfile and provenance evidence as soon as runtime
+   dependencies exist.
 4. Run managed Crabbox broker or Blacksmith Testbox remote proof with approved
    credentials; static SSH fallback is already proven.
 5. Rerun Hermes update compatibility on every future Hermes release.

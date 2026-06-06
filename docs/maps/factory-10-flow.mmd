@@ -190,6 +190,11 @@ flowchart LR
   F43["F43 Quasar CU/fuzz/property PASS"]:::learning
   F43D["Hermes solana-quasar-auditor rerodou Quasar em Docker, conferiu hash do source, cobriu 513 casos e marcou CU como simbolico, nao producao."]:::desc
   F43 -.-> F43D
+  F43 --> F44
+
+  F44["F44 Supply-chain CI/SBOM PASS"]:::security
+  F44D["Hermes supply-chain-gate validou CI com permissoes minimas, actions pinadas por SHA, SBOM SPDX, scanners, JSON publico, 64 testes e diff check."]:::desc
+  F44 -.-> F44D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

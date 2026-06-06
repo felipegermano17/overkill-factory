@@ -56,6 +56,8 @@ jobs:
         run: python adapters/hermes/compatibility-check.py
       - name: Public JSON artifact validation
         run: python scripts/validate_public_json_artifacts.py
+      - name: Supply-chain proof
+        run: python scripts/supply_chain_proof.py --check --no-write
       - name: Secret safety scan
         run: python scripts/secret_safety_scan.py
       - name: Public safety scan

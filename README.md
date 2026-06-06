@@ -41,6 +41,9 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
 - Official Hermes main patch smoke: the public adapter patch applied to official
   Hermes commit `56236b16e383cc656bb8c88429902f4de83f1faf` and the focused
   regression suite passed.
+- Real supply-chain gate evidence: Hermes `supply-chain-gate` validated
+  least-privilege CI permissions, commit-pinned GitHub Actions, public scans,
+  source SBOM and unit tests on a clean public clone.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -101,6 +104,7 @@ python scripts/factoryctl.py worker-packet --worker all --required-only --card e
 python scripts/factoryctl.py validate-completion --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json
 python scripts/factory_battery.py
 python adapters/hermes/compatibility-check.py
+python scripts/supply_chain_proof.py --check --no-write
 python scripts/public_safety_scan.py
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
