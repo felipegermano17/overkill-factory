@@ -48,5 +48,7 @@
     "human gate",
     "Receipt Five",
     "authority boundaries"
-  ]
+  ],
+  "evidence_kind": "real",
+  "reusable_for_product": false
 }

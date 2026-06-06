@@ -35,5 +35,7 @@
   "evidence_refs": [
     "pilots/quasar-vault-guard-test/evidence/independent-review-report.md"
   ],
-  "next_action": "Promote V3.6 learning items."
+  "next_action": "Promote V3.6 learning items.",
+  "evidence_kind": "real",
+  "reusable_for_product": false
 }

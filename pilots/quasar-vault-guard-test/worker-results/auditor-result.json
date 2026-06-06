@@ -37,5 +37,7 @@
   "evidence_refs": [
     "pilots/quasar-vault-guard-test/evidence/auditor-preflight-report.md"
   ],
-  "next_action": "Run Auditor against real Quasar source in future onchain implementation card."
+  "next_action": "Run Auditor against real Quasar source in future onchain implementation card.",
+  "evidence_kind": "real",
+  "reusable_for_product": false
 }

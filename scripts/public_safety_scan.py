@@ -19,6 +19,10 @@ PATTERNS = [
     re.compile(r"hermes_kaxis_v2_completion_required"),
     re.compile(r"Felipe_gate_required|felipe_gate"),
     re.compile(r"/srv/hermes"),
+    re.compile(r"\bt_[a-f0-9]{8}\b"),
+    re.compile(r"\boverkill-factory-live-smoke\b"),
+    re.compile(r"\bHermes task:\s*t_[a-f0-9]{8}\b", re.IGNORECASE),
+    re.compile(r"\bWhimsical primary board:\s*[A-Za-z0-9_-]{4,}\b"),
     re.compile(r"C:\\Users"),
     re.compile(r"C:\\\\Users"),
     re.compile(r"OneDrive"),
@@ -35,6 +39,7 @@ BYTE_PATTERNS = [
     b"C:\\Users",
     b"C:\\\\Users",
     b"/srv/hermes",
+    b"overkill-factory-live-smoke",
     b"felipe-s-workspace",
 ]
 

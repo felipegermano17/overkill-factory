@@ -24,12 +24,24 @@ def load_card(name: str) -> dict:
 
 
 def worker_result(record_type: str, *, result: str = "PASS") -> dict:
+    worker_id = {
+        "security_scan_result": "codex-security",
+        "auditor_result": "solana-quasar-auditor",
+        "independent_review_result": "independent-reviewer",
+        "qa_verification_result": "qa-verification-worker",
+        "autoreview_result": "autoreview-gate",
+        "security_orchestration_result": "security-orchestrator",
+        "crypto_key_management_result": "crypto-key-management-specialist",
+        "remote_proof_result": "remote-proof-runner",
+        "handoff_packet_result": "handoff-packer",
+    }.get(record_type, "fixture-worker")
     payload = {
         "record_type": record_type,
         "created_at": "2026-06-06T00:00:00+00:00",
-        "worker": {"id": "fixture-worker", "name": "Fixture Worker", "factory_phase": "F13"},
+        "worker": {"id": worker_id, "name": "Fixture Worker", "factory_phase": "F13"},
         "card_ref": {
             "card_id": "VAL-SOLANA-QUASAR-R3",
+            "slice_id": "VAL_FACTORY_HEAVY_03",
             "phase": "F13",
             "risk_effective": "R3",
             "surfaces": ["solana-quasar"],
@@ -40,6 +52,8 @@ def worker_result(record_type: str, *, result: str = "PASS") -> dict:
         "tool_or_profile": "fixture-tool",
         "executed_by": "fixture-runner",
         "evidence_refs": ["reports/fixture.md"],
+        "evidence_kind": "synthetic",
+        "reusable_for_product": False,
         "next_action": "none",
     }
     if record_type == "security_scan_result":
@@ -50,6 +64,24 @@ def worker_result(record_type: str, *, result: str = "PASS") -> dict:
         payload["audit_mode"] = "preflight"
         payload["preflight_only"] = True
         payload["findings_summary"] = "Auditor preflight only; no code audit is claimed."
+    if record_type == "autoreview_result":
+        payload["reviewed_diff"] = "synthetic fixture"
+    if record_type == "remote_proof_result":
+        payload["runtime"] = "synthetic-smoke"
+        payload["ttl"] = "synthetic"
+        payload["cleanup"] = {"status": "not_applicable"}
+        payload["artifact_refs"] = ["reports/fixture.md"]
+    if record_type == "handoff_packet_result":
+        payload["handoff_packet_ref"] = "reports/fixture.md"
+    if result == "WAIVED":
+        payload["waiver"] = {
+            "owner": "fixture-owner",
+            "reason": "Synthetic fixture boundary.",
+            "expires_at": "2026-12-31T00:00:00+00:00",
+            "reviewer_or_human_gate_ref": "reports/fixture.md",
+            "compensating_controls": ["run real worker before production"],
+            "evidence_refs": ["reports/fixture.md"],
+        }
     return payload
 
 
@@ -58,6 +90,10 @@ def human_gate_record() -> dict:
         "record_type": "human_gate_record",
         "gate_type": "R3",
         "card_id": "VAL-SOLANA-QUASAR-R3",
+        "card_ref": {
+            "card_id": "VAL-SOLANA-QUASAR-R3",
+            "slice_id": "VAL_FACTORY_HEAVY_03",
+        },
         "decision": "approved",
         "human_actor": "product-owner",
         "decision_at": "2026-06-06T00:00:00+00:00",
@@ -67,6 +103,8 @@ def human_gate_record() -> dict:
         "security_owner": "security-owner",
         "rollback_owner": "release-owner",
         "evidence_refs": ["decisions/r3.md"],
+        "evidence_kind": "synthetic",
+        "reusable_for_product": False,
     }
 
 
@@ -415,8 +453,9 @@ class FactoryCtlTest(unittest.TestCase):
         )
         queues = {task["worker_id"]: task["queue_class"] for task in plan["worker_tasks"]}
 
-        self.assertEqual(plan["transition_action"], "allow_and_create_worker_tasks")
-        self.assertEqual(plan["blocked_reasons"], [])
+        self.assertEqual(plan["transition_action"], "block_and_create_before_ready_tasks")
+        self.assertIn("factory-orchestrator result is required before ready", plan["blocked_reasons"])
+        self.assertIn("supply-chain-gate result is required before ready", plan["blocked_reasons"])
         self.assertEqual(plan["gate_report"]["gate_status"], "ready_for_worker_execution")
         self.assertEqual(queues["factory-orchestrator"], "blocking-before-ready")
         self.assertEqual(queues["supply-chain-gate"], "blocking-before-ready")
@@ -435,9 +474,10 @@ class FactoryCtlTest(unittest.TestCase):
             to_status="ready",
         )
 
-        self.assertEqual(plan["transition_action"], "block_transition")
+        self.assertEqual(plan["transition_action"], "block_and_create_before_ready_tasks")
         self.assertIn("security-orchestrator missing inputs for blocking-before-done", plan["blocked_reasons"])
         self.assertIn("appsec-owasp-specialist missing inputs for blocking-before-done", plan["blocked_reasons"])
+        self.assertIn("factory-orchestrator result is required before ready", plan["blocked_reasons"])
 
     def test_transition_plan_done_blocks_missing_required_worker_results(self) -> None:
         card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"

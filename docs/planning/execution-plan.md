@@ -79,7 +79,7 @@ Evidence:
 
 ```text
 Hermes board: overkill-factory-pilot-10
-Hermes task: t_a09d1c2e
+Hermes task: public-methodology-card
 Status: done
 Pilot folder: pilots/quasar-vault-guard-test
 ```

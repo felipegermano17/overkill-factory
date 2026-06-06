@@ -2,8 +2,8 @@
   "$schema": "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json",
   "mode": "enforce-done",
   "blocked": false,
-  "board": "overkill-factory-live-smoke",
-  "main_task_id": "t_ac5844fd",
+  "board": "public-live-smoke-board",
+  "main_task_id": "public-main-task",
   "hook": {
     "$schema": "https://overkill-factory.dev/schemas/hermes-transition-hook.schema.json",
     "hook_type": "overkill_factory_hermes_transition_hook",

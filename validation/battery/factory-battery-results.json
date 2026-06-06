@@ -384,7 +384,11 @@
           "security-orchestrator result is required before done",
           "crypto-key-management-specialist result is required before done",
           "remote-proof-runner result is required before done",
-          "handoff-packer result is required before done"
+          "handoff-packer result is required before done",
+          "codex-security result is invalid before done",
+          "solana-quasar-auditor result is invalid before done",
+          "independent-reviewer result is invalid before done",
+          "human-gate-clerk result is invalid before done"
         ],
         "required_workers": [
           "codex-security",

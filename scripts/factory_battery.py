@@ -75,6 +75,8 @@ def worker_result(factoryctl: Any, worker_id: str, card: dict[str, Any], evidenc
             rollback_owner="battery-rollback-owner",
             evidence_refs=[evidence_ref],
             notes="Synthetic battery approval only; not reusable for real product work.",
+            evidence_kind="synthetic",
+            reusable_for_product=False,
         )
     return factoryctl.build_worker_result(
         worker_id,
@@ -86,6 +88,8 @@ def worker_result(factoryctl: Any, worker_id: str, card: dict[str, Any], evidenc
         blocking_findings=False,
         findings_summary="Synthetic battery result passed.",
         next_action="Run real specialist for product work.",
+        evidence_kind="synthetic",
+        reusable_for_product=False,
     )
 
 
@@ -95,8 +99,9 @@ def write_required_results(factoryctl: Any, card: dict[str, Any], card_name: str
     results_dir.mkdir(parents=True, exist_ok=True)
     evidence_dir.mkdir(parents=True, exist_ok=True)
     for worker_id in factoryctl.required_worker_ids(card):
-        evidence_ref = f"validation/battery/{card_name}/evidence/{worker_id}.md"
-        (evidence_dir / f"{worker_id}.md").write_text(
+        evidence_path = evidence_dir / f"{worker_id}.md"
+        evidence_ref = factoryctl.source_card_ref(evidence_path)
+        evidence_path.write_text(
             "Synthetic battery evidence only; not a real product approval or audit.\n",
             encoding="utf-8",
         )

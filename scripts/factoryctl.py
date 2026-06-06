@@ -944,7 +944,107 @@ def string_list(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str) and item.strip()]
 
 
-def validate_worker_result_record(data: dict[str, Any], expected_field: str | None = None) -> list[str]:
+def _worker_id_for_output_field(output_field: str) -> str | None:
+    for worker_id, worker in WORKERS.items():
+        if worker.output_field == output_field:
+            return worker_id
+    return "human-gate-clerk" if output_field == "human_gate_record" else None
+
+
+def _field_mismatch_errors(data: dict[str, Any], card: dict[str, Any] | None) -> list[str]:
+    if card is None:
+        return []
+    errors: list[str] = []
+    card_ref_value = data.get("card_ref")
+    card_ref = card_ref_value if isinstance(card_ref_value, dict) else {}
+    if data.get("record_type") == "human_gate_record" and data.get("card_id") != card.get("card_id"):
+        errors.append("card_id must match current card")
+    if card_ref.get("card_id") != card.get("card_id"):
+        errors.append("card_ref.card_id must match current card")
+    expected_slice = card.get("slice_id")
+    if expected_slice and card_ref.get("slice_id") != expected_slice:
+        errors.append("card_ref.slice_id must match current card")
+    return errors
+
+
+def _evidence_ref_errors(refs: list[str], evidence_root: Path | None) -> list[str]:
+    errors: list[str] = []
+    for ref in refs:
+        normalized = ref.strip().replace("\\", "/")
+        if normalized.startswith(("http://", "https://", "external:", "repo://")):
+            continue
+        if normalized.startswith("file://") or Path(ref).is_absolute() or ":" in normalized.split("/", 1)[0]:
+            errors.append(f"evidence ref must be public-relative or explicit external ref: {ref}")
+            continue
+        if evidence_root is not None:
+            candidate = (evidence_root / normalized).resolve()
+            try:
+                candidate.relative_to(evidence_root.resolve())
+            except ValueError:
+                errors.append(f"evidence ref escapes evidence root: {ref}")
+                continue
+            if not candidate.exists():
+                errors.append(f"evidence ref does not exist: {ref}")
+    return errors
+
+
+def _waiver_errors(data: dict[str, Any]) -> list[str]:
+    if str(data.get("result") or "").strip() != "WAIVED":
+        return []
+    waiver = data.get("waiver")
+    if not isinstance(waiver, dict):
+        return ["WAIVED result requires waiver object"]
+    errors: list[str] = []
+    for field in ("owner", "reason", "expires_at", "reviewer_or_human_gate_ref"):
+        if not str(waiver.get(field) or "").strip():
+            errors.append(f"waiver.{field} is required")
+    if not string_list(waiver.get("compensating_controls")):
+        errors.append("waiver.compensating_controls must contain at least one item")
+    if not string_list(waiver.get("evidence_refs")):
+        errors.append("waiver.evidence_refs must contain at least one item")
+    return errors
+
+
+def _record_specific_errors(data: dict[str, Any], evidence_kind: str) -> list[str]:
+    record_type = str(data.get("record_type") or "").strip()
+    errors: list[str] = []
+    if record_type == "security_scan_result":
+        for field in ("scanner_agent", "tool"):
+            if not str(data.get(field) or "").strip():
+                errors.append(f"{field} is required for security_scan_result")
+        if not string_list(data.get("scope")):
+            errors.append("scope must contain at least one item for security_scan_result")
+    if record_type == "auditor_result":
+        audit_mode = str(data.get("audit_mode") or "").strip()
+        if not audit_mode:
+            errors.append("audit_mode is required for auditor_result")
+        if data.get("preflight_only") is True and data.get("result") == "PASS" and evidence_kind != "synthetic":
+            errors.append("preflight_only auditor_result cannot be real PASS")
+    if record_type == "product_face_result":
+        for field in ("screenshots", "viewports", "checked_states", "journeys", "accessibility", "overlap", "performance_note"):
+            if data.get(field) in (None, "", [], {}):
+                errors.append(f"{field} is required for product_face_result")
+    if record_type == "remote_proof_result":
+        for field in ("runtime", "ttl", "cleanup", "artifact_refs"):
+            if data.get(field) in (None, "", [], {}):
+                errors.append(f"{field} is required for remote_proof_result")
+    if record_type == "autoreview_result":
+        if data.get("reviewed_diff") in (None, "", [], {}):
+            errors.append("reviewed_diff is required for autoreview_result")
+    if record_type == "handoff_packet_result":
+        if data.get("handoff_packet_ref") in (None, "", [], {}):
+            errors.append("handoff_packet_ref is required for handoff_packet_result")
+    return errors
+
+
+def validate_worker_result_record(
+    data: dict[str, Any],
+    expected_field: str | None = None,
+    *,
+    expected_worker_id: str | None = None,
+    card: dict[str, Any] | None = None,
+    evidence_root: Path | None = None,
+) -> list[str]:
     errors: list[str] = []
     record_type = str(data.get("record_type") or "").strip()
     if expected_field is not None and record_type != expected_field:
@@ -957,6 +1057,12 @@ def validate_worker_result_record(data: dict[str, Any], expected_field: str | No
             errors.append("human gate decision must be approved")
         if not str(data.get("human_actor") or "").strip():
             errors.append("human_actor is required")
+        for field in ("approved_scope", "forbidden_scope"):
+            if not string_list(data.get(field)):
+                errors.append(f"{field} must contain at least one item")
+        for field in ("risk_owner", "security_owner", "rollback_owner"):
+            if not str(data.get(field) or "").strip() or str(data.get(field)).strip().upper() == "TBD":
+                errors.append(f"{field} must be explicit")
     else:
         result = str(data.get("result") or "").strip()
         if result not in {"PASS", "WAIVED"}:
@@ -966,13 +1072,35 @@ def validate_worker_result_record(data: dict[str, Any], expected_field: str | No
         for field in ("worker", "card_ref", "findings_summary", "tool_or_profile", "executed_by", "next_action"):
             if field not in data:
                 errors.append(f"{field} is required")
+        worker_ref = data.get("worker") if isinstance(data.get("worker"), dict) else {}
+        if expected_worker_id and worker_ref.get("id") != expected_worker_id:
+            errors.append(f"worker.id must be {expected_worker_id}")
 
-    if not string_list(data.get("evidence_refs")):
+    evidence_refs = string_list(data.get("evidence_refs"))
+    if not evidence_refs:
         errors.append("evidence_refs must contain at least one artifact ref")
+    else:
+        errors.extend(_evidence_ref_errors(evidence_refs, evidence_root))
+    errors.extend(_field_mismatch_errors(data, card))
+
+    evidence_kind = str(data.get("evidence_kind") or "").strip()
+    if evidence_kind not in {"real", "synthetic", "waiver"}:
+        errors.append("evidence_kind must be real, synthetic or waiver")
+    reusable = data.get("reusable_for_product")
+    if not isinstance(reusable, bool):
+        errors.append("reusable_for_product must be boolean")
+    elif evidence_kind == "synthetic" and reusable is not False:
+        errors.append("synthetic evidence must set reusable_for_product=false")
+    if evidence_kind == "synthetic" and card is not None:
+        source_text = " ".join(str(item).lower() for item in card.get("source_refs", []))
+        if "synthetic" not in source_text and "validation" not in source_text:
+            errors.append("synthetic evidence can only satisfy synthetic/validation cards")
+    errors.extend(_waiver_errors(data))
+    errors.extend(_record_specific_errors(data, evidence_kind))
     return errors
 
 
-def collect_worker_result_fields(results_dir: Path | None) -> dict[str, dict[str, Any]]:
+def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None) -> dict[str, dict[str, Any]]:
     if results_dir is None or not results_dir.exists():
         return {}
     records: dict[str, dict[str, Any]] = {}
@@ -983,7 +1111,14 @@ def collect_worker_result_fields(results_dir: Path | None) -> dict[str, dict[str
             continue
         record_type = str(data.get("record_type") or "").strip()
         if record_type:
-            errors = validate_worker_result_record(data, expected_field=record_type)
+            expected_worker_id = _worker_id_for_output_field(record_type)
+            errors = validate_worker_result_record(
+                data,
+                expected_field=record_type,
+                expected_worker_id=expected_worker_id,
+                card=card,
+                evidence_root=ROOT,
+            )
             records[record_type] = {
                 "evidence_ref": source_card_ref(path),
                 "result": data.get("result") or data.get("decision"),
@@ -993,12 +1128,17 @@ def collect_worker_result_fields(results_dir: Path | None) -> dict[str, dict[str
     return records
 
 
-def receipt_result_fields(metadata: dict[str, Any]) -> dict[str, dict[str, Any]]:
+def receipt_result_fields(card: dict[str, Any], metadata: dict[str, Any]) -> dict[str, dict[str, Any]]:
     fields: dict[str, dict[str, Any]] = {}
-    for worker in WORKERS.values():
+    for worker_id, worker in WORKERS.items():
         value = metadata.get(worker.output_field)
         if isinstance(value, dict):
-            errors = validate_worker_result_record(value, expected_field=worker.output_field)
+            errors = validate_worker_result_record(
+                value,
+                expected_field=worker.output_field,
+                expected_worker_id=worker_id,
+                card=card,
+            )
             fields[worker.output_field] = {
                 "evidence_ref": None,
                 "result": value.get("result") or value.get("decision"),
@@ -1030,8 +1170,8 @@ def build_worker_closure(
     results_dir: Path | None,
 ) -> dict[str, Any]:
     metadata = metadata or {}
-    present_fields = receipt_result_fields(metadata)
-    result_files = collect_worker_result_fields(results_dir)
+    present_fields = receipt_result_fields(card, metadata)
+    result_files = collect_worker_result_fields(card, results_dir)
     present_fields.update(result_files)
     rows: dict[str, dict[str, Any]] = {}
     missing_blocking: list[str] = []
@@ -1090,9 +1230,22 @@ def build_transition_plan(
         for worker_id in gate["blocked_workers"]:
             queue_class = worker_queue_class(worker_id, card)
             blocked_reasons.append(f"{worker_id} missing inputs for {queue_class}")
-        transition_action = "block_transition" if blocked_reasons else "allow_and_create_worker_tasks"
+        before_ready = [
+            task["worker_id"]
+            for task in worker_tasks
+            if task["queue_class"] == "blocking-before-ready"
+        ]
+        for worker_id in before_ready:
+            blocked_reasons.append(f"{worker_id} result is required before ready")
+        if blocked_reasons and before_ready:
+            transition_action = "block_and_create_before_ready_tasks"
+        else:
+            transition_action = "block_transition" if blocked_reasons else "allow_and_create_worker_tasks"
         completion = None
     elif normalized_to in {"done", "closed", "complete"}:
+        blocked_reasons.extend(gate["card_validation_errors"])
+        for worker_id in gate["blocked_workers"]:
+            blocked_reasons.append(f"{worker_id} missing inputs before done")
         if receipt is None:
             blocked_reasons.append("receipt metadata is required for done transition")
             completion = build_worker_closure(card, {}, worker_results_dir)
@@ -1150,6 +1303,8 @@ def build_worker_result(
     blocking_findings: bool,
     findings_summary: str,
     next_action: str,
+    evidence_kind: str = "real",
+    reusable_for_product: bool = True,
 ) -> dict[str, Any]:
     if worker_id == "human-gate-clerk":
         raise ValueError("use human-gate-record for human decisions")
@@ -1175,6 +1330,8 @@ def build_worker_result(
         "tool_or_profile": tool_or_profile,
         "executed_by": executed_by,
         "evidence_refs": evidence_refs,
+        "evidence_kind": evidence_kind,
+        "reusable_for_product": reusable_for_product,
         "next_action": next_action,
     }
     if worker_id == "codex-security":
@@ -1189,6 +1346,38 @@ def build_worker_result(
                 "scope": [str(item) for item in scope if str(item).strip()],
             }
         )
+    if worker_id == "solana-quasar-auditor":
+        payload.update(
+            {
+                "audit_mode": "synthetic-smoke" if evidence_kind == "synthetic" else "code-audit",
+                "preflight_only": evidence_kind == "synthetic",
+            }
+        )
+    if worker_id == "product-face":
+        payload.update(
+            {
+                "screenshots": evidence_refs,
+                "viewports": ["synthetic-desktop", "synthetic-mobile"] if evidence_kind == "synthetic" else [],
+                "checked_states": ["default", "empty", "loading", "error", "success"],
+                "journeys": ["open target", "inspect states"],
+                "accessibility": {"checked": True, "mode": evidence_kind},
+                "overlap": {"checked": True, "mode": evidence_kind},
+                "performance_note": "Synthetic smoke only." if evidence_kind == "synthetic" else "See Product Face report.",
+            }
+        )
+    if worker_id == "remote-proof-runner":
+        payload.update(
+            {
+                "runtime": "synthetic-smoke" if evidence_kind == "synthetic" else "remote-proof",
+                "ttl": "synthetic",
+                "cleanup": {"status": "not_applicable" if evidence_kind == "synthetic" else "required"},
+                "artifact_refs": evidence_refs,
+            }
+        )
+    if worker_id == "autoreview-gate":
+        payload["reviewed_diff"] = "synthetic-smoke" if evidence_kind == "synthetic" else "attached-diff"
+    if worker_id == "handoff-packer":
+        payload["handoff_packet_ref"] = evidence_refs[0] if evidence_refs else "external:missing"
     return payload
 
 
@@ -1218,6 +1407,8 @@ def build_human_gate_record(
     rollback_owner: str | None,
     evidence_refs: list[str],
     notes: str,
+    evidence_kind: str = "real",
+    reusable_for_product: bool = True,
 ) -> dict[str, Any]:
     if decision == "approved" and not evidence_refs:
         raise ValueError("approved human gates require at least one evidence ref")
@@ -1248,6 +1439,8 @@ def build_human_gate_record(
         ),
         "rollback_owner": rollback_owner or packet.get("rollback_owner") or r4_gate.get("rollback_owner") or "TBD",
         "evidence_refs": evidence_refs,
+        "evidence_kind": evidence_kind,
+        "reusable_for_product": reusable_for_product,
         "notes": notes,
     }
 
@@ -1320,6 +1513,8 @@ def command_evidence_record(args: argparse.Namespace) -> int:
             blocking_findings=args.blocking_findings,
             findings_summary=args.summary,
             next_action=args.next_action,
+            evidence_kind=args.evidence_kind,
+            reusable_for_product=not args.not_reusable_for_product,
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
@@ -1344,6 +1539,8 @@ def command_human_gate_record(args: argparse.Namespace) -> int:
             rollback_owner=args.rollback_owner,
             evidence_refs=args.evidence_ref or [],
             notes=args.notes,
+            evidence_kind=args.evidence_kind,
+            reusable_for_product=not args.not_reusable_for_product,
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
@@ -1410,6 +1607,8 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_record_parser.add_argument("--blocking-findings", action="store_true")
     evidence_record_parser.add_argument("--summary", default="")
     evidence_record_parser.add_argument("--next-action", default="")
+    evidence_record_parser.add_argument("--evidence-kind", choices=["real", "synthetic", "waiver"], default="real")
+    evidence_record_parser.add_argument("--not-reusable-for-product", action="store_true")
     evidence_record_parser.add_argument("--out", type=Path)
     evidence_record_parser.set_defaults(func=command_evidence_record)
 
@@ -1426,6 +1625,8 @@ def build_parser() -> argparse.ArgumentParser:
     human_gate_record_parser.add_argument("--rollback-owner")
     human_gate_record_parser.add_argument("--evidence-ref", action="append")
     human_gate_record_parser.add_argument("--notes", default="")
+    human_gate_record_parser.add_argument("--evidence-kind", choices=["real", "synthetic", "waiver"], default="real")
+    human_gate_record_parser.add_argument("--not-reusable-for-product", action="store_true")
     human_gate_record_parser.add_argument("--out", type=Path)
     human_gate_record_parser.set_defaults(func=command_human_gate_record)
 

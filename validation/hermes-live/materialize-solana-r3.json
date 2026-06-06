@@ -2,22 +2,22 @@
   "$schema": "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json",
   "mode": "materialize",
   "dry_run": false,
-  "board": "overkill-factory-live-smoke",
+  "board": "public-live-smoke-board",
   "board_created": false,
-  "main_task_id": "t_ac5844fd",
+  "main_task_id": "public-main-task",
   "worker_task_ids": {
-    "codex-security": "t_204b77b2",
-    "solana-quasar-auditor": "t_e68280c4",
-    "independent-reviewer": "t_e06d00b0",
-    "human-gate-clerk": "t_e8ff9893",
-    "factory-orchestrator": "t_b874f6c5",
-    "qa-verification-worker": "t_b332e177",
-    "autoreview-gate": "t_2c263635",
-    "security-orchestrator": "t_cd9b6ad7",
-    "crypto-key-management-specialist": "t_28086da7",
-    "remote-proof-runner": "t_dada4c23",
-    "handoff-packer": "t_4b9b8b1c",
-    "supply-chain-gate": "t_ab8f43d7"
+    "codex-security": "public-worker-codex-security",
+    "solana-quasar-auditor": "public-worker-solana-quasar-auditor",
+    "independent-reviewer": "public-worker-independent-reviewer",
+    "human-gate-clerk": "public-worker-human-gate-clerk",
+    "factory-orchestrator": "public-worker-factory-orchestrator",
+    "qa-verification-worker": "public-worker-qa-verification-worker",
+    "autoreview-gate": "public-worker-autoreview-gate",
+    "security-orchestrator": "public-worker-security-orchestrator",
+    "crypto-key-management-specialist": "public-worker-crypto-key-management-specialist",
+    "remote-proof-runner": "public-worker-remote-proof-runner",
+    "handoff-packer": "public-worker-handoff-packer",
+    "supply-chain-gate": "public-worker-supply-chain-gate"
   },
   "hook": {
     "$schema": "https://overkill-factory.dev/schemas/hermes-transition-hook.schema.json",
@@ -1056,5 +1056,6 @@
       "unchanged": [],
       "task_count": 12
     }
-  }
+  },
+  "card_id": "VAL-SOLANA-QUASAR-R3"
 }

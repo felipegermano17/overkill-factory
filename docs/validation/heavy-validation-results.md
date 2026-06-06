@@ -29,8 +29,8 @@ Public evidence:
 
 Observed result:
 
-- real Hermes board: `overkill-factory-live-smoke`;
-- real main task: `t_ac5844fd`;
+- Hermes board alias: `public-live-smoke-board` (real operational ID redacted);
+- Hermes main task alias: `public-main-task` (real operational ID redacted);
 - required worker tasks created: 12;
 - worker tasks completed: 12;
 - negative done enforcement: blocked without worker results;
@@ -83,6 +83,17 @@ checks.
 - Hermes transition-plan fixtures now show the intended runtime contract:
   `ready` creates required worker subtasks by queue class, while `done`
   reconciles worker results and Receipt Five before allowing closure.
+- Worker result reconciliation now binds evidence to the expected worker ID,
+  card ID and slice ID, so a result from another worker/card cannot satisfy a
+  blocking gate.
+- Worker and human-gate records now declare `evidence_kind` and
+  `reusable_for_product`; synthetic smoke evidence is explicitly non-reusable
+  for real product approval.
+- The Hermes transition hook is fail-closed by default for every blocking
+  action, including `block_and_create_before_ready_tasks`; `--report-only` is
+  only for observation/CI capture.
+- Public Hermes smoke artifacts now use redacted aliases for board/task IDs.
+  Real operational IDs stay out of the public repository.
 
 ### Still Not Proven
 
@@ -111,7 +122,7 @@ checks.
 | Agent/Hermes Operability | 9.2 | Real Hermes board, worker graph and done enforcement proven; dispatcher hooks still need hard integration. |
 | Solana/Quasar/Auditor | 8.6 | Strong routing and live smoke; still no real Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.2/10 for factory process,
+Estimated score after fixes in this pass: 9.4/10 for factory process,
 operability and public repository safety.
 
 It is not 9.5+ yet because the next jump requires real specialist executions,

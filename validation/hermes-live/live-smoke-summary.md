@@ -2,8 +2,8 @@
 
 This validation ran against a real Hermes Kanban board using a synthetic Solana/Quasar R3 card.
 
-- Board: `overkill-factory-live-smoke`
-- Main task: `t_ac5844fd`
+- Board alias: `public-live-smoke-board` (real operational ID redacted)
+- Main task alias: `public-main-task` (real operational ID redacted)
 - Worker tasks created: `12`
 - Negative enforcement: blocked = `true` with `6` missing-result reasons.
 - Positive enforcement: blocked = `false`; action = `allow_done`; required workers reconciled = `12`.

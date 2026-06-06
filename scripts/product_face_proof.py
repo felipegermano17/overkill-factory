@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -94,13 +95,18 @@ def parse_viewport(raw: str) -> Viewport:
     return Viewport(name=name.strip() or f"{width}x{height}", width=width, height=height)
 
 
-def resolve_target(target: str) -> tuple[str, Path | None]:
+def resolve_target(target: str, *, allow_external_file: bool = False) -> tuple[str, Path | None]:
     if target.startswith(("http://", "https://")):
         return target, None
     path = Path(target)
     if not path.is_absolute():
         path = ROOT / path
     path = path.resolve()
+    try:
+        path.relative_to(ROOT)
+    except ValueError:
+        if not allow_external_file:
+            raise ValueError("file targets must be repo-relative unless --allow-external-file is set")
     return path.as_uri(), path
 
 
@@ -121,6 +127,13 @@ def redact_text(value: str) -> str:
     redacted = value.replace(str(ROOT), "<repo-root>")
     redacted = redacted.replace(str(ROOT).replace("\\", "/"), "<repo-root>")
     redacted = redacted.replace(ROOT.as_uri(), "repo://")
+    home = str(Path.home())
+    redacted = redacted.replace(home, "<home>")
+    redacted = redacted.replace(home.replace("\\", "/"), "<home>")
+    redacted = re.sub(r"file:///[A-Za-z]:/Users/[^\\s\"')<]+", "file:///<redacted-local-file>", redacted)
+    redacted = re.sub(r"[A-Za-z]:\\\\Users\\\\[^\\s\"')<]+", "<redacted-local-path>", redacted)
+    redacted = re.sub(r"/home/[^\\s\"')<]+", "<redacted-local-path>", redacted)
+    redacted = re.sub(r"/tmp/[^\\s\"')<]+", "<redacted-temp-path>", redacted)
     private_workspace_marker = "".join(["K", "axis%20", "V", "M"])
     redacted = redacted.replace(private_workspace_marker, "workspace")
     return redacted
@@ -488,13 +501,14 @@ def build_product_face_proof(
     journeys: list[str] | None = None,
     strict: bool = False,
     force_fallback: bool = False,
+    allow_external_file: bool = False,
 ) -> dict[str, Any]:
     output_dir = out if out.suffix == "" else out.parent
     output_dir.mkdir(parents=True, exist_ok=True)
     viewports = viewports or [Viewport(name, *size) for name, size in DEFAULT_VIEWPORTS.items()]
     states = states or ["default", "empty", "loading", "error", "success"]
     journeys = journeys or ["open target", "inspect desktop viewport", "inspect mobile viewport"]
-    target_url, target_path = resolve_target(target)
+    target_url, target_path = resolve_target(target, allow_external_file=allow_external_file)
     target_ref = repo_ref(target_path) if target_path else target
 
     if force_fallback:
@@ -539,13 +553,14 @@ def build_product_face_proof(
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a minimal Product Face proof against a local HTML file or URL.")
-    parser.add_argument("--target", required=True, help="Repo-relative HTML path, absolute file path, or http(s) URL.")
+    parser.add_argument("--target", required=True, help="Repo-relative HTML path or http(s) URL.")
     parser.add_argument("--out", default="validation/product-face/product-face-result.json", help="Output JSON path or directory.")
     parser.add_argument("--viewport", action="append", default=[], help="Viewport as NAME=WIDTHxHEIGHT. Can be repeated.")
     parser.add_argument("--state", action="append", default=[], help="Checked state label. Can be repeated.")
     parser.add_argument("--journey", action="append", default=[], help="Checked user journey label. Can be repeated.")
     parser.add_argument("--strict", action="store_true", help="Treat a11y and overlap warnings as blocking findings.")
     parser.add_argument("--force-fallback", action="store_true", help="Skip Playwright and write bounded static fallback evidence.")
+    parser.add_argument("--allow-external-file", action="store_true", help="Allow absolute file targets outside this repo; output is redacted.")
     return parser.parse_args(argv)
 
 
@@ -561,6 +576,7 @@ def main(argv: list[str] | None = None) -> int:
             journeys=args.journey or None,
             strict=args.strict,
             force_fallback=args.force_fallback,
+            allow_external_file=args.allow_external_file,
         )
     except Exception as exc:
         print(f"product_face_proof failed: {exc}", file=sys.stderr)

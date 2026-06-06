@@ -41,7 +41,8 @@ class HermesTransitionHookTest(unittest.TestCase):
             )
             ledger_data = json.loads(ledger.read_text(encoding="utf-8"))
 
-        self.assertEqual(first["transition_action"], "allow_and_create_worker_tasks")
+        self.assertEqual(first["transition_action"], "block_and_create_before_ready_tasks")
+        self.assertTrue(any("result is required before ready" in reason for reason in first["blocked_reasons"]))
         self.assertGreater(first["ledger"]["created"], [])
         self.assertEqual(second["ledger"]["created"], [])
         self.assertEqual(first["ledger"]["task_count"], second["ledger"]["task_count"])
@@ -62,6 +63,57 @@ class HermesTransitionHookTest(unittest.TestCase):
 
         self.assertEqual(result["transition_action"], "block_transition")
         self.assertTrue(any("result is required before done" in reason for reason in result["blocked_reasons"]))
+
+    def test_cli_is_fail_closed_for_before_ready_blocks(self) -> None:
+        card = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            argv = [
+                "transition_hook.py",
+                "--card",
+                str(card),
+                "--from-status",
+                "draft",
+                "--to-status",
+                "ready",
+                "--ledger",
+                str(Path(tmp) / "worker-ledger.json"),
+                "--out",
+                str(Path(tmp) / "hook-result.json"),
+            ]
+            previous = sys.argv
+            try:
+                sys.argv = argv
+                exit_code = transition_hook.main()
+            finally:
+                sys.argv = previous
+
+        self.assertEqual(exit_code, 1)
+
+    def test_cli_report_only_allows_blocked_result_for_ci_observation(self) -> None:
+        card = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            argv = [
+                "transition_hook.py",
+                "--card",
+                str(card),
+                "--from-status",
+                "draft",
+                "--to-status",
+                "ready",
+                "--ledger",
+                str(Path(tmp) / "worker-ledger.json"),
+                "--out",
+                str(Path(tmp) / "hook-result.json"),
+                "--report-only",
+            ]
+            previous = sys.argv
+            try:
+                sys.argv = argv
+                exit_code = transition_hook.main()
+            finally:
+                sys.argv = previous
+
+        self.assertEqual(exit_code, 0)
 
 
 if __name__ == "__main__":

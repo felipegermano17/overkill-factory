@@ -42,5 +42,7 @@
   "evidence_refs": [
     "Codex chat 2026-06-05 user authorization for test goal"
   ],
-  "notes": "Approved for dry pilot only; not production authority."
+  "notes": "Approved for dry pilot only; not production authority.",
+  "evidence_kind": "real",
+  "reusable_for_product": false
 }

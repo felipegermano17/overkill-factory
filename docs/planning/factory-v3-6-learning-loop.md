@@ -7,7 +7,7 @@ The first completed pilot is a dry pilot, not a production product:
 ```text
 pilot: pilots/quasar-vault-guard-test
 Hermes board: overkill-factory-pilot-10
-Hermes task: t_a09d1c2e
+Hermes task: public-methodology-card
 status: done
 ```
 

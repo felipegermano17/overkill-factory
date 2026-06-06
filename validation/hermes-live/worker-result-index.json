@@ -2,51 +2,51 @@
   "$schema": "https://overkill-factory.dev/schemas/hermes-worker-result-index.schema.json",
   "index_type": "hermes_worker_result_index",
   "autoreview-gate": {
-    "task_id": "t_2c263635",
+    "task_id": "public-worker-autoreview-gate",
     "result_file": "validation/hermes-live/worker-results/autoreview_result.json"
   },
   "codex-security": {
-    "task_id": "t_204b77b2",
+    "task_id": "public-worker-codex-security",
     "result_file": "validation/hermes-live/worker-results/security_scan_result.json"
   },
   "crypto-key-management-specialist": {
-    "task_id": "t_28086da7",
+    "task_id": "public-worker-crypto-key-management-specialist",
     "result_file": "validation/hermes-live/worker-results/crypto_key_management_result.json"
   },
   "factory-orchestrator": {
-    "task_id": "t_b874f6c5",
+    "task_id": "public-worker-factory-orchestrator",
     "result_file": "validation/hermes-live/worker-results/orchestration_result.json"
   },
   "handoff-packer": {
-    "task_id": "t_4b9b8b1c",
+    "task_id": "public-worker-handoff-packer",
     "result_file": "validation/hermes-live/worker-results/handoff_packet_result.json"
   },
   "human-gate-clerk": {
-    "task_id": "t_e8ff9893",
+    "task_id": "public-worker-human-gate-clerk",
     "result_file": "validation/hermes-live/worker-results/human_gate_record.json"
   },
   "independent-reviewer": {
-    "task_id": "t_e06d00b0",
+    "task_id": "public-worker-independent-reviewer",
     "result_file": "validation/hermes-live/worker-results/independent_review_result.json"
   },
   "qa-verification-worker": {
-    "task_id": "t_b332e177",
+    "task_id": "public-worker-qa-verification-worker",
     "result_file": "validation/hermes-live/worker-results/qa_verification_result.json"
   },
   "remote-proof-runner": {
-    "task_id": "t_dada4c23",
+    "task_id": "public-worker-remote-proof-runner",
     "result_file": "validation/hermes-live/worker-results/remote_proof_result.json"
   },
   "security-orchestrator": {
-    "task_id": "t_cd9b6ad7",
+    "task_id": "public-worker-security-orchestrator",
     "result_file": "validation/hermes-live/worker-results/security_orchestration_result.json"
   },
   "solana-quasar-auditor": {
-    "task_id": "t_e68280c4",
+    "task_id": "public-worker-solana-quasar-auditor",
     "result_file": "validation/hermes-live/worker-results/auditor_result.json"
   },
   "supply-chain-gate": {
-    "task_id": "t_ab8f43d7",
+    "task_id": "public-worker-supply-chain-gate",
     "result_file": "validation/hermes-live/worker-results/supply_chain_result.json"
   }
 }

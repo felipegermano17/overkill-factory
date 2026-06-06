@@ -37,5 +37,7 @@
     "pilots/quasar-vault-guard-test/evidence/screenshots/desktop.png",
     "pilots/quasar-vault-guard-test/evidence/screenshots/mobile.png"
   ],
-  "next_action": "Keep Product Face evidence required for future visible surfaces."
+  "next_action": "Keep Product Face evidence required for future visible surfaces.",
+  "evidence_kind": "real",
+  "reusable_for_product": false
 }

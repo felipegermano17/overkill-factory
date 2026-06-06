@@ -14,6 +14,8 @@
     "tool_or_profile",
     "executed_by",
     "evidence_refs",
+    "evidence_kind",
+    "reusable_for_product",
     "next_action"
   ],
   "properties": {
@@ -56,7 +58,14 @@
     },
     "evidence_refs": {
       "type": "array",
+      "minItems": 1,
       "items": { "type": "string" }
+    },
+    "evidence_kind": {
+      "enum": ["real", "synthetic", "waiver"]
+    },
+    "reusable_for_product": {
+      "type": "boolean"
     }
   },
   "additionalProperties": true

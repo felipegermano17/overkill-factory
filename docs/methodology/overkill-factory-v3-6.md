@@ -7,9 +7,9 @@ Pilot evidence:
 ```text
 pilot: pilots/quasar-vault-guard-test
 Hermes board: overkill-factory-pilot-10
-Hermes task: t_a09d1c2e
+Hermes task: public-methodology-card
 status: done
-Whimsical primary board: XVvfzk
+Whimsical map alias: public-methodology-map
 ```
 
 This version does not claim production readiness. It upgrades the factory

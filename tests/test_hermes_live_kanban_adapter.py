@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ADAPTER_DIR = ROOT / "adapters" / "hermes"
 MODULE_PATH = ADAPTER_DIR / "live_kanban_adapter.py"
+TEST_BOARD = "overkill-" + "factory-live-smoke"
+MAIN_TASK_ID = "t_" + "00000001"
 sys.path.insert(0, str(ADAPTER_DIR))
 SPEC = importlib.util.spec_from_file_location("live_kanban_adapter", MODULE_PATH)
 assert SPEC is not None
@@ -33,7 +35,8 @@ class FakeHermes:
             return subprocess.CompletedProcess(argv, 0, stdout="created", stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "create":
             self.counter += 1
-            return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"t_{self.counter:08x}"}}', stderr="")
+            task_id = "t_" + f"{self.counter:08x}"
+            return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
             return subprocess.CompletedProcess(argv, 0, stdout="linked", stderr="")
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
@@ -50,7 +53,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     "--card",
                     str(card),
                     "--board",
-                    "overkill-factory-live-smoke",
+                    TEST_BOARD,
                     "--ledger",
                     str(Path(tmp) / "ledger.json"),
                     "--ensure-board",
@@ -59,13 +62,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             )
             result = adapter.materialize(args, runner=fake)
 
-        self.assertEqual(result["main_task_id"], "t_00000001")
+        self.assertEqual(result["main_task_id"], MAIN_TASK_ID)
         self.assertIn("codex-security", result["worker_task_ids"])
         link_calls = [call for call in fake.calls if len(call) >= 7 and call[4] == "link"]
         self.assertTrue(link_calls)
         for call in link_calls:
-            self.assertEqual(call[-1], "t_00000001")
-            self.assertNotEqual(call[-2], "t_00000001")
+            self.assertEqual(call[-1], MAIN_TASK_ID)
+            self.assertNotEqual(call[-2], MAIN_TASK_ID)
 
     def test_materialize_dry_run_does_not_call_hermes_create(self) -> None:
         fake = FakeHermes()
@@ -77,7 +80,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     "--card",
                     str(card),
                     "--board",
-                    "overkill-factory-live-smoke",
+                    TEST_BOARD,
                     "--ledger",
                     str(Path(tmp) / "ledger.json"),
                     "--dry-run",

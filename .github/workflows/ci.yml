@@ -29,7 +29,8 @@ jobs:
             --from-status draft \
             --to-status ready \
             --ledger "$RUNNER_TEMP/overkill-hook/worker-ledger.json" \
-            --out "$RUNNER_TEMP/overkill-hook/ready-hook-result.json"
+            --out "$RUNNER_TEMP/overkill-hook/ready-hook-result.json" \
+            --report-only
           python adapters/hermes/transition_hook.py \
             --card validation/cards/solana-quasar-r3.md \
             --from-status ready \
@@ -37,7 +38,8 @@ jobs:
             --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json \
             --worker-results-dir pilots/quasar-vault-guard-test/worker-results \
             --ledger "$RUNNER_TEMP/overkill-hook/worker-ledger.json" \
-            --out "$RUNNER_TEMP/overkill-hook/done-hook-blocked.json"
+            --out "$RUNNER_TEMP/overkill-hook/done-hook-blocked.json" \
+            --report-only
           if python adapters/hermes/transition_hook.py \
             --card validation/cards/solana-quasar-r3.md \
             --from-status ready \

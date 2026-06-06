@@ -3,8 +3,8 @@
 
 Hermes can call this script before a Kanban transition. It produces the same
 transition plan as `factoryctl.py`, persists idempotent worker subtasks in a
-small JSON ledger, and exits non-zero when `--enforce` is used and the
-transition must be blocked.
+small JSON ledger, and exits non-zero by default when the transition must be
+blocked.
 
 This adapter intentionally does not execute specialist workers by itself. It
 creates durable worker tasks and reconciles worker evidence.
@@ -58,6 +58,10 @@ def public_path_ref(path: Path) -> str:
 def task_id(card_id: str, worker_id: str) -> str:
     digest = hashlib.sha256(f"{card_id}:{worker_id}".encode("utf-8")).hexdigest()[:16]
     return f"ofw_{digest}"
+
+
+def is_blocking_action(action: str) -> bool:
+    return action.startswith("block")
 
 
 def load_ledger(path: Path) -> dict[str, Any]:
@@ -162,7 +166,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--worker-results-dir", type=Path)
     parser.add_argument("--ledger", type=Path, required=True)
     parser.add_argument("--out", type=Path)
-    parser.add_argument("--enforce", action="store_true")
+    parser.add_argument("--enforce", action="store_true", help="Deprecated; blocked transitions are fail-closed by default.")
+    parser.add_argument("--report-only", action="store_true", help="Write the hook result without failing blocked transitions.")
     return parser
 
 
@@ -180,7 +185,7 @@ def main() -> int:
         write_json(args.out, result)
     else:
         print(json.dumps(result, indent=2, ensure_ascii=True))
-    if args.enforce and result["transition_action"] == ACTION_BLOCK_TRANSITION:
+    if not args.report_only and is_blocking_action(result["transition_action"]):
         return 1
     return 0
 

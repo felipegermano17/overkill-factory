@@ -68,5 +68,7 @@
   "evidence_refs": [
     "validation/remote-proof/local-clean-smoke.json"
   ],
-  "next_action": "Use Crabbox/Testbox for provider-backed remote proof when available."
+  "next_action": "Use Crabbox/Testbox for provider-backed remote proof when available.",
+  "evidence_kind": "real",
+  "reusable_for_product": false
 }

@@ -19,10 +19,10 @@
     "reviewer_identity": "security-reviewer"
   },
   "decision": "approved",
-  "human_actor": "authorized-test-operator",
-  "decision_at": "2026-06-06T06:23:07+00:00",
+  "human_actor": "public-smoke-operator",
+  "decision_at": "2026-06-06T06:58:56+00:00",
   "approved_scope": [
-    "synthetic Hermes smoke card only"
+    "public synthetic live-adapter smoke only"
   ],
   "forbidden_scope": [
     "deploy",
@@ -32,11 +32,13 @@
     "funds"
   ],
   "required_changes": [],
-  "risk_owner": "test-risk-owner",
-  "security_owner": "test-security-owner",
-  "rollback_owner": "test-rollback-owner",
+  "risk_owner": "public-smoke-risk-owner",
+  "security_owner": "public-smoke-security-owner",
+  "rollback_owner": "public-smoke-rollback-owner",
   "evidence_refs": [
     "validation/hermes-live/evidence/human-gate-clerk.md"
   ],
-  "notes": "Smoke-only approval for synthetic validation card; not reusable for real product work."
+  "evidence_kind": "synthetic",
+  "reusable_for_product": false,
+  "notes": "Synthetic public record derived from a live Hermes adapter smoke; not reusable for product approval."
 }
