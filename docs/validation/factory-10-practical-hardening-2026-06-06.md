@@ -112,9 +112,10 @@ the scanner now represents the real public policy more closely.
 - Hermes dashboard `ready` parity is live-smoke proven. Dashboard/API `done`
   parity is live-smoke proven for missing Product Face result and weak Auditor
   preflight. Worker-style CLI completion is now live-smoke proven for missing
-  Product Face result. Hermes still needs live wiring from Kanban events to the
-  public hook, automatic result ingestion and real specialist profile
-  execution.
+  Product Face result. One real specialist profile dispatch is now live-smoke
+  proven with factory skill preload and public-safety scanner execution. Hermes
+  still needs live wiring from Kanban events to the public hook, automatic
+  result ingestion and product-specific specialist profile execution.
 - Remote Proof is local-clean fallback, not provider-backed Crabbox/Testbox.
 - Supply-chain posture still lacks dependency review and SBOM/provenance.
 - Current Git history still contains old private/internal markers from earlier
@@ -125,10 +126,11 @@ the scanner now represents the real public policy more closely.
 
 ## Current Practical Score
 
-Estimated public-factory score after this pass: 9.8/10 for contracts,
+Estimated public-factory score after this pass: 9.85/10 for contracts,
 preflight, executable Hermes hook, stricter worker-result reconciliation,
 Product Face proof, dashboard/API no-bypass smokes, worker-style completion
-no-bypass, local remote proof, action pinning and public-safety controls.
+no-bypass, real public-safety profile dispatch, local remote proof, action
+pinning and public-safety controls.
 
 It is not 10 because the missing items above require real runtime integration or
 real target code, plus a clean public publication path for Git history.

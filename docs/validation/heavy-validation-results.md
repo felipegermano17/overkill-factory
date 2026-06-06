@@ -29,6 +29,7 @@ Public evidence:
 - `validation/hermes-live/dashboard-ready-gate-smoke.md`
 - `validation/hermes-live/dashboard-done-gate-smoke.md`
 - `validation/hermes-live/worker-dispatched-done-gate-smoke.md`
+- `validation/hermes-live/real-profile-dispatch-smoke.md`
 
 Observed result:
 
@@ -47,11 +48,15 @@ Observed result:
 - worker-style CLI completion enforcement: product-facing completion without
   `product_face_result` returned non-zero, kept the task `running`, preserved
   the active run and emitted a completion-blocked event;
+- real specialist dispatch: `public-safety-gate` was spawned by Hermes,
+  preloaded the `overkill-factory` skill, ran `public_safety_scan.py`, wrote
+  worker evidence and closed with Receipt Five metadata;
 - main card final state: `done`.
 
 This proves real Kanban materialization, dependency wiring and worker-result
-reconciliation. It does not prove real Quasar Auditor, release, production
-Product Face or human approval execution.
+reconciliation, plus one real specialist-profile execution path. It does not
+prove real Quasar Auditor, release, production Product Face or human approval
+execution.
 
 ## Real Codex Security Scan
 
@@ -173,6 +178,9 @@ checks.
   return 409 and preserve the card before closure.
 - Hermes worker-style CLI completion now returns non-zero with the gate reason
   and keeps the active run open until the missing worker result exists.
+- Hermes real profile dispatch is now smoke-proven with `public-safety-gate`:
+  the worker preloaded the factory skill, ran a real public-safety scanner,
+  wrote evidence and completed with Receipt Five.
 
 ### Still Not Proven
 
@@ -187,10 +195,10 @@ checks.
   receipt.
 - Disposable Hermes update smoke against a fresh real checkout with the full
   patch chain.
-- Full automatic Hermes dispatcher execution with real specialist profiles.
-  The live adapter materializes and reconciles the task graph, and the
-  worker-style CLI completion path is now smoke-proven, but the public smoke
-  still does not prove real specialist profiles doing product work end to end.
+- Full multi-specialist Hermes execution on product work. A real
+  `public-safety-gate` profile dispatch is proven, including skill preload and
+  scanner execution, but Product Face, Auditor, Remote Proof, release and human
+  gate profiles still need product-specific runs.
 
 ## Adversarial Review Scores
 
@@ -198,16 +206,16 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.4 | Browser-backed proof exists and weak PASS is now blocked; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.85 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass and worker-style CLI completion no-bypass are now smoke-proven; real specialist profile execution remains open. |
+| Agent/Hermes Operability | 9.9 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass and one real specialist-profile dispatch with skill preload are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.2 | Source-pinned Quasar init/build/test proof exists and dashboard/API done now rejects Auditor preflight-only PASS; still no real product Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.9/10 for factory process,
+Estimated score after fixes in this pass: 9.92/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires real specialist executions,
 not more synthetic smoke: real Auditor/Quasar, provider-backed remote proof, a
-production Product Face target and real dispatched specialist profiles doing
-the work end to end.
+production Product Face target and multi-specialist dispatched profiles doing
+product-specific work end to end.
 
 ## Next Validation Gates
 
@@ -218,5 +226,5 @@ the work end to end.
    SBOM/provenance or explicit waiver.
 4. Run provider-backed remote proof in Crabbox/Testbox.
 5. Test Hermes update compatibility against a disposable Hermes checkout.
-6. Run the same live smoke with real dispatched specialist profiles instead of
-   synthetic worker completions.
+6. Run Product Face, Auditor, Remote Proof and release worker profiles on
+   product-specific tasks, not only the public-safety dispatch smoke.

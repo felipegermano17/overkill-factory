@@ -2,8 +2,8 @@
 
 ## What Is Still Weak
 
-1. Worker routing is broader, but many workers still produce packets and
-   contracts rather than executing real tools automatically.
+1. Worker routing is broader, and one real public-safety profile dispatch is
+   proven, but most workers still need product-specific tool execution proof.
 2. Security is now a matrix, but not every matrix row has a dedicated automated
    fixture.
 3. Product Face proof exists for a static pilot and `done` now rejects missing
@@ -22,9 +22,9 @@
    spawning the right worker.
 2. Workers may produce structured JSON with weak evidence.
 3. High-risk tasks may become slow if every specialist runs on every card.
-4. Dashboard/API `ready`, critical `done` and worker-style CLI completion
-   negative paths are now covered by patch and live smoke, but real specialist
-   profiles can still fail to produce strong evidence.
+4. Dashboard/API `ready`, critical `done`, worker-style CLI completion and one
+   real specialist dispatch are now covered by live smoke, but untested
+   specialist profiles can still fail to produce strong evidence.
 5. Public safety scan may miss a new class of private leak unless the denylist
    evolves.
 6. The factory may overfit to the dry pilot until multiple real contexts are
@@ -72,11 +72,11 @@ Mitigation: keep gates risk-tiered and worker-triggered, not universal.
 
 ## Score
 
-Factory 11 is strong as an operational hardening pass: 9.7/10 for methodology
+Factory 11 is strong as an operational hardening pass: 9.8/10 for methodology
 and public-safe agent operability.
 
 It is not a final 10/10 because the remaining proof requires heavy validation
 across multiple real contexts, including repeated real product papers,
 product-specific security scans, Hermes update smoke, production Product Face
-automation, provider-backed remote proof, real dispatched specialist profiles
-and real Solana/Quasar implementation audit.
+automation, provider-backed remote proof, product-specific dispatched
+specialist profiles and real Solana/Quasar implementation audit.

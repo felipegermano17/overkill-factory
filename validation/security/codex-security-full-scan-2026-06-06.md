@@ -100,5 +100,5 @@ This scan raises the factory-process confidence, but it does not replace:
 - provider-backed Crabbox/Testbox remote proof;
 - full Hermes dashboard/API/CLI hook wiring with bypass tests;
 - production Product Face proof on a real deployed UI;
-- real dispatched specialist profiles completing work autonomously.
-
+- multi-profile product-specific specialist dispatch. One public-safety profile
+  dispatch is now smoke-proven separately.

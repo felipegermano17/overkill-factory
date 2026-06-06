@@ -36,6 +36,8 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
   registry, Hermes update safety, public-safety scan and CI.
 - Live Hermes Kanban adapter evidence: real board, main card, required worker
   cards, dependency links, negative done block, positive done reconciliation.
+- Real Hermes specialist dispatch evidence: `public-safety-gate` preloaded the
+  factory skill, ran a public-safety scan and completed with Receipt Five.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -118,6 +120,10 @@ The live Hermes smoke proves that the adapter can materialize a synthetic
 Solana/Quasar R3 card into real Hermes Kanban tasks and block/allow completion
 based on worker results. The smoke worker results are intentionally marked as
 synthetic and cannot be reused as real product evidence.
+
+The real profile dispatch smoke proves one specialist profile can be spawned by
+Hermes, load the factory skill, run a scoped scanner and complete with Receipt
+Five. It does not prove all specialist profiles or product-specific execution.
 
 The first production-intent pilot still needs a real raw product paper.
 
