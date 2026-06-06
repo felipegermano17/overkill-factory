@@ -7,6 +7,7 @@ adapter compatibility work, not as a casual package upgrade.
 
 ```text
 adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch
+adapters/hermes/patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
 ```
 
 ## Required Contract Versions
@@ -23,13 +24,18 @@ adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch
 - `kanban_transition_event`
 - `security_scan_packet`
 - `security_scan_result`
+- `_block_ready_task_on_overkill_gate_error`
 
 ## Required Surfaces
 
 - Hermes Kanban card validation before `ready`.
 - Hermes completion validation before `done`.
 - CLI exit-code propagation for blocked transitions.
-- Dashboard/API/worker routes must converge on the same gate logic.
+- Dashboard direct move and bulk move to `ready` must converge on the same gate
+  logic.
+- Dashboard edits/reassignments of an already `ready` card must re-run the
+  ready gate before work remains dispatchable.
+- API/worker routes must converge on the same gate logic before production use.
 
 ## Incompatible Signs
 
@@ -40,6 +46,8 @@ adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch
 - Executor and reviewer can be the same identity.
 - Blocked transition returns exit code `0`.
 - Dashboard/API can bypass CLI/Kanban gate behavior.
+- Editing or reassigning a `ready` Factory card can leave invalid work
+  dispatchable.
 
 ## Required Local Checks
 
@@ -55,10 +63,12 @@ Run these on a clean Hermes checkout after applying the adapter patch:
 
 ```bash
 git am /path/to/0001-add-overkill-factory-10-kanban-gates.patch
+git am /path/to/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
 python -m pytest -q -o addopts='' \
   tests/hermes_cli/test_overkill_factory_v35_gate.py \
   tests/hermes_cli/test_kanban_promote.py \
-  tests/hermes_cli/test_kanban_cli.py
+  tests/hermes_cli/test_kanban_cli.py \
+  tests/plugins/test_kanban_dashboard_plugin.py
 ```
 
 ## Update Receipt

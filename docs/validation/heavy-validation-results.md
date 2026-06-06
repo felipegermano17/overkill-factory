@@ -26,6 +26,7 @@ Public evidence:
 - `validation/hermes-live/enforce-done-missing-results.json`
 - `validation/hermes-live/enforce-done-pass.json`
 - `validation/hermes-live/worker-result-index.json`
+- `validation/hermes-live/dashboard-ready-gate-smoke.md`
 
 Observed result:
 
@@ -35,6 +36,8 @@ Observed result:
 - worker tasks completed: 12;
 - negative done enforcement: blocked without worker results;
 - positive done enforcement: allowed with 12 valid worker result records;
+- dashboard direct ready enforcement: invalid product-facing card received
+  HTTP 409 and remained blocked;
 - main card final state: `done`.
 
 This proves real Kanban materialization, dependency wiring and worker-result
@@ -153,6 +156,9 @@ checks.
   build, while the source-pinned `blueshift-gg/quasar` path passed init, build
   and test. `auditor_result audit_mode=code_audit` now requires a
   `quasar_toolchain_proof` before it can be considered valid.
+- Hermes dashboard ready bypass is now covered by a public adapter patch and a
+  live smoke: direct `ready` move returns 409 and blocks the invalid card with a
+  preserved gate reason.
 
 ### Still Not Proven
 
@@ -165,13 +171,14 @@ checks.
 - Provider-backed remote proof in Crabbox/Testbox. Local clean-environment
   remote proof now passes with sanitized environment, artifact and cleanup
   receipt.
-- Disposable Hermes update smoke against a real checkout with dashboard/API
-  bypass checks.
+- Disposable Hermes update smoke against a fresh real checkout with the full
+  patch chain.
 - Full automatic Hermes dispatcher execution with real specialist profiles.
   The live adapter materializes and reconciles the task graph, but the public
   smoke completed synthetic worker tasks manually.
-- Shared CLI/dashboard/API enforcement. The adapter proves the contract; Hermes
-  still needs the hook wired into every transition surface so no bypass exists.
+- Shared `done`, API and worker-route enforcement. Dashboard `ready` is now
+  proven; Hermes still needs the transition hook wired into every remaining
+  bypassable surface.
 
 ## Adversarial Review Scores
 
@@ -179,16 +186,16 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.4 | Browser-backed proof exists and weak PASS is now blocked; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.4 | Real Hermes board, worker graph, stronger evidence reconciliation and done enforcement proven; dashboard/API hooks still need hard integration. |
+| Agent/Hermes Operability | 9.6 | Real Hermes board, worker graph, stronger evidence reconciliation, done enforcement and dashboard ready no-bypass smoke proven; full done/API/worker hook integration still remains. |
 | Solana/Quasar/Auditor | 9.0 | Source-pinned Quasar init/build/test proof now exists and shallow Auditor PASS is blocked; still no real product Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.75/10 for factory process,
+Estimated score after fixes in this pass: 9.8/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires real specialist executions,
 not more synthetic smoke: real Auditor/Quasar, provider-backed remote proof, a
 production Product Face target and Hermes transition hooks wired into every
-bypassable surface.
+bypassable `done`, API and worker surface.
 
 ## Next Validation Gates
 
@@ -199,6 +206,6 @@ bypassable surface.
    SBOM/provenance or explicit waiver.
 4. Run provider-backed remote proof in Crabbox/Testbox.
 5. Test Hermes update compatibility against a disposable Hermes checkout.
-6. Wire the live adapter into Hermes CLI/dashboard/API transition paths.
+6. Wire the live adapter into Hermes `done`, API and worker transition paths.
 7. Run the same live smoke with real dispatched specialist profiles instead of
    synthetic worker completions.

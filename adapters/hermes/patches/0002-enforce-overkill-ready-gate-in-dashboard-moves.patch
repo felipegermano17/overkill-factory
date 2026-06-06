@@ -1,0 +1,273 @@
+From 46c4350cb76fd2e4f130718a2e78bd68404cecbe Mon Sep 17 00:00:00 2001
+From: Overkill Factory <overkill-factory@local>
+Date: Sat, 6 Jun 2026 09:06:39 +0000
+Subject: [PATCH] Enforce Overkill ready gate in dashboard moves
+
+---
+ plugins/kanban/dashboard/plugin_api.py        | 95 ++++++++++++++++++-
+ tests/plugins/test_kanban_dashboard_plugin.py | 86 +++++++++++++++++
+ 2 files changed, 178 insertions(+), 3 deletions(-)
+
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+index 0a49172a8..391e58a30 100644
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -890,6 +890,12 @@ def update_task(task_id: str, payload: UpdateTaskBody, board: Optional[str] = Qu
+                                 f"not done — {names}"
+                             ),
+                         )
++                    gate_failure = _last_failure_error(conn, task_id)
++                    if gate_failure:
++                        raise HTTPException(
++                            status_code=409,
++                            detail=gate_failure,
++                        )
+                 raise HTTPException(
+                     status_code=409,
+                     detail=f"status transition to {s!r} not valid from current state",
+@@ -931,6 +937,13 @@ def update_task(task_id: str, payload: UpdateTaskBody, board: Optional[str] = Qu
+                     (task_id, int(time.time())),
+                 )
+
++        ready_gate_error = _block_ready_task_on_overkill_gate_error(conn, task_id)
++        if ready_gate_error:
++            raise HTTPException(
++                status_code=409,
++                detail=ready_gate_error,
++            )
++
+         updated = kanban_db.get_task(conn, task_id)
+         return {"task": _task_dict(updated) if updated else None}
+     finally:
+@@ -977,6 +990,49 @@ def _parents_blocking_ready(
+     ]
+
+
++def _last_failure_error(conn: sqlite3.Connection, task_id: str) -> Optional[str]:
++    row = conn.execute(
++        "SELECT last_failure_error FROM tasks WHERE id = ?",
++        (task_id,),
++    ).fetchone()
++    if row is None:
++        return None
++    value = row["last_failure_error"]
++    return str(value) if value else None
++
++
++def _block_ready_task_on_overkill_gate_error(
++    conn: sqlite3.Connection,
++    task_id: str,
++) -> Optional[str]:
++    """Re-run the kernel ready gate after dashboard edits/reassignments.
++
++    ``create_task``, ``promote_task``, ``unblock_task``, ``recompute_ready``
++    and ``claim_task`` already enforce the Overkill ready contract. Dashboard
++    PATCH can still mutate a card that is already ``ready``; this guard keeps
++    those post-gate mutations from leaving invalid work dispatchable.
++    """
++    with kanban_db.write_txn(conn):
++        row = conn.execute(
++            "SELECT status, title, body, assignee FROM tasks WHERE id = ?",
++            (task_id,),
++        ).fetchone()
++        if row is None or row["status"] != "ready":
++            return None
++        gate_error = kanban_db._overkill_ready_gate_error(
++            row["title"], row["body"], row["assignee"]
++        )
++        if not gate_error:
++            return None
++        conn.execute(
++            "UPDATE tasks SET status = 'blocked', consecutive_failures = 0, last_failure_error = ? "
++            "WHERE id = ? AND status = 'ready'",
++            (gate_error, task_id),
++        )
++        kanban_db._append_event(conn, task_id, "blocked", {"reason": gate_error})
++        return gate_error
++
++
+ def _set_status_direct(
+     conn: sqlite3.Connection, task_id: str, new_status: str,
+ ) -> bool:
+@@ -993,11 +1049,12 @@ def _set_status_direct(
+     with kanban_db.write_txn(conn):
+         # Snapshot current state so we know whether to close a run.
+         prev = conn.execute(
+-            "SELECT status, current_run_id FROM tasks WHERE id = ?",
++            "SELECT status, current_run_id, title, body, assignee FROM tasks WHERE id = ?",
+             (task_id,),
+         ).fetchone()
+         if prev is None:
+             return False
++        was_running = prev["status"] == "running"
+
+         # Guard: don't allow promoting to 'ready' unless all parents are done.
+         # Prevents the dispatcher from spawning a child whose upstream work
+@@ -1014,7 +1071,33 @@ def _set_status_direct(
+             ):
+                 return False
+
+-        was_running = prev["status"] == "running"
++            gate_error = kanban_db._overkill_ready_gate_error(
++                prev["title"], prev["body"], prev["assignee"]
++            )
++            if gate_error:
++                run_id = None
++                if was_running and prev["current_run_id"]:
++                    run_id = kanban_db._end_run(
++                        conn, task_id,
++                        outcome="reclaimed", status="reclaimed",
++                        summary="dashboard ready move blocked by Overkill gate",
++                    )
++                conn.execute(
++                    "UPDATE tasks SET status = 'blocked', current_run_id = NULL, "
++                    "claim_lock = NULL, claim_expires = NULL, worker_pid = NULL, "
++                    "consecutive_failures = 0, last_failure_error = ? "
++                    "WHERE id = ?",
++                    (gate_error, task_id),
++                )
++                kanban_db._append_event(
++                    conn,
++                    task_id,
++                    "blocked",
++                    {"reason": gate_error},
++                    run_id=run_id,
++                )
++                return False
++
+         reopening_satisfied_parent = (
+             prev["status"] in {"done", "archived"}
+             and new_status not in {"done", "archived"}
+@@ -1219,7 +1302,10 @@ def bulk_update(payload: BulkTaskBody, board: Optional[str] = Query(None)):
+                         results.append(entry)
+                         continue
+                     if not ok:
+-                        entry.update(ok=False, error=f"transition to {s!r} refused")
++                        error = f"transition to {s!r} refused"
++                        if s == "ready":
++                            error = _last_failure_error(conn, tid) or error
++                        entry.update(ok=False, error=error)
+                 if payload.assignee is not None:
+                     try:
+                         if payload.reclaim_first:
+@@ -1247,6 +1333,9 @@ def bulk_update(payload: BulkTaskBody, board: Optional[str] = Query(None)):
+                             (tid, json.dumps({"priority": int(payload.priority)}),
+                              int(time.time())),
+                         )
++                ready_gate_error = _block_ready_task_on_overkill_gate_error(conn, tid)
++                if ready_gate_error:
++                    entry.update(ok=False, error=ready_gate_error)
+             except Exception as e:  # defensive — one bad id shouldn't kill the batch
+                 entry.update(ok=False, error=str(e))
+             results.append(entry)
+diff --git a/tests/plugins/test_kanban_dashboard_plugin.py b/tests/plugins/test_kanban_dashboard_plugin.py
+index e570c7627..9f08a56eb 100644
+--- a/tests/plugins/test_kanban_dashboard_plugin.py
++++ b/tests/plugins/test_kanban_dashboard_plugin.py
+@@ -18,6 +18,7 @@ from fastapi import FastAPI
+ from fastapi.testclient import TestClient
+
+ from hermes_cli import kanban_db as kb
++from tests.hermes_cli.test_overkill_factory_v35_gate import _base_card, _body
+
+
+ # ---------------------------------------------------------------------------
+@@ -387,6 +388,61 @@ def test_patch_drag_drop_move_todo_to_ready(client):
+     assert child_after["status"] == "ready"
+
+
++def test_patch_ready_uses_overkill_gate_for_direct_dashboard_move(client):
++    """Dashboard drag-drop must not bypass the Factory ready gate."""
++    card = _base_card(owner="frontend-worker", surfaces=["ux", "frontend"])
++    card.pop("product_face_packet")
++
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="invalid factory card",
++            body=_body(card),
++            assignee="frontend-worker",
++            initial_status="blocked",
++        )
++        with kb.write_txn(conn):
++            conn.execute("UPDATE tasks SET status = 'todo' WHERE id = ?", (tid,))
++
++    r = client.patch(
++        f"/api/plugins/kanban/tasks/{tid}",
++        json={"status": "ready"},
++    )
++
++    assert r.status_code == 409
++    assert "product_face_packet" in r.json()["detail"]
++    detail = client.get(f"/api/plugins/kanban/tasks/{tid}").json()["task"]
++    assert detail["status"] == "blocked"
++    assert "product_face_packet" in detail["last_failure_error"]
++
++
++def test_patch_body_edit_rechecks_ready_overkill_card(client):
++    """Editing a ready Factory card cannot leave invalid work dispatchable."""
++    valid_card = _base_card(owner="frontend-worker", surfaces=["ux", "frontend"])
++    invalid_card = dict(valid_card)
++    invalid_card.pop("product_face_packet")
++
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="valid factory card",
++            body=_body(valid_card),
++            assignee="frontend-worker",
++        )
++        assert kb.get_task(conn, tid).status == "ready"
++
++    r = client.patch(
++        f"/api/plugins/kanban/tasks/{tid}",
++        json={"body": _body(invalid_card)},
++    )
++
++    assert r.status_code == 409
++    assert "product_face_packet" in r.json()["detail"]
++    detail = client.get(f"/api/plugins/kanban/tasks/{tid}").json()["task"]
++    assert detail["status"] == "blocked"
++    assert "product_face_packet" in detail["last_failure_error"]
++
++
+ def test_reopening_parent_demotes_ready_child(client):
+     """Reopening a completed parent must invalidate ready children immediately.
+
+@@ -968,6 +1024,36 @@ def test_bulk_status_ready(client):
+     assert {a["id"], b["id"], c2["id"]}.issubset(ids)
+
+
++def test_bulk_ready_uses_overkill_gate_for_direct_dashboard_move(client):
++    """Bulk multi-move must enforce the same Factory ready gate as PATCH."""
++    card = _base_card(owner="frontend-worker", surfaces=["ux", "frontend"])
++    card.pop("product_face_packet")
++
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="invalid bulk factory card",
++            body=_body(card),
++            assignee="frontend-worker",
++            initial_status="blocked",
++        )
++        with kb.write_txn(conn):
++            conn.execute("UPDATE tasks SET status = 'todo' WHERE id = ?", (tid,))
++
++    r = client.post(
++        "/api/plugins/kanban/tasks/bulk",
++        json={"ids": [tid], "status": "ready"},
++    )
++
++    assert r.status_code == 200
++    result = r.json()["results"][0]
++    assert result["ok"] is False
++    assert "product_face_packet" in result["error"]
++    detail = client.get(f"/api/plugins/kanban/tasks/{tid}").json()["task"]
++    assert detail["status"] == "blocked"
++    assert "product_face_packet" in detail["last_failure_error"]
++
++
+ def test_bulk_status_done_forwards_completion_summary(client):
+     a = client.post("/api/plugins/kanban/tasks", json={"title": "a"}).json()["task"]
+     b = client.post("/api/plugins/kanban/tasks", json={"title": "b"}).json()["task"]

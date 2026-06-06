@@ -6,7 +6,7 @@ Do not update a real Hermes factory runtime directly.
 
 1. Identify the current Hermes version and target Hermes version.
 2. Create or use a disposable Hermes checkout/runtime.
-3. Apply the Overkill adapter patch.
+3. Apply both Overkill adapter patches.
 4. Run compatibility checks.
 5. Run negative and positive smoke tests.
 6. Record the update receipt.
@@ -21,7 +21,10 @@ Do not update a real Hermes factory runtime directly.
 4. Security-required card cannot close without `security_scan_result`.
 5. R4 card without `r4_gate` fails.
 6. Blocked transition returns non-zero exit code.
-7. Dashboard/API path cannot bypass the same gate.
+7. Dashboard direct `ready` path cannot bypass the same gate.
+8. Dashboard bulk `ready` path cannot bypass the same gate.
+9. Dashboard edits/reassignments cannot leave an invalid `ready` card
+   dispatchable.
 
 ## What To Adopt From New Hermes Releases
 

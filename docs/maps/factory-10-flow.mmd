@@ -123,7 +123,7 @@ flowchart LR
   F29 --> F30
 
   F30["F30 Ainda nao e 10"]:::alert
-  F30D["Faltam Auditor real em Quasar, Product Face de UI real, Crabbox/Testbox e hook em todas as superficies Hermes."]:::desc
+  F30D["Faltam Auditor real em Quasar, Product Face de UI real, Crabbox/Testbox e hooks de done/API/worker."]:::desc
   F30 -.-> F30D
   F30 --> F31
 
@@ -140,6 +140,11 @@ flowchart LR
   F33["F33 Quasar runtime proof"]:::execution
   F33D["Crates.io falhou no build; source pinado do Quasar passou init, build e test em container limpo."]:::desc
   F33 -.-> F33D
+  F33 --> F34
+
+  F34["F34 Dashboard ready no-bypass"]:::gate
+  F34D["Dashboard live recebeu 409 e bloqueou card invalida ao tentar mover direto para ready."]:::desc
+  F34 -.-> F34D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

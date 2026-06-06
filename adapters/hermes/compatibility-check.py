@@ -8,20 +8,33 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PATCH = ROOT / "adapters" / "hermes" / "patches" / "0001-add-overkill-factory-10-kanban-gates.patch"
+PATCHES = [
+    ROOT / "adapters" / "hermes" / "patches" / "0001-add-overkill-factory-10-kanban-gates.patch",
+    ROOT / "adapters" / "hermes" / "patches" / "0002-enforce-overkill-ready-gate-in-dashboard-moves.patch",
+]
 FACTORYCTL = ROOT / "scripts" / "factoryctl.py"
 TRANSITION_HOOK = ROOT / "adapters" / "hermes" / "transition_hook.py"
 
-REQUIRED_PATCH_MARKERS = [
-    "_overkill_is_v35_card",
-    "_overkill_validate_v35_card",
-    "_overkill_validate_v35_completion",
-    "OVERKILL_V3_5_FACTORY_10",
-    "receipt_five",
-    "kanban_transition_event",
-    "security_scan_packet",
-    "security_scan_result",
-]
+REQUIRED_PATCH_MARKERS = {
+    "0001-add-overkill-factory-10-kanban-gates.patch": [
+        "_overkill_is_v35_card",
+        "_overkill_validate_v35_card",
+        "_overkill_validate_v35_completion",
+        "OVERKILL_V3_5_FACTORY_10",
+        "receipt_five",
+        "kanban_transition_event",
+        "security_scan_packet",
+        "security_scan_result",
+    ],
+    "0002-enforce-overkill-ready-gate-in-dashboard-moves.patch": [
+        "_block_ready_task_on_overkill_gate_error",
+        "_overkill_ready_gate_error",
+        "dashboard ready move blocked by Overkill gate",
+        "test_patch_ready_uses_overkill_gate_for_direct_dashboard_move",
+        "test_patch_body_edit_rechecks_ready_overkill_card",
+        "test_bulk_ready_uses_overkill_gate_for_direct_dashboard_move",
+    ],
+}
 
 REQUIRED_FACTORYCTL_MARKERS = [
     "public-safety-gate",
@@ -51,7 +64,12 @@ def missing_markers(path: Path, markers: list[str]) -> list[str]:
 
 def main() -> int:
     failures = []
-    failures.extend(f"patch missing marker: {m}" for m in missing_markers(PATCH, REQUIRED_PATCH_MARKERS))
+    for patch in PATCHES:
+        markers = REQUIRED_PATCH_MARKERS.get(patch.name, [])
+        failures.extend(
+            f"{patch.name} missing marker: {m}"
+            for m in missing_markers(patch, markers)
+        )
     failures.extend(f"factoryctl missing marker: {m}" for m in missing_markers(FACTORYCTL, REQUIRED_FACTORYCTL_MARKERS))
     failures.extend(f"transition hook missing marker: {m}" for m in missing_markers(TRANSITION_HOOK, REQUIRED_TRANSITION_HOOK_MARKERS))
 

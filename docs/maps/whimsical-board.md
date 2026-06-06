@@ -28,9 +28,10 @@ It includes:
 - Factory 10 + Hermes V3.5 + Hermes V2 completion compatibility.
 - Critical workers, worker-role explanations and agent misread warnings.
 - Multi-context validation battery as the learning-loop proof surface.
-- F27-F33 operational hardening: real Codex Security, stricter gates, clean
+- F27-F34 operational hardening: real Codex Security, stricter gates, clean
   remote proof, remaining nota-10 gaps, a durable Whimsical MCP fallback,
-  stricter Auditor/Quasar contracts and source-pinned Quasar runtime proof.
+  stricter Auditor/Quasar contracts, source-pinned Quasar runtime proof and
+  dashboard ready no-bypass smoke.
 
 ## Supporting Diagram
 
@@ -44,7 +45,7 @@ updated.
 
 The public source diagram now includes live Hermes materialization, worker
 dependency graph, negative/positive done enforcement, the multi-context factory
-battery and the F27-F33 hardening block. If the editable Whimsical board is
+battery and the F27-F34 hardening block. If the editable Whimsical board is
 updated manually, mirror those additions from `docs/maps/factory-10-flow.mmd`.
 
 ## Durable MCP Fallback

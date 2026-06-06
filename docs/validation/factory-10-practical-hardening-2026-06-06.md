@@ -68,7 +68,9 @@ Public CI now has:
 - lightweight secret scan;
 - public-safety scan.
 
-This is still not a full Codex Security scan.
+This CI layer is still not a full Codex Security scan by itself. A separate
+full Codex Security scan was later run and recorded under
+`validation/security/`.
 
 Worker result reconciliation is now stricter:
 
@@ -104,10 +106,12 @@ the scanner now represents the real public policy more closely.
 
 ## Still Not 10/10
 
-- Codex Security full phased scan has not been run.
+- Product-specific Codex Security scans still need to run per real
+  implementation.
 - Auditor has not run against real public Quasar source.
-- Hermes runtime still needs live wiring from Kanban events to the public hook,
-  plus dashboard/API parity and result ingestion.
+- Hermes dashboard `ready` parity is now live-smoke proven. Hermes still needs
+  live wiring from Kanban events to the public hook, plus `done`, API/worker
+  parity and result ingestion.
 - Remote Proof is local-clean fallback, not provider-backed Crabbox/Testbox.
 - Supply-chain posture still lacks dependency review and SBOM/provenance.
 - Current Git history still contains old private/internal markers from earlier

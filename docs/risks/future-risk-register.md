@@ -9,8 +9,8 @@ proven in real product pilots.
 | Agents confuse packet with result | Worker request is treated as evidence | Closure summary and Receipt Five distinguish required vs delivered | Stronger reconciler in `factoryctl.py` |
 | Security remains generic | A single scan misses AppSec, AI, cloud or onchain risks | Security control matrix and specialist workers | Automated routing and domain-specific fixtures |
 | Public repo leaks private context | Internal names, paths, source extraction or private board links enter docs | `public-safety-gate` and `public_safety_scan.py` | CI enforcement on every PR |
-| Hermes update breaks gates | Upstream update removes adapter symbols or bypasses exit codes | compatibility manifest, runbook and check script | Disposable runtime update pipeline |
-| Dashboard/API bypasses CLI gates | UI path mutates Kanban without same validation | Required smoke in update runbook | Live dashboard/API test harness |
+| Hermes update breaks gates | Upstream update removes adapter symbols or bypasses exit codes | compatibility manifest, runbook, check script and adapter patch chain | Disposable runtime update pipeline |
+| Dashboard/API bypasses CLI gates | UI path mutates Kanban without same validation | Dashboard `ready` patch and live smoke; required update smokes | `done`, API and worker-route live test harness |
 | AutoReview over-trusted | Automated review is treated as approval | AutoReview cannot replace independent or human gates | Review result schema and blocking-finding policy |
 | Remote proof leaks secrets | Testbox/remote runner receives sensitive data | Secrets denied by default, TTL/cost/cleanup required | Secret allowlist scanner and remote proof fixtures |
 | Handoff becomes prose | Handoff omits state, constraints or evidence | Handoff Packer contract | Replay validator with hashes/artifact checks |

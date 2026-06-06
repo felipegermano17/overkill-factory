@@ -21,8 +21,8 @@
    spawning the right worker.
 2. Workers may produce structured JSON with weak evidence.
 3. High-risk tasks may become slow if every specialist runs on every card.
-4. Dashboard/API paths in Hermes may bypass CLI-tested gates unless explicitly
-   validated.
+4. Dashboard `ready` bypass is now covered by patch and live smoke, but `done`,
+   API and worker-route parity still need equivalent validation.
 5. Public safety scan may miss a new class of private leak unless the denylist
    evolves.
 6. The factory may overfit to the dry pilot until multiple real contexts are
@@ -58,19 +58,22 @@ Mitigation: keep gates risk-tiered and worker-triggered, not universal.
 
 ## What Is Too Simple
 
-1. Hermes adapter compatibility check currently verifies markers, not a live
-   disposable runtime.
+1. Hermes adapter compatibility check currently verifies markers and public
+   patch contents, not a fresh disposable runtime.
 2. Public safety scan is denylist-based, not semantic.
 3. CI is minimal: unit tests, compatibility marker check and public scan only.
-4. No real Product Face runner exists yet.
-5. No full Codex Security scan report exists yet for the public repo.
+4. Product Face proof exists, but production UI and full WCAG/performance proof
+   remain open.
+5. Full Codex Security has been run for the factory repo, but every real
+   product implementation still needs its own scan.
 
 ## Score
 
-Factory 11 is strong as an operational hardening pass: 9.5/10 for methodology
+Factory 11 is strong as an operational hardening pass: 9.6/10 for methodology
 and public-safe agent operability.
 
 It is not a final 10/10 because the remaining proof requires heavy validation
-across multiple real contexts, including a real product paper, full security
-scan, Hermes update smoke, Product Face automation, remote proof and real
+across multiple real contexts, including repeated real product papers,
+product-specific security scans, Hermes update smoke, Product Face automation,
+provider-backed remote proof and real
 Solana/Quasar implementation audit.

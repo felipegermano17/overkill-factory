@@ -9,6 +9,7 @@ production line unless their contracts are complete.
 
 ```text
 patches/0001-add-overkill-factory-10-kanban-gates.patch
+patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
 ```
 
 This patch adds:
@@ -23,6 +24,8 @@ This patch adds:
 - R4 human gate.
 - Receipt Five and transition-event done gate.
 - Correct CLI exit-code propagation.
+- Dashboard direct `ready`, bulk `ready` and post-edit `ready` revalidation, so
+  a browser/API move cannot bypass the same Factory gate.
 - Regression tests.
 
 ## Worker Automation Hook
@@ -128,10 +131,12 @@ From a Hermes checkout:
 ```bash
 git switch -c codex/overkill-factory-10-gates
 git am /path/to/0001-add-overkill-factory-10-kanban-gates.patch
+git am /path/to/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
 python -m pytest -q -o addopts='' \
   tests/hermes_cli/test_overkill_factory_v35_gate.py \
   tests/hermes_cli/test_kanban_promote.py \
-  tests/hermes_cli/test_kanban_cli.py
+  tests/hermes_cli/test_kanban_cli.py \
+  tests/plugins/test_kanban_dashboard_plugin.py
 ```
 
 ## Contract Version
@@ -154,7 +159,8 @@ The transition-plan fixtures prove the intended fan-out and reconciliation
 contract.
 
 Real Hermes runtime integration is still not fully landed inside Hermes itself.
-The public adapter now provides the executable hook, ledger contract and CI
-smoke. The remaining work is to wire Hermes Kanban events into this hook, map
-ledger tasks to real dashboard/API worker cards, ingest worker result artifacts,
-and prove that CLI, dashboard, API and worker routes share the same gate path.
+The public adapter now provides the executable hook, ledger contract, CI smoke
+and dashboard `ready` parity patch. The remaining work is to wire Hermes Kanban
+events into this hook, map ledger tasks to real dashboard/API worker cards,
+ingest worker result artifacts, and prove `done` plus worker/API routes share
+the same gate path under real dispatched execution.
