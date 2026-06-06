@@ -1,0 +1,543 @@
+diff --git a/hermes_cli/kanban.py b/hermes_cli/kanban.py
+index 31c4bf6..f062e57 100644
+--- a/hermes_cli/kanban.py
++++ b/hermes_cli/kanban.py
+@@ -1894,15 +1894,24 @@ def _cmd_complete(args: argparse.Namespace) -> int:
+     failed: list[str] = []
+     with kb.connect_closing() as conn:
+         for tid in ids:
+-            if not kb.complete_task(
+-                conn, tid,
+-                result=args.result,
+-                summary=summary,
+-                metadata=metadata,
+-                expected_run_id=_worker_run_id_for(tid),
+-            ):
++            try:
++                completed = kb.complete_task(
++                    conn, tid,
++                    result=args.result,
++                    summary=summary,
++                    metadata=metadata,
++                    expected_run_id=_worker_run_id_for(tid),
++                )
++            except ValueError as exc:
+                 failed.append(tid)
+-                print(f"cannot complete {tid} (unknown id or terminal state)", file=sys.stderr)
++                print(f"cannot complete {tid}: {exc}", file=sys.stderr)
++                continue
++            if not completed:
++                failed.append(tid)
++                print(
++                    f"cannot complete {tid} (unknown id or terminal state)",
++                    file=sys.stderr,
++                )
+             else:
+                 print(f"Completed {tid}")
+     return 0 if not failed else 1
+diff --git a/hermes_cli/kanban_db.py b/hermes_cli/kanban_db.py
+index c8c53db..ec7f2ba 100644
+--- a/hermes_cli/kanban_db.py
++++ b/hermes_cli/kanban_db.py
+@@ -103,6 +103,193 @@ VALID_WORKSPACE_KINDS = {"scratch", "worktree", "dir"}
+ KNOWN_TOOLSET_NAMES = frozenset(name.casefold() for name in get_toolset_names())
+ _IS_WINDOWS = sys.platform == "win32"
+ 
++OVERKILL_FACTORY_VERSION = "OVERKILL_V3_5_FACTORY_10"
++
++_OVERKILL_REQUIRED_CARD_FIELDS = [
++    "factory_method_version",
++    "phase",
++    "surfaces",
++    "risk_initial",
++    "risk_effective",
++    "authority_max",
++    "owner_worker",
++    "executor_identity",
++    "reviewer_identity",
++    "runtime_contract",
++    "security_contract",
++    "forbidden_actions",
++    "done_definition",
++    "kanban_transition_event_ref",
++]
++
++_OVERKILL_REQUIRED_RECEIPT_FIELDS = [
++    "changed_files",
++    "evidence_refs",
++    "verification",
++    "independent_review",
++    "next_action",
++]
++
++
++def _overkill_extract_json_object(text: Optional[str]) -> Optional[dict[str, Any]]:
++    if not text or OVERKILL_FACTORY_VERSION not in text:
++        return None
++    candidates: list[str] = []
++    candidates.extend(
++        match.group(1)
++        for match in re.finditer(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.S)
++    )
++    candidates.append(text.strip())
++    start = text.find("{")
++    end = text.rfind("}")
++    if start >= 0 and end > start:
++        candidates.append(text[start : end + 1])
++    for candidate in candidates:
++        try:
++            payload = json.loads(candidate)
++        except json.JSONDecodeError:
++            continue
++        if (
++            isinstance(payload, dict)
++            and payload.get("factory_method_version") == OVERKILL_FACTORY_VERSION
++        ):
++            return payload
++    return None
++
++
++def _overkill_card_for_task(
++    conn: sqlite3.Connection,
++    task_id: str,
++) -> Optional[dict[str, Any]]:
++    row = conn.execute("SELECT body FROM tasks WHERE id = ?", (task_id,)).fetchone()
++    if row is None:
++        return None
++    return _overkill_extract_json_object(row["body"])
++
++
++def _overkill_text_values(value: Any) -> list[str]:
++    if isinstance(value, str):
++        return [value.casefold()]
++    if isinstance(value, dict):
++        out: list[str] = []
++        for item in value.values():
++            out.extend(_overkill_text_values(item))
++        return out
++    if isinstance(value, (list, tuple, set)):
++        out = []
++        for item in value:
++            out.extend(_overkill_text_values(item))
++        return out
++    return []
++
++
++def _overkill_card_mentions(card: dict[str, Any], *needles: str) -> bool:
++    haystack = " ".join(_overkill_text_values(card))
++    return any(needle.casefold() in haystack for needle in needles)
++
++
++def _overkill_truthy_mapping(value: Any) -> bool:
++    return isinstance(value, dict) and bool(value)
++
++
++def _overkill_missing_common_card_fields(card: dict[str, Any]) -> list[str]:
++    missing = [key for key in _OVERKILL_REQUIRED_CARD_FIELDS if not card.get(key)]
++    if card.get("executor_identity") == card.get("reviewer_identity"):
++        missing.append("reviewer_identity_different_from_executor")
++    return missing
++
++
++def _overkill_ready_gate_error(conn: sqlite3.Connection, task_id: str) -> Optional[str]:
++    card = _overkill_card_for_task(conn, task_id)
++    if card is None:
++        return None
++
++    missing = _overkill_missing_common_card_fields(card)
++    if _overkill_card_mentions(card, "frontend", "ui", "product face", "mobile"):
++        if not _overkill_truthy_mapping(card.get("product_face_packet")):
++            missing.append("product_face_packet")
++    if _overkill_card_mentions(card, "onchain", "solana", "quasar"):
++        if not _overkill_truthy_mapping(card.get("onchain_work_package")):
++            missing.append("onchain_work_package")
++        if not _overkill_truthy_mapping(card.get("auditor_packet")):
++            missing.append("auditor_packet")
++    if _overkill_card_mentions(card, "r3", "r4", "security", "production"):
++        if not _overkill_truthy_mapping(card.get("security_scan_packet")):
++            missing.append("security_scan_packet")
++    if _overkill_card_mentions(card, "r4", "production"):
++        if not _overkill_truthy_mapping(card.get("human_gate")):
++            missing.append("human_gate")
++        if not card.get("rollback_plan"):
++            missing.append("rollback_plan")
++
++    if missing:
++        return "Overkill Factory ready gate: missing " + ", ".join(sorted(set(missing)))
++    return None
++
++
++def overkill_ready_gate_error(
++    conn: sqlite3.Connection,
++    task_id: str,
++) -> Optional[str]:
++    return _overkill_ready_gate_error(conn, task_id)
++
++
++def _overkill_completion_gate_error(
++    conn: sqlite3.Connection,
++    task_id: str,
++    metadata: Optional[dict],
++) -> Optional[str]:
++    card = _overkill_card_for_task(conn, task_id)
++    if card is None:
++        return None
++
++    missing: list[str] = []
++    if not isinstance(metadata, dict):
++        metadata = {}
++    receipt = metadata.get("receipt_five")
++    if not isinstance(receipt, dict):
++        missing.append("receipt_five")
++        receipt = {}
++    for key in _OVERKILL_REQUIRED_RECEIPT_FIELDS:
++        if not receipt.get(key):
++            missing.append(f"receipt_five.{key}")
++    if not _overkill_truthy_mapping(metadata.get("kanban_transition_event")):
++        missing.append("kanban_transition_event")
++    if _overkill_card_mentions(card, "frontend", "ui", "product face", "mobile"):
++        if not _overkill_truthy_mapping(metadata.get("product_face_result")):
++            missing.append("product_face_result")
++    if _overkill_card_mentions(card, "onchain", "solana", "quasar"):
++        auditor = metadata.get("auditor_result")
++        if not _overkill_truthy_mapping(auditor):
++            missing.append("auditor_result")
++        elif auditor.get("audit_mode") != "code_audit":
++            missing.append("auditor_result.audit_mode=code_audit")
++    if _overkill_card_mentions(card, "security", "onchain", "solana", "quasar", "r3", "r4"):
++        if not _overkill_truthy_mapping(metadata.get("security_scan_result")):
++            missing.append("security_scan_result")
++    if _overkill_card_mentions(card, "r3", "r4", "production"):
++        human = metadata.get("human_gate_record")
++        if not _overkill_truthy_mapping(human):
++            missing.append("human_gate_record")
++        elif human.get("decision") != "approved":
++            missing.append("human_gate_record.decision=approved")
++    if card.get("remote_proof_required") and not _overkill_truthy_mapping(
++        metadata.get("remote_proof_result")
++    ):
++        missing.append("remote_proof_result")
++
++    if missing:
++        return "Overkill Factory completion gate: missing " + ", ".join(sorted(set(missing)))
++    return None
++
++
++def overkill_completion_gate_error(
++    conn: sqlite3.Connection,
++    task_id: str,
++    metadata: Optional[dict],
++) -> Optional[str]:
++    return _overkill_completion_gate_error(conn, task_id, metadata)
++
+ # A running task's claim is valid for 15 minutes by default; after that the
+ # next dispatcher tick reclaims it. Workers that outlive this window should
+ # call ``heartbeat_claim(task_id)`` periodically. In practice most kanban
+@@ -3626,6 +3813,17 @@ def complete_task(
+     else:
+         verified_cards = []
+ 
++    overkill_error = _overkill_completion_gate_error(conn, task_id, metadata)
++    if overkill_error:
++        with write_txn(conn):
++            _append_event(
++                conn,
++                task_id,
++                "completion_blocked_overkill_gate",
++                {"reason": overkill_error},
++            )
++        raise ValueError(overkill_error)
++
+     with write_txn(conn):
+         if expected_run_id is None:
+             cur = conn.execute(
+@@ -4149,6 +4347,10 @@ def promote_task(
+                 f"{', '.join(unsatisfied)} (use --force to override)"
+             )
+ 
++    overkill_error = _overkill_ready_gate_error(conn, task_id)
++    if overkill_error:
++        return False, overkill_error
++
+     if dry_run:
+         return True, None
+ 
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+index 0a49172..bf85ab5 100644
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -843,17 +843,23 @@ def update_task(task_id: str, payload: UpdateTaskBody, board: Optional[str] = Qu
+             s = payload.status
+             ok = True
+             if s == "done":
+-                ok = kanban_db.complete_task(
+-                    conn, task_id,
+-                    result=payload.result,
+-                    summary=payload.summary,
+-                    metadata=payload.metadata,
+-                )
++                try:
++                    ok = kanban_db.complete_task(
++                        conn, task_id,
++                        result=payload.result,
++                        summary=payload.summary,
++                        metadata=payload.metadata,
++                    )
++                except ValueError as e:
++                    raise HTTPException(status_code=409, detail=str(e))
+             elif s == "blocked":
+                 ok = kanban_db.block_task(conn, task_id, reason=payload.block_reason)
+             elif s == "scheduled":
+                 ok = kanban_db.schedule_task(conn, task_id, reason=payload.block_reason)
+             elif s == "ready":
++                gate_error = kanban_db.overkill_ready_gate_error(conn, task_id)
++                if gate_error:
++                    raise HTTPException(status_code=409, detail=gate_error)
+                 # Re-open a blocked/scheduled task, or just an explicit status set.
+                 current = kanban_db.get_task(conn, task_id)
+                 if current and current.status in ("blocked", "scheduled"):
+@@ -1186,15 +1192,25 @@ def bulk_update(payload: BulkTaskBody, board: Optional[str] = Query(None)):
+                 if payload.status is not None and not payload.archive:
+                     s = payload.status
+                     if s == "done":
+-                        ok = kanban_db.complete_task(
+-                            conn, tid,
+-                            result=payload.result,
+-                            summary=payload.summary,
+-                            metadata=payload.metadata,
+-                        )
++                        try:
++                            ok = kanban_db.complete_task(
++                                conn, tid,
++                                result=payload.result,
++                                summary=payload.summary,
++                                metadata=payload.metadata,
++                            )
++                        except ValueError as e:
++                            entry.update(ok=False, error=str(e))
++                            results.append(entry)
++                            continue
+                     elif s == "blocked":
+                         ok = kanban_db.block_task(conn, tid)
+                     elif s == "ready":
++                        gate_error = kanban_db.overkill_ready_gate_error(conn, tid)
++                        if gate_error:
++                            entry.update(ok=False, error=gate_error)
++                            results.append(entry)
++                            continue
+                         cur = kanban_db.get_task(conn, tid)
+                         if cur and cur.status in ("blocked", "scheduled"):
+                             ok = kanban_db.unblock_task(conn, tid)
+diff --git a/tests/hermes_cli/test_overkill_factory_v35_gate.py b/tests/hermes_cli/test_overkill_factory_v35_gate.py
+new file mode 100644
+index 0000000..3a9e0ce
+--- /dev/null
++++ b/tests/hermes_cli/test_overkill_factory_v35_gate.py
+@@ -0,0 +1,207 @@
++from __future__ import annotations
++
++import argparse
++import importlib.util
++import json
++import sys
++from pathlib import Path
++
++import pytest
++from fastapi import FastAPI
++from fastapi.testclient import TestClient
++
++from hermes_cli import kanban as kb_cli
++from hermes_cli import kanban_db as kb
++
++
++@pytest.fixture
++def kanban_home(tmp_path, monkeypatch):
++    home = tmp_path / ".hermes"
++    home.mkdir()
++    monkeypatch.setenv("HERMES_HOME", str(home))
++    monkeypatch.setattr(Path, "home", lambda: tmp_path)
++    db_path = kb.kanban_db_path(board="default")
++    kb._INITIALIZED_PATHS.discard(str(db_path.resolve()))
++    kb.init_db()
++    return home
++
++
++@pytest.fixture
++def conn(kanban_home):
++    with kb.connect() as c:
++        yield c
++
++
++def _load_dashboard_router():
++    repo_root = Path(__file__).resolve().parents[2]
++    plugin_file = repo_root / "plugins" / "kanban" / "dashboard" / "plugin_api.py"
++    spec = importlib.util.spec_from_file_location(
++        "overkill_factory_dashboard_test",
++        plugin_file,
++    )
++    assert spec and spec.loader
++    mod = importlib.util.module_from_spec(spec)
++    sys.modules[spec.name] = mod
++    spec.loader.exec_module(mod)
++    return mod.router
++
++
++@pytest.fixture
++def client(kanban_home):
++    app = FastAPI()
++    app.include_router(_load_dashboard_router(), prefix="/api/plugins/kanban")
++    return TestClient(app)
++
++
++def _card(**overrides):
++    card = {
++        "factory_method_version": kb.OVERKILL_FACTORY_VERSION,
++        "phase": "execution",
++        "surfaces": ["frontend", "security"],
++        "risk_initial": "R2-product",
++        "risk_effective": "R2-product",
++        "authority_max": "code_only",
++        "owner_worker": "product-face",
++        "executor_identity": "implementation-worker",
++        "reviewer_identity": "independent-reviewer",
++        "runtime_contract": {"runner": "codex"},
++        "security_contract": {"surface": "security"},
++        "forbidden_actions": ["deploy", "secrets"],
++        "done_definition": {"requires_receipt_five": True},
++        "kanban_transition_event_ref": "evt-ready",
++        "product_face_packet": {"screenshots": ["desktop", "mobile"]},
++        "security_scan_packet": {"tool": "codex-security"},
++    }
++    card.update(overrides)
++    return json.dumps(card)
++
++
++def _receipt_metadata(**overrides):
++    metadata = {
++        "receipt_five": {
++            "changed_files": ["app.py"],
++            "evidence_refs": ["validation/report.md"],
++            "verification": {"passed": True},
++            "independent_review": {"passed": True},
++            "next_action": "promote",
++        },
++        "kanban_transition_event": {"id": "evt-done"},
++        "product_face_result": {"status": "PASS", "evidence_refs": ["shot.png"]},
++        "security_scan_result": {"status": "PASS", "findings": []},
++    }
++    metadata.update(overrides)
++    return metadata
++
++
++def _todo_task(conn, body):
++    parent = kb.create_task(conn, title="parent")
++    child = kb.create_task(conn, title="child", body=body, parents=[parent])
++    conn.execute("UPDATE tasks SET status='done' WHERE id=?", (parent,))
++    assert kb.get_task(conn, child).status == "todo"
++    return child
++
++
++def test_overkill_ready_gate_blocks_missing_product_face_packet(conn):
++    body = _card(product_face_packet=None)
++    task_id = _todo_task(conn, body)
++
++    ok, error = kb.promote_task(conn, task_id, actor="tester", force=True)
++
++    assert ok is False
++    assert "Overkill Factory ready gate" in error
++    assert "product_face_packet" in error
++    assert kb.get_task(conn, task_id).status == "todo"
++
++
++def test_overkill_ready_gate_allows_complete_card(conn):
++    task_id = _todo_task(conn, _card())
++
++    ok, error = kb.promote_task(conn, task_id, actor="tester")
++
++    assert ok is True
++    assert error is None
++    assert kb.get_task(conn, task_id).status == "ready"
++
++
++def test_overkill_completion_gate_blocks_missing_results(conn):
++    task_id = kb.create_task(conn, title="done blocked", body=_card())
++
++    with pytest.raises(ValueError, match="receipt_five"):
++        kb.complete_task(conn, task_id, metadata={})
++
++    assert kb.get_task(conn, task_id).status == "ready"
++    event = conn.execute(
++        "SELECT kind FROM task_events "
++        "WHERE task_id = ? AND kind = 'completion_blocked_overkill_gate'",
++        (task_id,),
++    ).fetchone()
++    assert event is not None
++
++
++def test_overkill_completion_gate_requires_real_quasar_auditor(conn):
++    body = _card(
++        surfaces=["solana", "quasar", "security"],
++        product_face_packet=None,
++        onchain_work_package={"program": "quasar"},
++        auditor_packet={"corpus": "solanabr/Auditor"},
++    )
++    task_id = kb.create_task(conn, title="auditor blocked", body=body)
++    metadata = _receipt_metadata(
++        product_face_result=None,
++        auditor_result={"audit_mode": "preflight", "status": "PASS"},
++    )
++
++    with pytest.raises(ValueError, match="audit_mode=code_audit"):
++        kb.complete_task(conn, task_id, metadata=metadata)
++
++
++def test_overkill_completion_gate_allows_full_receipt(conn):
++    task_id = kb.create_task(conn, title="done allowed", body=_card())
++
++    assert kb.complete_task(conn, task_id, metadata=_receipt_metadata()) is True
++    assert kb.get_task(conn, task_id).status == "done"
++
++
++def test_overkill_cli_completion_reports_gate_without_traceback(
++    conn,
++    kanban_home,
++    capsys,
++):
++    task_id = kb.create_task(conn, title="cli blocked", body=_card())
++    args = argparse.Namespace(
++        task_ids=[task_id],
++        result=None,
++        summary=None,
++        metadata="{}",
++    )
++
++    rc = kb_cli._cmd_complete(args)
++
++    captured = capsys.readouterr()
++    assert rc == 1
++    assert "cannot complete" in captured.err
++    assert "Overkill Factory completion gate" in captured.err
++
++
++def test_overkill_dashboard_ready_move_returns_409(client, conn):
++    task_id = _todo_task(conn, _card(product_face_packet=None))
++
++    response = client.patch(
++        f"/api/plugins/kanban/tasks/{task_id}",
++        json={"status": "ready"},
++    )
++
++    assert response.status_code == 409
++    assert "product_face_packet" in response.json()["detail"]
++
++
++def test_overkill_dashboard_done_move_returns_409(client, conn):
++    task_id = kb.create_task(conn, title="dashboard done blocked", body=_card())
++
++    response = client.patch(
++        f"/api/plugins/kanban/tasks/{task_id}",
++        json={"status": "done", "metadata": {}},
++    )
++
++    assert response.status_code == 409
++    assert "Overkill Factory completion gate" in response.json()["detail"]

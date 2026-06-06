@@ -30,6 +30,7 @@ Public evidence:
 - `validation/hermes-live/dashboard-done-gate-smoke.md`
 - `validation/hermes-live/worker-dispatched-done-gate-smoke.md`
 - `validation/hermes-live/real-profile-dispatch-smoke.md`
+- `validation/hermes-live/official-main-patch-smoke.md`
 
 Observed result:
 
@@ -51,6 +52,9 @@ Observed result:
 - real specialist dispatch: `public-safety-gate` was spawned by Hermes,
   preloaded the `overkill-factory` skill, ran `public_safety_scan.py`, wrote
   worker evidence and closed with Receipt Five metadata;
+- official-main patch smoke: the public adapter patch applied to official Hermes
+  commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
+  tests passed (`119 passed, 1 warning`);
 - main card final state: `done`.
 
 This proves real Kanban materialization, dependency wiring and worker-result
@@ -181,6 +185,9 @@ checks.
 - Hermes real profile dispatch is now smoke-proven with `public-safety-gate`:
   the worker preloaded the factory skill, ran a real public-safety scanner,
   wrote evidence and completed with Receipt Five.
+- Hermes update compatibility now has a disposable official-main smoke: the
+  public patch is parseable, applies to the tested official Hermes main commit,
+  and passes focused Kanban/dashboard regression tests.
 
 ### Still Not Proven
 
@@ -193,8 +200,8 @@ checks.
 - Provider-backed remote proof in Crabbox/Testbox. Local clean-environment
   remote proof now passes with sanitized environment, artifact and cleanup
   receipt.
-- Disposable Hermes update smoke against a fresh real checkout with the full
-  patch chain.
+- Future Hermes releases still need the same disposable compatibility smoke
+  rerun before an update is accepted.
 - Full multi-specialist Hermes execution on product work. A real
   `public-safety-gate` profile dispatch is proven, including skill preload and
   scanner execution, but Product Face, Auditor, Remote Proof, release and human
@@ -206,10 +213,10 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.4 | Browser-backed proof exists and weak PASS is now blocked; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.9 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass and one real specialist-profile dispatch with skill preload are now smoke-proven. |
+| Agent/Hermes Operability | 9.95 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply and one real specialist-profile dispatch with skill preload are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.2 | Source-pinned Quasar init/build/test proof exists and dashboard/API done now rejects Auditor preflight-only PASS; still no real product Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.92/10 for factory process,
+Estimated score after fixes in this pass: 9.94/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires real specialist executions,
@@ -225,6 +232,6 @@ product-specific work end to end.
 3. Add supply-chain CI: workflow permissions, secret scan, dependency audit,
    SBOM/provenance or explicit waiver.
 4. Run provider-backed remote proof in Crabbox/Testbox.
-5. Test Hermes update compatibility against a disposable Hermes checkout.
+5. Rerun Hermes update compatibility on every future Hermes release.
 6. Run Product Face, Auditor, Remote Proof and release worker profiles on
    product-specific tasks, not only the public-safety dispatch smoke.

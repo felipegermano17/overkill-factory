@@ -160,6 +160,11 @@ flowchart LR
   F37["F37 Real profile dispatch"]:::execution
   F37D["public-safety-gate despachado pelo Hermes carregou overkill-factory, rodou scan e fechou com Receipt Five."]:::desc
   F37 -.-> F37D
+  F37 --> F38
+
+  F38["F38 Official Hermes patch"]:::execution
+  F38D["Patch publico aplica no Hermes oficial testado e passa 119 testes focados."]:::desc
+  F38 -.-> F38D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

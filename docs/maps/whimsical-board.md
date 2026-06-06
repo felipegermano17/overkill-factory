@@ -28,11 +28,13 @@ It includes:
 - Factory 10 + Hermes V3.5 + Hermes V2 completion compatibility.
 - Critical workers, worker-role explanations and agent misread warnings.
 - Multi-context validation battery as the learning-loop proof surface.
-- F27-F37 operational hardening: real Codex Security, stricter gates, clean
+- F27-F38 operational hardening: real Codex Security, stricter gates, clean
   remote proof, remaining nota-10 gaps, a durable Whimsical MCP fallback,
   stricter Auditor/Quasar contracts, source-pinned Quasar runtime proof and
-  dashboard ready/done, worker-style done no-bypass and real profile dispatch
-  smokes.
+  dashboard ready/done, worker-style done no-bypass, real profile dispatch and
+  official Hermes patch smokes.
+- Official-main patch compatibility: the public Hermes adapter patch applies to
+  the tested official Hermes main commit and passes focused regression tests.
 
 ## Supporting Diagram
 
@@ -46,25 +48,31 @@ updated.
 
 The public source diagram now includes live Hermes materialization, worker
 dependency graph, negative/positive done enforcement, the multi-context factory
-battery and the F27-F37 hardening block. The editable Whimsical board was
-updated through the local Whimsical MCP and now includes:
+battery and the F27-F38 hardening block. The editable Whimsical board was
+updated through the local Whimsical MCP and now contains three clean official
+flowchart blocks:
 
-- F36 node id: `L7w5g8`;
-- F36 description id: `JMdx1k`;
-- F35 to F36 connector id: `JxHUea`;
-- F36 explanation connector id: `N6ky4L`.
-- F37 node id: `3RvUgk`;
-- F37 description id: `JbDRs7`;
-- F36 to F37 connector id: `Bik5Ub`;
-- F37 explanation connector id: `NRFhzD`.
+- `Lki1eW`: main F0-F19 factory spine;
+- `8kQkhJ`: F20-F26 hardening bridge;
+- `AyHQAj`: F27-F38 operational hardening block.
+
+Important current IDs in `AyHQAj`:
+
+- F27 node id: `AyHQAj`;
+- F31 node id: `Pd32Hj`;
+- F36 node id: `Dkwa8P`;
+- F37 node id: `NUuuFx`;
+- F37 description id: `2YiC8u`.
+- F38 node id: `8emoZb`;
+- F38 description id: `YKnVtt`.
 
 If the editable Whimsical board is updated manually, mirror those additions
 from `docs/maps/factory-10-flow.mmd`.
 
-MCP note: the flowchart edit exposed and removed one dangling connector in the
-primary flowchart before F36 could be inserted. The MCP still reports visual
-overlap with an older duplicate flowchart on the same board; this does not
-change the F36 content but should be cleaned in a future visual-layout pass.
+MCP note: older duplicate F27-F37 blocks and orphan explanatory texts were
+removed through the local Whimsical MCP. A post-cleanup `board_read` showed only
+the three official flowcharts above. F38 was added with `flowchart_edit`, then
+the whole F27-F38 flowchart was repositioned with `board_repl` to avoid overlap.
 
 ## Durable MCP Fallback
 

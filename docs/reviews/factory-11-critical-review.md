@@ -9,8 +9,8 @@
 3. Product Face proof exists for a static pilot and `done` now rejects missing
    `product_face_result`, but production UI proof and full WCAG/performance
    automation remain open.
-4. Hermes update safety exists as manifest and checks, but no disposable Hermes
-   update smoke was run in this pass.
+4. Hermes update safety now has a disposable official-main smoke, but every
+   future Hermes release still needs that smoke rerun before update.
 5. Remote proof has a clean local fallback, but provider-backed Crabbox/Testbox
    execution was not proven in this pass.
 6. Context spine is defined as a safe model, but no memory storage backend has
@@ -22,9 +22,10 @@
    spawning the right worker.
 2. Workers may produce structured JSON with weak evidence.
 3. High-risk tasks may become slow if every specialist runs on every card.
-4. Dashboard/API `ready`, critical `done`, worker-style CLI completion and one
-   real specialist dispatch are now covered by live smoke, but untested
-   specialist profiles can still fail to produce strong evidence.
+4. Dashboard/API `ready`, critical `done`, worker-style CLI completion,
+   official-main patch application and one real specialist dispatch are now
+   covered by smoke, but untested specialist profiles can still fail to produce
+   strong evidence.
 5. Public safety scan may miss a new class of private leak unless the denylist
    evolves.
 6. The factory may overfit to the dry pilot until multiple real contexts are
@@ -61,8 +62,9 @@ Mitigation: keep gates risk-tiered and worker-triggered, not universal.
 
 ## What Is Too Simple
 
-1. Hermes adapter compatibility check currently verifies markers and public
-   patch contents, not a fresh disposable runtime.
+1. Hermes adapter compatibility check can now validate patch syntax and, when
+   pointed at a Hermes checkout, real patch application. It still must be rerun
+   for every future Hermes release.
 2. Public safety scan is denylist-based, not semantic.
 3. CI is minimal: unit tests, compatibility marker check and public scan only.
 4. Product Face proof exists, but production UI and full WCAG/performance proof
@@ -72,11 +74,11 @@ Mitigation: keep gates risk-tiered and worker-triggered, not universal.
 
 ## Score
 
-Factory 11 is strong as an operational hardening pass: 9.8/10 for methodology
+Factory 11 is strong as an operational hardening pass: 9.9/10 for methodology
 and public-safe agent operability.
 
 It is not a final 10/10 because the remaining proof requires heavy validation
 across multiple real contexts, including repeated real product papers,
-product-specific security scans, Hermes update smoke, production Product Face
-automation, provider-backed remote proof, product-specific dispatched
+product-specific security scans, repeated Hermes update smoke, production
+Product Face automation, provider-backed remote proof, product-specific dispatched
 specialist profiles and real Solana/Quasar implementation audit.

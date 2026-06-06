@@ -38,6 +38,9 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
   cards, dependency links, negative done block, positive done reconciliation.
 - Real Hermes specialist dispatch evidence: `public-safety-gate` preloaded the
   factory skill, ran a public-safety scan and completed with Receipt Five.
+- Official Hermes main patch smoke: the public adapter patch applied to official
+  Hermes commit `56236b16e383cc656bb8c88429902f4de83f1faf` and the focused
+  regression suite passed.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -58,6 +61,8 @@ offline battery.
 
 The portable Hermes adapter patch is kept under `adapters/hermes/patches/`.
 The live adapter entrypoint is `adapters/hermes/live_kanban_adapter.py`.
+Official-main patch evidence is recorded in
+`validation/hermes-live/official-main-patch-smoke.md`.
 
 The first dry pilot is complete and kept under:
 
@@ -124,6 +129,11 @@ synthetic and cannot be reused as real product evidence.
 The real profile dispatch smoke proves one specialist profile can be spawned by
 Hermes, load the factory skill, run a scoped scanner and complete with Receipt
 Five. It does not prove all specialist profiles or product-specific execution.
+
+The official-main patch smoke proves the public patch applies to the tested
+Hermes main commit and keeps focused Kanban/dashboard regression tests green. It
+does not prove future Hermes releases will remain compatible without rerunning
+the compatibility manifest.
 
 The first production-intent pilot still needs a real raw product paper.
 

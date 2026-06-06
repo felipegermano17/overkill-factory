@@ -4,53 +4,38 @@
 from __future__ import annotations
 
 import sys
+import os
+import subprocess
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
 PATCHES = [
-    ROOT / "adapters" / "hermes" / "patches" / "0001-add-overkill-factory-10-kanban-gates.patch",
-    ROOT / "adapters" / "hermes" / "patches" / "0002-enforce-overkill-ready-gate-in-dashboard-moves.patch",
-    ROOT / "adapters" / "hermes" / "patches" / "0003-require-overkill-worker-results-before-done.patch",
-    ROOT / "adapters" / "hermes" / "patches" / "0004-handle-overkill-worker-completion-gate-errors.patch",
+    ROOT / "adapters" / "hermes" / "patches" / "0001-overkill-factory-v35-gates-official-main.patch",
 ]
 FACTORYCTL = ROOT / "scripts" / "factoryctl.py"
 TRANSITION_HOOK = ROOT / "adapters" / "hermes" / "transition_hook.py"
 
 REQUIRED_PATCH_MARKERS = {
-    "0001-add-overkill-factory-10-kanban-gates.patch": [
-        "_overkill_is_v35_card",
-        "_overkill_validate_v35_card",
-        "_overkill_validate_v35_completion",
+    "0001-overkill-factory-v35-gates-official-main.patch": [
+        "OVERKILL_FACTORY_VERSION",
         "OVERKILL_V3_5_FACTORY_10",
+        "_overkill_ready_gate_error",
+        "_overkill_completion_gate_error",
+        "overkill_ready_gate_error",
+        "completion_blocked_overkill_gate",
         "receipt_five",
         "kanban_transition_event",
+        "product_face_packet",
+        "product_face_result",
         "security_scan_packet",
         "security_scan_result",
-    ],
-    "0002-enforce-overkill-ready-gate-in-dashboard-moves.patch": [
-        "_block_ready_task_on_overkill_gate_error",
-        "_overkill_ready_gate_error",
-        "dashboard ready move blocked by Overkill gate",
-        "test_patch_ready_uses_overkill_gate_for_direct_dashboard_move",
-        "test_patch_body_edit_rechecks_ready_overkill_card",
-        "test_bulk_ready_uses_overkill_gate_for_direct_dashboard_move",
-    ],
-    "0003-require-overkill-worker-results-before-done.patch": [
-        "_overkill_v35_validate_worker_result",
-        "_overkill_v35_validate_auditor_result",
-        "_overkill_v35_validate_product_face_result",
-        "_overkill_v35_validate_human_gate_record",
-        "auditor_result audit_mode must be code_audit for PASS",
-        "product_face_result metadata is required",
-        "test_patch_status_done_blocks_overkill_missing_product_face_result",
-    ],
-    "0004-handle-overkill-worker-completion-gate-errors.patch": [
+        "auditor_result.audit_mode=code_audit",
+        "human_gate_record",
         "cannot complete {tid}: {exc}",
-        "HERMES_KANBAN_RUN_ID",
-        "test_v35_worker_cli_completion_keeps_running_until_product_face_result",
-        "product_face_result metadata is required",
-        "completion_blocked_overkill_gate",
+        "HTTPException(status_code=409",
+        "test_overkill_ready_gate_blocks_missing_product_face_packet",
+        "test_overkill_dashboard_done_move_returns_409",
     ],
 }
 
@@ -80,6 +65,52 @@ def missing_markers(path: Path, markers: list[str]) -> list[str]:
     return [marker for marker in markers if marker not in text]
 
 
+def patch_syntax_failures() -> list[str]:
+    failures = []
+    for patch in PATCHES:
+        if not patch.exists():
+            continue
+        result = subprocess.run(
+            ["git", "apply", "--numstat", str(patch)],
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if result.returncode != 0:
+            failures.append(
+                f"{patch.name} is not parseable by git apply: "
+                f"{result.stderr.strip() or result.stdout.strip()}"
+            )
+    return failures
+
+
+def hermes_checkout_failures() -> list[str]:
+    checkout = os.environ.get("OVERKILL_HERMES_CHECKOUT", "").strip()
+    if not checkout:
+        return []
+    root = Path(checkout)
+    failures = []
+    if not root.exists():
+        return [f"OVERKILL_HERMES_CHECKOUT does not exist: {root}"]
+    for patch in PATCHES:
+        result = subprocess.run(
+            ["git", "apply", "--check", str(patch)],
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        if result.returncode != 0:
+            failures.append(
+                f"{patch.name} does not apply to {root}: "
+                f"{result.stderr.strip() or result.stdout.strip()}"
+            )
+    return failures
+
+
 def main() -> int:
     failures = []
     for patch in PATCHES:
@@ -88,6 +119,8 @@ def main() -> int:
             f"{patch.name} missing marker: {m}"
             for m in missing_markers(patch, markers)
         )
+    failures.extend(patch_syntax_failures())
+    failures.extend(hermes_checkout_failures())
     failures.extend(f"factoryctl missing marker: {m}" for m in missing_markers(FACTORYCTL, REQUIRED_FACTORYCTL_MARKERS))
     failures.extend(f"transition hook missing marker: {m}" for m in missing_markers(TRANSITION_HOOK, REQUIRED_TRANSITION_HOOK_MARKERS))
 
