@@ -44,6 +44,13 @@ unit test.
 - Remote Proof is real local clean-tempdir fallback evidence. It is not
   provider-backed Crabbox/Testbox proof.
 
+Historical note: this summary describes the earlier multi-profile dispatch.
+The later QVG product-like code-audit run supersedes the Auditor boundary for
+the public pilot and is recorded in
+`validation/quasar-product-like-proof/hermes-qvg-code-audit-summary.md`.
+Production approval remains blocked until production Quasar source receives its
+own audit.
+
 ## Verification
 
 All public aliases above closed in Hermes with terminal `done` state. Commands

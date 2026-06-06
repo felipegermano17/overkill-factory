@@ -12,13 +12,13 @@
     "pilots/quasar-vault-guard-test/08-security-scan-packet.md"
   ],
   "source_state": "compiled",
-  "outcome": "Complete the first dry pilot slice by producing Product Face, security, Auditor preflight, independent review, human gate and Receipt Five evidence without sensitive actions.",
+  "outcome": "Complete the first dry pilot slice by producing Product Face, security, product-like Quasar/Auditor code-audit evidence, independent review, human gate and Receipt Five evidence without sensitive actions.",
   "acceptance_criteria": [
     "factoryctl validate-card passes",
     "gate report lists Product Face, Codex Security, Auditor, Independent Reviewer and Human Gate Clerk as required",
     "Product Face prototype has desktop and mobile screenshots",
     "security_scan_result exists with evidence refs",
-    "auditor_result exists with evidence refs and does not claim code audit pass",
+    "auditor_result exists with evidence refs and any code-audit claim is bounded to the public product-like Quasar target",
     "independent_review_result exists with evidence refs",
     "human_gate_record exists and is test-only",
     "Receipt Five exists",
@@ -33,8 +33,8 @@
     "Hermes Kanban completion"
   ],
   "scope_out": [
-    "Solana program implementation",
-    "Quasar compile",
+    "production Solana program implementation",
+    "production Quasar compile",
     "wallet signing",
     "key access",
     "devnet write",
@@ -47,7 +47,7 @@
     "pilots/quasar-vault-guard-test"
   ],
   "conflict_set": [
-    "Auditor path is mandatory, but no Quasar code exists yet; record Auditor preflight only.",
+    "Auditor path is mandatory; public product-like Quasar source can receive code-audit evidence, but production source still requires a separate audit.",
     "Human gate is authorized for test pilot only; do not expand to production authority."
   ],
   "risk_class": "R3-financial-critical",
@@ -91,7 +91,7 @@
     "desktop screenshot",
     "mobile screenshot",
     "security scan result",
-    "auditor preflight result",
+    "product-like Auditor code-audit result or explicit bounded waiver",
     "independent review result",
     "human gate record",
     "Receipt Five",

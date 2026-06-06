@@ -38,6 +38,8 @@ def redact_text(text: str, source_dir: Path, work_dir: Path) -> str:
         str(source_dir).replace("\\", "/"): "<source-dir>",
         str(work_dir): "<work-dir>",
         str(work_dir).replace("\\", "/"): "<work-dir>",
+        "/tmp/quasar": "<container-quasar-src>",
+        "/tmp/qvg-product-like": "<container-project>",
     }
     for before, after in replacements.items():
         redacted = redacted.replace(before, after)

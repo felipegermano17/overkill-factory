@@ -39,6 +39,10 @@ Public evidence:
 - `validation/hermes-live/multi-profile-dispatch-fixed/remote-proof/remote-proof-result.json`
 - `validation/hermes-live/multi-profile-dispatch-browser/product-face/qvg-product-face-result.json`
 - `validation/hermes-live/multi-profile-dispatch-browser/remote-proof/remote-proof-result.json`
+- `validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json`
+- `validation/quasar-product-like-proof/qvg-product-like-auditor-result.json`
+- `validation/quasar-product-like-proof/qvg-product-like-auditor-report.md`
+- `validation/quasar-product-like-proof/hermes-qvg-code-audit-summary.md`
 
 Observed result:
 
@@ -78,6 +82,11 @@ Observed result:
 - Auditor profile dispatch: `solana-quasar-auditor` loaded the Auditor corpus
   path and emitted a bounded `WAIVED` preflight because real product Quasar
   source is still absent;
+- product-like Quasar/Auditor dispatch: a later real Hermes
+  `solana-quasar-auditor` worker ran against a clean public clone, built/tested
+  the QVG product-like Quasar target in Docker, generated a bounded
+  `auditor_result audit_mode=code_audit`, validated it with `factoryctl`, and
+  closed with `PASS`;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -221,6 +230,10 @@ checks.
   `codex-security`, `solana-quasar-auditor` and `remote-proof-runner`. Product
   Face first exposed a fallback validation bug, then passed with browser-backed
   screenshots after the Chrome-channel fallback was added.
+- QVG product-like Quasar source now exists and was built/tested by a real
+  Hermes `solana-quasar-auditor` worker in a clean Docker container. The same
+  worker cloned `solanabr/Auditor`, generated a bounded code-audit result and
+  passed deep `factoryctl.validate_auditor_result` validation.
 - Hermes update compatibility now has a disposable official-main smoke: the
   public patch is parseable, applies to the tested official Hermes main commit,
   and passes focused Kanban/dashboard regression tests.
@@ -230,10 +243,12 @@ checks.
 - Production Product Face execution on a deployed or production-like UI. The
   current Hermes profile proof is browser backed but still limited to the static
   Quasar Vault Guard prototype.
-- Real Auditor execution against product Quasar source.
-- Product-specific Solana/Quasar build, tests, compute profiling and
-  fuzz/property tests. The generated minimal source proof now passes, but that
-  is not product safety.
+- Real Auditor execution against production Quasar source. Public product-like
+  source now has a bounded code-audit PASS, but production source still needs a
+  separate run.
+- Product-specific Solana/Quasar compute profiling, SVM/client flows and
+  fuzz/property tests. Product-like build/test now passes, but production
+  compute/economic safety remains open.
 - Provider-backed remote proof in Crabbox/Testbox. Local clean-tempdir remote
   proof now passes before and after browser-backed Product Face evidence.
 - Future Hermes releases still need the same disposable compatibility smoke
@@ -250,21 +265,23 @@ checks.
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.7 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence; production UI proof and full WCAG remain open. |
 | Agent/Hermes Operability | 9.98 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply and multi-profile dispatch are now smoke-proven. |
-| Solana/Quasar/Auditor | 9.3 | Source-pinned Quasar init/build/test proof exists and real Auditor corpus preflight is dispatched; still no real product Quasar code audit. |
+| Solana/Quasar/Auditor | 9.65 | Product-like Quasar source now builds/tests in Docker and has a bounded Auditor code-audit PASS from a real Hermes worker; production source, CU profiling and fuzz/property tests remain open. |
 
-Estimated score after fixes in this pass: 9.96/10 for factory process,
+Estimated score after fixes in this pass: 9.98/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or
-provider-backed execution, not more public-pilot smoke: real Auditor/Quasar
-against product source, provider-backed remote proof, a production-like Product
-Face target, release profile execution and human gate evidence.
+provider-backed execution, not more public-pilot smoke: production Quasar
+source with CU/fuzz/property depth, provider-backed remote proof, a
+production-like Product Face target, release profile execution and human gate
+evidence.
 
 ## Next Validation Gates
 
 1. Run Product Face proof against the next production-like UI, not only the
    static prototype.
-2. Build or import a product-like Quasar program and run the real Auditor path.
+2. Replace public product-like Quasar proof with production Quasar source when
+   the production product exists, then add CU profiling and fuzz/property tests.
 3. Add supply-chain CI: workflow permissions, secret scan, dependency audit,
    SBOM/provenance or explicit waiver.
 4. Run provider-backed remote proof in Crabbox/Testbox.

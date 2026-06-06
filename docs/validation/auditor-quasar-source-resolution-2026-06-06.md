@@ -72,13 +72,31 @@ Public Quasar runtime receipts are recorded in:
 - `validation/quasar-real-proof/quasar-crates-proof-result.json`
 - `validation/quasar-real-proof/quasar-source-proof-result.json`
 
+Later hardening added a public product-like QVG Quasar target:
+
+- `pilots/quasar-vault-guard-test/onchain/qvg-product-like/src/lib.rs`
+- `pilots/quasar-vault-guard-test/onchain/qvg-product-like/src/tests.rs`
+
+Hermes then ran a real `solana-quasar-auditor` worker against a clean public
+clone. That worker produced:
+
+- `validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json`
+- `validation/quasar-product-like-proof/qvg-product-like-auditor-result.json`
+- `validation/quasar-product-like-proof/qvg-product-like-auditor-report.md`
+- `validation/quasar-product-like-proof/hermes-qvg-code-audit-summary.md`
+
+This is no longer preflight-only for the public pilot. It is a bounded
+`code_audit` PASS over product-like public source. It is still not reusable as
+production product approval.
+
 ## Remaining Gate To Reach Real Nota 10
 
-1. Provide or scaffold real Quasar source.
-2. Run Quasar build/test/profile against the real product program, not only a
-   generated minimal proof.
-3. Run Auditor over that product Quasar source with corpus coverage, checklist coverage,
-   instruction matrix, state model, known-vector results and findings.
-4. Attach the Auditor report as `auditor_result audit_mode=code_audit`.
-5. Keep promotion blocked if Auditor is preflight, synthetic or waived without
-   explicit human risk ownership.
+1. Replace the public product-like target with real production Quasar source
+   when a production product exists.
+2. Add production compute-unit profiling and SVM/client flow coverage.
+3. Rerun Auditor over production source with corpus coverage, checklist
+   coverage, instruction matrix, state model, known-vector results and
+   findings.
+4. Attach the production Auditor report as `auditor_result audit_mode=code_audit`.
+5. Keep promotion blocked if production Auditor is preflight, synthetic or
+   waived without explicit human risk ownership.
