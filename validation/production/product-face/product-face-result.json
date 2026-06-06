@@ -1,0 +1,105 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-face-result.schema.json",
+  "record_type": "product_face_result",
+  "created_at": "2026-06-06T16:11:43+00:00",
+  "worker": {
+    "id": "product-face",
+    "name": "Product Face Validator",
+    "factory_phase": "F5/F13"
+  },
+  "card_ref": {
+    "card_id": "QVG-PILOT-FIRST-SLICE",
+    "slice_id": "QVG_DRY_PILOT_001",
+    "phase": "F11",
+    "risk_effective": "R3",
+    "surfaces": [
+      "ux",
+      "frontend",
+      "mobile",
+      "wallet-ui",
+      "security",
+      "agent-runtime",
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units"
+    ],
+    "executor_identity": "codex-overkill-factory",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "target": "pilots/quasar-vault-guard-test/product-face/prototype.html",
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Browser proof captured for screenshots, console, DOM state, a11y basics, overlap and performance note.",
+  "tool_or_profile": "playwright-static-product-face-proof",
+  "executed_by": "product-face-proof-runner",
+  "screenshots": [
+    "validation/production/product-face/screenshots/desktop.png",
+    "validation/production/product-face/screenshots/mobile.png"
+  ],
+  "viewports": [
+    "desktop 1440x900",
+    "mobile 390x844"
+  ],
+  "checked_states": [
+    "initial-render",
+    "product-specific-production-like-static-artifact"
+  ],
+  "user_journeys_checked": [
+    "open QVG production-like static target",
+    "inspect status, gate copy and evidence affordances"
+  ],
+  "journeys": [
+    "open QVG production-like static target",
+    "inspect status, gate copy and evidence affordances"
+  ],
+  "a11y": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM-level accessible-name, title, lang, image alt and landmark checks; not a full WCAG audit."
+  },
+  "accessibility": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM-level accessible-name, title, lang, image alt and landmark checks; not a full WCAG audit."
+  },
+  "overlap_check": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM rectangle intersection scan; nested parent-child overlaps are ignored."
+  },
+  "overlap": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM rectangle intersection scan; nested parent-child overlaps are ignored."
+  },
+  "performance_note": "desktop render duration 9 ms, dom nodes 102; mobile render duration 8 ms, dom nodes 102; browser-local static proof only, not a production performance benchmark",
+  "evidence_refs": [
+    "validation/production/product-face/state.json",
+    "validation/production/product-face/console.json",
+    "validation/production/product-face/screenshots/desktop.png",
+    "validation/production/product-face/screenshots/mobile.png",
+    "validation/production/product-face/product-face-report.md",
+    "validation/production/product-face/product-face-result.json"
+  ],
+  "evidence_kind": "real",
+  "reusable_for_product": true,
+  "next_action": "Attach this product-specific Product Face result to the production Product Face lane.",
+  "console": {
+    "status": "pass",
+    "messages_ref": "validation/production/product-face/console.json",
+    "error_count": 0,
+    "page_error_count": 0
+  },
+  "product_target": {
+    "product_id": "qvg-public-validation-product",
+    "environment_class": "production-like-static-artifact",
+    "target": "pilots/quasar-vault-guard-test/product-face/prototype.html",
+    "approval_scope": "Product Face lane for the QVG public validation product only",
+    "production_like": true,
+    "deployed_production": false,
+    "reusability_boundary": "Reusable only for the named product target and approval scope; other products, releases, deploys, onchain code or human gates must rerun their own evidence.",
+    "target_artifact_ref": "pilots/quasar-vault-guard-test/product-face/prototype.html",
+    "target_sha256": "b3d81d4d0fbba292ffc18ce62535b09e3d1f2617f4e46b7f4e28f86b76313926"
+  }
+}

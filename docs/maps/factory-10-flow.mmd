@@ -123,7 +123,7 @@ flowchart LR
   F29 --> F30
 
   F30["F30 Ainda nao e 10 pratico"]:::alert
-  F30D["Agora faltam provas product-specific: Quasar de producao com CU/fuzz/property, UI production-like, managed Testbox/broker, release e gate humano."]:::desc
+  F30D["Agora faltam provas product-specific/provider-backed: Quasar de producao com CU/fuzz/property, UI deployed/full WCAG/perf, managed Testbox/broker, release e gate humano."]:::desc
   F30 -.-> F30D
   F30 --> F31
 
@@ -198,7 +198,7 @@ flowchart LR
   F44 --> F45
 
   F45["F45 Completion audit guard"]:::gate
-  F45D["Hermes independent-reviewer validou NOT_COMPLETE, bloqueou require-complete e confirmou 6 blockers product-specific/provider-backed."]:::desc
+  F45D["Hermes independent-reviewer validou NOT_COMPLETE, bloqueou require-complete e confirmou 5 blockers product-specific/provider-backed."]:::desc
   F45 -.-> F45D
   F45 --> F46
 
@@ -210,6 +210,11 @@ flowchart LR
   F47["F47 Managed remote proof probe"]:::review
   F47D["Hermes remote-proof-runner confirmou PENDING: sem Crabbox broker/Testbox, sem credencial, sem lease, sem cleanup; sem vazamento publico."]:::desc
   F47 -.-> F47D
+  F47 --> F48
+
+  F48["F48 Product Face production-like PASS"]:::face
+  F48D["Hermes product-face validou QVG como alvo production-like reutilizavel para a lane Product Face; audit caiu para 5 blockers."]:::desc
+  F48 -.-> F48D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

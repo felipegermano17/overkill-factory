@@ -12,24 +12,26 @@ class FactoryCompletionAuditTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "NOT_COMPLETE")
         self.assertFalse(result["completion_claim_allowed"])
+        self.assertEqual(result["score_estimate"], "9.994/10")
         self.assertGreater(result["requirements_blocking"], 0)
 
     def test_blocks_product_specific_and_provider_backed_gaps(self):
         result = audit.build_audit()
         blockers = set(result["blocking_summary"])
 
-        self.assertIn("production_product_face", blockers)
+        self.assertNotIn("production_product_face", blockers)
         self.assertIn("production_quasar_auditor", blockers)
         self.assertIn("production_cu_svm_economic", blockers)
         self.assertIn("managed_remote_proof", blockers)
         self.assertIn("production_release_human_gate", blockers)
         self.assertIn("full_product_specific_worker_graph", blockers)
+        self.assertEqual(len(blockers), 5)
 
-    def test_current_public_proofs_are_counted_as_bounded_not_complete(self):
+    def test_product_face_can_be_achieved_while_other_public_proofs_remain_bounded(self):
         result = audit.build_audit()
         by_id = {item["id"]: item for item in result["requirements"]}
 
-        self.assertEqual(by_id["production_product_face"]["status"], "BOUNDED_PUBLIC_PROOF")
+        self.assertEqual(by_id["production_product_face"]["status"], "ACHIEVED")
         self.assertEqual(by_id["production_quasar_auditor"]["status"], "BOUNDED_PUBLIC_PROOF")
         self.assertEqual(by_id["managed_remote_proof"]["status"], "BOUNDED_PUBLIC_PROOF")
         self.assertEqual(by_id["full_product_specific_worker_graph"]["status"], "BOUNDED_PUBLIC_PROOF")

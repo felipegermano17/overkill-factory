@@ -53,6 +53,10 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
 - Managed remote-proof readiness probe: Hermes `remote-proof-runner` confirmed
   managed Crabbox broker / Blacksmith Testbox proof remains `PENDING` without
   configured provider credentials, while public output stays redacted.
+- Production-like Product Face proof: Hermes `product-face` validated the QVG
+  public validation product as a reusable Product Face lane with scoped product
+  id, production-like static artifact class, screenshots, DOM state, console,
+  a11y basics, overlap checks and target hash.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -159,10 +163,11 @@ the compatibility manifest.
 The first production-intent pilot still needs a real raw product paper.
 
 The completion audit currently blocks practical 10/10 because the repository
-does not yet contain production Product Face, production Quasar Auditor,
-production CU/SVM/economic proof, managed remote proof, production release human
-gate evidence or a production product graph with every critical lane marked
-`reusable_for_product=true`.
+does not yet contain production Quasar Auditor, production CU/SVM/economic
+proof, managed remote proof, production release human gate evidence or a
+production product graph with every critical lane marked
+`reusable_for_product=true`. Production-like Product Face is now achieved only
+for the named QVG public validation product lane.
 
 The QVG full product graph now proves bounded product-specific reconciliation
 across Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,

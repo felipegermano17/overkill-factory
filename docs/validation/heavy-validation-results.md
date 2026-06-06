@@ -69,6 +69,9 @@ Public evidence:
 - `validation/remote-proof/managed-remote-proof-probe.json`
 - `validation/remote-proof/managed-remote-proof-probe.md`
 - `validation/remote-proof/hermes-managed-remote-proof-probe-summary.md`
+- `validation/production/product-face/product-face-result.json`
+- `validation/production/product-face/product-face-report.md`
+- `validation/production/product-face/hermes-production-product-face-summary.md`
 
 Observed result:
 
@@ -142,7 +145,7 @@ Observed result:
 - completion audit dispatch: a real Hermes `independent-reviewer` worker ran
   the schema-backed completion audit against a clean public clone with the
   current diff applied, confirmed status `NOT_COMPLETE`, confirmed
-  `completion_claim_allowed=false`, confirmed the six remaining blockers, and
+  `completion_claim_allowed=false`, confirmed the remaining blockers, and
   verified that `--require-complete` exits non-zero while public JSON,
   public-safety, secret-safety, unit tests and `git diff --check` pass;
 - full product worker graph dispatch: a real Hermes `independent-reviewer`
@@ -157,6 +160,14 @@ Observed result:
   `reusable_for_product=false`, no managed Crabbox broker / Blacksmith Testbox
   execution, no credential or private endpoint leakage, and reran public JSON,
   public-safety, secret-safety, 77 tests and `git diff --check` with `PASS`;
+- production-like Product Face dispatch: a real Hermes `product-face` worker
+  reran Product Face with `--reusable-for-product`, confirmed `PASS`,
+  `evidence_kind=real`, `reusable_for_product=true`,
+  `product_id=qvg-public-validation-product`,
+  `environment_class=production-like-static-artifact`, target artifact hash,
+  public JSON/scans, 80 tests and `git diff --check`; the completion audit now
+  marks only `production_product_face` as `ACHIEVED` and still blocks the full
+  completion claim with five remaining lanes;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -207,6 +218,13 @@ Public evidence:
 - `validation/quasar-product-like-proof/product-face/console.json`
 - `validation/quasar-product-like-proof/product-face/screenshots/desktop.png`
 - `validation/quasar-product-like-proof/product-face/screenshots/mobile.png`
+- `validation/production/product-face/product-face-result.json`
+- `validation/production/product-face/product-face-report.md`
+- `validation/production/product-face/state.json`
+- `validation/production/product-face/console.json`
+- `validation/production/product-face/screenshots/desktop.png`
+- `validation/production/product-face/screenshots/mobile.png`
+- `validation/production/product-face/hermes-production-product-face-summary.md`
 
 Observed result:
 
@@ -217,16 +235,23 @@ Observed result:
 - a11y basis: DOM-level accessible-name, title, language, image-alt and landmark checks;
 - overlap basis: DOM rectangle intersection scan;
 - evidence kind: real static prototype proof;
-- reusable for production product approval: `false`.
+- reusable for generic production product approval: `false`.
 - latest rerun basis: real Hermes `product-face` worker after product-like
   Quasar/Auditor copy changes, commit
   `bb03115b77a65caecb557a7e00473cc5742c2ec7`;
 - latest rerun validations: public JSON artifacts, public safety scan and
   secret safety scan all returned `OK`.
+- production-like reusable rerun: real Hermes `product-face` worker validated
+  the QVG public validation product lane with `reusable_for_product=true`,
+  product id `qvg-public-validation-product`, environment class
+  `production-like-static-artifact`, approval scope limited to the Product Face
+  lane, and target artifact hash recorded.
 
 This proves that Product Face is no longer just a contract in the factory: the
-runner can produce browser-backed evidence. It still does not prove production
-UI quality, full WCAG compliance or runtime performance.
+runner can produce browser-backed evidence and can now mark one scoped
+production-like Product Face lane reusable without turning that into a broader
+production approval. It still does not prove full WCAG compliance, production
+performance or release approval.
 
 ## Private Real Paper Smoke
 
@@ -355,9 +380,9 @@ checks.
 
 ### Still Not Proven
 
-- Production Product Face execution on a deployed or production-like UI. The
-  current Hermes profile proof is browser backed but still limited to the static
-  Quasar Vault Guard prototype.
+- Deployed-production Product Face, full WCAG and production performance remain
+  open. The QVG public validation product now has scoped production-like Product
+  Face evidence, but other products and deployments must rerun their own proof.
 - Real Auditor execution against production Quasar source. Public product-like
   source now has a bounded code-audit PASS, but production source still needs a
   separate run.
@@ -388,24 +413,25 @@ checks.
 | Review Area | Score Before Fixes | Main Reason |
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
-| Product Face | 9.8 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including the updated product-like audit state; production UI proof and full WCAG remain open. |
+| Product Face | 9.9 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including a scoped reusable production-like QVG Product Face lane; deployed-production UI, full WCAG and production performance remain open. |
 | Agent/Hermes Operability | 9.997 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof, release/human dry-run, supply-chain gate dispatch, completion-claim blocking and bounded full-product graph review are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.72 | Product-like Quasar source now builds/tests in Docker, has bounded Auditor code-audit PASS and product-like CU/fuzz/property smoke from real Hermes workers; production source, real CU/SVM flow and economic fuzz/property tests remain open. |
 
-Estimated score after fixes in this pass: 9.992/10 for factory process,
+Estimated score after fixes in this pass: 9.994/10 for factory process,
 operability, completion-claim discipline, bounded product-graph reconciliation
 and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or
 provider-backed execution, not more public-pilot smoke: production Quasar
 source with CU/fuzz/property depth, managed Testbox/broker remote proof, a
-production-like Product Face target, production release execution and
-production-scoped human gate evidence.
+production release execution, production-scoped human gate evidence and a full
+product graph with all critical lanes reusable.
 
 ## Next Validation Gates
 
-1. Run Product Face proof against the next production-like UI, not only the
-   static prototype.
+1. Rerun Product Face proof for every new product/deployed UI. The QVG public
+   validation product lane is scoped reusable; that does not transfer to other
+   products or releases.
 2. Replace public product-like Quasar proof with production Quasar source when
    the production product exists, then add CU profiling and fuzz/property tests.
 3. Rerun supply-chain CI/SBOM proof after every workflow/dependency change; add
@@ -417,7 +443,8 @@ production-scoped human gate evidence.
 6. Run release and human-gate worker profiles on product-specific production
    targets with real rollback, smoke, monitoring and approval evidence.
 7. Only allow `factory_completion_audit.py --require-complete` to pass after
-   the six product-specific/provider-backed blockers have direct evidence.
+   the five remaining product-specific/provider-backed blockers have direct
+   evidence.
 8. Promote the bounded QVG graph to a production graph only after a production
    target exists and every critical lane can truthfully set
    `reusable_for_product=true`.

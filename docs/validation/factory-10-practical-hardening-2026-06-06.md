@@ -145,6 +145,23 @@ This is better than a vague blocker because future workers know exactly what
 must appear before `managed_remote_proof` can move from bounded/static SSH to
 provider-backed evidence.
 
+### Production-like Product Face Reuse
+
+`scripts/product_face_proof.py` now has an explicit reusable-product mode.
+
+`reusable_for_product=true` is blocked unless the proof is `PASS`, has no
+blocking findings, and includes a product id, environment class and approval
+scope. For static production-like artifacts it also records the target artifact
+hash.
+
+Hermes `product-face` reran this path for the QVG public validation product and
+wrote `validation/production/product-face/product-face-result.json`.
+
+This is better than flipping a boolean in an existing proof because the
+reusability claim is scoped to one product lane, one artifact class and one
+approval boundary. It clears Product Face for that lane without pretending to
+clear onchain, release, managed remote proof or human gates.
+
 ## Still Not 10/10
 
 - Product-specific Codex Security scans still need to run per real
@@ -165,6 +182,9 @@ provider-backed evidence.
   real implementation.
 - Completion audit now blocks false practical-10 claims, but the blockers it
   names still require real product/provider execution.
+- Production-like Product Face is now achieved for the named QVG public
+  validation product lane. It is still not full WCAG, production performance,
+  deployed-production proof or a substitute for the other product lanes.
 - QVG full product graph now passes as bounded public validation, but production
   completion still requires a production target with reusable lane evidence.
 - Managed remote proof readiness is explicit now, but the managed provider run
@@ -177,12 +197,14 @@ provider-backed evidence.
 
 ## Current Practical Score
 
-Estimated public-factory score after this pass: 9.992/10 for contracts,
+Estimated public-factory score after this pass: 9.994/10 for contracts,
 preflight, executable Hermes hook, stricter worker-result reconciliation,
 Product Face proof, dashboard/API no-bypass smokes, worker-style completion
 no-bypass, official-main patch compatibility, real public-safety profile
 dispatch, Crabbox static-SSH proof, action pinning, supply-chain CI/SBOM proof,
 completion-claim blocking and public-safety controls.
 
-It is not 10 because the missing items above require real runtime integration or
-real target code, plus a clean public publication path for Git history.
+It is not 10 because the remaining missing items require production Quasar
+source, real CU/SVM/economic evidence, managed provider-backed remote proof,
+release/human-gate evidence, a full reusable product graph, and a clean public
+publication path for Git history.

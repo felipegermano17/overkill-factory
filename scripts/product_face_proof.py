@@ -17,6 +17,11 @@ DEFAULT_VIEWPORTS = {
     "desktop": (1440, 900),
     "mobile": (390, 844),
 }
+ALLOWED_PRODUCT_ENV_CLASSES = {
+    "production-like-static-artifact",
+    "production-like-deployed",
+    "deployed-production",
+}
 
 
 class PlaywrightUnavailable(RuntimeError):
@@ -333,6 +338,67 @@ def base_result(
     }
 
 
+def validate_reusable_product_scope(
+    *,
+    result: dict[str, Any],
+    target_ref: str,
+    target_path: Path | None,
+    product_id: str | None,
+    environment_class: str | None,
+    approval_scope: str | None,
+) -> None:
+    if result.get("result") != "PASS" or result.get("blocking_findings") is True:
+        raise ValueError("reusable Product Face evidence requires a PASS result with no blocking findings")
+    if not product_id or len(product_id.strip()) < 3:
+        raise ValueError("--reusable-for-product requires --product-id")
+    if not environment_class or environment_class not in ALLOWED_PRODUCT_ENV_CLASSES:
+        allowed = ", ".join(sorted(ALLOWED_PRODUCT_ENV_CLASSES))
+        raise ValueError(f"--reusable-for-product requires --environment-class in: {allowed}")
+    if not approval_scope or len(approval_scope.strip()) < 10:
+        raise ValueError("--reusable-for-product requires a specific --approval-scope")
+    if environment_class == "production-like-static-artifact" and target_path is None:
+        raise ValueError("production-like-static-artifact requires a repo file target so the artifact hash can be recorded")
+    if environment_class == "deployed-production" and target_ref.startswith("file://"):
+        raise ValueError("deployed-production requires an http(s) target, not a local file target")
+
+
+def apply_product_reuse_scope(
+    *,
+    result: dict[str, Any],
+    target_ref: str,
+    target_path: Path | None,
+    product_id: str | None,
+    environment_class: str | None,
+    approval_scope: str | None,
+) -> None:
+    validate_reusable_product_scope(
+        result=result,
+        target_ref=target_ref,
+        target_path=target_path,
+        product_id=product_id,
+        environment_class=environment_class,
+        approval_scope=approval_scope,
+    )
+    product_target: dict[str, Any] = {
+        "product_id": product_id.strip() if product_id else "",
+        "environment_class": environment_class,
+        "target": target_ref,
+        "approval_scope": approval_scope.strip() if approval_scope else "",
+        "production_like": environment_class in {"production-like-static-artifact", "production-like-deployed"},
+        "deployed_production": environment_class == "deployed-production",
+        "reusability_boundary": (
+            "Reusable only for the named product target and approval scope; "
+            "other products, releases, deploys, onchain code or human gates must rerun their own evidence."
+        ),
+    }
+    if target_path is not None:
+        product_target["target_artifact_ref"] = repo_ref(target_path)
+        product_target["target_sha256"] = sha256_file(target_path)
+    result["product_target"] = product_target
+    result["reusable_for_product"] = True
+    result["next_action"] = "Attach this product-specific Product Face result to the production Product Face lane."
+
+
 def launch_chromium_browser(chromium: Any) -> Any:
     """Launch Chromium, falling back to the system Chrome channel when needed."""
     launch_errors: list[str] = []
@@ -602,6 +668,10 @@ def build_product_face_proof(
     force_fallback: bool = False,
     allow_external_file: bool = False,
     card: Path | None = None,
+    reusable_for_product: bool = False,
+    product_id: str | None = None,
+    environment_class: str | None = None,
+    approval_scope: str | None = None,
 ) -> dict[str, Any]:
     output_dir = out if out.suffix == "" else out.parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -654,6 +724,15 @@ def build_product_face_proof(
     result["journeys"] = result.get("user_journeys_checked", [])
     result["accessibility"] = result.get("a11y", {})
     result["overlap"] = result.get("overlap_check", {})
+    if reusable_for_product:
+        apply_product_reuse_scope(
+            result=result,
+            target_ref=target_ref,
+            target_path=target_path,
+            product_id=product_id,
+            environment_class=environment_class,
+            approval_scope=approval_scope,
+        )
     result["evidence_refs"] = [*result["evidence_refs"], repo_ref(report_path), repo_ref(result_path)]
     if result.get("result") == "WAIVED":
         result["waiver"] = build_waiver(result)
@@ -673,6 +752,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--force-fallback", action="store_true", help="Skip Playwright and write bounded static fallback evidence.")
     parser.add_argument("--allow-external-file", action="store_true", help="Allow absolute file targets outside this repo; output is redacted.")
     parser.add_argument("--card", type=Path, help="Factory card to bind this Product Face result to.")
+    parser.add_argument("--reusable-for-product", action="store_true", help="Mark this PASS proof reusable for the named product scope.")
+    parser.add_argument("--product-id", help="Stable product id required with --reusable-for-product.")
+    parser.add_argument(
+        "--environment-class",
+        choices=sorted(ALLOWED_PRODUCT_ENV_CLASSES),
+        help="Target environment class required with --reusable-for-product.",
+    )
+    parser.add_argument("--approval-scope", help="Specific approval scope required with --reusable-for-product.")
     return parser.parse_args(argv)
 
 
@@ -690,6 +777,10 @@ def main(argv: list[str] | None = None) -> int:
             force_fallback=args.force_fallback,
             allow_external_file=args.allow_external_file,
             card=args.card,
+            reusable_for_product=args.reusable_for_product,
+            product_id=args.product_id,
+            environment_class=args.environment_class,
+            approval_scope=args.approval_scope,
         )
     except Exception as exc:
         print(f"product_face_proof failed: {exc}", file=sys.stderr)

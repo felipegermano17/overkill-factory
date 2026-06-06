@@ -2,13 +2,13 @@
   "$schema": "https://overkill-factory.dev/schemas/spdx-sbom.schema.json",
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-06-06T15:49:21+00:00",
+    "created": "2026-06-06T16:27:06+00:00",
     "creators": [
       "Tool: scripts/supply_chain_proof.py"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://overkill-factory.dev/sbom/6aaaf50cd1feb21c17aef47178f6d369520c4f05843c98d21bd349a53d1d2d16",
+  "documentNamespace": "https://overkill-factory.dev/sbom/6e990b8122776fd04ea63c719dffe59bb96f6d8b0f4dff843767133376fc8f1d",
   "files": [
     {
       "SPDXID": "SPDXRef-File-.gitattributes",
@@ -65,7 +65,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "a2eb857d2e87c3d40f21c3ded7b31a96643b2202223e99007d72b6dba0a93532"
+          "checksumValue": "89d41aed95166dc04e629d3b43c4d23f2e498803468f165e4bbe2557f99c6580"
         }
       ],
       "fileName": "README.md"
@@ -265,7 +265,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "01e5867728501a0e58592dbc828573557f57c48fd175fee4a2cffee8c27daa1c"
+          "checksumValue": "bb98dcab5cd9d98a7b11974f757580425d11c359f0f65565e2899e5ffd9787c3"
         }
       ],
       "fileName": "docs/maps/factory-10-flow.mmd"
@@ -285,27 +285,27 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "51b95f1aff926fa9618845b22b66dab254628252edcb7a896aa5608480e66da4"
+          "checksumValue": "2043c0ef5b5496a67a635b81decc62b49b7890e235721b012b6d14c27a8c78b4"
         }
       ],
       "fileName": "docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png"
     },
     {
-      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f47-snapshot.png",
+      "SPDXID": "SPDXRef-File-docs-maps-overkill-factory-hardening-f27-f48-snapshot.png",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "e5ad106e0826ec8cad9bc5c4e680cc454159545c9f805ec18893bf4bebbcb4b9"
+          "checksumValue": "b347a25f8674d736eac8a05c091c6b7e9ff3c0c9391bd8ec17a7d2166dbbfca8"
         }
       ],
-      "fileName": "docs/maps/overkill-factory-hardening-f27-f47-snapshot.png"
+      "fileName": "docs/maps/overkill-factory-hardening-f27-f48-snapshot.png"
     },
     {
       "SPDXID": "SPDXRef-File-docs-maps-whimsical-board.md",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "9f9584b86976a3bcf1a6239d1e806ddac288b27c41522280a6197c306f7fc668"
+          "checksumValue": "6dede68e035d39bf5cc8d76d60966a8f025b33c8ee039ccabdf55f8a260612fe"
         }
       ],
       "fileName": "docs/maps/whimsical-board.md"
@@ -515,7 +515,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "7606f501abca175419b7188bcdff7f1bd0c9e612b8a578c679bdb2d438782602"
+          "checksumValue": "fd85ed7da32f3aeaa999ae28e28cd5af48fdd09829f1f789989d573afe874b79"
         }
       ],
       "fileName": "docs/validation/factory-10-practical-hardening-2026-06-06.md"
@@ -535,7 +535,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "d57dc04bc5eef4454281f268ffd30a4e89297588179520e5c2ac6994b8d1be1d"
+          "checksumValue": "1227f749ef8b64d712b099581c407856aed09f6fa1332aa228db3aeae2eef69d"
         }
       ],
       "fileName": "docs/validation/heavy-validation-results.md"
@@ -1695,7 +1695,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "3f809ed6c5c73c55d47a2d713497e47b6222852fb302abb8d50267cd6c328305"
+          "checksumValue": "21a172a25fcdeba3bea682171d96a7b166dab367128731727715a1e9f8a3140c"
         }
       ],
       "fileName": "scripts/factory_completion_audit.py"
@@ -1735,7 +1735,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "107cb3d16588d9245acc922c80a463f822add31848eb5238db61578b0a75ec3c"
+          "checksumValue": "3f466878c053264c6ab8e00f7d85ba6edce50cc9833f1e14c55a3bcd18e2f685"
         }
       ],
       "fileName": "scripts/product_face_proof.py"
@@ -1975,7 +1975,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "60c353918ac528fc86be7a913a077225e03c20665dbee1a1c2144bc26b6ea30b"
+          "checksumValue": "b8bd89f90e2108f2cd93148d7501970ae0ddecde1386194038020cd3a0984e62"
         }
       ],
       "fileName": "tests/test_factory_completion_audit.py"
@@ -2035,7 +2035,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "b64fbd3f672b99d5d56774ee2a4b1843ac43af708629374b0dcfe4449eca82a9"
+          "checksumValue": "182a2fe44efbe47170f4eaaf5b0b84a7724cd68b59d9450ed41087ab0fc5a92b"
         }
       ],
       "fileName": "tests/test_product_face_proof.py"
@@ -2155,7 +2155,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "6fb10faf3fcb1fb1b3d83d07db4ef2f0bad33592cb029eb7c548f29caa746e9e"
+          "checksumValue": "8707540dd761d4ee6c822fa972d87918f032915e321f42f0f3efd8bd542237a5"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.json"
@@ -2165,7 +2165,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "bfc218ea8bf88bf02b99f546f3f27e33381e360c627016485414a31a3476ae9d"
+          "checksumValue": "f5ab44dc106d9eec015b243facfd825f088a5941107b50f4e16b5561705cd130"
         }
       ],
       "fileName": "validation/completion/factory-10-completion-audit.md"
@@ -2939,6 +2939,76 @@
         }
       ],
       "fileName": "validation/product-specific/qvg-full-product-worker-graph.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-product-face-console.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1ff9e9b76aae3790225b087e47b93061ce7c024003f3efa29f4155b35bf2f3c7"
+        }
+      ],
+      "fileName": "validation/production/product-face/console.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-product-face-hermes-production-product-face-summary.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1372016d78201e7383366c4392f25069a7d57f973f9c4e0e85b51f2363316b74"
+        }
+      ],
+      "fileName": "validation/production/product-face/hermes-production-product-face-summary.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-product-face-product-face-report.md",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8d241eb34eadddf62ffab6acd23e07d88ca77f190043d26cd85ab483a71c15ef"
+        }
+      ],
+      "fileName": "validation/production/product-face/product-face-report.md"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-product-face-product-face-result.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6a77458f096f253ee8f67adb9ed34d09258afe072a25d17120f5359f042eee30"
+        }
+      ],
+      "fileName": "validation/production/product-face/product-face-result.json"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-product-face-screenshots-desktop.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "30369a1ee95ea05255672469ec725aedcaf75800862709a4246e448462ee369a"
+        }
+      ],
+      "fileName": "validation/production/product-face/screenshots/desktop.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-product-face-screenshots-mobile.png",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3dc836e7cf1daf55d634e1264dfa5f09d2984ee26a71e63d41ad4424ed165319"
+        }
+      ],
+      "fileName": "validation/production/product-face/screenshots/mobile.png"
+    },
+    {
+      "SPDXID": "SPDXRef-File-validation-production-product-face-state.json",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5e5e92134fdb7de31ebe8933eaa3bc54eea8931880ab75fba24a47b475dadf31"
+        }
+      ],
+      "fileName": "validation/production/product-face/state.json"
     },
     {
       "SPDXID": "SPDXRef-File-validation-quasar-product-like-proof-hermes-cu-fuzz-property-summary.md",
@@ -5228,7 +5298,7 @@
       "filesAnalyzed": true,
       "name": "overkill-factory",
       "packageVerificationCode": {
-        "packageVerificationCodeValue": "6aaaf50cd1feb21c17aef47178f6d369520c4f05843c98d21bd349a53d1d2d16"
+        "packageVerificationCodeValue": "6e990b8122776fd04ea63c719dffe59bb96f6d8b0f4dff843767133376fc8f1d"
       }
     }
   ],

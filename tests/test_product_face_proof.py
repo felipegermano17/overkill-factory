@@ -145,6 +145,69 @@ class ProductFaceProofTest(unittest.TestCase):
         self.assertEqual(result["evidence_kind"], "real")
         self.assertFalse(result["reusable_for_product"])
 
+    def test_reusable_for_product_requires_pass_result(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            html_path = Path(tmp) / "prototype.html"
+            html_path.write_text("<html lang='en'><title>Proof</title><main>Ok</main></html>", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "requires a PASS result"):
+                product_face_proof.build_product_face_proof(
+                    target=str(html_path),
+                    out=Path(tmp) / "result.json",
+                    force_fallback=True,
+                    reusable_for_product=True,
+                    product_id="qvg-public-validation-product",
+                    environment_class="production-like-static-artifact",
+                    approval_scope="Product Face lane for the QVG public validation product",
+                )
+
+    def test_reusable_for_product_scope_adds_target_hash(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            html_path = Path(tmp) / "prototype.html"
+            html_path.write_text("<html lang='en'><title>Proof</title><main>Ok</main></html>", encoding="utf-8")
+            expected_sha256 = product_face_proof.sha256_file(html_path)
+            result = product_face_proof.base_result(
+                target_ref=product_face_proof.repo_ref(html_path),
+                viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+                states=["initial-render"],
+                journeys=["open target"],
+                tool_or_profile="unit-test",
+            )
+
+            product_face_proof.apply_product_reuse_scope(
+                result=result,
+                target_ref=product_face_proof.repo_ref(html_path),
+                target_path=html_path,
+                product_id="qvg-public-validation-product",
+                environment_class="production-like-static-artifact",
+                approval_scope="Product Face lane for the QVG public validation product",
+            )
+
+        self.assertTrue(result["reusable_for_product"])
+        self.assertEqual(result["product_target"]["product_id"], "qvg-public-validation-product")
+        self.assertEqual(result["product_target"]["environment_class"], "production-like-static-artifact")
+        self.assertEqual(result["product_target"]["target_sha256"], expected_sha256)
+        self.assertIn("Product Face lane", result["product_target"]["approval_scope"])
+
+    def test_reusable_for_product_requires_scope_metadata(self) -> None:
+        result = product_face_proof.base_result(
+            target_ref="pilots/quasar-vault-guard-test/product-face/prototype.html",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=["initial-render"],
+            journeys=["open target"],
+            tool_or_profile="unit-test",
+        )
+
+        with self.assertRaisesRegex(ValueError, "requires --product-id"):
+            product_face_proof.apply_product_reuse_scope(
+                result=result,
+                target_ref=result["target"],
+                target_path=ROOT / "pilots" / "quasar-vault-guard-test" / "product-face" / "prototype.html",
+                product_id=None,
+                environment_class="production-like-static-artifact",
+                approval_scope="Product Face lane for the QVG public validation product",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
