@@ -123,7 +123,7 @@ flowchart LR
   F29 --> F30
 
   F30["F30 Ainda nao e 10 pratico"]:::alert
-  F30D["Agora faltam provas product-specific: Quasar de producao com CU/fuzz/property, UI production-like, Crabbox/Testbox provider-backed, release e gate humano."]:::desc
+  F30D["Agora faltam provas product-specific: Quasar de producao com CU/fuzz/property, UI production-like, managed Testbox/broker, release e gate humano."]:::desc
   F30 -.-> F30D
   F30 --> F31
 
@@ -175,6 +175,11 @@ flowchart LR
   F40["F40 Product Face atualizado PASS"]:::learning
   F40D["Depois da mudanca do prototipo, Product Face rodou de novo no Hermes com desktop/mobile, console, a11y smoke, overlap e scans OK."]:::desc
   F40 -.-> F40D
+  F40 --> F41
+
+  F41["F41 Crabbox static-SSH PASS"]:::learning
+  F41D["Crabbox v0.26.0 sincronizou clone publico por ssh+rsync, rodou scanners em runner externo e voltou exit 0; managed Testbox ainda falta."]:::desc
+  F41 -.-> F41D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

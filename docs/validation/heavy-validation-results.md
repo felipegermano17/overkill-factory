@@ -39,6 +39,8 @@ Public evidence:
 - `validation/hermes-live/multi-profile-dispatch-fixed/remote-proof/remote-proof-result.json`
 - `validation/hermes-live/multi-profile-dispatch-browser/product-face/qvg-product-face-result.json`
 - `validation/hermes-live/multi-profile-dispatch-browser/remote-proof/remote-proof-result.json`
+- `validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json`
+- `validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.md`
 - `validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json`
 - `validation/quasar-product-like-proof/qvg-product-like-auditor-result.json`
 - `validation/quasar-product-like-proof/qvg-product-like-auditor-report.md`
@@ -81,6 +83,10 @@ Observed result:
 - Remote Proof after browser-backed Product Face: the `remote-proof-runner`
   profile produced a passing local clean-tempdir receipt and public JSON
   validation still passed;
+- Crabbox static-SSH remote proof: Crabbox `v0.26.0` was installed with release
+  checksum verification, then ran a real static SSH proof against a clean public
+  clone, synced `488` files through `ssh+rsync`, executed public JSON, secret
+  and public-safety scans remotely, and returned exit code `0`;
 - Security profile dispatch: `codex-security` ran secret safety, public safety,
   unit tests and factory battery with result `PASS`;
 - Auditor profile dispatch: `solana-quasar-auditor` loaded the Auditor corpus
@@ -274,8 +280,9 @@ checks.
 - Product-specific Solana/Quasar compute profiling, SVM/client flows and
   fuzz/property tests. Product-like build/test now passes, but production
   compute/economic safety remains open.
-- Provider-backed remote proof in Crabbox/Testbox. Local clean-tempdir remote
-  proof now passes before and after browser-backed Product Face evidence.
+- Managed Crabbox broker or Blacksmith Testbox proof. Crabbox static-SSH remote
+  proof now passes, but managed broker/Testbox credentials were not available
+  and must not be simulated.
 - Future Hermes releases still need the same disposable compatibility smoke
   rerun before an update is accepted.
 - Full multi-specialist Hermes execution on product work. Product Face,
@@ -289,7 +296,7 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.8 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including the updated product-like audit state; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.98 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply and multi-profile dispatch are now smoke-proven. |
+| Agent/Hermes Operability | 9.99 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch and Crabbox static-SSH remote proof are now smoke-proven. |
 | Solana/Quasar/Auditor | 9.65 | Product-like Quasar source now builds/tests in Docker and has a bounded Auditor code-audit PASS from a real Hermes worker; production source, CU profiling and fuzz/property tests remain open. |
 
 Estimated score after fixes in this pass: 9.98/10 for factory process,
@@ -297,7 +304,7 @@ operability and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or
 provider-backed execution, not more public-pilot smoke: production Quasar
-source with CU/fuzz/property depth, provider-backed remote proof, a
+source with CU/fuzz/property depth, managed Testbox/broker remote proof, a
 production-like Product Face target, release profile execution and human gate
 evidence.
 
@@ -309,6 +316,7 @@ evidence.
    the production product exists, then add CU profiling and fuzz/property tests.
 3. Add supply-chain CI: workflow permissions, secret scan, dependency audit,
    SBOM/provenance or explicit waiver.
-4. Run provider-backed remote proof in Crabbox/Testbox.
+4. Run managed Crabbox broker or Blacksmith Testbox remote proof with approved
+   credentials; static SSH fallback is already proven.
 5. Rerun Hermes update compatibility on every future Hermes release.
 6. Run release and human-gate worker profiles on product-specific tasks.
