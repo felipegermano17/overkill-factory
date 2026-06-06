@@ -28,6 +28,8 @@ It includes:
 - Factory 10 + Hermes V3.5 + Hermes V2 completion compatibility.
 - Critical workers, worker-role explanations and agent misread warnings.
 - Multi-context validation battery as the learning-loop proof surface.
+- F27-F31 operational hardening: real Codex Security, stricter gates, clean
+  remote proof, remaining nota-10 gaps and a durable Whimsical MCP fallback.
 
 ## Supporting Diagram
 
@@ -40,6 +42,28 @@ updated.
 ## Current Update Note
 
 The public source diagram now includes live Hermes materialization, worker
-dependency graph, negative/positive done enforcement and the multi-context
-factory battery. If the editable Whimsical board is updated manually, mirror
-those four additions from `docs/maps/factory-10-flow.mmd`.
+dependency graph, negative/positive done enforcement, the multi-context factory
+battery and the F27-F31 hardening block. If the editable Whimsical board is
+updated manually, mirror those additions from `docs/maps/factory-10-flow.mmd`.
+
+## Durable MCP Fallback
+
+Some Codex sessions may not expose Whimsical as native callable tools even when
+the desktop MCP is healthy. Use the repo wrapper instead of relying on chat
+memory:
+
+```bash
+python scripts/whimsical_mcp.py health
+python scripts/whimsical_mcp.py inspect-state
+python scripts/whimsical_mcp.py board-read --grep "Factory 10" --format simple
+```
+
+Use `tool-call` for precise edits after inspecting the current board:
+
+```bash
+python scripts/whimsical_mcp.py tool-call --name board_read --args-json "{\"format\":\"simple\",\"limit\":50}"
+```
+
+The wrapper redacts private Whimsical URLs, local paths and maintainer identity
+by default. Use `--no-redact` only for local interactive operation when the
+output will not be committed.

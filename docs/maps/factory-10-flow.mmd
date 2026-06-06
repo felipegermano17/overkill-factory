@@ -105,6 +105,31 @@ flowchart LR
   F20D["Falhas viram teste, schema, worker, skill, checklist ou simplificacao."]:::desc
   F20 -.-> F20D
   F20 --> H3["Battery multi-contexto | Product Face, Solana/Quasar, cloud R4, public repo e agentic memory"]:::worker
+  F20 --> F27
+
+  F27["F27 Codex Security real"]:::review
+  F27D["Scan real da fabrica: threat model, revisao critica, Bandit 0 findings e relatorio publico."]:::desc
+  F27 -.-> F27D
+  F27 --> F28
+
+  F28["F28 Gate hardening"]:::gate
+  F28D["Done bloqueia evidencia duplicada, inline inexistente, Product Face fraco e task Hermes sem binding."]:::desc
+  F28 -.-> F28D
+  F28 --> F29
+
+  F29["F29 Remote proof limpo"]:::execution
+  F29D["Prova local em copia temporaria, ambiente sanitizado, recibo redigido e validado em runtime externo."]:::desc
+  F29 -.-> F29D
+  F29 --> F30
+
+  F30["F30 Ainda nao e 10"]:::alert
+  F30D["Faltam Auditor real em Quasar, Product Face de UI real, Crabbox/Testbox e hook em todas as superficies Hermes."]:::desc
+  F30 -.-> F30D
+  F30 --> F31
+
+  F31["F31 Whimsical MCP duravel"]:::learning
+  F31D["Wrapper versionado chama o MCP local, lista tools, le board e faz edicoes sem depender da memoria do chat."]:::desc
+  F31 -.-> F31D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

@@ -141,6 +141,9 @@ checks.
   only for observation/CI capture.
 - Public Hermes smoke artifacts now use redacted aliases for board/task IDs.
   Real operational IDs stay out of the public repository.
+- Whimsical MCP fallback is now scripted through `scripts/whimsical_mcp.py`.
+  The factory can inspect/read/edit the board through the local MCP endpoint
+  even when native MCP tools are not exposed in a future Codex session.
 
 ### Still Not Proven
 
