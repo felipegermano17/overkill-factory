@@ -52,6 +52,38 @@ class FactoryCompletionAuditTests(unittest.TestCase):
 
         self.assertFalse(audit.cu_svm_economic_scope_is_valid(symbolic))
 
+    def test_remote_proof_scope_requires_crabbox_cleanup(self):
+        proof = {
+            "record_type": "remote_proof_result",
+            "result": "PASS",
+            "evidence_kind": "real",
+            "reusable_for_product": True,
+            "tool_or_profile": "crabbox local-container",
+            "managed_by_crabbox": True,
+            "provider_kind": "crabbox_ephemeral_container",
+            "product_target": {
+                "product_id": "qvg-public-validation-product",
+                "source_ref": "products/qvg-public-validation-product",
+                "source_sha256": "a" * 64,
+                "approval_scope": "Reusable only for the public validation product.",
+            },
+            "cleanup_evidence": {
+                "lease_stopped": True,
+                "active_local_container_leases_after": 0,
+            },
+            "remote_command": {"exit_code": 0},
+            "checks_executed": [
+                "python3 scripts/validate_public_json_artifacts.py",
+                "python3 scripts/secret_safety_scan.py",
+                "python3 scripts/public_safety_scan.py",
+                "python3 scripts/full_product_worker_graph.py --require-pass",
+            ],
+        }
+
+        self.assertTrue(audit.remote_proof_scope_is_valid(proof))
+        proof["cleanup_evidence"]["lease_stopped"] = False
+        self.assertFalse(audit.remote_proof_scope_is_valid(proof))
+
     def test_shallow_auditor_result_cannot_clear_production_scope(self):
         proof_path = audit.ROOT / "validation" / "production" / "quasar" / "auditor-result.json"
         shallow = json.loads(proof_path.read_text(encoding="utf-8"))

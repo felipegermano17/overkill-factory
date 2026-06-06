@@ -91,6 +91,65 @@ def production_cu_svm_economic_result(rel_path: str) -> bool:
     return cu_svm_economic_scope_is_valid(data)
 
 
+def production_remote_proof_result(rel_path: str) -> bool:
+    path = ROOT / rel_path
+    if not path.exists():
+        return False
+    try:
+        data = load_json(path)
+    except json.JSONDecodeError:
+        return False
+    if not production_worker_result(rel_path, record_type="remote_proof_result"):
+        return False
+    return remote_proof_scope_is_valid(data)
+
+
+def remote_proof_scope_is_valid(data: dict[str, Any]) -> bool:
+    target = data.get("product_target")
+    if not isinstance(target, dict):
+        return False
+    if target.get("product_id") != "qvg-public-validation-product":
+        return False
+    if target.get("source_ref") != "products/qvg-public-validation-product":
+        return False
+    if len(str(target.get("source_sha256") or "")) != 64:
+        return False
+
+    if data.get("tool_or_profile") not in {"crabbox local-container", "crabbox blacksmith-testbox", "crabbox brokered-cloud"}:
+        return False
+    if data.get("managed_by_crabbox") is not True:
+        return False
+
+    cleanup = data.get("cleanup_evidence")
+    if not isinstance(cleanup, dict):
+        return False
+    if cleanup.get("lease_stopped") is not True:
+        return False
+    active = cleanup.get("active_local_container_leases_after")
+    if active not in (0, None):
+        return False
+
+    command = data.get("remote_command")
+    if not isinstance(command, dict) or command.get("exit_code") != 0:
+        return False
+
+    required_checks = {
+        "python3 scripts/validate_public_json_artifacts.py",
+        "python3 scripts/secret_safety_scan.py",
+        "python3 scripts/public_safety_scan.py",
+        "python3 scripts/full_product_worker_graph.py --require-pass",
+    }
+    checks = {str(item) for item in data.get("checks_executed") or []}
+    if not required_checks.issubset(checks):
+        return False
+
+    provider_kind = str(data.get("provider_kind") or "")
+    if provider_kind not in {"crabbox_ephemeral_container", "blacksmith_testbox", "brokered_cloud"}:
+        return False
+
+    return True
+
+
 def cu_svm_economic_scope_is_valid(data: dict[str, Any]) -> bool:
     if data.get("record_type") != "cu_svm_economic_proof":
         return False
@@ -422,26 +481,26 @@ def build_requirements() -> list[dict[str, Any]]:
             )
         )
 
-    if production_worker_result("validation/production/remote-proof/managed-testbox-result.json", record_type="remote_proof_result"):
+    if production_remote_proof_result("validation/production/remote-proof/managed-testbox-result.json"):
         requirements.append(
             achieved_requirement(
                 "managed_remote_proof",
-                "Managed Crabbox/Testbox remote proof",
+                "Crabbox/Testbox remote proof",
                 ["validation/production/remote-proof/managed-testbox-result.json"],
-                "Static SSH proof is useful, but managed remote proof validates the intended provider-backed heavy gate.",
+                "Remote proof validates the intended heavy gate in an isolated Crabbox/Testbox/container environment.",
             )
         )
     elif public_proof("validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json"):
         requirements.append(
             bounded_requirement(
                 "managed_remote_proof",
-                "Managed Crabbox/Testbox remote proof",
+                "Crabbox/Testbox remote proof",
                 [
                     "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
                     "validation/remote-proof/managed-remote-proof-probe.json",
                 ],
-                "Static SSH proof is useful, but managed remote proof validates the intended provider-backed heavy gate.",
-                "Run managed Crabbox broker or Blacksmith Testbox with approved credentials and cleanup receipt.",
+                "Static SSH proof is useful, but the completion lane needs Crabbox-managed cleanup and product-scoped evidence.",
+                "Run Crabbox broker, Blacksmith Testbox or Crabbox local-container with cleanup receipt and product-scoped reusable evidence.",
             )
         )
     else:
