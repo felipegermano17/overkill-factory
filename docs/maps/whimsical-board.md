@@ -27,6 +27,7 @@ It includes:
   Hermes Done Gate.
 - Factory 10 + Hermes V3.5 + Hermes V2 completion compatibility.
 - Critical workers, worker-role explanations and agent misread warnings.
+- Map-reading legend for colors, side explanations and primary/lateral arrows.
 - Multi-context validation battery as the learning-loop proof surface.
 - F27-F38 operational hardening: real Codex Security, stricter gates, clean
   remote proof, remaining nota-10 gaps, a durable Whimsical MCP fallback,
@@ -48,9 +49,10 @@ updated.
 
 The public source diagram now includes live Hermes materialization, worker
 dependency graph, negative/positive done enforcement, the multi-context factory
-battery and the F27-F38 hardening block. The editable Whimsical board was
-updated through the local Whimsical MCP and now contains three clean official
-flowchart blocks:
+battery, the F27-F38 hardening block and the same map-reading legend added to
+the editable Whimsical board. The editable board was updated through the local
+Whimsical MCP and now contains three clean official flowchart blocks plus one
+legend block:
 
 - `Lki1eW`: main F0-F19 factory spine;
 - `8kQkhJ`: F20-F26 hardening bridge;
@@ -65,6 +67,7 @@ Important current IDs in `AyHQAj`:
 - F37 description id: `2YiC8u`.
 - F38 node id: `8emoZb`;
 - F38 description id: `YKnVtt`.
+- Map legend node id: `GBGPXU`.
 
 If the editable Whimsical board is updated manually, mirror those additions
 from `docs/maps/factory-10-flow.mmd`.
@@ -75,7 +78,16 @@ the three official flowcharts above. F38 was added with `flowchart_edit`, then
 the whole F27-F38 flowchart was repositioned with `board_repl` to avoid overlap.
 The main F0-F19 spine was later color-coded with `flowchart_edit`, preserving
 node IDs and connectors while making phases, explanations, workers and warnings
-visually distinguishable.
+visually distinguishable. A separate map-reading legend was then added with
+`flowchart_create` so users can understand colors, side explanations and
+primary/lateral arrows without chat context.
+
+Latest MCP validation:
+
+- `python scripts/whimsical_mcp.py health` returned `PASS` with 34 tools.
+- The live Desktop MCP accepted direct JSON-RPC calls even when native Codex
+  tool namespaces were not exposed.
+- The public snapshot was refreshed through the MCP after the legend update.
 
 ## Durable MCP Fallback
 

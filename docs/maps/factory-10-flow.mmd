@@ -190,6 +190,22 @@ flowchart LR
   F14 --> A4["Alerta: Auditor preflight nao e auditoria de codigo real"]:::alert
   F18 --> A5["Alerta: dry pilot nao e producao"]:::alert
 
+  LEGEND0["Como ler o mapa"]:::review
+  LEGEND1["Caixa colorida = etapa da fabrica"]:::planning
+  LEGEND2["Caixa cinza na frente = o que aquela etapa faz"]:::desc
+  LEGEND3["Seta principal = ordem real de producao"]:::learning
+  LEGEND4["Seta lateral = detalhe, alerta ou prova"]:::architecture
+  LEGEND5["Verde = fonte, evidencia, resultado ou aprendizado"]:::source
+  LEGEND6["Azul = organizacao, documentacao ou operacao"]:::planning
+  LEGEND7["Roxo = revisao critica ou especialista"]:::review
+  LEGEND8["Laranja = arquitetura, promocao ou decisao dificil"]:::architecture
+  LEGEND9["Amarelo = aprovacao humana"]:::human
+  LEGEND10["Vermelho = gate rigido, bloqueio ou risco"]:::gate
+  LEGEND11["Prata = explicacao simples"]:::desc
+
+  LEGEND0 --> LEGEND1 --> LEGEND2 --> LEGEND3 --> LEGEND4
+  LEGEND0 --> LEGEND5 --> LEGEND6 --> LEGEND7 --> LEGEND8 --> LEGEND9 --> LEGEND10 --> LEGEND11
+
   classDef source fill:#e9f7f1,stroke:#217a54,color:#12372a;
   classDef planning fill:#eef2ff,stroke:#4f63c6,color:#1c2455;
   classDef architecture fill:#fff4df,stroke:#b36b00,color:#4a2d00;

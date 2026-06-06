@@ -1,0 +1,73 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "auditor_result",
+  "created_at": "2026-06-06T11:46:01+00:00",
+  "worker": {
+    "id": "solana-quasar-auditor",
+    "name": "Solana/Quasar Auditor Runner",
+    "factory_phase": "F7/F13"
+  },
+  "card_ref": {
+    "card_id": "QVG-PILOT-FIRST-SLICE",
+    "slice_id": "QVG_DRY_PILOT_001",
+    "phase": "F11",
+    "risk_effective": "R3",
+    "surfaces": [
+      "ux",
+      "frontend",
+      "mobile",
+      "wallet-ui",
+      "security",
+      "agent-runtime",
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units"
+    ],
+    "executor_identity": "codex-overkill-factory",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "WAIVED",
+  "blocking_findings": false,
+  "findings_summary": "Auditor corpus path inspected in real Hermes worker dispatch; product-specific Quasar code audit remains blocked until real product Quasar source exists.",
+  "tool_or_profile": "solanabr/Auditor corpus operational preflight",
+  "executed_by": "solana-quasar-auditor",
+  "evidence_refs": [
+    "validation/hermes-live/multi-profile-dispatch-fixed/auditor/auditor-quasar-evidence.md"
+  ],
+  "evidence_kind": "real",
+  "reusable_for_product": false,
+  "next_action": "Provide or scaffold real product Quasar source, run Quasar build/test/profile, then run Auditor checklist/vector coverage against that product source before any code-audit claim.",
+  "audit_mode": "preflight",
+  "preflight_only": true,
+  "auditor_source": "https://github.com/solanabr/Auditor",
+  "auditor_head": "38ceb3fabc811d62e1d6172bd23e110af502d8e6",
+  "corpus_counts": {
+    "markdown_files_available": 131,
+    "known_vector_files_available": 101,
+    "checklist_files_available": 18,
+    "program_checklists_01_07_available": true
+  },
+  "coverage_possible": {
+    "corpus_availability_preflight": true,
+    "product_quasar_source_present": false,
+    "product_specific_code_audit": false,
+    "instruction_matrix": "blocked_no_product_source",
+    "state_model": "blocked_no_product_source",
+    "known_vector_target_coverage": "blocked_no_product_source"
+  },
+  "boundary": "Real Hermes worker preflight using an available Auditor corpus; no product-specific Quasar code audit is claimed and this evidence is not reusable for product approval.",
+  "waiver": {
+    "owner": "solana-quasar-auditor",
+    "reason": "Auditor corpus path inspected in real Hermes worker dispatch; product-specific Quasar code audit remains blocked until real product Quasar source exists.",
+    "expires_at": "before-product-approval",
+    "reviewer_or_human_gate_ref": "human-gate-required:real-quasar-auditor-before-product-approval",
+    "compensating_controls": [
+      "auditor result remains marked not reusable for product approval",
+      "real product Quasar source must be provided and audited before promotion"
+    ],
+    "evidence_refs": [
+      "validation/hermes-live/multi-profile-dispatch-fixed/auditor/auditor-quasar-evidence.md"
+    ]
+  }
+}

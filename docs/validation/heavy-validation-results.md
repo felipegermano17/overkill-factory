@@ -32,6 +32,13 @@ Public evidence:
 - `validation/hermes-live/real-profile-dispatch-smoke.md`
 - `validation/hermes-live/official-main-patch-smoke.md`
 - `validation/hermes-live/official-head-recheck-2026-06-06.md`
+- `validation/hermes-live/multi-profile-dispatch-summary.md`
+- `validation/hermes-live/multi-profile-dispatch-fixed/product-face/qvg-product-face-result.json`
+- `validation/hermes-live/multi-profile-dispatch-fixed/security/security_scan_result.json`
+- `validation/hermes-live/multi-profile-dispatch-fixed/auditor/auditor_result.json`
+- `validation/hermes-live/multi-profile-dispatch-fixed/remote-proof/remote-proof-result.json`
+- `validation/hermes-live/multi-profile-dispatch-browser/product-face/qvg-product-face-result.json`
+- `validation/hermes-live/multi-profile-dispatch-browser/remote-proof/remote-proof-result.json`
 
 Observed result:
 
@@ -53,6 +60,24 @@ Observed result:
 - real specialist dispatch: `public-safety-gate` was spawned by Hermes,
   preloaded the `overkill-factory` skill, ran `public_safety_scan.py`, wrote
   worker evidence and closed with Receipt Five metadata;
+- real multi-profile dispatch: Product Face, Codex Security,
+  Solana/Quasar Auditor and Remote Proof profiles were spawned by Hermes on a
+  disposable public clone and closed with evidence records;
+- first multi-profile run found a real Product Face fallback contract bug, then
+  the clean rerun proved the fixed schema/waiver path with public JSON
+  validation passing;
+- Product Face browser rerun: after adding the system-Chrome launch fallback,
+  the `product-face` profile captured desktop and mobile screenshots, console,
+  DOM state, a11y basics, overlap checks and performance notes with result
+  `PASS`;
+- Remote Proof after browser-backed Product Face: the `remote-proof-runner`
+  profile produced a passing local clean-tempdir receipt and public JSON
+  validation still passed;
+- Security profile dispatch: `codex-security` ran secret safety, public safety,
+  unit tests and factory battery with result `PASS`;
+- Auditor profile dispatch: `solana-quasar-auditor` loaded the Auditor corpus
+  path and emitted a bounded `WAIVED` preflight because real product Quasar
+  source is still absent;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -60,10 +85,11 @@ Observed result:
   commit, so no new disposable compatibility smoke was required in this pass;
 - main card final state: `done`.
 
-This proves real Kanban materialization, dependency wiring and worker-result
-reconciliation, plus one real specialist-profile execution path. It does not
-prove real Quasar Auditor, release, production Product Face or human approval
-execution.
+This proves real Kanban materialization, dependency wiring, worker-result
+reconciliation and multiple specialist-profile execution paths. It also proves
+that Product Face can now run as real browser-backed evidence in Hermes. It does
+not prove real product Quasar Auditor, release, provider-backed remote proof or
+human approval execution.
 
 ## Real Codex Security Scan
 
@@ -168,6 +194,9 @@ checks.
 - Whimsical MCP fallback is now scripted through `scripts/whimsical_mcp.py`.
   The factory can inspect/read/edit the board through the local MCP endpoint
   even when native MCP tools are not exposed in a future Codex session.
+- Whimsical Desktop MCP was exercised live through JSON-RPC, with health,
+  board read, flowchart creation and snapshot capture passing. The public map
+  snapshot was refreshed after adding the map-reading legend.
 - Auditor result handling is stricter: `code_audit` now requires corpus count,
   checklists 01-07, known-vector coverage, instruction matrix and state model.
   The worker-result validator now blocks shallow real Auditor PASS records.
@@ -188,44 +217,48 @@ checks.
 - Hermes real profile dispatch is now smoke-proven with `public-safety-gate`:
   the worker preloaded the factory skill, ran a real public-safety scanner,
   wrote evidence and completed with Receipt Five.
+- Hermes multi-profile dispatch is now smoke-proven with `product-face`,
+  `codex-security`, `solana-quasar-auditor` and `remote-proof-runner`. Product
+  Face first exposed a fallback validation bug, then passed with browser-backed
+  screenshots after the Chrome-channel fallback was added.
 - Hermes update compatibility now has a disposable official-main smoke: the
   public patch is parseable, applies to the tested official Hermes main commit,
   and passes focused Kanban/dashboard regression tests.
 
 ### Still Not Proven
 
-- Production Product Face execution on a real UI. The current proof is browser
-  backed but limited to the static Quasar Vault Guard prototype.
+- Production Product Face execution on a deployed or production-like UI. The
+  current Hermes profile proof is browser backed but still limited to the static
+  Quasar Vault Guard prototype.
 - Real Auditor execution against product Quasar source.
 - Product-specific Solana/Quasar build, tests, compute profiling and
   fuzz/property tests. The generated minimal source proof now passes, but that
   is not product safety.
-- Provider-backed remote proof in Crabbox/Testbox. Local clean-environment
-  remote proof now passes with sanitized environment, artifact and cleanup
-  receipt.
+- Provider-backed remote proof in Crabbox/Testbox. Local clean-tempdir remote
+  proof now passes before and after browser-backed Product Face evidence.
 - Future Hermes releases still need the same disposable compatibility smoke
   rerun before an update is accepted.
-- Full multi-specialist Hermes execution on product work. A real
-  `public-safety-gate` profile dispatch is proven, including skill preload and
-  scanner execution, but Product Face, Auditor, Remote Proof, release and human
-  gate profiles still need product-specific runs.
+- Full multi-specialist Hermes execution on product work. Product Face,
+  Security, Auditor preflight and Remote Proof profile dispatch are proven on
+  the public pilot, but release and human gate profiles still need
+  product-specific runs.
 
 ## Adversarial Review Scores
 
 | Review Area | Score Before Fixes | Main Reason |
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
-| Product Face | 9.4 | Browser-backed proof exists and weak PASS is now blocked; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.95 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply and one real specialist-profile dispatch with skill preload are now smoke-proven. |
-| Solana/Quasar/Auditor | 9.2 | Source-pinned Quasar init/build/test proof exists and dashboard/API done now rejects Auditor preflight-only PASS; still no real product Quasar code audit. |
+| Product Face | 9.7 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence; production UI proof and full WCAG remain open. |
+| Agent/Hermes Operability | 9.98 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply and multi-profile dispatch are now smoke-proven. |
+| Solana/Quasar/Auditor | 9.3 | Source-pinned Quasar init/build/test proof exists and real Auditor corpus preflight is dispatched; still no real product Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.94/10 for factory process,
+Estimated score after fixes in this pass: 9.96/10 for factory process,
 operability and public repository safety.
 
-It is not 10 yet because the next jump requires real specialist executions,
-not more synthetic smoke: real Auditor/Quasar, provider-backed remote proof, a
-production Product Face target and multi-specialist dispatched profiles doing
-product-specific work end to end.
+It is not 10 yet because the next jump requires product-specific or
+provider-backed execution, not more public-pilot smoke: real Auditor/Quasar
+against product source, provider-backed remote proof, a production-like Product
+Face target, release profile execution and human gate evidence.
 
 ## Next Validation Gates
 
@@ -236,5 +269,4 @@ product-specific work end to end.
    SBOM/provenance or explicit waiver.
 4. Run provider-backed remote proof in Crabbox/Testbox.
 5. Rerun Hermes update compatibility on every future Hermes release.
-6. Run Product Face, Auditor, Remote Proof and release worker profiles on
-   product-specific tasks, not only the public-safety dispatch smoke.
+6. Run release and human-gate worker profiles on product-specific tasks.

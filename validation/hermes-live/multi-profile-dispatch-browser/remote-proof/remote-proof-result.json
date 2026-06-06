@@ -1,0 +1,74 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-06T11:55:03+00:00",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "REMOTE-PROOF-SMOKE",
+    "slice_id": "LOCAL_CLEAN_SMOKE",
+    "phase": "F13",
+    "risk_effective": "R2",
+    "surfaces": [
+      "code",
+      "ci",
+      "public",
+      "remote-proof"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Local clean-environment fallback proof passed.",
+  "tool_or_profile": "local-tempdir-clean-proof-fallback",
+  "executed_by": "remote-proof-runner",
+  "environment": {
+    "provider": "local-tempdir",
+    "secrets_allowed": false,
+    "ttl_minutes": 30,
+    "cost_owner": "repo-maintainer",
+    "cleanup": "temporary directory removed by context manager"
+  },
+  "commands": [
+    {
+      "command": "/usr/bin/python3 -m unittest discover -s tests -p \"test_*.py\" -q",
+      "returncode": 0,
+      "stdout_tail": "Wrote <temp>/tmp1gueur_5/codex-security-request.json\nWrote <temp>/tmp1gueur_5/solana-quasar-auditor-request.json\nWrote <temp>/tmp1gueur_5/independent-reviewer-request.json\nWrote <temp>/tmp1gueur_5/human-gate-clerk-request.json\nWrote <temp>/tmp1gueur_5/factory-orchestrator-request.json\nWrote <temp>/tmp1gueur_5/qa-verification-worker-request.json\nWrote <temp>/tmp1gueur_5/autoreview-gate-request.json\nWrote <temp>/tmp1gueur_5/security-orchestrator-request.json\nWrote <temp>/tmp1gueur_5/crypto-key-management-specialist-request.json\nWrote <temp>/tmp1gueur_5/remote-proof-runner-request.json\nWrote <temp>/tmp1gueur_5/handoff-packer-request.json\nWrote <temp>/tmp1gueur_5/supply-chain-gate-request.json\n{\n  \"bytes\": 9,\n  \"metadata\": [\n    \"board_id: test\\nsize: 1x1\"\n  ],\n  \"output\": \"<temp>/tmpj_ouf227/snapshot.png\",\n  \"status\": \"PASS\"\n}\n",
+      "stderr_tail": "----------------------------------------------------------------------\nRan 53 tests in 0.152s\n\nOK\n"
+    },
+    {
+      "command": "/usr/bin/python3 adapters/hermes/compatibility-check.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": "/usr/bin/python3 scripts/validate_public_json_artifacts.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": "/usr/bin/python3 scripts/secret_safety_scan.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": "/usr/bin/python3 scripts/public_safety_scan.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    }
+  ],
+  "evidence_refs": [
+    "validation/hermes-live/multi-profile-dispatch-browser/remote-proof/remote-proof-result.json"
+  ],
+  "evidence_kind": "real",
+  "reusable_for_product": false,
+  "next_action": "Use Crabbox/Testbox for provider-backed remote proof when available."
+}

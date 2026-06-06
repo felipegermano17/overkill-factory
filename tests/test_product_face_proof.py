@@ -27,6 +27,22 @@ class ProductFaceProofTest(unittest.TestCase):
         self.assertEqual(viewport.height, 1024)
         self.assertEqual(viewport.label, "tablet 768x1024")
 
+    def test_launch_chromium_falls_back_to_system_chrome_channel(self) -> None:
+        class FakeBrowserType:
+            def __init__(self) -> None:
+                self.calls: list[dict[str, str]] = []
+
+            def launch(self, **kwargs):  # type: ignore[no-untyped-def]
+                self.calls.append(kwargs)
+                if not kwargs:
+                    raise RuntimeError("bundled browser missing")
+                return "browser"
+
+        fake = FakeBrowserType()
+
+        self.assertEqual(product_face_proof.launch_chromium_browser(fake), "browser")
+        self.assertEqual(fake.calls, [{}, {"channel": "chrome"}])
+
     def test_forced_fallback_writes_compatible_honest_result(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             tmp_path = Path(tmp)

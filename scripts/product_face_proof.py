@@ -333,6 +333,18 @@ def base_result(
     }
 
 
+def launch_chromium_browser(chromium: Any) -> Any:
+    """Launch Chromium, falling back to the system Chrome channel when needed."""
+    launch_errors: list[str] = []
+    for launch_kwargs in ({}, {"channel": "chrome"}):
+        try:
+            return chromium.launch(**launch_kwargs)
+        except Exception as exc:  # pragma: no cover - exercised with fakes/unit tests.
+            label = "default" if not launch_kwargs else "chrome channel"
+            launch_errors.append(f"{label}: {exc}")
+    raise PlaywrightUnavailable("Playwright browser is not available: " + "; ".join(launch_errors))
+
+
 def run_playwright(
     *,
     target_url: str,
@@ -357,10 +369,7 @@ def run_playwright(
     screenshot_dir.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as playwright:
-        try:
-            browser = playwright.chromium.launch()
-        except Exception as exc:
-            raise PlaywrightUnavailable(f"Playwright browser is not available: {exc}") from exc
+        browser = launch_chromium_browser(playwright.chromium)
         try:
             for viewport in viewports:
                 page_console: list[dict[str, str]] = []
