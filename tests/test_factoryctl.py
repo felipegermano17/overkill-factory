@@ -357,6 +357,73 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertTrue(any(error.startswith("auditor_result code_audit missing") for error in errors))
 
+    def test_auditor_code_audit_requires_sufficient_corpus_and_coverage(self) -> None:
+        shallow = {
+            "audit_mode": "code_audit",
+            "result": "PASS",
+            "findings_summary": "Real code audit claimed.",
+            "evidence_refs": ["reports/auditor.md"],
+            "auditor_head": "abc123",
+            "corpus_files_loaded": ["README.md"],
+            "checklist_coverage": {"01-program-account-validation": {"status": "done"}},
+            "known_vectors_coverage": {"total": 2},
+            "instruction_matrix": [{"instruction": "deposit"}],
+            "state_model": {"accounts": ["vault"]},
+            "findings": [],
+            "waivers": [],
+        }
+
+        errors = factoryctl.validate_auditor_result(shallow)
+
+        self.assertIn("auditor_result code_audit corpus_files_loaded must include at least 120 files", errors)
+        self.assertIn("auditor_result code_audit missing program checklist coverage 02, 03, 04, 05, 06, 07", errors)
+        self.assertIn("auditor_result code_audit known_vectors_coverage must cover at least 100 vectors", errors)
+
+    def test_auditor_code_audit_allows_empty_findings_when_coverage_is_complete(self) -> None:
+        complete = {
+            "audit_mode": "code_audit",
+            "result": "PASS",
+            "findings_summary": "Real code audit claimed with no blocking finding.",
+            "evidence_refs": ["reports/auditor.md"],
+            "auditor_head": "abc123",
+            "corpus_files_loaded": [f"auditor/file-{index}.md" for index in range(120)],
+            "checklist_coverage": {
+                "01-program-account-validation": {"status": "done"},
+                "02-program-access-control": {"status": "done"},
+                "03-program-arithmetic-safety": {"status": "done"},
+                "04-program-cpi-pda": {"status": "done"},
+                "05-program-state-machine": {"status": "done"},
+                "06-program-economic-logic": {"status": "done"},
+                "07-program-opsec-governance": {"status": "done"},
+            },
+            "known_vectors_coverage": {"total": 100},
+            "instruction_matrix": [{"instruction": "deposit"}],
+            "state_model": {"accounts": ["vault"], "pdas": ["vault"]},
+            "findings": [],
+            "waivers": [],
+        }
+
+        self.assertEqual(factoryctl.validate_auditor_result(complete), [])
+
+    def test_real_auditor_worker_result_uses_deep_validation(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        result = factoryctl.build_worker_result(
+            "solana-quasar-auditor",
+            card,
+            result="PASS",
+            tool_or_profile="solanabr/Auditor",
+            executed_by="solana-quasar-auditor",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Real code audit claimed.",
+            next_action="continue",
+            evidence_kind="real",
+        )
+
+        errors = factoryctl.validate_worker_result_record(result, expected_field="auditor_result", expected_worker_id="solana-quasar-auditor", card=card, evidence_root=ROOT)
+
+        self.assertTrue(any(error.startswith("auditor_result code_audit missing") for error in errors))
+
     def test_r3_without_scan_and_human_packet_is_invalid(self) -> None:
         card = load_card("v35_invalid_security_no_scan.md")
         errors = factoryctl.validate_card(card)

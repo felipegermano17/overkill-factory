@@ -144,6 +144,11 @@ checks.
 - Whimsical MCP fallback is now scripted through `scripts/whimsical_mcp.py`.
   The factory can inspect/read/edit the board through the local MCP endpoint
   even when native MCP tools are not exposed in a future Codex session.
+- Auditor result handling is stricter: `code_audit` now requires corpus count,
+  checklists 01-07, known-vector coverage, instruction matrix and state model.
+  The worker-result validator now blocks shallow real Auditor PASS records.
+- The Solana/Quasar source-resolution note is recorded in
+  `docs/validation/auditor-quasar-source-resolution-2026-06-06.md`.
 
 ### Still Not Proven
 

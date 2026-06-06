@@ -130,6 +130,11 @@ flowchart LR
   F31["F31 Whimsical MCP duravel"]:::learning
   F31D["Wrapper versionado chama o MCP local, lista tools, le board e faz edicoes sem depender da memoria do chat."]:::desc
   F31 -.-> F31D
+  F31 --> F32
+
+  F32["F32 Auditor/Quasar contrato forte"]:::review
+  F32D["Code audit so vale com corpus Auditor, checklists 01-07, 100 vetores, matriz de instrucoes e modelo de estado."]:::desc
+  F32 -.-> F32D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

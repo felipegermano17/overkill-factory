@@ -87,6 +87,9 @@ PRODUCT_FACE_RESULT_PHASES = {"F11", "F13", "F14", "F15", "F16", "F17"}
 HIGH_RISK = {"R3", "R4"}
 REVIEW_RISK = {"R2", "R3", "R4"}
 ALLOWED_SOURCE_STATES = {"backlog", "compiled", "inference", "promoted", "raw", "rejected"}
+AUDITOR_MIN_CORPUS_FILES = 120
+AUDITOR_PROGRAM_CHECKLIST_PREFIXES = ("01", "02", "03", "04", "05", "06", "07")
+AUDITOR_MIN_KNOWN_VECTORS = 100
 
 
 @dataclass(frozen=True)
@@ -539,6 +542,33 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _coverage_keys(coverage: object) -> list[str]:
+    if not isinstance(coverage, dict):
+        return []
+    return [str(key).lower() for key in coverage]
+
+
+def _coverage_has_prefixes(coverage: object, prefixes: tuple[str, ...]) -> list[str]:
+    keys = _coverage_keys(coverage)
+    missing: list[str] = []
+    for prefix in prefixes:
+        if not any(key.startswith(prefix) or key.startswith(f"{prefix}-") for key in keys):
+            missing.append(prefix)
+    return missing
+
+
+def _known_vector_count(coverage: object) -> int:
+    if not isinstance(coverage, dict):
+        return 0
+    for key in ("total", "total_vectors", "known_vectors_total"):
+        value = coverage.get(key)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str) and value.isdigit():
+            return int(value)
+    return len(coverage)
+
+
 def validate_auditor_result(result: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     audit_mode = str(result.get("audit_mode") or "").strip()
@@ -555,19 +585,34 @@ def validate_auditor_result(result: dict[str, Any]) -> list[str]:
         if "code audit" not in str(result.get("findings_summary") or "").lower():
             errors.append("auditor_result preflight summary must state that no code audit is claimed")
         return errors
-    required_code_audit_fields = [
+    required_non_empty_fields = [
         "auditor_head",
         "corpus_files_loaded",
         "checklist_coverage",
         "known_vectors_coverage",
         "instruction_matrix",
         "state_model",
+    ]
+    missing = [field for field in required_non_empty_fields if result.get(field) in (None, "", [], {})]
+    required_present_fields = [
         "findings",
         "waivers",
     ]
-    missing = [field for field in required_code_audit_fields if result.get(field) in (None, "", [], {})]
+    missing.extend(field for field in required_present_fields if field not in result)
     if missing:
         errors.append("auditor_result code_audit missing " + ", ".join(missing))
+    corpus_files = result.get("corpus_files_loaded") if isinstance(result.get("corpus_files_loaded"), list) else []
+    if len(corpus_files) < AUDITOR_MIN_CORPUS_FILES:
+        errors.append(f"auditor_result code_audit corpus_files_loaded must include at least {AUDITOR_MIN_CORPUS_FILES} files")
+    missing_program_checklists = _coverage_has_prefixes(result.get("checklist_coverage"), AUDITOR_PROGRAM_CHECKLIST_PREFIXES)
+    if missing_program_checklists:
+        errors.append("auditor_result code_audit missing program checklist coverage " + ", ".join(missing_program_checklists))
+    if _known_vector_count(result.get("known_vectors_coverage")) < AUDITOR_MIN_KNOWN_VECTORS:
+        errors.append(f"auditor_result code_audit known_vectors_coverage must cover at least {AUDITOR_MIN_KNOWN_VECTORS} vectors")
+    if "findings" in result and not isinstance(result.get("findings"), list):
+        errors.append("auditor_result findings must be an array")
+    if "waivers" in result and not isinstance(result.get("waivers"), list):
+        errors.append("auditor_result waivers must be an array")
     return errors
 
 
@@ -1060,6 +1105,8 @@ def _record_specific_errors(data: dict[str, Any], evidence_kind: str) -> list[st
         audit_mode = str(data.get("audit_mode") or "").strip()
         if not audit_mode:
             errors.append("audit_mode is required for auditor_result")
+        elif not (evidence_kind == "synthetic" and audit_mode == "synthetic-smoke"):
+            errors.extend(validate_auditor_result(data))
         if data.get("preflight_only") is True and data.get("result") == "PASS" and evidence_kind != "synthetic":
             errors.append("preflight_only auditor_result cannot be real PASS")
     if record_type == "product_face_result":
@@ -1413,7 +1460,7 @@ def build_worker_result(
     if worker_id == "solana-quasar-auditor":
         payload.update(
             {
-                "audit_mode": "synthetic-smoke" if evidence_kind == "synthetic" else "code-audit",
+                "audit_mode": "synthetic-smoke" if evidence_kind == "synthetic" else "code_audit",
                 "preflight_only": evidence_kind == "synthetic",
             }
         )

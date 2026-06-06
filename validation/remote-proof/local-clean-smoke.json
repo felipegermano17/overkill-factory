@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
   "record_type": "remote_proof_result",
-  "created_at": "2026-06-06T08:07:28+00:00",
+  "created_at": "2026-06-06T08:16:52+00:00",
   "worker": {
     "id": "remote-proof-runner",
     "name": "Remote Proof Runner",
@@ -37,8 +37,8 @@
     {
       "command": "'<home>\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' -m unittest discover -s tests -p \"test_*.py\" -q",
       "returncode": 0,
-      "stdout_tail": "Wrote <temp>\\tmpg0ti7har\\codex-security-request.json\nWrote <temp>\\tmpg0ti7har\\solana-quasar-auditor-request.json\nWrote <temp>\\tmpg0ti7har\\independent-reviewer-request.json\nWrote <temp>\\tmpg0ti7har\\human-gate-clerk-request.json\nWrote <temp>\\tmpg0ti7har\\factory-orchestrator-request.json\nWrote <temp>\\tmpg0ti7har\\qa-verification-worker-request.json\nWrote <temp>\\tmpg0ti7har\\autoreview-gate-request.json\nWrote <temp>\\tmpg0ti7har\\security-orchestrator-request.json\nWrote <temp>\\tmpg0ti7har\\crypto-key-management-specialist-request.json\nWrote <temp>\\tmpg0ti7har\\remote-proof-runner-request.json\nWrote <temp>\\tmpg0ti7har\\handoff-packer-request.json\nWrote <temp>\\tmpg0ti7har\\supply-chain-gate-request.json\n",
-      "stderr_tail": "----------------------------------------------------------------------\nRan 47 tests in 0.371s\n\nOK\n"
+      "stdout_tail": "Wrote <temp>\\tmpsq0ynp8g\\codex-security-request.json\nWrote <temp>\\tmpsq0ynp8g\\solana-quasar-auditor-request.json\nWrote <temp>\\tmpsq0ynp8g\\independent-reviewer-request.json\nWrote <temp>\\tmpsq0ynp8g\\human-gate-clerk-request.json\nWrote <temp>\\tmpsq0ynp8g\\factory-orchestrator-request.json\nWrote <temp>\\tmpsq0ynp8g\\qa-verification-worker-request.json\nWrote <temp>\\tmpsq0ynp8g\\autoreview-gate-request.json\nWrote <temp>\\tmpsq0ynp8g\\security-orchestrator-request.json\nWrote <temp>\\tmpsq0ynp8g\\crypto-key-management-specialist-request.json\nWrote <temp>\\tmpsq0ynp8g\\remote-proof-runner-request.json\nWrote <temp>\\tmpsq0ynp8g\\handoff-packer-request.json\nWrote <temp>\\tmpsq0ynp8g\\supply-chain-gate-request.json\n",
+      "stderr_tail": "----------------------------------------------------------------------\nRan 50 tests in 0.353s\n\nOK\n"
     },
     {
       "command": "'<home>\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' adapters/hermes/compatibility-check.py",
