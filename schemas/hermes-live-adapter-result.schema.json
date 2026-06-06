@@ -1,0 +1,37 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["$schema", "mode", "board", "hook"],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json"
+    },
+    "mode": {
+      "enum": ["materialize", "enforce-done"]
+    },
+    "dry_run": {
+      "type": "boolean"
+    },
+    "blocked": {
+      "type": "boolean"
+    },
+    "board": {
+      "type": "string",
+      "minLength": 3
+    },
+    "board_created": {
+      "type": "boolean"
+    },
+    "main_task_id": {
+      "type": ["string", "null"]
+    },
+    "worker_task_ids": {
+      "type": "object"
+    },
+    "hook": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

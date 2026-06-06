@@ -17,6 +17,7 @@ from transition_hook import ACTION_BLOCK_TRANSITION, build_hook_result, write_js
 
 ROOT = Path(__file__).resolve().parents[2]
 TASK_ID_RE = re.compile(r"\bt_[a-f0-9]{8,}\b")
+LIVE_ADAPTER_SCHEMA = "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json"
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 
 
@@ -154,6 +155,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
 
     if args.dry_run:
         envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
             "mode": "materialize",
             "dry_run": True,
             "board": args.board,
@@ -200,6 +202,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         run_checked(hermes_kanban(args.hermes_bin, args.board, "link", task_id, main_task_id), runner)
 
     envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
         "mode": "materialize",
         "dry_run": False,
         "board": args.board,
@@ -224,6 +227,7 @@ def enforce_done(args: argparse.Namespace, runner: Runner = default_runner) -> d
     )
     blocked = result["transition_action"] == ACTION_BLOCK_TRANSITION
     envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
         "mode": "enforce-done",
         "blocked": blocked,
         "board": args.board,
