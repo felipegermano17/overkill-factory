@@ -48,6 +48,13 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
 
 
+def public_path_ref(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except (OSError, ValueError):
+        return f"external:{path.name or 'artifact'}"
+
+
 def task_id(card_id: str, worker_id: str) -> str:
     digest = hashlib.sha256(f"{card_id}:{worker_id}".encode("utf-8")).hexdigest()[:16]
     return f"ofw_{digest}"
@@ -106,7 +113,7 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
     ledger["last_action"] = plan.get("transition_action")
     write_json(ledger_path, ledger)
     return {
-        "ledger_path": str(ledger_path),
+        "ledger_path": public_path_ref(ledger_path),
         "created": created,
         "updated": updated,
         "unchanged": unchanged,
