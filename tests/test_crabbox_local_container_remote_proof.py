@@ -35,6 +35,7 @@ class CrabboxLocalContainerRemoteProofTest(unittest.TestCase):
                 "OK\nOK\nOK\n"
                 "python3 scripts/validate_public_json_artifacts.py\n"
                 "python3 scripts/full_product_worker_graph.py --require-pass\n"
+                "PASS\n"
             ),
             stderr="",
         )
@@ -68,6 +69,7 @@ class CrabboxLocalContainerRemoteProofTest(unittest.TestCase):
                 "OK\nOK\nOK\n"
                 "python3 scripts/validate_public_json_artifacts.py\n"
                 "python3 scripts/full_product_worker_graph.py --require-pass\n"
+                "PASS\n"
             ),
             stderr="",
         )

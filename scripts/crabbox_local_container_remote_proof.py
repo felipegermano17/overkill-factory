@@ -68,12 +68,18 @@ def parse_timing_json(stdout: str, stderr: str) -> dict[str, Any]:
     raise ValueError("Crabbox timing JSON line was not found")
 
 
-def command_passed(stdout: str, timing: dict[str, Any]) -> bool:
+def command_passed(stdout: str, timing: dict[str, Any], command: str) -> bool:
+    required = [
+        "python3 scripts/validate_public_json_artifacts.py",
+        "python3 scripts/secret_safety_scan.py",
+        "python3 scripts/public_safety_scan.py",
+        "python3 scripts/full_product_worker_graph.py --require-pass",
+    ]
     return (
         timing.get("exitCode") == 0
-        and "OK" in stdout
-        and "python3 scripts/validate_public_json_artifacts.py" in stdout + json.dumps(timing)
-        and "python3 scripts/full_product_worker_graph.py --require-pass" in stdout + json.dumps(timing)
+        and stdout.count("OK") >= 3
+        and "PASS" in stdout
+        and all(item in command for item in required)
     )
 
 
@@ -105,7 +111,7 @@ def build_result(
 ) -> dict[str, Any]:
     pass_status = (
         completed.returncode == 0
-        and command_passed(completed.stdout, timing)
+        and command_passed(completed.stdout, timing, command)
         and timing.get("leaseStopped") is True
         and active_leases_after in (0, None)
     )
