@@ -10,13 +10,13 @@ proven in real product pilots.
 | Security remains generic | A single scan misses AppSec, AI, cloud or onchain risks | Security control matrix and specialist workers | Automated routing and domain-specific fixtures |
 | Public repo leaks private context | Internal names, paths, source extraction or private board links enter docs | `public-safety-gate` and `public_safety_scan.py` | CI enforcement on every PR |
 | Hermes update breaks gates | Upstream update removes adapter symbols or bypasses exit codes | compatibility manifest, runbook, check script and adapter patch chain | Disposable runtime update pipeline |
-| Dashboard/API bypasses CLI gates | UI path mutates Kanban without same validation | Dashboard `ready` patch and live smoke; required update smokes | `done`, API and worker-route live test harness |
+| Dashboard/API bypasses CLI gates | UI path mutates Kanban without same validation | Dashboard `ready` patch, dashboard/API `done` patch and live smokes for missing Product Face plus weak Auditor | Worker-route live completion harness |
 | AutoReview over-trusted | Automated review is treated as approval | AutoReview cannot replace independent or human gates | Review result schema and blocking-finding policy |
 | Remote proof leaks secrets | Testbox/remote runner receives sensitive data | Secrets denied by default, TTL/cost/cleanup required | Secret allowlist scanner and remote proof fixtures |
 | Handoff becomes prose | Handoff omits state, constraints or evidence | Handoff Packer contract | Replay validator with hashes/artifact checks |
 | Memory poisoning | Old or malicious context becomes truth | Memory Steward, trust tier, freshness, source status | Memory test suite and poisoning examples |
-| Product Face is under-tested | UI looks complete but lacks states/mobile/a11y | Product Face worker and packet | Automated browser/a11y/mobile proof runner |
-| Onchain proof is shallow | Auditor preflight mistaken for real Quasar audit | Auditor result must state preflight vs real code audit | Real Quasar source pilots |
+| Product Face is under-tested | UI looks complete but lacks states/mobile/a11y | Product Face worker, packet, static pilot proof and runtime `done` block without `product_face_result` | Production UI browser/a11y/mobile proof runner |
+| Onchain proof is shallow | Auditor preflight mistaken for real Quasar audit | Auditor result must state preflight vs real code audit; runtime blocks preflight-only Auditor PASS before `done` | Real Quasar source pilots |
 | Human gate becomes rubber stamp | Agents pressure approval without clear packet | Human Gate Clerk and R3/R4 packet | Approval UI/record with explicit scope and risk owner |
 | Closed workers get promoted too early | A worker becomes rigid before the task shape is stable | open/closed promotion rule | Evals and repetition threshold tracking |
 | CI is too thin | Local tests pass but package/release path breaks | CI added for unit, compatibility and public scan | Patch-apply CI against Hermes checkout |

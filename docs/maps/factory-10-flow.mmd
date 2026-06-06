@@ -123,7 +123,7 @@ flowchart LR
   F29 --> F30
 
   F30["F30 Ainda nao e 10"]:::alert
-  F30D["Faltam Auditor real em Quasar, Product Face de UI real, Crabbox/Testbox e hooks de done/API/worker."]:::desc
+  F30D["Faltam Auditor real em Quasar, Product Face de UI real, Crabbox/Testbox e worker-dispatch proof."]:::desc
   F30 -.-> F30D
   F30 --> F31
 
@@ -145,6 +145,11 @@ flowchart LR
   F34["F34 Dashboard ready no-bypass"]:::gate
   F34D["Dashboard live recebeu 409 e bloqueou card invalida ao tentar mover direto para ready."]:::desc
   F34 -.-> F34D
+  F34 --> F35
+
+  F35["F35 Dashboard done no-bypass"]:::gate
+  F35D["Dashboard/API live recebeu 409 para Product Face sem resultado e Auditor preflight antes de done."]:::desc
+  F35 -.-> F35D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

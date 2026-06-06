@@ -6,8 +6,9 @@
    contracts rather than executing real tools automatically.
 2. Security is now a matrix, but not every matrix row has a dedicated automated
    fixture.
-3. Product Face proof is defined, but the browser/a11y/mobile runner still needs
-   full automation.
+3. Product Face proof exists for a static pilot and `done` now rejects missing
+   `product_face_result`, but production UI proof and full WCAG/performance
+   automation remain open.
 4. Hermes update safety exists as manifest and checks, but no disposable Hermes
    update smoke was run in this pass.
 5. Remote proof is defined, but no Crabbox/Testbox/container run was executed in
@@ -21,8 +22,9 @@
    spawning the right worker.
 2. Workers may produce structured JSON with weak evidence.
 3. High-risk tasks may become slow if every specialist runs on every card.
-4. Dashboard `ready` bypass is now covered by patch and live smoke, but `done`,
-   API and worker-route parity still need equivalent validation.
+4. Dashboard/API `ready` and critical `done` negative paths are now covered by
+   patch and live smoke, but worker-dispatched completion still needs
+   equivalent validation.
 5. Public safety scan may miss a new class of private leak unless the denylist
    evolves.
 6. The factory may overfit to the dry pilot until multiple real contexts are
@@ -32,7 +34,8 @@
 
 1. AutoReview is evidence, not approval.
 2. Handoff is replayable state, not a summary.
-3. Auditor preflight is not real program audit.
+3. Auditor preflight is not real program audit, and the runtime now blocks it
+   from closing onchain work as PASS.
 4. Product Face packet is not rendered proof.
 5. Memory is not truth.
 6. A green local preflight is not production readiness.
@@ -69,11 +72,11 @@ Mitigation: keep gates risk-tiered and worker-triggered, not universal.
 
 ## Score
 
-Factory 11 is strong as an operational hardening pass: 9.6/10 for methodology
+Factory 11 is strong as an operational hardening pass: 9.7/10 for methodology
 and public-safe agent operability.
 
 It is not a final 10/10 because the remaining proof requires heavy validation
 across multiple real contexts, including repeated real product papers,
-product-specific security scans, Hermes update smoke, Product Face automation,
-provider-backed remote proof and real
-Solana/Quasar implementation audit.
+product-specific security scans, Hermes update smoke, production Product Face
+automation, provider-backed remote proof, worker-dispatched completion smoke
+and real Solana/Quasar implementation audit.

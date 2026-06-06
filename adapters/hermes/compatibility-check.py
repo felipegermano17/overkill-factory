@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PATCHES = [
     ROOT / "adapters" / "hermes" / "patches" / "0001-add-overkill-factory-10-kanban-gates.patch",
     ROOT / "adapters" / "hermes" / "patches" / "0002-enforce-overkill-ready-gate-in-dashboard-moves.patch",
+    ROOT / "adapters" / "hermes" / "patches" / "0003-require-overkill-worker-results-before-done.patch",
 ]
 FACTORYCTL = ROOT / "scripts" / "factoryctl.py"
 TRANSITION_HOOK = ROOT / "adapters" / "hermes" / "transition_hook.py"
@@ -33,6 +34,15 @@ REQUIRED_PATCH_MARKERS = {
         "test_patch_ready_uses_overkill_gate_for_direct_dashboard_move",
         "test_patch_body_edit_rechecks_ready_overkill_card",
         "test_bulk_ready_uses_overkill_gate_for_direct_dashboard_move",
+    ],
+    "0003-require-overkill-worker-results-before-done.patch": [
+        "_overkill_v35_validate_worker_result",
+        "_overkill_v35_validate_auditor_result",
+        "_overkill_v35_validate_product_face_result",
+        "_overkill_v35_validate_human_gate_record",
+        "auditor_result audit_mode must be code_audit for PASS",
+        "product_face_result metadata is required",
+        "test_patch_status_done_blocks_overkill_missing_product_face_result",
     ],
 }
 

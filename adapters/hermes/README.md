@@ -10,6 +10,7 @@ production line unless their contracts are complete.
 ```text
 patches/0001-add-overkill-factory-10-kanban-gates.patch
 patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
+patches/0003-require-overkill-worker-results-before-done.patch
 ```
 
 This patch adds:
@@ -23,9 +24,15 @@ This patch adds:
 - Anti-self-review.
 - R4 human gate.
 - Receipt Five and transition-event done gate.
+- Worker-result done gate for Product Face, Solana/Quasar Auditor, QA,
+  independent review, human gate and optional remote proof.
+- Auditor preflight cannot close onchain/Solana/Quasar work as a PASS; a real
+  code-audit result must carry checklist coverage, instruction matrix, state
+  model, known-vector coverage and Quasar toolchain proof.
 - Correct CLI exit-code propagation.
 - Dashboard direct `ready`, bulk `ready` and post-edit `ready` revalidation, so
   a browser/API move cannot bypass the same Factory gate.
+- Dashboard/API `done` failures return HTTP 409 with the gate reason.
 - Regression tests.
 
 ## Worker Automation Hook
@@ -132,6 +139,7 @@ From a Hermes checkout:
 git switch -c codex/overkill-factory-10-gates
 git am /path/to/0001-add-overkill-factory-10-kanban-gates.patch
 git am /path/to/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
+git am /path/to/0003-require-overkill-worker-results-before-done.patch
 python -m pytest -q -o addopts='' \
   tests/hermes_cli/test_overkill_factory_v35_gate.py \
   tests/hermes_cli/test_kanban_promote.py \
@@ -159,8 +167,9 @@ The transition-plan fixtures prove the intended fan-out and reconciliation
 contract.
 
 Real Hermes runtime integration is still not fully landed inside Hermes itself.
-The public adapter now provides the executable hook, ledger contract, CI smoke
-and dashboard `ready` parity patch. The remaining work is to wire Hermes Kanban
-events into this hook, map ledger tasks to real dashboard/API worker cards,
-ingest worker result artifacts, and prove `done` plus worker/API routes share
-the same gate path under real dispatched execution.
+The public adapter now provides the executable hook, ledger contract, CI smoke,
+dashboard `ready` parity patch, and dashboard/API `done` rejection for missing
+Product Face or weak Auditor evidence. The remaining work is to wire Hermes
+Kanban events into this hook, map ledger tasks to real dashboard/API worker
+cards, ingest worker result artifacts automatically, and prove worker-driven
+completion uses the same `complete_task` gate under real dispatched execution.

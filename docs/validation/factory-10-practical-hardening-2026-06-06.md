@@ -109,9 +109,11 @@ the scanner now represents the real public policy more closely.
 - Product-specific Codex Security scans still need to run per real
   implementation.
 - Auditor has not run against real public Quasar source.
-- Hermes dashboard `ready` parity is now live-smoke proven. Hermes still needs
-  live wiring from Kanban events to the public hook, plus `done`, API/worker
-  parity and result ingestion.
+- Hermes dashboard `ready` parity is live-smoke proven. Dashboard/API `done`
+  parity is now live-smoke proven for missing Product Face result and weak
+  Auditor preflight. Hermes still needs worker-dispatched completion proof,
+  live wiring from Kanban events to the public hook and automatic result
+  ingestion.
 - Remote Proof is local-clean fallback, not provider-backed Crabbox/Testbox.
 - Supply-chain posture still lacks dependency review and SBOM/provenance.
 - Current Git history still contains old private/internal markers from earlier
@@ -122,10 +124,10 @@ the scanner now represents the real public policy more closely.
 
 ## Current Practical Score
 
-Estimated public-factory score after this pass: 9.55/10 for contracts,
+Estimated public-factory score after this pass: 9.65/10 for contracts,
 preflight, executable Hermes hook, stricter worker-result reconciliation,
-Product Face proof, local remote proof, action pinning and public-safety
-controls.
+Product Face proof, dashboard/API no-bypass smokes, local remote proof, action
+pinning and public-safety controls.
 
 It is not 10 because the missing items above require real runtime integration or
 real target code, plus a clean public publication path for Git history.

@@ -6,7 +6,7 @@ Do not update a real Hermes factory runtime directly.
 
 1. Identify the current Hermes version and target Hermes version.
 2. Create or use a disposable Hermes checkout/runtime.
-3. Apply both Overkill adapter patches.
+3. Apply all Overkill adapter patches.
 4. Run compatibility checks.
 5. Run negative and positive smoke tests.
 6. Record the update receipt.
@@ -19,12 +19,16 @@ Do not update a real Hermes factory runtime directly.
 2. Self-review card fails before `ready`.
 3. Completion without `receipt_five` and `kanban_transition_event` fails before `done`.
 4. Security-required card cannot close without `security_scan_result`.
-5. R4 card without `r4_gate` fails.
-6. Blocked transition returns non-zero exit code.
-7. Dashboard direct `ready` path cannot bypass the same gate.
-8. Dashboard bulk `ready` path cannot bypass the same gate.
-9. Dashboard edits/reassignments cannot leave an invalid `ready` card
+5. Product-facing card cannot close without `product_face_result`.
+6. Onchain/Solana/Quasar card cannot close when Auditor evidence is only
+   preflight or lacks `audit_mode=code_audit`.
+7. R4 card without `r4_gate` fails.
+8. Blocked transition returns non-zero exit code.
+9. Dashboard direct `ready` path cannot bypass the same gate.
+10. Dashboard bulk `ready` path cannot bypass the same gate.
+11. Dashboard edits/reassignments cannot leave an invalid `ready` card
    dispatchable.
+12. Dashboard/API `done` failures return HTTP 409 with the gate reason.
 
 ## What To Adopt From New Hermes Releases
 

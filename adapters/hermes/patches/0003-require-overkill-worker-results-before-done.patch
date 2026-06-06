@@ -1,0 +1,473 @@
+From e2414906d2620f8f85fd15fd9de6db0be4643c15 Mon Sep 17 00:00:00 2001
+From: Overkill Factory <overkill-factory@local>
+Date: Sat, 6 Jun 2026 09:44:26 +0000
+Subject: [PATCH] Require factory worker results before done
+
+---
+ hermes_cli/kanban_db.py                       | 131 +++++++++++
+ plugins/kanban/dashboard/plugin_api.py        |  15 +-
+ .../hermes_cli/test_overkill_factory_v35_gate.py | 209 ++++++++++++++++++
+ tests/plugins/test_kanban_dashboard_plugin.py |  32 ++-
+ 4 files changed, 380 insertions(+), 7 deletions(-)
+
+diff --git a/hermes_cli/kanban_db.py b/hermes_cli/kanban_db.py
+index e4e19ec59..7f0dee238 100644
+--- a/hermes_cli/kanban_db.py
++++ b/hermes_cli/kanban_db.py
+@@ -412,6 +412,112 @@ def _overkill_validate_v35_card(card: dict[str, Any], risk_class: object) -> list[s
+     return errors
+
+
++def _overkill_v35_validate_worker_result(
++    metadata: dict,
++    key: str,
++    errors: list[str],
++    *,
++    allowed_results: set[str] | None = None,
++) -> Optional[dict[str, Any]]:
++    record = metadata.get(key)
++    if not _overkill_non_empty_dict(record):
++        errors.append(f"v3.5 {key} metadata is required")
++        return None
++
++    if record.get("record_type") and record.get("record_type") != key:
++        errors.append(f"v3.5 {key} record_type must be {key}")
++
++    worker = record.get("worker")
++    if not _overkill_non_empty_dict(worker) or not _overkill_non_empty_string(worker.get("id")):
++        errors.append(f"v3.5 {key} worker.id is required")
++    card_ref = record.get("card_ref")
++    if not _overkill_non_empty_dict(card_ref) or not _overkill_non_empty_string(card_ref.get("card_id")):
++        errors.append(f"v3.5 {key} card_ref.card_id is required")
++
++    required = ["findings_summary", "tool_or_profile", "executed_by", "evidence_kind", "next_action"]
++    missing = [field for field in required if not _overkill_non_empty_string(record.get(field), 3)]
++    if missing:
++        errors.append(f"v3.5 {key} missing " + ", ".join(missing))
++    if not _overkill_non_empty_string_list(record.get("evidence_refs")):
++        errors.append(f"v3.5 {key} evidence_refs must be a non-empty string array")
++
++    result = str(record.get("result") or "").strip().upper()
++    allowed = allowed_results or {"PASS", "WAIVED"}
++    if result not in allowed:
++        errors.append(f"v3.5 {key} result must be " + " or ".join(sorted(allowed)))
++    if record.get("blocking_findings") is True and not _overkill_non_empty_dict(record.get("waiver")):
++        errors.append(f"v3.5 {key} blocking findings require waiver")
++    if result == "WAIVED" and not _overkill_non_empty_dict(record.get("waiver")):
++        errors.append(f"v3.5 {key} WAIVED result requires waiver")
++    return record
++
++
++def _overkill_v35_validate_product_face_result(metadata: dict, errors: list[str]) -> None:
++    record = _overkill_v35_validate_worker_result(
++        metadata,
++        "product_face_result",
++        errors,
++        allowed_results={"PASS"},
++    )
++    if not record:
++        return
++    list_fields = ["screenshots", "viewports", "checked_states", "journeys"]
++    missing_lists = [field for field in list_fields if not _overkill_non_empty_string_list(record.get(field))]
++    if missing_lists:
++        errors.append("v3.5 product_face_result missing " + ", ".join(missing_lists))
++    for field in ("accessibility", "overlap"):
++        if not _overkill_non_empty_dict(record.get(field)):
++            errors.append(f"v3.5 product_face_result {field} must be an object")
++    if not _overkill_non_empty_string(record.get("performance_note"), 10):
++        errors.append("v3.5 product_face_result performance_note is required")
++
++
++def _overkill_v35_validate_auditor_result(metadata: dict, errors: list[str]) -> None:
++    record = _overkill_v35_validate_worker_result(
++        metadata,
++        "auditor_result",
++        errors,
++        allowed_results={"PASS", "WAIVED"},
++    )
++    if not record:
++        return
++    result = str(record.get("result") or "").strip().upper()
++    if result == "WAIVED":
++        return
++    audit_mode = str(record.get("audit_mode") or "").strip().lower()
++    if audit_mode != "code_audit":
++        errors.append("v3.5 auditor_result audit_mode must be code_audit for PASS")
++    if record.get("preflight_only") is True:
++        errors.append("v3.5 auditor_result preflight_only cannot PASS")
++    required_objects = [
++        "quasar_toolchain_proof",
++        "checklist_coverage",
++        "instruction_matrix",
++        "state_model",
++    ]
++    missing_objects = [field for field in required_objects if not _overkill_non_empty_dict(record.get(field))]
++    if missing_objects:
++        errors.append("v3.5 auditor_result missing " + ", ".join(missing_objects))
++    if not record.get("known_vector_coverage"):
++        errors.append("v3.5 auditor_result known_vector_coverage is required")
++
++
++def _overkill_v35_validate_human_gate_record(metadata: dict, errors: list[str]) -> None:
++    record = metadata.get("human_gate_record")
++    if not _overkill_non_empty_dict(record):
++        errors.append("v3.5 human_gate_record metadata is required")
++        return
++    required = ["decision", "human_actor", "decision_at", "risk_owner", "security_owner"]
++    missing = [field for field in required if not _overkill_non_empty_string(record.get(field), 3)]
++    if missing:
++        errors.append("v3.5 human_gate_record missing " + ", ".join(missing))
++    decision = str(record.get("decision") or "").strip().lower()
++    if decision not in {"approved", "waived"}:
++        errors.append("v3.5 human_gate_record decision must be approved or waived")
++    if not _overkill_non_empty_string_list(record.get("evidence_refs")):
++        errors.append("v3.5 human_gate_record evidence_refs must be a non-empty string array")
++
++
+ def _overkill_validate_v35_completion(card: dict[str, Any], metadata: Optional[dict]) -> list[str]:
+     if not _overkill_is_v35_card(card):
+         return []
+@@ -494,6 +600,31 @@ def _overkill_validate_v35_completion(card: dict[str, Any], metadata: Optional[dict
+             if scan.get("blocking_findings") is True and not _overkill_non_empty_dict(metadata.get("security_exception")):
+                 errors.append("v3.5 security_scan_result blocking findings require security_exception")
+
++    if surfaces & _Overkill_V35_PRODUCT_FACE_SURFACES:
++        _overkill_v35_validate_product_face_result(metadata, errors)
++
++    if surfaces & _Overkill_V35_ONCHAIN_SURFACES:
++        _overkill_v35_validate_auditor_result(metadata, errors)
++
++    review = card.get("review") if isinstance(card.get("review"), dict) else {}
++    if review.get("QA_required") is True:
++        _overkill_v35_validate_worker_result(metadata, "qa_verification_result", errors)
++    if review.get("independent_review_required") is True:
++        _overkill_v35_validate_worker_result(metadata, "independent_review_result", errors)
++
++    human_gate_required = (
++        risk_effective in {"R3", "R4"}
++        or review.get("CTO_gate_required") is True
++        or review.get("human_owner_gate_required") is True
++        or card.get("human_gate_required") is True
++    )
++    if human_gate_required:
++        _overkill_v35_validate_human_gate_record(metadata, errors)
++
++    runtime_contract = card.get("runtime_contract") if isinstance(card.get("runtime_contract"), dict) else {}
++    if card.get("remote_proof_required") is True or runtime_contract.get("remote_proof_required") is True:
++        _overkill_v35_validate_worker_result(metadata, "remote_proof_result", errors)
++
+     return errors
+
+
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+index 391e58a30..9a43d88c9 100644
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -843,12 +843,15 @@ def update_task(task_id: str, payload: UpdateTaskBody, board: Optional[str] = Qu
+             s = payload.status
+             ok = True
+             if s == "done":
+-                ok = kanban_db.complete_task(
+-                    conn, task_id,
+-                    result=payload.result,
+-                    summary=payload.summary,
+-                    metadata=payload.metadata,
+-                )
++                try:
++                    ok = kanban_db.complete_task(
++                        conn, task_id,
++                        result=payload.result,
++                        summary=payload.summary,
++                        metadata=payload.metadata,
++                    )
++                except ValueError as e:
++                    raise HTTPException(status_code=409, detail=str(e))
+             elif s == "blocked":
+                 ok = kanban_db.block_task(conn, task_id, reason=payload.block_reason)
+             elif s == "scheduled":
+diff --git a/tests/hermes_cli/test_overkill_factory_v35_gate.py b/tests/hermes_cli/test_overkill_factory_v35_gate.py
+index e71b1de0a..821d145e2 100644
+--- a/tests/hermes_cli/test_overkill_factory_v35_gate.py
++++ b/tests/hermes_cli/test_overkill_factory_v35_gate.py
+@@ -192,6 +192,51 @@ def _receipt_metadata(*, include_scan: bool = False) -> dict:
+             "receipt_refs": ["receipt_five"],
+             "artifact_refs": ["tests/hermes_cli/test_overkill_factory_v35_gate.py"],
+         },
++        "evidence_paths": ["tests/hermes_cli/test_overkill_factory_v35_gate.py"],
++        "verification": {
++            "passed": True,
++            "commands": ["pytest tests/hermes_cli/test_overkill_factory_v35_gate.py"],
++        },
++        "sandbox": {
++            "passed": True,
++            "invariants": ["regression fixture has no funds, deploy or signing authority"],
++        },
++        "rollback": {
++            "verified": True,
++            "evidence_path": "tests/hermes_cli/test_overkill_factory_v35_gate.py",
++        },
++        "approvals": {
++            "qa": {
++                "approved": True,
++                "actor": "pytest-qa",
++                "at": "2026-06-06T00:00:00Z",
++            },
++            "independent_review": {
++                "approved": True,
++                "actor": "pytest-independent-reviewer",
++                "at": "2026-06-06T00:00:00Z",
++            },
++            "security_review": {
++                "approved": True,
++                "actor": "pytest-security-reviewer",
++                "at": "2026-06-06T00:00:00Z",
++            },
++            "cybersecurity_review": {
++                "approved": True,
++                "actor": "pytest-cybersecurity-reviewer",
++                "at": "2026-06-06T00:00:00Z",
++            },
++            "cto_gate": {
++                "approved": True,
++                "actor": "pytest-cto",
++                "at": "2026-06-06T00:00:00Z",
++            },
++            "human_owner_gate": {
++                "approved": True,
++                "actor": "pytest-human-owner",
++                "at": "2026-06-06T00:00:00Z",
++            },
++        },
+     }
+     if include_scan:
+         metadata["security_scan_result"] = {
+@@ -206,6 +251,79 @@ def _receipt_metadata(*, include_scan: bool = False) -> dict:
+     return metadata
+
+
++def _worker_result(record_type: str, worker_id: str, *, result: str = "PASS", **extra: object) -> dict:
++    record = {
++        "record_type": record_type,
++        "worker": {"id": worker_id, "name": worker_id},
++        "card_ref": {"card_id": "OFP-V35-TEST", "slice_id": "OVERKILL_FACTORY_V35_TEST"},
++        "result": result,
++        "blocking_findings": False,
++        "findings_summary": "Deterministic worker-result fixture passed.",
++        "tool_or_profile": f"pytest:{worker_id}",
++        "executed_by": "pytest",
++        "evidence_refs": ["tests/hermes_cli/test_overkill_factory_v35_gate.py"],
++        "evidence_kind": "real",
++        "reusable_for_product": False,
++        "next_action": "Keep the worker result attached to completion metadata.",
++    }
++    record.update(extra)
++    return record
++
++
++def _product_face_result() -> dict:
++    return _worker_result(
++        "product_face_result",
++        "product-face",
++        screenshots=["validation/product-face/screenshots/desktop.png"],
++        viewports=["desktop 1440x900", "mobile 390x844"],
++        checked_states=["default", "loading", "error", "success"],
++        journeys=["open target", "inspect evidence"],
++        accessibility={"status": "pass"},
++        overlap={"status": "pass"},
++        performance_note="Static regression fixture performance note is present.",
++    )
++
++
++def _auditor_code_audit_result() -> dict:
++    return _worker_result(
++        "auditor_result",
++        "solana-quasar-auditor",
++        audit_mode="code_audit",
++        preflight_only=False,
++        quasar_toolchain_proof={"source": "quasar", "build": "PASS", "test": "PASS"},
++        checklist_coverage={
++            "01-program-account-validation": {"status": "done"},
++            "02-program-access-control": {"status": "done"},
++            "03-program-arithmetic-safety": {"status": "done"},
++            "04-program-cpi-pda": {"status": "done"},
++            "05-program-state-machine": {"status": "done"},
++            "06-program-economic-logic": {"status": "done"},
++            "07-program-opsec-governance": {"status": "done"},
++        },
++        known_vector_coverage=["happy-path", "invalid-account", "authority-mismatch"],
++        instruction_matrix={"test_instruction": {"checked": True}},
++        state_model={"accounts": ["test_account"], "transitions": ["init", "update"]},
++    )
++
++
++def _human_gate_record() -> dict:
++    return {
++        "record_type": "human_gate_record",
++        "gate_type": "R3",
++        "card_id": "OFP-V35-TEST",
++        "decision": "approved",
++        "human_actor": "pytest-human-actor",
++        "decision_at": "2026-06-06T00:00:00Z",
++        "risk_owner": "pytest-risk-owner",
++        "security_owner": "pytest-security-owner",
++        "approved_scope": ["regression fixture only"],
++        "forbidden_scope": ["deploy", "funds", "mainnet"],
++        "evidence_refs": ["tests/hermes_cli/test_overkill_factory_v35_gate.py"],
++        "evidence_kind": "real",
++        "reusable_for_product": False,
++    }
++
++
+ def test_v35_product_face_surfaces_require_product_face_packet() -> None:
+     card = _base_card(surfaces=["ux", "frontend"])
+     card.pop("product_face_packet")
+@@ -272,6 +390,97 @@ def test_v35_security_scan_completion_requires_scan_result(kanban_home: Path) ->
+         assert kb.get_task(conn, tid).status == "done"
+
+
++def test_v35_product_face_completion_requires_product_face_result(kanban_home: Path) -> None:
++    card = _base_card(owner="frontend", surfaces=["ux", "frontend"], phase="F13")
++
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="product face completion fixture",
++            body=_body(card),
++            assignee="frontend",
++            initial_status="blocked",
++        )
++        ok, err = kb.promote_task(conn, tid, actor="pytest")
++        assert ok is True
++        assert err is None
++
++        with pytest.raises(ValueError, match="product_face_result metadata is required"):
++            kb.complete_task(
++                conn,
++                tid,
++                result="missing product face proof",
++                summary="Receipt Five exists but browser/product evidence is missing",
++                metadata=_receipt_metadata(include_scan=False),
++            )
++        assert kb.get_task(conn, tid).status == "ready"
++
++        metadata = _receipt_metadata(include_scan=False)
++        metadata["product_face_result"] = _product_face_result()
++        assert kb.complete_task(
++            conn,
++            tid,
++            result="product face proof passed",
++            summary="Receipt Five and Product Face result accepted",
++            metadata=metadata,
++        )
++        assert kb.get_task(conn, tid).status == "done"
++
++
++def test_v35_onchain_done_requires_real_auditor_result(kanban_home: Path) -> None:
++    card = _base_card(
++        owner="protocol",
++        surfaces=["solana-quasar", "account-pda", "cpi", "compute-units"],
++        risk="R3-financial-critical",
++        phase="F13",
++    )
++    card["onchain_work_package"] = _onchain_package(auditor_required=True)
++    card["security_scan_packet"] = _security_scan_packet()
++
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="onchain completion fixture",
++            body=_body(card),
++            assignee="protocol",
++            initial_status="blocked",
++        )
++        ok, err = kb.promote_task(conn, tid, actor="pytest")
++        assert ok is True
++        assert err is None
++
++        metadata = _receipt_metadata(include_scan=True)
++        metadata["auditor_result"] = _worker_result(
++            "auditor_result",
++            "solana-quasar-auditor",
++            audit_mode="preflight",
++            preflight_only=True,
++        )
++        metadata["qa_verification_result"] = _worker_result("qa_verification_result", "qa-verification-worker")
++        metadata["independent_review_result"] = _worker_result("independent_review_result", "independent-reviewer")
++        metadata["human_gate_record"] = _human_gate_record()
++
++        with pytest.raises(ValueError, match="auditor_result audit_mode must be code_audit"):
++            kb.complete_task(
++                conn,
++                tid,
++                result="weak auditor proof",
++                summary="Preflight-only Auditor result is not enough for onchain done",
++                metadata=metadata,
++            )
++        assert kb.get_task(conn, tid).status == "ready"
++
++        metadata["auditor_result"] = _auditor_code_audit_result()
++        assert kb.complete_task(
++            conn,
++            tid,
++            result="auditor proof passed",
++            summary="Receipt Five, security scan and Auditor code-audit result accepted",
++            metadata=metadata,
++        )
++        assert kb.get_task(conn, tid).status == "done"
++
++
+ def test_v35_onchain_r3_requires_auditor_or_human_waiver() -> None:
+     card = _base_card(
+         owner="protocol",
+diff --git a/tests/plugins/test_kanban_dashboard_plugin.py b/tests/plugins/test_kanban_dashboard_plugin.py
+index 9f08a56eb..6173ab8de 100644
+--- a/tests/plugins/test_kanban_dashboard_plugin.py
++++ b/tests/plugins/test_kanban_dashboard_plugin.py
+@@ -18,7 +18,7 @@ from fastapi import FastAPI
+ from fastapi.testclient import TestClient
+
+ from hermes_cli import kanban_db as kb
+-from tests.hermes_cli.test_overkill_factory_v35_gate import _base_card, _body
++from tests.hermes_cli.test_overkill_factory_v35_gate import _base_card, _body, _receipt_metadata
+
+
+ # ---------------------------------------------------------------------------
+@@ -1352,6 +1352,36 @@ def test_patch_status_done_with_summary_and_metadata(client):
+         conn.close()
+
+
++def test_patch_status_done_blocks_overkill_missing_product_face_result(client):
++    """Dashboard completion must surface the Factory done gate as HTTP 409."""
++    card = _base_card(owner="frontend", surfaces=["ux", "frontend"], phase="F13")
++    with kb.connect() as conn:
++        tid = kb.create_task(
++            conn,
++            title="product face dashboard done fixture",
++            body=_body(card),
++            assignee="frontend",
++            initial_status="blocked",
++        )
++        ok, err = kb.promote_task(conn, tid, actor="pytest")
++        assert ok is True
++        assert err is None
++
++    r = client.patch(
++        f"/api/plugins/kanban/tasks/{tid}",
++        json={
++            "status": "done",
++            "summary": "Receipt exists but Product Face result is missing",
++            "metadata": _receipt_metadata(include_scan=False),
++        },
++    )
++
++    assert r.status_code == 409
++    assert "product_face_result metadata is required" in r.json()["detail"]
++    with kb.connect() as conn:
++        assert kb.get_task(conn, tid).status == "ready"
++
++
+ def test_patch_status_done_without_summary_still_works(client):
+     """Back-compat: PATCH without the new fields still completes."""
+     r = client.post("/api/plugins/kanban/tasks", json={"title": "y", "assignee": "worker"})
+--
+2.43.0

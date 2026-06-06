@@ -8,6 +8,7 @@ adapter compatibility work, not as a casual package upgrade.
 ```text
 adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch
 adapters/hermes/patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
+adapters/hermes/patches/0003-require-overkill-worker-results-before-done.patch
 ```
 
 ## Required Contract Versions
@@ -25,6 +26,10 @@ adapters/hermes/patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patc
 - `security_scan_packet`
 - `security_scan_result`
 - `_block_ready_task_on_overkill_gate_error`
+- `_overkill_v35_validate_worker_result`
+- `_overkill_v35_validate_auditor_result`
+- `_overkill_v35_validate_product_face_result`
+- `_overkill_v35_validate_human_gate_record`
 
 ## Required Surfaces
 
@@ -35,7 +40,13 @@ adapters/hermes/patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patc
   logic.
 - Dashboard edits/reassignments of an already `ready` card must re-run the
   ready gate before work remains dispatchable.
-- API/worker routes must converge on the same gate logic before production use.
+- `done` must reject product-facing cards without `product_face_result`.
+- `done` must reject onchain/Solana/Quasar cards when Auditor evidence is only
+  preflight or lacks `audit_mode=code_audit`.
+- Dashboard/API `done` failures must return HTTP 409, not an unstructured
+  runtime error.
+- Worker routes must converge on the same `complete_task` gate before
+  production use.
 
 ## Incompatible Signs
 
@@ -48,6 +59,9 @@ adapters/hermes/patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patc
 - Dashboard/API can bypass CLI/Kanban gate behavior.
 - Editing or reassigning a `ready` Factory card can leave invalid work
   dispatchable.
+- Product-facing or onchain cards can close with Receipt Five but without the
+  required worker result records.
+- Auditor preflight can be represented as a real onchain code-audit PASS.
 
 ## Required Local Checks
 
@@ -64,6 +78,7 @@ Run these on a clean Hermes checkout after applying the adapter patch:
 ```bash
 git am /path/to/0001-add-overkill-factory-10-kanban-gates.patch
 git am /path/to/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
+git am /path/to/0003-require-overkill-worker-results-before-done.patch
 python -m pytest -q -o addopts='' \
   tests/hermes_cli/test_overkill_factory_v35_gate.py \
   tests/hermes_cli/test_kanban_promote.py \
