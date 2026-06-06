@@ -180,13 +180,22 @@ def redact_public_artifact(value: Any) -> Any:
 
 def summarize_static_html(path: Path | None) -> dict[str, Any]:
     if path is None:
-        return {"mode": "remote-url", "note": "static fallback cannot read remote DOM"}
+        return {
+            "$schema": "https://overkill-factory.dev/schemas/product-face-static-summary.schema.json",
+            "mode": "remote-url",
+            "note": "static fallback cannot read remote DOM",
+        }
     if not path.exists():
-        return {"mode": "missing-file", "target": repo_ref(path)}
+        return {
+            "$schema": "https://overkill-factory.dev/schemas/product-face-static-summary.schema.json",
+            "mode": "missing-file",
+            "target": repo_ref(path),
+        }
     summary = StaticHtmlSummary()
     text = path.read_text(encoding="utf-8", errors="replace")
     summary.feed(text)
     return {
+        "$schema": "https://overkill-factory.dev/schemas/product-face-static-summary.schema.json",
         "mode": "static-file",
         "target": repo_ref(path),
         "sha256": sha256_file(path),
@@ -236,16 +245,16 @@ def build_fallback_result(
             "findings_summary": "Playwright proof did not run; static target metadata was registered only.",
             "screenshots": [f"not-captured: {reason}"],
             "a11y": {
-                "status": "not_run",
+                "status": "fail",
                 "reason": reason,
                 "static_summary_ref": repo_ref(summary_path),
             },
             "overlap_check": {
-                "status": "not_run",
+                "status": "fail",
                 "reason": reason,
             },
             "console": {
-                "status": "not_run",
+                "status": "fail",
                 "reason": reason,
             },
             "performance_note": "not measured; browser proof did not run",
@@ -254,6 +263,27 @@ def build_fallback_result(
         }
     )
     return result
+
+
+def build_waiver(result: dict[str, Any]) -> dict[str, Any]:
+    evidence_refs = [str(ref) for ref in result.get("evidence_refs", []) if str(ref).strip()]
+    if not evidence_refs:
+        evidence_refs = ["external:product-face-waiver-boundary"]
+    return {
+        "owner": "product-face-validator",
+        "reason": str(
+            result.get("findings_summary")
+            or result.get("next_action")
+            or "Product Face proof was waived."
+        ),
+        "expires_at": "before-product-approval",
+        "reviewer_or_human_gate_ref": "human-gate-required:product-face-proof-rerun",
+        "compensating_controls": [
+            "result is marked not reusable for product approval",
+            "rerun Product Face proof with browser screenshots before promotion",
+        ],
+        "evidence_refs": evidence_refs,
+    }
 
 
 def base_result(
@@ -616,6 +646,8 @@ def build_product_face_proof(
     result["accessibility"] = result.get("a11y", {})
     result["overlap"] = result.get("overlap_check", {})
     result["evidence_refs"] = [*result["evidence_refs"], repo_ref(report_path), repo_ref(result_path)]
+    if result.get("result") == "WAIVED":
+        result["waiver"] = build_waiver(result)
     write_json(result_path, result)
     write_report(report_path, result)
     return result
