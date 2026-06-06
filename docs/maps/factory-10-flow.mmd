@@ -122,8 +122,8 @@ flowchart LR
   F29 -.-> F29D
   F29 --> F30
 
-  F30["F30 Ainda nao e 10"]:::alert
-  F30D["Faltam Auditor real em Quasar, Product Face de UI real, Crabbox/Testbox e worker-dispatch proof."]:::desc
+  F30["F30 Ainda nao e 10 pratico"]:::alert
+  F30D["Agora faltam provas product-specific: Quasar de producao com CU/fuzz/property, UI production-like, Crabbox/Testbox provider-backed, release e gate humano."]:::desc
   F30 -.-> F30D
   F30 --> F31
 
@@ -165,6 +165,16 @@ flowchart LR
   F38["F38 Official Hermes patch"]:::execution
   F38D["Patch publico aplica no Hermes oficial testado e passa 119 testes focados."]:::desc
   F38 -.-> F38D
+  F38 --> F39
+
+  F39["F39 Quasar/Auditor product-like PASS"]:::learning
+  F39D["Worker real do Hermes buildou/testou Quasar em Docker, usou corpus solanabr/Auditor e fechou code-audit bounded com PASS."]:::desc
+  F39 -.-> F39D
+  F39 --> F40
+
+  F40["F40 Product Face atualizado PASS"]:::learning
+  F40D["Depois da mudanca do prototipo, Product Face rodou de novo no Hermes com desktop/mobile, console, a11y smoke, overlap e scans OK."]:::desc
+  F40 -.-> F40D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

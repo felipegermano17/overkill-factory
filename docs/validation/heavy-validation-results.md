@@ -225,8 +225,9 @@ checks.
   The factory can inspect/read/edit the board through the local MCP endpoint
   even when native MCP tools are not exposed in a future Codex session.
 - Whimsical Desktop MCP was exercised live through JSON-RPC, with health,
-  board read, flowchart creation and snapshot capture passing. The public map
-  snapshot was refreshed after adding the map-reading legend.
+  board read, flowchart edit and snapshot capture passing. The editable board
+  now includes F39 Quasar/Auditor product-like PASS and F40 updated Product Face
+  PASS, and the public map snapshot was refreshed after that update.
 - Auditor result handling is stricter: `code_audit` now requires corpus count,
   checklists 01-07, known-vector coverage, instruction matrix and state model.
   The worker-result validator now blocks shallow real Auditor PASS records.
