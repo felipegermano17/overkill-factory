@@ -11,8 +11,8 @@
    automation remain open.
 4. Hermes update safety exists as manifest and checks, but no disposable Hermes
    update smoke was run in this pass.
-5. Remote proof is defined, but no Crabbox/Testbox/container run was executed in
-   this pass.
+5. Remote proof has a clean local fallback, but provider-backed Crabbox/Testbox
+   execution was not proven in this pass.
 6. Context spine is defined as a safe model, but no memory storage backend has
    been tested.
 
@@ -22,9 +22,9 @@
    spawning the right worker.
 2. Workers may produce structured JSON with weak evidence.
 3. High-risk tasks may become slow if every specialist runs on every card.
-4. Dashboard/API `ready` and critical `done` negative paths are now covered by
-   patch and live smoke, but worker-dispatched completion still needs
-   equivalent validation.
+4. Dashboard/API `ready`, critical `done` and worker-style CLI completion
+   negative paths are now covered by patch and live smoke, but real specialist
+   profiles can still fail to produce strong evidence.
 5. Public safety scan may miss a new class of private leak unless the denylist
    evolves.
 6. The factory may overfit to the dry pilot until multiple real contexts are
@@ -78,5 +78,5 @@ and public-safe agent operability.
 It is not a final 10/10 because the remaining proof requires heavy validation
 across multiple real contexts, including repeated real product papers,
 product-specific security scans, Hermes update smoke, production Product Face
-automation, provider-backed remote proof, worker-dispatched completion smoke
+automation, provider-backed remote proof, real dispatched specialist profiles
 and real Solana/Quasar implementation audit.

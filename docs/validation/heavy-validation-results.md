@@ -28,6 +28,7 @@ Public evidence:
 - `validation/hermes-live/worker-result-index.json`
 - `validation/hermes-live/dashboard-ready-gate-smoke.md`
 - `validation/hermes-live/dashboard-done-gate-smoke.md`
+- `validation/hermes-live/worker-dispatched-done-gate-smoke.md`
 
 Observed result:
 
@@ -43,6 +44,9 @@ Observed result:
   `product_face_result` received HTTP 409 and remained `ready`;
 - dashboard/API Auditor enforcement: onchain/Solana/Quasar completion with
   preflight-only Auditor PASS received HTTP 409 and remained `ready`;
+- worker-style CLI completion enforcement: product-facing completion without
+  `product_face_result` returned non-zero, kept the task `running`, preserved
+  the active run and emitted a completion-blocked event;
 - main card final state: `done`.
 
 This proves real Kanban materialization, dependency wiring and worker-result
@@ -167,6 +171,8 @@ checks.
 - Hermes dashboard/API `done` bypass is now covered by a public adapter patch
   and live smokes: missing Product Face result and weak Auditor preflight both
   return 409 and preserve the card before closure.
+- Hermes worker-style CLI completion now returns non-zero with the gate reason
+  and keeps the active run open until the missing worker result exists.
 
 ### Still Not Proven
 
@@ -182,12 +188,9 @@ checks.
 - Disposable Hermes update smoke against a fresh real checkout with the full
   patch chain.
 - Full automatic Hermes dispatcher execution with real specialist profiles.
-  The live adapter materializes and reconciles the task graph, but the public
-  smoke completed synthetic worker tasks manually.
-- Full worker-route enforcement under real dispatched specialist execution.
-  Dashboard/API `ready` and critical `done` negative paths are now proven, but
-  a live worker process completing through the dispatcher still needs the same
-  evidence-path smoke.
+  The live adapter materializes and reconciles the task graph, and the
+  worker-style CLI completion path is now smoke-proven, but the public smoke
+  still does not prove real specialist profiles doing product work end to end.
 
 ## Adversarial Review Scores
 
@@ -195,16 +198,16 @@ checks.
 |---|---:|---|
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.4 | Browser-backed proof exists and weak PASS is now blocked; production UI proof and full WCAG remain open. |
-| Agent/Hermes Operability | 9.7 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass and HTTP 409 proof exist; worker-dispatched completion still needs a live smoke. |
+| Agent/Hermes Operability | 9.85 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass and worker-style CLI completion no-bypass are now smoke-proven; real specialist profile execution remains open. |
 | Solana/Quasar/Auditor | 9.2 | Source-pinned Quasar init/build/test proof exists and dashboard/API done now rejects Auditor preflight-only PASS; still no real product Quasar code audit. |
 
-Estimated score after fixes in this pass: 9.85/10 for factory process,
+Estimated score after fixes in this pass: 9.9/10 for factory process,
 operability and public repository safety.
 
 It is not 10 yet because the next jump requires real specialist executions,
 not more synthetic smoke: real Auditor/Quasar, provider-backed remote proof, a
-production Product Face target and a live dispatcher worker completing through
-the same `complete_task` evidence gate.
+production Product Face target and real dispatched specialist profiles doing
+the work end to end.
 
 ## Next Validation Gates
 
@@ -215,7 +218,5 @@ the same `complete_task` evidence gate.
    SBOM/provenance or explicit waiver.
 4. Run provider-backed remote proof in Crabbox/Testbox.
 5. Test Hermes update compatibility against a disposable Hermes checkout.
-6. Prove worker-dispatched completion hits the same `complete_task` evidence
-   gate as CLI/dashboard/API.
-7. Run the same live smoke with real dispatched specialist profiles instead of
+6. Run the same live smoke with real dispatched specialist profiles instead of
    synthetic worker completions.

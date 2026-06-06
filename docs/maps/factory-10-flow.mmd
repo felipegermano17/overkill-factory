@@ -150,6 +150,11 @@ flowchart LR
   F35["F35 Dashboard done no-bypass"]:::gate
   F35D["Dashboard/API live recebeu 409 para Product Face sem resultado e Auditor preflight antes de done."]:::desc
   F35 -.-> F35D
+  F35 --> F36
+
+  F36["F36 Worker done no-bypass"]:::gate
+  F36D["Worker-style CLI live voltou nao-zero, manteve run aberta e so fechou com product_face_result."]:::desc
+  F36 -.-> F36D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker

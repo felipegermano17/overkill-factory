@@ -11,6 +11,7 @@ production line unless their contracts are complete.
 patches/0001-add-overkill-factory-10-kanban-gates.patch
 patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
 patches/0003-require-overkill-worker-results-before-done.patch
+patches/0004-handle-overkill-worker-completion-gate-errors.patch
 ```
 
 This patch adds:
@@ -33,6 +34,8 @@ This patch adds:
 - Dashboard direct `ready`, bulk `ready` and post-edit `ready` revalidation, so
   a browser/API move cannot bypass the same Factory gate.
 - Dashboard/API `done` failures return HTTP 409 with the gate reason.
+- Worker CLI `done` failures return non-zero with the gate reason and preserve
+  the active run until the missing worker result exists.
 - Regression tests.
 
 ## Worker Automation Hook
@@ -140,6 +143,7 @@ git switch -c codex/overkill-factory-10-gates
 git am /path/to/0001-add-overkill-factory-10-kanban-gates.patch
 git am /path/to/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
 git am /path/to/0003-require-overkill-worker-results-before-done.patch
+git am /path/to/0004-handle-overkill-worker-completion-gate-errors.patch
 python -m pytest -q -o addopts='' \
   tests/hermes_cli/test_overkill_factory_v35_gate.py \
   tests/hermes_cli/test_kanban_promote.py \
@@ -168,8 +172,9 @@ contract.
 
 Real Hermes runtime integration is still not fully landed inside Hermes itself.
 The public adapter now provides the executable hook, ledger contract, CI smoke,
-dashboard `ready` parity patch, and dashboard/API `done` rejection for missing
-Product Face or weak Auditor evidence. The remaining work is to wire Hermes
-Kanban events into this hook, map ledger tasks to real dashboard/API worker
-cards, ingest worker result artifacts automatically, and prove worker-driven
-completion uses the same `complete_task` gate under real dispatched execution.
+dashboard `ready` parity patch, dashboard/API `done` rejection for missing
+Product Face or weak Auditor evidence, and worker CLI completion rejection with
+the active run preserved. The remaining work is to wire Hermes Kanban events
+into this hook, map ledger tasks to real dashboard/API worker cards, ingest
+worker result artifacts automatically, and prove full specialist execution with
+real dispatched profiles.

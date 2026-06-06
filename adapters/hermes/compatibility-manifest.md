@@ -9,6 +9,7 @@ adapter compatibility work, not as a casual package upgrade.
 adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch
 adapters/hermes/patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
 adapters/hermes/patches/0003-require-overkill-worker-results-before-done.patch
+adapters/hermes/patches/0004-handle-overkill-worker-completion-gate-errors.patch
 ```
 
 ## Required Contract Versions
@@ -47,6 +48,8 @@ adapters/hermes/patches/0003-require-overkill-worker-results-before-done.patch
   runtime error.
 - Worker routes must converge on the same `complete_task` gate before
   production use.
+- Worker CLI completion must surface gate failures as non-zero operational
+  errors and keep the active run open until the required worker result exists.
 
 ## Incompatible Signs
 
@@ -79,6 +82,7 @@ Run these on a clean Hermes checkout after applying the adapter patch:
 git am /path/to/0001-add-overkill-factory-10-kanban-gates.patch
 git am /path/to/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
 git am /path/to/0003-require-overkill-worker-results-before-done.patch
+git am /path/to/0004-handle-overkill-worker-completion-gate-errors.patch
 python -m pytest -q -o addopts='' \
   tests/hermes_cli/test_overkill_factory_v35_gate.py \
   tests/hermes_cli/test_kanban_promote.py \

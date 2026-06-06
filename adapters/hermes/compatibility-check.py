@@ -12,6 +12,7 @@ PATCHES = [
     ROOT / "adapters" / "hermes" / "patches" / "0001-add-overkill-factory-10-kanban-gates.patch",
     ROOT / "adapters" / "hermes" / "patches" / "0002-enforce-overkill-ready-gate-in-dashboard-moves.patch",
     ROOT / "adapters" / "hermes" / "patches" / "0003-require-overkill-worker-results-before-done.patch",
+    ROOT / "adapters" / "hermes" / "patches" / "0004-handle-overkill-worker-completion-gate-errors.patch",
 ]
 FACTORYCTL = ROOT / "scripts" / "factoryctl.py"
 TRANSITION_HOOK = ROOT / "adapters" / "hermes" / "transition_hook.py"
@@ -43,6 +44,13 @@ REQUIRED_PATCH_MARKERS = {
         "auditor_result audit_mode must be code_audit for PASS",
         "product_face_result metadata is required",
         "test_patch_status_done_blocks_overkill_missing_product_face_result",
+    ],
+    "0004-handle-overkill-worker-completion-gate-errors.patch": [
+        "cannot complete {tid}: {exc}",
+        "HERMES_KANBAN_RUN_ID",
+        "test_v35_worker_cli_completion_keeps_running_until_product_face_result",
+        "product_face_result metadata is required",
+        "completion_blocked_overkill_gate",
     ],
 }
 
