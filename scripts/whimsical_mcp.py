@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import http.client
 import json
 import re
 import urllib.parse
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 
@@ -186,6 +188,43 @@ def run_tool_call(args: argparse.Namespace, client: McpClient, should_redact: bo
     return 0
 
 
+def run_snapshot(args: argparse.Namespace, client: McpClient, should_redact: bool) -> int:
+    client.initialize()
+    tool_args: dict[str, Any] = {}
+    if args.board_id:
+        tool_args["board_id"] = args.board_id
+    if args.object_id:
+        tool_args["object_ids"] = args.object_id
+    if args.scale:
+        tool_args["scale"] = args.scale
+    if args.transparent:
+        tool_args["transparent"] = True
+    if args.no_expand:
+        tool_args["expand"] = False
+
+    response = client.call_tool("board_snapshot", tool_args, request_id=2)
+    content = response.get("result", {}).get("content", [])
+    text_blocks = [item.get("text", "") for item in content if item.get("type") == "text"]
+    image_data = next((item.get("data") for item in content if item.get("type") == "image"), None)
+    if not image_data:
+        raise RuntimeError("board_snapshot did not return image data")
+
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_bytes(base64.b64decode(image_data))
+
+    print_json(
+        {
+            "status": "PASS",
+            "metadata": text_blocks,
+            "output": str(out_path),
+            "bytes": out_path.stat().st_size,
+        },
+        should_redact=should_redact,
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Operate Whimsical Desktop MCP through local JSON-RPC.")
     parser.add_argument("--endpoint", default=DEFAULT_ENDPOINT)
@@ -207,6 +246,14 @@ def build_parser() -> argparse.ArgumentParser:
     tool_call.add_argument("--name", required=True)
     tool_call.add_argument("--args-json", default="{}")
 
+    snapshot = subparsers.add_parser("snapshot", help="Capture a board or object snapshot as a PNG.")
+    snapshot.add_argument("--out", required=True, help="PNG output path.")
+    snapshot.add_argument("--board-id", help="Board id or URL. Omit to use the current board.")
+    snapshot.add_argument("--object-id", action="append", help="Object id to capture. Can be repeated.")
+    snapshot.add_argument("--scale", type=int, choices=[1, 2], default=1)
+    snapshot.add_argument("--transparent", action="store_true")
+    snapshot.add_argument("--no-expand", action="store_true")
+
     return parser
 
 
@@ -222,6 +269,8 @@ def main() -> int:
         return run_board_read(args, client, should_redact)
     if args.command == "tool-call":
         return run_tool_call(args, client, should_redact)
+    if args.command == "snapshot":
+        return run_snapshot(args, client, should_redact)
     raise SystemExit(f"unknown command: {args.command}")
 
 

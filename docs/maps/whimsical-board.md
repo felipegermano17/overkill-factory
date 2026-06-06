@@ -73,6 +73,9 @@ MCP note: older duplicate F27-F37 blocks and orphan explanatory texts were
 removed through the local Whimsical MCP. A post-cleanup `board_read` showed only
 the three official flowcharts above. F38 was added with `flowchart_edit`, then
 the whole F27-F38 flowchart was repositioned with `board_repl` to avoid overlap.
+The main F0-F19 spine was later color-coded with `flowchart_edit`, preserving
+node IDs and connectors while making phases, explanations, workers and warnings
+visually distinguishable.
 
 ## Durable MCP Fallback
 
@@ -84,6 +87,7 @@ memory:
 python scripts/whimsical_mcp.py health
 python scripts/whimsical_mcp.py inspect-state
 python scripts/whimsical_mcp.py board-read --grep "Factory 10" --format simple
+python scripts/whimsical_mcp.py snapshot --board-id XVvfzk --scale 2 --out docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png
 ```
 
 Use `tool-call` for precise edits after inspecting the current board:
