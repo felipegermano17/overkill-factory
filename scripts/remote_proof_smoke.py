@@ -10,6 +10,7 @@ import re
 import shutil
 import shlex
 import subprocess  # nosec B404
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -116,19 +117,26 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--command",
         action="append",
-        default=[
-            "python -m unittest discover -s tests -p \"test_*.py\" -q",
-            "python adapters/hermes/compatibility-check.py",
-            "python scripts/validate_public_json_artifacts.py",
-            "python scripts/secret_safety_scan.py",
-            "python scripts/public_safety_scan.py",
-        ],
+        default=[],
     )
     return parser
 
 
+def default_commands() -> list[str]:
+    python = shlex.quote(sys.executable)
+    return [
+        f"{python} -m unittest discover -s tests -p \"test_*.py\" -q",
+        f"{python} adapters/hermes/compatibility-check.py",
+        f"{python} scripts/validate_public_json_artifacts.py",
+        f"{python} scripts/secret_safety_scan.py",
+        f"{python} scripts/public_safety_scan.py",
+    ]
+
+
 def main() -> int:
     args = build_parser().parse_args()
+    if not args.command:
+        args.command = default_commands()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="overkill-remote-proof-") as tmp:
         work = Path(tmp) / "repo"

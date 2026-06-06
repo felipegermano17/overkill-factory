@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
   "record_type": "remote_proof_result",
-  "created_at": "2026-06-06T07:49:04+00:00",
+  "created_at": "2026-06-06T07:50:57+00:00",
   "worker": {
     "id": "remote-proof-runner",
     "name": "Remote Proof Runner",
@@ -35,31 +35,31 @@
   },
   "commands": [
     {
-      "command": "python -m unittest discover -s tests -p \"test_*.py\" -q",
+      "command": "'<home>\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' -m unittest discover -s tests -p \"test_*.py\" -q",
       "returncode": 0,
-      "stdout_tail": "Wrote <temp>\\tmpawu_xw2g\\codex-security-request.json\nWrote <temp>\\tmpawu_xw2g\\solana-quasar-auditor-request.json\nWrote <temp>\\tmpawu_xw2g\\independent-reviewer-request.json\nWrote <temp>\\tmpawu_xw2g\\human-gate-clerk-request.json\nWrote <temp>\\tmpawu_xw2g\\factory-orchestrator-request.json\nWrote <temp>\\tmpawu_xw2g\\qa-verification-worker-request.json\nWrote <temp>\\tmpawu_xw2g\\autoreview-gate-request.json\nWrote <temp>\\tmpawu_xw2g\\security-orchestrator-request.json\nWrote <temp>\\tmpawu_xw2g\\crypto-key-management-specialist-request.json\nWrote <temp>\\tmpawu_xw2g\\remote-proof-runner-request.json\nWrote <temp>\\tmpawu_xw2g\\handoff-packer-request.json\nWrote <temp>\\tmpawu_xw2g\\supply-chain-gate-request.json\n",
-      "stderr_tail": "----------------------------------------------------------------------\nRan 43 tests in 0.396s\n\nOK\n"
+      "stdout_tail": "Wrote <temp>\\tmp4n1f0fqv\\codex-security-request.json\nWrote <temp>\\tmp4n1f0fqv\\solana-quasar-auditor-request.json\nWrote <temp>\\tmp4n1f0fqv\\independent-reviewer-request.json\nWrote <temp>\\tmp4n1f0fqv\\human-gate-clerk-request.json\nWrote <temp>\\tmp4n1f0fqv\\factory-orchestrator-request.json\nWrote <temp>\\tmp4n1f0fqv\\qa-verification-worker-request.json\nWrote <temp>\\tmp4n1f0fqv\\autoreview-gate-request.json\nWrote <temp>\\tmp4n1f0fqv\\security-orchestrator-request.json\nWrote <temp>\\tmp4n1f0fqv\\crypto-key-management-specialist-request.json\nWrote <temp>\\tmp4n1f0fqv\\remote-proof-runner-request.json\nWrote <temp>\\tmp4n1f0fqv\\handoff-packer-request.json\nWrote <temp>\\tmp4n1f0fqv\\supply-chain-gate-request.json\n",
+      "stderr_tail": "----------------------------------------------------------------------\nRan 43 tests in 0.384s\n\nOK\n"
     },
     {
-      "command": "python adapters/hermes/compatibility-check.py",
-      "returncode": 0,
-      "stdout_tail": "OK\n",
-      "stderr_tail": ""
-    },
-    {
-      "command": "python scripts/validate_public_json_artifacts.py",
+      "command": "'<home>\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' adapters/hermes/compatibility-check.py",
       "returncode": 0,
       "stdout_tail": "OK\n",
       "stderr_tail": ""
     },
     {
-      "command": "python scripts/secret_safety_scan.py",
+      "command": "'<home>\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' scripts/validate_public_json_artifacts.py",
       "returncode": 0,
       "stdout_tail": "OK\n",
       "stderr_tail": ""
     },
     {
-      "command": "python scripts/public_safety_scan.py",
+      "command": "'<home>\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' scripts/secret_safety_scan.py",
+      "returncode": 0,
+      "stdout_tail": "OK\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": "'<home>\\AppData\\Local\\Programs\\Python\\Python313\\python.exe' scripts/public_safety_scan.py",
       "returncode": 0,
       "stdout_tail": "OK\n",
       "stderr_tail": ""
