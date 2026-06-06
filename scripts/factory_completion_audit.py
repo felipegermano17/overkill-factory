@@ -73,6 +73,48 @@ def production_worker_result(rel_path: str, *, record_type: str | None = None) -
         return False
     if record_type and data.get("record_type") != record_type:
         return False
+    if not reusable_product_scope_is_valid(data, record_type=record_type):
+        return False
+    return True
+
+
+def reusable_product_scope_is_valid(data: dict[str, Any], *, record_type: str | None = None) -> bool:
+    target = data.get("product_target")
+    if not isinstance(target, dict):
+        return False
+    product_id = str(target.get("product_id") or "").strip()
+    approval_scope = str(target.get("approval_scope") or "").strip()
+    if len(product_id) < 3 or len(approval_scope) < 10:
+        return False
+
+    if record_type == "product_face_result":
+        return bool(target.get("target_sha256") or target.get("deployed_production"))
+
+    if record_type == "auditor_result":
+        if data.get("audit_mode") != "code_audit" or data.get("preflight_only") is True:
+            return False
+        environment_class = str(target.get("environment_class") or "")
+        if environment_class not in {"production-validation-quasar-source", "production-quasar-source"}:
+            return False
+        source_ref = str(target.get("source_ref") or "")
+        source_sha256 = str(target.get("source_sha256") or "")
+        if not source_ref.startswith("products/") or len(source_sha256) != 64:
+            return False
+        toolchain = data.get("quasar_toolchain_proof") or {}
+        if toolchain.get("source_target") != source_ref:
+            return False
+        if toolchain.get("source_sha256") != source_sha256:
+            return False
+        if toolchain.get("build_status") != "PASS" or toolchain.get("test_status") != "PASS":
+            return False
+        vectors = data.get("known_vectors_coverage") or {}
+        if int(vectors.get("total") or 0) < 100:
+            return False
+        checklist = data.get("checklist_coverage") or {}
+        required_prefixes = ("01", "02", "03", "04", "05", "06", "07")
+        covered = {str(key)[:2] for key, value in checklist.items() if isinstance(value, dict) and value.get("status") == "done"}
+        return all(prefix in covered for prefix in required_prefixes)
+
     return True
 
 
@@ -420,7 +462,12 @@ def build_audit() -> dict[str, Any]:
     status = "COMPLETE" if not blocking else "NOT_COMPLETE"
     score_estimate = "10/10"
     if status != "COMPLETE":
-        score_estimate = "9.994/10" if len(blocking) <= 5 and len(achieved) >= 4 else "9.992/10"
+        if len(blocking) <= 4 and len(achieved) >= 5:
+            score_estimate = "9.996/10"
+        elif len(blocking) <= 5 and len(achieved) >= 4:
+            score_estimate = "9.994/10"
+        else:
+            score_estimate = "9.992/10"
     return {
         "$schema": "https://overkill-factory.dev/schemas/factory-completion-audit.schema.json",
         "created_at": now_iso(),

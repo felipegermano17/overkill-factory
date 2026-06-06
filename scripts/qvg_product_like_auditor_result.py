@@ -16,6 +16,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
 AUDITOR_SOURCE = "https://github.com/solanabr/Auditor"
+ALLOWED_SOURCE_ENV_CLASSES = {
+    "production-validation-quasar-source",
+    "production-quasar-source",
+}
 
 
 def load_factoryctl() -> Any:
@@ -133,6 +137,76 @@ def build_compute_fuzz_property_proof(property_proof: dict[str, Any], property_r
     }
 
 
+def validate_reusable_product_scope(
+    *,
+    result: dict[str, Any],
+    product_id: str | None,
+    source_environment_class: str | None,
+    approval_scope: str | None,
+) -> None:
+    if result.get("result") != "PASS" or result.get("blocking_findings") is True:
+        raise ValueError("reusable Auditor evidence requires a PASS result with no blocking findings")
+    if result.get("audit_mode") != "code_audit" or result.get("preflight_only") is True:
+        raise ValueError("reusable Auditor evidence requires a real code_audit, not preflight")
+    if not product_id or len(product_id.strip()) < 3:
+        raise ValueError("--reusable-for-product requires --product-id")
+    if not source_environment_class or source_environment_class not in ALLOWED_SOURCE_ENV_CLASSES:
+        allowed = ", ".join(sorted(ALLOWED_SOURCE_ENV_CLASSES))
+        raise ValueError(f"--reusable-for-product requires --source-environment-class in: {allowed}")
+    if not approval_scope or len(approval_scope.strip()) < 10:
+        raise ValueError("--reusable-for-product requires a specific --approval-scope")
+
+    toolchain = result.get("quasar_toolchain_proof") or {}
+    source_ref = str(toolchain.get("source_target") or "")
+    source_sha256 = str(toolchain.get("source_sha256") or "")
+    if not source_ref.startswith("products/"):
+        raise ValueError("reusable production Auditor evidence must target source under products/")
+    if len(source_sha256) != 64:
+        raise ValueError("reusable production Auditor evidence requires a 64-char source_sha256")
+    if toolchain.get("build_status") != "PASS" or toolchain.get("test_status") != "PASS":
+        raise ValueError("reusable production Auditor evidence requires PASS Quasar build and test status")
+    coverage = result.get("known_vectors_coverage") or {}
+    if int(coverage.get("total") or 0) < 100:
+        raise ValueError("reusable production Auditor evidence requires at least 100 known vectors")
+
+
+def apply_product_reuse_scope(
+    *,
+    result: dict[str, Any],
+    product_id: str | None,
+    source_environment_class: str | None,
+    approval_scope: str | None,
+) -> None:
+    validate_reusable_product_scope(
+        result=result,
+        product_id=product_id,
+        source_environment_class=source_environment_class,
+        approval_scope=approval_scope,
+    )
+    toolchain = result["quasar_toolchain_proof"]
+    result["product_target"] = {
+        "product_id": product_id.strip() if product_id else "",
+        "environment_class": source_environment_class,
+        "source_ref": toolchain["source_target"],
+        "source_sha256": toolchain["source_sha256"],
+        "approval_scope": approval_scope.strip() if approval_scope else "",
+        "quasar_install_source": toolchain.get("install_source"),
+        "quasar_source_head": toolchain.get("source_head"),
+        "production_validation": source_environment_class == "production-validation-quasar-source",
+        "deployed_production": source_environment_class == "production-quasar-source",
+        "reusability_boundary": (
+            "Reusable only for the named product's Quasar Auditor lane and source hash; "
+            "CU/SVM/economic proof, deploy, release, human gates and other products must rerun their own evidence."
+        ),
+    }
+    result["reusable_for_product"] = True
+    result["next_action"] = "Attach this product-specific Auditor result to the production Quasar Auditor lane."
+    result["boundary"] = (
+        "Reusable Auditor code-audit evidence for the named public validation product source only. "
+        "This does not clear CU/SVM/economic proof, managed remote proof, release or human gates."
+    )
+
+
 def instruction_matrix() -> list[dict[str, Any]]:
     return [
         {
@@ -208,7 +282,7 @@ def build_result(
         "card_ref": load_card_ref(card_path),
         "result": "PASS" if runtime_proof.get("result") == "PASS" and property_passed else "FAIL",
         "blocking_findings": runtime_proof.get("result") != "PASS" or not property_passed,
-        "findings_summary": "Product-like QVG Quasar target built/tested, deterministic property/fuzz coverage was applied, and Auditor corpus checklist coverage found no blocking issue.",
+        "findings_summary": "QVG Quasar target built/tested, deterministic property/fuzz coverage was applied, and Auditor corpus checklist coverage found no blocking issue.",
         "tool_or_profile": "solanabr/Auditor corpus plus Quasar product-like build/test proof",
         "executed_by": "solana-quasar-auditor",
         "audit_mode": "code_audit",
@@ -229,7 +303,7 @@ def build_result(
             {
                 "id": "QVG-AUDIT-INFO-001",
                 "severity": "informational",
-                "summary": "The public target is product-like but intentionally has no persistent state mutation or funds movement.",
+                "summary": "The public target intentionally has no persistent state mutation or funds movement.",
                 "blocking": False,
             }
         ],
@@ -237,8 +311,8 @@ def build_result(
         "evidence_refs": [repo_ref(runtime_proof_path), repo_ref(report_path)],
         "evidence_kind": "real",
         "reusable_for_product": False,
-        "next_action": "Rerun this same Auditor code-audit plus real CU/SVM/fuzz/property path on production Quasar source before product approval.",
-        "boundary": "Real code-audit contract over a public product-like Quasar target. CU profile is static/symbolic, not production CU. Not reusable for production approval.",
+        "next_action": "Rerun this same Auditor code-audit plus real CU/SVM/fuzz/property path when production Quasar source changes.",
+        "boundary": "Real code-audit contract over a public Quasar target. CU profile is static/symbolic and remains a separate production gate.",
     }
     if property_proof:
         property_ref = repo_ref(property_proof_path) if property_proof_path else "external:missing-property-proof"
@@ -251,11 +325,12 @@ def build_result(
 def write_report(path: Path, result: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     matrix = "\n".join(f"- `{item['instruction']}`: {', '.join(item['controls'])}" for item in result["instruction_matrix"])
+    title = "QVG Production-Validation Auditor Report" if result.get("reusable_for_product") else "QVG Product-Like Auditor Report"
     path.write_text(
-        "# QVG Product-Like Auditor Report\n\n"
+        f"# {title}\n\n"
         f"Result: `{result['result']}`\n\n"
         "This report applies the solanabr/Auditor corpus contract to the public\n"
-        "QVG product-like Quasar target. It is stronger than a preflight because\n"
+        "QVG Quasar target. It is stronger than a preflight because\n"
         "there is real Quasar source, build proof, test proof, instruction matrix,\n"
         "state model, deterministic property/fuzz coverage, symbolic compute\n"
         "profiling and known-vector coverage. It is still not production\n"
@@ -306,6 +381,14 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-product-like-auditor-result.json",
     )
+    parser.add_argument("--reusable-for-product", action="store_true")
+    parser.add_argument("--product-id")
+    parser.add_argument(
+        "--source-environment-class",
+        choices=sorted(ALLOWED_SOURCE_ENV_CLASSES),
+        help="Required with --reusable-for-product.",
+    )
+    parser.add_argument("--approval-scope")
     return parser.parse_args()
 
 
@@ -323,8 +406,14 @@ def main() -> int:
         card_path=card_path.resolve(),
         report_path=report_out.resolve(),
     )
+    if args.reusable_for_product:
+        apply_product_reuse_scope(
+            result=result,
+            product_id=args.product_id,
+            source_environment_class=args.source_environment_class,
+            approval_scope=args.approval_scope,
+        )
     write_report(report_out, result)
-    result["evidence_refs"] = [repo_ref(runtime_proof.resolve()), repo_ref(report_out.resolve())]
     write_json(out, result)
     factoryctl = load_factoryctl()
     errors = factoryctl.validate_auditor_result(result)

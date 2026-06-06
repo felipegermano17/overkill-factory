@@ -20,7 +20,7 @@ LANES: tuple[dict[str, Any], ...] = (
         "lane_id": "product_face",
         "worker_id": "product-face",
         "record_type": "product_face_result",
-        "path": "validation/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json",
+        "path": "validation/production/product-face/product-face-result.json",
         "scope": "product",
     },
     {
@@ -34,13 +34,13 @@ LANES: tuple[dict[str, Any], ...] = (
         "lane_id": "auditor",
         "worker_id": "solana-quasar-auditor",
         "record_type": "auditor_result",
-        "path": "validation/quasar-product-like-proof/qvg-product-like-auditor-result.json",
+        "path": "validation/production/quasar/auditor-result.json",
         "scope": "product",
     },
     {
         "lane_id": "cu_svm_economic",
         "proof_kind": "product_like_quasar_cu_fuzz_property",
-        "path": "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json",
+        "path": "validation/production/quasar/qvg-quasar-cu-fuzz-property-proof.json",
         "scope": "product",
     },
     {
@@ -88,12 +88,10 @@ LANES: tuple[dict[str, Any], ...] = (
 
 
 PRODUCTION_BLOCKERS = [
-    "production Product Face still needs a deployed or production-like product target marked reusable_for_product=true",
-    "production Quasar Auditor still needs the actual production Quasar source",
     "production CU/SVM/economic proof still needs real CU measurement and SVM/client transaction flow",
     "managed remote proof still needs Crabbox broker or Blacksmith Testbox credentials and cleanup evidence",
     "production release still needs a fresh R4 human gate, rollback proof, release smoke and monitoring evidence",
-    "one real production product still needs the same graph with all required lanes reusable_for_product=true",
+    "one real production product still needs the same graph with every remaining critical lane reusable_for_product=true",
 ]
 
 
@@ -217,7 +215,7 @@ def build_graph() -> dict[str, Any]:
         "record_type": "full_product_worker_graph",
         "created_at": utc_now(),
         "graph_kind": "product_specific_public_validation_graph",
-        "product_id": "qvg-public-product-intent",
+        "product_id": "qvg-public-validation-product",
         "product_name": "Quasar Vault Guard public validation product",
         "result": "PASS" if all_pass else "FAIL",
         "blocking_findings": not all_pass,
@@ -235,9 +233,10 @@ def build_graph() -> dict[str, Any]:
         "evidence_refs": [str(lane["path"]) for lane in LANES],
         "policy_decision": (
             "This proves product-specific worker-graph reconciliation for the public QVG validation product, "
-            "but it is not reusable as production approval because the lanes intentionally preserve production boundaries."
+            "including reusable Product Face and Quasar Auditor lanes. It is not reusable as production approval because "
+            "the remaining critical lanes intentionally preserve production boundaries."
         ),
-        "next_action": "Rerun the same graph on a production product target and require every critical lane to be reusable_for_product=true before practical 10/10 completion.",
+        "next_action": "Add real CU/SVM/economic proof, managed remote proof, product-specific release/human evidence and a fully reusable graph before practical 10/10 completion.",
     }
 
 

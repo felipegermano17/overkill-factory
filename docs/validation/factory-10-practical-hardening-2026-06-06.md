@@ -162,11 +162,32 @@ reusability claim is scoped to one product lane, one artifact class and one
 approval boundary. It clears Product Face for that lane without pretending to
 clear onchain, release, managed remote proof or human gates.
 
+### Production-Validation Quasar Auditor Reuse
+
+`scripts/qvg_product_like_auditor_result.py` now has an explicit reusable
+product mode for Auditor results.
+
+`reusable_for_product=true` is blocked unless the result is a real
+`code_audit`, not preflight, has no blocking findings, targets source under
+`products/`, includes a product id, source environment class, approval scope,
+source hash, passing Quasar build/test proof, at least 100 known vectors and
+Auditor checklist coverage for 01-07.
+
+Hermes `solana-quasar-auditor` reran this path for the QVG public validation
+product and wrote `validation/production/quasar/auditor-result.json`.
+
+This is better than reusing the older product-like proof because the claim is
+bound to a named product source hash and approval scope. It clears the Auditor
+lane for that source without pretending to clear CU/SVM/economic proof, deploy,
+release or human gates.
+
 ## Still Not 10/10
 
 - Product-specific Codex Security scans still need to run per real
   implementation.
-- Auditor has not run against real public Quasar source.
+- Quasar Auditor is now achieved for the named QVG public validation product
+  source. Future product source changes must rerun it, and it still does not
+  clear CU/SVM/economic proof.
 - Hermes dashboard `ready` parity is live-smoke proven. Dashboard/API `done`
   parity is live-smoke proven for missing Product Face result and weak Auditor
   preflight. Worker-style CLI completion is now live-smoke proven for missing
@@ -180,13 +201,14 @@ clear onchain, release, managed remote proof or human gates.
 - Supply-chain posture now has public CI/SBOM proof for this repository, but
   product-specific dependency review, lockfiles and provenance still repeat per
   real implementation.
-- Completion audit now blocks false practical-10 claims, but the blockers it
-  names still require real product/provider execution.
+- Completion audit now blocks false practical-10 claims, but the four remaining
+  blockers it names still require real product/provider execution.
 - Production-like Product Face is now achieved for the named QVG public
   validation product lane. It is still not full WCAG, production performance,
   deployed-production proof or a substitute for the other product lanes.
-- QVG full product graph now passes as bounded public validation, but production
-  completion still requires a production target with reusable lane evidence.
+- QVG full product graph now passes as bounded public validation with reusable
+  Product Face and Quasar Auditor lanes, but production completion still
+  requires the remaining critical lanes to become reusable.
 - Managed remote proof readiness is explicit now, but the managed provider run
   itself still needs approved credentials, transcript, artifacts and cleanup.
 - Current Git history still contains old private/internal markers from earlier
@@ -197,14 +219,15 @@ clear onchain, release, managed remote proof or human gates.
 
 ## Current Practical Score
 
-Estimated public-factory score after this pass: 9.994/10 for contracts,
+Estimated public-factory score after this pass: 9.996/10 for contracts,
 preflight, executable Hermes hook, stricter worker-result reconciliation,
 Product Face proof, dashboard/API no-bypass smokes, worker-style completion
 no-bypass, official-main patch compatibility, real public-safety profile
 dispatch, Crabbox static-SSH proof, action pinning, supply-chain CI/SBOM proof,
-completion-claim blocking and public-safety controls.
+completion-claim blocking, production-validation Quasar Auditor proof and
+public-safety controls.
 
-It is not 10 because the remaining missing items require production Quasar
-source, real CU/SVM/economic evidence, managed provider-backed remote proof,
-release/human-gate evidence, a full reusable product graph, and a clean public
-publication path for Git history.
+It is not 10 because the remaining missing items require real CU/SVM/economic
+evidence, managed provider-backed remote proof, release/human-gate evidence, a
+full reusable product graph, and a clean public publication path for Git
+history.

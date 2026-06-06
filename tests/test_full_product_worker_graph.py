@@ -16,6 +16,7 @@ class FullProductWorkerGraphTests(unittest.TestCase):
         self.assertGreaterEqual(result["lanes_total"], 10)
         self.assertEqual(result["lanes_total"], result["lanes_passed"])
         self.assertIn("managed remote proof", " ".join(result["production_blockers"]))
+        self.assertEqual(result["reusable_for_product_lanes"], 2)
 
     def test_every_lane_has_existing_evidence_and_no_validation_errors(self):
         result = graph.build_graph()
@@ -29,6 +30,9 @@ class FullProductWorkerGraphTests(unittest.TestCase):
         result = graph.build_graph()
         by_id = {lane["lane_id"]: lane for lane in result["lanes"]}
 
+        self.assertTrue(by_id["product_face"]["reusable_for_product"])
+        self.assertTrue(by_id["auditor"]["reusable_for_product"])
+        self.assertFalse(by_id["cu_svm_economic"]["reusable_for_product"])
         self.assertGreater(len(by_id["receipt_five"]["stale_evidence_refs"]), 0)
         self.assertEqual(by_id["receipt_five"]["status"], "PASS")
 

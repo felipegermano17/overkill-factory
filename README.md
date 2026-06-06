@@ -57,6 +57,10 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
   public validation product as a reusable Product Face lane with scoped product
   id, production-like static artifact class, screenshots, DOM state, console,
   a11y basics, overlap checks and target hash.
+- Production-validation Quasar Auditor proof: Hermes `solana-quasar-auditor`
+  validated the QVG public validation product source under `products/` with a
+  clean Docker Quasar build/test, Auditor corpus/checklist coverage and a
+  scoped reusable Auditor lane.
 - Multi-context validation battery artifacts with Product Face, security,
   onchain, release, agentic and public-repo stress scenarios.
 
@@ -163,16 +167,18 @@ the compatibility manifest.
 The first production-intent pilot still needs a real raw product paper.
 
 The completion audit currently blocks practical 10/10 because the repository
-does not yet contain production Quasar Auditor, production CU/SVM/economic
-proof, managed remote proof, production release human gate evidence or a
-production product graph with every critical lane marked
-`reusable_for_product=true`. Production-like Product Face is now achieved only
-for the named QVG public validation product lane.
+does not yet contain production CU/SVM/economic proof, managed remote proof,
+production release human gate evidence or a production product graph with every
+critical lane marked `reusable_for_product=true`. Production-like Product Face
+and production-validation Quasar Auditor are now achieved only for the named
+QVG public validation product lanes.
 
 The QVG full product graph now proves bounded product-specific reconciliation
 across Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,
 Independent Review, Human Gate, Release Ops, Supply Chain and Receipt Five. It
-is intentionally not reusable as production approval.
+now includes reusable Product Face and Quasar Auditor lanes, but it is
+intentionally not reusable as production approval because the remaining critical
+lanes keep production boundaries.
 
 The managed remote-proof probe records the current provider gap explicitly:
 static SSH proof exists, but managed Crabbox broker / Blacksmith Testbox still

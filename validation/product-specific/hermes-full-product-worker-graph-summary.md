@@ -12,10 +12,10 @@ This review inspected the staged QVG full product worker graph implementation an
 ## Findings
 
 - The full product worker graph is stronger than isolated prooflets because it reconciles ten lanes into one product-specific public validation graph: Product Face, security scan, Auditor, CU/SVM/economic proof, remote proof, independent review, human gate, release ops, supply chain, and Receipt Five.
-- The graph remains bounded and does not claim production readiness: `reusable_for_product=false`, `completion_claim_allowed=false`, `reusable_for_product_lanes=0`, and the completion audit remains `NOT_COMPLETE`.
-- The graph keeps six explicit production blockers: production Product Face, production Quasar Auditor, production CU/SVM/economic proof, managed Crabbox/Testbox remote proof, production release/R4 human gate, and a production product run with all critical lanes marked `reusable_for_product=true`.
+- The graph remains bounded and does not claim production readiness: `reusable_for_product=false`, `completion_claim_allowed=false`, `reusable_for_product_lanes=2`, and the completion audit remains `NOT_COMPLETE`.
+- The graph keeps four explicit production blockers: production CU/SVM/economic proof, managed Crabbox/Testbox remote proof, production release/R4 human gate, and a production product run with every remaining critical lane marked `reusable_for_product=true`.
 - Stale Receipt Five references are preserved only as `stale_evidence_refs` on the `receipt_five` lane. They are visible for historical traceability and do not replace current lane evidence in the graph-level `evidence_refs` list.
-- No production Product Face, production Quasar Auditor, managed Testbox, release, human approval, or production worker-graph evidence was inferred or invented.
+- No managed Testbox, release, human approval, CU/SVM/economic, or production worker-graph evidence was inferred or invented.
 
 ## Validation commands run
 
@@ -25,7 +25,7 @@ This review inspected the staged QVG full product worker graph implementation an
 - `python3 scripts/validate_public_json_artifacts.py` -> exit 0, `OK`
 - `python3 scripts/public_safety_scan.py` -> exit 0, `OK`
 - `python3 scripts/secret_safety_scan.py` -> exit 0, `OK`
-- `python3 -m unittest discover -s tests -p "test_*.py" -q` -> exit 0, 74 tests passed
+- `python3 -m unittest discover -s tests -p "test_*.py" -q` -> exit 0, reported `OK`
 - `git diff --check` -> exit 0
 
 ## Review decision

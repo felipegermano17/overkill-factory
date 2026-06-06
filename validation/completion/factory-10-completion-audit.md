@@ -2,11 +2,10 @@
 
 Status: `NOT_COMPLETE`
 Completion claim allowed: `false`
-Score estimate: `9.994/10`
+Score estimate: `9.996/10`
 
 ## Blocking Requirements
 
-- `production_quasar_auditor`: Run solana-quasar-auditor plus Auditor corpus/checklists against production Quasar source.
 - `production_cu_svm_economic`: Run real CU profiling, SVM/client transactions and economic fuzz/property tests on production source.
 - `managed_remote_proof`: Run managed Crabbox broker or Blacksmith Testbox with approved credentials and cleanup receipt.
 - `production_release_human_gate`: Run product-specific R4 human gate, rollback proof, release smoke and monitoring evidence before any production claim.

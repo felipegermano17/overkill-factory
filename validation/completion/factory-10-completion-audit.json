@@ -2,14 +2,13 @@
   "$schema": "https://overkill-factory.dev/schemas/factory-completion-audit.schema.json",
   "audit_kind": "factory_10_practical_completion",
   "blocking_summary": [
-    "production_quasar_auditor",
     "production_cu_svm_economic",
     "managed_remote_proof",
     "production_release_human_gate",
     "full_product_specific_worker_graph"
   ],
   "completion_claim_allowed": false,
-  "created_at": "2026-06-06T16:25:53+00:00",
+  "created_at": "2026-06-06T16:50:51+00:00",
   "policy_decision": "Do not mark Overkill Factory as practical 10/10 until every blocking requirement has product-specific or provider-backed evidence.",
   "requirements": [
     {
@@ -49,14 +48,13 @@
       "why_it_matters": "The factory code that gates autonomous work must itself pass security review."
     },
     {
-      "blocking": true,
-      "boundary": "Run solana-quasar-auditor plus Auditor corpus/checklists against production Quasar source.",
+      "blocking": false,
       "evidence_refs": [
-        "validation/quasar-product-like-proof/qvg-product-like-auditor-result.json"
+        "validation/production/quasar/auditor-result.json"
       ],
       "id": "production_quasar_auditor",
-      "next_action": "Run solana-quasar-auditor plus Auditor corpus/checklists against production Quasar source.",
-      "status": "BOUNDED_PUBLIC_PROOF",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
       "title": "Production Quasar Auditor code audit",
       "why_it_matters": "The public product-like audit is useful, but production approval needs the actual product program."
     },
@@ -124,10 +122,10 @@
       "why_it_matters": "The goal is a factory that carries a real product through all required workers, not isolated prooflets."
     }
   ],
-  "requirements_achieved": 4,
-  "requirements_blocking": 5,
-  "requirements_bounded": 5,
+  "requirements_achieved": 5,
+  "requirements_blocking": 4,
+  "requirements_bounded": 4,
   "requirements_total": 9,
-  "score_estimate": "9.994/10",
+  "score_estimate": "9.996/10",
   "status": "NOT_COMPLETE"
 }

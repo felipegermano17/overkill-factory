@@ -12,29 +12,36 @@ class FactoryCompletionAuditTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "NOT_COMPLETE")
         self.assertFalse(result["completion_claim_allowed"])
-        self.assertEqual(result["score_estimate"], "9.994/10")
+        self.assertEqual(result["score_estimate"], "9.996/10")
         self.assertGreater(result["requirements_blocking"], 0)
 
-    def test_blocks_product_specific_and_provider_backed_gaps(self):
+    def test_blocks_remaining_product_specific_and_provider_backed_gaps(self):
         result = audit.build_audit()
         blockers = set(result["blocking_summary"])
 
         self.assertNotIn("production_product_face", blockers)
-        self.assertIn("production_quasar_auditor", blockers)
+        self.assertNotIn("production_quasar_auditor", blockers)
         self.assertIn("production_cu_svm_economic", blockers)
         self.assertIn("managed_remote_proof", blockers)
         self.assertIn("production_release_human_gate", blockers)
         self.assertIn("full_product_specific_worker_graph", blockers)
-        self.assertEqual(len(blockers), 5)
+        self.assertEqual(len(blockers), 4)
 
-    def test_product_face_can_be_achieved_while_other_public_proofs_remain_bounded(self):
+    def test_product_face_and_quasar_auditor_can_be_achieved_while_other_public_proofs_remain_bounded(self):
         result = audit.build_audit()
         by_id = {item["id"]: item for item in result["requirements"]}
 
         self.assertEqual(by_id["production_product_face"]["status"], "ACHIEVED")
-        self.assertEqual(by_id["production_quasar_auditor"]["status"], "BOUNDED_PUBLIC_PROOF")
+        self.assertEqual(by_id["production_quasar_auditor"]["status"], "ACHIEVED")
         self.assertEqual(by_id["managed_remote_proof"]["status"], "BOUNDED_PUBLIC_PROOF")
         self.assertEqual(by_id["full_product_specific_worker_graph"]["status"], "BOUNDED_PUBLIC_PROOF")
+
+    def test_shallow_auditor_result_cannot_clear_production_scope(self):
+        proof_path = audit.ROOT / "validation" / "production" / "quasar" / "auditor-result.json"
+        shallow = json.loads(proof_path.read_text(encoding="utf-8"))
+        shallow["product_target"]["source_ref"] = "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src"
+
+        self.assertFalse(audit.reusable_product_scope_is_valid(shallow, record_type="auditor_result"))
 
     def test_require_complete_returns_nonzero_while_blocked(self):
         exit_code = audit.main(["--no-write", "--require-complete"])

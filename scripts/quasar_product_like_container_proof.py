@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import tempfile
 from datetime import datetime, timezone
@@ -16,6 +17,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 QUASAR_SOURCE = "github:blueshift-gg/quasar"
 QUASAR_SOURCE_HEAD = "a89a9329f05740a20520607608b2b3b78c74f7c4"
+PROJECT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{2,63}$")
 
 
 def utc_now() -> str:
@@ -65,8 +67,8 @@ def read_marker(work_dir: Path, name: str) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
-def docker_script() -> str:
-    return """set -eux
+def docker_script(project_name: str) -> str:
+    return f"""set -eux
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install -y --no-install-recommends git ca-certificates curl pkg-config libssl-dev perl make clang llvm-dev libclang-dev protobuf-compiler
@@ -79,11 +81,11 @@ cd /tmp/quasar
 git rev-parse HEAD | tee /out/quasar_head.txt
 cargo install --path cli --locked
 cd /tmp
-quasar init qvg-product-like --yes --toolchain solana --test-language rust --rust-framework quasar-svm --template minimal --no-git --verbose
-rm -rf /tmp/qvg-product-like/src
-mkdir -p /tmp/qvg-product-like/src
-cp -R /repo-src/. /tmp/qvg-product-like/src/
-cd /tmp/qvg-product-like
+quasar init {project_name} --yes --toolchain solana --test-language rust --rust-framework quasar-svm --template minimal --no-git --verbose
+rm -rf /tmp/{project_name}/src
+mkdir -p /tmp/{project_name}/src
+cp -R /repo-src/. /tmp/{project_name}/src/
+cd /tmp/{project_name}
 find src -maxdepth 3 -type f | sort > /out/source_files.txt
 quasar build
 printf PASS > /out/build_status.txt
@@ -95,9 +97,9 @@ quasar --version | tee /out/quasar.txt
 """
 
 
-def run_container(source_dir: Path, work_dir: Path, timeout: int) -> subprocess.CompletedProcess[str]:
+def run_container(source_dir: Path, work_dir: Path, timeout: int, project_name: str) -> subprocess.CompletedProcess[str]:
     script = work_dir / "run-quasar-proof.sh"
-    script.write_text(docker_script(), encoding="utf-8")
+    script.write_text(docker_script(project_name), encoding="utf-8")
     command = [
         "docker",
         "run",
@@ -121,6 +123,10 @@ def build_result(
     completed: subprocess.CompletedProcess[str],
     started_at: str,
     ended_at: str,
+    project_name: str,
+    proof_kind: str,
+    evidence_boundary: str,
+    policy_decision: str,
 ) -> dict[str, Any]:
     build_status = read_marker(work_dir, "build_status.txt")
     test_status = read_marker(work_dir, "test_status.txt")
@@ -135,7 +141,7 @@ def build_result(
     return {
         "$schema": "https://overkill-factory.dev/schemas/quasar-runtime-proof.schema.json",
         "result": result,
-        "proof_kind": "containerized_product_like_quasar_build_test",
+        "proof_kind": proof_kind,
         "created_at": ended_at,
         "started_at": started_at,
         "source_target": repo_ref(source_dir),
@@ -148,7 +154,7 @@ def build_result(
         "cargo": read_marker(work_dir, "cargo.txt"),
         "solana": read_marker(work_dir, "solana.txt"),
         "quasar": read_marker(work_dir, "quasar.txt"),
-        "init_command": "quasar init qvg-product-like --yes --toolchain solana --test-language rust --rust-framework quasar-svm --template minimal --no-git --verbose",
+        "init_command": f"quasar init {project_name} --yes --toolchain solana --test-language rust --rust-framework quasar-svm --template minimal --no-git --verbose",
         "build_command": "quasar build",
         "build_status": build_status or "FAIL",
         "test_command": "quasar test",
@@ -156,11 +162,8 @@ def build_result(
         "returncode": completed.returncode,
         "stdout_tail": stdout_tail,
         "stderr_tail": stderr_tail,
-        "evidence_boundary": (
-            "Proves a public product-like QVG Quasar target can build and test in a clean Docker container. "
-            "It does not prove production safety, deploy readiness, funds handling or mainnet/devnet authority."
-        ),
-        "policy_decision": "Use this product-like proof as stronger Auditor input than generated-minimal Quasar proof, while keeping production promotion gated.",
+        "evidence_boundary": evidence_boundary,
+        "policy_decision": policy_decision,
     }
 
 
@@ -182,6 +185,19 @@ def parse_args() -> argparse.Namespace:
         default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-quasar-runtime-proof.json",
     )
     parser.add_argument("--timeout-seconds", type=int, default=900)
+    parser.add_argument("--project-name", default="qvg-product-like")
+    parser.add_argument("--proof-kind", default="containerized_product_like_quasar_build_test")
+    parser.add_argument(
+        "--evidence-boundary",
+        default=(
+            "Proves a public product-like QVG Quasar target can build and test in a clean Docker container. "
+            "It does not prove production safety, deploy readiness, funds handling or mainnet/devnet authority."
+        ),
+    )
+    parser.add_argument(
+        "--policy-decision",
+        default="Use this product-like proof as stronger Auditor input than generated-minimal Quasar proof, while keeping production promotion gated.",
+    )
     return parser.parse_args()
 
 
@@ -191,11 +207,13 @@ def main() -> int:
     source_dir = source_dir.resolve()
     if not source_dir.exists():
         raise SystemExit(f"source dir does not exist: {source_dir}")
+    if not PROJECT_NAME_RE.fullmatch(args.project_name):
+        raise SystemExit("--project-name must be 3-64 chars of lowercase letters, numbers or hyphens")
     out = args.out if args.out.is_absolute() else ROOT / args.out
     started_at = utc_now()
     with tempfile.TemporaryDirectory(prefix="of-quasar-product-like-") as tmp:
         work_dir = Path(tmp)
-        completed = run_container(source_dir, work_dir, args.timeout_seconds)
+        completed = run_container(source_dir, work_dir, args.timeout_seconds, args.project_name)
         ended_at = utc_now()
         result = build_result(
             source_dir=source_dir,
@@ -204,6 +222,10 @@ def main() -> int:
             completed=completed,
             started_at=started_at,
             ended_at=ended_at,
+            project_name=args.project_name,
+            proof_kind=args.proof_kind,
+            evidence_boundary=args.evidence_boundary,
+            policy_decision=args.policy_decision,
         )
     write_json(out, result)
     print(json.dumps({"result": result["result"], "out": repo_ref(out), "returncode": result["returncode"]}, indent=2))

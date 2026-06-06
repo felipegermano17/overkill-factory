@@ -72,6 +72,11 @@ Public evidence:
 - `validation/production/product-face/product-face-result.json`
 - `validation/production/product-face/product-face-report.md`
 - `validation/production/product-face/hermes-production-product-face-summary.md`
+- `validation/production/quasar/qvg-quasar-runtime-proof.json`
+- `validation/production/quasar/qvg-quasar-cu-fuzz-property-proof.json`
+- `validation/production/quasar/auditor-result.json`
+- `validation/production/quasar/qvg-production-auditor-report.md`
+- `validation/production/quasar/hermes-production-quasar-auditor-summary.md`
 
 Observed result:
 
@@ -167,7 +172,16 @@ Observed result:
   `environment_class=production-like-static-artifact`, target artifact hash,
   public JSON/scans, 80 tests and `git diff --check`; the completion audit now
   marks only `production_product_face` as `ACHIEVED` and still blocks the full
-  completion claim with five remaining lanes;
+  completion claim until the remaining lanes are proven;
+- production-validation Quasar Auditor dispatch: a real Hermes
+  `solana-quasar-auditor` worker reran the QVG public validation product source
+  under `products/`, built/tested it in Docker with Quasar, cloned and applied
+  `solanabr/Auditor` corpus/checklists, carried forward `513` deterministic
+  CU/property/fuzz cases, wrote reusable product-scoped Auditor evidence, and
+  reran public JSON, public-safety, secret-safety, focused tests and
+  `git diff --check`; the completion audit now marks
+  `production_quasar_auditor` as `ACHIEVED` and blocks the full completion
+  claim with four remaining lanes;
 - official-main patch smoke: the public adapter patch applied to official Hermes
   commit `56236b16e383cc656bb8c88429902f4de83f1faf` and focused regression
   tests passed (`119 passed, 1 warning`);
@@ -177,9 +191,10 @@ Observed result:
 
 This proves real Kanban materialization, dependency wiring, worker-result
 reconciliation and multiple specialist-profile execution paths. It also proves
-that Product Face can now run as real browser-backed evidence in Hermes. It does
-not prove real product Quasar Auditor, release, provider-backed remote proof or
-human approval execution.
+that Product Face can run as real browser-backed evidence in Hermes and that
+the named QVG public validation product source can clear a scoped Quasar Auditor
+lane. It does not prove real CU/SVM/economic safety, release,
+provider-backed remote proof or human approval execution.
 
 ## Real Codex Security Scan
 
@@ -365,27 +380,34 @@ checks.
   diff-check.
 - Factory completion audit now exists as a schema-backed release boundary.
   A real Hermes `independent-reviewer` worker confirmed it blocks practical
-  `10/10` completion claims until production Product Face, production Quasar
-  Auditor, production CU/SVM/economic proof, managed remote proof, production
-  release human gate evidence and a full product-specific worker graph exist.
+  `10/10` completion claims until production CU/SVM/economic proof, managed
+  remote proof, production release human gate evidence and a fully reusable
+  product-specific worker graph exist.
 - Full product worker graph proof now exists for QVG as bounded public
   validation. It reconciles Product Face, Security, Auditor, CU/SVM/economic
   proof, Remote Proof, Independent Review, Human Gate, Release Ops, Supply
-  Chain and Receipt Five in one graph, while preserving `reusable_for_product`
-  as `false` and keeping stale historical Receipt Five refs visible.
+  Chain and Receipt Five in one graph. Product Face and Auditor are now
+  reusable for the named QVG product lanes, while the graph itself preserves
+  `reusable_for_product=false` and keeps stale historical Receipt Five refs
+  visible.
 - Managed remote proof readiness is now explicitly probed. The Hermes
   `remote-proof-runner` confirmed the current state is `PENDING` because no
   managed Crabbox broker or Blacksmith Testbox credentials/run exist; the probe
   captures only boolean config presence and redacted command tails.
+- Production-validation Quasar Auditor reuse is now proof-backed. A real Hermes
+  `solana-quasar-auditor` worker validated the QVG public validation product
+  source under `products/`, required a real `code_audit`, required Auditor
+  checklist 01-07 coverage and 100+ known vectors, recorded the source hash and
+  marked only the named Auditor lane reusable.
 
 ### Still Not Proven
 
 - Deployed-production Product Face, full WCAG and production performance remain
   open. The QVG public validation product now has scoped production-like Product
   Face evidence, but other products and deployments must rerun their own proof.
-- Real Auditor execution against production Quasar source. Public product-like
-  source now has a bounded code-audit PASS, but production source still needs a
-  separate run.
+- Quasar Auditor source changes. The named QVG public validation product source
+  now has scoped reusable Auditor evidence, but every future production source
+  change or different product must rerun the lane.
 - Product-specific Solana/Quasar compute profiling, SVM/client flows and
   fuzz/property tests. Product-like CU/fuzz/property smoke now passes with
   source-hash reconciliation and `513` deterministic cases, but production real
@@ -399,11 +421,11 @@ checks.
   product/runtime dependencies must add their own audit evidence.
 - Future Hermes releases still need the same disposable compatibility smoke
   rerun before an update is accepted.
-- Full multi-specialist Hermes execution on product work. Product Face,
-  Security, Auditor, Remote Proof, Release Ops, Human Gate and the bounded
-  full-product graph are proven on public/dry-run pilots, but still need
-  production target execution with all critical lanes marked
-  `reusable_for_product=true`.
+- Full multi-specialist Hermes execution on product work. Product Face and
+  Auditor are reusable for the named QVG public validation product lanes, while
+  Security, CU/SVM/economic proof, Remote Proof, Release Ops, Human Gate and the
+  bounded full-product graph still need production target execution with all
+  remaining critical lanes marked `reusable_for_product=true`.
 - The completion audit correctly blocks a practical `10/10` claim. This is a
   release-safety improvement, not a substitute for clearing the blockers it
   reports.
@@ -415,15 +437,15 @@ checks.
 | Security | 9.5 | Real Codex Security scan, Bandit, public scanners and fixed findings now exist; product-specific scans still repeat per implementation. |
 | Product Face | 9.9 | Hermes profile now captures browser-backed desktop/mobile screenshots and validation evidence, including a scoped reusable production-like QVG Product Face lane; deployed-production UI, full WCAG and production performance remain open. |
 | Agent/Hermes Operability | 9.997 | Real Hermes board, worker graph, stronger evidence reconciliation, dashboard ready no-bypass, dashboard/API done no-bypass, worker-style CLI completion no-bypass, official-main patch apply, multi-profile dispatch, Crabbox static-SSH remote proof, release/human dry-run, supply-chain gate dispatch, completion-claim blocking and bounded full-product graph review are now smoke-proven. |
-| Solana/Quasar/Auditor | 9.72 | Product-like Quasar source now builds/tests in Docker, has bounded Auditor code-audit PASS and product-like CU/fuzz/property smoke from real Hermes workers; production source, real CU/SVM flow and economic fuzz/property tests remain open. |
+| Solana/Quasar/Auditor | 9.86 | The named QVG public validation product source now builds/tests in Docker and has scoped reusable Auditor code-audit PASS from a real Hermes worker; real CU/SVM flow and economic fuzz/property tests remain open. |
 
-Estimated score after fixes in this pass: 9.994/10 for factory process,
+Estimated score after fixes in this pass: 9.996/10 for factory process,
 operability, completion-claim discipline, bounded product-graph reconciliation
 and public repository safety.
 
 It is not 10 yet because the next jump requires product-specific or
-provider-backed execution, not more public-pilot smoke: production Quasar
-source with CU/fuzz/property depth, managed Testbox/broker remote proof, a
+provider-backed execution, not more public-pilot smoke: real CU/SVM/economic
+depth, managed Testbox/broker remote proof, a
 production release execution, production-scoped human gate evidence and a full
 product graph with all critical lanes reusable.
 
@@ -432,8 +454,8 @@ product graph with all critical lanes reusable.
 1. Rerun Product Face proof for every new product/deployed UI. The QVG public
    validation product lane is scoped reusable; that does not transfer to other
    products or releases.
-2. Replace public product-like Quasar proof with production Quasar source when
-   the production product exists, then add CU profiling and fuzz/property tests.
+2. Rerun Quasar Auditor whenever product source changes, then add real CU
+   profiling, SVM/client transactions and economic fuzz/property tests.
 3. Rerun supply-chain CI/SBOM proof after every workflow/dependency change; add
    dependency audit, lockfile and provenance evidence as soon as runtime
    dependencies exist.
@@ -443,7 +465,7 @@ product graph with all critical lanes reusable.
 6. Run release and human-gate worker profiles on product-specific production
    targets with real rollback, smoke, monitoring and approval evidence.
 7. Only allow `factory_completion_audit.py --require-complete` to pass after
-   the five remaining product-specific/provider-backed blockers have direct
+   the four remaining product-specific/provider-backed blockers have direct
    evidence.
 8. Promote the bounded QVG graph to a production graph only after a production
    target exists and every critical lane can truthfully set

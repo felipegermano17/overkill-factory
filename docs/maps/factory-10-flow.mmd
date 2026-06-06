@@ -123,7 +123,7 @@ flowchart LR
   F29 --> F30
 
   F30["F30 Ainda nao e 10 pratico"]:::alert
-  F30D["Agora faltam provas product-specific/provider-backed: Quasar de producao com CU/fuzz/property, UI deployed/full WCAG/perf, managed Testbox/broker, release e gate humano."]:::desc
+  F30D["Agora faltam provas product-specific/provider-backed: CU/SVM/economic real, UI deployed/full WCAG/perf, managed Testbox/broker, release, gate humano e grafo reutilizavel."]:::desc
   F30 -.-> F30D
   F30 --> F31
 
@@ -198,12 +198,12 @@ flowchart LR
   F44 --> F45
 
   F45["F45 Completion audit guard"]:::gate
-  F45D["Hermes independent-reviewer validou NOT_COMPLETE, bloqueou require-complete e confirmou 5 blockers product-specific/provider-backed."]:::desc
+  F45D["Hermes independent-reviewer validou NOT_COMPLETE, bloqueou require-complete e confirmou blockers product-specific/provider-backed."]:::desc
   F45 -.-> F45D
   F45 --> F46
 
   F46["F46 Full product graph bounded PASS"]:::learning
-  F46D["Grafo QVG reconciliou 10 lanes reais, preservou stale refs visiveis e manteve reusable_for_product=false sem declarar producao."]:::desc
+  F46D["Grafo QVG reconciliou 10 lanes reais; Product Face e Auditor agora sao reutilizaveis, mas o grafo segue sem declarar producao."]:::desc
   F46 -.-> F46D
   F46 --> F47
 
@@ -213,8 +213,13 @@ flowchart LR
   F47 --> F48
 
   F48["F48 Product Face production-like PASS"]:::face
-  F48D["Hermes product-face validou QVG como alvo production-like reutilizavel para a lane Product Face; audit caiu para 5 blockers."]:::desc
+  F48D["Hermes product-face validou QVG como alvo production-like reutilizavel para a lane Product Face; audit ainda manteve blockers restantes."]:::desc
   F48 -.-> F48D
+  F48 --> F49
+
+  F49["F49 Quasar Auditor production-validation PASS"]:::review
+  F49D["Hermes solana-quasar-auditor validou source em products, Quasar Docker build/test, corpus Auditor, 513 casos e reusable Auditor lane; audit caiu para 4 blockers."]:::desc
+  F49 -.-> F49D
 
   F1 --> W1["source-ledger-worker | open | fonte vs inferencia"]:::worker
   F2 --> W2["product-sot-planner | open | SOT candidata"]:::worker
