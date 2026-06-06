@@ -17,15 +17,18 @@ SPEC.loader.exec_module(module)
 
 
 class ProductionFullProductWorkerGraphTest(unittest.TestCase):
-    def test_current_graph_stays_blocked_until_production_lanes_exist(self) -> None:
+    def test_current_graph_matches_available_production_lanes(self) -> None:
         graph = module.build_graph()
-        blockers = "\n".join(graph["blocking_summary"])
+        all_lane_files_exist = all((ROOT / lane["path"]).exists() for lane in module.LANES)
 
-        self.assertEqual(graph["result"], "FAIL")
-        self.assertFalse(graph["reusable_for_product"])
-        self.assertIn("remote_proof", blockers)
-        self.assertIn("human_gate", blockers)
-        self.assertIn("release_ops", blockers)
+        if all_lane_files_exist:
+            self.assertEqual(graph["result"], "PASS")
+            self.assertTrue(graph["reusable_for_product"])
+            self.assertEqual(graph["blocking_summary"], [])
+        else:
+            self.assertEqual(graph["result"], "FAIL")
+            self.assertFalse(graph["reusable_for_product"])
+            self.assertGreater(len(graph["blocking_summary"]), 0)
 
     def test_strict_lane_requires_reusable_product_target(self) -> None:
         lane = {

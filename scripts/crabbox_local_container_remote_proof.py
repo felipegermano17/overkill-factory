@@ -244,7 +244,7 @@ def run_proof(args: argparse.Namespace) -> dict[str, Any]:
     env.setdefault("HOME", str(Path.home()))
     env.setdefault("HERMES_HOME", env["HOME"])
     command = args.command or DEFAULT_COMMAND
-    if not args.no_clean_previous:
+    if not args.no_write and not args.no_clean_previous:
         for stale in (args.out, args.md_out):
             if stale.exists():
                 stale.unlink()
