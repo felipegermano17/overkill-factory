@@ -1,8 +1,8 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
   "packet_type": "worker_execution_request",
-  "created_at": "2026-06-06T02:15:29+00:00",
-  "source_card_path": "pilots\\quasar-vault-guard-test\\cards\\qvg-first-slice.md",
+  "created_at": "2026-06-06T21:51:51+00:00",
+  "source_card_path": "pilots/quasar-vault-guard-test/cards/qvg-first-slice.md",
   "worker": {
     "id": "human-gate-clerk",
     "name": "Human Gate Clerk",
@@ -33,7 +33,7 @@
       "compute-units"
     ],
     "executor_identity": "codex-overkill-factory",
-    "reviewer_identity": "kaxis-reviewer"
+    "reviewer_identity": "independent-reviewer"
   },
   "input_contract": {
     "required_fields": [
@@ -65,5 +65,33 @@
     "must_record_tool_or_profile": true,
     "human_approval_must_be_real": true
   },
-  "status": "requires_execution"
+  "status": "requires_execution",
+  "profile_binding": {
+    "profile_id": "human-gate-clerk.profile.v1",
+    "hermes_profile_name": "human-gate-clerk",
+    "dispatch_queue_policy": {
+      "source_of_truth": "factoryctl.worker_queue_class",
+      "default_queue": "blocking-before-ready",
+      "allowed_effective_queues": [
+        "blocking-before-ready",
+        "blocking-before-done",
+        "human-gate"
+      ]
+    },
+    "queue_class_source": "worker_task.queue_class",
+    "skill_refs": [
+      "overkill-factory",
+      "hermes-kanban",
+      "human-gate"
+    ],
+    "result_schema": "schemas/human-gate-record.schema.json",
+    "receipt_field": "human_gate_record",
+    "can_mutate_card_state": false,
+    "evidence_path_policy": "Human records must use role names, explicit scope and public-safe evidence refs.",
+    "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+    "profile_description_ref": "agents/worker-profiles.public.json",
+    "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+    "skill_install_ref": "docs/agents/live-agent-configuration.md",
+    "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+  }
 }

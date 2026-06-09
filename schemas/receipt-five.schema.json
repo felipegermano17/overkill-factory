@@ -39,7 +39,7 @@
       "required": ["from_status", "to_status", "actor", "worker", "receipt_refs", "artifact_refs"],
       "additionalProperties": true
     },
-    "hermes_kaxis_v2_completion_required": {
+    "hermes_legacy_completion_required": {
       "type": "boolean"
     },
     "evidence_paths": {
@@ -69,7 +69,7 @@
         "security_review",
         "cybersecurity_review",
         "cto_gate",
-        "felipe_gate"
+        "human_gate"
       ],
       "additionalProperties": true
     },
@@ -97,10 +97,36 @@
     },
     "auditor_result": {
       "type": "object",
+      "required": [
+        "record_type",
+        "result",
+        "audit_mode",
+        "tool_or_profile",
+        "executed_by",
+        "blocking_findings",
+        "findings_summary",
+        "evidence_refs",
+        "next_action"
+      ],
       "additionalProperties": true
     },
     "product_face_result": {
       "type": "object",
+      "required": [
+        "result",
+        "tool_or_profile",
+        "executed_by",
+        "screenshots",
+        "viewports",
+        "checked_states",
+        "user_journeys_checked",
+        "a11y",
+        "overlap_check",
+        "performance_note",
+        "blocking_findings",
+        "evidence_refs",
+        "next_action"
+      ],
       "additionalProperties": true
     },
     "independent_review_result": {

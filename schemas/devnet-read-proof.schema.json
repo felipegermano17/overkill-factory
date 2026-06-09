@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/devnet-read-proof.schema.json",
+  "title": "Devnet Read Proof",
+  "type": "object",
+  "required": ["$schema", "result", "observed_at", "boundaries"],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/devnet-read-proof.schema.json"
+    },
+    "result": {
+      "enum": ["PASS", "FAIL"]
+    },
+    "receipt_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "proof_hash": {
+      "type": "string",
+      "minLength": 16
+    },
+    "observed_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "devnet_rpc": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "boundaries": {
+      "type": "object",
+      "required": ["signing", "devnet_write", "mainnet_write", "secret_access", "deploy"],
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "error": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

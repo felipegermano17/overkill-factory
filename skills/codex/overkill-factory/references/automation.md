@@ -10,8 +10,9 @@ python scripts/factoryctl.py validate-card path/to/card.md
 python scripts/factoryctl.py validate-receipt path/to/receipt.json
 python scripts/factoryctl.py gate-report --card path/to/card.md
 python scripts/factoryctl.py worker-packet --worker all --card path/to/card.md --out path/to/worker-packets
-python scripts/factoryctl.py evidence-record --worker codex-security --card path/to/card.md --result PASS --tool codex-security:security-scan --actor kaxis-cybersecurity --evidence-ref path/to/report.md
-python scripts/factoryctl.py human-gate-record --card path/to/card.md --decision approved --human-actor Felipe --evidence-ref path/to/decision.md
+python scripts/validate_worker_profiles.py
+python scripts/factoryctl.py evidence-record --worker codex-security --card path/to/card.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref path/to/report.md
+python scripts/factoryctl.py human-gate-record --card path/to/card.md --decision approved --human-actor product-owner --evidence-ref path/to/decision.md
 ```
 
 ## Worker Packets
@@ -21,8 +22,16 @@ Worker packets are not evidence. They are execution requests. They tell Hermes:
 - which specialist is required;
 - why the specialist is required;
 - what input fields are missing;
+- which Hermes profile and skill refs should execute the work;
 - what output field must appear in Receipt Five;
 - which gate remains blocked until real evidence exists.
+
+The profile data comes from:
+
+- `agents/worker-profiles.public.json`
+- `agents/hermes-profile-bindings.public.json`
+
+If a worker has no profile or binding, it is not an operable agent yet.
 
 Use `evidence-record` only after the specialist really ran.
 Use `human-gate-record` only after the human decision really happened.

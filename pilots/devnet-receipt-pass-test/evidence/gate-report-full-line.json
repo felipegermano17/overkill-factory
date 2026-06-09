@@ -1,0 +1,232 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+  "report_type": "factory_gate_preflight",
+  "created_at": "2026-06-06T22:01:58+00:00",
+  "card_id": "DRP-FULL-LINE-PILOT",
+  "risk_effective": "R3",
+  "surfaces": [
+    "sot",
+    "architecture",
+    "docs",
+    "documentation",
+    "decomposition",
+    "kanban-card-graph",
+    "implementation",
+    "code",
+    "frontend",
+    "mobile",
+    "ux",
+    "product-face",
+    "web",
+    "browser",
+    "api",
+    "backend",
+    "auth",
+    "security",
+    "cybersecurity",
+    "agent",
+    "agents",
+    "llm",
+    "prompt",
+    "memory",
+    "tools",
+    "autonomous",
+    "skill",
+    "eval",
+    "onchain",
+    "solana-quasar",
+    "account-pda",
+    "cpi",
+    "compute-units",
+    "wallet",
+    "wallet-ui",
+    "signing",
+    "crypto",
+    "keys",
+    "secrets",
+    "cloud",
+    "infra",
+    "deploy",
+    "ci",
+    "supply-chain",
+    "public",
+    "opensource",
+    "repo-public",
+    "release",
+    "production",
+    "rollback",
+    "monitoring",
+    "observability",
+    "logging",
+    "alerting",
+    "incident"
+  ],
+  "gate_status": "ready_for_worker_execution",
+  "required_workers": [
+    "codex-security",
+    "solana-quasar-auditor",
+    "product-face",
+    "independent-reviewer",
+    "human-gate-clerk",
+    "factory-orchestrator",
+    "source-ledger-worker",
+    "product-sot-planner",
+    "product-architect",
+    "docs-os-worker",
+    "decomposition-planner",
+    "implementation-worker",
+    "qa-verification-worker",
+    "autoreview-gate",
+    "security-orchestrator",
+    "appsec-owasp-specialist",
+    "agentic-ai-security-specialist",
+    "cloud-infra-security-specialist",
+    "crypto-key-management-specialist",
+    "release-ops-worker",
+    "handoff-packer",
+    "memory-steward",
+    "skill-eval-distiller",
+    "public-safety-gate",
+    "supply-chain-gate",
+    "detection-monitoring-worker"
+  ],
+  "blocked_workers": [],
+  "card_validation_errors": [],
+  "workers": {
+    "codex-security": {
+      "required": true,
+      "reason": "risk, code, public, agentic, scan packet or sensitive surface requires security evidence",
+      "status": "requires_execution"
+    },
+    "solana-quasar-auditor": {
+      "required": true,
+      "reason": "onchain/Solana/Quasar surface detected",
+      "status": "requires_execution"
+    },
+    "product-face": {
+      "required": true,
+      "reason": "visible product surface detected",
+      "status": "requires_execution"
+    },
+    "independent-reviewer": {
+      "required": true,
+      "reason": "R2+ or explicit independent review required",
+      "status": "requires_execution"
+    },
+    "human-gate-clerk": {
+      "required": true,
+      "reason": "architecture/high-risk/human gate detected",
+      "status": "requires_execution"
+    },
+    "factory-orchestrator": {
+      "required": true,
+      "reason": "factory card needs routing and state control",
+      "status": "requires_execution"
+    },
+    "source-ledger-worker": {
+      "required": true,
+      "reason": "raw or early source state detected",
+      "status": "requires_execution"
+    },
+    "product-sot-planner": {
+      "required": true,
+      "reason": "Product SOT phase detected",
+      "status": "requires_execution"
+    },
+    "product-architect": {
+      "required": true,
+      "reason": "architecture/specialist review phase detected",
+      "status": "requires_execution"
+    },
+    "docs-os-worker": {
+      "required": true,
+      "reason": "Documentation OS phase detected",
+      "status": "requires_execution"
+    },
+    "decomposition-planner": {
+      "required": true,
+      "reason": "decomposition/card-graph phase detected",
+      "status": "requires_execution"
+    },
+    "implementation-worker": {
+      "required": true,
+      "reason": "implementation surface detected",
+      "status": "requires_execution"
+    },
+    "qa-verification-worker": {
+      "required": true,
+      "reason": "verification/review risk detected",
+      "status": "requires_execution"
+    },
+    "autoreview-gate": {
+      "required": true,
+      "reason": "code or pre-landing review surface detected",
+      "status": "requires_execution"
+    },
+    "security-orchestrator": {
+      "required": true,
+      "reason": "security-sensitive or R2+ card needs routed controls",
+      "status": "requires_execution"
+    },
+    "appsec-owasp-specialist": {
+      "required": true,
+      "reason": "OWASP Web/API/AppSec surface detected",
+      "status": "requires_execution"
+    },
+    "agentic-ai-security-specialist": {
+      "required": true,
+      "reason": "agentic AI/tool/memory surface detected",
+      "status": "requires_execution"
+    },
+    "cloud-infra-security-specialist": {
+      "required": true,
+      "reason": "cloud/infra/IaC/deploy surface detected",
+      "status": "requires_execution"
+    },
+    "crypto-key-management-specialist": {
+      "required": true,
+      "reason": "crypto/key/custody surface detected",
+      "status": "requires_execution"
+    },
+    "remote-proof-runner": {
+      "required": false,
+      "reason": "high-risk card has remote proof as future/advisory gate unless runtime_contract.remote_proof_required=true",
+      "status": "not_required_by_current_card"
+    },
+    "release-ops-worker": {
+      "required": true,
+      "reason": "release/promotion surface detected",
+      "status": "requires_execution"
+    },
+    "handoff-packer": {
+      "required": true,
+      "reason": "phase or risk requires portable handoff",
+      "status": "requires_execution"
+    },
+    "memory-steward": {
+      "required": true,
+      "reason": "memory/source/learning-loop surface detected",
+      "status": "requires_execution"
+    },
+    "skill-eval-distiller": {
+      "required": true,
+      "reason": "skill/eval/learning loop detected",
+      "status": "requires_execution"
+    },
+    "public-safety-gate": {
+      "required": true,
+      "reason": "public artifact or release surface detected",
+      "status": "requires_execution"
+    },
+    "supply-chain-gate": {
+      "required": true,
+      "reason": "code/dependency/high-risk supply-chain trigger detected",
+      "status": "requires_execution"
+    },
+    "detection-monitoring-worker": {
+      "required": true,
+      "reason": "monitoring/incident/release trigger detected",
+      "status": "requires_execution"
+    }
+  }
+}

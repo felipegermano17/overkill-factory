@@ -9,29 +9,43 @@ Use Hermes Kanban as the factory floor:
 - Gates block weak cards before execution.
 - Done requires evidence, not prose.
 
-Factory 10 was committed on the KAXIS VM Hermes checkout:
+Factory 10 was first proven on a Hermes checkout:
 
 ```text
-repo: /srv/hermes/home/hermes-agent
-branch: codex/kaxis-factory-10-gates
+branch: codex/overkill-factory-10-gates
 commit: d297c0c78900d6858384297895ef4392e6fb85b9
 ```
 
 Portable patch:
 
 ```text
-adapters/hermes/patches/0001-add-kaxis-factory-10-kanban-gates.patch
+adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch
+adapters/hermes/patches/0002-enforce-overkill-ready-gate-in-dashboard-moves.patch
+adapters/hermes/patches/0003-require-overkill-worker-results-before-done.patch
+adapters/hermes/patches/0004-handle-overkill-worker-completion-gate-errors.patch
 ```
 
 Validation command used:
 
 ```bash
 venv/bin/python -m pytest -q -o addopts='' \
-  tests/hermes_cli/test_kaxis_factory_v35_gate.py \
+  tests/hermes_cli/test_overkill_factory_v35_gate.py \
   tests/hermes_cli/test_kanban_promote.py \
   tests/hermes_cli/test_kanban_cli.py
 ```
 
-Expected result: `72 passed`.
+Expected result: see `docs/validation/heavy-validation-results.md`.
 
-When operating KAXIS/Hermes, also use the `hermes-kanban` skill.
+When operating Overkill/Hermes, also use the `hermes-kanban` skill.
+
+## Worker Skill Availability
+
+If a Factory card force-loads `overkill-factory`, the skill package must be
+available to the specialist profile runtime before dispatch. A real dispatch
+smoke proved this with `public-safety-gate`: the profile loaded the factory
+skill, ran `python3 scripts/public_safety_scan.py`, wrote evidence and closed
+with Receipt Five.
+
+Do not treat a local Codex skill install as sufficient for Hermes workers.
+Hermes profiles need access to the same skill package in their runtime skill
+search path, including `SKILL.md`, references and scripts.

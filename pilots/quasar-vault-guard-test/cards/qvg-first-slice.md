@@ -2,7 +2,7 @@
 {
   "card_id": "QVG-PILOT-FIRST-SLICE",
   "slice_id": "QVG_DRY_PILOT_001",
-  "owner_profile": "kaxis-pm",
+  "owner_profile": "product-planner",
   "source_refs": [
     "pilots/quasar-vault-guard-test/00-raw-paper.md",
     "pilots/quasar-vault-guard-test/02-product-sot.md",
@@ -12,13 +12,13 @@
     "pilots/quasar-vault-guard-test/08-security-scan-packet.md"
   ],
   "source_state": "compiled",
-  "outcome": "Complete the first dry pilot slice by producing Product Face, security, Auditor preflight, independent review, human gate and Receipt Five evidence without sensitive actions.",
+  "outcome": "Complete the first dry pilot slice by producing Product Face, security, product-like Quasar/Auditor code-audit evidence, independent review, human gate and Receipt Five evidence without sensitive actions.",
   "acceptance_criteria": [
     "factoryctl validate-card passes",
     "gate report lists Product Face, Codex Security, Auditor, Independent Reviewer and Human Gate Clerk as required",
     "Product Face prototype has desktop and mobile screenshots",
     "security_scan_result exists with evidence refs",
-    "auditor_result exists with evidence refs and does not claim code audit pass",
+    "auditor_result exists with evidence refs and any code-audit claim is bounded to the public product-like Quasar target",
     "independent_review_result exists with evidence refs",
     "human_gate_record exists and is test-only",
     "Receipt Five exists",
@@ -33,8 +33,8 @@
     "Hermes Kanban completion"
   ],
   "scope_out": [
-    "Solana program implementation",
-    "Quasar compile",
+    "production Solana program implementation",
+    "production Quasar compile",
     "wallet signing",
     "key access",
     "devnet write",
@@ -47,7 +47,7 @@
     "pilots/quasar-vault-guard-test"
   ],
   "conflict_set": [
-    "Auditor path is mandatory, but no Quasar code exists yet; record Auditor preflight only.",
+    "Auditor path is mandatory; public product-like Quasar source can receive code-audit evidence, but production source still requires a separate audit.",
     "Human gate is authorized for test pilot only; do not expand to production authority."
   ],
   "risk_class": "R3-financial-critical",
@@ -91,7 +91,7 @@
     "desktop screenshot",
     "mobile screenshot",
     "security scan result",
-    "auditor preflight result",
+    "product-like Auditor code-audit result or explicit bounded waiver",
     "independent review result",
     "human gate record",
     "Receipt Five",
@@ -105,18 +105,18 @@
     "security_review_required": true,
     "cybersecurity_review_required": true,
     "CTO_gate_required": true,
-    "Felipe_gate_required": true
+    "human_gate_required": true
   },
   "rollback_or_recovery": "If any evidence is missing, keep the Hermes card blocked and do not claim pilot completion.",
   "security_role_separation": true,
   "protected_assets": [
-    "KAXIS vault concept",
+    "example vault concept",
     "future Quasar program",
     "wallet identity",
     "operator authority",
     "human approval trail"
   ],
-  "factory_method_version": "KAXIS_V3_5_FACTORY_10",
+  "factory_method_version": "OVERKILL_V3_5_FACTORY_10",
   "phase": "F11",
   "surfaces": [
     "ux",
@@ -135,7 +135,7 @@
   "authority_max": "dry_pilot_artifacts_only",
   "owner_worker": "Pilot Decomposition Planner",
   "executor_identity": "codex-overkill-factory",
-  "reviewer_identity": "kaxis-reviewer",
+  "reviewer_identity": "independent-reviewer",
   "runtime_decision": "hermes_default_with_codex_artifact_execution",
   "runtime_contract": {
     "mode": "dry_pilot",
@@ -202,6 +202,7 @@
       "mobile screenshot"
     ]
   },
+  "product_face_result_ref": "pilots/quasar-vault-guard-test/worker-results/product-face-result.json",
   "onchain_work_package": {
     "quasar_source_ref": "pilots/quasar-vault-guard-test/07-onchain-work-package.md",
     "quasar_required": true,
@@ -230,7 +231,7 @@
     "auditor_tool_ref": "solanabr/Auditor"
   },
   "security_scan_packet": {
-    "security_owner": "kaxis-cybersecurity",
+    "security_owner": "security-runner",
     "scanner_agent": "codex-security-runner",
     "scan_timing": "before_done",
     "scan_scope": [
@@ -256,11 +257,11 @@
   "human_gate_packet": {
     "gate_type": "R3_dry_pilot",
     "required_approvers": [
-      "Felipe"
+      "product-owner"
     ],
     "decision_state": "approved_for_dry_pilot_only",
-    "risk_owner": "Felipe",
-    "security_owner": "kaxis-cybersecurity",
+    "risk_owner": "product-owner",
+    "security_owner": "security-runner",
     "rollback_owner": "codex-overkill-factory",
     "waiver_policy": "no production waiver; test-only authorization from active user instruction"
   }

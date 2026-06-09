@@ -7,9 +7,9 @@ Pilot evidence:
 ```text
 pilot: pilots/quasar-vault-guard-test
 Hermes board: overkill-factory-pilot-10
-Hermes task: t_a09d1c2e
+Hermes task: public-methodology-card
 status: done
-Whimsical primary board: XVvfzk
+Whimsical map alias: public-methodology-map
 ```
 
 This version does not claim production readiness. It upgrades the factory
@@ -33,6 +33,7 @@ paper
 -> Hermes ready gate
 -> agent execution
 -> worker results
+-> evidence reconciliation
 -> closure summary
 -> Receipt Five
 -> Hermes done gate
@@ -48,14 +49,14 @@ paper
 Receipt Five now supports both Factory 10/Hermes V3.5 and the older Hermes V2
 completion gate.
 
-Required when `hermes_kaxis_v2_completion_required=true`:
+Required when `hermes_legacy_completion_required=true`:
 
 - evidence paths;
 - `verification.passed=true` with commands;
 - `sandbox.passed=true` with invariants;
 - `rollback.verified=true` with evidence;
 - approvals for QA, independent review, security, cybersecurity, CTO and
-  Felipe gate.
+  product-owner gate.
 
 Why better than a plain Receipt Five: Hermes can reject weak closure even when a
 worker writes confident prose.
@@ -77,17 +78,24 @@ the evidence lives.
 
 ### 3. Closure Summary Between Results And Receipt
 
-The factory now requires a closure summary for non-trivial cards.
+The factory now requires deterministic evidence reconciliation before Receipt
+Five for non-trivial cards. The `evidence-reconciler` profile chooses the
+current worker result for each receipt field, records stale superseded results
+and blocks closure when current evidence is missing, invalid or still blocking.
 
 It answers:
 
 - which workers were required by preflight;
 - which worker results exist;
+- which worker result is current for each receipt field;
+- which older results were superseded;
 - which results are only preflight or bounded;
 - which authority is still forbidden.
 
 Why better than relying on the gate report: preflight says what must run. It
-does not prove that the worker ran.
+does not prove that the worker ran. A closure summary alone is also too soft
+for agents; the reconciler emits a schema-shaped result and a supersession
+ledger that Hermes can block on.
 
 ### 4. Portable Pilot Package
 

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-face-state.schema.json",
+  "viewports": {
+    "desktop": {
+      "page": {
+        "title": "Quasar Vault Guard",
+        "lang": "en",
+        "url": "file://<repo-root>/pilots/quasar-vault-guard-test/product-face/prototype.html",
+        "headings": [
+          "Vault instruction review",
+          "Decision",
+          "Required evidence",
+          "State coverage"
+        ],
+        "disabled_controls": 1,
+        "status_nodes": [
+          "Current status\nBlocked\n\nProduct-like Quasar code audit passed for the dry proof. Production authority remains closed until real product source, deployment review and human approval exist.",
+          "Product Face captured",
+          "Security scan packet ready",
+          "Auditor product-like PASS",
+          "Signing disabled",
+          "pass",
+          "pass",
+          "pass",
+          "pass",
+          "approved"
+        ]
+      },
+      "a11y": {
+        "issues": []
+      },
+      "overlap": {
+        "items": []
+      },
+      "performance": {
+        "duration_ms": 18,
+        "dom_content_loaded_ms": 17,
+        "load_event_ms": 18,
+        "dom_nodes": 102
+      }
+    },
+    "mobile": {
+      "page": {
+        "title": "Quasar Vault Guard",
+        "lang": "en",
+        "url": "file://<repo-root>/pilots/quasar-vault-guard-test/product-face/prototype.html",
+        "headings": [
+          "Vault instruction review",
+          "Decision",
+          "Required evidence",
+          "State coverage"
+        ],
+        "disabled_controls": 1,
+        "status_nodes": [
+          "Current status\nBlocked\n\nProduct-like Quasar code audit passed for the dry proof. Production authority remains closed until real product source, deployment review and human approval exist.",
+          "Product Face captured",
+          "Security scan packet ready",
+          "Auditor product-like PASS",
+          "Signing disabled",
+          "pass",
+          "pass",
+          "pass",
+          "pass",
+          "approved"
+        ]
+      },
+      "a11y": {
+        "issues": []
+      },
+      "overlap": {
+        "items": []
+      },
+      "performance": {
+        "duration_ms": 8,
+        "dom_content_loaded_ms": 7,
+        "load_event_ms": 8,
+        "dom_nodes": 102
+      }
+    }
+  }
+}

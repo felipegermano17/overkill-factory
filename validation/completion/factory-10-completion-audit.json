@@ -1,0 +1,121 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-completion-audit.schema.json",
+  "audit_kind": "factory_10_practical_completion",
+  "blocking_summary": [],
+  "completion_claim_allowed": true,
+  "created_at": "2026-06-06T19:09:52+00:00",
+  "policy_decision": "Factory 10 practical completion can be claimed from current evidence.",
+  "requirements": [
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/hermes-live/real-profile-dispatch-smoke.md",
+        "validation/hermes-live/multi-profile-dispatch-summary.md",
+        "validation/hermes-live/worker-dispatched-done-gate-smoke.md"
+      ],
+      "id": "hermes_real_worker_orchestration",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Hermes real worker orchestration",
+      "why_it_matters": "The factory floor must be Hermes, not only local scripts or chat plans."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/production/product-face/product-face-result.json"
+      ],
+      "id": "production_product_face",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Production-like Product Face proof",
+      "why_it_matters": "A product is not complete until its real face works across states, mobile, a11y and performance boundaries."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/security/codex-security-full-scan-2026-06-06.md",
+        "validation/security/bandit-scripts-adapters.json"
+      ],
+      "id": "factory_security_scan",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Factory code security scan",
+      "why_it_matters": "The factory code that gates autonomous work must itself pass security review."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/production/quasar/auditor-result.json"
+      ],
+      "id": "production_quasar_auditor",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Production Quasar Auditor code audit",
+      "why_it_matters": "The public product-like audit is useful, but production approval needs the actual product program."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/production/quasar/cu-svm-economic-proof.json"
+      ],
+      "id": "production_cu_svm_economic",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Production CU, SVM/client flow and economic safety",
+      "why_it_matters": "Onchain code can pass unit tests and still fail through compute, transaction flow or economic edge cases."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/production/remote-proof/managed-testbox-result.json"
+      ],
+      "id": "managed_remote_proof",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Crabbox/Testbox remote proof",
+      "why_it_matters": "Remote proof validates the intended heavy gate in an isolated Crabbox/Testbox/container environment."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/production/release/release-ops-result.json",
+        "validation/production/release/human-gate-record.json"
+      ],
+      "id": "production_release_human_gate",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Production release and human R4 gate",
+      "why_it_matters": "Production release authority must be explicit, reviewed and reversible."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/supply-chain/supply-chain-proof.json",
+        "validation/supply-chain/source-sbom.spdx.json",
+        "validation/supply-chain/hermes-supply-chain-summary.md"
+      ],
+      "id": "public_supply_chain_ci_sbom",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Public repository supply-chain CI/SBOM",
+      "why_it_matters": "An open factory must be reproducible and safe to accept contributions."
+    },
+    {
+      "blocking": false,
+      "evidence_refs": [
+        "validation/production/full-product-worker-graph.json"
+      ],
+      "id": "full_product_specific_worker_graph",
+      "next_action": "Keep rerunning this proof when the related surface changes.",
+      "status": "ACHIEVED",
+      "title": "Full product-specific multi-specialist execution",
+      "why_it_matters": "The goal is a factory that carries a real product through all required workers, not isolated prooflets."
+    }
+  ],
+  "requirements_achieved": 9,
+  "requirements_blocking": 0,
+  "requirements_bounded": 0,
+  "requirements_total": 9,
+  "score_estimate": "10/10",
+  "status": "COMPLETE"
+}

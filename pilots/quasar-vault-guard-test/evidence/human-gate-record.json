@@ -21,10 +21,10 @@
       "compute-units"
     ],
     "executor_identity": "codex-overkill-factory",
-    "reviewer_identity": "kaxis-reviewer"
+    "reviewer_identity": "independent-reviewer"
   },
   "decision": "approved",
-  "human_actor": "Felipe",
+  "human_actor": "product-owner",
   "decision_at": "2026-06-06T02:11:27+00:00",
   "approved_scope": [
     "dry pilot artifacts and Hermes test completion"
@@ -36,11 +36,13 @@
     "key or fund access"
   ],
   "required_changes": [],
-  "risk_owner": "Felipe",
-  "security_owner": "kaxis-cybersecurity",
+  "risk_owner": "product-owner",
+  "security_owner": "security-runner",
   "rollback_owner": "codex-overkill-factory",
   "evidence_refs": [
     "Codex chat 2026-06-05 user authorization for test goal"
   ],
-  "notes": "Approved for dry pilot only; not production authority."
+  "notes": "Approved for dry pilot only; not production authority.",
+  "evidence_kind": "real",
+  "reusable_for_product": false
 }

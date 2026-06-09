@@ -6,7 +6,7 @@ Approved for dry pilot only.
 
 ## Evidence
 
-Felipe's current instruction in this Codex thread:
+product-owner's current instruction in this Codex thread:
 
 ```text
 Voce tem autorização para tudo ok? faça o mapa mental, arrume um paper de teste,

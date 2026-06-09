@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-transition-hook.schema.json",
+  "title": "Overkill Factory Hermes Transition Hook Result",
+  "type": "object",
+  "required": [
+    "hook_type",
+    "transition_action",
+    "blocked_reasons",
+    "plan",
+    "ledger"
+  ],
+  "properties": {
+    "hook_type": {
+      "const": "overkill_factory_hermes_transition_hook"
+    },
+    "transition_action": {
+      "enum": [
+        "allow",
+        "allow_and_create_worker_tasks",
+        "allow_done",
+        "block_and_create_before_ready_tasks",
+        "block_transition"
+      ]
+    },
+    "blocked_reasons": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "completion_reconciliation": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "plan_type",
+        "event",
+        "transition_action",
+        "blocked_reasons",
+        "gate_report",
+        "worker_tasks"
+      ],
+      "additionalProperties": true
+    },
+    "ledger": {
+      "type": "object",
+      "required": [
+        "ledger_path",
+        "created",
+        "updated",
+        "unchanged",
+        "task_count"
+      ],
+      "properties": {
+        "created": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "updated": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "unchanged": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "task_count": { "type": "integer" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

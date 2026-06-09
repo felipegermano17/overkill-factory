@@ -1,115 +1,76 @@
-# KAXIS Factory 10 Durability Addendum
+# Overkill Factory 10 Durability Addendum
 
-Data: 2026-06-05  
-Objetivo: tirar a Factory 10 do estado de patch validado e transformar em codigo versionado, testado e pronto para promocao.
+Date: 2026-06-05
 
-## Resultado
+Goal: turn the Factory 10 Hermes gate proof into portable, versioned,
+reviewable work that can be applied to a Hermes checkout without relying on
+chat memory or private runtime details.
 
-A Factory 10 agora esta commitada no repositorio Hermes da VM.
+## Public Result
+
+The Hermes adapter patch is kept in:
 
 ```text
-repo: /srv/hermes/home/hermes-agent
-branch: codex/kaxis-factory-10-gates
-commit: d297c0c78900d6858384297895ef4392e6fb85b9
-summary: Add KAXIS Factory 10 kanban gates
+adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch
 ```
 
-Arquivos versionados:
+The patch adds the Factory 10 card and completion gates, plus regression tests.
+The private runtime where the patch was first proven is intentionally not
+documented in this public repository.
+
+## Versioned Files Touched By The Patch
 
 ```text
 hermes_cli/kanban_db.py
 hermes_cli/main.py
-tests/hermes_cli/test_kaxis_factory_v35_gate.py
+tests/hermes_cli/test_overkill_factory_v35_gate.py
 ```
 
-Patch de promocao:
+## Test Shape
 
-```text
-/srv/hermes/home/context-lock/kaxis-factory-10-runtime/patches/0001-add-kaxis-factory-10-kanban-gates.patch
-sha256: 62dbe4155c0a5e6e9869f62c7104e2db63663ea38aae3a071b803ff369cfd725
-```
-
-Copiado tambem para:
-
-```text
-C:\Users\felip\OneDrive\Documentos\Kaxis VM\KAXIS_FACTORY_10_RUNTIME_2026-06-05\patches\0001-add-kaxis-factory-10-kanban-gates.patch
-```
-
-## Testes Adicionados
-
-Arquivo novo:
-
-```text
-tests/hermes_cli/test_kaxis_factory_v35_gate.py
-```
-
-Cobertura:
-
-1. Product Face Packet obrigatorio para `ux/frontend/mobile/wallet-ui`.
-2. Bloqueio de executor revisando o proprio trabalho.
-3. Security surface exigindo pacote Codex Security/Cybersecurity.
-4. Done gate exigindo `security_scan_result` quando o card exige scan.
-5. Onchain R3 exigindo Auditor ou waiver humano.
-6. Onchain R3 com Auditor + scan podendo chegar a `ready`.
-7. R4 exigindo `r4_gate`.
-8. R4 com `r4_gate` satisfazendo ready contract.
-9. `hermes_cli.main.main()` propagando exit code `1` quando o Kanban bloqueia uma promocao.
-
-## Validacao Rodada
-
-Comando:
+The patch-level validation command is:
 
 ```bash
-venv/bin/python -m pytest -q -o addopts='' \
-  tests/hermes_cli/test_kaxis_factory_v35_gate.py \
+python -m pytest -q -o addopts='' \
+  tests/hermes_cli/test_overkill_factory_v35_gate.py \
   tests/hermes_cli/test_kanban_promote.py \
   tests/hermes_cli/test_kanban_cli.py
 ```
 
-Resultado:
+The local repository validation command is:
 
-```text
-72 passed in 3.53s
+```bash
+python -m unittest discover -s tests -p "test_*.py" -q
 ```
 
-Outras validacoes:
+## Coverage Added
 
-```text
-py_compile hermes_cli/kanban_db.py hermes_cli/main.py tests/hermes_cli/test_kaxis_factory_v35_gate.py: PASS
-git diff --check antes do commit: PASS
-board kaxis-factory-v35-10 ready tasks: []
-negative gate smoke: promoted=false, exit code=1
-gateway: active
-gateway PID: 915372
-```
+1. Product Face Packet required for visible product surfaces.
+2. Executor cannot review its own work.
+3. Security-sensitive cards require a scan packet.
+4. Done requires `security_scan_result` when a scan is required.
+5. R3/R4 onchain work requires Auditor evidence or a structured human waiver.
+6. R4 requires a human gate packet with rollback and ownership.
+7. Receipt Five and Kanban transition metadata are required before done.
+8. CLI command failures propagate a non-zero exit code.
 
-## Decisao Operacional
+## Operational Decision
 
-Nao fiz push automatico para `origin` porque o remoto aponta para:
+Do not rely on the original private runtime as the durable source of truth.
+The durable artifact is the patch, the adapter documentation, the schemas, the
+local `factoryctl.py` preflight, and the regression tests.
 
-```text
-https://github.com/NousResearch/hermes-agent.git
-```
+## Promotion Options
 
-Empurrar branch para um remoto externo/upstream e uma decisao de promocao. O estado seguro agora e:
+1. Apply the patch to a dedicated Hermes fork maintained by the factory.
+2. Open a pull request against the appropriate Hermes upstream if the maintainers
+   want this integration there.
+3. Keep the patch as a public adapter until the factory owns a long-term Hermes
+   compatibility branch.
 
-1. Commit local na VM criado.
-2. Patch formatado e hasheado.
-3. Testes adicionados e passando.
-4. Board piloto sem cards `ready`.
-5. Gateway rodando.
+## Next Hardening
 
-## Proximo Passo Recomendado
-
-Escolher um destes caminhos:
-
-1. Criar fork/remoto KAXIS do Hermes e fazer push da branch `codex/kaxis-factory-10-gates`.
-2. Abrir PR contra o repo correto usando o patch `0001-add-kaxis-factory-10-kanban-gates.patch`.
-3. Se a KAXIS vai manter Hermes como fork interno, promover esse commit para a branch principal do fork KAXIS depois de uma revisao humana.
-
-Depois disso, o proximo hardening real e automatizar a execucao dos gates que hoje sao contratos:
-
-1. Worker que executa Codex Security quando `security_scan_packet.scan_timing` pedir.
-2. Worker que executa `solanabr/Auditor` para onchain/Quasar.
-3. Worker Product Face que gera e valida screenshots, mobile, acessibilidade e estados.
-4. UI de aprovacao humana para R3/R4 com registro no Kanban.
+1. Wire `factoryctl.py` into Hermes transition events.
+2. Auto-create worker packets from gate reports.
+3. Add CI for adapter patch application and local schema/preflight tests.
+4. Add public safety scans so private terms cannot re-enter the repository.

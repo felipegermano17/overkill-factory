@@ -2,7 +2,7 @@
 
 ## Scan Owner
 
-`kaxis-cybersecurity`
+`security-runner`
 
 ## Timing
 

@@ -7,7 +7,7 @@ A dry pilot already ran on a synthetic paper:
 ```text
 pilot: pilots/quasar-vault-guard-test
 Hermes board: overkill-factory-pilot-10
-Hermes task: t_a09d1c2e
+Hermes task: public-methodology-card
 status: done
 ```
 

@@ -2,7 +2,7 @@
 
 ## Assets
 
-- Future KAXIS vault authority.
+- Future example vault authority.
 - Future Quasar program.
 - Operator wallet identity.
 - Human approval trail.

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T21:51:50+00:00",
+  "source_card_path": "validation/cards/cloud-release-r4.md",
+  "worker": {
+    "id": "appsec-owasp-specialist",
+    "name": "AppSec OWASP Specialist",
+    "factory_phase": "F7/F14/F15",
+    "tool_required": "OWASP Web/API/AppSec checklist and code/runtime evidence"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "no OWASP AppSec surface detected",
+    "timing": "before done for web, API, auth, backend, frontend or session surfaces",
+    "blocking_policy": "OWASP-sensitive work cannot close without control coverage or explicit waiver."
+  },
+  "card_ref": {
+    "card_id": "VAL-CLOUD-RELEASE-R4",
+    "slice_id": "VAL_FACTORY_HEAVY_04",
+    "phase": "F16",
+    "risk_effective": "R4",
+    "surfaces": [
+      "release",
+      "production",
+      "cloud",
+      "infra",
+      "iam",
+      "kms",
+      "dns",
+      "monitoring",
+      "secrets"
+    ],
+    "executor_identity": "release-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "security_scan_packet",
+      "target_repo_paths",
+      "acceptance_criteria"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/cloud-release-r4.md"
+    ],
+    "authority_max": "no real release",
+    "forbidden_actions": [
+      "deploy",
+      "iam_change",
+      "dns_change",
+      "secret_access",
+      "production_release"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "appsec_owasp_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card",
+  "profile_binding": {
+    "profile_id": "appsec-owasp-specialist.profile.v1",
+    "hermes_profile_name": "appsec-owasp-specialist",
+    "dispatch_queue_policy": {
+      "source_of_truth": "factoryctl.worker_queue_class",
+      "default_queue": "blocking-before-done",
+      "allowed_effective_queues": [
+        "blocking-before-done"
+      ]
+    },
+    "queue_class_source": "worker_task.queue_class",
+    "skill_refs": [
+      "overkill-factory",
+      "hermes-kanban",
+      "appsec-owasp"
+    ],
+    "result_schema": "schemas/worker-result.schema.json",
+    "receipt_field": "appsec_owasp_result",
+    "can_mutate_card_state": false,
+    "evidence_path_policy": "Use generic endpoint refs and redact exploit-ready detail.",
+    "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+    "profile_description_ref": "agents/worker-profiles.public.json",
+    "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+    "skill_install_ref": "docs/agents/live-agent-configuration.md",
+    "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+  }
+}

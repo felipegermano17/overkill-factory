@@ -13,7 +13,7 @@ Is this vault instruction safe enough to proceed, blocked, or unknown?
 
 ## Primary User
 
-KAXIS operator reviewing sensitive vault/account actions.
+Overkill operator reviewing sensitive vault/account actions.
 
 ## First Slice
 

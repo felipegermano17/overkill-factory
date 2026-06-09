@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/worker-profile.schema.json",
+  "title": "Overkill Factory Worker Profile Registry",
+  "type": "object",
+  "required": [
+    "registry_version",
+    "profile_contract_version",
+    "profiles"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 3 },
+    "registry_version": { "type": "string", "minLength": 3 },
+    "profile_contract_version": { "type": "string", "minLength": 3 },
+    "profiles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "profile_id",
+          "worker_id",
+          "display_name",
+          "topology",
+          "identity",
+          "mission",
+          "operating_rules",
+          "activation",
+          "authority",
+          "tool_policy",
+          "input_contract",
+          "output_contract",
+          "evidence_contract",
+          "review_contract",
+          "handoff_contract",
+          "understanding_contract",
+          "failure_contract",
+          "promotion_contract",
+          "public_safety_notes"
+        ],
+        "properties": {
+          "profile_id": { "type": "string", "minLength": 3 },
+          "worker_id": { "type": "string", "minLength": 3 },
+          "display_name": { "type": "string", "minLength": 3 },
+          "topology": { "enum": ["open", "closed", "hybrid", "human"] },
+          "identity": { "type": "string", "minLength": 24 },
+          "mission": { "type": "string", "minLength": 24 },
+          "operating_rules": {
+            "type": "array",
+            "minItems": 3,
+            "items": { "type": "string", "minLength": 12 }
+          },
+          "activation": {
+            "type": "object",
+            "required": ["phases", "surfaces", "risk_floor", "trigger_words"],
+            "properties": {
+              "phases": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "F0",
+                    "F1",
+                    "F2",
+                    "F3",
+                    "F4",
+                    "F5",
+                    "F6",
+                    "F7",
+                    "F8",
+                    "F9",
+                    "F10",
+                    "F11",
+                    "F12",
+                    "F13",
+                    "F14",
+                    "F15",
+                    "F16",
+                    "F17",
+                    "F18"
+                  ]
+                }
+              },
+              "surfaces": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2 } },
+              "risk_floor": { "enum": ["R0", "R1", "R2", "R3", "R4"] },
+              "trigger_words": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2 } }
+            },
+            "additionalProperties": false
+          },
+          "authority": {
+            "type": "object",
+            "required": ["may", "must_not", "human_gate_required_when"],
+            "properties": {
+              "may": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 6 } },
+              "must_not": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 6 } },
+              "human_gate_required_when": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } }
+            },
+            "additionalProperties": false
+          },
+          "tool_policy": {
+            "type": "object",
+            "required": ["allowed", "forbidden", "runtime_notes"],
+            "properties": {
+              "allowed": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2 } },
+              "forbidden": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+              "runtime_notes": { "type": "string", "minLength": 12 }
+            },
+            "additionalProperties": false
+          },
+          "input_contract": {
+            "type": "object",
+            "required": ["required", "refuse_if_missing"],
+            "properties": {
+              "required": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2 } },
+              "refuse_if_missing": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2 } }
+            },
+            "additionalProperties": false
+          },
+          "output_contract": {
+            "type": "object",
+            "required": ["receipt_field", "required_sections", "done_definition"],
+            "properties": {
+              "receipt_field": { "type": "string", "minLength": 3 },
+              "required_sections": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 3 } },
+              "done_definition": { "type": "string", "minLength": 20 }
+            },
+            "additionalProperties": false
+          },
+          "evidence_contract": {
+            "type": "object",
+            "required": ["trust_floor", "required_refs", "not_valid_evidence"],
+            "properties": {
+              "trust_floor": { "enum": ["synthetic", "public_validation", "product_specific", "production_bound"] },
+              "required_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+              "not_valid_evidence": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 6 } }
+            },
+            "additionalProperties": false
+          },
+          "review_contract": {
+            "type": "object",
+            "required": ["reviewer_mode", "review_boundary", "rerun_required"],
+            "properties": {
+              "reviewer_mode": { "enum": ["self_check_only", "independent_required", "human_required", "report_only"] },
+              "review_boundary": { "type": "string", "minLength": 20 },
+              "rerun_required": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          },
+          "handoff_contract": {
+            "type": "object",
+            "required": ["required_when", "include"],
+            "properties": {
+              "required_when": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+              "include": { "type": "array", "minItems": 4, "items": { "type": "string", "minLength": 3 } }
+            },
+            "additionalProperties": false
+          },
+          "understanding_contract": {
+            "type": "object",
+            "required": ["required_when", "must_record"],
+            "properties": {
+              "required_when": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+              "must_record": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 6 } }
+            },
+            "additionalProperties": false
+          },
+          "failure_contract": {
+            "type": "object",
+            "required": ["retry_limit", "after_first_failure", "after_second_failure", "after_third_failure"],
+            "properties": {
+              "retry_limit": { "type": "integer", "minimum": 1, "maximum": 3 },
+              "after_first_failure": { "type": "string", "minLength": 12 },
+              "after_second_failure": { "type": "string", "minLength": 12 },
+              "after_third_failure": { "type": "string", "minLength": 12 }
+            },
+            "additionalProperties": false
+          },
+          "domain_contract": {
+            "type": "object",
+            "required": [
+              "domain_slugs",
+              "routing_moments",
+              "required_controls",
+              "minimum_evidence",
+              "sensitive_surface_triggers"
+            ],
+            "properties": {
+              "domain_slugs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "networking",
+                    "linux-systems",
+                    "web-security",
+                    "ethical-hacking",
+                    "security-tools",
+                    "cloud-security",
+                    "detection-monitoring",
+                    "cryptography",
+                    "security-operations",
+                    "future-security",
+                    "supply-chain",
+                    "onchain-solana-quasar"
+                  ]
+                }
+              },
+              "routing_moments": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "source-sot",
+                    "architecture-pre-decomposition",
+                    "security-scan-plan",
+                    "implementation",
+                    "verification",
+                    "pre-release",
+                    "post-release-learning"
+                  ]
+                }
+              },
+              "required_controls": {
+                "type": "array",
+                "minItems": 2,
+                "items": { "type": "string", "minLength": 4 }
+              },
+              "minimum_evidence": {
+                "type": "array",
+                "minItems": 2,
+                "items": { "type": "string", "minLength": 4 }
+              },
+              "sensitive_surface_triggers": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 3 }
+              }
+            },
+            "additionalProperties": false
+          },
+          "waiver_contract": {
+            "type": "object",
+            "required": [
+              "allowed",
+              "requires_owner",
+              "requires_scope",
+              "requires_expiry_or_review",
+              "requires_human_gate_for",
+              "forbidden"
+            ],
+            "properties": {
+              "allowed": { "type": "boolean" },
+              "requires_owner": { "const": true },
+              "requires_scope": { "const": true },
+              "requires_expiry_or_review": { "const": true },
+              "requires_human_gate_for": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "forbidden": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 6 }
+              }
+            },
+            "additionalProperties": false
+          },
+          "promotion_contract": {
+            "type": "object",
+            "required": ["closed_when", "demote_when"],
+            "properties": {
+              "closed_when": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 6 } },
+              "demote_when": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 6 } }
+            },
+            "additionalProperties": false
+          },
+          "public_safety_notes": { "type": "string", "minLength": 12 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

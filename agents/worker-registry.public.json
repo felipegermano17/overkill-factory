@@ -1,0 +1,1620 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-registry.schema.json",
+  "registry_version": "factory-11",
+  "workers": [
+    {
+      "worker_id": "factory-orchestrator",
+      "mode": "hybrid",
+      "phase": [
+        "F0",
+        "F18"
+      ],
+      "triggers": [
+        "phase change",
+        "blocked work",
+        "worker routing"
+      ],
+      "inputs": [
+        "phase",
+        "risk_effective",
+        "surfaces",
+        "done_definition"
+      ],
+      "tools": [
+        "Hermes Kanban",
+        "factoryctl gate-report"
+      ],
+      "output_contract": "orchestration_result",
+      "authority_max": "route and block; cannot approve gates",
+      "veto_conditions": [
+        "missing phase",
+        "missing risk",
+        "missing evidence chain"
+      ],
+      "evidence_required": [
+        "gate report",
+        "routing decision",
+        "next action"
+      ],
+      "kanban_transition_rules": [
+        "never unblock R3/R4 without required gates"
+      ],
+      "promotion_rule": "hybrid worker remains supervised; closed subflows only after repeated success",
+      "public_safety_notes": "No private board ids or runtime paths."
+    },
+    {
+      "worker_id": "source-ledger-worker",
+      "mode": "open",
+      "phase": [
+        "F0",
+        "F1"
+      ],
+      "triggers": [
+        "raw paper",
+        "new source",
+        "source conflict"
+      ],
+      "inputs": [
+        "source_refs",
+        "source_state"
+      ],
+      "tools": [
+        "repo search",
+        "browser",
+        "source ledger"
+      ],
+      "output_contract": "source_ledger_result",
+      "authority_max": "classify source status; cannot promote decisions alone",
+      "veto_conditions": [
+        "source mixed with inference",
+        "unresolved contradiction hidden"
+      ],
+      "evidence_required": [
+        "source map",
+        "conflict list",
+        "gap list"
+      ],
+      "kanban_transition_rules": [
+        "Product SOT waits for source resolution"
+      ],
+      "promotion_rule": "stays open while source shapes remain unpredictable",
+      "public_safety_notes": "Raw extraction stays outside the public repo."
+    },
+    {
+      "worker_id": "product-sot-planner",
+      "mode": "open",
+      "phase": [
+        "F2",
+        "F3"
+      ],
+      "triggers": [
+        "source ledger ready",
+        "alignment questions answered"
+      ],
+      "inputs": [
+        "source_refs",
+        "acceptance_criteria",
+        "scope_in",
+        "scope_out"
+      ],
+      "tools": [
+        "planning model",
+        "decision packet"
+      ],
+      "output_contract": "product_sot_result",
+      "authority_max": "draft SOT candidate; cannot approve architecture",
+      "veto_conditions": [
+        "candidate treated as approved",
+        "business/legal debate outside scope"
+      ],
+      "evidence_required": [
+        "SOT candidate",
+        "open questions",
+        "decision boundaries"
+      ],
+      "kanban_transition_rules": [
+        "architecture waits for SOT candidate and open risk list"
+      ],
+      "promotion_rule": "closed only for repeatable SOT normalization after evals",
+      "public_safety_notes": "No internal product names in public examples."
+    },
+    {
+      "worker_id": "product-architect",
+      "mode": "open",
+      "phase": [
+        "F4",
+        "F6"
+      ],
+      "triggers": [
+        "SOT candidate ready",
+        "architecture review needed"
+      ],
+      "inputs": [
+        "scope_in",
+        "scope_out",
+        "risk_class",
+        "runtime_contract"
+      ],
+      "tools": [
+        "architecture review",
+        "domain references"
+      ],
+      "output_contract": "architecture_result",
+      "authority_max": "produce candidate architecture; cannot bypass human architecture gate",
+      "veto_conditions": [
+        "architecture without risks",
+        "hidden dependency",
+        "unsupported runtime choice"
+      ],
+      "evidence_required": [
+        "architecture packet",
+        "tradeoff list",
+        "risk matrix"
+      ],
+      "kanban_transition_rules": [
+        "no decomposition before architecture gate"
+      ],
+      "promotion_rule": "stays open for judgment-heavy design",
+      "public_safety_notes": "Use example domains in public docs."
+    },
+    {
+      "worker_id": "product-face",
+      "mode": "hybrid",
+      "phase": [
+        "F5",
+        "F13"
+      ],
+      "triggers": [
+        "frontend",
+        "mobile",
+        "wallet-ui",
+        "visible product surface"
+      ],
+      "inputs": [
+        "product_face_packet",
+        "target_repo_paths",
+        "acceptance_criteria"
+      ],
+      "tools": [
+        "browser",
+        "screenshots",
+        "a11y checks",
+        "mobile viewport"
+      ],
+      "output_contract": "product_face_result",
+      "authority_max": "validate visible product evidence; cannot approve product alone",
+      "veto_conditions": [
+        "no screenshots",
+        "no mobile state",
+        "no error/empty/loading state"
+      ],
+      "evidence_required": [
+        "desktop screenshot",
+        "mobile screenshot",
+        "state matrix",
+        "a11y notes"
+      ],
+      "kanban_transition_rules": [
+        "product-facing done waits for Product Face evidence"
+      ],
+      "promotion_rule": "closed for repeatable screenshot/a11y runner after fixture coverage",
+      "public_safety_notes": "Screenshots must not expose private data."
+    },
+    {
+      "worker_id": "solana-quasar-auditor",
+      "mode": "hybrid",
+      "phase": [
+        "F7",
+        "F13",
+        "F15"
+      ],
+      "triggers": [
+        "solana",
+        "quasar",
+        "onchain",
+        "PDA",
+        "CPI",
+        "funds"
+      ],
+      "inputs": [
+        "onchain_work_package",
+        "target_repo_paths",
+        "risk_effective"
+      ],
+      "tools": [
+        "solanabr/Auditor",
+        "Quasar-aware review"
+      ],
+      "output_contract": "auditor_result",
+      "authority_max": "audit or preflight; cannot deploy, sign or touch funds",
+      "veto_conditions": [
+        "Anchor assumption",
+        "missing PDA map",
+        "missing signer boundary"
+      ],
+      "evidence_required": [
+        "Auditor report",
+        "PDA/signers/CPI/CU checks",
+        "waiver if not run"
+      ],
+      "kanban_transition_rules": [
+        "R3/R4 onchain waits for Auditor evidence or structured waiver"
+      ],
+      "promotion_rule": "hybrid until real Quasar implementation pilots pass",
+      "public_safety_notes": "No real keys, funds or private program details."
+    },
+    {
+      "worker_id": "codex-security",
+      "mode": "hybrid",
+      "phase": [
+        "F8",
+        "F13"
+      ],
+      "triggers": [
+        "R3",
+        "R4",
+        "security",
+        "onchain",
+        "auth",
+        "api",
+        "wallet"
+      ],
+      "inputs": [
+        "security_scan_packet",
+        "target_repo_paths",
+        "forbidden_actions"
+      ],
+      "tools": [
+        "Codex Security",
+        "security scan runner"
+      ],
+      "output_contract": "security_scan_result",
+      "authority_max": "run scans and report findings; cannot waive blocking findings",
+      "veto_conditions": [
+        "no scope",
+        "no tool evidence",
+        "blocking finding without exception"
+      ],
+      "evidence_required": [
+        "scan result",
+        "scope",
+        "tool",
+        "findings",
+        "evidence refs"
+      ],
+      "kanban_transition_rules": [
+        "done waits for security_scan_result when scan is required"
+      ],
+      "promotion_rule": "closed only for repeatable scan execution, not risk judgment",
+      "public_safety_notes": "Do not store secrets or raw private findings in examples."
+    },
+    {
+      "worker_id": "appsec-owasp-specialist",
+      "mode": "hybrid",
+      "phase": [
+        "F7",
+        "F14",
+        "F15"
+      ],
+      "triggers": [
+        "web",
+        "api",
+        "auth",
+        "session",
+        "frontend",
+        "backend"
+      ],
+      "inputs": [
+        "security_scan_packet",
+        "target_repo_paths",
+        "acceptance_criteria"
+      ],
+      "tools": [
+        "OWASP Web",
+        "OWASP API",
+        "ASVS-style checklist"
+      ],
+      "output_contract": "appsec_owasp_result",
+      "authority_max": "review controls and evidence; cannot accept residual risk alone",
+      "veto_conditions": [
+        "auth bypass untested",
+        "unsafe errors",
+        "missing validation"
+      ],
+      "evidence_required": [
+        "control matrix",
+        "test refs",
+        "risk residuals"
+      ],
+      "kanban_transition_rules": [
+        "AppSec-sensitive done waits for AppSec result or waiver"
+      ],
+      "promotion_rule": "hybrid; checklists can become closed after repeated fixtures",
+      "public_safety_notes": "Use generic example endpoints."
+    },
+    {
+      "worker_id": "agentic-ai-security-specialist",
+      "mode": "hybrid",
+      "phase": [
+        "F1",
+        "F7",
+        "F12",
+        "F14"
+      ],
+      "triggers": [
+        "agent",
+        "llm",
+        "prompt",
+        "memory",
+        "browser",
+        "tools"
+      ],
+      "inputs": [
+        "security_contract",
+        "runtime_contract",
+        "forbidden_actions"
+      ],
+      "tools": [
+        "OWASP LLM",
+        "tool-boundary review"
+      ],
+      "output_contract": "agentic_ai_security_result",
+      "authority_max": "review agent boundaries; cannot approve dangerous actions",
+      "veto_conditions": [
+        "external text treated as instruction",
+        "tool access too broad",
+        "memory poisoning risk ignored"
+      ],
+      "evidence_required": [
+        "prompt-injection controls",
+        "tool allowlist",
+        "memory trust tier"
+      ],
+      "kanban_transition_rules": [
+        "agentic surfaces wait for tool-boundary evidence"
+      ],
+      "promotion_rule": "hybrid because judgment and adversarial reasoning remain necessary",
+      "public_safety_notes": "No private prompts or memory dumps."
+    },
+    {
+      "worker_id": "autoreview-gate",
+      "mode": "closed",
+      "phase": [
+        "F14",
+        "F15"
+      ],
+      "triggers": [
+        "code diff",
+        "patch",
+        "branch",
+        "pre-landing review"
+      ],
+      "inputs": [
+        "target_repo_paths",
+        "done_definition"
+      ],
+      "tools": [
+        "autoreview skill",
+        "code review harness"
+      ],
+      "output_contract": "autoreview_result",
+      "authority_max": "find and verify issues; cannot approve release alone",
+      "veto_conditions": [
+        "review without diff",
+        "unverified finding",
+        "blocking finding ignored"
+      ],
+      "evidence_required": [
+        "review report",
+        "finding status",
+        "follow-up action"
+      ],
+      "kanban_transition_rules": [
+        "pre-landing code work waits for AutoReview when required"
+      ],
+      "promotion_rule": "closed because input and output are repeatable",
+      "public_safety_notes": "Reports must be redacted before public sharing."
+    },
+    {
+      "worker_id": "remote-proof-runner",
+      "mode": "closed",
+      "phase": [
+        "F13",
+        "F16"
+      ],
+      "triggers": [
+        "heavy validation",
+        "CI parity",
+        "clean runtime proof",
+        "R3",
+        "R4"
+      ],
+      "inputs": [
+        "runtime_contract",
+        "target_repo_paths",
+        "done_definition"
+      ],
+      "tools": [
+        "Crabbox",
+        "Testbox",
+        "container fallback"
+      ],
+      "output_contract": "remote_proof_result",
+      "authority_max": "run proof in scoped environment; cannot receive secrets by default",
+      "veto_conditions": [
+        "no TTL",
+        "no cost owner",
+        "no cleanup evidence",
+        "secret required by default"
+      ],
+      "evidence_required": [
+        "logs",
+        "artifacts",
+        "timing",
+        "cleanup",
+        "cost note"
+      ],
+      "kanban_transition_rules": [
+        "remote proof evidence attaches before promotion"
+      ],
+      "promotion_rule": "closed because command/proof shape is repeatable",
+      "public_safety_notes": "Artifact paths must be public-safe."
+    },
+    {
+      "worker_id": "handoff-packer",
+      "mode": "closed",
+      "phase": [
+        "F9",
+        "F15"
+      ],
+      "triggers": [
+        "agent transfer",
+        "pause",
+        "context compaction",
+        "phase boundary"
+      ],
+      "inputs": [
+        "target_repo_paths",
+        "done_definition"
+      ],
+      "tools": [
+        "handoff workflow",
+        "receipt evidence"
+      ],
+      "output_contract": "handoff_packet_result",
+      "authority_max": "package state; cannot invent approval or evidence",
+      "veto_conditions": [
+        "missing constraints",
+        "missing evidence",
+        "private paths in public packet"
+      ],
+      "evidence_required": [
+        "state",
+        "constraints",
+        "non-goals",
+        "artifact refs",
+        "next action"
+      ],
+      "kanban_transition_rules": [
+        "handoff required for R2+ worker transfer"
+      ],
+      "promotion_rule": "closed because packet shape is repeatable",
+      "public_safety_notes": "Use path-free public handoff unless private context is explicitly scoped."
+    },
+    {
+      "worker_id": "independent-reviewer",
+      "mode": "hybrid",
+      "phase": [
+        "F14"
+      ],
+      "triggers": [
+        "R2",
+        "R3",
+        "R4",
+        "explicit independent review"
+      ],
+      "inputs": [
+        "executor_identity",
+        "reviewer_identity",
+        "done_definition"
+      ],
+      "tools": [
+        "different reviewer identity",
+        "review checklist"
+      ],
+      "output_contract": "independent_review_result",
+      "authority_max": "review evidence; cannot replace human gates",
+      "veto_conditions": [
+        "self review",
+        "missing evidence",
+        "untested claim"
+      ],
+      "evidence_required": [
+        "review report",
+        "accepted findings",
+        "residual risk"
+      ],
+      "kanban_transition_rules": [
+        "R2+ waits for independent review before done"
+      ],
+      "promotion_rule": "hybrid; closed only for narrow repeatable review checklists",
+      "public_safety_notes": "Reviewer packets must not expose private paths."
+    },
+    {
+      "worker_id": "evidence-reconciler",
+      "mode": "deterministic",
+      "phase": [
+        "F15"
+      ],
+      "triggers": [
+        "done promotion",
+        "Receipt Five closure",
+        "duplicate worker results",
+        "stale failed evidence",
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "inputs": [
+        "done_definition",
+        "target_repo_paths",
+        "worker_result_artifacts",
+        "kanban_transition_event_ref"
+      ],
+      "tools": [
+        "Receipt Five evidence indexer",
+        "worker result supersession ledger",
+        "factoryctl transition-plan"
+      ],
+      "output_contract": "receipt_five_reconciliation_result",
+      "authority_max": "reconcile evidence and block closure; cannot approve human gates or waive findings",
+      "veto_conditions": [
+        "missing required worker result",
+        "current worker result has blocking findings",
+        "invalid worker result schema",
+        "stale failed result without supersession record",
+        "Receipt Five cannot identify current evidence"
+      ],
+      "evidence_required": [
+        "effective worker result index",
+        "supersession ledger",
+        "missing/blocking evidence list",
+        "Receipt Five readiness verdict"
+      ],
+      "kanban_transition_rules": [
+        "runs after required worker artifacts exist",
+        "runs before QA, AutoReview and done promotion",
+        "blocks done when current evidence cannot satisfy Receipt Five"
+      ],
+      "promotion_rule": "closed when reconciliation is deterministic, path-safe and repeatable on the same evidence set",
+      "public_safety_notes": "Indexes must use repo-relative or external refs only and must not expose private workspace paths."
+    },
+    {
+      "worker_id": "human-gate-clerk",
+      "mode": "human",
+      "phase": [
+        "F9",
+        "F15",
+        "F16"
+      ],
+      "triggers": [
+        "architecture approval",
+        "R3",
+        "R4",
+        "promotion"
+      ],
+      "inputs": [
+        "human_gate_packet",
+        "security_scan_packet",
+        "rollback_or_recovery"
+      ],
+      "tools": [
+        "Hermes decision record",
+        "gate evidence"
+      ],
+      "output_contract": "human_gate_record",
+      "authority_max": "record a real human decision; cannot invent approval",
+      "veto_conditions": [
+        "missing human actor",
+        "missing evidence",
+        "fake approval"
+      ],
+      "evidence_required": [
+        "decision",
+        "scope",
+        "actor",
+        "time",
+        "evidence refs"
+      ],
+      "kanban_transition_rules": [
+        "architecture and R4 promotion wait for real human decision"
+      ],
+      "promotion_rule": "always human-controlled",
+      "public_safety_notes": "Use role names, not private personal identifiers."
+    },
+    {
+      "worker_id": "docs-os-worker",
+      "mode": "hybrid",
+      "phase": [
+        "F10"
+      ],
+      "triggers": [
+        "approved architecture",
+        "documentation",
+        "docs"
+      ],
+      "inputs": [
+        "done_definition",
+        "acceptance_criteria",
+        "target_repo_paths"
+      ],
+      "tools": [
+        "docs generator",
+        "ADR/contracts workflow"
+      ],
+      "output_contract": "documentation_os_result",
+      "authority_max": "produce docs; cannot authorize implementation",
+      "veto_conditions": [
+        "architecture not approved",
+        "docs lack contracts",
+        "docs drift from SOT"
+      ],
+      "evidence_required": [
+        "docs index",
+        "ADR refs",
+        "contract refs"
+      ],
+      "kanban_transition_rules": [
+        "decomposition waits for durable docs"
+      ],
+      "promotion_rule": "hybrid; templated docs can become closed after evals",
+      "public_safety_notes": "Docs must avoid private source dumps."
+    },
+    {
+      "worker_id": "decomposition-planner",
+      "mode": "hybrid",
+      "phase": [
+        "F11"
+      ],
+      "triggers": [
+        "documentation OS ready",
+        "card graph needed",
+        "decomposition"
+      ],
+      "inputs": [
+        "done_definition",
+        "risk_effective",
+        "runtime_contract",
+        "security_contract"
+      ],
+      "tools": [
+        "Hermes card graph planner",
+        "factory card schema"
+      ],
+      "output_contract": "decomposition_result",
+      "authority_max": "create work graph; cannot bypass gates",
+      "veto_conditions": [
+        "missing risk",
+        "missing reviewer",
+        "missing Product Face result for visible product"
+      ],
+      "evidence_required": [
+        "card graph",
+        "dependencies",
+        "gate mapping"
+      ],
+      "kanban_transition_rules": [
+        "cards without required contracts are rejected"
+      ],
+      "promotion_rule": "closed for narrow card normalization after regression suite",
+      "public_safety_notes": "Generated cards must be public-safe when committed."
+    },
+    {
+      "worker_id": "implementation-worker",
+      "mode": "hybrid",
+      "phase": [
+        "F12"
+      ],
+      "triggers": [
+        "implementation",
+        "code",
+        "fallback implementation surface"
+      ],
+      "inputs": [
+        "scope_in",
+        "scope_out",
+        "forbidden_actions",
+        "done_definition"
+      ],
+      "tools": [
+        "bounded coding tools",
+        "tests"
+      ],
+      "output_contract": "implementation_result",
+      "authority_max": "fallback/router for implementation work that has no better specialist builder",
+      "veto_conditions": [
+        "specialist builder available",
+        "scope expansion",
+        "self approval"
+      ],
+      "evidence_required": [
+        "fallback rationale",
+        "diff refs",
+        "tests",
+        "receipt"
+      ],
+      "kanban_transition_rules": [
+        "use specialist builders first; fallback only for unknown or legacy code surfaces"
+      ],
+      "promotion_rule": "demote by default when a surface-specific builder exists",
+      "public_safety_notes": "No private credentials or local-only assumptions."
+    },
+    {
+      "worker_id": "frontend-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F13"
+      ],
+      "triggers": [
+        "frontend",
+        "mobile",
+        "wallet-ui",
+        "visible product surface",
+        "product-facing implementation"
+      ],
+      "inputs": [
+        "product_face_packet",
+        "scope_in",
+        "scope_out",
+        "done_definition"
+      ],
+      "tools": [
+        "frontend runtime",
+        "browser",
+        "component tests",
+        "visual evidence"
+      ],
+      "output_contract": "frontend_build_result",
+      "authority_max": "implement scoped visible product surfaces only; cannot approve Product Face evidence",
+      "veto_conditions": [
+        "missing Product Face packet",
+        "unapproved design-system change",
+        "self approval"
+      ],
+      "evidence_required": [
+        "diff refs",
+        "component/test refs",
+        "desktop/mobile evidence request"
+      ],
+      "kanban_transition_rules": [
+        "frontend work waits for Product Face packet and later Product Face validation"
+      ],
+      "promotion_rule": "closed only for repeatable component implementation with visual regression fixtures",
+      "public_safety_notes": "Screenshots and UI refs must not expose private data."
+    },
+    {
+      "worker_id": "backend-api-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F13"
+      ],
+      "triggers": [
+        "backend",
+        "api",
+        "auth",
+        "server",
+        "service"
+      ],
+      "inputs": [
+        "scope_in",
+        "scope_out",
+        "security_contract",
+        "done_definition"
+      ],
+      "tools": [
+        "backend runtime",
+        "api tests",
+        "lint/typecheck"
+      ],
+      "output_contract": "backend_api_build_result",
+      "authority_max": "implement scoped API/service work only",
+      "veto_conditions": [
+        "missing API contract",
+        "auth boundary unclear",
+        "scope expansion"
+      ],
+      "evidence_required": [
+        "diff refs",
+        "API test refs",
+        "contract refs"
+      ],
+      "kanban_transition_rules": [
+        "API/auth work waits for AppSec and security evidence when sensitive"
+      ],
+      "promotion_rule": "closed only for repeatable endpoint/service patterns with contract tests",
+      "public_safety_notes": "Use generic endpoint names in public artifacts."
+    },
+    {
+      "worker_id": "data-persistence-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F13"
+      ],
+      "triggers": [
+        "data",
+        "database",
+        "schema",
+        "migration",
+        "storage",
+        "rls"
+      ],
+      "inputs": [
+        "scope_in",
+        "scope_out",
+        "runtime_contract",
+        "done_definition"
+      ],
+      "tools": [
+        "migration runner",
+        "schema tests",
+        "data access tests"
+      ],
+      "output_contract": "data_persistence_result",
+      "authority_max": "implement scoped schema/storage changes only",
+      "veto_conditions": [
+        "destructive migration without gate",
+        "missing rollback",
+        "unclear data ownership"
+      ],
+      "evidence_required": [
+        "migration refs",
+        "schema test refs",
+        "rollback notes"
+      ],
+      "kanban_transition_rules": [
+        "data work waits for rollback and security review when sensitive"
+      ],
+      "promotion_rule": "closed only for repeatable schema changes with rollback fixtures",
+      "public_safety_notes": "No private records or production data samples."
+    },
+    {
+      "worker_id": "solana-quasar-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F13"
+      ],
+      "triggers": [
+        "solana",
+        "quasar",
+        "onchain",
+        "program",
+        "PDA",
+        "CPI"
+      ],
+      "inputs": [
+        "onchain_work_package",
+        "scope_in",
+        "scope_out",
+        "done_definition"
+      ],
+      "tools": [
+        "Quasar toolchain",
+        "Solana devnet",
+        "Rust tests"
+      ],
+      "output_contract": "solana_quasar_build_result",
+      "authority_max": "implement scoped Quasar/Solana program work only; cannot deploy mainnet or touch keys",
+      "veto_conditions": [
+        "Anchor assumption",
+        "missing PDA/signer map",
+        "mainnet or key access requested"
+      ],
+      "evidence_required": [
+        "diff refs",
+        "Quasar build/test refs",
+        "PDA/signer map"
+      ],
+      "kanban_transition_rules": [
+        "onchain work waits for Solana QA, Auditor, security and human gates when required"
+      ],
+      "promotion_rule": "closed only after repeated Quasar fixtures and Auditor-reviewed patterns",
+      "public_safety_notes": "No real keys, funds, program secrets or private program identifiers."
+    },
+    {
+      "worker_id": "solana-quasar-qa-engineer",
+      "mode": "hybrid",
+      "phase": [
+        "F13",
+        "F15"
+      ],
+      "triggers": [
+        "solana-test",
+        "quasar-test",
+        "devnet",
+        "compute-units",
+        "onchain QA"
+      ],
+      "inputs": [
+        "onchain_work_package",
+        "target_repo_paths",
+        "done_definition"
+      ],
+      "tools": [
+        "devnet",
+        "Quasar tests",
+        "simulation",
+        "fuzz/property tests"
+      ],
+      "output_contract": "solana_quasar_qa_result",
+      "authority_max": "verify onchain behavior; cannot waive Auditor/security findings",
+      "veto_conditions": [
+        "no devnet/local proof",
+        "missing negative tests",
+        "Auditor bypass"
+      ],
+      "evidence_required": [
+        "test logs",
+        "devnet/local refs",
+        "negative test matrix"
+      ],
+      "kanban_transition_rules": [
+        "onchain done waits for QA, Auditor and security evidence"
+      ],
+      "promotion_rule": "closed only for stable Quasar test harnesses and replayable fixtures",
+      "public_safety_notes": "No real keys or live fund movement."
+    },
+    {
+      "worker_id": "wallet-transaction-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F13"
+      ],
+      "triggers": [
+        "wallet",
+        "transaction",
+        "signing",
+        "funds",
+        "wallet-ui"
+      ],
+      "inputs": [
+        "product_face_packet",
+        "security_contract",
+        "scope_in",
+        "done_definition"
+      ],
+      "tools": [
+        "wallet adapter",
+        "browser",
+        "transaction-state tests"
+      ],
+      "output_contract": "wallet_transaction_result",
+      "authority_max": "implement scoped wallet/transaction UX and client flow; cannot touch real keys or funds",
+      "veto_conditions": [
+        "unclear signer authority",
+        "real key/fund access",
+        "missing transaction states"
+      ],
+      "evidence_required": [
+        "diff refs",
+        "transaction-state tests",
+        "signer boundary notes"
+      ],
+      "kanban_transition_rules": [
+        "wallet/funds work waits for crypto/key, AppSec and Product Face evidence"
+      ],
+      "promotion_rule": "closed only for repeated wallet-state components with safe fixtures",
+      "public_safety_notes": "Use mock/devnet wallets only."
+    },
+    {
+      "worker_id": "integration-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F13"
+      ],
+      "triggers": [
+        "integration",
+        "fullstack",
+        "end-to-end",
+        "surface-join"
+      ],
+      "inputs": [
+        "scope_in",
+        "scope_out",
+        "done_definition",
+        "runtime_contract"
+      ],
+      "tools": [
+        "integration tests",
+        "local runtime",
+        "browser",
+        "API checks"
+      ],
+      "output_contract": "integration_build_result",
+      "authority_max": "connect approved surfaces; cannot redesign owned components",
+      "veto_conditions": [
+        "missing upstream builder evidence",
+        "unapproved cross-surface assumption",
+        "no E2E proof"
+      ],
+      "evidence_required": [
+        "integration test refs",
+        "runtime refs",
+        "handoff gaps"
+      ],
+      "kanban_transition_rules": [
+        "integration waits for builder outputs and feeds QA verification"
+      ],
+      "promotion_rule": "closed only for repeatable glue patterns with stable E2E fixtures",
+      "public_safety_notes": "Use generic fixtures and no private endpoints."
+    },
+    {
+      "worker_id": "test-automation-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F13",
+        "F18"
+      ],
+      "triggers": [
+        "test",
+        "tests",
+        "qa",
+        "e2e",
+        "eval",
+        "regression"
+      ],
+      "inputs": [
+        "acceptance_criteria",
+        "done_definition",
+        "target_repo_paths"
+      ],
+      "tools": [
+        "unit tests",
+        "E2E tests",
+        "visual tests",
+        "eval harness"
+      ],
+      "output_contract": "test_automation_result",
+      "authority_max": "create and maintain tests/evals; cannot redefine acceptance criteria alone",
+      "veto_conditions": [
+        "test asserts wrong behavior",
+        "no regression value",
+        "acceptance criteria missing"
+      ],
+      "evidence_required": [
+        "test diff refs",
+        "run logs",
+        "coverage/gap notes"
+      ],
+      "kanban_transition_rules": [
+        "high-repeat work should become tests or evals before learning loop"
+      ],
+      "promotion_rule": "closed only when fixtures are stable and held-out cases pass",
+      "public_safety_notes": "Public tests use public-safe fixtures."
+    },
+    {
+      "worker_id": "infra-devops-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F16"
+      ],
+      "triggers": [
+        "infra",
+        "devops",
+        "deploy",
+        "ci",
+        "cd",
+        "runtime",
+        "environment"
+      ],
+      "inputs": [
+        "runtime_contract",
+        "rollback_or_recovery",
+        "scope_in",
+        "done_definition"
+      ],
+      "tools": [
+        "CI/CD config",
+        "environment smoke",
+        "deploy scripts"
+      ],
+      "output_contract": "infra_devops_result",
+      "authority_max": "prepare scoped runtime/deploy infrastructure; cannot release production alone",
+      "veto_conditions": [
+        "no rollback",
+        "secret required by default",
+        "unclear environment boundary"
+      ],
+      "evidence_required": [
+        "config diff refs",
+        "smoke refs",
+        "rollback notes"
+      ],
+      "kanban_transition_rules": [
+        "infra work waits for cloud/security/release gates when promotion-like"
+      ],
+      "promotion_rule": "closed only for repeatable environment setup with rollback fixtures",
+      "public_safety_notes": "No account ids, tokens, private endpoints or local runtime paths."
+    },
+    {
+      "worker_id": "agent-runtime-builder",
+      "mode": "hybrid",
+      "phase": [
+        "F12",
+        "F18"
+      ],
+      "triggers": [
+        "agent",
+        "hermes",
+        "factory",
+        "adapter",
+        "profile",
+        "skill",
+        "mcp"
+      ],
+      "inputs": [
+        "runtime_contract",
+        "security_contract",
+        "scope_in",
+        "done_definition"
+      ],
+      "tools": [
+        "Hermes adapter tests",
+        "profile tooling",
+        "skill packaging"
+      ],
+      "output_contract": "agent_runtime_result",
+      "authority_max": "implement scoped factory/agent runtime changes; cannot approve its own safety",
+      "veto_conditions": [
+        "tool access too broad",
+        "memory boundary unclear",
+        "self approval"
+      ],
+      "evidence_required": [
+        "adapter test refs",
+        "profile/binding refs",
+        "safety review handoff"
+      ],
+      "kanban_transition_rules": [
+        "agent runtime work waits for agentic AI security, public safety and profile validation"
+      ],
+      "promotion_rule": "closed only for repeatable adapter/profile changes with regression tests",
+      "public_safety_notes": "No private profile dumps, local paths, secrets or internal runtime identifiers."
+    },
+    {
+      "worker_id": "qa-verification-worker",
+      "mode": "hybrid",
+      "phase": [
+        "F13",
+        "F15"
+      ],
+      "triggers": [
+        "verification",
+        "R2",
+        "R3",
+        "R4",
+        "product-facing work"
+      ],
+      "inputs": [
+        "acceptance_criteria",
+        "done_definition",
+        "target_repo_paths"
+      ],
+      "tools": [
+        "tests",
+        "screenshots",
+        "logs",
+        "evidence capture"
+      ],
+      "output_contract": "qa_verification_result",
+      "authority_max": "verify evidence; cannot waive risk",
+      "veto_conditions": [
+        "no objective proof",
+        "missing state coverage",
+        "failed tests ignored"
+      ],
+      "evidence_required": [
+        "commands",
+        "outputs",
+        "artifacts",
+        "pass/fail"
+      ],
+      "kanban_transition_rules": [
+        "done waits for objective verification"
+      ],
+      "promotion_rule": "hybrid; closed only for deterministic fixtures",
+      "public_safety_notes": "Logs and screenshots must be redacted."
+    },
+    {
+      "worker_id": "security-orchestrator",
+      "mode": "hybrid",
+      "phase": [
+        "F6",
+        "F16"
+      ],
+      "triggers": [
+        "R2+",
+        "security-sensitive surface",
+        "specialist routing"
+      ],
+      "inputs": [
+        "security_contract",
+        "security_scan_packet",
+        "risk_effective"
+      ],
+      "tools": [
+        "security control matrix",
+        "threat model router"
+      ],
+      "output_contract": "security_orchestration_result",
+      "authority_max": "route security work; cannot waive findings",
+      "veto_conditions": [
+        "generic security review",
+        "wrong specialist",
+        "missing owner"
+      ],
+      "evidence_required": [
+        "specialist matrix",
+        "owner mapping",
+        "blocking policy"
+      ],
+      "kanban_transition_rules": [
+        "security-sensitive done waits for routed controls"
+      ],
+      "promotion_rule": "hybrid because security judgment stays adversarial",
+      "public_safety_notes": "Public examples must not include private findings."
+    },
+    {
+      "worker_id": "cloud-infra-security-specialist",
+      "mode": "hybrid",
+      "phase": [
+        "F7",
+        "F16"
+      ],
+      "triggers": [
+        "cloud",
+        "infra",
+        "IaC",
+        "deploy",
+        "IAM",
+        "KMS",
+        "DNS",
+        "secrets"
+      ],
+      "inputs": [
+        "security_scan_packet",
+        "runtime_contract",
+        "rollback_or_recovery"
+      ],
+      "tools": [
+        "cloud/IaC/IAM/KMS checks",
+        "CI/CD posture"
+      ],
+      "output_contract": "cloud_infra_security_result",
+      "authority_max": "review cloud controls; cannot mutate production",
+      "veto_conditions": [
+        "no rollback",
+        "broad IAM",
+        "secret access by default"
+      ],
+      "evidence_required": [
+        "least privilege notes",
+        "rollback proof",
+        "logs/monitoring plan"
+      ],
+      "kanban_transition_rules": [
+        "infra/release waits for cloud security evidence"
+      ],
+      "promotion_rule": "hybrid; closed only for deterministic policy checks",
+      "public_safety_notes": "No real cloud account ids or secrets."
+    },
+    {
+      "worker_id": "crypto-key-management-specialist",
+      "mode": "hybrid",
+      "phase": [
+        "F7",
+        "F16"
+      ],
+      "triggers": [
+        "crypto",
+        "keys",
+        "secrets",
+        "signing",
+        "custody",
+        "funds",
+        "wallet",
+        "KMS"
+      ],
+      "inputs": [
+        "security_contract",
+        "forbidden_actions",
+        "risk_effective"
+      ],
+      "tools": [
+        "key management checklist",
+        "custody/signing review"
+      ],
+      "output_contract": "crypto_key_management_result",
+      "authority_max": "review key/custody design; cannot touch keys or funds",
+      "veto_conditions": [
+        "real key access",
+        "unclear signer authority",
+        "missing rotation/ownership"
+      ],
+      "evidence_required": [
+        "key boundary map",
+        "custody model",
+        "waivers"
+      ],
+      "kanban_transition_rules": [
+        "key/funds surfaces wait for crypto/key review"
+      ],
+      "promotion_rule": "hybrid because custody risk needs human oversight",
+      "public_safety_notes": "Never store real key material."
+    },
+    {
+      "worker_id": "release-ops-worker",
+      "mode": "hybrid",
+      "phase": [
+        "F16",
+        "F17"
+      ],
+      "triggers": [
+        "release",
+        "promotion",
+        "production",
+        "rollback",
+        "monitoring"
+      ],
+      "inputs": [
+        "done_definition",
+        "rollback_or_recovery",
+        "human_gate_packet"
+      ],
+      "tools": [
+        "release packet",
+        "smoke",
+        "rollback",
+        "monitoring"
+      ],
+      "output_contract": "release_ops_result",
+      "authority_max": "prepare release evidence; cannot release without gate",
+      "veto_conditions": [
+        "open blocker",
+        "missing rollback",
+        "missing monitoring owner"
+      ],
+      "evidence_required": [
+        "release plan",
+        "rollback plan",
+        "smoke result",
+        "monitoring refs"
+      ],
+      "kanban_transition_rules": [
+        "R4 release waits for human gate and rollback evidence"
+      ],
+      "promotion_rule": "hybrid; dry-run substeps can become closed",
+      "public_safety_notes": "Use dry examples in public repo."
+    },
+    {
+      "worker_id": "memory-steward",
+      "mode": "hybrid",
+      "phase": [
+        "F0",
+        "F1",
+        "F18"
+      ],
+      "triggers": [
+        "memory",
+        "context",
+        "source reuse",
+        "learning loop"
+      ],
+      "inputs": [
+        "source_refs",
+        "source_state",
+        "security_contract"
+      ],
+      "tools": [
+        "memory trust-tier review",
+        "poisoning controls"
+      ],
+      "output_contract": "memory_steward_result",
+      "authority_max": "classify memory; cannot turn memory into truth",
+      "veto_conditions": [
+        "untrusted memory promoted",
+        "freshness unknown",
+        "poisoning risk ignored"
+      ],
+      "evidence_required": [
+        "trust tier",
+        "freshness",
+        "source refs",
+        "poisoning controls"
+      ],
+      "kanban_transition_rules": [
+        "memory updates wait for source and trust tier"
+      ],
+      "promotion_rule": "hybrid because memory quality depends on context",
+      "public_safety_notes": "No private memory dumps."
+    },
+    {
+      "worker_id": "skill-eval-distiller",
+      "mode": "hybrid",
+      "phase": [
+        "F18"
+      ],
+      "triggers": [
+        "skill",
+        "eval",
+        "repeated workflow",
+        "learning loop"
+      ],
+      "inputs": [
+        "evidence_expected",
+        "done_definition",
+        "source_refs"
+      ],
+      "tools": [
+        "skill distillation",
+        "held-out evals"
+      ],
+      "output_contract": "skill_eval_result",
+      "authority_max": "propose skill changes; cannot fake eval success",
+      "veto_conditions": [
+        "one-off workflow",
+        "no regression",
+        "no held-out case"
+      ],
+      "evidence_required": [
+        "repetition evidence",
+        "eval cases",
+        "before/after result"
+      ],
+      "kanban_transition_rules": [
+        "closed specialists need eval-backed promotion"
+      ],
+      "promotion_rule": "closed only after repeated predictable success",
+      "public_safety_notes": "Skill examples must be public-safe."
+    },
+    {
+      "worker_id": "public-safety-gate",
+      "mode": "closed",
+      "phase": [
+        "F16",
+        "F17"
+      ],
+      "triggers": [
+        "public",
+        "open-source",
+        "release",
+        "docs",
+        "repo-public"
+      ],
+      "inputs": [
+        "target_repo_paths",
+        "forbidden_actions",
+        "done_definition"
+      ],
+      "tools": [
+        "public safety scan",
+        "redaction review"
+      ],
+      "output_contract": "public_safety_result",
+      "authority_max": "block public leaks; cannot approve product risk",
+      "veto_conditions": [
+        "private path",
+        "internal name",
+        "raw source extraction",
+        "private board link"
+      ],
+      "evidence_required": [
+        "scan command",
+        "result",
+        "redaction notes"
+      ],
+      "kanban_transition_rules": [
+        "public artifacts wait for public-safety pass"
+      ],
+      "promotion_rule": "closed because scan shape is deterministic",
+      "public_safety_notes": "This worker protects the public repo boundary."
+    },
+    {
+      "worker_id": "supply-chain-gate",
+      "mode": "hybrid",
+      "phase": [
+        "F11",
+        "F13",
+        "F16"
+      ],
+      "triggers": [
+        "code",
+        "dependency",
+        "CI",
+        "CD",
+        "workflow",
+        "package",
+        "supply-chain"
+      ],
+      "inputs": [
+        "target_repo_paths",
+        "runtime_contract",
+        "security_scan_packet"
+      ],
+      "tools": [
+        "dependency audit",
+        "secret scan",
+        "SBOM",
+        "workflow review"
+      ],
+      "output_contract": "supply_chain_result",
+      "authority_max": "review supply chain evidence; cannot waive release blockers",
+      "veto_conditions": [
+        "unpinned risky action",
+        "secret leak",
+        "unknown dependency risk"
+      ],
+      "evidence_required": [
+        "dependency report",
+        "secret scan",
+        "workflow permissions",
+        "SBOM or waiver"
+      ],
+      "kanban_transition_rules": [
+        "code/release work waits for supply-chain gate"
+      ],
+      "promotion_rule": "hybrid; scanners closed, risk judgment supervised",
+      "public_safety_notes": "Reports must not expose private tokens."
+    },
+    {
+      "worker_id": "detection-monitoring-worker",
+      "mode": "hybrid",
+      "phase": [
+        "F16",
+        "F17"
+      ],
+      "triggers": [
+        "logs",
+        "monitoring",
+        "alerting",
+        "incident",
+        "production",
+        "observability"
+      ],
+      "inputs": [
+        "rollback_or_recovery",
+        "security_contract",
+        "done_definition"
+      ],
+      "tools": [
+        "logging review",
+        "alerting plan",
+        "incident workflow"
+      ],
+      "output_contract": "detection_monitoring_result",
+      "authority_max": "review observability; cannot approve release alone",
+      "veto_conditions": [
+        "no alert owner",
+        "no incident path",
+        "no rollback signal"
+      ],
+      "evidence_required": [
+        "monitoring plan",
+        "alert owner",
+        "incident response notes"
+      ],
+      "kanban_transition_rules": [
+        "production promotion waits for monitoring evidence"
+      ],
+      "promotion_rule": "hybrid because runtime signals are product-specific",
+      "public_safety_notes": "No private dashboards or log samples in public repo."
+    }
+  ]
+}

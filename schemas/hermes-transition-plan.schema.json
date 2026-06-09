@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-transition-plan.schema.json",
+  "title": "Overkill Factory Hermes Transition Plan",
+  "type": "object",
+  "required": [
+    "plan_type",
+    "created_at",
+    "source_card_path",
+    "event",
+    "transition_action",
+    "blocked_reasons",
+    "gate_report",
+    "worker_tasks"
+  ],
+  "properties": {
+    "plan_type": {
+      "const": "hermes_kanban_transition_plan"
+    },
+    "transition_action": {
+      "enum": [
+        "allow",
+        "allow_and_create_worker_tasks",
+        "allow_done",
+        "block_and_create_before_ready_tasks",
+        "block_transition"
+      ]
+    },
+    "blocked_reasons": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "event": {
+      "type": "object",
+      "required": ["from_status", "to_status", "card_id"],
+      "additionalProperties": true
+    },
+    "worker_tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "task_type",
+          "worker_id",
+          "title",
+          "queue_class",
+          "required_before",
+          "packet",
+          "expected_receipt_field",
+          "status"
+        ],
+        "properties": {
+          "task_type": { "const": "worker_subtask" },
+          "queue_class": {
+            "enum": [
+              "blocking-before-ready",
+              "blocking-before-done",
+              "advisory-review"
+            ]
+          },
+          "required_before": {
+            "enum": ["ready", "done"]
+          },
+          "status": {
+            "enum": [
+              "requires_execution",
+              "blocked_missing_inputs",
+              "not_required_by_current_card"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "completion_reconciliation": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

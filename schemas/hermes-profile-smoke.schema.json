@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-profile-smoke.schema.json",
+  "title": "Overkill Factory Hermes Profile Smoke",
+  "type": "object",
+  "required": [
+    "$schema",
+    "smoke_type",
+    "created_at",
+    "profile_registry_ref",
+    "binding_registry_ref",
+    "rows"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 3 },
+    "smoke_type": { "const": "hermes_profile_structural_smoke" },
+    "created_at": { "type": "string", "minLength": 10 },
+    "profile_registry_ref": { "type": "string", "minLength": 3 },
+    "binding_registry_ref": { "type": "string", "minLength": 3 },
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "worker_id",
+          "hermes_profile_name",
+          "status",
+          "profile_manifest_ref",
+          "profile_description_ref",
+          "profile_yaml_ref",
+          "soul_ref",
+          "skill_install_ref",
+          "command_or_adapter_used",
+          "worker_packet_ref",
+          "response_shape",
+          "result_schema",
+          "checks"
+        ],
+        "properties": {
+          "worker_id": { "type": "string", "minLength": 3 },
+          "hermes_profile_name": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["PASS", "FAIL"] },
+          "profile_manifest_ref": { "type": "string", "minLength": 3 },
+          "profile_description_ref": { "type": "string", "minLength": 3 },
+          "profile_yaml_ref": { "type": "string", "minLength": 3 },
+          "soul_ref": { "type": "string", "minLength": 3 },
+          "skill_install_ref": { "type": "string", "minLength": 3 },
+          "command_or_adapter_used": { "type": "string", "minLength": 3 },
+          "worker_packet_ref": { "type": "string", "minLength": 3 },
+          "response_shape": { "type": "string", "minLength": 3 },
+          "result_schema": { "type": "string", "minLength": 3 },
+          "checks": {
+            "type": "object",
+            "required": [
+              "profile_exists",
+              "profile_yaml_present",
+              "soul_md_present",
+              "profile_description_strong",
+              "binding_present",
+              "queue_source_verified",
+              "result_schema_verified",
+              "skills_verified",
+              "domain_contract_verified",
+              "waiver_contract_verified"
+            ],
+            "properties": {
+              "profile_exists": { "type": "boolean" },
+              "profile_yaml_present": { "type": "boolean" },
+              "soul_md_present": { "type": "boolean" },
+              "profile_description_strong": { "type": "boolean" },
+              "binding_present": { "type": "boolean" },
+              "queue_source_verified": { "type": "boolean" },
+              "result_schema_verified": { "type": "boolean" },
+              "skills_verified": { "type": "boolean" },
+              "domain_contract_verified": { "type": "boolean" },
+              "waiver_contract_verified": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

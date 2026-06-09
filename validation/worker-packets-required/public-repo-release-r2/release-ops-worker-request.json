@@ -1,0 +1,91 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T21:51:51+00:00",
+  "source_card_path": "validation/cards/public-repo-release-r2.md",
+  "worker": {
+    "id": "release-ops-worker",
+    "name": "Release Operations Worker",
+    "factory_phase": "F16-F17",
+    "tool_required": "promotion packet, smoke, rollback and monitoring workflow"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "release/promotion surface detected",
+    "timing": "after done gate and before release/promotion",
+    "blocking_policy": "Release cannot proceed with open blocking findings, missing rollback or missing monitoring owner."
+  },
+  "card_ref": {
+    "card_id": "VAL-PUBLIC-REPO-RELEASE-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_05",
+    "phase": "F16",
+    "risk_effective": "R2",
+    "surfaces": [
+      "public",
+      "docs",
+      "code",
+      "ci",
+      "supply-chain"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "done_definition",
+      "rollback_or_recovery",
+      "human_gate_packet"
+    ],
+    "missing_fields": [
+      "rollback_or_recovery",
+      "human_gate_packet"
+    ],
+    "target_repo_paths": [
+      "README.md",
+      "docs",
+      "scripts",
+      "agents"
+    ],
+    "authority_max": "no publish without review",
+    "forbidden_actions": [
+      "publish",
+      "push",
+      "merge",
+      "private_path_leak"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "release_ops_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "blocked_missing_inputs",
+  "profile_binding": {
+    "profile_id": "release-ops-worker.profile.v1",
+    "hermes_profile_name": "release-ops-worker",
+    "dispatch_queue_policy": {
+      "source_of_truth": "factoryctl.worker_queue_class",
+      "default_queue": "blocking-before-done",
+      "allowed_effective_queues": [
+        "blocking-before-done"
+      ]
+    },
+    "queue_class_source": "worker_task.queue_class",
+    "skill_refs": [
+      "overkill-factory",
+      "hermes-kanban",
+      "release-ops"
+    ],
+    "result_schema": "schemas/worker-result.schema.json",
+    "receipt_field": "release_ops_result",
+    "can_mutate_card_state": false,
+    "evidence_path_policy": "Release evidence must include smoke, rollback and monitoring refs.",
+    "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+    "profile_description_ref": "agents/worker-profiles.public.json",
+    "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+    "skill_install_ref": "docs/agents/live-agent-configuration.md",
+    "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+  }
+}

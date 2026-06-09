@@ -1,0 +1,120 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-worker-result-index.schema.json",
+  "index_type": "hermes_worker_result_index",
+  "summary": {
+    "task_id": "DRP-FULL-LINE-PILOT",
+    "result_file": "pilots/devnet-receipt-pass-test/evidence/transition-plan-done.json",
+    "required_worker_count": 26,
+    "result_count": 27,
+    "packet_count": 27,
+    "remote_proof_runner": "advisory_future_gate_not_required_before_done"
+  },
+  "agentic_ai_security_specialist": {
+    "task_id": "DRP-FULL-LINE-PILOT:agentic-ai-security-specialist",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/agentic-ai-security-specialist-result.json"
+  },
+  "appsec_owasp_specialist": {
+    "task_id": "DRP-FULL-LINE-PILOT:appsec-owasp-specialist",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/appsec-owasp-specialist-result.json"
+  },
+  "autoreview_gate": {
+    "task_id": "DRP-FULL-LINE-PILOT:autoreview-gate",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/autoreview-gate-result.json"
+  },
+  "cloud_infra_security_specialist": {
+    "task_id": "DRP-FULL-LINE-PILOT:cloud-infra-security-specialist",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/cloud-infra-security-specialist-result.json"
+  },
+  "codex_security": {
+    "task_id": "DRP-FULL-LINE-PILOT:codex-security",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/codex-security-result.json"
+  },
+  "crypto_key_management_specialist": {
+    "task_id": "DRP-FULL-LINE-PILOT:crypto-key-management-specialist",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/crypto-key-management-specialist-result.json"
+  },
+  "decomposition_planner": {
+    "task_id": "DRP-FULL-LINE-PILOT:decomposition-planner",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/decomposition-planner-result.json"
+  },
+  "detection_monitoring_worker": {
+    "task_id": "DRP-FULL-LINE-PILOT:detection-monitoring-worker",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/detection-monitoring-worker-result.json"
+  },
+  "docs_os_worker": {
+    "task_id": "DRP-FULL-LINE-PILOT:docs-os-worker",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/docs-os-worker-result.json"
+  },
+  "factory_orchestrator": {
+    "task_id": "DRP-FULL-LINE-PILOT:factory-orchestrator",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/factory-orchestrator-result.json"
+  },
+  "handoff_packer": {
+    "task_id": "DRP-FULL-LINE-PILOT:handoff-packer",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/handoff-packer-result.json"
+  },
+  "human_gate_clerk": {
+    "task_id": "DRP-FULL-LINE-PILOT:human-gate-clerk",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/human-gate-record.json"
+  },
+  "implementation_worker": {
+    "task_id": "DRP-FULL-LINE-PILOT:implementation-worker",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/implementation-worker-result.json"
+  },
+  "independent_reviewer": {
+    "task_id": "DRP-FULL-LINE-PILOT:independent-reviewer",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/independent-reviewer-result.json"
+  },
+  "memory_steward": {
+    "task_id": "DRP-FULL-LINE-PILOT:memory-steward",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/memory-steward-result.json"
+  },
+  "product_architect": {
+    "task_id": "DRP-FULL-LINE-PILOT:product-architect",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/product-architect-result.json"
+  },
+  "product_face": {
+    "task_id": "DRP-FULL-LINE-PILOT:product-face",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/product-face-result.json"
+  },
+  "product_sot_planner": {
+    "task_id": "DRP-FULL-LINE-PILOT:product-sot-planner",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/product-sot-planner-result.json"
+  },
+  "public_safety_gate": {
+    "task_id": "DRP-FULL-LINE-PILOT:public-safety-gate",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/public-safety-gate-result.json"
+  },
+  "qa_verification_worker": {
+    "task_id": "DRP-FULL-LINE-PILOT:qa-verification-worker",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/qa-verification-worker-result.json"
+  },
+  "release_ops_worker": {
+    "task_id": "DRP-FULL-LINE-PILOT:release-ops-worker",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/release-ops-worker-result.json"
+  },
+  "remote_proof_runner": {
+    "task_id": "DRP-FULL-LINE-PILOT:remote-proof-runner",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/remote-proof-runner-result.json"
+  },
+  "security_orchestrator": {
+    "task_id": "DRP-FULL-LINE-PILOT:security-orchestrator",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/security-orchestrator-result.json"
+  },
+  "skill_eval_distiller": {
+    "task_id": "DRP-FULL-LINE-PILOT:skill-eval-distiller",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/skill-eval-distiller-result.json"
+  },
+  "solana_quasar_auditor": {
+    "task_id": "DRP-FULL-LINE-PILOT:solana-quasar-auditor",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/solana-quasar-auditor-result.json"
+  },
+  "source_ledger_worker": {
+    "task_id": "DRP-FULL-LINE-PILOT:source-ledger-worker",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/source-ledger-worker-result.json"
+  },
+  "supply_chain_gate": {
+    "task_id": "DRP-FULL-LINE-PILOT:supply-chain-gate",
+    "result_file": "pilots/devnet-receipt-pass-test/worker-results/supply-chain-gate-result.json"
+  }
+}

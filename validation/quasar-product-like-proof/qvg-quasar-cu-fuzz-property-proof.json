@@ -1,0 +1,116 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/quasar-property-proof.schema.json",
+  "result": "PASS",
+  "proof_kind": "product_like_quasar_cu_fuzz_property",
+  "created_at": "2026-06-06T14:03:06+00:00",
+  "source_target": "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src",
+  "source_sha256": "d01eaf425d01e02480620cf1d18a27cc0833ff4246e14462794556ec117d67ed",
+  "runtime_proof_ref": "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json",
+  "runtime_quasar_test_status": "PASS",
+  "runtime_source_match": {
+    "runtime_source_sha256": "d01eaf425d01e02480620cf1d18a27cc0833ff4246e14462794556ec117d67ed",
+    "current_source_sha256": "d01eaf425d01e02480620cf1d18a27cc0833ff4246e14462794556ec117d67ed",
+    "matches": true
+  },
+  "source_test_contract": {
+    "test_file": "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src/tests.rs",
+    "required_tests": [
+      "property_nonzero_hashes_are_accepted_for_deterministic_cases",
+      "property_zero_hash_is_the_rejected_hash_case",
+      "property_all_nonzero_reason_codes_are_accepted",
+      "client_flow_sequence_keeps_all_public_invariants_local"
+    ],
+    "present": [
+      "property_nonzero_hashes_are_accepted_for_deterministic_cases",
+      "property_zero_hash_is_the_rejected_hash_case",
+      "property_all_nonzero_reason_codes_are_accepted",
+      "client_flow_sequence_keeps_all_public_invariants_local"
+    ],
+    "missing": [],
+    "verdict": "PASS"
+  },
+  "property_fuzz_coverage": {
+    "deterministic_seed_policy": "exhaustive u8 edge corpus plus deterministic 32-byte hash generation",
+    "cases": {
+      "hash_cases": {
+        "total": 256,
+        "accepted": 255,
+        "rejected": 1,
+        "expected_rejected": 1,
+        "verdict": "PASS"
+      },
+      "reason_code_cases": {
+        "total": 256,
+        "accepted": 255,
+        "rejected": 1,
+        "expected_rejected": 1,
+        "verdict": "PASS"
+      },
+      "client_flow_cases": {
+        "total": 1,
+        "flow": [
+          "review_vault_instruction",
+          "record_audit_receipt",
+          "block_instruction"
+        ],
+        "verdict": "PASS"
+      }
+    },
+    "total_cases": 513
+  },
+  "compute_unit_profile": {
+    "profile_kind": "static_symbolic_upper_bound",
+    "real_solana_cu_measured": false,
+    "why_not_real_cu": "The public QVG target has no production deployment or live SVM transaction harness. This proof records a static upper bound and requires real CU profiling again on production source.",
+    "instruction_profile": {
+      "review_vault_instruction": {
+        "branch_checks": 1,
+        "hash_bytes_checked": 32,
+        "cpi_calls": 0,
+        "funds_movement": false,
+        "persistent_state_writes": 0,
+        "symbolic_upper_bound_units": 40
+      },
+      "record_audit_receipt": {
+        "branch_checks": 1,
+        "hash_bytes_checked": 32,
+        "cpi_calls": 0,
+        "funds_movement": false,
+        "persistent_state_writes": 0,
+        "symbolic_upper_bound_units": 40
+      },
+      "block_instruction": {
+        "branch_checks": 1,
+        "hash_bytes_checked": 0,
+        "cpi_calls": 0,
+        "funds_movement": false,
+        "persistent_state_writes": 0,
+        "symbolic_upper_bound_units": 8
+      }
+    },
+    "max_symbolic_upper_bound_units": 40
+  },
+  "svm_or_client_flow_coverage": {
+    "quasar_test_passed": true,
+    "flows": [
+      {
+        "name": "public_local_invariant_flow",
+        "steps": [
+          "review nonzero hash",
+          "record nonzero receipt",
+          "block with nonzero reason"
+        ],
+        "status": "PASS"
+      }
+    ],
+    "real_svm_transaction_harness": false,
+    "boundary": "Public product-like invariant flow only; production SVM/client transaction flow must rerun on product source."
+  },
+  "evidence_refs": [
+    "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src/tests.rs",
+    "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json"
+  ],
+  "evidence_kind": "real",
+  "reusable_for_product": false,
+  "policy_decision": "This closes the public product-like CU/fuzz/property smoke gap, but production Quasar still needs real CU, SVM/client flow and fuzz/property execution before approval."
+}

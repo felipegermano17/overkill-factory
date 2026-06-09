@@ -25,9 +25,11 @@
       "compute-units"
     ],
     "executor_identity": "codex-overkill-factory",
-    "reviewer_identity": "kaxis-reviewer"
+    "reviewer_identity": "independent-reviewer"
   },
-  "result": "PASS",
+  "result": "WAIVED",
+  "audit_mode": "preflight",
+  "preflight_only": true,
   "blocking_findings": false,
   "findings_summary": "Auditor path used as preflight; no Quasar code audit pass claimed.",
   "tool_or_profile": "solanabr/Auditor-preflight",
@@ -35,5 +37,21 @@
   "evidence_refs": [
     "pilots/quasar-vault-guard-test/evidence/auditor-preflight-report.md"
   ],
-  "next_action": "Run Auditor against real Quasar source in future onchain implementation card."
+  "next_action": "Run Auditor against real Quasar source in future onchain implementation card.",
+  "evidence_kind": "waiver",
+  "reusable_for_product": false,
+  "waiver": {
+    "owner": "onchain-risk-owner",
+    "reason": "No real Quasar source exists in this pilot, so Auditor can only be recorded as bounded preflight evidence.",
+    "expires_at": "2026-12-31T00:00:00+00:00",
+    "reviewer_or_human_gate_ref": "pilots/quasar-vault-guard-test/evidence/human-gate-record.json",
+    "compensating_controls": [
+      "Block production or onchain promotion until Auditor runs against real Quasar source",
+      "Keep deploy, devnet write, mainnet write, signing and funds out of scope"
+    ],
+    "evidence_refs": [
+      "pilots/quasar-vault-guard-test/evidence/auditor-preflight-report.md",
+      "pilots/quasar-vault-guard-test/evidence/human-gate-record.json"
+    ]
+  }
 }

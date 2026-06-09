@@ -31,7 +31,48 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
 - Example cards, worker packets, gate reports, and Receipt Five metadata.
 - A Codex skill for operating the factory.
 - Initial automation for critical factory workers: Product Face, Codex Security,
-  Solana/Quasar Auditor, independent reviewer, and human gate clerk.
+  onchain auditor, independent reviewer, and human gate clerk.
+- Factory 11 hardening: public source policy, security control matrix, worker
+  registry, Hermes update safety, public-safety scan and CI.
+- Factory 12 agent hardening: every registered worker now has a public-safe
+  agent profile, Hermes profile binding, operator-understanding contract,
+  bounded failure policy and validation script.
+- Live Hermes Kanban adapter evidence: real board, main card, required worker
+  cards, dependency links, negative done block, positive done reconciliation.
+- Real Hermes specialist dispatch evidence: `public-safety-gate` preloaded the
+  factory skill, ran a public-safety scan and completed with Receipt Five.
+- Official Hermes main patch smoke: the public adapter patch applied to official
+  Hermes commit `56236b16e383cc656bb8c88429902f4de83f1faf` and the focused
+  regression suite passed.
+- Real supply-chain gate evidence: Hermes `supply-chain-gate` validated
+  least-privilege CI permissions, commit-pinned GitHub Actions, public scans,
+  source SBOM and unit tests on a clean public clone.
+- Final practical completion evidence: real Hermes V2 worker cards completed
+  remote proof, release control and production graph lanes; the completion audit
+  now reports `COMPLETE`, `completion_claim_allowed=true` and `10/10`.
+- Production full product worker graph evidence: QVG reconciles nine current
+  real lanes into one public validation product graph with
+  `reusable_for_product=true` and `completion_claim_allowed=true`.
+- Crabbox managed-container remote proof: Hermes `remote-proof-runner` ran a
+  real Crabbox `local-container` proof with TTL, command transcript, validation
+  checks, `leaseStopped=true` and zero active local-container leases afterward.
+- Production release-control proof: human-gate and release-ops records now
+  exist for the public validation product, with rollback, monitoring and
+  no-deploy boundaries recorded.
+- Production-like Product Face proof: Hermes `product-face` validated the QVG
+  public validation product as a reusable Product Face lane with scoped product
+  id, production-like static artifact class, screenshots, DOM state, console,
+  a11y basics, overlap checks and target hash.
+- Production-validation Quasar Auditor proof: Hermes `solana-quasar-auditor`
+  validated the QVG public validation product source under `products/` with a
+  clean Docker Quasar build/test, Auditor corpus/checklist coverage and a
+  scoped reusable Auditor lane.
+- Production-validation Quasar CU/SVM/economic proof: the QVG public validation
+  product source under `products/` now has a clean QuasarSVM transaction
+  harness with real CU measurements, success/error flows, economic no-mutation
+  checks and scoped reusable evidence for that source hash.
+- Multi-context validation battery artifacts with Product Face, security,
+  onchain, release, agentic and public-repo stress scenarios.
 
 ## Why Hermes Is Required
 
@@ -45,33 +86,20 @@ project, but the Hermes adapter is a first-class and required integration.
 
 ## Current Status
 
-Factory 10 has been validated on a real Hermes/KAXIS VM.
+Factory 10 has been validated in a real Hermes runtime and in a multi-context
+offline battery.
 
-The Hermes adapter patch has been committed on the VM in:
+The portable Hermes adapter patch is kept under `adapters/hermes/patches/`.
+The live adapter entrypoint is `adapters/hermes/live_kanban_adapter.py`.
+Official-main patch evidence is recorded in
+`validation/hermes-live/official-main-patch-smoke.md`.
 
-```text
-branch: codex/kaxis-factory-10-gates
-commit: d297c0c78900d6858384297895ef4392e6fb85b9
-```
-
-The portable patch is available at:
-
-```text
-adapters/hermes/patches/0001-add-kaxis-factory-10-kanban-gates.patch
-```
-
-The first dry pilot is complete:
+The first dry pilot is complete and kept under:
 
 ```text
 pilot: pilots/quasar-vault-guard-test
-Hermes board: overkill-factory-pilot-10
-Hermes task: t_a09d1c2e
 status: done
 ```
-
-Primary Whimsical map:
-
-[Overkill Factory - Factory 10+ Fluxo Linear Legivel](https://whimsical.com/felipe-s-workspace2684/overkill-factory-factory-10-fluxo-linear-legivel-XVvfzkVyVEwiPMQM9TNP84)
 
 ## Quick Start
 
@@ -83,8 +111,19 @@ Read these in order:
 4. `docs/automation/worker-automation-v0.md`
 5. `adapters/hermes/README.md`
 6. `agents/worker-roster.md`
-7. `docs/maps/whimsical-board.md`
-8. `pilots/quasar-vault-guard-test/README.md`
+7. `agents/worker-registry.public.json`
+8. `agents/worker-profiles.public.json`
+9. `agents/hermes-profile-bindings.public.json`
+10. `docs/agents/live-agent-configuration.md`
+11. `docs/agents/security-specialist-matrix.md`
+12. `docs/security/security-control-matrix.md`
+13. `adapters/hermes/compatibility-manifest.md`
+14. `docs/maps/whimsical-board.md`
+15. `pilots/quasar-vault-guard-test/README.md`
+16. `docs/roadmap/factory-11-action-plan.md`
+17. `docs/methodology/factory-11-operational-hardening.md`
+18. `docs/validation/heavy-validation-results.md`
+19. `docs/reviews/heavy-validation-adversarial-review.md`
 
 Run the local preflight:
 
@@ -92,13 +131,32 @@ Run the local preflight:
 python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md
 python scripts/factoryctl.py gate-report --card examples/cards/v35_valid_onchain_auditor_scan.md
 python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
+python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
+python scripts/factoryctl.py validate-completion --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json
+python scripts/factory_battery.py
+python adapters/hermes/compatibility-check.py
+python scripts/supply_chain_proof.py --check --no-write
+python scripts/full_product_worker_graph.py --require-pass
+python scripts/managed_remote_proof_probe.py
+python scripts/crabbox_local_container_remote_proof.py --crabbox-bin /path/to/crabbox
+python scripts/production_release_gate.py
+python scripts/production_full_product_worker_graph.py --require-pass
+python scripts/factory_completion_audit.py
+python scripts/validate_worker_profiles.py
+python scripts/public_safety_scan.py
+python -m unittest discover -s tests -p "test_*.py" -q
 ```
+
+For final practical closure, `python scripts/factory_completion_audit.py
+--no-write --require-complete` must pass. If it fails, the repo is no longer in
+the Factory 10 completed state and the failing blocker should be treated as the
+next factory task.
 
 After a specialist really runs, write structured evidence metadata:
 
 ```bash
-python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor kaxis-cybersecurity --evidence-ref reports/security-scan.md
-python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor Felipe --evidence-ref decisions/r3-human-approval.md
+python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref reports/security-scan.md
+python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor product-owner --evidence-ref decisions/r3-human-approval.md
 ```
 
 ## Current Boundaries
@@ -107,10 +165,53 @@ The repo prepares contracts and worker packets. It does not fake scanner output,
 Auditor results, screenshots, independent approval, or human decisions.
 
 The dry pilot proves the factory process and Hermes gates. It does not prove
-production readiness, deploy readiness, real Quasar program safety, wallet
+production readiness, deploy readiness, real onchain program safety, wallet
 signing, devnet/mainnet behavior, funds movement, or custody safety.
 
-The first production-intent pilot still needs a real raw product paper.
+The live Hermes smoke proves that the adapter can materialize a synthetic
+Solana/Quasar R3 card into real Hermes Kanban tasks and block/allow completion
+based on worker results. The smoke worker results are intentionally marked as
+synthetic and cannot be reused as real product evidence.
+
+The real profile dispatch smoke proves one specialist profile can be spawned by
+Hermes, load the factory skill, run a scoped scanner and complete with Receipt
+Five. It does not prove all specialist profiles or product-specific execution.
+
+The official-main patch smoke proves the public patch applies to the tested
+Hermes main commit and keeps focused Kanban/dashboard regression tests green. It
+does not prove future Hermes releases will remain compatible without rerunning
+the compatibility manifest.
+
+The Factory 10 practical audit is complete for the QVG public validation product
+and the current public branch state. That means the factory process can claim
+practical 10/10 for this validation context.
+
+This is still not a real production launch. No deploy, funds movement, wallet
+signing, devnet/mainnet write, secret disclosure, infrastructure mutation, DNS
+change, IAM change, KMS change or history rewrite was performed. Crabbox proof
+used a real managed local-container lease, not a brokered cloud lease or
+Blacksmith Testbox. Future real products must rerun the relevant product,
+security, remote-proof, release and monitoring gates against their own source
+and environment.
+
+The QVG full product graph now proves bounded product-specific reconciliation
+across Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,
+Independent Review, Human Gate, Release Ops, Supply Chain and Receipt Five. It
+now includes reusable Product Face and Quasar Auditor lanes, but it is
+intentionally not reusable as production approval because the remaining critical
+lanes keep production boundaries.
+
+The managed remote-proof probe records the current provider gap explicitly:
+static SSH proof exists, but managed Crabbox broker / Blacksmith Testbox still
+needs credentials, a provider-backed run handle, transcript, artifacts and
+cleanup evidence.
+
+## Public Repository Safety
+
+Raw study material, screenshots of private sessions, private source ledgers,
+local paths, private board links and internal project names do not belong in
+this repository. Run `python scripts/public_safety_scan.py` before publishing or
+opening a pull request.
 
 ## License
 

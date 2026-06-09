@@ -1,0 +1,134 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "blocking_findings": false,
+  "brokered_cloud_or_testbox": false,
+  "card_ref": {
+    "card_id": "QVG-PRODUCTION-REMOTE-PROOF",
+    "executor_identity": "remote-proof-runner",
+    "phase": "F16",
+    "reviewer_identity": "independent-reviewer",
+    "risk_effective": "R3",
+    "slice_id": "QVG_PUBLIC_VALIDATION_PRODUCT",
+    "surfaces": [
+      "remote-proof",
+      "crabbox",
+      "container",
+      "public-product"
+    ]
+  },
+  "checks_executed": [
+    "python3 scripts/validate_public_json_artifacts.py",
+    "python3 scripts/secret_safety_scan.py",
+    "python3 scripts/public_safety_scan.py",
+    "python3 scripts/full_product_worker_graph.py --require-pass"
+  ],
+  "cleanup_evidence": {
+    "active_local_container_leases_after": 0,
+    "lease_id": "cbx_dee862ddecd0",
+    "lease_list_output_tail": "",
+    "lease_stopped": true,
+    "slug": "violet-shrimp"
+  },
+  "crabbox_version": "0.26.0",
+  "created_at": "2026-06-06T18:48:26+00:00",
+  "evidence_kind": "real",
+  "evidence_refs": [
+    "validation/production/remote-proof/managed-testbox-result.md",
+    "validation/product-specific/qvg-full-product-worker-graph.json",
+    "validation/production/product-face/product-face-result.json",
+    "validation/production/quasar/auditor-result.json",
+    "validation/production/quasar/cu-svm-economic-proof.json"
+  ],
+  "executed_by": "remote-proof-runner",
+  "findings_summary": "Crabbox created an ephemeral local-container lease, synced the repository, ran product validation commands and stopped the lease.",
+  "managed_by_crabbox": true,
+  "next_action": "Use this as the product remote-proof lane for the public validation product. Escalate to brokered cloud or Blacksmith only when the product policy requires provider parity beyond ephemeral container isolation.",
+  "product_target": {
+    "approval_scope": "Reusable only for the public Quasar Vault Guard validation product and this repository state.",
+    "environment_class": "crabbox-local-container-production-validation",
+    "product_id": "qvg-public-validation-product",
+    "source_ref": "products/qvg-public-validation-product",
+    "source_sha256": "9407ab73f2af2c31f7859f978bf50fbc7e24da996631d59fa543597a4c4099f7"
+  },
+  "production_boundary": "This is a real Crabbox-managed ephemeral container proof. It is not a brokered cloud lease and not Blacksmith Testbox; those paths still require their own credentials if a project policy mandates that exact provider.",
+  "provider": "local-container",
+  "provider_kind": "crabbox_ephemeral_container",
+  "record_type": "remote_proof_result",
+  "remote_command": {
+    "command": "python3 --version && python3 scripts/validate_public_json_artifacts.py && python3 scripts/secret_safety_scan.py && python3 scripts/public_safety_scan.py && python3 scripts/full_product_worker_graph.py --require-pass",
+    "exit_code": 0,
+    "stderr_tail": "provisioning provider=local-container lease=cbx_dee862ddecd0 slug=violet-shrimp runtime=docker image=ubuntu:26.04 keep=false\nwaiting for 127.0.0.1:32778 local container ssh ssh-auth... elapsed=0s remaining=20m0s ports=32778:tcp\nwaiting for 127.0.0.1:32778 local container ssh ssh-auth... elapsed=10s remaining=19m50s ports=32778:tcp\nprovisioned lease=cbx_dee862ddecd0 container=428b0e06a76f state=ready\nsyncing <repo> -> 127.0.0.1:/work/crabbox/cbx_dee862ddecd0/overkill-factory\nrun context:\n  run=- portal=- logs=-\n  lease=cbx_dee862ddecd0 slug=violet-shrimp provider=local-container target=linux type=ubuntu_26.04\n  ssh=crabbox@127.0.0.1:32778 ip=127.0.0.1\n  workdir=/work/crabbox/cbx_dee862ddecd0/overkill-factory workspace=raw actions=-\nsync candidate: 560 files, 5.2 MiB dirty_delta=10 files, 31.6 KiB\nsync complete in 3.114s\nrunning on 127.0.0.1 python3 --version && python3 scripts/validate_public_json_artifacts.py && python3 scripts/secret_safety_scan.py && python3 scripts/public_safety_scan.py && python3 scripts/full_product_worker_graph.py --require-pass\ncommand complete in 774ms total=3.897s\nrun summary sync=3.114s command=774ms total=3.897s sync_skipped=false exit=0 sync_steps=ssh:29ms,manifest:24ms,preflight:0s,fingerprint:0s,fingerprint_remote:12ms,git_seed:2.326s,manifest_write:38ms,prune:10ms,rsync:121ms,finalize:549ms command_phases=user-command:773ms\nrun details provider=local-container lease=cbx_dee862ddecd0 slug=violet-shrimp run=- label=\"overkill-qvg-managed-container-proof\" type=ubuntu_26.04 repo=<repo> workdir=/work/crabbox/cbx_dee862ddecd0/overkill-factory actions=- stop_command=\"crabbox stop --provider local-container --target linux --id violet-shrimp\" idle_timeout=5m0s\n{\"provider\":\"local-container\",\"leaseId\":\"cbx_dee862ddecd0\",\"slug\":\"violet-shrimp\",\"syncMs\":3114,\"syncPhases\":[{\"name\":\"ssh\",\"ms\":28},{\"name\":\"manifest\",\"ms\":24},{\"name\":\"preflight\"},{\"name\":\"fingerprint\"},{\"name\":\"fingerprint_remote\",\"ms\":12},{\"name\":\"git_seed\",\"ms\":2326},{\"name\":\"manifest_write\",\"ms\":38},{\"name\":\"prune\",\"ms\":10},{\"name\":\"rsync\",\"ms\":121},{\"name\":\"finalize\",\"ms\":549}],\"syncSkipped\":false,\"commandMs\":773,\"commandPhases\":[{\"name\":\"user-command\",\"ms\":773}],\"totalMs\":3897,\"exitCode\":0,\"label\":\"overkill-qvg-managed-container-proof\",\"machineType\":\"ubuntu_26.04\",\"repoPath\":\"<repo>\",\"workdir\":\"/work/crabbox/cbx_dee862ddecd0/overkill-factory\",\"stopCommand\":\"crabbox stop --provider local-container --target linux --id violet-shrimp\",\"idleTimeout\":\"5m0s\",\"leaseStopped\":true}\n",
+    "stdout_tail": "Python 3.14.4\nOK\nOK\nOK\nWrote validation/product-specific/qvg-full-product-worker-graph.json\nWrote validation/product-specific/qvg-full-product-worker-graph.md\nPASS\n"
+  },
+  "result": "PASS",
+  "reusable_for_product": true,
+  "timing": {
+    "commandMs": 773,
+    "commandPhases": [
+      {
+        "ms": 773,
+        "name": "user-command"
+      }
+    ],
+    "exitCode": 0,
+    "idleTimeout": "5m0s",
+    "label": "overkill-qvg-managed-container-proof",
+    "leaseId": "cbx_dee862ddecd0",
+    "leaseStopped": true,
+    "machineType": "ubuntu_26.04",
+    "provider": "local-container",
+    "repoPath": "<repo>",
+    "slug": "violet-shrimp",
+    "stopCommand": "crabbox stop --provider local-container --target linux --id violet-shrimp",
+    "syncMs": 3114,
+    "syncPhases": [
+      {
+        "ms": 28,
+        "name": "ssh"
+      },
+      {
+        "ms": 24,
+        "name": "manifest"
+      },
+      {
+        "name": "preflight"
+      },
+      {
+        "name": "fingerprint"
+      },
+      {
+        "ms": 12,
+        "name": "fingerprint_remote"
+      },
+      {
+        "ms": 2326,
+        "name": "git_seed"
+      },
+      {
+        "ms": 38,
+        "name": "manifest_write"
+      },
+      {
+        "ms": 10,
+        "name": "prune"
+      },
+      {
+        "ms": 121,
+        "name": "rsync"
+      },
+      {
+        "ms": 549,
+        "name": "finalize"
+      }
+    ],
+    "syncSkipped": false,
+    "totalMs": 3897,
+    "workdir": "/work/crabbox/cbx_dee862ddecd0/overkill-factory"
+  },
+  "tool_or_profile": "crabbox local-container",
+  "worker": {
+    "factory_phase": "F13-F16",
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner"
+  }
+}

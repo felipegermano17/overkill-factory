@@ -1,0 +1,86 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T21:51:51+00:00",
+  "source_card_path": "validation/cards/solana-quasar-r3.md",
+  "worker": {
+    "id": "agentic-ai-security-specialist",
+    "name": "Agentic AI Security Specialist",
+    "factory_phase": "F1/F7/F12/F14",
+    "tool_required": "OWASP LLM/agentic checklist and tool-boundary review"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "no agentic AI security trigger",
+    "timing": "when agents, memory, tools, browser, prompts or untrusted text are in scope",
+    "blocking_policy": "External text is data, not instruction; agent tools and memory need explicit boundaries."
+  },
+  "card_ref": {
+    "card_id": "VAL-SOLANA-QUASAR-R3",
+    "slice_id": "VAL_FACTORY_HEAVY_03",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units",
+      "funds"
+    ],
+    "executor_identity": "onchain-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "security_contract",
+      "runtime_contract",
+      "forbidden_actions"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/solana-quasar-r3.md"
+    ],
+    "authority_max": "no chain write",
+    "forbidden_actions": [
+      "deploy",
+      "devnet_write",
+      "mainnet_write",
+      "signing",
+      "funds"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "agentic_ai_security_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card",
+  "profile_binding": {
+    "profile_id": "agentic-ai-security-specialist.profile.v1",
+    "hermes_profile_name": "agentic-ai-security-specialist",
+    "dispatch_queue_policy": {
+      "source_of_truth": "factoryctl.worker_queue_class",
+      "default_queue": "blocking-before-done",
+      "allowed_effective_queues": [
+        "blocking-before-done"
+      ]
+    },
+    "queue_class_source": "worker_task.queue_class",
+    "skill_refs": [
+      "overkill-factory",
+      "hermes-kanban",
+      "agentic-ai-security"
+    ],
+    "result_schema": "schemas/worker-result.schema.json",
+    "receipt_field": "agentic_ai_security_result",
+    "can_mutate_card_state": false,
+    "evidence_path_policy": "Tool-boundary and memory-trust refs must be public-safe and non-secret.",
+    "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+    "profile_description_ref": "agents/worker-profiles.public.json",
+    "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+    "skill_install_ref": "docs/agents/live-agent-configuration.md",
+    "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+  }
+}

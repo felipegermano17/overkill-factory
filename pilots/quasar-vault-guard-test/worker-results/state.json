@@ -1,0 +1,81 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-face-state.schema.json",
+  "viewports": {
+    "desktop": {
+      "page": {
+        "title": "Quasar Vault Guard",
+        "lang": "en",
+        "url": "repo:///pilots/quasar-vault-guard-test/product-face/prototype.html",
+        "headings": [
+          "Vault instruction review",
+          "Decision",
+          "Required evidence",
+          "State coverage"
+        ],
+        "disabled_controls": 1,
+        "status_nodes": [
+          "Current status\nBlocked\n\nOnchain code is not present, so Auditor can only issue a preflight result. Production authority remains closed.",
+          "Product Face captured",
+          "Security scan packet ready",
+          "Auditor preflight only",
+          "Signing disabled",
+          "pass",
+          "pass",
+          "limited",
+          "pass",
+          "approved"
+        ]
+      },
+      "a11y": {
+        "issues": []
+      },
+      "overlap": {
+        "items": []
+      },
+      "performance": {
+        "duration_ms": 9,
+        "dom_content_loaded_ms": 8,
+        "load_event_ms": 9,
+        "dom_nodes": 102
+      }
+    },
+    "mobile": {
+      "page": {
+        "title": "Quasar Vault Guard",
+        "lang": "en",
+        "url": "repo:///pilots/quasar-vault-guard-test/product-face/prototype.html",
+        "headings": [
+          "Vault instruction review",
+          "Decision",
+          "Required evidence",
+          "State coverage"
+        ],
+        "disabled_controls": 1,
+        "status_nodes": [
+          "Current status\nBlocked\n\nOnchain code is not present, so Auditor can only issue a preflight result. Production authority remains closed.",
+          "Product Face captured",
+          "Security scan packet ready",
+          "Auditor preflight only",
+          "Signing disabled",
+          "pass",
+          "pass",
+          "limited",
+          "pass",
+          "approved"
+        ]
+      },
+      "a11y": {
+        "issues": []
+      },
+      "overlap": {
+        "items": []
+      },
+      "performance": {
+        "duration_ms": 6,
+        "dom_content_loaded_ms": 6,
+        "load_event_ms": 6,
+        "dom_nodes": 102
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Overkill Factory Security Review</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 980px; margin: 40px auto; line-height: 1.55; color: #17202a; }
+    h1, h2 { color: #0f172a; }
+    table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+    th, td { border: 1px solid #d8dee9; padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #f5f7fa; }
+    code, pre { background: #f6f8fa; border-radius: 4px; }
+    pre { padding: 12px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Security Review: Overkill Factory</h1>
+  <p><strong>Date:</strong> 2026-06-06</p>
+  <h2>Scope</h2>
+  <p>This scan reviewed the public Overkill Factory repository at commit <code>664edd2</code> plus the current hardening diff. Critical surfaces included the gate reconciler, Hermes hook and live adapter, Product Face proof, remote proof, public scanners, schemas and validation artifacts.</p>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Mode</td><td>Codex Security repository/scoped critical-surface scan</td></tr>
+    <tr><td>Discovery</td><td>Parent review plus three parallel specialist reviews</td></tr>
+    <tr><td>Reportable open findings</td><td>0</td></tr>
+    <tr><td>Fixed during scan</td><td>9</td></tr>
+  </table>
+  <h2>Findings</h2>
+  <table>
+    <tr><th>Finding</th><th>Severity</th><th>Status</th></tr>
+    <tr><td>Inline worker results could satisfy done with nonexistent evidence</td><td>High</td><td>Fixed</td></tr>
+    <tr><td>Product Face PASS could accept warning/blocking UI evidence</td><td>High</td><td>Fixed</td></tr>
+    <tr><td>Remote proof claimed no secrets while inheriting host environment</td><td>High</td><td>Fixed</td></tr>
+    <tr><td>Hermes live complete-main could target an arbitrary task id</td><td>Medium</td><td>Fixed</td></tr>
+    <tr><td>Public JSON validator ignored additionalProperties=false</td><td>Medium</td><td>Fixed</td></tr>
+    <tr><td>Worker-result schemas allowed weak worker/card/waiver shape</td><td>Medium</td><td>Fixed</td></tr>
+    <tr><td>Auditor waiver was semantically marked as real evidence</td><td>Medium</td><td>Fixed</td></tr>
+    <tr><td>Secret scanner let fixture words suppress concrete secret patterns</td><td>Medium</td><td>Fixed</td></tr>
+    <tr><td>Product Face external-file redaction missed normal Windows paths</td><td>Low</td><td>Fixed</td></tr>
+  </table>
+  <h2>Validation Evidence</h2>
+  <pre>python -m unittest discover -s tests -p "test_*.py" -q
+python scripts/remote_proof_smoke.py --out validation/remote-proof/local-clean-smoke.json --timeout-seconds 180
+python -m bandit -r scripts adapters -f json -o validation/security/bandit-scripts-adapters.json
+python scripts/validate_public_json_artifacts.py
+python scripts/secret_safety_scan.py
+python scripts/public_safety_scan.py</pre>
+  <p>Observed result: 43 tests passed, remote proof PASS, Bandit 0 findings, public JSON validation OK, secret scan OK and public safety scan OK.</p>
+  <h2>Remaining Risk</h2>
+  <p>This scan does not replace real Auditor execution against real Quasar source, provider-backed Crabbox/Testbox proof, full Hermes dashboard/API/CLI hook wiring, production Product Face proof, or multi-profile product-specific specialist dispatch. One public-safety profile dispatch is now smoke-proven separately.</p>
+</body>
+</html>

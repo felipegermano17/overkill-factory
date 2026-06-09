@@ -14,6 +14,8 @@
     "tool_or_profile",
     "executed_by",
     "evidence_refs",
+    "evidence_kind",
+    "reusable_for_product",
     "next_action"
   ],
   "properties": {
@@ -22,18 +24,174 @@
         "security_scan_result",
         "auditor_result",
         "product_face_result",
-        "independent_review_result"
+        "independent_review_result",
+        "receipt_five_reconciliation_result",
+        "human_gate_record",
+        "orchestration_result",
+        "source_ledger_result",
+        "product_sot_result",
+        "architecture_result",
+        "documentation_os_result",
+        "decomposition_result",
+        "implementation_result",
+        "qa_verification_result",
+        "autoreview_result",
+        "security_orchestration_result",
+        "appsec_owasp_result",
+        "agentic_ai_security_result",
+        "cloud_infra_security_result",
+        "crypto_key_management_result",
+        "remote_proof_result",
+        "release_ops_result",
+        "handoff_packet_result",
+        "memory_steward_result",
+        "skill_eval_result",
+        "public_safety_result",
+        "supply_chain_result",
+        "detection_monitoring_result",
+        "frontend_build_result",
+        "backend_api_build_result",
+        "data_persistence_result",
+        "solana_quasar_build_result",
+        "solana_quasar_qa_result",
+        "wallet_transaction_result",
+        "integration_build_result",
+        "test_automation_result",
+        "infra_devops_result",
+        "agent_runtime_result"
       ]
     },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "worker": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "name": {
+          "type": "string"
+        },
+        "factory_phase": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "card_ref": {
+      "type": "object",
+      "required": [
+        "card_id"
+      ],
+      "properties": {
+        "card_id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "slice_id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "phase": {
+          "type": "string"
+        },
+        "risk_effective": {
+          "type": "string"
+        },
+        "surfaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "executor_identity": {
+          "type": "string"
+        },
+        "reviewer_identity": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
     "result": {
-      "enum": ["PASS", "FAIL", "WAIVED", "PENDING"]
+      "enum": [
+        "PASS",
+        "FAIL",
+        "WAIVED",
+        "PENDING"
+      ]
     },
     "blocking_findings": {
       "type": "boolean"
     },
     "evidence_refs": {
       "type": "array",
-      "items": { "type": "string" }
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_kind": {
+      "enum": [
+        "real",
+        "synthetic",
+        "waiver"
+      ]
+    },
+    "reusable_for_product": {
+      "type": "boolean"
+    },
+    "waiver": {
+      "type": "object",
+      "required": [
+        "owner",
+        "reason",
+        "expires_at",
+        "reviewer_or_human_gate_ref",
+        "compensating_controls",
+        "evidence_refs"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 2
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 3
+        },
+        "expires_at": {
+          "type": "string",
+          "minLength": 10
+        },
+        "reviewer_or_human_gate_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "compensating_controls": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": true

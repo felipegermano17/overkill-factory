@@ -1,0 +1,84 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "human_gate_record",
+  "created_at": "2026-06-06T13:25:03+00:00",
+  "worker": {
+    "id": "human-gate-clerk",
+    "name": "Human Gate Clerk",
+    "factory_phase": "F9/F15/F16"
+  },
+  "card_ref": {
+    "card_id": "QVG-RELEASE-GATE-DRY-RUN",
+    "slice_id": "QVG_RELEASE_GATE_DRY_RUN",
+    "phase": "F16",
+    "risk_effective": "R4",
+    "surfaces": [
+      "release",
+      "production",
+      "cloud",
+      "infra",
+      "iam",
+      "kms",
+      "dns",
+      "monitoring",
+      "secrets"
+    ],
+    "executor_identity": "release-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Bounded product-owner decision recorded for dry-run evidence generation only; production promotion, deployment, signing, secret access, authority-bearing release and environment mutation remain blocked.",
+  "tool_or_profile": "Hermes human-gate-clerk",
+  "executed_by": "human-gate-clerk",
+  "evidence_refs": [
+    "validation/release-human-gate/qvg-human-gate-record.md",
+    "agents/worker-registry.public.json",
+    "validation/worker-packets/cloud-release-r4/human-gate-clerk-request.json",
+    "validation/worker-packets/cloud-release-r4/release-ops-worker-request.json",
+    "docs/automation/worker-automation-v0.md"
+  ],
+  "evidence_kind": "real",
+  "reusable_for_product": false,
+  "next_action": "Use this record only for dry-run factory validation. Before any production promotion, collect a separate real R4 human gate with release operations, rollback, monitoring, security and authority evidence.",
+  "gate_type": "R4-dry-run",
+  "decision": "approved_bounded_dry_run_evidence_generation",
+  "decision_at": "2026-06-06T13:25:03+00:00",
+  "decision_source": "operator instruction carrying product-owner dry-run decision",
+  "human_actor": "product-owner",
+  "approved_scope": [
+    "Generate public-safe dry-run evidence for Overkill Factory validation.",
+    "Read the scoped public repository files listed in the worker request.",
+    "Write qvg-human-gate-record JSON and Markdown artifacts under validation/release-human-gate/.",
+    "Run public JSON, public-safety and secret-safety validation commands against the repository."
+  ],
+  "forbidden_scope": [
+    "production deploy",
+    "devnet write",
+    "mainnet write",
+    "wallet signing",
+    "key access",
+    "fund access",
+    "IAM mutation",
+    "DNS mutation",
+    "KMS mutation",
+    "secret mutation",
+    "secret access",
+    "authority-bearing release",
+    "push",
+    "commit"
+  ],
+  "required_changes": [],
+  "risk_owner": "product-owner",
+  "security_owner": "security-reviewer",
+  "rollback_owner": "release-ops-worker",
+  "production_status": "blocked",
+  "production_promotion_blocking_findings": true,
+  "reusability_note": "This is real evidence of the bounded dry-run decision only. It is not reusable as product approval, production approval, release approval or authority-bearing evidence.",
+  "reviewed_refs": [
+    "agents/worker-registry.public.json",
+    "validation/worker-packets/cloud-release-r4/human-gate-clerk-request.json",
+    "validation/worker-packets/cloud-release-r4/release-ops-worker-request.json",
+    "docs/automation/worker-automation-v0.md"
+  ]
+}

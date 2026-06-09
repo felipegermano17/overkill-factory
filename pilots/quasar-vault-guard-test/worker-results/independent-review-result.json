@@ -25,15 +25,17 @@
       "compute-units"
     ],
     "executor_identity": "codex-overkill-factory",
-    "reviewer_identity": "kaxis-reviewer"
+    "reviewer_identity": "independent-reviewer"
   },
   "result": "PASS",
   "blocking_findings": false,
   "findings_summary": "Dry pilot approved with boundaries; does not prove production readiness.",
   "tool_or_profile": "independent-review",
-  "executed_by": "kaxis-reviewer",
+  "executed_by": "independent-reviewer",
   "evidence_refs": [
     "pilots/quasar-vault-guard-test/evidence/independent-review-report.md"
   ],
-  "next_action": "Promote V3.6 learning items."
+  "next_action": "Promote V3.6 learning items.",
+  "evidence_kind": "real",
+  "reusable_for_product": false
 }

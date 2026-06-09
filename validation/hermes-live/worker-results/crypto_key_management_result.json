@@ -1,0 +1,36 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "crypto_key_management_result",
+  "created_at": "2026-06-06T06:58:56+00:00",
+  "worker": {
+    "id": "crypto-key-management-specialist",
+    "name": "Crypto and Key Management Specialist",
+    "factory_phase": "F7/F15/F16"
+  },
+  "card_ref": {
+    "card_id": "VAL-SOLANA-QUASAR-R3",
+    "slice_id": "VAL_FACTORY_HEAVY_03",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units",
+      "funds"
+    ],
+    "executor_identity": "onchain-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Synthetic public live-adapter smoke passed; replace with real specialist run for product work.",
+  "tool_or_profile": "hermes-live-smoke:crypto-key-management-specialist",
+  "executed_by": "hermes-live-smoke-runner",
+  "evidence_refs": [
+    "validation/hermes-live/evidence/crypto-key-management-specialist.md"
+  ],
+  "evidence_kind": "synthetic",
+  "reusable_for_product": false,
+  "next_action": "Use real worker execution in the next product pilot."
+}

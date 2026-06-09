@@ -1,0 +1,460 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-battery-result.schema.json",
+  "result_type": "factory_validation_battery",
+  "scenario_count": 12,
+  "passed_count": 12,
+  "failed_count": 0,
+  "scenarios": [
+    {
+      "name": "product-face-r2",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "ready_for_worker_execution",
+        "required_workers": [
+          "product-face",
+          "independent-reviewer",
+          "qa-verification-worker"
+        ]
+      },
+      "observed": {
+        "gate_status": "ready_for_worker_execution",
+        "required_workers": [
+          "codex-security",
+          "product-face",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "factory-orchestrator",
+          "frontend-builder",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "appsec-owasp-specialist",
+          "handoff-packer"
+        ],
+        "blocked_workers": []
+      }
+    },
+    {
+      "name": "solana-quasar-r3",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "ready_for_worker_execution",
+        "required_workers": [
+          "codex-security",
+          "solana-quasar-auditor",
+          "human-gate-clerk",
+          "remote-proof-runner",
+          "supply-chain-gate"
+        ]
+      },
+      "observed": {
+        "gate_status": "ready_for_worker_execution",
+        "required_workers": [
+          "codex-security",
+          "solana-quasar-auditor",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "solana-quasar-builder",
+          "solana-quasar-qa-engineer",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "crypto-key-management-specialist",
+          "remote-proof-runner",
+          "handoff-packer",
+          "supply-chain-gate"
+        ],
+        "blocked_workers": []
+      }
+    },
+    {
+      "name": "cloud-release-r4",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "ready_for_worker_execution",
+        "required_workers": [
+          "codex-security",
+          "cloud-infra-security-specialist",
+          "release-ops-worker",
+          "detection-monitoring-worker",
+          "human-gate-clerk"
+        ]
+      },
+      "observed": {
+        "gate_status": "ready_for_worker_execution",
+        "required_workers": [
+          "codex-security",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "infra-devops-builder",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "cloud-infra-security-specialist",
+          "crypto-key-management-specialist",
+          "remote-proof-runner",
+          "release-ops-worker",
+          "handoff-packer",
+          "public-safety-gate",
+          "supply-chain-gate",
+          "detection-monitoring-worker"
+        ],
+        "blocked_workers": []
+      }
+    },
+    {
+      "name": "public-repo-release-r2",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "blocked",
+        "required_workers": [
+          "public-safety-gate",
+          "supply-chain-gate"
+        ],
+        "blocked_workers": [
+          "codex-security",
+          "release-ops-worker"
+        ]
+      },
+      "observed": {
+        "gate_status": "blocked",
+        "required_workers": [
+          "codex-security",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "docs-os-worker",
+          "infra-devops-builder",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "cloud-infra-security-specialist",
+          "release-ops-worker",
+          "handoff-packer",
+          "public-safety-gate",
+          "supply-chain-gate",
+          "detection-monitoring-worker"
+        ],
+        "blocked_workers": [
+          "codex-security",
+          "human-gate-clerk",
+          "infra-devops-builder",
+          "security-orchestrator",
+          "cloud-infra-security-specialist",
+          "release-ops-worker",
+          "supply-chain-gate",
+          "detection-monitoring-worker"
+        ]
+      }
+    },
+    {
+      "name": "agentic-browser-memory-r3",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "ready_for_worker_execution",
+        "required_workers": [
+          "agentic-ai-security-specialist",
+          "security-orchestrator",
+          "memory-steward",
+          "handoff-packer"
+        ]
+      },
+      "observed": {
+        "gate_status": "ready_for_worker_execution",
+        "required_workers": [
+          "codex-security",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "appsec-owasp-specialist",
+          "agentic-ai-security-specialist",
+          "remote-proof-runner",
+          "handoff-packer",
+          "memory-steward",
+          "supply-chain-gate"
+        ],
+        "blocked_workers": []
+      }
+    },
+    {
+      "name": "invalid-product-face",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "blocked",
+        "min_blocked_reasons": 1
+      },
+      "observed": {
+        "gate_status": "blocked",
+        "blocked_reasons": [
+          "product_face_packet required for product-facing surfaces",
+          "product-face",
+          "security-orchestrator",
+          "appsec-owasp-specialist"
+        ],
+        "required_workers": [
+          "product-face",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "factory-orchestrator",
+          "source-ledger-worker",
+          "product-architect",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "appsec-owasp-specialist",
+          "handoff-packer"
+        ],
+        "blocked_workers": [
+          "product-face",
+          "security-orchestrator",
+          "appsec-owasp-specialist"
+        ]
+      }
+    },
+    {
+      "name": "invalid-onchain-no-auditor",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "blocked",
+        "min_blocked_reasons": 1
+      },
+      "observed": {
+        "gate_status": "blocked",
+        "blocked_reasons": [
+          "security_scan_packet required for R3/R4 work",
+          "human_gate_packet required for R3/R4 work",
+          "security_role_separation=true or security_role_separation_exception required for R3/R4 security-sensitive work",
+          "codex-security",
+          "human-gate-clerk",
+          "security-orchestrator",
+          "supply-chain-gate"
+        ],
+        "required_workers": [
+          "codex-security",
+          "solana-quasar-auditor",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "source-ledger-worker",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "handoff-packer",
+          "supply-chain-gate"
+        ],
+        "blocked_workers": [
+          "codex-security",
+          "human-gate-clerk",
+          "security-orchestrator",
+          "supply-chain-gate"
+        ]
+      }
+    },
+    {
+      "name": "invalid-r4-no-gate",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "blocked",
+        "min_blocked_reasons": 1
+      },
+      "observed": {
+        "gate_status": "blocked",
+        "blocked_reasons": [
+          "security_scan_packet required for R3/R4 work",
+          "human_gate_packet required for R3/R4 work",
+          "r4_gate required for R4 work",
+          "codex-security",
+          "human-gate-clerk",
+          "security-orchestrator",
+          "cloud-infra-security-specialist",
+          "release-ops-worker",
+          "supply-chain-gate"
+        ],
+        "required_workers": [
+          "codex-security",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "source-ledger-worker",
+          "infra-devops-builder",
+          "qa-verification-worker",
+          "security-orchestrator",
+          "cloud-infra-security-specialist",
+          "crypto-key-management-specialist",
+          "release-ops-worker",
+          "handoff-packer",
+          "public-safety-gate",
+          "supply-chain-gate",
+          "detection-monitoring-worker"
+        ],
+        "blocked_workers": [
+          "codex-security",
+          "human-gate-clerk",
+          "security-orchestrator",
+          "cloud-infra-security-specialist",
+          "release-ops-worker",
+          "supply-chain-gate"
+        ]
+      }
+    },
+    {
+      "name": "invalid-security-no-scan",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "blocked",
+        "min_blocked_reasons": 1
+      },
+      "observed": {
+        "gate_status": "blocked",
+        "blocked_reasons": [
+          "security_scan_packet required for R3/R4 work",
+          "human_gate_packet required for R3/R4 work",
+          "codex-security",
+          "human-gate-clerk",
+          "security-orchestrator",
+          "supply-chain-gate"
+        ],
+        "required_workers": [
+          "codex-security",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "source-ledger-worker",
+          "qa-verification-worker",
+          "security-orchestrator",
+          "handoff-packer",
+          "supply-chain-gate"
+        ],
+        "blocked_workers": [
+          "codex-security",
+          "human-gate-clerk",
+          "security-orchestrator",
+          "supply-chain-gate"
+        ]
+      }
+    },
+    {
+      "name": "invalid-self-review",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "gate_status": "blocked",
+        "min_blocked_reasons": 1
+      },
+      "observed": {
+        "gate_status": "blocked",
+        "blocked_reasons": [
+          "executor_identity and reviewer_identity must differ",
+          "appsec-owasp-specialist"
+        ],
+        "required_workers": [
+          "product-face",
+          "evidence-reconciler",
+          "factory-orchestrator",
+          "source-ledger-worker",
+          "product-architect",
+          "autoreview-gate",
+          "appsec-owasp-specialist"
+        ],
+        "blocked_workers": [
+          "appsec-owasp-specialist"
+        ]
+      }
+    },
+    {
+      "name": "done-blocks-missing-worker-results",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "transition_action": "block_transition",
+        "min_blocked_reasons": 1
+      },
+      "observed": {
+        "transition_action": "block_transition",
+        "blocked_reasons": [
+          "evidence-reconciler result is required before done",
+          "solana-quasar-builder result is required before done",
+          "solana-quasar-qa-engineer result is required before done",
+          "qa-verification-worker result is required before done",
+          "autoreview-gate result is required before done",
+          "crypto-key-management-specialist result is required before done",
+          "remote-proof-runner result is required before done",
+          "handoff-packer result is required before done",
+          "codex-security result is invalid before done",
+          "solana-quasar-auditor result is invalid before done",
+          "independent-reviewer result is invalid before done",
+          "human-gate-clerk result is invalid before done"
+        ],
+        "required_workers": [
+          "codex-security",
+          "solana-quasar-auditor",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "solana-quasar-builder",
+          "solana-quasar-qa-engineer",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "crypto-key-management-specialist",
+          "remote-proof-runner",
+          "handoff-packer",
+          "supply-chain-gate"
+        ],
+        "blocked_workers": []
+      }
+    },
+    {
+      "name": "done-allows-complete-worker-results",
+      "passed": true,
+      "failures": [],
+      "expected": {
+        "transition_action": "allow_done"
+      },
+      "observed": {
+        "transition_action": "allow_done",
+        "blocked_reasons": [],
+        "required_workers": [
+          "codex-security",
+          "solana-quasar-auditor",
+          "independent-reviewer",
+          "evidence-reconciler",
+          "human-gate-clerk",
+          "factory-orchestrator",
+          "solana-quasar-builder",
+          "solana-quasar-qa-engineer",
+          "qa-verification-worker",
+          "autoreview-gate",
+          "security-orchestrator",
+          "crypto-key-management-specialist",
+          "remote-proof-runner",
+          "handoff-packer",
+          "supply-chain-gate"
+        ],
+        "blocked_workers": []
+      }
+    }
+  ]
+}

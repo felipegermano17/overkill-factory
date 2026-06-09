@@ -1,0 +1,68 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "approved_scope": [
+    "Run the public validation product through the Overkill Factory release-control lane.",
+    "Use Hermes/Kanban workers and Crabbox/container proof where available.",
+    "Write public-safe validation, release and audit artifacts.",
+    "Push public repository branch updates that contain no private project material."
+  ],
+  "blocking_findings": false,
+  "card_ref": {
+    "card_id": "QVG-PRODUCTION-RELEASE-GATE",
+    "executor_identity": "release-ops-worker",
+    "phase": "F16",
+    "reviewer_identity": "human-gate-clerk",
+    "risk_effective": "R4",
+    "slice_id": "QVG_PUBLIC_VALIDATION_PRODUCT",
+    "surfaces": [
+      "release",
+      "public-repository",
+      "rollback",
+      "monitoring"
+    ]
+  },
+  "created_at": "2026-06-06T18:48:26+00:00",
+  "decision": "approved_with_boundaries",
+  "decision_at": "2026-06-06T18:48:26+00:00",
+  "decision_source": "external:redacted-maintainer-authorization-2026-06-06",
+  "evidence_kind": "real",
+  "evidence_refs": [
+    "validation/production/release/human-gate-record.md",
+    "validation/production/release/release-ops-result.json",
+    "validation/production/remote-proof/managed-testbox-result.json"
+  ],
+  "executed_by": "human-gate-clerk",
+  "expiry": "Valid only for this public validation product and this release-control evidence round.",
+  "findings_summary": "Maintainer authorization was recorded for the public validation product release-control lane with rollback and monitoring boundaries.",
+  "forbidden_scope": [
+    "secret disclosure",
+    "funds movement",
+    "wallet signing",
+    "mainnet write",
+    "unreviewed production infrastructure mutation",
+    "history rewrite"
+  ],
+  "gate_type": "R4-public-validation-release",
+  "human_actor": "project-maintainer",
+  "next_action": "Keep future R4 gates product-specific and time-bounded.",
+  "product_target": {
+    "approval_scope": "Reusable for the public Quasar Vault Guard validation product release-control lane.",
+    "environment_class": "public-repository-production-validation",
+    "product_id": "qvg-public-validation-product",
+    "source_ref": "products/qvg-public-validation-product",
+    "source_sha256": "9407ab73f2af2c31f7859f978bf50fbc7e24da996631d59fa543597a4c4099f7"
+  },
+  "public_redaction_policy": "The raw authorization text and personal identity are intentionally kept outside the public repository.",
+  "record_type": "human_gate_record",
+  "result": "PASS",
+  "reusable_for_product": true,
+  "risk_owner": "project-maintainer",
+  "rollback_owner": "release-ops-worker",
+  "security_owner": "security-reviewer",
+  "tool_or_profile": "Hermes human-gate-clerk",
+  "worker": {
+    "factory_phase": "F16",
+    "id": "human-gate-clerk",
+    "name": "Human Gate Clerk"
+  }
+}

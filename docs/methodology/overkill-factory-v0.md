@@ -75,7 +75,7 @@ Output: review matrix and required remediation.
 
 ### F7 Onchain Package
 
-For Solana/KAXIS work, create a Quasar-first onchain package: accounts,
+For Solana/Overkill work, create a Quasar-first onchain package: accounts,
 instruction ABI, PDA derivation, CPI allowlist, compute-unit budget, authorities,
 and Auditor path.
 

@@ -35,7 +35,7 @@
   ],
   "properties": {
     "factory_method_version": {
-      "enum": ["KAXIS_V3_5_AGENT_WORKFORCE", "KAXIS_V3_5_FACTORY_10"]
+      "enum": ["OVERKILL_V3_5_AGENT_WORKFORCE", "OVERKILL_V3_5_FACTORY_10"]
     },
     "source_state": {
       "enum": ["backlog", "compiled", "inference", "promoted", "raw", "rejected"]

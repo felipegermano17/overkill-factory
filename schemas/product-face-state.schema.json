@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-face-state.schema.json",
+  "title": "Overkill Factory Product Face State Evidence",
+  "type": "object",
+  "required": ["$schema", "viewports"],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/product-face-state.schema.json"
+    },
+    "viewports": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

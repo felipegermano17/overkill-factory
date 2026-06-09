@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-face-static-summary.schema.json",
+  "title": "Overkill Factory Product Face Static Summary",
+  "type": "object",
+  "required": ["$schema", "mode"],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/product-face-static-summary.schema.json"
+    },
+    "mode": {
+      "enum": ["static-file", "remote-url", "missing-file"]
+    },
+    "target": {
+      "type": "string"
+    },
+    "sha256": {
+      "type": "string"
+    },
+    "bytes": {
+      "type": "integer"
+    },
+    "title": {
+      "type": "string"
+    },
+    "lang": {
+      "type": "string"
+    },
+    "tag_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "images_missing_alt": {
+      "type": "integer"
+    },
+    "controls_missing_name": {
+      "type": "integer"
+    },
+    "disabled_controls": {
+      "type": "integer"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

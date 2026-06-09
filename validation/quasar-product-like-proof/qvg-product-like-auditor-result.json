@@ -1,0 +1,426 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/auditor-result.schema.json",
+  "record_type": "auditor_result",
+  "created_at": "2026-06-06T13:59:43+00:00",
+  "worker": {
+    "id": "solana-quasar-auditor",
+    "name": "Solana/Quasar Auditor Runner",
+    "factory_phase": "F7/F13"
+  },
+  "card_ref": {
+    "card_id": "QVG-PILOT-FIRST-SLICE",
+    "slice_id": "QVG_DRY_PILOT_001",
+    "phase": "F11",
+    "risk_effective": "R3",
+    "surfaces": [
+      "ux",
+      "frontend",
+      "mobile",
+      "wallet-ui",
+      "security",
+      "agent-runtime",
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units"
+    ],
+    "executor_identity": "codex-overkill-factory",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Product-like QVG Quasar target built/tested, deterministic property/fuzz coverage was applied, and Auditor corpus checklist coverage found no blocking issue.",
+  "tool_or_profile": "solanabr/Auditor corpus plus Quasar product-like build/test proof",
+  "executed_by": "solana-quasar-auditor",
+  "audit_mode": "code_audit",
+  "preflight_only": false,
+  "auditor_source": "https://github.com/solanabr/Auditor",
+  "auditor_head": "38ceb3fabc811d62e1d6172bd23e110af502d8e6",
+  "corpus_files_loaded": [
+    "external:Auditor/CORPUS-MANIFEST.md",
+    "external:Auditor/COSTS.md",
+    "external:Auditor/FULL-AUDIT.md",
+    "external:Auditor/OUTPUT-RULES.md",
+    "external:Auditor/QUESTIONS.md",
+    "external:Auditor/README.md",
+    "external:Auditor/SKILL.md",
+    "external:Auditor/TOP-100-HACKS.md",
+    "external:Auditor/checklists/01-program-account-validation.md",
+    "external:Auditor/checklists/02-program-access-control.md",
+    "external:Auditor/checklists/03-program-arithmetic-safety.md",
+    "external:Auditor/checklists/04-program-cpi-pda.md",
+    "external:Auditor/checklists/05-program-state-machine.md",
+    "external:Auditor/checklists/06-program-economic-logic.md",
+    "external:Auditor/checklists/07-program-opsec-governance.md",
+    "external:Auditor/checklists/08-typescript-safety.md",
+    "external:Auditor/checklists/09-backend-security.md",
+    "external:Auditor/checklists/10-frontend-security.md",
+    "external:Auditor/checklists/11-supply-chain.md",
+    "external:Auditor/checklists/12-secrets-opsec.md",
+    "external:Auditor/checklists/13-deployment-infrastructure.md",
+    "external:Auditor/checklists/14-python-safety.md",
+    "external:Auditor/checklists/15-general-language-safety.md",
+    "external:Auditor/checklists/16-formal-verification-testing.md",
+    "external:Auditor/checklists/17-logging-monitoring-incident-response.md",
+    "external:Auditor/checklists/18-privacy-compliance-change-management.md",
+    "external:Auditor/discovery/file-map.md",
+    "external:Auditor/discovery/grep-commands.md",
+    "external:Auditor/known-vectors/001-private-key-leak.md",
+    "external:Auditor/known-vectors/002-flash-loan-price-manipulation.md",
+    "external:Auditor/known-vectors/003-reentrancy-cpi.md",
+    "external:Auditor/known-vectors/004-missing-access-control.md",
+    "external:Auditor/known-vectors/005-oracle-manipulation.md",
+    "external:Auditor/known-vectors/006-first-depositor-share-inflation.md",
+    "external:Auditor/known-vectors/007-mev-sandwich-attack.md",
+    "external:Auditor/known-vectors/008-rug-pull-admin-backdoor.md",
+    "external:Auditor/known-vectors/009-unchecked-cpi-target.md",
+    "external:Auditor/known-vectors/010-pda-confusion-type-cosplay.md",
+    "external:Auditor/known-vectors/011-integer-overflow-underflow.md",
+    "external:Auditor/known-vectors/012-arithmetic-rounding-exploit.md",
+    "external:Auditor/known-vectors/013-missing-signer-check.md",
+    "external:Auditor/known-vectors/014-account-reinitialization.md",
+    "external:Auditor/known-vectors/015-unchecked-account-owner.md",
+    "external:Auditor/known-vectors/016-token-account-mismatch.md",
+    "external:Auditor/known-vectors/017-vault-donation-attack.md",
+    "external:Auditor/known-vectors/018-fee-on-transfer-token-exploit.md",
+    "external:Auditor/known-vectors/019-freeze-authority-griefing.md",
+    "external:Auditor/known-vectors/020-program-upgrade-hijack.md",
+    "external:Auditor/known-vectors/021-governance-attack-vote-buying.md",
+    "external:Auditor/known-vectors/022-bridge-exploit-fake-proof.md",
+    "external:Auditor/known-vectors/023-token-2022-transfer-hook-attack.md",
+    "external:Auditor/known-vectors/024-stale-missing-account-close.md",
+    "external:Auditor/known-vectors/025-compute-budget-exhaustion-dos.md",
+    "external:Auditor/known-vectors/026-pda-seed-collision.md",
+    "external:Auditor/known-vectors/027-missing-discriminator-check.md",
+    "external:Auditor/known-vectors/028-front-running-transaction.md",
+    "external:Auditor/known-vectors/029-withdraw-before-update-race.md",
+    "external:Auditor/known-vectors/030-infinite-mint-uncapped-supply.md",
+    "external:Auditor/known-vectors/031-nosql-injection-mongodb.md",
+    "external:Auditor/known-vectors/032-sql-injection.md",
+    "external:Auditor/known-vectors/033-mass-assignment-vibe-coding.md",
+    "external:Auditor/known-vectors/034-baas-auth-bypass-supabase-firebase.md",
+    "external:Auditor/known-vectors/035-jwt-algorithm-confusion.md",
+    "external:Auditor/known-vectors/036-ssrf-server-side-request-forgery.md",
+    "external:Auditor/known-vectors/037-cors-misconfiguration.md",
+    "external:Auditor/known-vectors/038-idor-insecure-direct-object-reference.md",
+    "external:Auditor/known-vectors/039-rate-limiting-bypass.md",
+    "external:Auditor/known-vectors/040-command-injection.md",
+    "external:Auditor/known-vectors/041-path-traversal-lfi.md",
+    "external:Auditor/known-vectors/042-xml-external-entity-xxe.md",
+    "external:Auditor/known-vectors/043-prototype-pollution.md",
+    "external:Auditor/known-vectors/044-server-side-template-injection.md",
+    "external:Auditor/known-vectors/045-webhook-forgery.md",
+    "external:Auditor/known-vectors/046-graphql-introspection-depth-attack.md",
+    "external:Auditor/known-vectors/047-websocket-hijacking.md",
+    "external:Auditor/known-vectors/048-redos-regex-denial-of-service.md",
+    "external:Auditor/known-vectors/049-http-response-splitting.md",
+    "external:Auditor/known-vectors/050-session-fixation.md",
+    "external:Auditor/known-vectors/051-account-enumeration.md",
+    "external:Auditor/known-vectors/052-unbounded-request-body-dos.md",
+    "external:Auditor/known-vectors/053-missing-wallet-signature-verification.md",
+    "external:Auditor/known-vectors/054-default-credentials-in-production.md",
+    "external:Auditor/known-vectors/055-exposed-debug-admin-endpoints.md",
+    "external:Auditor/known-vectors/056-xss-via-svg-image-injection.md",
+    "external:Auditor/known-vectors/057-stored-xss-user-content.md",
+    "external:Auditor/known-vectors/058-dom-based-xss.md",
+    "external:Auditor/known-vectors/059-clickjacking.md",
+    "external:Auditor/known-vectors/060-oauth-state-forgery-csrf-via-oauth.md",
+    "external:Auditor/known-vectors/061-sensitive-data-in-url-parameters.md",
+    "external:Auditor/known-vectors/062-client-side-auth-bypass.md",
+    "external:Auditor/known-vectors/063-postmessage-origin-bypass.md",
+    "external:Auditor/known-vectors/064-localstorage-token-theft.md",
+    "external:Auditor/known-vectors/065-clipboard-hijacking-crypto-address.md",
+    "external:Auditor/known-vectors/066-css-exfiltration.md",
+    "external:Auditor/known-vectors/067-wallet-blind-signing-exploit.md",
+    "external:Auditor/known-vectors/068-subresource-integrity-bypass.md",
+    "external:Auditor/known-vectors/069-third-party-script-compromise.md",
+    "external:Auditor/known-vectors/070-open-redirect.md",
+    "external:Auditor/known-vectors/071-missing-csp-content-security-policy.md",
+    "external:Auditor/known-vectors/072-api-key-exposure-in-client-bundle.md",
+    "external:Auditor/known-vectors/073-dangling-dns-subdomain-takeover.md",
+    "external:Auditor/known-vectors/074-insecure-external-link-no-rel.md",
+    "external:Auditor/known-vectors/075-console-data-leak-in-production.md",
+    "external:Auditor/known-vectors/076-dependency-confusion-substitution-attack.md",
+    "external:Auditor/known-vectors/077-malicious-npm-package-typosquatting.md",
+    "external:Auditor/known-vectors/078-secrets-in-git-history.md",
+    "external:Auditor/known-vectors/079-env-file-committed-to-repo.md",
+    "external:Auditor/known-vectors/080-ci-cd-pipeline-injection.md",
+    "external:Auditor/known-vectors/081-insecure-docker-configuration.md",
+    "external:Auditor/known-vectors/082-exposed-admin-debug-endpoints-in-production.md",
+    "external:Auditor/known-vectors/083-missing-rate-limiting-on-critical-endpoints.md",
+    "external:Auditor/known-vectors/084-prototype-pollution.md",
+    "external:Auditor/known-vectors/085-server-side-request-forgery-ssrf.md",
+    "external:Auditor/known-vectors/086-insecure-deserialization.md",
+    "external:Auditor/known-vectors/087-insufficient-logging-monitoring.md",
+    "external:Auditor/known-vectors/088-insecure-cors-configuration.md",
+    "external:Auditor/known-vectors/089-unpatched-server-dependencies.md",
+    "external:Auditor/known-vectors/090-missing-https-tls-misconfiguration.md",
+    "external:Auditor/known-vectors/091-upgrade-authority-not-secured.md",
+    "external:Auditor/known-vectors/092-dns-hijacking-domain-takeover.md",
+    "external:Auditor/known-vectors/093-improper-error-handling-error-leak.md",
+    "external:Auditor/known-vectors/094-missing-input-length-limits.md",
+    "external:Auditor/known-vectors/095-insecure-randomness.md",
+    "external:Auditor/known-vectors/096-missing-security-headers.md",
+    "external:Auditor/known-vectors/097-stale-leaked-development-credentials.md",
+    "external:Auditor/known-vectors/098-broken-access-control-on-api-endpoints.md",
+    "external:Auditor/known-vectors/099-insecure-websocket-connections.md",
+    "external:Auditor/known-vectors/100-insufficient-backup-disaster-recovery.md",
+    "external:Auditor/known-vectors/INDEX.md",
+    "external:Auditor/templates/instruction-worksheet.md",
+    "external:Auditor/templates/report-template.md"
+  ],
+  "checklist_coverage": {
+    "01-program-account-validation": {
+      "status": "done",
+      "basis": [
+        "external:Auditor/checklists/01-program-account-validation.md",
+        "external:Auditor/known-vectors/010-pda-confusion-type-cosplay.md",
+        "external:Auditor/known-vectors/011-integer-overflow-underflow.md",
+        "external:Auditor/known-vectors/012-arithmetic-rounding-exploit.md",
+        "external:Auditor/known-vectors/013-missing-signer-check.md"
+      ],
+      "qvg_verdict": "covered_no_blocking_finding"
+    },
+    "02-program-access-control": {
+      "status": "done",
+      "basis": [
+        "external:Auditor/checklists/02-program-access-control.md",
+        "external:Auditor/known-vectors/020-program-upgrade-hijack.md",
+        "external:Auditor/known-vectors/021-governance-attack-vote-buying.md",
+        "external:Auditor/known-vectors/022-bridge-exploit-fake-proof.md",
+        "external:Auditor/known-vectors/023-token-2022-transfer-hook-attack.md"
+      ],
+      "qvg_verdict": "covered_no_blocking_finding"
+    },
+    "03-program-arithmetic-safety": {
+      "status": "done",
+      "basis": [
+        "external:Auditor/checklists/03-program-arithmetic-safety.md",
+        "external:Auditor/known-vectors/030-infinite-mint-uncapped-supply.md",
+        "external:Auditor/known-vectors/031-nosql-injection-mongodb.md",
+        "external:Auditor/known-vectors/032-sql-injection.md",
+        "external:Auditor/known-vectors/033-mass-assignment-vibe-coding.md"
+      ],
+      "qvg_verdict": "covered_no_blocking_finding"
+    },
+    "04-program-CPI-and-PDA": {
+      "status": "done",
+      "basis": [
+        "external:Auditor/checklists/04-program-cpi-pda.md",
+        "external:Auditor/known-vectors/040-command-injection.md",
+        "external:Auditor/known-vectors/041-path-traversal-lfi.md",
+        "external:Auditor/known-vectors/042-xml-external-entity-xxe.md",
+        "external:Auditor/known-vectors/043-prototype-pollution.md"
+      ],
+      "qvg_verdict": "covered_no_blocking_finding"
+    },
+    "05-program-state-machine": {
+      "status": "done",
+      "basis": [
+        "external:Auditor/checklists/05-program-state-machine.md",
+        "external:Auditor/known-vectors/050-session-fixation.md",
+        "external:Auditor/known-vectors/051-account-enumeration.md",
+        "external:Auditor/known-vectors/052-unbounded-request-body-dos.md",
+        "external:Auditor/known-vectors/053-missing-wallet-signature-verification.md"
+      ],
+      "qvg_verdict": "covered_no_blocking_finding"
+    },
+    "06-program-economic-logic": {
+      "status": "done",
+      "basis": [
+        "external:Auditor/checklists/06-program-economic-logic.md",
+        "external:Auditor/known-vectors/060-oauth-state-forgery-csrf-via-oauth.md",
+        "external:Auditor/known-vectors/061-sensitive-data-in-url-parameters.md",
+        "external:Auditor/known-vectors/062-client-side-auth-bypass.md",
+        "external:Auditor/known-vectors/063-postmessage-origin-bypass.md"
+      ],
+      "qvg_verdict": "covered_no_blocking_finding"
+    },
+    "07-program-opsec-and-governance": {
+      "status": "done",
+      "basis": [
+        "external:Auditor/checklists/07-program-opsec-governance.md",
+        "external:Auditor/known-vectors/070-open-redirect.md",
+        "external:Auditor/known-vectors/071-missing-csp-content-security-policy.md",
+        "external:Auditor/known-vectors/072-api-key-exposure-in-client-bundle.md",
+        "external:Auditor/known-vectors/073-dangling-dns-subdomain-takeover.md"
+      ],
+      "qvg_verdict": "covered_no_blocking_finding"
+    }
+  },
+  "known_vectors_coverage": {
+    "total": 101,
+    "basis": [
+      "external:Auditor/known-vectors/001-private-key-leak.md",
+      "external:Auditor/known-vectors/002-flash-loan-price-manipulation.md",
+      "external:Auditor/known-vectors/003-reentrancy-cpi.md",
+      "external:Auditor/known-vectors/004-missing-access-control.md",
+      "external:Auditor/known-vectors/005-oracle-manipulation.md",
+      "external:Auditor/known-vectors/006-first-depositor-share-inflation.md",
+      "external:Auditor/known-vectors/007-mev-sandwich-attack.md",
+      "external:Auditor/known-vectors/008-rug-pull-admin-backdoor.md",
+      "external:Auditor/known-vectors/009-unchecked-cpi-target.md",
+      "external:Auditor/known-vectors/010-pda-confusion-type-cosplay.md",
+      "external:Auditor/known-vectors/011-integer-overflow-underflow.md",
+      "external:Auditor/known-vectors/012-arithmetic-rounding-exploit.md",
+      "external:Auditor/known-vectors/013-missing-signer-check.md",
+      "external:Auditor/known-vectors/014-account-reinitialization.md",
+      "external:Auditor/known-vectors/015-unchecked-account-owner.md",
+      "external:Auditor/known-vectors/016-token-account-mismatch.md",
+      "external:Auditor/known-vectors/017-vault-donation-attack.md",
+      "external:Auditor/known-vectors/018-fee-on-transfer-token-exploit.md",
+      "external:Auditor/known-vectors/019-freeze-authority-griefing.md",
+      "external:Auditor/known-vectors/020-program-upgrade-hijack.md"
+    ],
+    "qvg_application": "no matching blocking vector found for no-CPI, no-funds, no-state-mutation public target"
+  },
+  "instruction_matrix": [
+    {
+      "instruction": "review_vault_instruction",
+      "accounts": [
+        "operator signer",
+        "vault_state PDA",
+        "pending_instruction PDA",
+        "audit_receipt PDA"
+      ],
+      "arguments": [
+        "instruction_hash"
+      ],
+      "controls": [
+        "operator must sign",
+        "hash cannot be zero",
+        "PDA addresses are Quasar account constraints"
+      ],
+      "cpi": "none",
+      "funds_movement": "none"
+    },
+    {
+      "instruction": "record_audit_receipt",
+      "accounts": [
+        "operator signer",
+        "vault_state PDA",
+        "audit_receipt PDA"
+      ],
+      "arguments": [
+        "receipt_hash"
+      ],
+      "controls": [
+        "operator must sign",
+        "receipt hash cannot be zero",
+        "audit receipt PDA is constrained"
+      ],
+      "cpi": "none",
+      "funds_movement": "none"
+    },
+    {
+      "instruction": "block_instruction",
+      "accounts": [
+        "operator signer",
+        "vault_state PDA",
+        "pending_instruction PDA"
+      ],
+      "arguments": [
+        "reason_code"
+      ],
+      "controls": [
+        "operator must sign",
+        "reason code cannot be zero",
+        "pending instruction PDA is constrained"
+      ],
+      "cpi": "none",
+      "funds_movement": "none"
+    }
+  ],
+  "state_model": {
+    "accounts": {
+      "operator": {
+        "kind": "Signer",
+        "authority": "dry proof operator only"
+      },
+      "vault_state": {
+        "kind": "PDA",
+        "seeds": [
+          "vault",
+          "operator"
+        ]
+      },
+      "pending_instruction": {
+        "kind": "PDA",
+        "seeds": [
+          "pending",
+          "vault_state"
+        ]
+      },
+      "audit_receipt": {
+        "kind": "PDA",
+        "seeds": [
+          "audit",
+          "vault_state"
+        ]
+      }
+    },
+    "forbidden_surfaces": [
+      "deploy",
+      "devnet_write",
+      "mainnet_write",
+      "signing_authority",
+      "funds_movement"
+    ],
+    "cpi_allowlist": [],
+    "state_mutation": "none in public proof target",
+    "known_limits": [
+      "No persistent account data is written in this public target.",
+      "Unit tests cover invariant helpers; Quasar build covers account macro and IDL generation.",
+      "This is product-like public proof, not production authorization."
+    ]
+  },
+  "quasar_toolchain_proof": {
+    "install_source": "github:blueshift-gg/quasar",
+    "source_head": "a89a9329f05740a20520607608b2b3b78c74f7c4",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+    "solana": "solana-cli 4.0.1 (src:e4e3aa49; feat:6ff76655, client:Agave)",
+    "quasar": "quasar 0.0.0",
+    "init_command": "quasar init qvg-product-like --yes --toolchain solana --test-language rust --rust-framework quasar-svm --template minimal --no-git --verbose",
+    "build_command": "quasar build",
+    "test_command": "quasar test",
+    "build_status": "PASS",
+    "test_status": "PASS",
+    "proof_kind": "containerized_product_like_quasar_build_test",
+    "source_target": "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src",
+    "source_sha256": "d01eaf425d01e02480620cf1d18a27cc0833ff4246e14462794556ec117d67ed",
+    "evidence_refs": [
+      "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json",
+      "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"
+    ]
+  },
+  "findings": [
+    {
+      "id": "QVG-AUDIT-INFO-001",
+      "severity": "informational",
+      "summary": "The public target is product-like but intentionally has no persistent state mutation or funds movement.",
+      "blocking": false
+    }
+  ],
+  "waivers": [],
+  "evidence_refs": [
+    "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json",
+    "validation/quasar-product-like-proof/qvg-product-like-auditor-report.md"
+  ],
+  "evidence_kind": "real",
+  "reusable_for_product": false,
+  "next_action": "Rerun this same Auditor code-audit plus real CU/SVM/fuzz/property path on production Quasar source before product approval.",
+  "boundary": "Real code-audit contract over a public product-like Quasar target. CU profile is static/symbolic, not production CU. Not reusable for production approval.",
+  "compute_fuzz_property_proof": {
+    "proof_kind": "product_like_quasar_cu_fuzz_property",
+    "result": "PASS",
+    "runtime_proof_ref": "validation/quasar-product-like-proof/qvg-quasar-runtime-proof.json",
+    "total_cases": 513,
+    "compute_profile_kind": "static_symbolic_upper_bound",
+    "real_solana_cu_measured": false,
+    "real_svm_transaction_harness": false,
+    "evidence_refs": [
+      "validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"
+    ]
+  }
+}

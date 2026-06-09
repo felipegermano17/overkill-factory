@@ -1,4 +1,5 @@
 {
+  "$schema": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
   "receipt_five": {
     "changed": "What changed.",
     "artifact_paths": ["path/to/artifact"],

@@ -1,0 +1,1151 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-profile-binding.schema.json",
+  "binding_version": "factory-12-hermes-bindings",
+  "profile_registry_ref": "agents/worker-profiles.public.json",
+  "bindings": {
+    "factory-orchestrator": {
+      "worker_id": "factory-orchestrator",
+      "profile_id": "factory-orchestrator.profile.v1",
+      "hermes_profile_name": "factory-orchestrator",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "orchestration_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; state mutation is owned by the adapter.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready"
+        ]
+      },
+      "routing_moments": [
+        "source-sot",
+        "architecture-pre-decomposition",
+        "implementation",
+        "verification",
+        "pre-release",
+        "post-release-learning"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "source-ledger-worker": {
+      "worker_id": "source-ledger-worker",
+      "profile_id": "source-ledger-worker.profile.v1",
+      "hermes_profile_name": "source-ledger-worker",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "source_ledger_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Raw source refs stay private; public refs must be redacted or repo-relative.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready"
+        ]
+      },
+      "routing_moments": [
+        "source-sot"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "product-sot-planner": {
+      "worker_id": "product-sot-planner",
+      "profile_id": "product-sot-planner.profile.v1",
+      "hermes_profile_name": "product-sot-planner",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "product_sot_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use Product SOT artifact refs; do not publish raw private paper extracts.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready"
+        ]
+      },
+      "routing_moments": [
+        "source-sot"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "product-architect": {
+      "worker_id": "product-architect",
+      "profile_id": "product-architect.profile.v1",
+      "hermes_profile_name": "product-architect",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "architecture_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Architecture evidence must reference packets, tradeoffs and review requirements.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "product-face": {
+      "worker_id": "product-face",
+      "profile_id": "product-face.profile.v1",
+      "hermes_profile_name": "product-face",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "browser"
+      ],
+      "result_schema": "schemas/product-face-result.schema.json",
+      "receipt_field": "product_face_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Screenshots, console notes and state matrices must be redacted and repo-relative.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "solana-quasar-auditor": {
+      "worker_id": "solana-quasar-auditor",
+      "profile_id": "solana-quasar-auditor.profile.v1",
+      "hermes_profile_name": "solana-quasar-auditor",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "solanabr-auditor"
+      ],
+      "result_schema": "schemas/auditor-result.schema.json",
+      "receipt_field": "auditor_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Auditor evidence must include scope and coverage; no keys, funds or authority-bearing refs.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "verification",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "codex-security": {
+      "worker_id": "codex-security",
+      "profile_id": "codex-security.profile.v1",
+      "hermes_profile_name": "codex-security",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "codex-security"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "security_scan_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Security findings must be scoped and redacted before public use.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "security-scan-plan",
+        "verification",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "appsec-owasp-specialist": {
+      "worker_id": "appsec-owasp-specialist",
+      "profile_id": "appsec-owasp-specialist.profile.v1",
+      "hermes_profile_name": "appsec-owasp-specialist",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "appsec-owasp"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "appsec_owasp_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use generic endpoint refs and redact exploit-ready detail.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "agentic-ai-security-specialist": {
+      "worker_id": "agentic-ai-security-specialist",
+      "profile_id": "agentic-ai-security-specialist.profile.v1",
+      "hermes_profile_name": "agentic-ai-security-specialist",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "agentic-ai-security"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "agentic_ai_security_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Tool-boundary and memory-trust refs must be public-safe and non-secret.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "source-sot",
+        "architecture-pre-decomposition",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "autoreview-gate": {
+      "worker_id": "autoreview-gate",
+      "profile_id": "autoreview-gate.profile.v1",
+      "hermes_profile_name": "autoreview-gate",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "autoreview"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "autoreview_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Review reports must name diff scope and finding status without private paths.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "remote-proof-runner": {
+      "worker_id": "remote-proof-runner",
+      "profile_id": "remote-proof-runner.profile.v1",
+      "hermes_profile_name": "remote-proof-runner",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "remote-proof"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "remote_proof_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Remote proof artifacts require transcript, cleanup and public-safe artifact refs.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "handoff-packer": {
+      "worker_id": "handoff-packer",
+      "profile_id": "handoff-packer.profile.v1",
+      "hermes_profile_name": "handoff-packer",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "handoff"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "handoff_packet_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Handoff refs must be replayable and never depend on chat memory alone.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "advisory-review",
+        "allowed_effective_queues": [
+          "blocking-before-done",
+          "advisory-review"
+        ]
+      },
+      "routing_moments": [
+        "verification",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "independent-reviewer": {
+      "worker_id": "independent-reviewer",
+      "profile_id": "independent-reviewer.profile.v1",
+      "hermes_profile_name": "independent-reviewer",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "independent-review"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "independent_review_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Review evidence must identify executor, reviewer and inspected refs.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "evidence-reconciler": {
+      "worker_id": "evidence-reconciler",
+      "profile_id": "evidence-reconciler.profile.v1",
+      "hermes_profile_name": "evidence-reconciler",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "receipt-five-reconciliation"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "receipt_five_reconciliation_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Reconciliation indexes must use repo-relative refs and record superseded stale results explicitly.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "evidence reconciliation",
+        "Receipt Five closure",
+        "done promotion"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "human-gate-clerk": {
+      "worker_id": "human-gate-clerk",
+      "profile_id": "human-gate-clerk.profile.v1",
+      "hermes_profile_name": "human-gate-clerk",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "human-gate"
+      ],
+      "result_schema": "schemas/human-gate-record.schema.json",
+      "receipt_field": "human_gate_record",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Human records must use role names, explicit scope and public-safe evidence refs.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready",
+          "blocking-before-done",
+          "human-gate"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "docs-os-worker": {
+      "worker_id": "docs-os-worker",
+      "profile_id": "docs-os-worker.profile.v1",
+      "hermes_profile_name": "docs-os-worker",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "docs-os"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "documentation_os_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Docs refs must trace to SOT and architecture without private source dumps.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready"
+        ]
+      },
+      "routing_moments": [
+        "security-scan-plan"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "decomposition-planner": {
+      "worker_id": "decomposition-planner",
+      "profile_id": "decomposition-planner.profile.v1",
+      "hermes_profile_name": "decomposition-planner",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "decomposition"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "decomposition_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Card graph evidence must include worker packets, dependencies and gate mapping.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready"
+        ]
+      },
+      "routing_moments": [
+        "security-scan-plan"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "implementation-worker": {
+      "worker_id": "implementation-worker",
+      "profile_id": "implementation-worker.profile.v1",
+      "hermes_profile_name": "implementation-worker",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "implementation"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "implementation_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Fallback implementation must include fallback rationale plus repo-relative diff/test refs.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "qa-verification-worker": {
+      "worker_id": "qa-verification-worker",
+      "profile_id": "qa-verification-worker.profile.v1",
+      "hermes_profile_name": "qa-verification-worker",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "qa-verification"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "qa_verification_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Verification refs must include commands, outputs and artifacts.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "security-orchestrator": {
+      "worker_id": "security-orchestrator",
+      "profile_id": "security-orchestrator.profile.v1",
+      "hermes_profile_name": "security-orchestrator",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "security-orchestration"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "security_orchestration_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Specialist matrix evidence must be scoped and public-safe.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "security-scan-plan",
+        "verification",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "cloud-infra-security-specialist": {
+      "worker_id": "cloud-infra-security-specialist",
+      "profile_id": "cloud-infra-security-specialist.profile.v1",
+      "hermes_profile_name": "cloud-infra-security-specialist",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "cloud-infra-security"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "cloud_infra_security_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Cloud evidence must omit account ids, tokens and private endpoints.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "crypto-key-management-specialist": {
+      "worker_id": "crypto-key-management-specialist",
+      "profile_id": "crypto-key-management-specialist.profile.v1",
+      "hermes_profile_name": "crypto-key-management-specialist",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "key-management"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "crypto_key_management_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Key and custody evidence must never contain real key material.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "release-ops-worker": {
+      "worker_id": "release-ops-worker",
+      "profile_id": "release-ops-worker.profile.v1",
+      "hermes_profile_name": "release-ops-worker",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "release-ops"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "release_ops_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Release evidence must include smoke, rollback and monitoring refs.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "memory-steward": {
+      "worker_id": "memory-steward",
+      "profile_id": "memory-steward.profile.v1",
+      "hermes_profile_name": "memory-steward",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "memory-steward"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "memory_steward_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Memory evidence must include trust tier and source refs, never raw private memory.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready",
+          "advisory-review"
+        ]
+      },
+      "routing_moments": [
+        "source-sot",
+        "post-release-learning"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "skill-eval-distiller": {
+      "worker_id": "skill-eval-distiller",
+      "profile_id": "skill-eval-distiller.profile.v1",
+      "hermes_profile_name": "skill-eval-distiller",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "skill-eval"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "skill_eval_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Skill eval refs must include held-out evals and before/after evidence.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "advisory-review",
+        "allowed_effective_queues": [
+          "advisory-review"
+        ]
+      },
+      "routing_moments": [
+        "post-release-learning"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "public-safety-gate": {
+      "worker_id": "public-safety-gate",
+      "profile_id": "public-safety-gate.profile.v1",
+      "hermes_profile_name": "public-safety-gate",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "public-safety"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "public_safety_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Public safety evidence must include scan commands and redaction notes.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "supply-chain-gate": {
+      "worker_id": "supply-chain-gate",
+      "profile_id": "supply-chain-gate.profile.v1",
+      "hermes_profile_name": "supply-chain-gate",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "supply-chain"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "supply_chain_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Supply-chain refs must include scans without exposing secrets.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "security-scan-plan",
+        "verification",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "detection-monitoring-worker": {
+      "worker_id": "detection-monitoring-worker",
+      "profile_id": "detection-monitoring-worker.profile.v1",
+      "hermes_profile_name": "detection-monitoring-worker",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "detection-monitoring"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "detection_monitoring_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Monitoring refs must avoid private dashboard URLs and raw logs.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "architecture-pre-decomposition",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "frontend-builder": {
+      "worker_id": "frontend-builder",
+      "profile_id": "frontend-builder.profile.v1",
+      "hermes_profile_name": "frontend-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "frontend-builder",
+        "browser"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "frontend_build_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "backend-api-builder": {
+      "worker_id": "backend-api-builder",
+      "profile_id": "backend-api-builder.profile.v1",
+      "hermes_profile_name": "backend-api-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "backend-api"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "backend_api_build_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "data-persistence-builder": {
+      "worker_id": "data-persistence-builder",
+      "profile_id": "data-persistence-builder.profile.v1",
+      "hermes_profile_name": "data-persistence-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "data-persistence"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "data_persistence_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "solana-quasar-builder": {
+      "worker_id": "solana-quasar-builder",
+      "profile_id": "solana-quasar-builder.profile.v1",
+      "hermes_profile_name": "solana-quasar-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "solana-quasar",
+        "solanabr-auditor"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "solana_quasar_build_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "solana-quasar-qa-engineer": {
+      "worker_id": "solana-quasar-qa-engineer",
+      "profile_id": "solana-quasar-qa-engineer.profile.v1",
+      "hermes_profile_name": "solana-quasar-qa-engineer",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "solana-quasar-qa",
+        "solanabr-auditor"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "solana_quasar_qa_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "wallet-transaction-builder": {
+      "worker_id": "wallet-transaction-builder",
+      "profile_id": "wallet-transaction-builder.profile.v1",
+      "hermes_profile_name": "wallet-transaction-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "wallet-transaction",
+        "browser"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "wallet_transaction_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "integration-builder": {
+      "worker_id": "integration-builder",
+      "profile_id": "integration-builder.profile.v1",
+      "hermes_profile_name": "integration-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "integration-builder",
+        "browser"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "integration_build_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "test-automation-builder": {
+      "worker_id": "test-automation-builder",
+      "profile_id": "test-automation-builder.profile.v1",
+      "hermes_profile_name": "test-automation-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "test-automation"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "test_automation_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "infra-devops-builder": {
+      "worker_id": "infra-devops-builder",
+      "profile_id": "infra-devops-builder.profile.v1",
+      "hermes_profile_name": "infra-devops-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "infra-devops"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "infra_devops_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "agent-runtime-builder": {
+      "worker_id": "agent-runtime-builder",
+      "profile_id": "agent-runtime-builder.profile.v1",
+      "hermes_profile_name": "agent-runtime-builder",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban",
+        "agent-runtime"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "agent_runtime_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-done",
+        "allowed_effective_queues": [
+          "blocking-before-done"
+        ]
+      },
+      "routing_moments": [
+        "implementation",
+        "verification"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    }
+  }
+}

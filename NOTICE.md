@@ -1,7 +1,8 @@
 # Notices
 
 Overkill Factory is a product-production methodology, contract set, agent
-workforce model, and runtime adapter layer created by Felipe Germano.
+workforce model, and runtime adapter layer maintained by the Overkill Factory
+contributors.
 
 The Hermes adapter in `adapters/hermes` targets the MIT-licensed
 `hermes-agent` project by Nous Research. The adapter may include patches against

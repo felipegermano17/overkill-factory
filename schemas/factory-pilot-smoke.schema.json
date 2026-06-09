@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-pilot-smoke.schema.json",
+  "title": "Overkill Factory Product-Specific Pilot Smoke",
+  "type": "object",
+  "required": [
+    "$schema",
+    "smoke_type",
+    "created_at",
+    "card_ref",
+    "result",
+    "scope",
+    "required_worker_count",
+    "worker_result_record_count",
+    "packet_count",
+    "builder_workers_triggered",
+    "implementation_worker_required",
+    "allow_done_plan_ref",
+    "receipt_ref",
+    "worker_result_index_ref",
+    "honest_boundaries"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 3 },
+    "smoke_type": { "const": "factory_product_specific_pilot_smoke" },
+    "created_at": { "type": "string", "minLength": 10 },
+    "card_ref": { "type": "string", "minLength": 3 },
+    "result": { "enum": ["PASS", "FAIL", "BOUNDED"] },
+    "scope": { "type": "string", "minLength": 3 },
+    "required_worker_count": { "type": "integer" },
+    "worker_result_record_count": { "type": "integer" },
+    "packet_count": { "type": "integer" },
+    "builder_workers_triggered": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "implementation_worker_required": { "type": "boolean" },
+    "implementation_worker_reason": { "type": "string" },
+    "allow_done_plan_ref": { "type": "string", "minLength": 3 },
+    "receipt_ref": { "type": "string", "minLength": 3 },
+    "worker_result_index_ref": { "type": "string", "minLength": 3 },
+    "product_face_result_ref": { "type": "string" },
+    "devnet_proof_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "honest_boundaries": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "toolchain_boundary_ref": { "type": "string" }
+  },
+  "additionalProperties": false
+}
