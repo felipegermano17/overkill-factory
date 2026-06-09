@@ -1,0 +1,49 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/toolchain-check.schema.json",
+  "result": "BOUNDED",
+  "checks": {
+    "node": {
+      "command": "node --version",
+      "status": "available",
+      "returncode": 0,
+      "version": "v24.15.0"
+    },
+    "npm": {
+      "command": "npm --version",
+      "status": "available",
+      "returncode": 0,
+      "version": "11.12.1"
+    },
+    "solana": {
+      "command": "solana --version",
+      "status": "missing",
+      "returncode": null,
+      "version": ""
+    },
+    "quasar": {
+      "command": "quasar --version",
+      "status": "missing",
+      "returncode": null,
+      "version": ""
+    },
+    "cargo": {
+      "command": "cargo --version",
+      "status": "missing",
+      "returncode": null,
+      "version": ""
+    },
+    "rustc": {
+      "command": "rustc --version",
+      "status": "missing",
+      "returncode": null,
+      "version": ""
+    },
+    "docker": {
+      "command": "docker --version",
+      "status": "missing",
+      "returncode": null,
+      "version": ""
+    }
+  },
+  "conclusion": "Node.js is available for offchain proof. Missing Solana, Quasar, Rust or Docker keeps Solana/Quasar build and QA as explicit waivers."
+}

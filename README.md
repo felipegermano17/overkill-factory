@@ -34,6 +34,9 @@ need contracts, gates, receipts, and a runtime that refuses weak work.
   onchain auditor, independent reviewer, and human gate clerk.
 - Factory 11 hardening: public source policy, security control matrix, worker
   registry, Hermes update safety, public-safety scan and CI.
+- Factory 12 agent hardening: every registered worker now has a public-safe
+  agent profile, Hermes profile binding, operator-understanding contract,
+  bounded failure policy and validation script.
 - Live Hermes Kanban adapter evidence: real board, main card, required worker
   cards, dependency links, negative done block, positive done reconciliation.
 - Real Hermes specialist dispatch evidence: `public-safety-gate` preloaded the
@@ -109,14 +112,18 @@ Read these in order:
 5. `adapters/hermes/README.md`
 6. `agents/worker-roster.md`
 7. `agents/worker-registry.public.json`
-8. `docs/security/security-control-matrix.md`
-9. `adapters/hermes/compatibility-manifest.md`
-10. `docs/maps/whimsical-board.md`
-11. `pilots/quasar-vault-guard-test/README.md`
-12. `docs/roadmap/factory-11-action-plan.md`
-13. `docs/methodology/factory-11-operational-hardening.md`
-14. `docs/validation/heavy-validation-results.md`
-15. `docs/reviews/heavy-validation-adversarial-review.md`
+8. `agents/worker-profiles.public.json`
+9. `agents/hermes-profile-bindings.public.json`
+10. `docs/agents/live-agent-configuration.md`
+11. `docs/agents/security-specialist-matrix.md`
+12. `docs/security/security-control-matrix.md`
+13. `adapters/hermes/compatibility-manifest.md`
+14. `docs/maps/whimsical-board.md`
+15. `pilots/quasar-vault-guard-test/README.md`
+16. `docs/roadmap/factory-11-action-plan.md`
+17. `docs/methodology/factory-11-operational-hardening.md`
+18. `docs/validation/heavy-validation-results.md`
+19. `docs/reviews/heavy-validation-adversarial-review.md`
 
 Run the local preflight:
 
@@ -135,6 +142,7 @@ python scripts/crabbox_local_container_remote_proof.py --crabbox-bin /path/to/cr
 python scripts/production_release_gate.py
 python scripts/production_full_product_worker_graph.py --require-pass
 python scripts/factory_completion_audit.py
+python scripts/validate_worker_profiles.py
 python scripts/public_safety_scan.py
 python -m unittest discover -s tests -p "test_*.py" -q
 ```

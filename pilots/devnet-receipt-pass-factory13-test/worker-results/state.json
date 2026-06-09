@@ -1,0 +1,63 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-face-state.schema.json",
+  "viewports": {
+    "desktop": {
+      "page": {
+        "title": "Devnet Receipt Pass",
+        "lang": "en",
+        "url": "http://127.0.0.1:44954/products/devnet-receipt-pass/offchain/dashboard.html",
+        "headings": [
+          "Devnet Receipt Pass",
+          "Receipt",
+          "Safety Boundaries",
+          "State Matrix"
+        ],
+        "disabled_controls": 2,
+        "status_nodes": [
+          "Devnet read proof ready"
+        ]
+      },
+      "a11y": {
+        "issues": []
+      },
+      "overlap": {
+        "items": []
+      },
+      "performance": {
+        "duration_ms": 68,
+        "dom_content_loaded_ms": 67,
+        "load_event_ms": 68,
+        "dom_nodes": 70
+      }
+    },
+    "mobile": {
+      "page": {
+        "title": "Devnet Receipt Pass",
+        "lang": "en",
+        "url": "http://127.0.0.1:44954/products/devnet-receipt-pass/offchain/dashboard.html",
+        "headings": [
+          "Devnet Receipt Pass",
+          "Receipt",
+          "Safety Boundaries",
+          "State Matrix"
+        ],
+        "disabled_controls": 2,
+        "status_nodes": [
+          "Devnet read proof ready"
+        ]
+      },
+      "a11y": {
+        "issues": []
+      },
+      "overlap": {
+        "items": []
+      },
+      "performance": {
+        "duration_ms": 53,
+        "dom_content_loaded_ms": 53,
+        "load_event_ms": 53,
+        "dom_nodes": 70
+      }
+    }
+  }
+}

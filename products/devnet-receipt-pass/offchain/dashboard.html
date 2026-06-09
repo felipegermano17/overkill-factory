@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Devnet Receipt Pass</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1c2430;
+        --muted: #5f6976;
+        --line: #d9dee7;
+        --panel: #ffffff;
+        --bg: #f4f6f9;
+        --good: #0f7a55;
+        --warn: #b25b00;
+        --bad: #af2d2d;
+        --blue: #2563eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      main {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 24px 0 40px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: start;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.05;
+        margin: 0 0 8px;
+        letter-spacing: 0;
+      }
+
+      p {
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 12px;
+        background: var(--panel);
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--good);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 16px;
+      }
+
+      section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      h2 {
+        font-size: 18px;
+        margin: 0 0 14px;
+        letter-spacing: 0;
+      }
+
+      dl {
+        display: grid;
+        grid-template-columns: minmax(120px, 0.45fr) 1fr;
+        gap: 10px 14px;
+        margin: 0;
+      }
+
+      dt {
+        color: var(--muted);
+      }
+
+      dd {
+        margin: 0;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+      }
+
+      .states {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .state {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        min-height: 86px;
+      }
+
+      .state strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .state span {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .boundary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .boundary:first-child {
+        border-top: 0;
+      }
+
+      .badge {
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-weight: 800;
+        font-size: 12px;
+        color: white;
+      }
+
+      .badge.good {
+        background: var(--good);
+      }
+
+      .badge.warn {
+        background: var(--warn);
+      }
+
+      .badge.bad {
+        background: var(--bad);
+      }
+
+      button {
+        min-height: 40px;
+        border-radius: 8px;
+        border: 0;
+        padding: 0 14px;
+        background: var(--blue);
+        color: #fff;
+        font-weight: 800;
+      }
+
+      button:disabled {
+        background: #a7b0bd;
+        cursor: not-allowed;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+
+      @media (max-width: 760px) {
+        main {
+          width: min(100% - 20px, 520px);
+          padding-top: 16px;
+        }
+
+        header,
+        .grid,
+        dl,
+        .states {
+          grid-template-columns: 1fr;
+        }
+
+        .status {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Devnet Receipt Pass</h1>
+          <p>Read-only devnet receipt proof with visible boundaries for signing, write access and promotion.</p>
+        </div>
+        <div class="status" aria-label="Current state">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="status-label">Loading devnet read proof</span>
+        </div>
+      </header>
+
+      <div class="grid">
+        <section aria-labelledby="receipt-title">
+          <h2 id="receipt-title">Receipt</h2>
+          <dl>
+            <dt>Receipt id</dt>
+            <dd id="receipt-id">pending</dd>
+            <dt>Cluster</dt>
+            <dd id="cluster-name">Solana devnet</dd>
+            <dt>Authority</dt>
+            <dd>Read-only, no signing, no write</dd>
+            <dt>Offchain event</dt>
+            <dd id="event-type">pending</dd>
+            <dt>Observed slot</dt>
+            <dd id="observed-slot">pending</dd>
+            <dt>Blockhash</dt>
+            <dd id="latest-blockhash">pending</dd>
+            <dt>Product scope</dt>
+            <dd>Validation artifact only</dd>
+          </dl>
+          <div class="actions">
+            <button id="refresh-proof" type="button">Refresh read proof</button>
+            <button disabled aria-disabled="true">Sign receipt disabled</button>
+            <button disabled aria-disabled="true">Deploy program disabled</button>
+          </div>
+        </section>
+
+        <section aria-labelledby="boundaries-title">
+          <h2 id="boundaries-title">Safety Boundaries</h2>
+          <div class="boundary"><span>Devnet read</span><span class="badge good">Allowed</span></div>
+          <div class="boundary"><span>Wallet signing</span><span class="badge bad">Blocked</span></div>
+          <div class="boundary"><span>Devnet write</span><span class="badge bad">Blocked</span></div>
+          <div class="boundary"><span>Secret access</span><span class="badge bad">Blocked</span></div>
+          <div class="boundary"><span>Production promotion</span><span class="badge warn">Gate required</span></div>
+        </section>
+      </div>
+
+      <section style="margin-top: 16px" aria-labelledby="states-title">
+        <h2 id="states-title">State Matrix</h2>
+        <div class="states">
+          <div class="state"><strong>Loading</strong><span>The proof is being refreshed and the UI keeps write controls disabled.</span></div>
+          <div class="state"><strong>Devnet OK</strong><span>A latest blockhash and slot were read from devnet without signing.</span></div>
+          <div class="state"><strong>Offline</strong><span>The dashboard keeps the previous receipt visible and blocks promotion.</span></div>
+          <div class="state"><strong>Error</strong><span>RPC failures require a new proof before the card can close.</span></div>
+        </div>
+      </section>
+    </main>
+    <script type="module">
+      const fields = {
+        status: document.getElementById("status-label"),
+        receipt: document.getElementById("receipt-id"),
+        eventType: document.getElementById("event-type"),
+        slot: document.getElementById("observed-slot"),
+        blockhash: document.getElementById("latest-blockhash"),
+        refresh: document.getElementById("refresh-proof"),
+      };
+
+      async function loadProof() {
+        fields.status.textContent = "Loading devnet read proof";
+        try {
+          const response = await fetch(`./devnet-read-proof.json?ts=${Date.now()}`);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const proof = await response.json();
+          if (proof.result !== "PASS") {
+            throw new Error(proof.error || "proof did not pass");
+          }
+          fields.receipt.textContent = proof.receipt_id || "missing";
+          fields.eventType.textContent = proof.event?.event_type || "missing";
+          fields.slot.textContent = String(proof.devnet_rpc?.slot ?? "missing");
+          fields.blockhash.textContent = proof.devnet_rpc?.latest_blockhash || "missing";
+          fields.status.textContent = "Devnet read proof ready";
+        } catch (error) {
+          fields.status.textContent = "Devnet proof unavailable";
+          fields.receipt.textContent = "offline";
+          fields.eventType.textContent = "proof_load_failed";
+          fields.slot.textContent = "blocked";
+          fields.blockhash.textContent = String(error.message || "blocked");
+        }
+      }
+
+      fields.refresh.addEventListener("click", loadProof);
+      loadProof();
+    </script>
+  </body>
+</html>

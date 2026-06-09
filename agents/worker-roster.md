@@ -3,6 +3,30 @@
 This roster names factory workers at process level. Detailed machine-readable
 contracts live in `agents/worker-registry.public.json`.
 
+The live-agent layer is separate:
+
+- `agents/worker-profiles.public.json` defines each agent identity, authority,
+  refusal rules, evidence, review, handoff and failure behavior.
+- `agents/hermes-profile-bindings.public.json` maps each worker to the Hermes
+  profile name, dispatch queue, skill refs and result schema.
+- `scripts/factoryctl.py` injects this binding into generated worker packets so
+  Hermes can hand the task to the correct profile.
+
+A worker in this roster is not considered operable unless it has a profile,
+binding, packet route and validation coverage.
+
+The roster has 38 public-safe operators:
+
+- 7 planning/documentation/router workers.
+- 10 specialist builders plus 1 generic fallback builder.
+- 6 proof/review/handoff/closure workers.
+- 10 security/onchain/release-safety workers.
+- 4 human, release, memory and learning support workers.
+
+That number is intentionally split by ownership. It is not meant to create 37
+parallel personalities. A card should call only the operators whose surface,
+risk and phase match the work.
+
 ## Worker Modes
 
 - `open`: best for exploration, ambiguity, taste and judgment.
@@ -27,13 +51,33 @@ needed.
 | `docs-os-worker` | closed/hybrid | F10 | Converts approved architecture into specs, ADRs, diagrams, contracts and evidence paths. |
 | `decomposition-planner` | closed | F11 | Produces work packages and Hermes card graph with risk, runtime, reviewer and gate contracts. |
 
-## Execution And Review
+## Execution Builders
+
+These are the operators that actually create product implementation. The
+generic `implementation-worker` is now only a fallback when no specialist owns
+the card.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `implementation-worker` | closed by stack | F12 | Executes bounded cards only. It cannot expand scope, change architecture or self-approve. |
+| `frontend-builder` | hybrid | F12-F13 | Builds scoped screens, components, responsive states, wallet-facing UI and browser-testable product surfaces. Product Face still validates the result. |
+| `backend-api-builder` | hybrid | F12-F13 | Builds scoped API, service, validation, auth/session and server behavior with contract/API test evidence. |
+| `data-persistence-builder` | hybrid | F12-F13 | Builds schema, migration, storage and data-access changes with rollback and data-risk notes. |
+| `solana-quasar-builder` | hybrid | F12-F13 | Builds scoped Solana program work using Quasar. Anchor assumptions, mainnet deploys and real keys are forbidden. |
+| `solana-quasar-qa-engineer` | hybrid | F13/F15 | Runs Quasar/devnet/local behavior proof, negative tests, compute-unit checks and audit handoff notes. |
+| `wallet-transaction-builder` | hybrid | F12-F13 | Builds wallet connection, signing prompts and transaction states without touching real keys or funds. |
+| `integration-builder` | hybrid | F12-F13 | Connects approved frontend, backend, data, wallet and onchain surfaces into an end-to-end flow. |
+| `test-automation-builder` | hybrid | F12-F13/F18 | Turns acceptance criteria into repeatable unit, integration, E2E, visual or eval proof. |
+| `infra-devops-builder` | hybrid | F12/F16 | Builds scoped CI/CD, runtime, environment and deploy wiring with smoke and rollback evidence. |
+| `agent-runtime-builder` | hybrid | F12/F18 | Builds factory/Hermes adapter, profile, skill, MCP and worker-routing changes with profile validation. |
+| `implementation-worker` | hybrid fallback | F12 | Executes or routes only generic/legacy implementation work that no specialist builder owns. |
+
+## Proof, Review And Handoff
+
+| Worker | Mode | Enters | What it does |
+|---|---|---|---|
 | `qa-verification-worker` | closed/hybrid | F13-F15 | Runs tests, screenshots, logs, regressions and evidence checks. |
 | `independent-reviewer` | hybrid | F14 | Reviews another worker's output. Executor and reviewer must differ. |
+| `evidence-reconciler` | deterministic | F15 | Selects current worker results, records superseded stale evidence and blocks Receipt Five/done when closure evidence is invalid. |
 | `autoreview-gate` | closed | F14/F15 | Runs structured pre-landing code review. It finds issues but does not replace independent review. |
 | `remote-proof-runner` | closed | F13-F16 | Uses Crabbox/Testbox/container fallback for heavy or clean-environment proof with TTL, cost and cleanup evidence. |
 | `handoff-packer` | closed | F9-F15 | Creates portable handoff packets for worker transfer, pause, context compaction or phase change. |
@@ -71,9 +115,26 @@ they get a machine-readable contract in `agents/worker-registry.public.json`.
 |---|---|---|---|
 | `factory-critic` | open | F18 | Attacks the methodology for ambiguity, over-complexity, under-specification and agent misinterpretation. |
 
+## Anti-Theater Rules
+
+- A planner cannot produce implementation proof.
+- A builder cannot approve its own output.
+- A reviewer cannot modify implementation artifacts while acting as reviewer.
+- A gate is not counted as an autonomous builder.
+- A human-support worker records decisions; it cannot invent approval.
+- `implementation-worker` is fallback only. If a surface-specific builder
+  matches, the fallback worker is not required.
+- Solana work uses `solana-quasar-builder`, `solana-quasar-qa-engineer` and
+  `solana-quasar-auditor`; build, QA and audit are separate.
+
 ## Why This Roster Is Better
 
 It separates broad judgment from repeatable execution. That prevents the two
 classic agent failures: a generic specialist trying to own everything, and a
 closed worker being asked to make taste or architecture decisions it cannot
 verify.
+
+Compared with a single generic developer agent, this roster is better because
+each builder has a surface, input contract, output receipt, refusal rule and
+review path. Compared with a large cast of planning agents, it is better
+because execution ownership is explicit and testable in `factoryctl.py`.

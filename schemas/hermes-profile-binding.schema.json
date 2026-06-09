@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-profile-binding.schema.json",
+  "title": "Overkill Factory Hermes Profile Binding Registry",
+  "type": "object",
+  "required": [
+    "binding_version",
+    "profile_registry_ref",
+    "bindings"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 3 },
+    "binding_version": { "type": "string", "minLength": 3 },
+    "profile_registry_ref": { "type": "string", "minLength": 3 },
+    "bindings": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "worker_id",
+          "profile_id",
+          "hermes_profile_name",
+          "dispatch_queue_policy",
+          "skill_refs",
+          "result_schema",
+          "receipt_field",
+          "can_mutate_card_state",
+          "evidence_path_policy",
+          "routing_moments",
+          "profile_manifest_ref",
+          "profile_description_ref",
+          "toolset_policy",
+          "skill_install_ref",
+          "last_hermes_smoke_ref"
+        ],
+        "properties": {
+          "worker_id": { "type": "string", "minLength": 3 },
+          "profile_id": { "type": "string", "minLength": 3 },
+          "hermes_profile_name": { "type": "string", "minLength": 3 },
+          "dispatch_queue_policy": {
+            "type": "object",
+            "required": ["source_of_truth", "default_queue", "allowed_effective_queues"],
+            "properties": {
+              "source_of_truth": { "const": "factoryctl.worker_queue_class" },
+              "default_queue": {
+                "enum": [
+                  "blocking-before-ready",
+                  "blocking-before-done",
+                  "advisory-review",
+                  "human-gate"
+                ]
+              },
+              "allowed_effective_queues": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "blocking-before-ready",
+                    "blocking-before-done",
+                    "advisory-review",
+                    "human-gate"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "skill_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "result_schema": {
+            "enum": [
+              "schemas/worker-result.schema.json",
+              "schemas/product-face-result.schema.json",
+              "schemas/auditor-result.schema.json",
+              "schemas/human-gate-record.schema.json"
+            ]
+          },
+          "receipt_field": { "type": "string", "minLength": 3 },
+          "can_mutate_card_state": { "type": "boolean" },
+          "evidence_path_policy": { "type": "string", "minLength": 12 },
+          "routing_moments": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "source-sot",
+                "architecture-pre-decomposition",
+                "security-scan-plan",
+                "implementation",
+                "verification",
+                "pre-release",
+                "post-release-learning"
+              ]
+            }
+          },
+          "profile_manifest_ref": { "type": "string", "minLength": 3 },
+          "profile_description_ref": { "type": "string", "minLength": 3 },
+          "toolset_policy": { "type": "string", "minLength": 8 },
+          "skill_install_ref": { "type": "string", "minLength": 3 },
+          "last_hermes_smoke_ref": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

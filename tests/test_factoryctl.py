@@ -6,6 +6,7 @@ import re
 import sys
 import tempfile
 import unittest
+from argparse import Namespace
 from pathlib import Path
 
 
@@ -28,14 +29,18 @@ def worker_result(record_type: str, *, result: str = "PASS") -> dict:
         "security_scan_result": "codex-security",
         "auditor_result": "solana-quasar-auditor",
         "independent_review_result": "independent-reviewer",
+        "receipt_five_reconciliation_result": "evidence-reconciler",
         "qa_verification_result": "qa-verification-worker",
         "autoreview_result": "autoreview-gate",
         "security_orchestration_result": "security-orchestrator",
         "crypto_key_management_result": "crypto-key-management-specialist",
         "remote_proof_result": "remote-proof-runner",
         "handoff_packet_result": "handoff-packer",
+        "solana_quasar_build_result": "solana-quasar-builder",
+        "solana_quasar_qa_result": "solana-quasar-qa-engineer",
     }.get(record_type, "fixture-worker")
     payload = {
+        "$schema": factoryctl.worker_result_schema_url(worker_id) if worker_id in factoryctl.WORKERS else "https://overkill-factory.dev/schemas/worker-result.schema.json",
         "record_type": record_type,
         "created_at": "2026-06-06T00:00:00+00:00",
         "worker": {"id": worker_id, "name": "Fixture Worker", "factory_phase": "F13"},
@@ -143,7 +148,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(report["workers"]["independent-reviewer"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["human-gate-clerk"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["autoreview-gate"]["status"], "requires_execution")
-        self.assertEqual(report["workers"]["remote-proof-runner"]["status"], "requires_execution")
+        self.assertEqual(report["workers"]["remote-proof-runner"]["status"], "not_required_by_current_card")
         self.assertEqual(report["workers"]["supply-chain-gate"]["status"], "requires_execution")
 
     def test_required_only_worker_packets_generate_only_triggered_workers(self) -> None:
@@ -168,6 +173,17 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(generated, sorted(f"{worker_id}-request.json" for worker_id in required_ids))
         self.assertLess(len(generated), len(factoryctl.WORKERS))
 
+    def test_worker_packet_fails_closed_without_profile_binding_manifest(self) -> None:
+        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card = factoryctl.load_json_like(card_path)
+        original_path = factoryctl.PROFILE_BINDINGS_PATH
+        try:
+            factoryctl.PROFILE_BINDINGS_PATH = ROOT / "agents" / "missing-bindings-for-test.json"
+            with self.assertRaises(FileNotFoundError):
+                factoryctl.build_worker_packet("codex-security", card, card_path)
+        finally:
+            factoryctl.PROFILE_BINDINGS_PATH = original_path
+
     def test_worker_packet_schema_allows_every_registered_worker(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))
         allowed = set(schema["properties"]["worker"]["properties"]["id"]["enum"])
@@ -189,6 +205,15 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("codex-security", report["blocked_workers"])
         self.assertEqual(report["workers"]["public-safety-gate"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["release-ops-worker"]["status"], "blocked_missing_inputs")
+
+    def test_security_scan_packet_can_require_codex_security_on_r2_product_face(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md")
+
+        report = factoryctl.build_gate_report(card)
+
+        self.assertTrue(report["workers"]["codex-security"]["required"])
+        self.assertEqual(report["workers"]["codex-security"]["status"], "requires_execution")
+        self.assertIn("codex-security", report["required_workers"])
 
     def test_worker_packet_source_card_ref_is_public_safe(self) -> None:
         card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
@@ -518,6 +543,23 @@ class FactoryCtlTest(unittest.TestCase):
                 next_action="fix",
             )
 
+    def test_real_specialist_result_requires_domain_contract_fields(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "solana-quasar-r3.md")
+        result = worker_result("appsec_owasp_result")
+        result["evidence_kind"] = "real"
+        result["reusable_for_product"] = True
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="appsec_owasp_result",
+            expected_worker_id="appsec-owasp-specialist",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn("covered_controls is required for real appsec_owasp_result", errors)
+        self.assertIn("control_coverage is required for real appsec_owasp_result", errors)
+
     def test_codex_security_result_matches_hermes_completion_gate_fields(self) -> None:
         card = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md")
         result = factoryctl.build_worker_result(
@@ -632,6 +674,43 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertTrue(receipt["hermes_legacy_completion_required"])
         self.assertIn("cto_gate", receipt["approvals"])
 
+    def test_worker_result_builder_uses_specialized_bound_schema(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+
+        auditor_result = factoryctl.build_worker_result(
+            "solana-quasar-auditor",
+            card,
+            result="WAIVED",
+            tool_or_profile="solanabr/Auditor-preflight",
+            executed_by="solana-quasar-auditor",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Preflight only; no code audit is claimed.",
+            next_action="run real Auditor code audit before promotion",
+            evidence_kind="synthetic",
+            reusable_for_product=False,
+        )
+        product_face_result = factoryctl.build_worker_result(
+            "product-face",
+            card,
+            result="PASS",
+            tool_or_profile="product-face-proof",
+            executed_by="product-face",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Synthetic Product Face smoke.",
+            next_action="run browser proof for real product",
+            evidence_kind="synthetic",
+            reusable_for_product=False,
+        )
+
+        self.assertEqual(auditor_result["$schema"], "https://overkill-factory.dev/schemas/auditor-result.schema.json")
+        self.assertEqual(auditor_result["audit_mode"], "preflight")
+        self.assertEqual(product_face_result["$schema"], "https://overkill-factory.dev/schemas/product-face-result.schema.json")
+        self.assertIn("user_journeys_checked", product_face_result)
+        self.assertIn("a11y", product_face_result)
+        self.assertIn("overlap_check", product_face_result)
+
     def test_human_approval_requires_evidence(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
 
@@ -672,6 +751,29 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(queues["codex-security"], "blocking-before-done")
         self.assertEqual(queues["solana-quasar-auditor"], "blocking-before-done")
 
+    def test_hermes_schemas_allow_before_ready_block_action(self) -> None:
+        action = "block_and_create_before_ready_tasks"
+        transition_plan_schema = json.loads((ROOT / "schemas" / "hermes-transition-plan.schema.json").read_text(encoding="utf-8"))
+        transition_hook_schema = json.loads((ROOT / "schemas" / "hermes-transition-hook.schema.json").read_text(encoding="utf-8"))
+        worker_ledger_schema = json.loads((ROOT / "schemas" / "hermes-worker-ledger.schema.json").read_text(encoding="utf-8"))
+
+        self.assertIn(action, transition_plan_schema["properties"]["transition_action"]["enum"])
+        self.assertIn(action, transition_hook_schema["properties"]["transition_action"]["enum"])
+        self.assertIn(action, worker_ledger_schema["properties"]["last_action"]["enum"])
+
+    def test_transition_plan_enforce_blocks_before_ready_action(self) -> None:
+        args = Namespace(
+            card=ROOT / "validation" / "cards" / "solana-quasar-r3.md",
+            receipt=None,
+            from_status="draft",
+            to_status="ready",
+            worker_results_dir=None,
+            out=None,
+            enforce=True,
+        )
+
+        self.assertEqual(factoryctl.command_transition_plan(args), 1)
+
     def test_transition_plan_ready_blocks_missing_worker_inputs(self) -> None:
         card_path = ROOT / "validation" / "cards" / "product-face-saas-r2.md"
         card = factoryctl.load_json_like(card_path)
@@ -685,7 +787,7 @@ class FactoryCtlTest(unittest.TestCase):
         )
 
         self.assertEqual(plan["transition_action"], "block_and_create_before_ready_tasks")
-        self.assertIn("security-orchestrator missing inputs for blocking-before-done", plan["blocked_reasons"])
+        self.assertIn("security-orchestrator missing inputs for blocking-before-ready", plan["blocked_reasons"])
         self.assertIn("appsec-owasp-specialist missing inputs for blocking-before-done", plan["blocked_reasons"])
         self.assertIn("factory-orchestrator result is required before ready", plan["blocked_reasons"])
 
@@ -755,6 +857,9 @@ class FactoryCtlTest(unittest.TestCase):
             "crypto_key_management_result": worker_result("crypto_key_management_result"),
             "remote_proof_result": worker_result("remote_proof_result"),
             "handoff_packet_result": worker_result("handoff_packet_result"),
+            "solana_quasar_build_result": worker_result("solana_quasar_build_result"),
+            "solana_quasar_qa_result": worker_result("solana_quasar_qa_result"),
+            "receipt_five_reconciliation_result": worker_result("receipt_five_reconciliation_result"),
         }
 
         plan = factoryctl.build_transition_plan(
@@ -799,6 +904,7 @@ class FactoryCtlTest(unittest.TestCase):
             "crypto_key_management_result": worker_result("crypto_key_management_result"),
             "remote_proof_result": worker_result("remote_proof_result"),
             "handoff_packet_result": worker_result("handoff_packet_result"),
+            "receipt_five_reconciliation_result": worker_result("receipt_five_reconciliation_result"),
         }
 
         plan = factoryctl.build_transition_plan(

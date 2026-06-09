@@ -1,0 +1,34 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/devnet-read-proof.schema.json",
+  "result": "PASS",
+  "receipt_id": "drp_70cba5b57e59bec0024828d5",
+  "proof_hash": "5361e85062d702039225c8663acee4733288f6e8eda9fcc07e329a800e111a69",
+  "observed_at": "2026-06-06T23:57:57.000Z",
+  "devnet_rpc": {
+    "url": "https://api.devnet.solana.com",
+    "methods": [
+      "getLatestBlockhash",
+      "getEpochInfo",
+      "getClusterNodes"
+    ],
+    "latest_blockhash": "9Az5xCvhRkeWc1DAHMZUe2tFjgVTWnBnfb5ByAZcDSVF",
+    "last_valid_block_height": 455513349,
+    "epoch": 1082,
+    "slot": 467659255,
+    "sampled_node_count": 135
+  },
+  "event": {
+    "product_id": "devnet-receipt-pass",
+    "event_type": "factory_validation_receipt_created",
+    "event_version": 1,
+    "actor": "factory-validation-runner",
+    "authority_boundary": "read_only_devnet_no_signing_no_write"
+  },
+  "boundaries": {
+    "signing": "forbidden",
+    "devnet_write": "forbidden",
+    "mainnet_write": "forbidden",
+    "secret_access": "forbidden",
+    "deploy": "forbidden"
+  }
+}

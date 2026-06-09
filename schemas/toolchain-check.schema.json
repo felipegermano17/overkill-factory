@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/toolchain-check.schema.json",
+  "title": "Toolchain Check",
+  "type": "object",
+  "required": ["$schema", "result", "checks", "conclusion"],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/toolchain-check.schema.json"
+    },
+    "result": {
+      "enum": ["PASS", "BOUNDED", "FAIL"]
+    },
+    "checks": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["command", "status"],
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 2
+          },
+          "status": {
+            "enum": ["available", "missing", "error", "timeout"]
+          },
+          "returncode": {
+            "type": ["integer", "null"]
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "conclusion": {
+      "type": "string",
+      "minLength": 3
+    }
+  },
+  "additionalProperties": true
+}

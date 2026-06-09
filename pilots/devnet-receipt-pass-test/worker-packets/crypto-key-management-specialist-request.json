@@ -1,0 +1,142 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T22:01:31+00:00",
+  "source_card_path": "pilots/devnet-receipt-pass-test/cards/drp-full-line-pilot.md",
+  "worker": {
+    "id": "crypto-key-management-specialist",
+    "name": "Crypto and Key Management Specialist",
+    "factory_phase": "F7/F15/F16",
+    "tool_required": "secrets, signing, custody, key rotation and cryptography review"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "crypto/key/custody surface detected",
+    "timing": "before any signing, custody, key, funds or crypto-sensitive promotion",
+    "blocking_policy": "This worker reviews contracts and evidence; it must not touch real keys, funds or signing authority."
+  },
+  "card_ref": {
+    "card_id": "DRP-FULL-LINE-PILOT",
+    "slice_id": "DRP_FACTORY12_FULL_001",
+    "phase": "F16",
+    "risk_effective": "R3",
+    "surfaces": [
+      "sot",
+      "architecture",
+      "docs",
+      "documentation",
+      "decomposition",
+      "kanban-card-graph",
+      "implementation",
+      "code",
+      "frontend",
+      "mobile",
+      "ux",
+      "product-face",
+      "web",
+      "browser",
+      "api",
+      "backend",
+      "auth",
+      "security",
+      "cybersecurity",
+      "agent",
+      "agents",
+      "llm",
+      "prompt",
+      "memory",
+      "tools",
+      "autonomous",
+      "skill",
+      "eval",
+      "onchain",
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units",
+      "wallet",
+      "wallet-ui",
+      "signing",
+      "crypto",
+      "keys",
+      "secrets",
+      "cloud",
+      "infra",
+      "deploy",
+      "ci",
+      "supply-chain",
+      "public",
+      "opensource",
+      "repo-public",
+      "release",
+      "production",
+      "rollback",
+      "monitoring",
+      "observability",
+      "logging",
+      "alerting",
+      "incident"
+    ],
+    "executor_identity": "codex-overkill-factory",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "security_contract",
+      "forbidden_actions",
+      "risk_effective"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "products/devnet-receipt-pass",
+      "pilots/devnet-receipt-pass-test"
+    ],
+    "authority_max": "local_validation_and_read_only_devnet",
+    "forbidden_actions": [
+      "wallet_signing",
+      "devnet_write",
+      "mainnet_write",
+      "program_deploy",
+      "secret_access",
+      "funds_movement",
+      "custody_action",
+      "production_release",
+      "upgrade_authority_change",
+      "claim_real_auditor_code_audit_without_toolchain"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "crypto_key_management_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution",
+  "profile_binding": {
+    "profile_id": "crypto-key-management-specialist.profile.v1",
+    "hermes_profile_name": "crypto-key-management-specialist",
+    "dispatch_queue_policy": {
+      "source_of_truth": "factoryctl.worker_queue_class",
+      "default_queue": "blocking-before-done",
+      "allowed_effective_queues": [
+        "blocking-before-done"
+      ]
+    },
+    "queue_class_source": "worker_task.queue_class",
+    "skill_refs": [
+      "overkill-factory",
+      "hermes-kanban",
+      "key-management"
+    ],
+    "result_schema": "schemas/worker-result.schema.json",
+    "receipt_field": "crypto_key_management_result",
+    "can_mutate_card_state": false,
+    "evidence_path_policy": "Key and custody evidence must never contain real key material.",
+    "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+    "profile_description_ref": "agents/worker-profiles.public.json",
+    "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+    "skill_install_ref": "docs/agents/live-agent-configuration.md",
+    "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+  }
+}

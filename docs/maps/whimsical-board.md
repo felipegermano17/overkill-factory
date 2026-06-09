@@ -27,6 +27,8 @@ It includes:
 - Hermes live adapter as the runtime bridge from factory card to real Kanban
   task graph.
 - Worker packets, Hermes Ready Gate, worker results and closure summary.
+- Evidence Reconciler before Receipt Five: current worker-result index,
+  supersession ledger and blocked draft when current evidence is invalid.
 - Receipt Five, missing-result done block, positive done reconciliation and
   Hermes Done Gate.
 - Factory 10 + Hermes V3.5 + Hermes V2 completion compatibility.
@@ -62,7 +64,10 @@ updated.
 The public source diagram now includes live Hermes materialization, worker
 dependency graph, negative/positive done enforcement, the multi-context factory
 battery, the F27-F52 hardening block and the same map-reading legend added to
-the editable Whimsical board. The editable board was updated through the local
+the editable Whimsical board. The local source diagram now also includes the
+F16R Evidence Reconciler node between independent review and Receipt Five. The
+editable board should mirror this F16R update when the Whimsical MCP is
+available. The editable board was updated through the local
 Whimsical MCP and now contains three clean official flowchart blocks plus one
 legend block:
 
@@ -111,6 +116,13 @@ Important current IDs in `AyHQAj`:
 
 If the editable Whimsical board is updated manually, mirror those additions
 from `docs/maps/factory-10-flow.mmd`.
+
+Latest local source update: F16R Evidence Reconciler was added after a real
+Hermes Evidence Reconciler card executed on a private validation board. That
+worker produced a valid blocked Receipt Five draft,
+`receipt_five_reconciliation_result`, evidence index and supersession ledger,
+then blocked done because eight current worker results remained
+invalid/blocking.
 
 MCP note: older duplicate F27-F37 blocks and orphan explanatory texts were
 removed through the local Whimsical MCP. A post-cleanup `board_read` showed only
@@ -161,6 +173,11 @@ confirmed Crabbox `local-container` proof with TTL, transcript,
 It was then extended to F52 after real Hermes `release-ops-worker` and
 `factory-orchestrator` evidence confirmed release-control, human gate,
 production graph, completion audit `COMPLETE` and `97` tests `OK`.
+It was then updated after the real Hermes Evidence Reconciler rerun by inserting
+`F13R Evidence Reconciler` into the main F0-F19 spine between `F13 Worker
+results` and `F14 Closure summary`. The map now makes evidence reconciliation a
+linear production step, not a side note. It also updates the Factory 13 operator
+count to `38`.
 
 Latest MCP validation:
 
@@ -195,6 +212,13 @@ Latest MCP validation:
   capture and `board_read` for F50, F51, F52 and their descriptions.
   `board_read` reports the map-reading legend below the hardening block with a
   220px gap and no overlap markers.
+- 2026-06-07 recheck: `flowchart_edit` inserted `F13R Evidence Reconciler`
+  (`3tHqho`) and its front-facing explanation (`7Wa8Yj`) into the main
+  flowchart. `board-read --grep "Evidence Reconciler" --grep "38 operadores"
+  --grep "supersedidos"` returned the new node, the updated operator count and
+  the Receipt Five blocking explanation.
+- A full-board snapshot for the Evidence Reconciler update was generated at
+  `docs/maps/overkill-factory-factory-13-evidence-reconciler-snapshot.png`.
 
 ## Durable MCP Fallback
 

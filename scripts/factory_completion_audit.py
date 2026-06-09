@@ -362,6 +362,42 @@ def build_requirements() -> list[dict[str, Any]]:
             )
         )
 
+    if (
+        exists("agents/worker-profiles.public.json")
+        and exists("agents/hermes-profile-bindings.public.json")
+        and exists("docs/agents/live-agent-configuration.md")
+        and exists("docs/agents/security-specialist-matrix.md")
+        and exists("validation/agents/worker-profile-validation.md")
+    ):
+        requirements.append(
+            achieved_requirement(
+                "live_agent_profile_layer",
+                "Live agent profile layer",
+                [
+                    "agents/worker-profiles.public.json",
+                    "agents/hermes-profile-bindings.public.json",
+                    "docs/agents/live-agent-configuration.md",
+                    "docs/agents/security-specialist-matrix.md",
+                    "validation/agents/worker-profile-validation.md",
+                ],
+                "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
+            )
+        )
+    else:
+        requirements.append(
+            blocked_requirement(
+                "live_agent_profile_layer",
+                "Live agent profile layer",
+                [
+                    "agents/worker-profiles.public.json",
+                    "agents/hermes-profile-bindings.public.json",
+                    "validation/agents/worker-profile-validation.md",
+                ],
+                "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
+                "Create worker profiles, Hermes bindings, security matrix and validation evidence.",
+            )
+        )
+
     if production_worker_result(
         "validation/production/product-face/product-face-result.json",
         record_type="product_face_result",

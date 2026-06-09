@@ -28,7 +28,13 @@
       "additionalProperties": true
     },
     "last_action": {
-      "enum": ["allow", "allow_and_create_worker_tasks", "allow_done", "block_transition"]
+      "enum": [
+        "allow",
+        "allow_and_create_worker_tasks",
+        "allow_done",
+        "block_and_create_before_ready_tasks",
+        "block_transition"
+      ]
     }
   },
   "additionalProperties": true

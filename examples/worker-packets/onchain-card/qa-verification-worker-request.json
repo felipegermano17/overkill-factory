@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
   "packet_type": "worker_execution_request",
-  "created_at": "2026-06-06T04:50:52+00:00",
+  "created_at": "2026-06-06T21:51:50+00:00",
   "source_card_path": "examples/cards/v35_valid_onchain_auditor_scan.md",
   "worker": {
     "id": "qa-verification-worker",
@@ -56,5 +56,31 @@
     "must_record_tool_or_profile": true,
     "human_approval_must_be_real": false
   },
-  "status": "requires_execution"
+  "status": "requires_execution",
+  "profile_binding": {
+    "profile_id": "qa-verification-worker.profile.v1",
+    "hermes_profile_name": "qa-verification-worker",
+    "dispatch_queue_policy": {
+      "source_of_truth": "factoryctl.worker_queue_class",
+      "default_queue": "blocking-before-done",
+      "allowed_effective_queues": [
+        "blocking-before-done"
+      ]
+    },
+    "queue_class_source": "worker_task.queue_class",
+    "skill_refs": [
+      "overkill-factory",
+      "hermes-kanban",
+      "qa-verification"
+    ],
+    "result_schema": "schemas/worker-result.schema.json",
+    "receipt_field": "qa_verification_result",
+    "can_mutate_card_state": false,
+    "evidence_path_policy": "Verification refs must include commands, outputs and artifacts.",
+    "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+    "profile_description_ref": "agents/worker-profiles.public.json",
+    "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+    "skill_install_ref": "docs/agents/live-agent-configuration.md",
+    "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+  }
 }

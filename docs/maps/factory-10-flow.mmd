@@ -78,15 +78,20 @@ flowchart LR
   F15["F15 Revisao independente"]:::review
   F15D["Reviewer diferente do executor tenta quebrar a entrega antes do fechamento."]:::desc
   F15 -.-> F15D
-  F15 --> F16
+  F15 --> F16R
+
+  F16R["F16R Evidence Reconciler"]:::gate
+  F16RD["Escolhe resultado vigente por campo, registra supersedidos e bloqueia Receipt Five se evidencia atual falha."]:::desc
+  F16R -.-> F16RD
+  F16R --> F16
 
   F16["F16 Closure + Receipt Five"]:::gate
-  F16D["Concilia workers requeridos vs entregues e fecha mudanca, evidencia, verificacao, revisao e proxima acao."]:::desc
+  F16D["Usa a reconciliacao vigente para fechar mudanca, evidencia, verificacao, revisao e proxima acao."]:::desc
   F16 -.-> F16D
   F16 --> F17
 
   F17["F17 Hermes Done Gate"]:::gate
-  F17D["Done so passa com Receipt Five, evento Kanban, resultados de workers e reconciliacao sem faltas."]:::desc
+  F17D["Done so passa com Receipt Five, evento Kanban, receipt_five_reconciliation_result e workers validos."]:::desc
   F17 -.-> F17D
   F17 --> H2["Negative/positive enforcement | sem resultados bloqueia; com 12 workers validos libera"]:::worker
   F17 --> F18
@@ -248,6 +253,7 @@ flowchart LR
   F14 --> W10["autoreview-gate | closed | pre-landing code review"]:::worker
   F14 --> W11["remote-proof-runner | closed | Crabbox/Testbox/container"]:::worker
   F15 --> W12["independent-reviewer | hybrid | executor diferente"]:::worker
+  F16R --> W13R["evidence-reconciler | deterministic | indice, supersession ledger, ready/block"]:::worker
   F16 --> W13["handoff-packer | closed | estado e replay"]:::worker
   F18 --> W14["public-safety-gate | closed | sem vazamento publico"]:::worker
   F19 --> W15["detection-monitoring-worker | hybrid | logs, alertas, incidente"]:::worker
@@ -256,6 +262,7 @@ flowchart LR
 
   F11 --> A1["Alerta: worker packet nao e worker result"]:::alert
   F16 --> A2["Alerta: gate report nao e evidencia final"]:::alert
+  F16R --> A2R["Alerta: resultado antigo falho precisa supersession, rerun ou waiver"]:::alert
   F14 --> A3["Alerta: AutoReview nao aprova sozinho"]:::alert
   F14 --> A4["Alerta: Auditor preflight nao e auditoria de codigo real"]:::alert
   F18 --> A5["Alerta: dry pilot nao e producao"]:::alert

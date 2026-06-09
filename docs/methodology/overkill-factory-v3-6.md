@@ -33,6 +33,7 @@ paper
 -> Hermes ready gate
 -> agent execution
 -> worker results
+-> evidence reconciliation
 -> closure summary
 -> Receipt Five
 -> Hermes done gate
@@ -77,17 +78,24 @@ the evidence lives.
 
 ### 3. Closure Summary Between Results And Receipt
 
-The factory now requires a closure summary for non-trivial cards.
+The factory now requires deterministic evidence reconciliation before Receipt
+Five for non-trivial cards. The `evidence-reconciler` profile chooses the
+current worker result for each receipt field, records stale superseded results
+and blocks closure when current evidence is missing, invalid or still blocking.
 
 It answers:
 
 - which workers were required by preflight;
 - which worker results exist;
+- which worker result is current for each receipt field;
+- which older results were superseded;
 - which results are only preflight or bounded;
 - which authority is still forbidden.
 
 Why better than relying on the gate report: preflight says what must run. It
-does not prove that the worker ran.
+does not prove that the worker ran. A closure summary alone is also too soft
+for agents; the reconciler emits a schema-shaped result and a supersession
+ledger that Hermes can block on.
 
 ### 4. Portable Pilot Package
 

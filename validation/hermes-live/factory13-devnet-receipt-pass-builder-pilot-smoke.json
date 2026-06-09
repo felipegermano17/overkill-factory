@@ -1,0 +1,42 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-pilot-smoke.schema.json",
+  "smoke_type": "factory_product_specific_pilot_smoke",
+  "created_at": "2026-06-06T23:58:00+00:00",
+  "card_ref": "pilots/devnet-receipt-pass-factory13-test/cards/drp-factory13-builder-pilot.md",
+  "result": "PASS",
+  "scope": "public-safe product-specific builder routing and evidence validation",
+  "required_worker_count": 28,
+  "worker_result_record_count": 28,
+  "packet_count": 28,
+  "builder_workers_triggered": [
+    "frontend-builder",
+    "backend-api-builder",
+    "data-persistence-builder",
+    "solana-quasar-builder",
+    "solana-quasar-qa-engineer",
+    "wallet-transaction-builder",
+    "integration-builder",
+    "test-automation-builder"
+  ],
+  "implementation_worker_required": false,
+  "implementation_worker_reason": "surface-specific builder owns this implementation card",
+  "allow_done_plan_ref": "pilots/devnet-receipt-pass-factory13-test/evidence/transition-plan-done.json",
+  "receipt_ref": "pilots/devnet-receipt-pass-factory13-test/evidence/receipt-five-factory13.json",
+  "worker_result_index_ref": "pilots/devnet-receipt-pass-factory13-test/evidence/worker-result-index.json",
+  "product_face_result_ref": "pilots/devnet-receipt-pass-factory13-test/worker-results/product-face-result.json",
+  "devnet_proof_refs": [
+    "products/devnet-receipt-pass/offchain/devnet-read-proof.json",
+    "pilots/devnet-receipt-pass-factory13-test/devnet/devnet-read-proof.json"
+  ],
+  "honest_boundaries": [
+    "no wallet signing",
+    "no devnet write",
+    "no mainnet write",
+    "no program deploy",
+    "no secret or key access",
+    "no production release",
+    "no real Quasar build/test claim",
+    "no real Auditor code-audit claim"
+  ],
+  "toolchain_boundary_ref": "pilots/devnet-receipt-pass-factory13-test/evidence/toolchain-check.json"
+}

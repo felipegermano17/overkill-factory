@@ -54,6 +54,14 @@ For Factory 10 / Overkill V3.5 cards, require:
 - `done_definition`
 - `kanban_transition_event_ref`
 
+## Validation Standard
+
+A factory test only counts as a real test when Hermes runs the production line
+through durable Kanban state: board, card, assigned profile, run log, worker
+result, Receipt Five evidence and gate transition. Local scripts, chat
+simulation and dry runs are preflight support only; they can prepare or debug the
+factory, but they cannot be reported as end-to-end production-line validation.
+
 Block or revise cards when:
 
 - Product Face surfaces lack a Product Face Packet.
@@ -76,6 +84,9 @@ Load only what is needed:
 - `references/hermes-adapter.md` for Hermes/Kanban coupling and patch status.
 - `references/card-contract.md` for card and Receipt Five field rules.
 - `references/automation.md` for critical worker packets and `factoryctl.py`.
+- `agents/worker-profiles.public.json` and
+  `agents/hermes-profile-bindings.public.json` before changing worker profiles
+  or dispatch behavior.
 
 ## Scripts
 
@@ -85,6 +96,7 @@ When inside the `overkill-factory` repository, prefer the repo-level
 ```bash
 python scripts/factoryctl.py gate-report --card path/to/card.md
 python scripts/factoryctl.py worker-packet --worker all --card path/to/card.md --out path/to/output-dir
+python scripts/validate_worker_profiles.py
 ```
 
 Use `scripts/validate_factory_contract.py` to sanity-check a card or receipt
@@ -116,6 +128,10 @@ running on the Hermes adapter.
   insufficient and must include TTL, cost, cleanup and artifact evidence.
 - Worker packets must not leak local absolute paths. Repo-local source cards use
   relative paths; external/private cards use redacted `external:<name>` refs.
+- Worker packets must carry `profile_binding` so Hermes can dispatch to a real
+  profile with skill refs, result schema and evidence policy.
+- Do not treat a worker name as an agent configuration. Agent configuration
+  lives in the worker profile and Hermes binding.
 - Product Face Packet is planning; `product_face_result` is proof. Product-facing
   completion needs screenshots, viewports, checked states, journeys,
   accessibility, overlap, performance note and evidence refs.

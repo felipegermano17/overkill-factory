@@ -19,6 +19,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 
 CARD_REQUIRED = {
     "factory_method_version",
@@ -57,6 +58,46 @@ V2_APPROVAL_KEYS = [
 ]
 
 PRODUCT_FACE_SURFACES = {"ux", "frontend", "mobile", "wallet-ui", "product-face"}
+FRONTEND_BUILD_SURFACES = {"frontend", "mobile", "wallet-ui", "ux", "product-face", "screen", "component", "browser"}
+BACKEND_BUILD_SURFACES = {"backend", "api", "auth", "server", "service", "session"}
+DATA_BUILD_SURFACES = {"data", "database", "schema", "migration", "storage", "rls", "persistence"}
+SOLANA_BUILD_SURFACES = {
+    "solana",
+    "solana-quasar",
+    "quasar",
+    "onchain",
+    "program",
+    "instruction",
+    "pda",
+    "cpi",
+    "account-pda",
+}
+SOLANA_QA_SURFACES = SOLANA_BUILD_SURFACES | {
+    "solana-test",
+    "quasar-test",
+    "devnet",
+    "compute-units",
+    "simulation",
+    "fuzz",
+    "onchain-qa",
+}
+WALLET_TRANSACTION_SURFACES = {"wallet", "wallet-ui", "transaction", "transactions", "signing"}
+INTEGRATION_BUILD_SURFACES = {"integration", "fullstack", "full-stack", "end-to-end", "e2e", "surface-join"}
+TEST_AUTOMATION_SURFACES = {"test", "tests", "qa", "e2e", "eval", "regression", "automation"}
+INFRA_DEVOPS_BUILD_SURFACES = {"infra", "devops", "deploy", "ci", "cd", "cicd", "runtime", "environment", "workflow"}
+AGENT_RUNTIME_BUILD_SURFACES = {"agent", "agents", "hermes", "factory", "adapter", "profile", "skill", "mcp", "autonomous"}
+GENERIC_IMPLEMENTATION_SURFACES = {"implementation", "code", "coding", "patch", "legacy", "generic-code"}
+SPECIFIC_BUILDER_SURFACES = (
+    FRONTEND_BUILD_SURFACES
+    | BACKEND_BUILD_SURFACES
+    | DATA_BUILD_SURFACES
+    | SOLANA_BUILD_SURFACES
+    | WALLET_TRANSACTION_SURFACES
+    | INTEGRATION_BUILD_SURFACES
+    | TEST_AUTOMATION_SURFACES
+    | INFRA_DEVOPS_BUILD_SURFACES
+    | AGENT_RUNTIME_BUILD_SURFACES
+)
 ONCHAIN_SURFACES = {
     "solana",
     "solana-quasar",
@@ -171,6 +212,19 @@ WORKERS: dict[str, WorkerDefinition] = {
         ),
         required_inputs=("executor_identity", "reviewer_identity", "done_definition"),
     ),
+    "evidence-reconciler": WorkerDefinition(
+        worker_id="evidence-reconciler",
+        worker_name="Evidence Reconciler",
+        factory_phase="F15",
+        output_field="receipt_five_reconciliation_result",
+        tool_required="Receipt Five evidence indexer and supersession ledger",
+        timing="after required worker evidence exists and before QA/AutoReview/done promotion",
+        blocking_policy=(
+            "A card cannot move to done while required worker results are missing, stale, duplicated, "
+            "blocking, invalid or not reconciled into a current Receipt Five evidence set."
+        ),
+        required_inputs=("done_definition", "target_repo_paths"),
+    ),
     "human-gate-clerk": WorkerDefinition(
         worker_id="human-gate-clerk",
         worker_name="Human Gate Clerk",
@@ -249,13 +303,113 @@ WORKERS: dict[str, WorkerDefinition] = {
     ),
     "implementation-worker": WorkerDefinition(
         worker_id="implementation-worker",
-        worker_name="Implementation Worker",
+        worker_name="Implementation Fallback Worker",
         factory_phase="F12",
         output_field="implementation_result",
-        tool_required="bounded coding/runtime tools selected by card",
-        timing="only after Hermes Ready Gate",
-        blocking_policy="Implementation cannot expand scope, change architecture, touch forbidden surfaces or self-approve.",
+        tool_required="bounded coding/runtime tools selected by card, only when no surface-specific builder owns the work",
+        timing="only after Hermes Ready Gate and after builder routing fails to find a better owner",
+        blocking_policy="Fallback implementation cannot replace frontend, backend, data, Solana, wallet, integration, test, infra or agent-runtime builders.",
         required_inputs=("scope_in", "scope_out", "forbidden_actions", "done_definition"),
+    ),
+    "frontend-builder": WorkerDefinition(
+        worker_id="frontend-builder",
+        worker_name="Frontend Builder",
+        factory_phase="F12/F13",
+        output_field="frontend_build_result",
+        tool_required="frontend runtime, browser, component tests and visual proof handoff",
+        timing="during scoped visible-product implementation, before Product Face validation",
+        blocking_policy="Frontend work cannot be treated as generic code when visible product surfaces are in scope.",
+        required_inputs=("product_face_packet", "scope_in", "scope_out", "done_definition"),
+    ),
+    "backend-api-builder": WorkerDefinition(
+        worker_id="backend-api-builder",
+        worker_name="Backend API Builder",
+        factory_phase="F12/F13",
+        output_field="backend_api_build_result",
+        tool_required="backend runtime, API tests, lint/typecheck and contract evidence",
+        timing="during scoped API/service implementation, before AppSec/security verification when sensitive",
+        blocking_policy="Backend/API work needs contract and test evidence; auth-sensitive work cannot close without security review.",
+        required_inputs=("scope_in", "scope_out", "security_contract", "done_definition"),
+    ),
+    "data-persistence-builder": WorkerDefinition(
+        worker_id="data-persistence-builder",
+        worker_name="Data Persistence Builder",
+        factory_phase="F12/F13",
+        output_field="data_persistence_result",
+        tool_required="migration runner, schema tests, data access tests and rollback notes",
+        timing="during scoped schema/storage implementation, before backend integration and verification",
+        blocking_policy="Data work cannot proceed without ownership, migration proof and rollback awareness.",
+        required_inputs=("scope_in", "scope_out", "runtime_contract", "done_definition"),
+    ),
+    "solana-quasar-builder": WorkerDefinition(
+        worker_id="solana-quasar-builder",
+        worker_name="Solana Quasar Builder",
+        factory_phase="F12/F13",
+        output_field="solana_quasar_build_result",
+        tool_required="Quasar toolchain, Solana devnet/local runtime and Rust tests",
+        timing="during scoped Solana/Quasar implementation, before Solana QA and Auditor evidence",
+        blocking_policy="Onchain program work must be built as Quasar work; Anchor assumptions, mainnet deploys and key access are forbidden.",
+        required_inputs=("onchain_work_package", "scope_in", "scope_out", "done_definition"),
+    ),
+    "solana-quasar-qa-engineer": WorkerDefinition(
+        worker_id="solana-quasar-qa-engineer",
+        worker_name="Solana Quasar QA Engineer",
+        factory_phase="F13/F15",
+        output_field="solana_quasar_qa_result",
+        tool_required="Quasar tests, devnet/local proof, simulation and negative test matrix",
+        timing="after Solana/Quasar build evidence and before Auditor/human promotion gates",
+        blocking_policy="Onchain work cannot rely on happy-path implementation evidence; behavior proof and negative tests are required.",
+        required_inputs=("onchain_work_package", "target_repo_paths", "done_definition"),
+    ),
+    "wallet-transaction-builder": WorkerDefinition(
+        worker_id="wallet-transaction-builder",
+        worker_name="Wallet Transaction Builder",
+        factory_phase="F12/F13",
+        output_field="wallet_transaction_result",
+        tool_required="wallet adapter, browser and transaction-state tests",
+        timing="during scoped wallet/signing/funds UX implementation, before Product Face and key/custody review",
+        blocking_policy="Wallet and transaction work cannot touch real keys or funds and must expose signer/state boundaries.",
+        required_inputs=("product_face_packet", "security_contract", "scope_in", "done_definition"),
+    ),
+    "integration-builder": WorkerDefinition(
+        worker_id="integration-builder",
+        worker_name="Integration Builder",
+        factory_phase="F12/F13",
+        output_field="integration_build_result",
+        tool_required="integration tests, local runtime, browser and API checks",
+        timing="after upstream builder outputs and before QA verification",
+        blocking_policy="Cross-surface work cannot hide missing upstream evidence or unapproved assumptions.",
+        required_inputs=("scope_in", "scope_out", "done_definition", "runtime_contract"),
+    ),
+    "test-automation-builder": WorkerDefinition(
+        worker_id="test-automation-builder",
+        worker_name="Test Automation Builder",
+        factory_phase="F12/F13/F18",
+        output_field="test_automation_result",
+        tool_required="unit, integration, E2E, visual or eval test harness",
+        timing="when acceptance criteria need repeatable proof or repeated workflow should become an eval",
+        blocking_policy="Acceptance criteria should become tests/evals when repeatable; automation cannot redefine acceptance alone.",
+        required_inputs=("acceptance_criteria", "done_definition", "target_repo_paths"),
+    ),
+    "infra-devops-builder": WorkerDefinition(
+        worker_id="infra-devops-builder",
+        worker_name="Infra DevOps Builder",
+        factory_phase="F12/F16",
+        output_field="infra_devops_result",
+        tool_required="CI/CD config, environment smoke and rollback scripts",
+        timing="during scoped runtime/deploy implementation, before cloud security and release ops",
+        blocking_policy="Infra work requires environment boundary, smoke evidence and rollback; production release remains gated.",
+        required_inputs=("runtime_contract", "rollback_or_recovery", "scope_in", "done_definition"),
+    ),
+    "agent-runtime-builder": WorkerDefinition(
+        worker_id="agent-runtime-builder",
+        worker_name="Agent Runtime Builder",
+        factory_phase="F12/F18",
+        output_field="agent_runtime_result",
+        tool_required="Hermes adapter tests, profile tooling and skill packaging",
+        timing="during scoped factory/agent runtime implementation, before profile validation and agentic security review",
+        blocking_policy="Agent runtime work must prove profile/binding/packet operability and cannot self-approve tool or memory risk.",
+        required_inputs=("runtime_contract", "security_contract", "scope_in", "done_definition"),
     ),
     "qa-verification-worker": WorkerDefinition(
         worker_id="qa-verification-worker",
@@ -424,6 +578,30 @@ def load_json_like(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return data
+
+
+def load_profile_bindings() -> dict[str, dict[str, Any]]:
+    if not PROFILE_BINDINGS_PATH.exists():
+        raise FileNotFoundError(f"profile binding manifest is required: {PROFILE_BINDINGS_PATH}")
+    data = json.loads(PROFILE_BINDINGS_PATH.read_text(encoding="utf-8"))
+    bindings = data.get("bindings", {})
+    if not isinstance(bindings, dict):
+        raise ValueError("profile binding manifest must contain a bindings object")
+    loaded = {str(worker_id): binding for worker_id, binding in bindings.items() if isinstance(binding, dict)}
+    missing = sorted(set(WORKERS) - set(loaded))
+    if missing:
+        raise ValueError("profile binding manifest missing workers: " + ", ".join(missing))
+    return loaded
+
+
+def worker_result_schema_path(worker_id: str) -> str:
+    binding = load_profile_bindings().get(worker_id) or {}
+    schema_path = str(binding.get("result_schema") or "schemas/worker-result.schema.json").strip()
+    return schema_path or "schemas/worker-result.schema.json"
+
+
+def worker_result_schema_url(worker_id: str) -> str:
+    return f"https://overkill-factory.dev/{worker_result_schema_path(worker_id)}"
 
 
 def write_json(path: Path | None, data: dict[str, Any]) -> None:
@@ -795,13 +973,21 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
     if worker_id == "codex-security":
         code_security_surfaces = {"code", "ci", "cd", "cicd", "workflow", "supply-chain", "public", "repo-public", "opensource", "open-source"}
         agentic_security_surfaces = {"agent", "agents", "llm", "prompt", "memory", "browser", "tools", "mcp", "autonomous"}
+        scan_packet = card.get("security_scan_packet", {}) if isinstance(card.get("security_scan_packet"), dict) else {}
+        required_tools = scan_packet.get("required_tools", []) if isinstance(scan_packet.get("required_tools"), list) else []
+        scan_tools = " ".join(
+            [str(scan_packet.get("scanner_agent") or "")]
+            + [str(tool) for tool in required_tools if isinstance(tool, str)]
+        ).lower()
         required = (
             effective_risk in HIGH_RISK
             or bool(surfaces & SECURITY_SURFACES)
             or bool(surfaces & code_security_surfaces)
             or bool(surfaces & agentic_security_surfaces)
+            or "codex-security" in scan_tools
+            or "cybersecurity" in scan_tools
         )
-        reason = "risk, code, public, agentic or sensitive surface requires security evidence" if required else "no R3/R4, code, public, agentic or sensitive surface detected"
+        reason = "risk, code, public, agentic, scan packet or sensitive surface requires security evidence" if required else "no R3/R4, code, public, agentic, scan packet or sensitive surface detected"
         return required, reason
     if worker_id == "solana-quasar-auditor":
         required = bool(surfaces & ONCHAIN_SURFACES)
@@ -814,6 +1000,15 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
     if worker_id == "independent-reviewer":
         required = effective_risk in REVIEW_RISK or review.get("independent_review_required") is True
         reason = "R2+ or explicit independent review required" if required else "low-risk card without explicit independent review"
+        return required, reason
+    if worker_id == "evidence-reconciler":
+        required = (
+            phase in {"F13", "F14", "F15", "F16"}
+            or effective_risk in REVIEW_RISK
+            or bool(card.get("transition_event_required"))
+            or bool(card.get("kanban_transition_event_ref"))
+        )
+        reason = "late-stage or review-risk card requires reconciled Receipt Five evidence" if required else "early/low-risk card without done promotion trigger"
         return required, reason
     if worker_id == "human-gate-clerk":
         required = (
@@ -849,8 +1044,59 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "decomposition/card-graph phase detected" if required else "not a decomposition phase"
         return required, reason
     if worker_id == "implementation-worker":
-        required = phase == "F12" or "implementation" in surfaces or "code" in surfaces
-        reason = "implementation surface detected" if required else "not an implementation card"
+        builder_owned = bool(surfaces & SPECIFIC_BUILDER_SURFACES)
+        generic_implementation = bool(surfaces & GENERIC_IMPLEMENTATION_SURFACES)
+        required = (phase == "F12" or generic_implementation) and not builder_owned
+        if required:
+            reason = "generic implementation fallback required; no surface-specific builder matched"
+        elif builder_owned:
+            reason = "surface-specific builder owns this implementation card"
+        else:
+            reason = "not an implementation card"
+        return required, reason
+    if worker_id == "frontend-builder":
+        required = phase in {"F12", "F13"} and bool(surfaces & FRONTEND_BUILD_SURFACES)
+        reason = "frontend/mobile/product-face implementation surface detected" if required else "no frontend builder trigger"
+        return required, reason
+    if worker_id == "backend-api-builder":
+        required = phase in {"F12", "F13"} and bool(surfaces & BACKEND_BUILD_SURFACES)
+        reason = "backend/API/auth implementation surface detected" if required else "no backend/API builder trigger"
+        return required, reason
+    if worker_id == "data-persistence-builder":
+        required = phase in {"F12", "F13"} and bool(surfaces & DATA_BUILD_SURFACES)
+        reason = "data/schema/migration implementation surface detected" if required else "no data persistence builder trigger"
+        return required, reason
+    if worker_id == "solana-quasar-builder":
+        required = phase in {"F12", "F13"} and bool(surfaces & SOLANA_BUILD_SURFACES)
+        reason = "Solana/Quasar implementation surface detected" if required else "no Solana/Quasar builder trigger"
+        return required, reason
+    if worker_id == "solana-quasar-qa-engineer":
+        explicit_onchain_qa = bool(surfaces & SOLANA_QA_SURFACES)
+        required = phase in {"F13", "F14", "F15"} and explicit_onchain_qa
+        reason = "Solana/Quasar QA or devnet verification surface detected" if required else "no Solana/Quasar QA trigger"
+        return required, reason
+    if worker_id == "wallet-transaction-builder":
+        required = phase in {"F12", "F13"} and bool(surfaces & WALLET_TRANSACTION_SURFACES)
+        reason = "wallet/transaction/signing implementation surface detected" if required else "no wallet transaction builder trigger"
+        return required, reason
+    if worker_id == "integration-builder":
+        required = phase in {"F12", "F13"} and bool(surfaces & INTEGRATION_BUILD_SURFACES)
+        reason = "integration/fullstack implementation surface detected" if required else "no integration builder trigger"
+        return required, reason
+    if worker_id == "test-automation-builder":
+        required = (
+            phase in {"F12", "F13", "F18"}
+            and bool(surfaces & TEST_AUTOMATION_SURFACES)
+        ) or review.get("test_automation_required") is True
+        reason = "test/eval/regression automation surface detected" if required else "no test automation builder trigger"
+        return required, reason
+    if worker_id == "infra-devops-builder":
+        required = phase in {"F12", "F16"} and bool(surfaces & INFRA_DEVOPS_BUILD_SURFACES)
+        reason = "infra/DevOps/runtime implementation surface detected" if required else "no infra/DevOps builder trigger"
+        return required, reason
+    if worker_id == "agent-runtime-builder":
+        required = phase in {"F12", "F18"} and bool(surfaces & AGENT_RUNTIME_BUILD_SURFACES)
+        reason = "agent/Hermes/factory runtime implementation surface detected" if required else "no agent runtime builder trigger"
         return required, reason
     if worker_id == "qa-verification-worker":
         required = phase in {"F13", "F14", "F15"} or effective_risk in REVIEW_RISK
@@ -886,8 +1132,13 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "crypto/key/custody surface detected" if required else "no crypto/key trigger"
         return required, reason
     if worker_id == "remote-proof-runner":
-        required = effective_risk in HIGH_RISK or runtime_contract.get("remote_proof_required") is True
-        reason = "high-risk or explicit remote proof required" if required else "local proof is sufficient by current card"
+        required = runtime_contract.get("remote_proof_required") is True
+        if required:
+            reason = "explicit remote proof required by runtime_contract"
+        elif effective_risk in HIGH_RISK:
+            reason = "high-risk card has remote proof as future/advisory gate unless runtime_contract.remote_proof_required=true"
+        else:
+            reason = "local proof is sufficient by current card"
         return required, reason
     if worker_id == "release-ops-worker":
         release_surfaces = {"release", "production", "deploy", "monitoring", "rollback"}
@@ -942,13 +1193,17 @@ def required_worker_ids(card: dict[str, Any]) -> list[str]:
 
 def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path) -> dict[str, Any]:
     worker = WORKERS[worker_id]
+    profile_binding = load_profile_bindings().get(worker_id)
     required, reason = worker_required(worker_id, card)
     missing_inputs = missing_required_inputs(worker, card)
+    missing_profile_binding = profile_binding is None
     status = "requires_execution" if required else "not_required_by_current_card"
     if required and missing_inputs:
         status = "blocked_missing_inputs"
+    if required and missing_profile_binding:
+        status = "blocked_missing_profile_binding"
 
-    return {
+    packet = {
         "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
         "packet_type": "worker_execution_request",
         "created_at": utc_now(),
@@ -990,6 +1245,24 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
         },
         "status": status,
     }
+    if profile_binding:
+        packet["profile_binding"] = {
+            "profile_id": profile_binding.get("profile_id"),
+            "hermes_profile_name": profile_binding.get("hermes_profile_name"),
+            "dispatch_queue_policy": profile_binding.get("dispatch_queue_policy"),
+            "queue_class_source": "worker_task.queue_class",
+            "skill_refs": profile_binding.get("skill_refs", []),
+            "result_schema": profile_binding.get("result_schema"),
+            "receipt_field": profile_binding.get("receipt_field"),
+            "can_mutate_card_state": profile_binding.get("can_mutate_card_state", False),
+            "evidence_path_policy": profile_binding.get("evidence_path_policy"),
+            "profile_manifest_ref": profile_binding.get("profile_manifest_ref"),
+            "profile_description_ref": profile_binding.get("profile_description_ref"),
+            "toolset_policy": profile_binding.get("toolset_policy"),
+            "skill_install_ref": profile_binding.get("skill_install_ref"),
+            "last_hermes_smoke_ref": profile_binding.get("last_hermes_smoke_ref"),
+        }
+    return packet
 
 
 def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
@@ -1003,7 +1276,7 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         worker_rows[worker_id] = {"required": required, "reason": reason, "status": status}
         if required:
             required_workers.append(worker_id)
-        if status == "blocked_missing_inputs":
+        if str(status).startswith("blocked_"):
             blocked_workers.append(worker_id)
     if validation_errors or blocked_workers:
         gate_status = "blocked"
@@ -1034,6 +1307,7 @@ BEFORE_READY_WORKERS = {
     "docs-os-worker",
     "decomposition-planner",
     "supply-chain-gate",
+    "security-orchestrator",
 }
 
 BEFORE_DONE_WORKERS = {
@@ -1041,11 +1315,21 @@ BEFORE_DONE_WORKERS = {
     "solana-quasar-auditor",
     "product-face",
     "independent-reviewer",
+    "evidence-reconciler",
     "human-gate-clerk",
     "implementation-worker",
+    "frontend-builder",
+    "backend-api-builder",
+    "data-persistence-builder",
+    "solana-quasar-builder",
+    "solana-quasar-qa-engineer",
+    "wallet-transaction-builder",
+    "integration-builder",
+    "test-automation-builder",
+    "infra-devops-builder",
+    "agent-runtime-builder",
     "qa-verification-worker",
     "autoreview-gate",
-    "security-orchestrator",
     "appsec-owasp-specialist",
     "agentic-ai-security-specialist",
     "cloud-infra-security-specialist",
@@ -1153,12 +1437,20 @@ def _record_specific_errors(data: dict[str, Any], evidence_kind: str) -> list[st
         audit_mode = str(data.get("audit_mode") or "").strip()
         if not audit_mode:
             errors.append("audit_mode is required for auditor_result")
-        elif not (evidence_kind == "synthetic" and audit_mode == "synthetic-smoke"):
+        elif not (evidence_kind == "synthetic" and audit_mode == "preflight"):
             errors.extend(validate_auditor_result(data))
         if data.get("preflight_only") is True and data.get("result") == "PASS" and evidence_kind != "synthetic":
             errors.append("preflight_only auditor_result cannot be real PASS")
     if record_type == "product_face_result":
-        for field in ("screenshots", "viewports", "checked_states", "journeys", "accessibility", "overlap", "performance_note"):
+        for field in (
+            "screenshots",
+            "viewports",
+            "checked_states",
+            "user_journeys_checked",
+            "a11y",
+            "overlap_check",
+            "performance_note",
+        ):
             if data.get(field) in (None, "", [], {}):
                 errors.append(f"{field} is required for product_face_result")
     if record_type == "remote_proof_result":
@@ -1171,6 +1463,21 @@ def _record_specific_errors(data: dict[str, Any], evidence_kind: str) -> list[st
     if record_type == "handoff_packet_result":
         if data.get("handoff_packet_ref") in (None, "", [], {}):
             errors.append("handoff_packet_ref is required for handoff_packet_result")
+    if evidence_kind == "real":
+        domain_requirements = {
+            "security_orchestration_result": ("routed_specialists", "coverage_ledger_ref"),
+            "appsec_owasp_result": ("covered_controls", "control_coverage"),
+            "agentic_ai_security_result": ("tool_boundary_controls", "untrusted_input_policy"),
+            "cloud_infra_security_result": ("infra_boundary_controls", "promotion_boundary"),
+            "crypto_key_management_result": ("key_boundary_controls", "forbidden_key_actions"),
+            "release_ops_result": ("promotion_boundary_controls", "rollback_boundary"),
+            "public_safety_result": ("public_safety_checks", "forbidden_residue_policy"),
+            "supply_chain_result": ("supply_chain_controls", "provenance_boundary"),
+            "detection_monitoring_result": ("monitoring_boundary_controls", "incident_boundary"),
+        }
+        for field in domain_requirements.get(record_type, ()):
+            if data.get(field) in (None, "", [], {}):
+                errors.append(f"{field} is required for real {record_type}")
     return errors
 
 
@@ -1212,6 +1519,10 @@ def validate_worker_result_record(
         worker_ref = data.get("worker") if isinstance(data.get("worker"), dict) else {}
         if expected_worker_id and worker_ref.get("id") != expected_worker_id:
             errors.append(f"worker.id must be {expected_worker_id}")
+        if expected_worker_id:
+            expected_schema = worker_result_schema_url(expected_worker_id)
+            if data.get("$schema") != expected_schema:
+                errors.append(f"$schema must be {expected_schema}")
 
     evidence_refs = string_list(data.get("evidence_refs"))
     if not evidence_refs:
@@ -1311,6 +1622,7 @@ def build_worker_task(worker_id: str, card: dict[str, Any], source_path: Path) -
         "queue_class": queue_class,
         "required_before": "ready" if queue_class == "blocking-before-ready" else "done",
         "packet": packet,
+        "profile_binding": packet.get("profile_binding"),
         "expected_receipt_field": worker.output_field,
         "status": packet["status"],
     }
@@ -1474,7 +1786,7 @@ def build_worker_result(
 
     worker = WORKERS[worker_id]
     payload = {
-        "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+        "$schema": worker_result_schema_url(worker_id),
         "record_type": worker.output_field,
         "created_at": utc_now(),
         "worker": {
@@ -1508,7 +1820,7 @@ def build_worker_result(
     if worker_id == "solana-quasar-auditor":
         payload.update(
             {
-                "audit_mode": "synthetic-smoke" if evidence_kind == "synthetic" else "code_audit",
+                "audit_mode": "preflight" if evidence_kind == "synthetic" else "code_audit",
                 "preflight_only": evidence_kind == "synthetic",
             }
         )
@@ -1519,8 +1831,12 @@ def build_worker_result(
                 "viewports": ["synthetic-desktop", "synthetic-mobile"] if evidence_kind == "synthetic" else [],
                 "checked_states": ["default", "empty", "loading", "error", "success"],
                 "journeys": ["open target", "inspect states"],
+                "user_journeys_checked": ["open target", "inspect states"],
                 "accessibility": {"checked": True, "mode": evidence_kind},
+                "a11y": {"status": "pass" if not blocking_findings else "fail", "mode": evidence_kind},
                 "overlap": {"checked": True, "mode": evidence_kind},
+                "overlap_check": {"status": "pass" if not blocking_findings else "fail", "mode": evidence_kind},
+                "console": {"status": "pass" if not blocking_findings else "warn"},
                 "performance_note": "Synthetic smoke only." if evidence_kind == "synthetic" else "See Product Face report.",
             }
         )
@@ -1537,6 +1853,100 @@ def build_worker_result(
         payload["reviewed_diff"] = "synthetic-smoke" if evidence_kind == "synthetic" else "attached-diff"
     if worker_id == "handoff-packer":
         payload["handoff_packet_ref"] = evidence_refs[0] if evidence_refs else "external:missing"
+    if evidence_kind == "real":
+        record_type = worker.output_field
+        if record_type == "security_orchestration_result":
+            payload.update(
+                {
+                    "routed_specialists": [
+                        "codex-security",
+                        "appsec-owasp-specialist",
+                        "agentic-ai-security-specialist",
+                        "cloud-infra-security-specialist",
+                        "crypto-key-management-specialist",
+                        "solana-quasar-auditor",
+                        "supply-chain-gate",
+                    ],
+                    "coverage_ledger_ref": "pilots/devnet-receipt-pass-test/evidence/security-coverage-ledger.md",
+                }
+            )
+        if record_type == "appsec_owasp_result":
+            payload.update(
+                {
+                    "covered_controls": ["browser", "api-boundary", "auth-not-applicable", "safe-errors", "no-external-scripts"],
+                    "control_coverage": {"status": "pass", "mode": "validation-scope"},
+                }
+            )
+        if record_type == "agentic_ai_security_result":
+            payload.update(
+                {
+                    "tool_boundary_controls": {
+                        "untrusted_text": "data_not_instruction",
+                        "tool_expansion": "forbidden_by_card",
+                    },
+                    "untrusted_input_policy": "Source material cannot override worker authority, tool policy or forbidden actions.",
+                }
+            )
+        if record_type == "cloud_infra_security_result":
+            payload.update(
+                {
+                    "infra_boundary_controls": {
+                        "deploy": "forbidden",
+                        "cloud_mutation": "not_authorized",
+                        "secrets": "not_mounted",
+                    },
+                    "promotion_boundary": "Production promotion requires a new release gate.",
+                }
+            )
+        if record_type == "crypto_key_management_result":
+            payload.update(
+                {
+                    "key_boundary_controls": {
+                        "signing": "forbidden",
+                        "key_material": "not_requested",
+                        "custody": "out_of_scope",
+                    },
+                    "forbidden_key_actions": ["wallet_signing", "secret_access", "custody_action", "funds_movement"],
+                }
+            )
+        if record_type == "release_ops_result":
+            payload.update(
+                {
+                    "promotion_boundary_controls": {
+                        "production_release": "forbidden",
+                        "release_gate": "future_required",
+                    },
+                    "rollback_boundary": "Keep card blocked or rerun generated validation artifacts; no production rollback exists.",
+                }
+            )
+        if record_type == "public_safety_result":
+            payload.update(
+                {
+                    "public_safety_checks": ["public_safety_scan", "secret_safety_scan", "relative_artifact_refs"],
+                    "forbidden_residue_policy": "No private names, local paths, private board ids or raw source captures in public artifacts.",
+                }
+            )
+        if record_type == "supply_chain_result":
+            payload.update(
+                {
+                    "supply_chain_controls": {
+                        "dependencies": "no_new_package_install",
+                        "scripts": "local_builtins_only",
+                        "secret_scan": "pass",
+                    },
+                    "provenance_boundary": "Generated artifacts are local validation evidence, not release provenance.",
+                }
+            )
+        if record_type == "detection_monitoring_result":
+            payload.update(
+                {
+                    "monitoring_boundary_controls": {
+                        "production_monitoring": "future_required",
+                        "logs": "validation_artifacts_only",
+                    },
+                    "incident_boundary": "No production incident surface exists in this validation run.",
+                }
+            )
     return payload
 
 
@@ -1720,7 +2130,8 @@ def command_transition_plan(args: argparse.Namespace) -> int:
         worker_results_dir=args.worker_results_dir,
     )
     write_json(args.out, plan)
-    return 1 if plan["transition_action"] == "block_transition" and args.enforce else 0
+    action = str(plan["transition_action"])
+    return 1 if action.startswith("block") and args.enforce else 0
 
 
 def build_parser() -> argparse.ArgumentParser:

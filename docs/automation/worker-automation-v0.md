@@ -19,6 +19,23 @@ or "check frontend." The factory needs a narrower contract:
 This is better than generic assignment text because Hermes can inspect the
 packet before execution and refuse weak cards before agents start improvising.
 
+## Worker Profiles
+
+Worker packets now include `profile_binding`.
+
+That binding connects the card to:
+
+- a public-safe agent profile in `agents/worker-profiles.public.json`;
+- a Hermes profile name;
+- a dispatch queue;
+- required skill refs;
+- the expected result schema;
+- the receipt field the worker must produce.
+
+This is better than assigning by worker name alone. Hermes profile names can
+drift, skills can be missing and a worker can be too vague to operate. The
+binding makes that drift visible and testable.
+
 ## CLI
 
 Use the repo-level helper:
@@ -28,6 +45,7 @@ python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face
 python scripts/factoryctl.py validate-receipt examples/receipts/v35_valid_completion_metadata.json
 python scripts/factoryctl.py gate-report --card examples/cards/v35_valid_onchain_auditor_scan.md
 python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
+python scripts/validate_worker_profiles.py
 python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref reports/security-scan.md
 python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor product-owner --evidence-ref decisions/r3-human-approval.md
 ```
@@ -89,7 +107,9 @@ This is separate from the gate report:
 - gate report says which workers are required before execution;
 - worker packets tell specialists what to do;
 - worker results prove what happened;
-- closure summary reconciles required workers against delivered evidence;
+- `scripts/evidence_reconciler.py` chooses the current result per receipt field,
+  records superseded stale results and blocks unresolved current failures;
+- closure summary explains the reconciled evidence set in human-readable form;
 - Receipt Five closes the Kanban transition.
 
 This avoids a common agent error: treating `requires_execution` in a preflight
@@ -160,6 +180,8 @@ At `done`, Hermes should:
 
 - reload the required-worker set for the card;
 - inspect delivered worker results;
+- run `scripts/evidence_reconciler.py` to produce the current evidence index,
+  supersession ledger and `receipt_five_reconciliation_result`;
 - reconcile each result against its expected Receipt Five field;
 - reject missing, failed, unsupported or preflight-only results;
 - reject Receipt Five without required evidence refs and transition metadata;

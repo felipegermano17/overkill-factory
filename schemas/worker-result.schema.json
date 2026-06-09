@@ -25,6 +25,7 @@
         "auditor_result",
         "product_face_result",
         "independent_review_result",
+        "receipt_five_reconciliation_result",
         "human_gate_record",
         "orchestration_result",
         "source_ledger_result",
@@ -47,7 +48,17 @@
         "skill_eval_result",
         "public_safety_result",
         "supply_chain_result",
-        "detection_monitoring_result"
+        "detection_monitoring_result",
+        "frontend_build_result",
+        "backend_api_build_result",
+        "data_persistence_result",
+        "solana_quasar_build_result",
+        "solana_quasar_qa_result",
+        "wallet_transaction_result",
+        "integration_build_result",
+        "test_automation_result",
+        "infra_devops_result",
+        "agent_runtime_result"
       ]
     },
     "created_at": {
@@ -56,7 +67,9 @@
     },
     "worker": {
       "type": "object",
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -73,7 +86,9 @@
     },
     "card_ref": {
       "type": "object",
-      "required": ["card_id"],
+      "required": [
+        "card_id"
+      ],
       "properties": {
         "card_id": {
           "type": "string",
@@ -91,7 +106,9 @@
         },
         "surfaces": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "executor_identity": {
           "type": "string"
@@ -103,7 +120,12 @@
       "additionalProperties": true
     },
     "result": {
-      "enum": ["PASS", "FAIL", "WAIVED", "PENDING"]
+      "enum": [
+        "PASS",
+        "FAIL",
+        "WAIVED",
+        "PENDING"
+      ]
     },
     "blocking_findings": {
       "type": "boolean"
@@ -111,10 +133,16 @@
     "evidence_refs": {
       "type": "array",
       "minItems": 1,
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "evidence_kind": {
-      "enum": ["real", "synthetic", "waiver"]
+      "enum": [
+        "real",
+        "synthetic",
+        "waiver"
+      ]
     },
     "reusable_for_product": {
       "type": "boolean"
@@ -130,19 +158,37 @@
         "evidence_refs"
       ],
       "properties": {
-        "owner": { "type": "string", "minLength": 2 },
-        "reason": { "type": "string", "minLength": 3 },
-        "expires_at": { "type": "string", "minLength": 10 },
-        "reviewer_or_human_gate_ref": { "type": "string", "minLength": 3 },
+        "owner": {
+          "type": "string",
+          "minLength": 2
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 3
+        },
+        "expires_at": {
+          "type": "string",
+          "minLength": 10
+        },
+        "reviewer_or_human_gate_ref": {
+          "type": "string",
+          "minLength": 3
+        },
         "compensating_controls": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "evidence_refs": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       },
       "additionalProperties": false
