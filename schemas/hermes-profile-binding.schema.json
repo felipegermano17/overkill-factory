@@ -93,7 +93,10 @@
                 "implementation",
                 "verification",
                 "pre-release",
-                "post-release-learning"
+                "post-release-learning",
+                "evidence reconciliation",
+                "Receipt Five closure",
+                "done promotion"
               ]
             }
           },

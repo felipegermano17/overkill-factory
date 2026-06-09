@@ -42,7 +42,7 @@
           "profile_id": { "type": "string", "minLength": 3 },
           "worker_id": { "type": "string", "minLength": 3 },
           "display_name": { "type": "string", "minLength": 3 },
-          "topology": { "enum": ["open", "closed", "hybrid", "human"] },
+          "topology": { "enum": ["open", "closed", "hybrid", "human", "deterministic"] },
           "identity": { "type": "string", "minLength": 24 },
           "mission": { "type": "string", "minLength": 24 },
           "operating_rules": {
@@ -140,7 +140,7 @@
             "type": "object",
             "required": ["reviewer_mode", "review_boundary", "rerun_required"],
             "properties": {
-              "reviewer_mode": { "enum": ["self_check_only", "independent_required", "human_required", "report_only"] },
+              "reviewer_mode": { "enum": ["self_check_only", "independent_required", "human_required", "report_only", "deterministic_reconciliation"] },
               "review_boundary": { "type": "string", "minLength": 20 },
               "rerun_required": { "type": "boolean" }
             },
@@ -216,7 +216,10 @@
                     "implementation",
                     "verification",
                     "pre-release",
-                    "post-release-learning"
+                    "post-release-learning",
+                    "evidence reconciliation",
+                    "Receipt Five closure",
+                    "done promotion"
                   ]
                 }
               },

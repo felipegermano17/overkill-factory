@@ -2284,9 +2284,10 @@
         ]
       },
       "failure_contract": {
-        "retry_limit": 2,
+        "retry_limit": 3,
         "after_first_failure": "Write the missing/current/blocking evidence list and the exact worker rerun needed.",
-        "after_second_failure": "Stop and hand off with an unresolved Receipt Five reconciliation blocker."
+        "after_second_failure": "Stop and hand off with an unresolved Receipt Five reconciliation blocker.",
+        "after_third_failure": "Block done promotion and preserve the full reconciliation history for human review."
       },
       "promotion_contract": {
         "closed_when": [
