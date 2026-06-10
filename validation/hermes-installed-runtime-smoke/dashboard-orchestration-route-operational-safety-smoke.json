@@ -1,0 +1,149 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T11:37:35Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-ORCHESTRATION-ROUTE-OPERATIONAL-SAFETY-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_ORCHESTRATION_ROUTE_OPERATIONAL_SAFETY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API orchestration route operational-safety smoke passed: PUT /orchestration updates only Kanban orchestration config knobs and does not mutate existing vFinal task graphs.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_orchestration_missing_profile_rejected": "PASS",
+    "dashboard_orchestration_valid_update_allowed": "PASS",
+    "dashboard_orchestration_clear_overrides_allowed": "PASS",
+    "dashboard_orchestration_resolved_fallbacks_returned": "PASS",
+    "factory_board_tasks_unchanged": "PASS",
+    "factory_worker_prerequisites_preserved": "PASS",
+    "no_local_paths_in_orchestration_responses": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_orchestration_route_evidence": {
+    "factory_board_slug": "of-dashboard-orchestration-factory-1781091454-3456",
+    "parent_task_id": "t_5a28b6e3",
+    "orchestrator_profile": "of-orch-profile-1781091454-3456",
+    "default_assignee": "of-default-profile-1781091454-3456",
+    "worker_count_before": 23,
+    "worker_count_after": 23,
+    "factory_snapshot_before": {
+      "task_count": 24,
+      "link_count": 23,
+      "digest": "700cd671501b211d378feec03406ef3cc70515cd9873520cc80070c22cdc2d79"
+    },
+    "factory_snapshot_after": {
+      "task_count": 24,
+      "link_count": 23,
+      "digest": "700cd671501b211d378feec03406ef3cc70515cd9873520cc80070c22cdc2d79"
+    },
+    "config_before": {
+      "exists": false,
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kanban": {
+        "orchestrator_profile": "",
+        "default_assignee": "",
+        "auto_decompose": true,
+        "auto_promote_children": null
+      }
+    },
+    "config_after_invalid": {
+      "exists": false,
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kanban": {
+        "orchestrator_profile": "",
+        "default_assignee": "",
+        "auto_decompose": true,
+        "auto_promote_children": null
+      }
+    },
+    "config_after_valid": {
+      "exists": true,
+      "size": 12146,
+      "sha256": "f1cc34859d53f7731422f388e179f226d7200ead2285e5aca57a75e6e7d4dbf8",
+      "kanban": {
+        "orchestrator_profile": "of-orch-profile-1781091454-3456",
+        "default_assignee": "of-default-profile-1781091454-3456",
+        "auto_decompose": false,
+        "auto_promote_children": false
+      }
+    },
+    "config_after_clear": {
+      "exists": true,
+      "size": 12083,
+      "sha256": "246cacd1b95003e42c3a1299856fffc549431ba7d96e71edaf8f7c510f96fa64",
+      "kanban": {
+        "orchestrator_profile": "",
+        "default_assignee": "",
+        "auto_decompose": true,
+        "auto_promote_children": true
+      }
+    },
+    "invalid_profile_attempt": {
+      "ok": false,
+      "http_status": 400,
+      "detail": "profile 'missing-orch-profile-1781091454-3456' does not exist"
+    },
+    "valid_update_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "orchestrator_profile": "of-orch-profile-1781091454-3456",
+        "default_assignee": "of-default-profile-1781091454-3456",
+        "auto_decompose": false,
+        "auto_promote_children": false,
+        "resolved_orchestrator_profile": "of-orch-profile-1781091454-3456",
+        "resolved_default_assignee": "of-default-profile-1781091454-3456",
+        "active_profile": "default"
+      }
+    },
+    "clear_override_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "orchestrator_profile": "",
+        "default_assignee": "",
+        "auto_decompose": true,
+        "auto_promote_children": true,
+        "resolved_orchestrator_profile": "default",
+        "resolved_default_assignee": "default",
+        "active_profile": "default"
+      }
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not prove real model execution or real worker output quality.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/dashboard_orchestration_route_operational_safety_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-orchestration-route-operational-safety-smoke.json"
+  ],
+  "next_action": "Mark dashboard/API mutating route inventory as fully covered for the current inspected surface and continue production-readiness work on non-stub worker execution and real rollback proof."
+}

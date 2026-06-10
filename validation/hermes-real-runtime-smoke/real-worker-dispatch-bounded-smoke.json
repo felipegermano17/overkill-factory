@@ -1,0 +1,40 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-real-runtime-smoke.schema.json",
+  "record_type": "hermes_real_runtime_smoke",
+  "created_at": "2026-06-10T14:39:09Z",
+  "result": "BLOCKED",
+  "smoke_type": "real_worker_dispatch_bounded_smoke",
+  "scope": "real Hermes runtime, disposable board, bounded worker dispatch",
+  "environment_ref": "redacted-real-hermes-runtime",
+  "checks": {
+    "read_only_status_checked_first": true,
+    "disposable_board_created": true,
+    "disposable_task_created": true,
+    "task_assigned_to_worker_profile": true,
+    "dispatch_command_passed": true,
+    "exactly_one_worker_spawned": true,
+    "run_record_exists": true,
+    "worker_pid_recorded": true,
+    "heartbeat_observed": true,
+    "task_reached_terminal_status": false,
+    "task_completed": false,
+    "task_reclaimed_after_timeout": true,
+    "task_blocked_after_timeout": true,
+    "board_was_archived": true,
+    "spawned_process_cleanup_verified": true
+  },
+  "cleanup": {
+    "method": "bounded timeout, reclaim, block, recoverable board archive, process absence check",
+    "result": "PASS"
+  },
+  "evidence_refs": [
+    "validation/hermes-real-runtime-smoke/no-spawn-blocked-board-smoke.json"
+  ],
+  "limits": [
+    "This receipt is sanitized for the public repository.",
+    "The raw runtime output is intentionally not stored because it contains runtime-local paths, ids and process details.",
+    "This smoke proves real dispatcher spawn, run-record creation, worker heartbeat and cleanup only.",
+    "It does not prove autonomous worker completion, non-stub model quality, real tool authentication, parent done reconciliation, production rollback or release readiness.",
+    "The result is intentionally BLOCKED because the task did not complete or block itself through the expected worker path within the bounded runtime window."
+  ]
+}

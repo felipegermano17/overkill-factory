@@ -34,4 +34,4 @@ R3/R4 onchain cards must require Auditor or a human waiver before `ready`.
 
 ## Hard Rule
 
-Do not assume Anchor defaults. KAXIS onchain work uses Quasar.
+Do not assume Anchor defaults. Factory onchain work uses Quasar.

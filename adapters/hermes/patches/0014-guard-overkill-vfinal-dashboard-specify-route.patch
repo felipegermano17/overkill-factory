@@ -1,0 +1,28 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+index 0000000..0000000 100644
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -1742,6 +1742,22 @@ def specify_task_endpoint(
+     reasoning models, which would block the event loop if we used
+     ``async def`` without an explicit ``run_in_executor``.
+     """
+     board = _resolve_board(board)
++    conn = _conn(board=board)
++    try:
++        task = kanban_db.get_task(conn, task_id)
++        if task is not None and (_is_overkill_factory_card(task) or _is_overkill_worker_subtask(task)):
++            raise HTTPException(
++                status_code=409,
++                detail=(
++                    "Overkill Factory cards and worker subtasks cannot be "
++                    "specified from dashboard/API; task contract changes must "
++                    "go through an explicit operator-safe specification "
++                    "workflow."
++                ),
++            )
++    finally:
++        conn.close()
++
+     # Pin the board for the duration of this call so the specifier module
+     # (which calls ``kb.connect()`` with no args) hits the right DB. Use a
+     # context-local override rather than mutating the process-global

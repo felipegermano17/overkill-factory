@@ -38,7 +38,7 @@ RECEIPT_REQUIRED = {
     "reviewer_required",
     "next_action",
 }
-V2_APPROVAL_KEYS = ["qa", "independent_review", "security_review", "cybersecurity_review", "cto_gate", "felipe_gate"]
+V2_APPROVAL_KEYS = ["qa", "independent_review", "security_review", "cybersecurity_review", "cto_gate", "human_gate"]
 
 
 def load_json(path: Path) -> dict:
@@ -118,7 +118,7 @@ def validate_receipt(data: dict) -> list[str]:
             errors.append("security_scan_result result must be PASS or WAIVED")
         if scan.get("blocking_findings") is True and not isinstance(data.get("security_exception"), dict):
             errors.append("security_scan_result blocking findings require security_exception")
-    if data.get("hermes_kaxis_v2_completion_required") is True:
+    if data.get("hermes_legacy_completion_required") is True:
         has_evidence = any(
             isinstance(data.get(field), list) and any(str(item).strip() for item in data.get(field, []))
             for field in ("evidence_paths", "evidence", "artifacts")

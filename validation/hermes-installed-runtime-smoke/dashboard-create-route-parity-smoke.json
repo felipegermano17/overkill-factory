@@ -1,0 +1,122 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T04:17:14Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-CREATE-ROUTE-PARITY-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_CREATE_ROUTE_PARITY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API create-route parity smoke passed: POST /tasks does not expose a status field, weak direct ready creation is blocked by the gate, and valid direct ready creation is allowed with blocked worker subtasks.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "create_body_status_field_not_exposed": "PASS",
+    "weak_dashboard_create_blocked_by_gate": "PASS",
+    "positive_dashboard_create_allowed_by_gate": "PASS",
+    "worker_subtasks_created_blocked": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_create_evidence": {
+    "board_slug": "of-dashboard-create-1781065033",
+    "route": "plugins.kanban.dashboard.plugin_api.create_task POST /tasks",
+    "create_body_fields": [
+      "assignee",
+      "body",
+      "goal_max_turns",
+      "goal_mode",
+      "idempotency_key",
+      "max_runtime_seconds",
+      "parents",
+      "priority",
+      "skills",
+      "tenant",
+      "title",
+      "triage",
+      "workspace_kind",
+      "workspace_path"
+    ],
+    "weak_create": {
+      "synthetic_card_ref": "validation/cards/vfinal-r3-missing-security-access.md",
+      "task_id": "t_543394ce",
+      "after_status": "blocked",
+      "gate_actions": [
+        "block"
+      ],
+      "worker_prerequisite_count": 0,
+      "blocked_by_gate": true
+    },
+    "positive_create": {
+      "synthetic_card_ref": "validation/cards/vfinal-r3-ready.md",
+      "task_id": "t_46ab5c41",
+      "after_status": "ready",
+      "gate_actions": [
+        "allow"
+      ],
+      "worker_prerequisite_count": 23,
+      "worker_statuses": [
+        "blocked"
+      ],
+      "worker_created_by": [
+        "overkill-factory"
+      ],
+      "first_worker_samples": [
+        {
+          "id": "ofw_189ed653dbe38737",
+          "title": "Software Development Planner: VAL-VFINAL-R3-READY",
+          "status": "blocked",
+          "assignee": "software-development-planner",
+          "created_by": "overkill-factory"
+        },
+        {
+          "id": "ofw_1ea0fe703c416e59",
+          "title": "Access and Capability Worker: VAL-VFINAL-R3-READY",
+          "status": "blocked",
+          "assignee": "access-capability-worker",
+          "created_by": "overkill-factory"
+        },
+        {
+          "id": "ofw_4adda35255d9b61d",
+          "title": "Security Architect Worker: VAL-VFINAL-R3-READY",
+          "status": "blocked",
+          "assignee": "security-architect-worker",
+          "created_by": "overkill-factory"
+        }
+      ],
+      "allowed_and_materialized_workers": true
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not prove attachment, comment, reclaim, reassign, decompose, dispatch or board/profile mutation routes.",
+    "It does not prove real worker execution, real model/tool auth, or production readiness."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/dashboard_create_route_parity_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/cards/vfinal-r3-missing-security-access.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-create-route-parity-smoke.json"
+  ],
+  "next_action": "Continue proving remaining dashboard/API route families that can affect task, worker or runtime configuration state."
+}

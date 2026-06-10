@@ -1,0 +1,513 @@
+diff --git a/hermes_cli/kanban_db.py b/hermes_cli/kanban_db.py
+index ccad2ac..f417026 100644
+--- a/hermes_cli/kanban_db.py
++++ b/hermes_cli/kanban_db.py
+@@ -103,6 +103,301 @@ VALID_WORKSPACE_KINDS = {"scratch", "worktree", "dir"}
+ KNOWN_TOOLSET_NAMES = frozenset(name.casefold() for name in get_toolset_names())
+ _IS_WINDOWS = sys.platform == "win32"
+
++
++class OverkillFactoryTransitionBlocked(RuntimeError):
++    """Raised when the external Overkill Factory transition gate blocks."""
++
++    def __init__(
++        self,
++        task_id: str,
++        to_status: str,
++        message: str,
++        result: Optional[dict] = None,
++    ) -> None:
++        super().__init__(message)
++        self.task_id = task_id
++        self.to_status = to_status
++        self.result = result or {}
++
++
++def _overkill_env_truthy(name: str) -> bool:
++    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
++
++
++def _overkill_kanban_gate_enabled() -> bool:
++    return _overkill_env_truthy("OVERKILL_FACTORY_KANBAN_GATE")
++
++
++def _overkill_factory_adapter_root() -> Optional[Path]:
++    raw = (
++        os.environ.get("OVERKILL_FACTORY_ADAPTER_ROOT")
++        or os.environ.get("OVERKILL_FACTORY_ROOT")
++    )
++    if not raw or not raw.strip():
++        return None
++    root = Path(raw).expanduser()
++    bridge = root / "adapters" / "hermes" / "kanban_event_bridge.py"
++    if not bridge.exists():
++        return None
++    return root
++
++
++def _overkill_parse_factory_card_body(body: Optional[str]) -> Optional[dict]:
++    if not body or not body.strip():
++        return None
++    try:
++        data = json.loads(body)
++    except Exception:
++        return None
++    if not isinstance(data, dict):
++        return None
++    version = str(data.get("factory_method_version") or "").strip()
++    if version.startswith("OVERKILL_"):
++        return data
++    return None
++
++
++def _overkill_transition_artifact_dir(task_id: str) -> Path:
++    raw = os.environ.get("OVERKILL_FACTORY_RUNTIME_DIR")
++    if raw and raw.strip():
++        root = Path(raw).expanduser()
++    else:
++        root = kanban_home() / "overkill-factory"
++    safe_task_id = re.sub(r"[^A-Za-z0-9._-]+", "-", task_id).strip("-") or "task"
++    path = root / safe_task_id
++    path.mkdir(parents=True, exist_ok=True)
++    return path
++
++
++def _overkill_transition_artifact_ref(task_id: str, filename: str) -> str:
++    safe_task_id = re.sub(r"[^A-Za-z0-9._-]+", "-", task_id).strip("-") or "task"
++    safe_filename = re.sub(r"[^A-Za-z0-9._-]+", "-", filename).strip("-") or "artifact.json"
++    return f"runtime-artifact:{safe_task_id}/{safe_filename}"
++
++
++def _overkill_metadata_receipt_path(metadata: Optional[dict], artifact_dir: Path) -> Optional[Path]:
++    if not isinstance(metadata, dict):
++        return None
++    raw_path = (
++        metadata.get("overkill_receipt_path")
++        or metadata.get("receipt_path")
++        or metadata.get("receipt_five_path")
++    )
++    if isinstance(raw_path, str) and raw_path.strip():
++        candidate = Path(raw_path).expanduser()
++        return candidate
++    receipt = metadata.get("overkill_receipt")
++    if isinstance(receipt, dict):
++        path = artifact_dir / "receipt-five-from-metadata.json"
++        path.write_text(json.dumps(receipt, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
++        return path
++    if isinstance(metadata.get("receipt_five"), dict) and isinstance(metadata.get("kanban_transition_event"), dict):
++        path = artifact_dir / "receipt-five-from-metadata.json"
++        path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
++        return path
++    return None
++
++
++def _overkill_metadata_worker_results_dir(metadata: Optional[dict]) -> Optional[Path]:
++    raw = None
++    if isinstance(metadata, dict):
++        raw = metadata.get("overkill_worker_results_dir") or metadata.get("worker_results_dir")
++    raw = raw or os.environ.get("OVERKILL_FACTORY_WORKER_RESULTS_DIR")
++    if isinstance(raw, str) and raw.strip():
++        return Path(raw).expanduser()
++    return None
++
++
++def _overkill_compact_block_message(result: Optional[dict], fallback: str) -> str:
++    if isinstance(result, dict):
++        reasons = result.get("blocked_reasons")
++        if isinstance(reasons, list):
++            cleaned = [str(item).strip() for item in reasons if str(item).strip()]
++            if cleaned:
++                return "; ".join(cleaned)[:800]
++        action = result.get("transition_action")
++        if action:
++            return f"Overkill Factory transition returned {action}"
++    return fallback[:800]
++
++
++def _overkill_transition_event_payload(
++    *,
++    to_status: str,
++    action: str,
++    message: str,
++    result: Optional[dict],
++) -> dict:
++    payload = {
++        "to_status": to_status,
++        "action": action,
++        "message": message,
++    }
++    if isinstance(result, dict):
++        payload["transition_action"] = result.get("transition_action")
++        payload["blocked_reasons"] = result.get("blocked_reasons", [])
++        payload["hook_result_ref"] = result.get("hook_result_ref")
++    return payload
++
++
++def _overkill_append_transition_event_in_txn(
++    conn: sqlite3.Connection,
++    task_id: str,
++    *,
++    to_status: str,
++    action: str,
++    message: str,
++    result: Optional[dict],
++) -> None:
++    payload = _overkill_transition_event_payload(
++        to_status=to_status,
++        action=action,
++        message=message,
++        result=result,
++    )
++    _append_event(conn, task_id, "overkill_factory_transition_gate", payload)
++    if action == "block":
++        _append_event(conn, task_id, "overkill_factory_transition_blocked", payload)
++
++
++def _overkill_append_transition_event(
++    conn: sqlite3.Connection,
++    task_id: str,
++    *,
++    to_status: str,
++    action: str,
++    message: str,
++    result: Optional[dict],
++) -> None:
++    with write_txn(conn):
++        _overkill_append_transition_event_in_txn(
++            conn,
++            task_id,
++            to_status=to_status,
++            action=action,
++            message=message,
++            result=result,
++        )
++
++
++def _overkill_run_transition_gate_for_payload(
++    task_id: str,
++    payload: dict,
++    *,
++    from_status: str,
++    to_status: str,
++    metadata: Optional[dict] = None,
++) -> Optional[dict]:
++    card = _overkill_parse_factory_card_body(payload.get("body"))
++    if card is None:
++        return None
++    if not _overkill_kanban_gate_enabled():
++        return None
++
++    root = _overkill_factory_adapter_root()
++    if root is None:
++        raise OverkillFactoryTransitionBlocked(
++            task_id,
++            to_status,
++            "Overkill Factory Kanban gate is enabled but adapter root is missing or invalid.",
++        )
++
++    artifact_dir = _overkill_transition_artifact_dir(task_id)
++    payload_path = artifact_dir / f"{to_status}-task-payload.json"
++    result_path = artifact_dir / f"{to_status}-hook-result.json"
++    ledger_path = artifact_dir / "worker-ledger.json"
++    payload_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
++
++    bridge = root / "adapters" / "hermes" / "kanban_event_bridge.py"
++    cmd = [
++        sys.executable,
++        str(bridge),
++        "--task-json",
++        str(payload_path),
++        "--from-status",
++        from_status,
++        "--to-status",
++        to_status,
++        "--ledger",
++        str(ledger_path),
++        "--out",
++        str(result_path),
++        "--enforce",
++    ]
++    receipt_path = _overkill_metadata_receipt_path(metadata, artifact_dir)
++    if receipt_path is not None:
++        cmd.extend(["--receipt", str(receipt_path)])
++    worker_results_dir = _overkill_metadata_worker_results_dir(metadata)
++    if worker_results_dir is not None:
++        cmd.extend(["--worker-results-dir", str(worker_results_dir)])
++
++    timeout = int(os.environ.get("OVERKILL_FACTORY_HOOK_TIMEOUT_SECONDS") or "30")
++    try:
++        completed = subprocess.run(
++            cmd,
++            cwd=str(root),
++            text=True,
++            capture_output=True,
++            timeout=timeout,
++            check=False,
++        )
++    except subprocess.TimeoutExpired as exc:
++        raise OverkillFactoryTransitionBlocked(
++            task_id,
++            to_status,
++            f"Overkill Factory transition hook timed out after {timeout}s.",
++        ) from exc
++
++    result = None
++    if result_path.exists():
++        try:
++            result = json.loads(result_path.read_text(encoding="utf-8"))
++        except Exception:
++            result = None
++    if isinstance(result, dict):
++        result["hook_result_ref"] = _overkill_transition_artifact_ref(task_id, result_path.name)
++
++    if completed.returncode != 0:
++        message = _overkill_compact_block_message(
++            result,
++            completed.stderr.strip() or completed.stdout.strip() or "Overkill Factory transition blocked.",
++        )
++        raise OverkillFactoryTransitionBlocked(task_id, to_status, message, result)
++    if isinstance(result, dict) and result.get("transition_action") == "block_transition":
++        message = _overkill_compact_block_message(result, "Overkill Factory transition blocked.")
++        raise OverkillFactoryTransitionBlocked(task_id, to_status, message, result)
++    return result
++
++
++def _overkill_run_transition_gate(
++    conn: sqlite3.Connection,
++    task_id: str,
++    *,
++    to_status: str,
++    metadata: Optional[dict] = None,
++) -> Optional[dict]:
++    row = conn.execute(
++        "SELECT id, title, body, assignee, status FROM tasks WHERE id = ?",
++        (task_id,),
++    ).fetchone()
++    if row is None:
++        return None
++    payload = {
++        "id": row["id"],
++        "title": row["title"] or "",
++        "status": row["status"],
++        "assignee": row["assignee"],
++        "body": row["body"] or "",
++    }
++    return _overkill_run_transition_gate_for_payload(
++        task_id,
++        payload,
++        from_status=str(row["status"]),
++        to_status=to_status,
++        metadata=metadata,
++    )
++
++
+ # A running task's claim is valid for 15 minutes by default; after that the
+ # next dispatcher tick reclaims it. Workers that outlive this window should
+ # call ``heartbeat_claim(task_id)`` periodically. In practice most kanban
+@@ -2230,6 +2519,34 @@ def create_task(
+                     if missing:
+                         raise ValueError(f"unknown parent task(s): {', '.join(missing)}")
+
++                overkill_gate_action = None
++                overkill_gate_message = None
++                overkill_gate_result = None
++                if task_status == "ready":
++                    payload = {
++                        "id": task_id,
++                        "title": title.strip(),
++                        "status": "ready",
++                        "assignee": assignee,
++                        "body": body or "",
++                    }
++                    try:
++                        overkill_gate_result = _overkill_run_transition_gate_for_payload(
++                            task_id,
++                            payload,
++                            from_status="created",
++                            to_status="ready",
++                        )
++                    except OverkillFactoryTransitionBlocked as exc:
++                        task_status = "blocked"
++                        overkill_gate_action = "block"
++                        overkill_gate_message = str(exc)
++                        overkill_gate_result = exc.result
++                    else:
++                        if overkill_gate_result is not None:
++                            overkill_gate_action = "allow"
++                            overkill_gate_message = "Overkill Factory transition gate allowed direct ready creation."
++
+                 conn.execute(
+                     """
+                     INSERT INTO tasks (
+@@ -2280,6 +2597,17 @@ def create_task(
+                         "goal_mode": bool(goal_mode) or None,
+                     },
+                 )
++                if overkill_gate_action is not None:
++                    if overkill_gate_action == "block":
++                        _append_event(conn, task_id, "blocked", {"reason": overkill_gate_message})
++                    _overkill_append_transition_event_in_txn(
++                        conn,
++                        task_id,
++                        to_status="ready",
++                        action=overkill_gate_action,
++                        message=overkill_gate_message or "",
++                        result=overkill_gate_result,
++                    )
+             return task_id
+         except sqlite3.IntegrityError:
+             if attempt == 1:
+@@ -2950,6 +3278,30 @@ def recompute_ready(
+                     )
+                     if failures >= effective_limit:
+                         continue
++                try:
++                    gate_result = _overkill_run_transition_gate(
++                        conn,
++                        task_id,
++                        to_status="ready",
++                    )
++                except OverkillFactoryTransitionBlocked as exc:
++                    if cur_status != "blocked":
++                        conn.execute(
++                            "UPDATE tasks SET status = 'blocked' "
++                            "WHERE id = ? AND status = 'todo'",
++                            (task_id,),
++                        )
++                    _append_event(conn, task_id, "blocked", {"reason": str(exc)})
++                    _overkill_append_transition_event_in_txn(
++                        conn,
++                        task_id,
++                        to_status="ready",
++                        action="block",
++                        message=str(exc),
++                        result=exc.result,
++                    )
++                    continue
++                if cur_status == "blocked":
+                     conn.execute(
+                         "UPDATE tasks SET status = 'ready' "
+                         "WHERE id = ? AND status = 'blocked'",
+@@ -2961,6 +3313,15 @@ def recompute_ready(
+                         (task_id,),
+                     )
+                 _append_event(conn, task_id, "promoted", None)
++                if gate_result is not None:
++                    _overkill_append_transition_event_in_txn(
++                        conn,
++                        task_id,
++                        to_status="ready",
++                        action="allow",
++                        message="Overkill Factory transition gate allowed automatic ready recompute.",
++                        result=gate_result,
++                    )
+                 promoted += 1
+     return promoted
+
+@@ -3626,6 +3987,37 @@ def complete_task(
+     else:
+         verified_cards = []
+
++    row = conn.execute(
++        "SELECT status FROM tasks WHERE id = ?", (task_id,)
++    ).fetchone()
++    if row and row["status"] in ("running", "ready", "blocked"):
++        try:
++            gate_result = _overkill_run_transition_gate(
++                conn,
++                task_id,
++                to_status="done",
++                metadata=metadata,
++            )
++        except OverkillFactoryTransitionBlocked as exc:
++            _overkill_append_transition_event(
++                conn,
++                task_id,
++                to_status="done",
++                action="block",
++                message=str(exc),
++                result=exc.result,
++            )
++            return False
++        if gate_result is not None:
++            _overkill_append_transition_event(
++                conn,
++                task_id,
++                to_status="done",
++                action="allow",
++                message="Overkill Factory transition gate allowed done.",
++                result=gate_result,
++            )
++
+     with write_txn(conn):
+         if expected_run_id is None:
+             cur = conn.execute(
+@@ -4217,6 +4609,32 @@ def promote_task(
+     if dry_run:
+         return True, None
+
++    try:
++        gate_result = _overkill_run_transition_gate(
++            conn,
++            task_id,
++            to_status="ready",
++        )
++    except OverkillFactoryTransitionBlocked as exc:
++        _overkill_append_transition_event(
++            conn,
++            task_id,
++            to_status="ready",
++            action="block",
++            message=str(exc),
++            result=exc.result,
++        )
++        return False, str(exc)
++    if gate_result is not None:
++        _overkill_append_transition_event(
++            conn,
++            task_id,
++            to_status="ready",
++            action="allow",
++            message="Overkill Factory transition gate allowed ready.",
++            result=gate_result,
++        )
++
+     with write_txn(conn):
+         upd = conn.execute(
+             "UPDATE tasks SET status = 'ready' "
+@@ -4276,6 +4694,21 @@ def unblock_task(conn: sqlite3.Connection, task_id: str) -> bool:
+             (task_id,),
+         ).fetchone()
+         new_status = "todo" if undone_parents else "ready"
++        gate_result = None
++        if new_status == "ready":
++            try:
++                gate_result = _overkill_run_transition_gate(conn, task_id, to_status="ready")
++            except OverkillFactoryTransitionBlocked as exc:
++                _append_event(conn, task_id, "blocked", {"reason": str(exc)})
++                _overkill_append_transition_event_in_txn(
++                    conn,
++                    task_id,
++                    to_status="ready",
++                    action="block",
++                    message=str(exc),
++                    result=exc.result,
++                )
++                return False
+         cur = conn.execute(
+             "UPDATE tasks SET status = ?, current_run_id = NULL, "
+             "consecutive_failures = 0, last_failure_error = NULL "
+@@ -4288,6 +4721,15 @@ def unblock_task(conn: sqlite3.Connection, task_id: str) -> bool:
+             conn, task_id, "unblocked",
+             {"status": new_status} if new_status != "ready" else None,
+         )
++        if gate_result is not None:
++            _overkill_append_transition_event_in_txn(
++                conn,
++                task_id,
++                to_status="ready",
++                action="allow",
++                message="Overkill Factory transition gate allowed unblock to ready.",
++                result=gate_result,
++            )
+         return True

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/production-readiness-plan.schema.json",
+  "release_path": "staged release with explicit gate",
+  "rollback_path": "revert deployment and restore previous version",
+  "monitoring": ["health check", "error rate", "latency", "alert owner"],
+  "incident_owner": "release-owner",
+  "support_path": "documented support channel and escalation",
+  "evidence_refs": ["production-readiness-plan.md"]
+}

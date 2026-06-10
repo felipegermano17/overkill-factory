@@ -16,7 +16,7 @@
 | Claim | Resolution | Why |
 | --- | --- | --- |
 | The first slice must include a visible product face. | Promoted. | Backend-only work would not prove Product Face gates. |
-| Quasar is required; Anchor assumptions are forbidden. | Promoted. | This is a hard KAXIS constraint from the raw paper and prior factory rules. |
+| Quasar is required; Anchor assumptions are forbidden. | Promoted. | This is a hard Overkill constraint from the raw paper and prior factory rules. |
 | Auditor is required for onchain work. | Promoted. | The pilot includes onchain risk surface, so Auditor path must be present. |
 | Production/devnet/mainnet writes are authorized. | Rejected. | User authorized this test goal, not key/funds/network actions. |
 | Human approval can be simulated silently. | Rejected. | The record must cite the real chat authorization and remain scoped to test pilot only. |

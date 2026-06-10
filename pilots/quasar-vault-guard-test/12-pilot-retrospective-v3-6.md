@@ -49,8 +49,8 @@
 
 ## Hermes Review Findings
 
-Hermes `kaxis-qa`, `kaxis-security`, `kaxis-cybersecurity`, `kaxis-cto` and
-`kaxis-reviewer` all passed the dry pilot with hard boundaries.
+Hermes `qa-reviewer`, `security-reviewer`, `security-runner`, `architecture-reviewer` and
+`independent-reviewer` all passed the dry pilot with hard boundaries.
 
 Shared findings:
 

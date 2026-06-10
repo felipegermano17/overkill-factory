@@ -1,4 +1,5 @@
 {
+  "$schema": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
   "receipt_five": {
     "changed": "Created and executed the Quasar Vault Guard dry pilot first slice: source resolution, Product SOT, architecture, Product Face prototype, worker packets, worker results, human gate and Hermes-ready evidence.",
     "artifact_paths": [
@@ -19,11 +20,11 @@
       "pilots\\quasar-vault-guard-test\\tools\\factoryctl.py",
       "pilots\\quasar-vault-guard-test\\evidence\\worker-closure-summary.json",
       "pilots\\quasar-vault-guard-test\\evidence\\v2-completion-gate-evidence.md",
-      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-qa-review.md",
-      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-security-review.md",
-      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-cybersecurity-review.md",
-      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-cto-review.md",
-      "pilots\\quasar-vault-guard-test\\evidence\\hermes-kaxis-reviewer-review.md"
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-qa-reviewer-review.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-security-reviewer-review.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-security-runner-review.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-architecture-reviewer-review.md",
+      "pilots\\quasar-vault-guard-test\\evidence\\hermes-independent-reviewer-review.md"
     ],
     "verification_commands": [
       "python tools/factoryctl.py validate-card cards/qvg-first-slice.md",
@@ -33,7 +34,7 @@
       "python scripts/factoryctl.py validate-receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json",
       "python -m unittest discover -s tests -v",
       "Playwright desktop/mobile screenshot capture for product-face/prototype.html",
-      "Hermes profile reviews: kaxis-qa, kaxis-security, kaxis-cybersecurity, kaxis-cto, kaxis-reviewer"
+      "Hermes profile reviews: qa-reviewer, security-reviewer, security-runner, architecture-reviewer, independent-reviewer"
     ],
     "verification_result": "PASS_WITH_BOUNDARIES: dry pilot complete; Hermes profile reviews passed for dry pilot only; no production, signing, key, funds, devnet or mainnet authority granted.",
     "reviewer_required": true,
@@ -79,13 +80,44 @@
         "compute-units"
       ],
       "executor_identity": "codex-overkill-factory",
-      "reviewer_identity": "kaxis-reviewer"
+      "reviewer_identity": "independent-reviewer"
     },
     "result": "PASS",
     "blocking_findings": false,
     "findings_summary": "Desktop and mobile Product Face evidence captured; signing disabled; six states covered.",
     "tool_or_profile": "playwright-static-prototype-validation",
     "executed_by": "product-face-validator",
+    "screenshots": [
+      "pilots/quasar-vault-guard-test/evidence/screenshots/desktop.png",
+      "pilots/quasar-vault-guard-test/evidence/screenshots/mobile.png"
+    ],
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "checked_states": [
+      "default",
+      "empty",
+      "loading",
+      "error",
+      "success",
+      "signing-disabled"
+    ],
+    "user_journeys_checked": [
+      "open static prototype",
+      "inspect wallet-disabled state",
+      "inspect mobile rendering"
+    ],
+    "a11y": {
+      "keyboard": "dry static check",
+      "labels": "dry static check",
+      "contrast": "dry static check"
+    },
+    "overlap_check": {
+      "desktop": "no blocking overlap reported",
+      "mobile": "no blocking overlap reported"
+    },
+    "performance_note": "static prototype validation only; no production performance claim",
     "evidence_refs": [
       "pilots/quasar-vault-guard-test/evidence/product-face-validation-report.md",
       "pilots/quasar-vault-guard-test/evidence/screenshots/desktop.png",
@@ -120,7 +152,7 @@
         "compute-units"
       ],
       "executor_identity": "codex-overkill-factory",
-      "reviewer_identity": "kaxis-reviewer"
+      "reviewer_identity": "independent-reviewer"
     },
     "result": "PASS",
     "blocking_findings": false,
@@ -172,9 +204,11 @@
         "compute-units"
       ],
       "executor_identity": "codex-overkill-factory",
-      "reviewer_identity": "kaxis-reviewer"
+      "reviewer_identity": "independent-reviewer"
     },
-    "result": "PASS",
+    "result": "WAIVED",
+    "audit_mode": "preflight",
+    "preflight_only": true,
     "blocking_findings": false,
     "findings_summary": "Auditor path used as preflight; no Quasar code audit pass claimed.",
     "tool_or_profile": "solanabr/Auditor-preflight",
@@ -211,13 +245,13 @@
         "compute-units"
       ],
       "executor_identity": "codex-overkill-factory",
-      "reviewer_identity": "kaxis-reviewer"
+      "reviewer_identity": "independent-reviewer"
     },
     "result": "PASS",
     "blocking_findings": false,
     "findings_summary": "Dry pilot approved with boundaries; does not prove production readiness.",
     "tool_or_profile": "independent-review",
-    "executed_by": "kaxis-reviewer",
+    "executed_by": "independent-reviewer",
     "evidence_refs": [
       "pilots/quasar-vault-guard-test/evidence/independent-review-report.md"
     ],
@@ -246,10 +280,10 @@
         "compute-units"
       ],
       "executor_identity": "codex-overkill-factory",
-      "reviewer_identity": "kaxis-reviewer"
+      "reviewer_identity": "independent-reviewer"
     },
     "decision": "approved",
-    "human_actor": "Felipe",
+    "human_actor": "product-owner",
     "decision_at": "2026-06-05T23:11:27-03:00",
     "approved_scope": [
       "dry pilot artifacts and Hermes test completion"
@@ -261,28 +295,28 @@
       "key or fund access"
     ],
     "required_changes": [],
-    "risk_owner": "Felipe",
-    "security_owner": "kaxis-cybersecurity",
+    "risk_owner": "product-owner",
+    "security_owner": "security-runner",
     "rollback_owner": "codex-overkill-factory",
     "evidence_refs": [
       "Codex chat 2026-06-05 user authorization for test goal"
     ],
     "notes": "Approved for dry pilot only; not production authority."
   },
-  "hermes_kaxis_v2_completion_required": true,
+  "hermes_legacy_completion_required": true,
   "evidence_paths": [
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/receipt-five-first-slice.json",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/v2-completion-gate-evidence.md",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/worker-closure-summary.json",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/security-scan-report.md",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/auditor-preflight-report.md",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/independent-review-report.md",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/human-gate-record.json",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-qa-review.md",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-security-review.md",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-cybersecurity-review.md",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-cto-review.md",
-    "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/hermes-kaxis-reviewer-review.md"
+    "pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json",
+    "pilots/quasar-vault-guard-test/evidence/v2-completion-gate-evidence.md",
+    "pilots/quasar-vault-guard-test/evidence/worker-closure-summary.json",
+    "pilots/quasar-vault-guard-test/evidence/security-scan-report.md",
+    "pilots/quasar-vault-guard-test/evidence/auditor-preflight-report.md",
+    "pilots/quasar-vault-guard-test/evidence/independent-review-report.md",
+    "pilots/quasar-vault-guard-test/evidence/human-gate-record.json",
+    "pilots/quasar-vault-guard-test/evidence/hermes-qa-reviewer-review.md",
+    "pilots/quasar-vault-guard-test/evidence/hermes-security-reviewer-review.md",
+    "pilots/quasar-vault-guard-test/evidence/hermes-security-runner-review.md",
+    "pilots/quasar-vault-guard-test/evidence/hermes-architecture-reviewer-review.md",
+    "pilots/quasar-vault-guard-test/evidence/hermes-independent-reviewer-review.md"
   ],
   "verification": {
     "passed": true,
@@ -294,7 +328,7 @@
       "python scripts/factoryctl.py validate-receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json",
       "python -m unittest discover -s tests -v",
       "Playwright desktop/mobile screenshot capture for product-face/prototype.html",
-      "Hermes profile reviews: kaxis-qa, kaxis-security, kaxis-cybersecurity, kaxis-cto, kaxis-reviewer"
+      "Hermes profile reviews: qa-reviewer, security-reviewer, security-runner, architecture-reviewer, independent-reviewer"
     ],
     "result": "PASS_WITH_BOUNDARIES"
   },
@@ -312,61 +346,61 @@
   },
   "rollback": {
     "verified": true,
-    "evidence": "/srv/hermes/home/context-lock/overkill-factory-pilot-10/quasar-vault-guard-test/evidence/v2-completion-gate-evidence.md",
+    "evidence": "pilots/quasar-vault-guard-test/evidence/v2-completion-gate-evidence.md",
     "plan": "Archive or supersede the Hermes card and rerun the dry pilot from the raw paper if any evidence record is missing or contradictory."
   },
   "approvals": {
     "qa": {
       "approved": true,
-      "actor": "kaxis-qa",
+      "actor": "qa-reviewer",
       "at": "2026-06-06T02:36:32+00:00",
       "scope": "dry pilot only",
       "evidence_refs": [
-        "evidence/hermes-kaxis-qa-review.md"
+        "evidence/hermes-qa-reviewer-review.md"
       ]
     },
     "independent_review": {
       "approved": true,
-      "actor": "kaxis-reviewer",
+      "actor": "independent-reviewer",
       "at": "2026-06-06T02:36:32+00:00",
       "scope": "dry pilot only",
       "evidence_refs": [
-        "evidence/hermes-kaxis-reviewer-review.md",
+        "evidence/hermes-independent-reviewer-review.md",
         "evidence/independent-review-report.md"
       ]
     },
     "security_review": {
       "approved": true,
-      "actor": "kaxis-security",
+      "actor": "security-reviewer",
       "at": "2026-06-06T02:36:32+00:00",
       "scope": "dry pilot only",
       "evidence_refs": [
-        "evidence/hermes-kaxis-security-review.md",
+        "evidence/hermes-security-reviewer-review.md",
         "evidence/security-scan-report.md"
       ]
     },
     "cybersecurity_review": {
       "approved": true,
-      "actor": "kaxis-cybersecurity",
+      "actor": "security-runner",
       "at": "2026-06-06T02:36:32+00:00",
       "scope": "dry pilot only",
       "evidence_refs": [
-        "evidence/hermes-kaxis-cybersecurity-review.md",
+        "evidence/hermes-security-runner-review.md",
         "evidence/security-threat-model.md"
       ]
     },
     "cto_gate": {
       "approved": true,
-      "actor": "kaxis-cto",
+      "actor": "architecture-reviewer",
       "at": "2026-06-06T02:36:32+00:00",
       "scope": "dry pilot only",
       "evidence_refs": [
-        "evidence/hermes-kaxis-cto-review.md"
+        "evidence/hermes-architecture-reviewer-review.md"
       ]
     },
-    "felipe_gate": {
+    "human_gate": {
       "approved": true,
-      "actor": "Felipe",
+      "actor": "product-owner",
       "at": "2026-06-06T02:36:32+00:00",
       "scope": "dry pilot only, based on explicit Codex chat authorization for this goal",
       "evidence_refs": [

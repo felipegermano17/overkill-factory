@@ -1,31 +1,32 @@
 {
+  "$schema": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
   "receipt_five": {
     "changed": "Validated V3.5 R3 security card through ready and done gates.",
-    "artifact_paths": ["docs/kaxis/factory-v35-10/security-scan-evidence.md"],
+    "artifact_paths": ["docs/factory/factory-v35-10/security-scan-evidence.md"],
     "verification_commands": [
       "hermes kanban promote --dry-run",
       "hermes kanban complete --metadata"
     ],
     "verification_result": "PASS",
     "reviewer_required": true,
-    "reviewer_result": "PASS by kaxis-cybersecurity gate proof",
+    "reviewer_result": "PASS by security-runner gate proof",
     "next_action": "Record runtime evidence and keep security scan mandatory for R3/R4/onchain/security cards."
   },
   "kanban_transition_event": {
     "from_status": "ready",
     "to_status": "done",
     "actor": "codex-operator",
-    "worker": "kaxis-security",
+    "worker": "security-reviewer",
     "receipt_refs": ["receipt_five", "security_scan_result"],
-    "artifact_refs": ["docs/kaxis/factory-v35-10/security-scan-evidence.md"]
+    "artifact_refs": ["docs/factory/factory-v35-10/security-scan-evidence.md"]
   },
   "security_scan_result": {
-    "scanner_agent": "kaxis-cybersecurity",
+    "scanner_agent": "security-runner",
     "tool": "codex-security:security-scan",
     "scope": ["card contract", "runtime boundary", "prompt injection risk", "agent handoff risk"],
     "result": "PASS",
     "findings_summary": "No blocking finding in gate proof scope.",
     "blocking_findings": false,
-    "evidence_refs": ["docs/kaxis/factory-v35-10/security-scan-evidence.md"]
+    "evidence_refs": ["docs/factory/factory-v35-10/security-scan-evidence.md"]
   }
 }

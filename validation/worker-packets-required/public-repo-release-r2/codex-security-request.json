@@ -1,0 +1,64 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:57:49+00:00",
+  "source_card_path": "validation/cards/public-repo-release-r2.md",
+  "worker": {
+    "id": "codex-security",
+    "name": "Codex Security Runner",
+    "factory_phase": "F8/F13",
+    "tool_required": "Codex Security plugin or Hermes cybersecurity profile"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "risk, code, public, agentic or sensitive surface requires security evidence",
+    "timing": "after a security_scan_packet exists and before done/promotion",
+    "blocking_policy": "R3/R4, security, onchain, wallet, funds, mainnet, API, auth, or infra work cannot be completed without a real scan result or explicit human waiver."
+  },
+  "card_ref": {
+    "card_id": "VAL-PUBLIC-REPO-RELEASE-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_05",
+    "phase": "F16",
+    "risk_effective": "R2",
+    "surfaces": [
+      "public",
+      "docs",
+      "code",
+      "ci",
+      "supply-chain"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "security_scan_packet",
+      "target_repo_paths",
+      "forbidden_actions"
+    ],
+    "missing_fields": [
+      "security_scan_packet"
+    ],
+    "target_repo_paths": [
+      "README.md",
+      "docs",
+      "scripts",
+      "agents"
+    ],
+    "authority_max": "no publish without review",
+    "forbidden_actions": [
+      "publish",
+      "push",
+      "merge",
+      "private_path_leak"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "security_scan_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "blocked_missing_inputs"
+}

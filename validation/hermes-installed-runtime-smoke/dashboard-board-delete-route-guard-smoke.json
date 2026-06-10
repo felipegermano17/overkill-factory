@@ -1,0 +1,108 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T09:56:14Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-BOARD-DELETE-ROUTE-GUARD-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_BOARD_DELETE_ROUTE_GUARD",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API board archive/delete guard smoke passed: boards containing vFinal Factory work cannot be archived or hard-deleted, while ordinary disposable boards can still be archived or deleted.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches including candidate 0016",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [
+    "adapters/hermes/patches/0016-guard-overkill-vfinal-dashboard-board-delete-route.patch"
+  ],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_board_archive_factory_board_blocked": "PASS",
+    "dashboard_board_hard_delete_factory_board_blocked": "PASS",
+    "factory_board_still_exists": "PASS",
+    "factory_board_task_count_preserved": "PASS",
+    "worker_prerequisite_count_preserved": "PASS",
+    "dashboard_board_archive_normal_board_allowed": "PASS",
+    "dashboard_board_hard_delete_normal_board_allowed": "PASS",
+    "receipt_sanitizes_local_paths": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_board_delete_evidence": {
+    "factory_board_slug": "of-dashboard-board-guard-1781085373",
+    "parent_task_id": "t_ebfe31a9",
+    "worker_count": 23,
+    "factory_task_count_before": 24,
+    "factory_task_count_after": 24,
+    "factory_archive_attempt": {
+      "ok": false,
+      "http_status": 409,
+      "delete": false,
+      "detail": "Boards containing Overkill Factory cards or worker subtasks cannot be archived from dashboard/API; close the Factory work with Receipt Five or use an explicit operator-safe board r"
+    },
+    "factory_hard_delete_attempt": {
+      "ok": false,
+      "http_status": 409,
+      "delete": true,
+      "detail": "Boards containing Overkill Factory cards or worker subtasks cannot be deleted from dashboard/API; close the Factory work with Receipt Five or use an explicit operator-safe board re"
+    },
+    "factory_board_exists_after": true,
+    "normal_archive_attempt": {
+      "ok": true,
+      "http_status": null,
+      "delete": false,
+      "result": {
+        "current": "of-dashboard-board-env-1781085373",
+        "result": {
+          "slug": "of-dashboard-board-archive-1781085373",
+          "action": "archived",
+          "new_path": "redacted-local-board-path"
+        }
+      }
+    },
+    "normal_archive_board_exists_after": false,
+    "normal_hard_delete_attempt": {
+      "ok": true,
+      "http_status": null,
+      "delete": true,
+      "result": {
+        "current": "of-dashboard-board-env-1781085373",
+        "result": {
+          "slug": "of-dashboard-board-delete-1781085373",
+          "action": "deleted",
+          "new_path": ""
+        }
+      }
+    },
+    "normal_delete_board_exists_after": false
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime after candidate patch 0016.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not define a future operator-approved board retirement workflow.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0016-guard-overkill-vfinal-dashboard-board-delete-route.patch",
+    "adapters/hermes/dashboard_board_delete_route_guard_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-board-delete-route-guard-smoke.json"
+  ],
+  "next_action": "Add patch 0016 to the update sequence and continue proving remaining dashboard/API route families."
+}

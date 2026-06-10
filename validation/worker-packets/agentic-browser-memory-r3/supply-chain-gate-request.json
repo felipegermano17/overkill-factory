@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:20+00:00",
+  "source_card_path": "validation/cards/agentic-browser-memory-r3.md",
+  "worker": {
+    "id": "supply-chain-gate",
+    "name": "Supply Chain Gate",
+    "factory_phase": "F11/F13/F16",
+    "tool_required": "dependency, CI, secret, SBOM and provenance checks"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "code/dependency/high-risk supply-chain trigger detected",
+    "timing": "before ready/done/release for code, dependency, CI or package work",
+    "blocking_policy": "Code and dependency work needs reproducible tests, secret scan and dependency risk checks."
+  },
+  "card_ref": {
+    "card_id": "VAL-AGENTIC-BROWSER-MEMORY-R3",
+    "slice_id": "VAL_FACTORY_HEAVY_02",
+    "phase": "F14",
+    "risk_effective": "R3",
+    "surfaces": [
+      "agent",
+      "llm",
+      "browser",
+      "tools",
+      "memory",
+      "security"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "target_repo_paths",
+      "runtime_contract",
+      "security_scan_packet"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/agentic-browser-memory-r3.md"
+    ],
+    "authority_max": "no external mutation",
+    "forbidden_actions": [
+      "credential_use",
+      "external_mutation",
+      "private_profile_use"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "supply_chain_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

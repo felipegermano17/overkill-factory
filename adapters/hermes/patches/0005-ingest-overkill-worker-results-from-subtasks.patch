@@ -1,0 +1,224 @@
+diff --git a/hermes_cli/kanban_db.py b/hermes_cli/kanban_db.py
+--- a/hermes_cli/kanban_db.py
++++ b/hermes_cli/kanban_db.py
+@@ -306,6 +306,194 @@
+         "packet": worker_task.get("packet"),
+     }
+     return json.dumps(payload, indent=2, ensure_ascii=False)
++
++
++def _overkill_parse_worker_subtask_body(body: Optional[str]) -> Optional[dict]:
++    if not body or not body.strip():
++        return None
++    try:
++        data = json.loads(body)
++    except Exception:
++        return None
++    if not isinstance(data, dict):
++        return None
++    if data.get("record_type") != "overkill_factory_worker_subtask":
++        return None
++    parent_task_id = str(data.get("parent_task_id") or "").strip()
++    worker_id = str(data.get("worker_id") or "").strip()
++    expected_field = str(data.get("expected_receipt_field") or "").strip()
++    if not parent_task_id or not worker_id or not expected_field:
++        return None
++    return data
++
++
++def _overkill_worker_results_dir(parent_task_id: str) -> Path:
++    path = _overkill_transition_artifact_dir(parent_task_id) / "worker-results"
++    path.mkdir(parents=True, exist_ok=True)
++    return path
++
++
++def _overkill_worker_result_filename(record_type: str) -> str:
++    safe = re.sub(r"[^A-Za-z0-9._-]+", "-", record_type).strip("-")
++    return f"{safe or 'worker-result'}.json"
++
++
++def _overkill_worker_result_from_completion(
++    *,
++    task_id: str,
++    task_row: sqlite3.Row,
++    subtask: dict,
++    result: Optional[str],
++    summary: Optional[str],
++    metadata: Optional[dict],
++    now: int,
++) -> dict:
++    packet = subtask.get("packet") if isinstance(subtask.get("packet"), dict) else {}
++    worker = packet.get("worker") if isinstance(packet.get("worker"), dict) else {}
++    card_ref = packet.get("card_ref") if isinstance(packet.get("card_ref"), dict) else {}
++    explicit = None
++    if isinstance(metadata, dict):
++        candidate = metadata.get("overkill_worker_result") or metadata.get("worker_result")
++        if isinstance(candidate, dict):
++            explicit = dict(candidate)
++    payload = explicit or {}
++    record_type = str(subtask.get("expected_receipt_field") or "").strip()
++    worker_id = str(subtask.get("worker_id") or task_row["assignee"] or "").strip()
++    outcome = str(payload.get("result") or "").strip().upper()
++    if outcome not in {"PASS", "FAIL", "WAIVED", "PENDING"}:
++        outcome = "PENDING"
++    evidence_refs = payload.get("evidence_refs")
++    if not isinstance(evidence_refs, list):
++        evidence_refs = []
++    if not evidence_refs and isinstance(metadata, dict):
++        artifacts = metadata.get("artifacts")
++        if isinstance(artifacts, (list, tuple)):
++            evidence_refs = [
++                str(item).strip()
++                for item in artifacts
++                if isinstance(item, str) and str(item).strip()
++            ]
++
++    if record_type == "human_gate_record":
++        payload.update(
++            {
++                "$schema": payload.get("$schema")
++                or "https://overkill-factory.dev/schemas/human-gate-record.schema.json",
++                "record_type": "human_gate_record",
++                "created_at": payload.get("created_at")
++                or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
++                "card_ref": payload.get("card_ref") or card_ref or {
++                    "card_id": subtask.get("card_id") or "factory-card",
++                },
++                "decision": payload.get("decision") or "pending",
++                "human_actor": payload.get("human_actor")
++                or payload.get("executed_by")
++                or task_row["assignee"]
++                or worker_id
++                or "human-gate",
++                "evidence_refs": evidence_refs,
++                "notes": str(
++                    payload.get("notes")
++                    or summary
++                    or result
++                    or "Human gate task completed without structured approval metadata."
++                ),
++                "source_task_id": task_id,
++                "parent_task_id": subtask.get("parent_task_id"),
++            }
++        )
++        return payload
++
++    payload.update(
++        {
++            "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
++            "record_type": record_type,
++            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
++            "worker": payload.get("worker") or worker or {
++                "id": worker_id,
++                "name": worker_id.replace("-", " ").title() if worker_id else "Overkill Worker",
++                "factory_phase": None,
++            },
++            "card_ref": payload.get("card_ref") or card_ref or {
++                "card_id": subtask.get("card_id") or "factory-card",
++            },
++            "result": outcome,
++            "blocking_findings": payload.get("blocking_findings")
++            if isinstance(payload.get("blocking_findings"), bool)
++            else outcome != "PASS",
++            "findings_summary": str(
++                payload.get("findings_summary")
++                or summary
++                or result
++                or "Worker completed without structured Overkill worker_result metadata."
++            ),
++            "tool_or_profile": str(
++                payload.get("tool_or_profile") or task_row["assignee"] or worker_id or "hermes-worker"
++            ),
++            "executed_by": str(
++                payload.get("executed_by") or task_row["assignee"] or worker_id or "hermes-worker"
++            ),
++            "evidence_refs": evidence_refs,
++            "next_action": str(
++                payload.get("next_action")
++                or (
++                    "Use this worker result during parent done reconciliation."
++                    if outcome in {"PASS", "WAIVED"}
++                    else "Review worker output and attach valid evidence."
++                )
++            ),
++            "source_task_id": task_id,
++            "parent_task_id": subtask.get("parent_task_id"),
++        }
++    )
++    return payload
++
++
++def _overkill_persist_worker_result_from_subtask(
++    conn: sqlite3.Connection,
++    task_id: str,
++    *,
++    result: Optional[str],
++    summary: Optional[str],
++    metadata: Optional[dict],
++    now: int,
++) -> Optional[dict]:
++    task_row = conn.execute(
++        "SELECT id, body, assignee FROM tasks WHERE id = ?",
++        (task_id,),
++    ).fetchone()
++    if task_row is None:
++        return None
++    subtask = _overkill_parse_worker_subtask_body(task_row["body"])
++    if subtask is None:
++        return None
++    parent_task_id = str(subtask.get("parent_task_id") or "").strip()
++    record_type = str(subtask.get("expected_receipt_field") or "").strip()
++    worker_id = str(subtask.get("worker_id") or task_row["assignee"] or "").strip()
++    result_dir = _overkill_worker_results_dir(parent_task_id)
++    filename = _overkill_worker_result_filename(record_type)
++    result_path = result_dir / filename
++    payload = _overkill_worker_result_from_completion(
++        task_id=task_id,
++        task_row=task_row,
++        subtask=subtask,
++        result=result,
++        summary=summary,
++        metadata=metadata,
++        now=now,
++    )
++    result_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
++    ref = _overkill_transition_artifact_ref(parent_task_id, f"worker-results/{filename}")
++    event_payload = {
++        "parent_task_id": parent_task_id,
++        "worker_id": worker_id,
++        "record_type": record_type,
++        "worker_result_ref": ref,
++        "result": payload.get("result"),
++    }
++    _append_event(conn, task_id, "overkill_worker_result_ingested", event_payload)
++    _append_event(conn, parent_task_id, "overkill_worker_result_ingested", event_payload)
++    return event_payload
+
+
+ def _overkill_load_worker_ledger(result: Optional[dict]) -> Optional[dict]:
+@@ -537,6 +725,10 @@
+     if receipt_path is not None:
+         cmd.extend(["--receipt", str(receipt_path)])
+     worker_results_dir = _overkill_metadata_worker_results_dir(metadata)
++    if worker_results_dir is None and to_status == "done":
++        candidate_results_dir = _overkill_worker_results_dir(task_id)
++        if candidate_results_dir.exists():
++            worker_results_dir = candidate_results_dir
+     if worker_results_dir is not None:
+         cmd.extend(["--worker-results-dir", str(worker_results_dir)])
+
+@@ -4325,6 +4517,14 @@
+             conn, task_id, "completed",
+             completed_payload,
+             run_id=run_id,
++        )
++        _overkill_persist_worker_result_from_subtask(
++            conn,
++            task_id,
++            result=result,
++            summary=summary,
++            metadata=metadata,
++            now=now,
+         )
+     # Prose-scan the summary + result for t_<hex> references that do
+     # not resolve. Advisory — does not block the completion. Runs in

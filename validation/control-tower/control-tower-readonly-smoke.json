@@ -1,0 +1,101 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/control-tower-readonly-smoke.schema.json",
+  "smoke_id": "control-tower-readonly-smoke",
+  "result": "PASS",
+  "projection": {
+    "$schema": "https://overkill-factory.dev/schemas/project-projection.schema.json",
+    "project_id": "example-control-tower-project",
+    "name": "Example Control Tower Project",
+    "phase": "access_gate",
+    "status": "waiting_access",
+    "execution_started": false,
+    "risk": "R3",
+    "forecast_confidence": "blocked",
+    "current_blockers": [
+      "missing repository write access",
+      "missing staging budget approval"
+    ],
+    "pending_access": [
+      "github_write",
+      "staging_cloud"
+    ],
+    "pending_approvals": [
+      "access.appr-example-access"
+    ],
+    "next_steps": [
+      "grant required access",
+      "record approval in runtime",
+      "rerun ready gate"
+    ],
+    "evidence_refs": [
+      "docs/control-tower/discord-control-tower-os.md"
+    ],
+    "source_runtime": "hermes",
+    "source_board": "redacted-board",
+    "last_synced_at": "2026-06-10T18:58:13Z"
+  },
+  "event": {
+    "$schema": "https://overkill-factory.dev/schemas/control-tower-event.schema.json",
+    "event_id": "evt-control-tower-readonly-access-block",
+    "event_type": "access_missing",
+    "severity": "P1",
+    "project_id": "example-control-tower-project",
+    "source": "hermes",
+    "summary": "Execution is blocked until required access and budget approval are recorded.",
+    "details": "Read-only projection only. No Discord action mutates runtime state.",
+    "action_required": true,
+    "owner_role": "Factory Owner",
+    "evidence_refs": [
+      "docs/control-tower/discord-control-tower-os.md"
+    ],
+    "discord_target": "owner-approvals",
+    "created_at": "2026-06-10T18:58:13Z"
+  },
+  "approval_request": {
+    "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
+    "approval_id": "appr-example-access",
+    "project_id": "example-control-tower-project",
+    "approval_type": "access",
+    "status": "pending",
+    "risk": "R3",
+    "scope": "grant repository write access and bounded staging cloud access",
+    "consequence": "Material execution remains blocked until this approval is registered in Hermes.",
+    "not_authorized": [
+      "production deploy",
+      "secret disclosure",
+      "billing limit increase"
+    ],
+    "requested_by": "factory-concierge",
+    "evidence_refs": [
+      "docs/control-tower/discord-control-tower-os.md"
+    ],
+    "expires_at": "2026-06-11T00:00:00Z",
+    "created_at": "2026-06-10T18:58:13Z"
+  },
+  "mapping": {
+    "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-mapping.schema.json",
+    "project_id": "example-control-tower-project",
+    "runtime": "hermes",
+    "board_ref": "redacted-board",
+    "guild_ref": "redacted-guild",
+    "dashboard_channel_ref": "redacted-dashboard-channel",
+    "dashboard_message_ref": "redacted-dashboard-message",
+    "approval_channel_ref": "redacted-approval-channel",
+    "project_thread_ref": "redacted-project-thread",
+    "evidence_channel_ref": "redacted-evidence-channel",
+    "bot_health_channel_ref": "redacted-bot-health-channel",
+    "last_synced_at": "2026-06-10T18:58:13Z"
+  },
+  "readonly_checks": {
+    "runtime_snapshot_unchanged": true,
+    "projection_derived_from_runtime": true,
+    "approval_pending_only": true,
+    "mapping_redacted": true,
+    "no_discord_mutation_claim": true
+  },
+  "evidence_refs": [
+    "docs/control-tower/discord-control-tower-os.md",
+    "docs/methodology/overkill-factory-vfinal.md"
+  ],
+  "created_at": "2026-06-10T18:58:13Z"
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T08:19:23Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-DECOMPOSE-ROUTE-GUARD-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_DECOMPOSE_ROUTE_GUARD",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API decompose-route guard smoke passed: vFinal parent cards and worker subtasks cannot be fanned out by the generic decomposition route, while ordinary disposable task decompose still works through a fake auxiliary decomposer.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches including candidate 0015",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [
+    "adapters/hermes/patches/0015-guard-overkill-vfinal-dashboard-decompose-route.patch"
+  ],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_decompose_parent_vfinal_blocked": "PASS",
+    "dashboard_decompose_worker_subtask_blocked": "PASS",
+    "decomposer_not_called_for_vfinal_tasks": "PASS",
+    "dashboard_decompose_normal_task_allowed": "PASS",
+    "worker_prerequisite_count_preserved": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_decompose_evidence": {
+    "board_slug": "of-dashboard-decompose-1781079562",
+    "parent_task_id": "t_9d0610c9",
+    "worker_task_id": "ofw_189ed653dbe38737",
+    "normal_task_id": "t_40c80cf8",
+    "worker_count": 23,
+    "decompose_calls": [
+      "t_40c80cf8"
+    ],
+    "attempts": {
+      "parent": {
+        "ok": false,
+        "http_status": 409,
+        "detail": "Overkill Factory cards and worker subtasks cannot be decomposed from dashboard/API; Factory worker graphs must be created through the vFinal method router and explicit operator-saf"
+      },
+      "worker": {
+        "ok": false,
+        "http_status": 409,
+        "detail": "Overkill Factory cards and worker subtasks cannot be decomposed from dashboard/API; Factory worker graphs must be created through the vFinal method router and explicit operator-saf"
+      },
+      "normal": {
+        "ok": true,
+        "http_status": null,
+        "result": {
+          "ok": true,
+          "task_id": "t_40c80cf8",
+          "reason": null,
+          "fanout": true,
+          "child_ids": [
+            "t_fake_child_1"
+          ],
+          "new_title": "NORMAL-DECOMPOSE-CONTROL-DECOMPOSED"
+        }
+      }
+    },
+    "after": {
+      "parent": {
+        "id": "t_9d0610c9",
+        "title": "VFINAL-DASHBOARD-DECOMPOSE-GUARD",
+        "status": "ready",
+        "assignee": "factory-orchestrator"
+      },
+      "worker": {
+        "id": "ofw_189ed653dbe38737",
+        "title": "Software Development Planner: VAL-VFINAL-R3-READY",
+        "status": "blocked",
+        "assignee": "software-development-planner"
+      },
+      "normal": {
+        "id": "t_40c80cf8",
+        "title": "NORMAL-DECOMPOSE-CONTROL-DECOMPOSED",
+        "status": "todo",
+        "assignee": "ordinary-worker"
+      }
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime after candidate patch 0015.",
+    "The positive normal-task path uses a fake auxiliary decomposer to avoid real model calls.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not prove real auxiliary model quality.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0015-guard-overkill-vfinal-dashboard-decompose-route.patch",
+    "adapters/hermes/dashboard_decompose_route_guard_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-decompose-route-guard-smoke.json"
+  ],
+  "next_action": "Add patch 0015 to the update sequence and continue proving remaining dashboard/API route families."
+}

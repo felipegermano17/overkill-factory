@@ -1,0 +1,44 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
+  "receipt_five": {
+    "changed": "Validated parent done reconciliation against a sanitized real Hermes public-safety-gate worker result.",
+    "artifact_paths": [
+      "validation/cards/real-worker-parent-done-reconciliation-r1.md",
+      "validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results/public_safety_result.json"
+    ],
+    "verification_commands": [
+      "python adapters/hermes/transition_hook.py --card validation/cards/real-worker-parent-done-reconciliation-r1.md --from-status ready --to-status done --receipt validation/hermes-real-runtime-smoke/parent-done-reconciliation/receipt-five.json --worker-results-dir validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results --ledger validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-ledger.json --out validation/hermes-real-runtime-smoke/parent-done-reconciliation/hook-result.json --enforce"
+    ],
+    "verification_result": "PASS",
+    "reviewer_required": false,
+    "next_action": "Use this proof as the real_worker_done_reconciliation production preflight evidence."
+  },
+  "kanban_transition_event": {
+    "from_status": "ready",
+    "to_status": "done",
+    "actor": "codex",
+    "worker": "public-safety-gate",
+    "receipt_refs": [
+      "validation/hermes-real-runtime-smoke/parent-done-reconciliation/receipt-five.json"
+    ],
+    "artifact_refs": [
+      "validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results/public_safety_result.json"
+    ],
+    "runtime_ref": "redacted-real-hermes-runtime",
+    "raw_runtime_data_policy": "raw Hermes runtime ids are not stored in public artifacts"
+  },
+  "evidence_paths": [
+    "validation/hermes-real-runtime-smoke/real-worker-local-tool-quality-smoke.json",
+    "validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results/public_safety_result.json"
+  ],
+  "verification": {
+    "passed": true,
+    "commands": [
+      "python adapters/hermes/transition_hook.py --card validation/cards/real-worker-parent-done-reconciliation-r1.md --from-status ready --to-status done --receipt validation/hermes-real-runtime-smoke/parent-done-reconciliation/receipt-five.json --worker-results-dir validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results --ledger validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-ledger.json --out validation/hermes-real-runtime-smoke/parent-done-reconciliation/hook-result.json --enforce"
+    ]
+  },
+  "rollback": {
+    "verified": true,
+    "evidence": "Hermes disposable board was archived after the worker completed."
+  }
+}

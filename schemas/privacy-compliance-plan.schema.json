@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/privacy-compliance-plan.schema.json",
+  "title": "Overkill Factory Privacy Compliance Plan",
+  "type": "object",
+  "required": ["data_types", "obligations", "owners", "decision"],
+  "properties": {
+    "data_types": { "type": "array", "items": { "type": "string" } },
+    "obligations": { "type": "array", "items": { "type": "string" } },
+    "owners": { "type": "array", "items": { "type": "string" } },
+    "decision": { "enum": ["pass", "block", "human_gate_required", "not_applicable"] },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

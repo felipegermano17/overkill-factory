@@ -1,0 +1,8 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/privacy-compliance-plan.schema.json",
+  "data_types": ["account metadata"],
+  "obligations": ["minimize collection", "define retention", "avoid sensitive logs"],
+  "owners": ["privacy-owner"],
+  "decision": "human_gate_required",
+  "evidence_refs": ["privacy-compliance-plan.md"]
+}

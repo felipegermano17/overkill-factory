@@ -1,0 +1,63 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-update-receipt.schema.json",
+  "record_type": "hermes_update_receipt",
+  "created_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "before": {
+    "hermes_version": "unknown",
+    "commit": "unknown"
+  },
+  "after": {
+    "hermes_version": "unknown",
+    "commit": "unknown"
+  },
+  "adapter_patch": {
+    "path": "adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch",
+    "sha256": "TBD",
+    "apply_result": "PENDING"
+  },
+  "checks": {
+    "compatibility_check": "PENDING",
+    "unit_tests": "PENDING",
+    "public_safety_scan": "PENDING",
+    "disposable_adapter_runtime_smoke": "PENDING",
+    "disposable_installed_hermes_runtime_smoke": "PENDING",
+    "dashboard_api_smoke": "PENDING",
+    "vfinal_transition_smoke": "PENDING",
+    "worker_subtasks_smoke": "PENDING",
+    "worker_subtasks_idempotency_smoke": "PENDING",
+    "worker_result_ingestion_smoke": "PENDING",
+    "worker_dispatch_route_smoke": "PENDING",
+    "worker_real_process_auth_block_smoke": "PENDING",
+    "worker_route_readiness_blocked": "PENDING",
+    "worker_profile_readiness_local_stub_smoke": "PENDING",
+    "worker_dispatch_completion_smoke": "PENDING",
+    "worker_real_process_local_stub_smoke": "PENDING",
+    "worker_real_process_matrix_local_stub_smoke": "PENDING",
+    "dashboard_dependency_patch_0007": "PENDING",
+    "dashboard_create_route_parity_smoke": "PENDING",
+    "dashboard_dispatch_route_parity_smoke": "PENDING",
+    "dashboard_delete_route_guard_smoke": "PENDING",
+    "dashboard_links_route_guard_smoke": "PENDING",
+    "dashboard_attachment_route_safety_smoke": "PENDING",
+    "dashboard_bulk_archive_guard_smoke": "PENDING",
+    "dashboard_reassign_route_guard_smoke": "PENDING",
+    "dashboard_reclaim_terminate_guard_smoke": "PENDING",
+    "dashboard_specify_route_guard_smoke": "PENDING",
+    "dashboard_decompose_route_guard_smoke": "PENDING",
+    "dashboard_comments_route_append_only_smoke": "PENDING",
+    "dashboard_home_subscribe_route_visibility_smoke": "PENDING",
+    "dashboard_board_delete_route_guard_smoke": "PENDING",
+    "dashboard_board_lifecycle_operational_safety_smoke": "PENDING",
+    "dashboard_profile_routes_operational_safety_smoke": "PENDING",
+    "dashboard_orchestration_route_operational_safety_smoke": "PENDING",
+    "dashboard_done_route_parity_smoke": "PENDING",
+    "dashboard_route_inventory_zero_pending": "PENDING",
+    "service_rollback_drill_smoke": "PENDING"
+  },
+  "decision": {
+    "real_runtime_update": "blocked_until_checked",
+    "risk_owner": "product-owner",
+    "rollback_plan": "restore previous Hermes runtime and adapter patch state"
+  },
+  "evidence_refs": []
+}

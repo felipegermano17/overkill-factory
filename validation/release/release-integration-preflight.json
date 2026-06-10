@@ -1,0 +1,68 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/release-integration-preflight.schema.json",
+  "record_type": "release_integration_preflight",
+  "created_at": "2026-06-10T21:39:57Z",
+  "result": "BLOCKED",
+  "branch": {
+    "current": "main",
+    "is_main": true
+  },
+  "counts": {
+    "status_entries": 283,
+    "release_candidate_entries": 283,
+    "needs_human_review_entries": 0,
+    "safe_cleanup_candidates": 0
+  },
+  "checks": {
+    "worktree_public_safety_passed": true,
+    "head_public_safety_passed": false,
+    "origin_main_public_safety_passed": false,
+    "worktree_inventory_has_no_unknown_entries": true,
+    "worktree_inventory_has_no_cleanup_candidates": true,
+    "worktree_has_release_candidate_material": true,
+    "release_ref_has_no_unintegrated_worktree_entries": false,
+    "current_branch_is_not_dirty_main": false
+  },
+  "release_candidate_plan": {
+    "safe_to_prepare_candidate_branch": true,
+    "recommended_branch": "codex/vfinal-release-candidate",
+    "why": "The dirty worktree is public-safe and classified as release-candidate material.",
+    "steps": [
+      "create or switch to a dedicated codex/vfinal-release-candidate branch",
+      "stage only the public-safe release-candidate worktree",
+      "commit the release candidate with validation evidence",
+      "rerun public-safety and secret-safety scans on the committed HEAD",
+      "push or merge only after the production gate owner accepts the release path"
+    ],
+    "must_not_do": [
+      "do not run broad cleanup against untracked vFinal artifacts",
+      "do not publish origin/main while exact HEAD and origin/main scans fail",
+      "do not treat a release candidate branch as production readiness"
+    ]
+  },
+  "blocking_items": [
+    "current_branch_is_not_dirty_main",
+    "head_public_safety_passed",
+    "origin_main_public_safety_passed",
+    "release_ref_has_no_unintegrated_worktree_entries"
+  ],
+  "attention_items": [
+    "release_candidate_material_waiting_for_integration"
+  ],
+  "evidence_refs": [
+    "validation/release/worktree-release-inventory.json",
+    "validation/public-safety/worktree-summary.json",
+    "validation/public-safety/head-summary.json",
+    "validation/public-safety/origin-main-summary.json"
+  ],
+  "next_required_actions": [
+    "move release-candidate work off dirty main or commit through an explicit release branch",
+    "integrate the public-safe worktree into the target release ref",
+    "rerun exact public-safety scans after the release ref is updated"
+  ],
+  "limits": [
+    "This preflight is public-safe and intentionally omits raw file paths.",
+    "It does not stage, commit, push or mutate the release ref.",
+    "A PASS result only means the release ref is ready for the final production gate review."
+  ]
+}

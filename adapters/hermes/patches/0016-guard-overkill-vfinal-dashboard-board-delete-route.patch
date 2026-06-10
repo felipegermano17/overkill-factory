@@ -1,0 +1,63 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+index 0000000..0000000 100644
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -1018,9 +1018,51 @@ def _is_overkill_worker_subtask(task: kanban_db.Task) -> bool:
+     try:
+         return parser(task.body or "") is not None
+     except Exception:
+         return False
+
+
++def _board_overkill_task_refs(slug: str) -> list[dict[str, str]]:
++    """Return public-safe refs for Factory-controlled tasks on a board."""
++    try:
++        normed = kanban_db._normalize_board_slug(slug)
++    except ValueError:
++        return []
++    if not normed or normed == kanban_db.DEFAULT_BOARD:
++        return []
++    if not kanban_db.board_exists(normed):
++        return []
++    if not kanban_db.kanban_db_path(board=normed).exists():
++        return []
++
++    conn = kanban_db.connect(board=normed)
++    try:
++        refs: list[dict[str, str]] = []
++        for task in kanban_db.list_tasks(conn, include_archived=True):
++            if _is_overkill_factory_card(task):
++                refs.append({"id": task.id, "kind": "factory_card"})
++            elif _is_overkill_worker_subtask(task):
++                refs.append({"id": task.id, "kind": "worker_subtask"})
++        return refs
++    finally:
++        conn.close()
++
++
++def _guard_overkill_board_removal(slug: str, *, delete: bool) -> None:
++    """Block board archive/delete when it would hide Factory-controlled work."""
++    refs = _board_overkill_task_refs(slug)
++    if refs:
++        action = "deleted" if delete else "archived"
++        raise HTTPException(
++            status_code=409,
++            detail=(
++                "Boards containing Overkill Factory cards or worker subtasks "
++                f"cannot be {action} from dashboard/API; close the Factory "
++                "work with Receipt Five or use an explicit operator-safe "
++                "board retirement workflow."
++            ),
++        )
++
++
+ def _guard_overkill_link_edit(
+     conn: sqlite3.Connection,
+     parent_id: str,
+@@ -2244,5 +2286,6 @@ def delete_board(slug: str, delete: bool = Query(False, description="Hard-delete
+     """Archive (default) or hard-delete a board."""
+     try:
++        _guard_overkill_board_removal(slug, delete=delete)
+         res = kanban_db.remove_board(slug, archive=not delete)
+     except ValueError as exc:
+         raise HTTPException(status_code=400, detail=str(exc))

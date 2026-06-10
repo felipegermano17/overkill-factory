@@ -1,0 +1,28 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+index 0000000..0000000 100644
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -2406,6 +2406,22 @@ def decompose_task_endpoint(
+     Runs in FastAPI's threadpool (sync ``def``) because the LLM call
+     can take minutes on reasoning models.
+     """
+     board = _resolve_board(board)
++    conn = _conn(board=board)
++    try:
++        task = kanban_db.get_task(conn, task_id)
++        if task is not None and (_is_overkill_factory_card(task) or _is_overkill_worker_subtask(task)):
++            raise HTTPException(
++                status_code=409,
++                detail=(
++                    "Overkill Factory cards and worker subtasks cannot be "
++                    "decomposed from dashboard/API; Factory worker graphs must "
++                    "be created through the vFinal method router and explicit "
++                    "operator-safe decomposition workflow."
++                ),
++            )
++    finally:
++        conn.close()
++
+     # Context-local board pin (see specify endpoint above): this sync
+     # endpoint runs in FastAPI's threadpool, so mutating the process-global
+     # HERMES_KANBAN_BOARD env var would let concurrent requests for

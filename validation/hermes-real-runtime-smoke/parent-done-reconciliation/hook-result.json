@@ -1,0 +1,570 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-transition-hook.schema.json",
+  "hook_type": "overkill_factory_hermes_transition_hook",
+  "transition_action": "allow_done",
+  "blocked_reasons": [],
+  "completion_reconciliation": {
+    "closure_type": "worker_result_reconciliation",
+    "required_workers": [
+      "factory-orchestrator",
+      "docs-os-worker",
+      "public-safety-gate"
+    ],
+    "missing_blocking_workers": [],
+    "invalid_blocking_workers": [],
+    "workers": {
+      "factory-orchestrator": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "orchestration_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "docs-os-worker": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "documentation_os_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "public-safety-gate": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "public_safety_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results/public_safety_result.json",
+        "result": "PASS",
+        "validation_errors": []
+      }
+    }
+  },
+  "plan": {
+    "$schema": "https://overkill-factory.dev/schemas/hermes-transition-plan.schema.json",
+    "plan_type": "hermes_kanban_transition_plan",
+    "created_at": "2026-06-10T18:02:17+00:00",
+    "source_card_path": "validation/cards/real-worker-parent-done-reconciliation-r1.md",
+    "event": {
+      "from_status": "ready",
+      "to_status": "done",
+      "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION"
+    },
+    "transition_action": "allow_done",
+    "blocked_reasons": [],
+    "gate_report": {
+      "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+      "report_type": "factory_gate_preflight",
+      "created_at": "2026-06-10T18:02:17+00:00",
+      "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+      "risk_effective": "R1",
+      "surfaces": [
+        "docs"
+      ],
+      "gate_status": "ready_for_worker_execution",
+      "required_workers": [
+        "factory-orchestrator",
+        "docs-os-worker",
+        "public-safety-gate"
+      ],
+      "blocked_workers": [],
+      "card_validation_errors": [],
+      "workers": {
+        "codex-security": {
+          "required": false,
+          "reason": "no R3/R4, code, public, agentic or sensitive surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "solana-quasar-auditor": {
+          "required": false,
+          "reason": "no onchain surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "product-face": {
+          "required": false,
+          "reason": "no visible product surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "independent-reviewer": {
+          "required": false,
+          "reason": "low-risk card without explicit independent review",
+          "status": "not_required_by_current_card"
+        },
+        "human-gate-clerk": {
+          "required": false,
+          "reason": "no human gate trigger detected",
+          "status": "not_required_by_current_card"
+        },
+        "factory-orchestrator": {
+          "required": true,
+          "reason": "factory card needs routing and state control",
+          "status": "requires_execution"
+        },
+        "source-ledger-worker": {
+          "required": false,
+          "reason": "source ledger already past early intake",
+          "status": "not_required_by_current_card"
+        },
+        "product-sot-planner": {
+          "required": false,
+          "reason": "not a Product SOT phase",
+          "status": "not_required_by_current_card"
+        },
+        "product-architect": {
+          "required": false,
+          "reason": "not an architecture phase",
+          "status": "not_required_by_current_card"
+        },
+        "docs-os-worker": {
+          "required": true,
+          "reason": "Documentation OS phase detected",
+          "status": "requires_execution"
+        },
+        "decomposition-planner": {
+          "required": false,
+          "reason": "not a decomposition phase",
+          "status": "not_required_by_current_card"
+        },
+        "implementation-worker": {
+          "required": false,
+          "reason": "not an implementation card",
+          "status": "not_required_by_current_card"
+        },
+        "qa-verification-worker": {
+          "required": false,
+          "reason": "low-risk card without verification trigger",
+          "status": "not_required_by_current_card"
+        },
+        "autoreview-gate": {
+          "required": false,
+          "reason": "no code/pre-landing trigger",
+          "status": "not_required_by_current_card"
+        },
+        "security-orchestrator": {
+          "required": false,
+          "reason": "no routed security trigger",
+          "status": "not_required_by_current_card"
+        },
+        "appsec-owasp-specialist": {
+          "required": false,
+          "reason": "no OWASP AppSec surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "agentic-ai-security-specialist": {
+          "required": false,
+          "reason": "no agentic AI security trigger",
+          "status": "not_required_by_current_card"
+        },
+        "cloud-infra-security-specialist": {
+          "required": false,
+          "reason": "no cloud/infra trigger",
+          "status": "not_required_by_current_card"
+        },
+        "crypto-key-management-specialist": {
+          "required": false,
+          "reason": "no crypto/key trigger",
+          "status": "not_required_by_current_card"
+        },
+        "remote-proof-runner": {
+          "required": false,
+          "reason": "local proof is sufficient by current card",
+          "status": "not_required_by_current_card"
+        },
+        "release-ops-worker": {
+          "required": false,
+          "reason": "not a release/promotion card",
+          "status": "not_required_by_current_card"
+        },
+        "handoff-packer": {
+          "required": false,
+          "reason": "handoff not required by current card",
+          "status": "not_required_by_current_card"
+        },
+        "memory-steward": {
+          "required": false,
+          "reason": "no memory stewardship trigger",
+          "status": "not_required_by_current_card"
+        },
+        "skill-eval-distiller": {
+          "required": false,
+          "reason": "no skill evolution trigger",
+          "status": "not_required_by_current_card"
+        },
+        "public-safety-gate": {
+          "required": true,
+          "reason": "public artifact or release surface detected",
+          "status": "requires_execution"
+        },
+        "supply-chain-gate": {
+          "required": false,
+          "reason": "no supply-chain trigger",
+          "status": "not_required_by_current_card"
+        },
+        "detection-monitoring-worker": {
+          "required": false,
+          "reason": "no detection/monitoring trigger",
+          "status": "not_required_by_current_card"
+        },
+        "product-outcome-discovery-worker": {
+          "required": false,
+          "reason": "outcome/discovery already outside this worker trigger",
+          "status": "not_required_by_current_card"
+        },
+        "agentic-method-router": {
+          "required": false,
+          "reason": "no method routing trigger",
+          "status": "not_required_by_current_card"
+        },
+        "software-development-planner": {
+          "required": false,
+          "reason": "no vFinal software planning trigger",
+          "status": "not_required_by_current_card"
+        },
+        "product-experience-router": {
+          "required": false,
+          "reason": "no vFinal product experience trigger",
+          "status": "not_required_by_current_card"
+        },
+        "data-metrics-worker": {
+          "required": false,
+          "reason": "no vFinal data/metrics trigger",
+          "status": "not_required_by_current_card"
+        },
+        "agent-eval-worker": {
+          "required": false,
+          "reason": "no vFinal agent eval trigger",
+          "status": "not_required_by_current_card"
+        },
+        "dependency-integration-worker": {
+          "required": false,
+          "reason": "no vFinal dependency trigger",
+          "status": "not_required_by_current_card"
+        },
+        "access-capability-worker": {
+          "required": false,
+          "reason": "no vFinal access/capability trigger",
+          "status": "not_required_by_current_card"
+        },
+        "security-architect-worker": {
+          "required": false,
+          "reason": "no vFinal security architecture trigger",
+          "status": "not_required_by_current_card"
+        },
+        "privacy-compliance-worker": {
+          "required": false,
+          "reason": "no vFinal privacy/compliance trigger",
+          "status": "not_required_by_current_card"
+        },
+        "budget-cost-worker": {
+          "required": false,
+          "reason": "no vFinal budget/cost trigger",
+          "status": "not_required_by_current_card"
+        },
+        "production-readiness-worker": {
+          "required": false,
+          "reason": "no vFinal production readiness trigger",
+          "status": "not_required_by_current_card"
+        },
+        "incident-support-worker": {
+          "required": false,
+          "reason": "no vFinal incident/support trigger",
+          "status": "not_required_by_current_card"
+        },
+        "legacy-migration-worker": {
+          "required": false,
+          "reason": "no vFinal legacy/migration trigger",
+          "status": "not_required_by_current_card"
+        },
+        "platform-devex-worker": {
+          "required": false,
+          "reason": "no vFinal platform/DevEx trigger",
+          "status": "not_required_by_current_card"
+        },
+        "user-docs-onboarding-worker": {
+          "required": false,
+          "reason": "no vFinal user docs/onboarding trigger",
+          "status": "not_required_by_current_card"
+        },
+        "factory-concierge": {
+          "required": false,
+          "reason": "no vFinal owner interface trigger",
+          "status": "not_required_by_current_card"
+        },
+        "discord-control-tower-bridge": {
+          "required": false,
+          "reason": "no vFinal Discord control tower trigger",
+          "status": "not_required_by_current_card"
+        },
+        "control-tower-projection-worker": {
+          "required": false,
+          "reason": "no vFinal control tower projection trigger",
+          "status": "not_required_by_current_card"
+        },
+        "factory-maturity-auditor": {
+          "required": false,
+          "reason": "no vFinal maturity trigger",
+          "status": "not_required_by_current_card"
+        }
+      }
+    },
+    "worker_tasks": [
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "factory-orchestrator",
+        "title": "Factory Orchestrator: VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T18:02:17+00:00",
+          "source_card_path": "validation/cards/real-worker-parent-done-reconciliation-r1.md",
+          "worker": {
+            "id": "factory-orchestrator",
+            "name": "Factory Orchestrator",
+            "factory_phase": "F0-F18",
+            "tool_required": "Hermes Kanban plus factory gate report"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "factory card needs routing and state control",
+            "timing": "at phase changes, gate preparation, worker routing, and blocked-state triage",
+            "blocking_policy": "The orchestrator routes work and records state, but cannot approve product, security, onchain, R3/R4, release, or human gates."
+          },
+          "card_ref": {
+            "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+            "slice_id": "VFINAL_HERMES_REAL_PARENT_DONE",
+            "phase": "F8",
+            "risk_effective": "R1",
+            "surfaces": [
+              "docs"
+            ],
+            "executor_identity": "public-safety-gate",
+            "reviewer_identity": "not-required"
+          },
+          "input_contract": {
+            "required_fields": [
+              "phase",
+              "risk_effective",
+              "surfaces",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "README.md",
+              "scripts/factoryctl.py",
+              "validation/hermes-real-runtime-smoke"
+            ],
+            "authority_max": "validation_only",
+            "forbidden_actions": [
+              "publish",
+              "push",
+              "merge",
+              "deploy",
+              "secret_access",
+              "private_path_leak"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "orchestration_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "orchestration_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "docs-os-worker",
+        "title": "Documentation OS Worker: VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T18:02:17+00:00",
+          "source_card_path": "validation/cards/real-worker-parent-done-reconciliation-r1.md",
+          "worker": {
+            "id": "docs-os-worker",
+            "name": "Documentation OS Worker",
+            "factory_phase": "F10",
+            "tool_required": "docs, ADR and contract generation workflow"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "Documentation OS phase detected",
+            "timing": "after approved architecture and before decomposition",
+            "blocking_policy": "Implementation cards cannot rely on architecture prose without durable executable docs."
+          },
+          "card_ref": {
+            "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+            "slice_id": "VFINAL_HERMES_REAL_PARENT_DONE",
+            "phase": "F8",
+            "risk_effective": "R1",
+            "surfaces": [
+              "docs"
+            ],
+            "executor_identity": "public-safety-gate",
+            "reviewer_identity": "not-required"
+          },
+          "input_contract": {
+            "required_fields": [
+              "done_definition",
+              "acceptance_criteria",
+              "target_repo_paths"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "README.md",
+              "scripts/factoryctl.py",
+              "validation/hermes-real-runtime-smoke"
+            ],
+            "authority_max": "validation_only",
+            "forbidden_actions": [
+              "publish",
+              "push",
+              "merge",
+              "deploy",
+              "secret_access",
+              "private_path_leak"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "documentation_os_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "documentation_os_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "public-safety-gate",
+        "title": "Public Safety Gate: VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T18:02:17+00:00",
+          "source_card_path": "validation/cards/real-worker-parent-done-reconciliation-r1.md",
+          "worker": {
+            "id": "public-safety-gate",
+            "name": "Public Safety Gate",
+            "factory_phase": "F16/F17",
+            "tool_required": "public repository redaction and forbidden-term scan"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "public artifact or release surface detected",
+            "timing": "before publishing, release, PR or public artifact generation",
+            "blocking_policy": "Public artifacts cannot contain private paths, internal names, raw study extraction or private board links."
+          },
+          "card_ref": {
+            "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+            "slice_id": "VFINAL_HERMES_REAL_PARENT_DONE",
+            "phase": "F8",
+            "risk_effective": "R1",
+            "surfaces": [
+              "docs"
+            ],
+            "executor_identity": "public-safety-gate",
+            "reviewer_identity": "not-required"
+          },
+          "input_contract": {
+            "required_fields": [
+              "target_repo_paths",
+              "forbidden_actions",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "README.md",
+              "scripts/factoryctl.py",
+              "validation/hermes-real-runtime-smoke"
+            ],
+            "authority_max": "validation_only",
+            "forbidden_actions": [
+              "publish",
+              "push",
+              "merge",
+              "deploy",
+              "secret_access",
+              "private_path_leak"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "public_safety_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "public_safety_result",
+        "status": "requires_execution"
+      }
+    ],
+    "completion_reconciliation": {
+      "closure_type": "worker_result_reconciliation",
+      "required_workers": [
+        "factory-orchestrator",
+        "docs-os-worker",
+        "public-safety-gate"
+      ],
+      "missing_blocking_workers": [],
+      "invalid_blocking_workers": [],
+      "workers": {
+        "factory-orchestrator": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "orchestration_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "docs-os-worker": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "documentation_os_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "public-safety-gate": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "public_safety_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results/public_safety_result.json",
+          "result": "PASS",
+          "validation_errors": []
+        }
+      }
+    }
+  },
+  "ledger": {
+    "ledger_path": "validation\\hermes-real-runtime-smoke\\parent-done-reconciliation\\worker-ledger.json",
+    "created": [
+      "ofw_1e4032762fa30bfc",
+      "ofw_090c50ebd1a8151b",
+      "ofw_e52aa9ccc1bea677"
+    ],
+    "updated": [],
+    "unchanged": [],
+    "task_count": 3
+  }
+}

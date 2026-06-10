@@ -1,0 +1,83 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T05:51:27Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-ATTACHMENT-ROUTE-SAFETY-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_ATTACHMENT_ROUTE_SAFETY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API attachment route safety smoke passed: traversal names are sanitized under the attachment root, normal delete works, and tampered outside-root delete is blocked.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches including candidate 0010",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [
+    "adapters/hermes/patches/0010-guard-overkill-vfinal-dashboard-attachment-delete-route.patch"
+  ],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "attachment_traversal_filename_sanitized": "PASS",
+    "attachment_normal_delete_allowed": "PASS",
+    "attachment_delete_outside_root_blocked": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_attachment_evidence": {
+    "board_slug": "of-dashboard-attachments-1781070686",
+    "task_id": "t_78a899bb",
+    "sanitized_upload": {
+      "attachment_id": 1,
+      "filename": "evil-proof.txt",
+      "size": 21,
+      "stored_under_attachment_root": true,
+      "normal_delete": {
+        "ok": true,
+        "http_status": null,
+        "result": {
+          "ok": true,
+          "id": 1
+        }
+      }
+    },
+    "tampered_delete": {
+      "attachment_id": 2,
+      "outside_file_survived": true,
+      "metadata_row_preserved": true,
+      "delete_attempt": {
+        "ok": false,
+        "http_status": 409,
+        "detail": "attachment file path is outside the board attachment root"
+      }
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime after candidate patch 0010.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not perform malware scanning or content trust validation for uploaded files.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0010-guard-overkill-vfinal-dashboard-attachment-delete-route.patch",
+    "adapters/hermes/dashboard_attachment_route_safety_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-attachment-route-safety-smoke.json"
+  ],
+  "next_action": "Add patch 0010 to the update sequence and continue proving remaining dashboard/API route families."
+}

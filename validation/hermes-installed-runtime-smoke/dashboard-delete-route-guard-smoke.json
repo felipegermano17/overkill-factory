@@ -1,0 +1,78 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T04:35:05Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-DELETE-ROUTE-GUARD-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_DELETE_ROUTE_GUARD",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API delete-route guard smoke passed: hard-delete is blocked for vFinal parent cards and worker subtasks, links are preserved, and a normal disposable task can still be deleted.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches including candidate 0008",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [
+    "adapters/hermes/patches/0008-guard-overkill-vfinal-dashboard-delete-route.patch"
+  ],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_delete_parent_vfinal_blocked": "PASS",
+    "dashboard_delete_worker_subtask_blocked": "PASS",
+    "dashboard_delete_normal_task_allowed": "PASS",
+    "worker_prerequisite_links_preserved": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_delete_evidence": {
+    "board_slug": "of-dashboard-delete-1781066104",
+    "parent_task_id": "t_5bf6adbc",
+    "worker_task_id": "ofw_189ed653dbe38737",
+    "worker_count_before": 23,
+    "worker_count_after": 23,
+    "parent_delete_attempt": {
+      "ok": false,
+      "http_status": 409,
+      "detail": "Overkill Factory cards and worker subtasks cannot be hard-deleted from dashboard/API; close with Receipt Five or archive through an explicit operator-safe path."
+    },
+    "worker_delete_attempt": {
+      "ok": false,
+      "http_status": 409,
+      "detail": "Overkill Factory cards and worker subtasks cannot be hard-deleted from dashboard/API; close with Receipt Five or archive through an explicit operator-safe path."
+    },
+    "normal_delete_attempt": {
+      "task_id": "t_f082e9f8",
+      "ok": true,
+      "deleted": true
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime after candidate patch 0008.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not define the future archive or operator-approved deletion workflow.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0008-guard-overkill-vfinal-dashboard-delete-route.patch",
+    "adapters/hermes/dashboard_delete_route_guard_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-delete-route-guard-smoke.json"
+  ],
+  "next_action": "Add patch 0008 to the update sequence and continue proving remaining dashboard/API route families."
+}

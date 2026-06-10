@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-09T22:21:50+00:00",
+  "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+  "worker": {
+    "id": "agentic-method-router",
+    "name": "Agentic Method Router",
+    "factory_phase": "F6-F7",
+    "tool_required": "method contract router"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "vFinal or method routing surface detected",
+    "timing": "after outcome/discovery and before detailed plans",
+    "blocking_policy": "Method choice must be explained; risky work cannot proceed from an implicit process."
+  },
+  "card_ref": {
+    "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+    "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+    "phase": "F19",
+    "risk_effective": "R2",
+    "surfaces": [
+      "discord",
+      "control-tower",
+      "owner-interface",
+      "approval",
+      "forecast"
+    ],
+    "executor_identity": "discord-control-tower-bridge",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "outcome_contract",
+      "risk_effective",
+      "surfaces"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/vfinal-control-tower-missing-interface.md"
+    ],
+    "authority_max": "preflight_only",
+    "forbidden_actions": [
+      "real_discord_message",
+      "approval_spoofing",
+      "production_change",
+      "secret_access"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "method_contract_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

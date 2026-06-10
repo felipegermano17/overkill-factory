@@ -1,0 +1,23 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-worker-profile-readiness-smoke.schema.json",
+  "schema": "overkill_factory_hermes_worker_profile_readiness_smoke.v1",
+  "result": "PASS",
+  "scope": "disposable-local-openai-stub-only",
+  "ledger_ref": "validation/hermes-disposable-runtime/worker-ledger.json",
+  "hermes_home_ref": "redacted-hermes-home",
+  "provider": "lmstudio",
+  "model_ref": "overkill-local-smoke-model",
+  "endpoint_ref": "local-loopback-openai-compatible-stub",
+  "worker_count": 23,
+  "profile_action_counts": {
+    "updated_existing": 23
+  },
+  "readiness_result": "PASS",
+  "blocked_worker_count": 0,
+  "blocked_workers": [],
+  "production_limits": [
+    "This proves disposable profile/config/model/provider shape and local OpenAI-compatible /models reachability only.",
+    "It does not prove real model quality, real specialist output, tool authentication, autonomous completion, or production readiness.",
+    "A real Hermes update still requires provisioned real profiles, worker execution, evidence reconciliation and rollback proof."
+  ]
+}

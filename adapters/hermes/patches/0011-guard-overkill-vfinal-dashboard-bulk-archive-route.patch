@@ -1,0 +1,21 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -1293,6 +1293,17 @@ def bulk_update(payload: BulkTaskBody, board: Optional[str] = Query(None)):
+                     results.append(entry)
+                     continue
+                 if payload.archive:
++                    if _is_overkill_factory_card(task) or _is_overkill_worker_subtask(task):
++                        entry.update(
++                            ok=False,
++                            error=(
++                                "Overkill Factory cards and worker subtasks cannot be "
++                                "archived from dashboard/API bulk actions; close with "
++                                "Receipt Five or use an explicit operator-safe archive workflow."
++                            ),
++                        )
++                        results.append(entry)
++                        continue
+                     if not kanban_db.archive_task(conn, tid):
+                         entry.update(ok=False, error="archive refused")
+                 if payload.status is not None and not payload.archive:

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-production-proof.schema.json",
+  "record_type": "hermes_production_proof",
+  "created_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "proof_type": "non_stub_worker_execution",
+  "result": "PASS",
+  "summary": "Bounded production-readiness proof summary.",
+  "scope": "disposable Hermes runtime with explicit bounded access",
+  "environment_ref": "redacted-disposable-runtime",
+  "evidence_refs": [
+    "validation/path/to/evidence.json"
+  ],
+  "limits": [
+    "This proof is bounded to the named scope.",
+    "This proof does not authorize a real Hermes update by itself."
+  ],
+  "decision": {
+    "real_runtime_update": "not_applicable"
+  }
+}

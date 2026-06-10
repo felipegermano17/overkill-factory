@@ -1,0 +1,56 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:21+00:00",
+  "source_card_path": "validation/cards/product-face-saas-r2.md",
+  "worker": {
+    "id": "public-safety-gate",
+    "name": "Public Safety Gate",
+    "factory_phase": "F16/F17",
+    "tool_required": "public repository redaction and forbidden-term scan"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "not a public/release artifact",
+    "timing": "before publishing, release, PR or public artifact generation",
+    "blocking_policy": "Public artifacts cannot contain private paths, internal names, raw study extraction or private board links."
+  },
+  "card_ref": {
+    "card_id": "VAL-PRODUCT-FACE-SAAS-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_01",
+    "phase": "F13",
+    "risk_effective": "R2",
+    "surfaces": [
+      "frontend",
+      "mobile",
+      "product-face"
+    ],
+    "executor_identity": "frontend-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "target_repo_paths",
+      "forbidden_actions",
+      "done_definition"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/product-face-saas-r2.md"
+    ],
+    "authority_max": "local validation only",
+    "forbidden_actions": [
+      "deploy",
+      "secret_access",
+      "payment_action"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "public_safety_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

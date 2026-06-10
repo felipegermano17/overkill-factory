@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/software-development-plan.schema.json",
+  "title": "Overkill Factory Software Development Plan",
+  "type": "object",
+  "required": ["work_units", "qa_plan", "review_plan", "release_or_block_rule"],
+  "properties": {
+    "work_units": { "type": "array", "items": { "type": "string" } },
+    "qa_plan": { "type": "array", "items": { "type": "string" } },
+    "review_plan": { "type": "array", "items": { "type": "string" } },
+    "release_or_block_rule": { "type": "string", "minLength": 3 },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,134 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -842,6 +842,7 @@
+         if payload.status is not None:
+             s = payload.status
+             ok = True
++            ready_error: Optional[str] = None
+             if s == "done":
+                 ok = kanban_db.complete_task(
+                     conn, task_id,
+@@ -854,13 +855,12 @@
+             elif s == "scheduled":
+                 ok = kanban_db.schedule_task(conn, task_id, reason=payload.block_reason)
+             elif s == "ready":
+-                # Re-open a blocked/scheduled task, or just an explicit status set.
+-                current = kanban_db.get_task(conn, task_id)
+-                if current and current.status in ("blocked", "scheduled"):
+-                    ok = kanban_db.unblock_task(conn, task_id)
+-                else:
+-                    # Direct status write for drag-drop (todo -> ready etc).
+-                    ok = _set_status_direct(conn, task_id, "ready")
++                ok, ready_error = _set_ready_status(
++                    conn,
++                    task_id,
++                    actor="dashboard",
++                    reason="dashboard status ready",
++                )
+             elif s == "archived":
+                 ok = kanban_db.archive_task(conn, task_id)
+             elif s == "running":
+@@ -877,6 +877,8 @@
+                 # can render an actionable toast instead of a silent no-op.
+                 # See #26744.
+                 if s == "ready":
++                    if ready_error:
++                        raise HTTPException(status_code=409, detail=ready_error)
+                     blockers = _parents_blocking_ready(conn, task_id)
+                     if blockers:
+                         names = ", ".join(
+@@ -975,6 +977,55 @@
+         {"id": r["id"], "title": r["title"], "status": r["status"]}
+         for r in rows
+     ]
++
++
++def _is_overkill_factory_card(task: kanban_db.Task) -> bool:
++    """Return True when the task body is an Overkill Factory card."""
++    parser = getattr(kanban_db, "_overkill_parse_factory_card_body", None)
++    if not callable(parser):
++        return False
++    try:
++        return parser(task.body or "") is not None
++    except Exception:
++        return False
++
++
++def _set_ready_status(
++    conn: sqlite3.Connection,
++    task_id: str,
++    *,
++    actor: str,
++    reason: str,
++) -> tuple[bool, Optional[str]]:
++    """Move a task to ready through the safest route for its contract."""
++    current = kanban_db.get_task(conn, task_id)
++    if current is None:
++        return False, "task not found"
++
++    if _is_overkill_factory_card(current):
++        if current.status == "scheduled":
++            ok = kanban_db.unblock_task(conn, task_id)
++            if ok:
++                return True, None
++            return False, "Overkill Factory gate refused scheduled -> ready"
++        if current.status in ("todo", "blocked"):
++            return kanban_db.promote_task(
++                conn,
++                task_id,
++                actor=actor,
++                reason=reason,
++            )
++        return False, (
++            "Overkill Factory cards cannot move directly to 'ready' "
++            f"from {current.status!r}; use a gated promote/unblock path"
++        )
++
++    # Re-open a blocked/scheduled task, or just an explicit status set.
++    if current.status in ("blocked", "scheduled"):
++        ok = kanban_db.unblock_task(conn, task_id)
++    else:
++        ok = _set_status_direct(conn, task_id, "ready")
++    return ok, None
+
+
+ def _set_status_direct(
+@@ -1185,6 +1236,7 @@
+                         entry.update(ok=False, error="archive refused")
+                 if payload.status is not None and not payload.archive:
+                     s = payload.status
++                    ready_error: Optional[str] = None
+                     if s == "done":
+                         ok = kanban_db.complete_task(
+                             conn, tid,
+@@ -1195,11 +1247,12 @@
+                     elif s == "blocked":
+                         ok = kanban_db.block_task(conn, tid)
+                     elif s == "ready":
+-                        cur = kanban_db.get_task(conn, tid)
+-                        if cur and cur.status in ("blocked", "scheduled"):
+-                            ok = kanban_db.unblock_task(conn, tid)
+-                        else:
+-                            ok = _set_status_direct(conn, tid, "ready")
++                        ok, ready_error = _set_ready_status(
++                            conn,
++                            tid,
++                            actor="dashboard-bulk",
++                            reason="dashboard bulk status ready",
++                        )
+                     elif s == "running":
+                         entry.update(
+                             ok=False,
+@@ -1219,7 +1272,10 @@
+                         results.append(entry)
+                         continue
+                     if not ok:
+-                        entry.update(ok=False, error=f"transition to {s!r} refused")
++                        entry.update(
++                            ok=False,
++                            error=ready_error or f"transition to {s!r} refused",
++                        )
+                 if payload.assignee is not None:
+                     try:
+                         if payload.reclaim_first:

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/agent-eval-plan.schema.json",
+  "title": "Overkill Factory Agent Eval Plan",
+  "type": "object",
+  "required": ["behaviors", "eval_cases", "failure_modes", "pass_rule"],
+  "properties": {
+    "behaviors": { "type": "array", "items": { "type": "string" } },
+    "eval_cases": { "type": "array", "items": { "type": "string" } },
+    "failure_modes": { "type": "array", "items": { "type": "string" } },
+    "pass_rule": { "type": "string", "minLength": 3 },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

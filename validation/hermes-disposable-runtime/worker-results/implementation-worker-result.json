@@ -1,0 +1,37 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "implementation_result",
+  "created_at": "2026-06-10T02:25:01+00:00",
+  "worker": {
+    "id": "implementation-worker",
+    "name": "Implementation Worker",
+    "factory_phase": "F12"
+  },
+  "card_ref": {
+    "card_id": "VAL-VFINAL-R3-READY",
+    "slice_id": "VAL_VFINAL_02",
+    "phase": "F12",
+    "risk_effective": "R3",
+    "surfaces": [
+      "code",
+      "api",
+      "auth",
+      "cloud",
+      "dependency",
+      "access",
+      "metrics",
+      "agent"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Synthetic PASS for implementation-worker before-done reconciliation.",
+  "tool_or_profile": "synthetic-implementation-worker",
+  "executed_by": "disposable-runtime-smoke",
+  "evidence_refs": [
+    "validation/hermes-disposable-runtime/evidence/implementation-worker.md"
+  ],
+  "next_action": "No action; this record is local adapter proof only."
+}

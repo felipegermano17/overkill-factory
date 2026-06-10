@@ -1,0 +1,131 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T11:25:19Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-PROFILE-ROUTES-OPERATIONAL-SAFETY-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_PROFILE_ROUTES_OPERATIONAL_SAFETY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API profile route operational-safety smoke passed: profile patch and describe-auto affect only profile metadata and do not mutate existing vFinal task graphs.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_profile_patch_existing_allowed": "PASS",
+    "dashboard_profile_patch_missing_rejected": "PASS",
+    "dashboard_profile_describe_auto_missing_returns_non_ok": "PASS",
+    "dashboard_profile_describe_auto_stubbed_allowed": "PASS",
+    "no_real_auxiliary_client_called": "PASS",
+    "factory_board_tasks_unchanged": "PASS",
+    "factory_worker_prerequisites_preserved": "PASS",
+    "no_local_paths_in_profile_responses": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_profile_routes_evidence": {
+    "factory_board_slug": "of-dashboard-profile-factory-1781090718-15492",
+    "parent_task_id": "t_161c1e49",
+    "profile_name": "of-profile-routes-1781090718-15492",
+    "worker_count_before": 23,
+    "worker_count_after": 23,
+    "factory_snapshot_before": {
+      "task_count": 24,
+      "link_count": 23,
+      "digest": "4d333d67e85006b86d109b3f4376e68edbc58bed3f28547827d588a9d944a696"
+    },
+    "factory_snapshot_after": {
+      "task_count": 24,
+      "link_count": 23,
+      "digest": "4d333d67e85006b86d109b3f4376e68edbc58bed3f28547827d588a9d944a696"
+    },
+    "initial_profile_meta": {
+      "description_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "description_length": 0,
+      "description_auto": false
+    },
+    "meta_after_patch": {
+      "description_sha256": "6b1f5d50f8c0a409706c3e49ec5b781d6f6fe972d4bb1e57aa56968cc772f65b",
+      "description_length": 43,
+      "description_auto": false
+    },
+    "meta_after_auto": {
+      "description_sha256": "6ed3d3d0250377e054ec018b2610b50c3112658cc816ec61f1c4d213d2f8104b",
+      "description_length": 54,
+      "description_auto": true
+    },
+    "patch_existing_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "ok": true,
+        "profile": "of-profile-routes-1781090718-15492",
+        "description": "Synthetic route-safety profile description."
+      }
+    },
+    "patch_missing_attempt": {
+      "ok": false,
+      "http_status": 404,
+      "detail": "profile 'missing-profile-1781090718-15492' not found"
+    },
+    "describe_missing_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "ok": false,
+        "profile": "missing-profile-1781090718-15492",
+        "reason": "profile not found",
+        "description": null
+      }
+    },
+    "describe_existing_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "ok": true,
+        "profile": "of-profile-routes-1781090718-15492",
+        "reason": "stubbed-disposable-describer",
+        "description": "Synthetic auto description written by disposable stub."
+      }
+    },
+    "stub_calls": [
+      {
+        "profile": "of-profile-routes-1781090718-15492",
+        "overwrite": true,
+        "timeout_passed": false
+      }
+    ]
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "The describe-auto success path uses a local stub and does not prove real auxiliary model quality.",
+    "It does not prove orchestration route safety.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/dashboard_profile_routes_operational_safety_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-profile-routes-operational-safety-smoke.json"
+  ],
+  "next_action": "Mark profile routes as operational-safety proven and continue with the remaining orchestration mutating route family."
+}

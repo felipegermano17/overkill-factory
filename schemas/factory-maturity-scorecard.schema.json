@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-maturity-scorecard.schema.json",
+  "title": "Overkill Factory Maturity Scorecard",
+  "type": "object",
+  "required": [
+    "project_type",
+    "areas_checked",
+    "missing_areas",
+    "risk_residuals",
+    "decision",
+    "evidence_refs"
+  ],
+  "properties": {
+    "project_type": { "type": "string", "minLength": 3 },
+    "areas_checked": { "type": "array", "items": { "type": "string" } },
+    "missing_areas": { "type": "array", "items": { "type": "string" } },
+    "risk_residuals": { "type": "array", "items": { "type": "string" } },
+    "decision": { "enum": ["pass", "block", "pass_with_owner"] },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

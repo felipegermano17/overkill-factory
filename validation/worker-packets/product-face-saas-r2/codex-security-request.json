@@ -1,0 +1,58 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:21+00:00",
+  "source_card_path": "validation/cards/product-face-saas-r2.md",
+  "worker": {
+    "id": "codex-security",
+    "name": "Codex Security Runner",
+    "factory_phase": "F8/F13",
+    "tool_required": "Codex Security plugin or Hermes cybersecurity profile"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "no R3/R4, code, public, agentic or sensitive surface detected",
+    "timing": "after a security_scan_packet exists and before done/promotion",
+    "blocking_policy": "R3/R4, security, onchain, wallet, funds, mainnet, API, auth, or infra work cannot be completed without a real scan result or explicit human waiver."
+  },
+  "card_ref": {
+    "card_id": "VAL-PRODUCT-FACE-SAAS-R2",
+    "slice_id": "VAL_FACTORY_HEAVY_01",
+    "phase": "F13",
+    "risk_effective": "R2",
+    "surfaces": [
+      "frontend",
+      "mobile",
+      "product-face"
+    ],
+    "executor_identity": "frontend-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "security_scan_packet",
+      "target_repo_paths",
+      "forbidden_actions"
+    ],
+    "missing_fields": [
+      "security_scan_packet"
+    ],
+    "target_repo_paths": [
+      "validation/cards/product-face-saas-r2.md"
+    ],
+    "authority_max": "local validation only",
+    "forbidden_actions": [
+      "deploy",
+      "secret_access",
+      "payment_action"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "security_scan_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

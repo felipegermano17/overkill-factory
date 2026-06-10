@@ -25,9 +25,11 @@
       "compute-units"
     ],
     "executor_identity": "codex-overkill-factory",
-    "reviewer_identity": "kaxis-reviewer"
+    "reviewer_identity": "independent-reviewer"
   },
-  "result": "PASS",
+  "result": "WAIVED",
+  "audit_mode": "preflight",
+  "preflight_only": true,
   "blocking_findings": false,
   "findings_summary": "Auditor path used as preflight; no Quasar code audit pass claimed.",
   "tool_or_profile": "solanabr/Auditor-preflight",

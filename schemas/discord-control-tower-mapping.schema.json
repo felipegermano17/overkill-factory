@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/discord-control-tower-mapping.schema.json",
+  "title": "Overkill Factory Discord Control Tower Mapping",
+  "type": "object",
+  "required": [
+    "$schema",
+    "project_id",
+    "runtime",
+    "board_ref",
+    "guild_ref",
+    "dashboard_message_ref",
+    "approval_channel_ref",
+    "last_synced_at"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/discord-control-tower-mapping.schema.json"
+    },
+    "project_id": { "type": "string", "minLength": 1 },
+    "runtime": { "type": "string", "enum": ["hermes", "other"] },
+    "board_ref": { "type": "string", "minLength": 1 },
+    "guild_ref": { "type": "string", "minLength": 1 },
+    "dashboard_channel_ref": { "type": "string" },
+    "dashboard_message_ref": { "type": "string", "minLength": 1 },
+    "approval_channel_ref": { "type": "string", "minLength": 1 },
+    "project_thread_ref": { "type": "string" },
+    "evidence_channel_ref": { "type": "string" },
+    "bot_health_channel_ref": { "type": "string" },
+    "last_synced_at": { "type": "string", "minLength": 10 }
+  },
+  "additionalProperties": true
+}

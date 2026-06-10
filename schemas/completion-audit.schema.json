@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/completion-audit.schema.json",
+  "title": "Overkill Factory Completion Audit",
+  "type": "object",
+  "required": ["promised", "delivered", "verified", "reviewed", "residual_risk", "decision"],
+  "properties": {
+    "promised": { "type": "array", "items": { "type": "string" } },
+    "delivered": { "type": "array", "items": { "type": "string" } },
+    "verified": { "type": "array", "items": { "type": "string" } },
+    "reviewed": { "type": "array", "items": { "type": "string" } },
+    "residual_risk": { "type": "array", "items": { "type": "string" } },
+    "decision": { "enum": ["done", "block", "done_with_owner"] },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T01:23:21Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-WORKER-DISPATCH-SMOKE",
+    "slice_id": "VFINAL_HERMES_WORKER_DISPATCH",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "worker-routing",
+      "dispatcher"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes smoke passed for dispatcher routing of materialized Overkill vFinal worker subtasks after fixing dependency direction. Worker subtasks were linked as prerequisites of the parent Factory card, the parent was rejected from spawning while worker prerequisites were unfinished, and spawnable worker subtasks were claimed by the dispatcher through a stubbed spawn function.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with kanban patches 0002, 0003, 0005 and candidate 0006 applied; dispatcher spawn function stubbed",
+  "executed_by": "remote-proof-runner",
+  "hermes_version_observed": "Hermes Agent v0.16.0 (2026.6.5)",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy, real model call or real Hermes runtime mutation.",
+  "patches": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+    "adapters/hermes/patches/0005-ingest-overkill-worker-results-from-subtasks.patch",
+    "adapters/hermes/patches/0006-fix-overkill-worker-subtask-dependency-direction.patch"
+  ],
+  "checks": {
+    "worker_subtasks_created": "PASS",
+    "dependency_direction_worker_to_parent": "PASS",
+    "no_parent_to_worker_dependency": "PASS",
+    "parent_not_spawned_before_workers_done": "PASS",
+    "materialized_worker_dispatched": "PASS",
+    "materialized_worker_running": "PASS",
+    "claim_events_written": "PASS",
+    "parent_claim_rejected_on_worker_dependencies": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "disposable_task_evidence": {
+    "board_slug": "of-worker-dispatch-1781054601",
+    "parent_task_id": "t_ce9c36a4",
+    "child_count": 23,
+    "worker_to_parent_dependency_count": 23,
+    "parent_to_worker_dependency_count": 0,
+    "parent_final_status": "todo",
+    "parent_worker_pid": null,
+    "spawned_worker_count": 2,
+    "spawned_workers": [
+      {
+        "task_id": "ofw_35126748916e0965",
+        "assignee": "agentic-method-router",
+        "final_status": "running",
+        "worker_pid": 424242,
+        "spawn_mode": "stubbed"
+      },
+      {
+        "task_id": "ofw_6244cd9f4d6817d7",
+        "assignee": "factory-orchestrator",
+        "final_status": "running",
+        "worker_pid": 424242,
+        "spawn_mode": "stubbed"
+      }
+    ],
+    "nonspawnable_worker_count": 21,
+    "parent_event_kinds": [
+      "created",
+      "overkill_worker_tasks_materialized",
+      "overkill_factory_transition_gate",
+      "claim_rejected"
+    ],
+    "spawned_worker_event_kinds": [
+      "created",
+      "claimed",
+      "tip_scratch_workspace",
+      "spawned"
+    ]
+  },
+  "important_limitations": [
+    "This proves dispatcher route mechanics for materialized worker subtasks in a disposable installed Hermes runtime.",
+    "The spawn function was stubbed; no real Hermes child process, model call or specialist execution happened.",
+    "Profile existence was simulated with disposable profile directories; real profile configuration, auth, toolsets and model quality are still unproven.",
+    "Only spawn/claim routing was proven. Autonomous completion and real worker-result quality still require a separate proof.",
+    "This does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0006-fix-overkill-worker-subtask-dependency-direction.patch",
+    "validation/hermes-installed-runtime-smoke/worker-dispatch-route-smoke.json",
+    "validation/cards/vfinal-r3-ready.md"
+  ],
+  "next_action": "Create a real-profile disposable worker execution proof with bounded model/tool access, then verify autonomous completion and result quality before any real-runtime update."
+}

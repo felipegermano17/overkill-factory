@@ -43,11 +43,11 @@ keys, touch funds, or write devnet/mainnet state.
 - `evidence/receipt-five-first-slice.json`
 - `evidence/worker-closure-summary.json`
 - `evidence/v2-completion-gate-evidence.md`
-- `evidence/hermes-kaxis-qa-review.md`
-- `evidence/hermes-kaxis-security-review.md`
-- `evidence/hermes-kaxis-cybersecurity-review.md`
-- `evidence/hermes-kaxis-cto-review.md`
-- `evidence/hermes-kaxis-reviewer-review.md`
+- `evidence/hermes-qa-reviewer-review.md`
+- `evidence/hermes-security-reviewer-review.md`
+- `evidence/hermes-security-runner-review.md`
+- `evidence/hermes-architecture-reviewer-review.md`
+- `evidence/hermes-independent-reviewer-review.md`
 - `12-pilot-retrospective-v3-6.md`
 
 ## Portable Verification

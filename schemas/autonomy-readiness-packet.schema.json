@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/autonomy-readiness-packet.schema.json",
+  "title": "Overkill Factory Autonomy Readiness Packet",
+  "type": "object",
+  "required": [
+    "execution_mode",
+    "accounts_ready",
+    "tools_ready",
+    "environment_ready",
+    "cost_limit",
+    "forbidden_actions",
+    "rollback_path",
+    "human_gates"
+  ],
+  "properties": {
+    "execution_mode": { "enum": ["planning_only", "bounded_execution", "material_execution"] },
+    "accounts_ready": { "type": "boolean" },
+    "tools_ready": { "type": "boolean" },
+    "environment_ready": { "type": "boolean" },
+    "cost_limit": { "type": "string", "minLength": 1 },
+    "forbidden_actions": { "type": "array", "items": { "type": "string" } },
+    "rollback_path": { "type": "string", "minLength": 3 },
+    "human_gates": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

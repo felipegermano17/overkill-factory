@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json",
+  "title": "Overkill Factory Product Experience Plan",
+  "type": "object",
+  "required": ["surface_type", "surface_pack", "states", "proof_required"],
+  "properties": {
+    "surface_type": { "type": "string", "minLength": 2 },
+    "surface_pack": { "type": "string", "minLength": 2 },
+    "states": { "type": "array", "items": { "type": "string" } },
+    "proof_required": { "type": "array", "items": { "type": "string" } },
+    "accessibility_checks": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,148 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T10:29:10Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-BOARD-LIFECYCLE-OPERATIONAL-SAFETY-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_BOARD_LIFECYCLE_OPERATIONAL_SAFETY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API board lifecycle operational-safety smoke passed: board create, metadata patch and switch routes affect only board metadata/current-board selection and do not mutate existing vFinal task graphs.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_board_create_invalid_slug_rejected": "PASS",
+    "dashboard_board_create_metadata_only_allowed": "PASS",
+    "dashboard_board_patch_metadata_only_allowed": "PASS",
+    "dashboard_board_create_switch_updates_current_pointer": "PASS",
+    "dashboard_board_switch_updates_current_pointer": "PASS",
+    "dashboard_board_patch_missing_rejected": "PASS",
+    "dashboard_board_switch_missing_rejected": "PASS",
+    "factory_board_tasks_unchanged": "PASS",
+    "factory_worker_prerequisites_preserved": "PASS",
+    "no_local_paths_in_board_responses": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_board_lifecycle_evidence": {
+    "factory_board_slug": "of-dashboard-board-life-factory-1781087349",
+    "parent_task_id": "t_f310f8f0",
+    "worker_count_before": 23,
+    "worker_count_after": 23,
+    "factory_snapshot_before": {
+      "task_count": 24,
+      "link_count": 23,
+      "digest": "2fbbb24c1966f04c4a0dc718bc294b9e56676c5fa0a956654c8720dbeef05328"
+    },
+    "factory_snapshot_after": {
+      "task_count": 24,
+      "link_count": 23,
+      "digest": "2fbbb24c1966f04c4a0dc718bc294b9e56676c5fa0a956654c8720dbeef05328"
+    },
+    "current_file_before": "of-dashboard-board-life-created-1781087302",
+    "current_file_after_create_switch": "of-dashboard-board-life-switched-1781087349",
+    "current_file_after_switch_endpoint": "of-dashboard-board-life-created-1781087349",
+    "invalid_create_attempt": {
+      "ok": false,
+      "http_status": 400,
+      "detail": "invalid board slug '../bad-board': must be 1-64 chars, lowercase alphanumerics / hyphens / underscores, not starting with '-' or '_'"
+    },
+    "create_no_switch_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "board": {
+          "slug": "of-dashboard-board-life-created-1781087349",
+          "name": "Created Board",
+          "description": "Metadata only board",
+          "icon": "dot",
+          "color": "#336699",
+          "archived": false,
+          "has_db_path": true
+        },
+        "current": "of-dashboard-board-life-env-1781087349"
+      }
+    },
+    "patch_created_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "board": {
+          "slug": "of-dashboard-board-life-created-1781087349",
+          "name": "Created Board Updated",
+          "description": "Updated metadata only",
+          "icon": "square",
+          "color": "#225577",
+          "archived": false,
+          "has_db_path": true
+        },
+        "current": null
+      }
+    },
+    "create_with_switch_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "board": {
+          "slug": "of-dashboard-board-life-switched-1781087349",
+          "name": "Switch Board",
+          "description": "Created and selected",
+          "icon": "",
+          "color": "",
+          "archived": false,
+          "has_db_path": true
+        },
+        "current": "of-dashboard-board-life-env-1781087349"
+      }
+    },
+    "switch_created_attempt": {
+      "ok": true,
+      "http_status": null,
+      "result": {
+        "current": "of-dashboard-board-life-created-1781087349"
+      }
+    },
+    "missing_patch_attempt": {
+      "ok": false,
+      "http_status": 404,
+      "detail": "board 'missing-1781087349' does not exist"
+    },
+    "missing_switch_attempt": {
+      "ok": false,
+      "http_status": 404,
+      "detail": "board 'missing-1781087349' does not exist"
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not prove profile or orchestration route safety.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/dashboard_board_lifecycle_operational_safety_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-board-lifecycle-operational-safety-smoke.json"
+  ],
+  "next_action": "Mark board lifecycle routes as operational-safety proven and continue with profile/orchestration mutating route families."
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/parallel-lane-contract.schema.json",
+  "record_type": "parallel_lane_contract",
+  "lane_id": "example-readonly-audit",
+  "lane_kind": "read_only",
+  "owner_agent": "external:subagent",
+  "status": "ready_for_integration",
+  "base_ref": "main",
+  "worktree_ref": "main",
+  "input_refs": [
+    "docs/methodology/overkill-factory-vfinal.md"
+  ],
+  "intended_write_scope": [
+    "none"
+  ],
+  "forbidden_paths": [
+    "validation/private/",
+    ".env",
+    "local-runtime-artifacts/"
+  ],
+  "changed_paths": [],
+  "expected_outputs": [
+    "read-only audit summary"
+  ],
+  "validation_commands": [
+    "python scripts/public_safety_scan.py",
+    "python scripts/secret_safety_scan.py"
+  ],
+  "validation_result": "PASS",
+  "evidence_refs": [
+    "external:subagent-summary"
+  ],
+  "cleanup_status": "not_needed",
+  "integration_owner": "main-agent",
+  "residual_risks": [
+    "No write lane was integrated from this example contract."
+  ],
+  "public_safety_boundary": {
+    "no_private_product_names": true,
+    "no_local_absolute_paths": true,
+    "no_private_ids": true,
+    "no_private_urls": true,
+    "no_credentials_or_raw_logs": true
+  }
+}

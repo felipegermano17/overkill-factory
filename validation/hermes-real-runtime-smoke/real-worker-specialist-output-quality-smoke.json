@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-real-runtime-smoke.schema.json",
+  "record_type": "hermes_real_runtime_smoke",
+  "created_at": "2026-06-10T18:27:54Z",
+  "result": "PASS",
+  "smoke_type": "real_worker_specialist_output_quality_smoke",
+  "scope": "real Hermes runtime, disposable board, disposable public-safe scanner workspace, public-safety-gate worker, scanner-backed specialist output quality check",
+  "environment_ref": "redacted-real-hermes-runtime",
+  "worker_ref": "public-safety-gate",
+  "checks": {
+    "real_gateway_running_checked_first": true,
+    "disposable_workspace_created": true,
+    "direct_scanner_precheck_passed": true,
+    "disposable_board_created": true,
+    "disposable_task_created": true,
+    "worker_profile_assigned": true,
+    "worker_spawned": true,
+    "terminal_tool_used": true,
+    "public_safety_scan_command_observed": true,
+    "secret_safety_scan_command_observed": true,
+    "scanner_ok_output_observed": true,
+    "quality_marker_observed": true,
+    "public_safety_result_shape_observed": true,
+    "task_completed": true,
+    "kanban_complete_observed": true,
+    "cleanup_verified": true,
+    "board_was_archived": true,
+    "disposable_workspace_removed": true,
+    "no_raw_runtime_logs_stored": true
+  },
+  "summary": {
+    "worker": "public-safety-gate",
+    "profile_mode": "closed",
+    "requested_quality_check": "public safety and secret safety scanner execution in disposable workspace",
+    "terminal_status": "done",
+    "scanner_results": {
+      "public_safety_scan": "PASS",
+      "secret_safety_scan": "PASS"
+    },
+    "worker_result_ref": "validation/hermes-real-runtime-smoke/specialist-output-quality/worker-results/public_safety_result.json"
+  },
+  "cleanup": {
+    "method": "bounded task completion, recoverable board archive, disposable scanner workspace removal",
+    "result": "PASS"
+  },
+  "evidence_refs": [
+    "validation/hermes-real-runtime-smoke/real-worker-local-tool-quality-smoke.json",
+    "validation/hermes-real-runtime-smoke/specialist-output-quality/worker-results/public_safety_result.json",
+    "scripts/public_safety_scan.py",
+    "scripts/secret_safety_scan.py"
+  ],
+  "limits": [
+    "This receipt is sanitized for the public repository.",
+    "It proves scanner-backed specialist output quality for one bounded public-safety-gate worker path.",
+    "It does not prove every future specialist worker, external SaaS, Discord, cloud, browser, GitHub mutation or scanner credential path.",
+    "The real production update receipt must still ensure the target Hermes worker workspace receives the scanner scripts through the release package.",
+    "Raw runtime output is intentionally not stored because it can contain runtime-local paths, ids, session files or provider details."
+  ]
+}

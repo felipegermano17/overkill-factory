@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
   "report_type": "factory_gate_preflight",
-  "created_at": "2026-06-05T23:00:51+00:00",
+  "created_at": "2026-06-06T04:50:52+00:00",
   "card_id": "KFP-V35-POS-ONCHAIN-AUDITOR",
   "risk_effective": "R3",
   "surfaces": [
@@ -10,11 +10,27 @@
     "cpi",
     "compute-units"
   ],
+  "gate_status": "ready_for_worker_execution",
+  "required_workers": [
+    "codex-security",
+    "solana-quasar-auditor",
+    "independent-reviewer",
+    "human-gate-clerk",
+    "factory-orchestrator",
+    "source-ledger-worker",
+    "qa-verification-worker",
+    "autoreview-gate",
+    "security-orchestrator",
+    "remote-proof-runner",
+    "handoff-packer",
+    "supply-chain-gate"
+  ],
+  "blocked_workers": [],
   "card_validation_errors": [],
   "workers": {
     "codex-security": {
       "required": true,
-      "reason": "risk or sensitive surface requires security evidence",
+      "reason": "risk, code, public, agentic or sensitive surface requires security evidence",
       "status": "requires_execution"
     },
     "solana-quasar-auditor": {
@@ -36,6 +52,116 @@
       "required": true,
       "reason": "architecture/high-risk/human gate detected",
       "status": "requires_execution"
+    },
+    "factory-orchestrator": {
+      "required": true,
+      "reason": "factory card needs routing and state control",
+      "status": "requires_execution"
+    },
+    "source-ledger-worker": {
+      "required": true,
+      "reason": "raw or early source state detected",
+      "status": "requires_execution"
+    },
+    "product-sot-planner": {
+      "required": false,
+      "reason": "not a Product SOT phase",
+      "status": "not_required_by_current_card"
+    },
+    "product-architect": {
+      "required": false,
+      "reason": "not an architecture phase",
+      "status": "not_required_by_current_card"
+    },
+    "docs-os-worker": {
+      "required": false,
+      "reason": "documentation OS not required by current card",
+      "status": "not_required_by_current_card"
+    },
+    "decomposition-planner": {
+      "required": false,
+      "reason": "not a decomposition phase",
+      "status": "not_required_by_current_card"
+    },
+    "implementation-worker": {
+      "required": false,
+      "reason": "not an implementation card",
+      "status": "not_required_by_current_card"
+    },
+    "qa-verification-worker": {
+      "required": true,
+      "reason": "verification/review risk detected",
+      "status": "requires_execution"
+    },
+    "autoreview-gate": {
+      "required": true,
+      "reason": "code or pre-landing review surface detected",
+      "status": "requires_execution"
+    },
+    "security-orchestrator": {
+      "required": true,
+      "reason": "security-sensitive or R2+ card needs routed controls",
+      "status": "requires_execution"
+    },
+    "appsec-owasp-specialist": {
+      "required": false,
+      "reason": "no OWASP AppSec surface detected",
+      "status": "not_required_by_current_card"
+    },
+    "agentic-ai-security-specialist": {
+      "required": false,
+      "reason": "no agentic AI security trigger",
+      "status": "not_required_by_current_card"
+    },
+    "cloud-infra-security-specialist": {
+      "required": false,
+      "reason": "no cloud/infra trigger",
+      "status": "not_required_by_current_card"
+    },
+    "crypto-key-management-specialist": {
+      "required": false,
+      "reason": "no crypto/key trigger",
+      "status": "not_required_by_current_card"
+    },
+    "remote-proof-runner": {
+      "required": true,
+      "reason": "high-risk or explicit remote proof required",
+      "status": "requires_execution"
+    },
+    "release-ops-worker": {
+      "required": false,
+      "reason": "not a release/promotion card",
+      "status": "not_required_by_current_card"
+    },
+    "handoff-packer": {
+      "required": true,
+      "reason": "phase or risk requires portable handoff",
+      "status": "requires_execution"
+    },
+    "memory-steward": {
+      "required": false,
+      "reason": "no memory stewardship trigger",
+      "status": "not_required_by_current_card"
+    },
+    "skill-eval-distiller": {
+      "required": false,
+      "reason": "no skill evolution trigger",
+      "status": "not_required_by_current_card"
+    },
+    "public-safety-gate": {
+      "required": false,
+      "reason": "not a public/release artifact",
+      "status": "not_required_by_current_card"
+    },
+    "supply-chain-gate": {
+      "required": true,
+      "reason": "code/dependency/high-risk supply-chain trigger detected",
+      "status": "requires_execution"
+    },
+    "detection-monitoring-worker": {
+      "required": false,
+      "reason": "no detection/monitoring trigger",
+      "status": "not_required_by_current_card"
     }
   }
 }

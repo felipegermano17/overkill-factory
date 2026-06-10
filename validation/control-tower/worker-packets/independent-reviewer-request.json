@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-09T22:21:50+00:00",
+  "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+  "worker": {
+    "id": "independent-reviewer",
+    "name": "Independent Reviewer",
+    "factory_phase": "F14",
+    "tool_required": "different Hermes/Codex reviewer identity"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "R2+ or explicit independent review required",
+    "timing": "after worker evidence exists and before done/promotion",
+    "blocking_policy": "Executor and reviewer must be different. Review is mandatory for R2+ work and whenever Receipt Five says reviewer_required=true."
+  },
+  "card_ref": {
+    "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+    "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+    "phase": "F19",
+    "risk_effective": "R2",
+    "surfaces": [
+      "discord",
+      "control-tower",
+      "owner-interface",
+      "approval",
+      "forecast"
+    ],
+    "executor_identity": "discord-control-tower-bridge",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "executor_identity",
+      "reviewer_identity",
+      "done_definition"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/vfinal-control-tower-missing-interface.md"
+    ],
+    "authority_max": "preflight_only",
+    "forbidden_actions": [
+      "real_discord_message",
+      "approval_spoofing",
+      "production_change",
+      "secret_access"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "independent_review_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

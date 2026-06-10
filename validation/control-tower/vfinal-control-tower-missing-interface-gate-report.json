@@ -1,0 +1,270 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+  "report_type": "factory_gate_preflight",
+  "created_at": "2026-06-09T22:21:47+00:00",
+  "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+  "risk_effective": "R2",
+  "surfaces": [
+    "discord",
+    "control-tower",
+    "owner-interface",
+    "approval",
+    "forecast"
+  ],
+  "gate_status": "blocked",
+  "required_workers": [
+    "independent-reviewer",
+    "factory-orchestrator",
+    "qa-verification-worker",
+    "security-orchestrator",
+    "handoff-packer",
+    "agentic-method-router",
+    "factory-concierge",
+    "discord-control-tower-bridge",
+    "control-tower-projection-worker"
+  ],
+  "blocked_workers": [
+    "security-orchestrator",
+    "factory-concierge",
+    "discord-control-tower-bridge",
+    "control-tower-projection-worker"
+  ],
+  "card_validation_errors": [],
+  "workers": {
+    "codex-security": {
+      "required": false,
+      "reason": "no R3/R4, code, public, agentic or sensitive surface detected",
+      "status": "not_required_by_current_card"
+    },
+    "solana-quasar-auditor": {
+      "required": false,
+      "reason": "no onchain surface detected",
+      "status": "not_required_by_current_card"
+    },
+    "product-face": {
+      "required": false,
+      "reason": "no visible product surface detected",
+      "status": "not_required_by_current_card"
+    },
+    "independent-reviewer": {
+      "required": true,
+      "reason": "R2+ or explicit independent review required",
+      "status": "requires_execution"
+    },
+    "human-gate-clerk": {
+      "required": false,
+      "reason": "no human gate trigger detected",
+      "status": "not_required_by_current_card"
+    },
+    "factory-orchestrator": {
+      "required": true,
+      "reason": "factory card needs routing and state control",
+      "status": "requires_execution"
+    },
+    "source-ledger-worker": {
+      "required": false,
+      "reason": "source ledger already past early intake",
+      "status": "not_required_by_current_card"
+    },
+    "product-sot-planner": {
+      "required": false,
+      "reason": "not a Product SOT phase",
+      "status": "not_required_by_current_card"
+    },
+    "product-architect": {
+      "required": false,
+      "reason": "not an architecture phase",
+      "status": "not_required_by_current_card"
+    },
+    "docs-os-worker": {
+      "required": false,
+      "reason": "documentation OS not required by current card",
+      "status": "not_required_by_current_card"
+    },
+    "decomposition-planner": {
+      "required": false,
+      "reason": "not a decomposition phase",
+      "status": "not_required_by_current_card"
+    },
+    "implementation-worker": {
+      "required": false,
+      "reason": "not an implementation card",
+      "status": "not_required_by_current_card"
+    },
+    "qa-verification-worker": {
+      "required": true,
+      "reason": "verification/review risk detected",
+      "status": "requires_execution"
+    },
+    "autoreview-gate": {
+      "required": false,
+      "reason": "no code/pre-landing trigger",
+      "status": "not_required_by_current_card"
+    },
+    "security-orchestrator": {
+      "required": true,
+      "reason": "security-sensitive or R2+ card needs routed controls",
+      "status": "blocked_missing_inputs"
+    },
+    "appsec-owasp-specialist": {
+      "required": false,
+      "reason": "no OWASP AppSec surface detected",
+      "status": "not_required_by_current_card"
+    },
+    "agentic-ai-security-specialist": {
+      "required": false,
+      "reason": "no agentic AI security trigger",
+      "status": "not_required_by_current_card"
+    },
+    "cloud-infra-security-specialist": {
+      "required": false,
+      "reason": "no cloud/infra trigger",
+      "status": "not_required_by_current_card"
+    },
+    "crypto-key-management-specialist": {
+      "required": false,
+      "reason": "no crypto/key trigger",
+      "status": "not_required_by_current_card"
+    },
+    "remote-proof-runner": {
+      "required": false,
+      "reason": "local proof is sufficient by current card",
+      "status": "not_required_by_current_card"
+    },
+    "release-ops-worker": {
+      "required": false,
+      "reason": "not a release/promotion card",
+      "status": "not_required_by_current_card"
+    },
+    "handoff-packer": {
+      "required": true,
+      "reason": "phase or risk requires portable handoff",
+      "status": "requires_execution"
+    },
+    "memory-steward": {
+      "required": false,
+      "reason": "no memory stewardship trigger",
+      "status": "not_required_by_current_card"
+    },
+    "skill-eval-distiller": {
+      "required": false,
+      "reason": "no skill evolution trigger",
+      "status": "not_required_by_current_card"
+    },
+    "public-safety-gate": {
+      "required": false,
+      "reason": "not a public/release artifact",
+      "status": "not_required_by_current_card"
+    },
+    "supply-chain-gate": {
+      "required": false,
+      "reason": "no supply-chain trigger",
+      "status": "not_required_by_current_card"
+    },
+    "detection-monitoring-worker": {
+      "required": false,
+      "reason": "no detection/monitoring trigger",
+      "status": "not_required_by_current_card"
+    },
+    "product-outcome-discovery-worker": {
+      "required": false,
+      "reason": "outcome/discovery already outside this worker trigger",
+      "status": "not_required_by_current_card"
+    },
+    "agentic-method-router": {
+      "required": true,
+      "reason": "vFinal or method routing surface detected",
+      "status": "requires_execution"
+    },
+    "software-development-planner": {
+      "required": false,
+      "reason": "no vFinal software planning trigger",
+      "status": "not_required_by_current_card"
+    },
+    "product-experience-router": {
+      "required": false,
+      "reason": "no vFinal product experience trigger",
+      "status": "not_required_by_current_card"
+    },
+    "data-metrics-worker": {
+      "required": false,
+      "reason": "no vFinal data/metrics trigger",
+      "status": "not_required_by_current_card"
+    },
+    "agent-eval-worker": {
+      "required": false,
+      "reason": "no vFinal agent eval trigger",
+      "status": "not_required_by_current_card"
+    },
+    "dependency-integration-worker": {
+      "required": false,
+      "reason": "no vFinal dependency trigger",
+      "status": "not_required_by_current_card"
+    },
+    "access-capability-worker": {
+      "required": false,
+      "reason": "no vFinal access/capability trigger",
+      "status": "not_required_by_current_card"
+    },
+    "security-architect-worker": {
+      "required": false,
+      "reason": "no vFinal security architecture trigger",
+      "status": "not_required_by_current_card"
+    },
+    "privacy-compliance-worker": {
+      "required": false,
+      "reason": "no vFinal privacy/compliance trigger",
+      "status": "not_required_by_current_card"
+    },
+    "budget-cost-worker": {
+      "required": false,
+      "reason": "no vFinal budget/cost trigger",
+      "status": "not_required_by_current_card"
+    },
+    "production-readiness-worker": {
+      "required": false,
+      "reason": "no vFinal production readiness trigger",
+      "status": "not_required_by_current_card"
+    },
+    "incident-support-worker": {
+      "required": false,
+      "reason": "no vFinal incident/support trigger",
+      "status": "not_required_by_current_card"
+    },
+    "legacy-migration-worker": {
+      "required": false,
+      "reason": "no vFinal legacy/migration trigger",
+      "status": "not_required_by_current_card"
+    },
+    "platform-devex-worker": {
+      "required": false,
+      "reason": "no vFinal platform/DevEx trigger",
+      "status": "not_required_by_current_card"
+    },
+    "user-docs-onboarding-worker": {
+      "required": false,
+      "reason": "no vFinal user docs/onboarding trigger",
+      "status": "not_required_by_current_card"
+    },
+    "factory-concierge": {
+      "required": true,
+      "reason": "vFinal owner interface trigger detected",
+      "status": "blocked_missing_inputs"
+    },
+    "discord-control-tower-bridge": {
+      "required": true,
+      "reason": "vFinal Discord control tower trigger detected",
+      "status": "blocked_missing_inputs"
+    },
+    "control-tower-projection-worker": {
+      "required": true,
+      "reason": "vFinal control tower projection trigger detected",
+      "status": "blocked_missing_inputs"
+    },
+    "factory-maturity-auditor": {
+      "required": false,
+      "reason": "no vFinal maturity trigger",
+      "status": "not_required_by_current_card"
+    }
+  }
+}

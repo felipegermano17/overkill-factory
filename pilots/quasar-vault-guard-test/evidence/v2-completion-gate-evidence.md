@@ -1,6 +1,6 @@
 # Hermes V2 Completion Gate Evidence
 
-This file exists because the live Hermes Kanban still enforces the older KAXIS
+This file exists because the live Hermes Kanban still enforces the older Overkill
 V2 completion gate before a high-risk card can be marked `done`.
 
 The approval records in the Receipt Five are scoped to the dry pilot only. They
@@ -20,11 +20,11 @@ funds, custody, or a real Quasar program.
 - `worker-results/independent-review-result.json`
 - `evidence/human-gate-record.json`
 - `evidence/receipt-five-first-slice.json`
-- `evidence/hermes-kaxis-qa-review.md`
-- `evidence/hermes-kaxis-security-review.md`
-- `evidence/hermes-kaxis-cybersecurity-review.md`
-- `evidence/hermes-kaxis-cto-review.md`
-- `evidence/hermes-kaxis-reviewer-review.md`
+- `evidence/hermes-qa-reviewer-review.md`
+- `evidence/hermes-security-reviewer-review.md`
+- `evidence/hermes-security-runner-review.md`
+- `evidence/hermes-architecture-reviewer-review.md`
+- `evidence/hermes-independent-reviewer-review.md`
 
 ## Structured Verification
 

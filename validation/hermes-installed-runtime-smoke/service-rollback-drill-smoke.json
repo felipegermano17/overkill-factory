@@ -1,0 +1,136 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T03:29:19Z",
+  "worker": {
+    "id": "release-ops-worker",
+    "name": "Release Ops Worker",
+    "factory_phase": "F16-F18"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-SERVICE-ROLLBACK-DRILL",
+    "slice_id": "VFINAL_HERMES_SERVICE_ROLLBACK_DRILL",
+    "phase": "F16",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "adapter",
+      "runtime-update",
+      "rollback"
+    ],
+    "executor_identity": "release-ops-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable service rollback drill passed: baseline restore, health checks, service stop/start probe and patched-state restore all passed.",
+  "tool_or_profile": "adapters/hermes/service_rollback_drill_smoke.py",
+  "executed_by": "release-ops-worker",
+  "runtime_scope": "Disposable Hermes checkout/home only; rollback uses baseline source restore and a local service-like process probe.",
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "disposable_baseline_guard": "PASS",
+    "patched_markers_present_before_rollback": "PASS",
+    "baseline_markers_absent": "PASS",
+    "rollback_markers_removed": "PASS",
+    "health_checks": "PASS",
+    "service_stop_start_probe": "PASS",
+    "patched_state_restored_after_drill": "PASS",
+    "final_restore": "PASS",
+    "no_real_runtime_touched": "PASS"
+  },
+  "health_checks_detail": [
+    {
+      "stage": "patched-before-rollback",
+      "result": "PASS",
+      "py_compile": "PASS",
+      "import_kanban_db": "PASS",
+      "hermes_version_command": "PASS",
+      "hermes_version": "Hermes Agent v0.16.0 (2026.6.5)"
+    },
+    {
+      "stage": "rolled-back-baseline",
+      "result": "PASS",
+      "py_compile": "PASS",
+      "import_kanban_db": "PASS",
+      "hermes_version_command": "PASS",
+      "hermes_version": "Hermes Agent v0.16.0 (2026.6.5)"
+    },
+    {
+      "stage": "patched-restored",
+      "result": "PASS",
+      "py_compile": "PASS",
+      "import_kanban_db": "PASS",
+      "hermes_version_command": "PASS",
+      "hermes_version": "Hermes Agent v0.16.0 (2026.6.5)"
+    }
+  ],
+  "service_checks_detail": [
+    {
+      "stage": "patched-before-rollback",
+      "result": "PASS",
+      "started": "PASS",
+      "stopped": "PASS",
+      "isolated_home_env": "PASS"
+    },
+    {
+      "stage": "rolled-back-baseline",
+      "result": "PASS",
+      "started": "PASS",
+      "stopped": "PASS",
+      "isolated_home_env": "PASS"
+    },
+    {
+      "stage": "patched-restored",
+      "result": "PASS",
+      "started": "PASS",
+      "stopped": "PASS",
+      "isolated_home_env": "PASS"
+    }
+  ],
+  "marker_checks": {
+    "rolled_back_baseline": {
+      "result": "PASS",
+      "files": {
+        "hermes_cli/kanban_db.py": {
+          "result": "PASS",
+          "present_count": 0,
+          "expected_present": false
+        },
+        "plugins/kanban/dashboard/plugin_api.py": {
+          "result": "PASS",
+          "present_count": 0,
+          "expected_present": false
+        }
+      }
+    },
+    "patched_restored": {
+      "result": "PASS",
+      "files": {
+        "hermes_cli/kanban_db.py": {
+          "result": "PASS",
+          "present_count": 4,
+          "expected_present": true
+        },
+        "plugins/kanban/dashboard/plugin_api.py": {
+          "result": "PASS",
+          "present_count": 3,
+          "expected_present": true
+        }
+      }
+    }
+  },
+  "important_limitations": [
+    "This proves rollback choreography in a disposable checkout/home, not a real systemd or Windows service unit.",
+    "It does not prove Discord, cloud, model, external tool, DNS, deployment, or production monitoring rollback.",
+    "It does not authorize updating a real Hermes runtime by itself."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/service_rollback_drill_smoke.py",
+    "validation/hermes-installed-runtime-smoke/service-rollback-drill-smoke.json",
+    "adapters/hermes/update-runbook.md",
+    "docs/validation/hermes-vfinal-production-readiness-status.md"
+  ],
+  "next_action": "Run one bounded non-stub model/tool-auth worker proof and then perform a receipt-backed real service update drill before production rollout."
+}

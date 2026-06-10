@@ -1,0 +1,124 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T00:48:34Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-ROUTE-PARITY-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_ROUTE_PARITY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api",
+      "control-tower"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes dashboard/API route parity smoke passed after patch 0004. Before the patch, PATCH /tasks/{id} status=ready could move an OVERKILL_VFINAL card from todo to ready without a transition-gate event. After the patch, weak vFinal cards are refused by the gate, complete vFinal cards are allowed and materialize 23 blocked worker subtasks, and bulk status=ready also respects the gate.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with patches 0002, 0003 and candidate 0004 applied",
+  "executed_by": "remote-proof-runner",
+  "hermes_version_observed": "Hermes Agent v0.16.0 (2026.6.5)",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy or real Hermes runtime mutation.",
+  "patches": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+    "adapters/hermes/patches/0004-guard-overkill-vfinal-dashboard-ready-route.patch"
+  ],
+  "checks": {
+    "before_0004_dashboard_ready_bypass_confirmed": "PASS",
+    "patch_0004_apply_check": "PASS",
+    "patch_0004_py_compile": "PASS",
+    "weak_patch_ready_rejected_by_gate": "PASS",
+    "ready_patch_allowed_by_gate": "PASS",
+    "ready_patch_worker_subtasks_created": "PASS",
+    "ready_patch_worker_subtasks_initial_status_blocked": "PASS",
+    "bulk_ready_rejected_by_gate": "PASS",
+    "hook_result_ref_sanitized": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "before_patch_evidence": {
+    "route": "plugins.kanban.dashboard.plugin_api.update_task status=ready",
+    "fixture": "A weak OVERKILL_VFINAL card was created blocked, then set to todo by direct SQL to simulate a legacy or inconsistent dashboard-visible card.",
+    "synthetic_card_ref": "validation/cards/vfinal-r3-missing-security-access.md",
+    "board_slug": "of-dashboard-before-1781052254",
+    "task_id": "t_7aa79245",
+    "before_status": "todo",
+    "after_status": "ready",
+    "gate_events_before": 0,
+    "gate_events_after": 0,
+    "child_link_count": 0,
+    "bypass_confirmed": true
+  },
+  "after_patch_evidence": {
+    "board_slug": "of-dashboard-after-1781052358",
+    "weak_patch": {
+      "route": "plugins.kanban.dashboard.plugin_api.update_task status=ready",
+      "synthetic_card_ref": "validation/cards/vfinal-r3-missing-security-access.md",
+      "task_id": "t_a6a45fd7",
+      "before_status": "todo",
+      "after_status": "todo",
+      "http_status": 409,
+      "gate_actions": [
+        "block"
+      ],
+      "gate_event_count_after": 1,
+      "child_link_count": 0,
+      "blocked_by_gate": true
+    },
+    "ready_patch": {
+      "route": "plugins.kanban.dashboard.plugin_api.update_task status=ready",
+      "synthetic_card_ref": "validation/cards/vfinal-r3-ready.md",
+      "task_id": "t_a0bb3ec4",
+      "before_status": "todo",
+      "after_status": "ready",
+      "gate_actions": [
+        "allow"
+      ],
+      "gate_event_count_after": 1,
+      "child_link_count": 23,
+      "child_status_counts": {
+        "blocked": 23
+      },
+      "allowed_and_materialized_workers": true
+    },
+    "weak_bulk": {
+      "route": "plugins.kanban.dashboard.plugin_api.bulk_update status=ready",
+      "synthetic_card_ref": "validation/cards/vfinal-r3-missing-security-access.md",
+      "task_id": "t_7108b675",
+      "before_status": "todo",
+      "after_status": "todo",
+      "bulk_ok": false,
+      "gate_actions": [
+        "block"
+      ],
+      "gate_event_count_after": 1,
+      "child_link_count": 0,
+      "blocked_by_gate": true
+    }
+  },
+  "important_limitations": [
+    "This proves the dashboard/API ready route behavior through direct Python route calls in a disposable installed Hermes runtime.",
+    "The legacy-card fixture intentionally used direct SQL setup to simulate a card that reached todo outside the normal guarded creation path.",
+    "The smoke did not start a production HTTP dashboard server and did not mutate any real Hermes runtime.",
+    "This does not yet prove dispatch or worker execution for materialized subtasks."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0004-guard-overkill-vfinal-dashboard-ready-route.patch",
+    "adapters/hermes/validate_v016_dashboard_route_patch.py",
+    "validation/cards/vfinal-r3-missing-security-access.md",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-route-parity-smoke.json"
+  ],
+  "next_action": "Add patch 0004 to the Hermes update runbook sequence, then prove dispatcher/worker execution and result ingestion before any real-runtime update."
+}

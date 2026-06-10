@@ -1,0 +1,30 @@
+diff --git a/hermes_cli/kanban_db.py b/hermes_cli/kanban_db.py
+index 8de45bd..ed49039 100644
+--- a/hermes_cli/kanban_db.py
++++ b/hermes_cli/kanban_db.py
+@@ -599,9 +599,12 @@ def _overkill_materialize_worker_tasks_in_txn(
+                     parent["tenant"],
+                 ),
+             )
++            # Worker subtasks are prerequisites for the parent Factory card.
++            # Linking worker -> parent lets the dispatcher run the worker
++            # before the parent can close.
+             conn.execute(
+                 "INSERT OR IGNORE INTO task_links (parent_id, child_id) VALUES (?, ?)",
+-                (parent_task_id, worker_task_id),
++                (worker_task_id, parent_task_id),
+             )
+             _append_event(
+                 conn,
+@@ -649,9 +652,10 @@ def _overkill_materialize_worker_tasks_in_txn(
+                 f"UPDATE tasks SET {', '.join(changes)} WHERE id = ?",
+                 tuple(params),
+             )
++            # Preserve worker -> parent on idempotent updates too.
+             conn.execute(
+                 "INSERT OR IGNORE INTO task_links (parent_id, child_id) VALUES (?, ?)",
+-                (parent_task_id, worker_task_id),
++                (worker_task_id, parent_task_id),
+             )
+             _append_event(
+                 conn,

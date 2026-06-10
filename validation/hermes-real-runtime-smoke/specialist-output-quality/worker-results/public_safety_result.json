@@ -1,0 +1,35 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "public_safety_result",
+  "created_at": "2026-06-10T18:27:54Z",
+  "worker": {
+    "id": "public-safety-gate",
+    "name": "Public Safety Gate",
+    "factory_phase": "F16/F17"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-REAL-SPECIALIST-OUTPUT-QUALITY",
+    "slice_id": "VFINAL_HERMES_SPECIALIST_QUALITY",
+    "phase": "F16",
+    "risk_effective": "R1",
+    "surfaces": ["public", "docs"],
+    "executor_identity": "public-safety-gate",
+    "reviewer_identity": "not-required"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Real Hermes public-safety-gate worker ran the public safety and secret safety scanners in a disposable public-safe workspace and found no blocking issue.",
+  "tool_or_profile": "Hermes public-safety-gate profile with local terminal tool and factory scanner scripts",
+  "executed_by": "public-safety-gate",
+  "evidence_refs": [
+    "validation/hermes-real-runtime-smoke/real-worker-specialist-output-quality-smoke.json",
+    "scripts/public_safety_scan.py",
+    "scripts/secret_safety_scan.py"
+  ],
+  "next_action": "Use this scanner-backed result for specialist_output_quality production proof.",
+  "scanner_results": {
+    "public_safety_scan": "PASS",
+    "secret_safety_scan": "PASS"
+  },
+  "raw_runtime_data_policy": "raw board ids, task ids, run ids, provider logs and local absolute paths are intentionally excluded from this public artifact"
+}

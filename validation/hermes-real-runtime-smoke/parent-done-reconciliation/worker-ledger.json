@@ -1,0 +1,220 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-worker-ledger.schema.json",
+  "ledger_type": "overkill_factory_hermes_worker_ledger",
+  "tasks": {
+    "ofw_1e4032762fa30bfc": {
+      "task_id": "ofw_1e4032762fa30bfc",
+      "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+      "worker_id": "factory-orchestrator",
+      "title": "Factory Orchestrator: VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+      "queue_class": "blocking-before-ready",
+      "required_before": "ready",
+      "expected_receipt_field": "orchestration_result",
+      "status": "requires_execution",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-10T18:02:17+00:00",
+        "source_card_path": "validation/cards/real-worker-parent-done-reconciliation-r1.md",
+        "worker": {
+          "id": "factory-orchestrator",
+          "name": "Factory Orchestrator",
+          "factory_phase": "F0-F18",
+          "tool_required": "Hermes Kanban plus factory gate report"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "factory card needs routing and state control",
+          "timing": "at phase changes, gate preparation, worker routing, and blocked-state triage",
+          "blocking_policy": "The orchestrator routes work and records state, but cannot approve product, security, onchain, R3/R4, release, or human gates."
+        },
+        "card_ref": {
+          "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+          "slice_id": "VFINAL_HERMES_REAL_PARENT_DONE",
+          "phase": "F8",
+          "risk_effective": "R1",
+          "surfaces": [
+            "docs"
+          ],
+          "executor_identity": "public-safety-gate",
+          "reviewer_identity": "not-required"
+        },
+        "input_contract": {
+          "required_fields": [
+            "phase",
+            "risk_effective",
+            "surfaces",
+            "done_definition"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "README.md",
+            "scripts/factoryctl.py",
+            "validation/hermes-real-runtime-smoke"
+          ],
+          "authority_max": "validation_only",
+          "forbidden_actions": [
+            "publish",
+            "push",
+            "merge",
+            "deploy",
+            "secret_access",
+            "private_path_leak"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "orchestration_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      }
+    },
+    "ofw_090c50ebd1a8151b": {
+      "task_id": "ofw_090c50ebd1a8151b",
+      "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+      "worker_id": "docs-os-worker",
+      "title": "Documentation OS Worker: VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+      "queue_class": "blocking-before-ready",
+      "required_before": "ready",
+      "expected_receipt_field": "documentation_os_result",
+      "status": "requires_execution",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-10T18:02:17+00:00",
+        "source_card_path": "validation/cards/real-worker-parent-done-reconciliation-r1.md",
+        "worker": {
+          "id": "docs-os-worker",
+          "name": "Documentation OS Worker",
+          "factory_phase": "F10",
+          "tool_required": "docs, ADR and contract generation workflow"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "Documentation OS phase detected",
+          "timing": "after approved architecture and before decomposition",
+          "blocking_policy": "Implementation cards cannot rely on architecture prose without durable executable docs."
+        },
+        "card_ref": {
+          "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+          "slice_id": "VFINAL_HERMES_REAL_PARENT_DONE",
+          "phase": "F8",
+          "risk_effective": "R1",
+          "surfaces": [
+            "docs"
+          ],
+          "executor_identity": "public-safety-gate",
+          "reviewer_identity": "not-required"
+        },
+        "input_contract": {
+          "required_fields": [
+            "done_definition",
+            "acceptance_criteria",
+            "target_repo_paths"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "README.md",
+            "scripts/factoryctl.py",
+            "validation/hermes-real-runtime-smoke"
+          ],
+          "authority_max": "validation_only",
+          "forbidden_actions": [
+            "publish",
+            "push",
+            "merge",
+            "deploy",
+            "secret_access",
+            "private_path_leak"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "documentation_os_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      }
+    },
+    "ofw_e52aa9ccc1bea677": {
+      "task_id": "ofw_e52aa9ccc1bea677",
+      "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+      "worker_id": "public-safety-gate",
+      "title": "Public Safety Gate: VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "expected_receipt_field": "public_safety_result",
+      "status": "requires_execution",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-10T18:02:17+00:00",
+        "source_card_path": "validation/cards/real-worker-parent-done-reconciliation-r1.md",
+        "worker": {
+          "id": "public-safety-gate",
+          "name": "Public Safety Gate",
+          "factory_phase": "F16/F17",
+          "tool_required": "public repository redaction and forbidden-term scan"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "public artifact or release surface detected",
+          "timing": "before publishing, release, PR or public artifact generation",
+          "blocking_policy": "Public artifacts cannot contain private paths, internal names, raw study extraction or private board links."
+        },
+        "card_ref": {
+          "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+          "slice_id": "VFINAL_HERMES_REAL_PARENT_DONE",
+          "phase": "F8",
+          "risk_effective": "R1",
+          "surfaces": [
+            "docs"
+          ],
+          "executor_identity": "public-safety-gate",
+          "reviewer_identity": "not-required"
+        },
+        "input_contract": {
+          "required_fields": [
+            "target_repo_paths",
+            "forbidden_actions",
+            "done_definition"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "README.md",
+            "scripts/factoryctl.py",
+            "validation/hermes-real-runtime-smoke"
+          ],
+          "authority_max": "validation_only",
+          "forbidden_actions": [
+            "publish",
+            "push",
+            "merge",
+            "deploy",
+            "secret_access",
+            "private_path_leak"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "public_safety_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      }
+    }
+  },
+  "last_transition": {
+    "from_status": "ready",
+    "to_status": "done",
+    "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION"
+  },
+  "last_action": "allow_done"
+}

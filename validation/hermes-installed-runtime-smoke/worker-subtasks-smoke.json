@@ -1,0 +1,114 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T00:16:15Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-WORKER-SUBTASKS-SMOKE",
+    "slice_id": "VFINAL_HERMES_WORKER_SUBTASKS",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "worker-routing",
+      "control-tower"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes CLI/Kanban smoke passed for opt-in materialization of 23 Overkill vFinal worker subtasks from the worker ledger. Worker subtasks were created as real Hermes tasks, linked to the parent card, and born blocked as a no-spawn safety default until worker-route parity is proven.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with patches 0002 and 0003 applied",
+  "executed_by": "remote-proof-runner",
+  "hermes_version_observed": "Hermes Agent v0.16.0 (2026.6.5)",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy or real Hermes runtime mutation.",
+  "patches": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch"
+  ],
+  "checks": {
+    "patch_0002_apply_check": "PASS",
+    "patch_0003_apply_check_after_0002": "PASS",
+    "py_compile_after_patches": "PASS",
+    "fresh_parent_ready_allowed": "PASS",
+    "worker_subtasks_created": "PASS",
+    "worker_subtasks_linked_to_parent": "PASS",
+    "worker_subtasks_initial_status_blocked": "PASS",
+    "worker_subtasks_created_by_overkill_factory": "PASS",
+    "materialization_event_recorded": "PASS",
+    "transition_event_contains_materialized_worker_tasks": "PASS",
+    "hook_result_ref_sanitized": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "disposable_task_evidence": {
+    "parent_task_id": "t_34697c60",
+    "synthetic_card_id": "VAL-VFINAL-R3-READY-MAT-20260609211254",
+    "parent_final_status": "ready",
+    "child_count": 23,
+    "child_statuses": [
+      "blocked"
+    ],
+    "child_created_by": [
+      "overkill-factory"
+    ],
+    "materialized_event_status": "blocked",
+    "materialized_event_created_count": 23,
+    "materialized_event_updated_count": 0,
+    "materialized_event_skipped_count": 0,
+    "transition_event_hook_ref": "runtime-artifact:t_34697c60/ready-hook-result.json",
+    "first_child_samples": [
+      {
+        "id": "ofw_0528f96d6b52ec34",
+        "title": "Agentic Method Router",
+        "status": "blocked",
+        "assignee": "agentic-method-router"
+      },
+      {
+        "id": "ofw_09fbd098a11b9fc9",
+        "title": "Data, Metrics and Analytics Worker",
+        "status": "blocked",
+        "assignee": "data-metrics-worker"
+      },
+      {
+        "id": "ofw_137b8a2c39943079",
+        "title": "Access and Capability Worker",
+        "status": "blocked",
+        "assignee": "access-capability-worker"
+      },
+      {
+        "id": "ofw_20fcb6a4728d1a79",
+        "title": "Factory Maturity Auditor",
+        "status": "blocked",
+        "assignee": "factory-maturity-auditor"
+      },
+      {
+        "id": "ofw_3ce31714f0f86362",
+        "title": "Factory Orchestrator",
+        "status": "blocked",
+        "assignee": "factory-orchestrator"
+      }
+    ]
+  },
+  "important_limitations": [
+    "This proves safe creation of real worker subtasks in a disposable installed Hermes CLI/Kanban runtime.",
+    "It does not yet prove dispatch/worker-route parity for executing those worker subtasks.",
+    "It does not yet prove autonomous worker result ingestion from real worker execution.",
+    "It does not yet prove dashboard or API parity.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+    "validation/hermes-installed-runtime-smoke/installed-runtime-smoke.json",
+    "validation/hermes-installed-runtime-smoke/worker-subtasks-smoke.json"
+  ],
+  "next_action": "Prove worker-route parity, autonomous worker result ingestion, dashboard/API parity and real-service rollback before any real-runtime update."
+}

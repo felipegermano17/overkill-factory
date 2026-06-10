@@ -1,0 +1,99 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T01:07:38Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-WORKER-RESULT-INGESTION-SMOKE",
+    "slice_id": "VFINAL_HERMES_WORKER_RESULT_INGESTION",
+    "phase": "F14",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "worker-results",
+      "receipt-five"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes smoke passed for automatic worker-result ingestion from completed Overkill vFinal worker subtasks. Completed before-done subtasks wrote worker-result artifacts under the parent runtime directory, emitted ingestion events on child and parent tasks, and the parent done gate found those artifacts automatically without a manually supplied worker_results_dir.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with patches 0002, 0003 and candidate 0005 applied",
+  "executed_by": "remote-proof-runner",
+  "hermes_version_observed": "Hermes Agent v0.16.0 (2026.6.5)",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy or real Hermes runtime mutation.",
+  "patches": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+    "adapters/hermes/patches/0005-ingest-overkill-worker-results-from-subtasks.patch"
+  ],
+  "checks": {
+    "patch_0005_apply_check_after_0002_0003": "PASS",
+    "py_compile_after_0002_0003_0005": "PASS",
+    "single_worker_result_written_from_child_completion": "PASS",
+    "single_worker_result_event_on_child": "PASS",
+    "single_worker_result_event_on_parent": "PASS",
+    "before_done_worker_results_written": "PASS",
+    "parent_done_used_auto_worker_results_dir": "PASS",
+    "parent_done_allowed": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "single_child_evidence": {
+    "board_slug": "of-worker-ingest-1781053471",
+    "parent_task_id": "t_87ddbced",
+    "child_task_id": "ofw_189ed653dbe38737",
+    "record_type": "software_development_plan_result",
+    "child_complete_ok": true,
+    "worker_result_written": true,
+    "worker_result_result": "PASS",
+    "worker_result_ref": "runtime-artifact:t_87ddbced/worker-results-software_development_plan_result.json",
+    "parent_event_recorded": true,
+    "child_event_recorded": true
+  },
+  "parent_done_evidence": {
+    "board_slug": "of-worker-autodone-1781053576",
+    "parent_task_id": "t_10cda496",
+    "before_done_worker_count": 13,
+    "completed_before_done_worker_count": 13,
+    "worker_result_file_count": 13,
+    "parent_done_ok": true,
+    "parent_final_status": "done",
+    "parent_last_transition_action": "allow_done",
+    "worker_result_files": [
+      "agentic_ai_security_result.json",
+      "appsec_owasp_result.json",
+      "autoreview_result.json",
+      "cloud_infra_security_result.json",
+      "factory_maturity_result.json",
+      "handoff_packet_result.json",
+      "human_gate_record.json",
+      "implementation_result.json",
+      "independent_review_result.json",
+      "qa_verification_result.json",
+      "remote_proof_result.json",
+      "security_orchestration_result.json",
+      "security_scan_result.json"
+    ]
+  },
+  "important_limitations": [
+    "This proves ingestion from completed worker subtasks in a disposable installed Hermes runtime.",
+    "The worker outputs were synthetic structured metadata, not autonomous model-produced specialist work.",
+    "This does not yet prove dispatcher spawning, real profile availability, model execution, or quality of specialist results.",
+    "This does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0005-ingest-overkill-worker-results-from-subtasks.patch",
+    "validation/hermes-v016-transition-patch/patch-apply-receipt.json",
+    "validation/hermes-installed-runtime-smoke/worker-result-ingestion-smoke.json",
+    "validation/cards/vfinal-r3-ready.md"
+  ],
+  "next_action": "Prove dispatcher spawning/profile routing for materialized worker subtasks, then prove real specialist worker output quality before any real-runtime update."
+}

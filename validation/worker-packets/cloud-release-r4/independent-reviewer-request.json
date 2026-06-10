@@ -1,0 +1,64 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:20+00:00",
+  "source_card_path": "validation/cards/cloud-release-r4.md",
+  "worker": {
+    "id": "independent-reviewer",
+    "name": "Independent Reviewer",
+    "factory_phase": "F14",
+    "tool_required": "different Hermes/Codex reviewer identity"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "R2+ or explicit independent review required",
+    "timing": "after worker evidence exists and before done/promotion",
+    "blocking_policy": "Executor and reviewer must be different. Review is mandatory for R2+ work and whenever Receipt Five says reviewer_required=true."
+  },
+  "card_ref": {
+    "card_id": "VAL-CLOUD-RELEASE-R4",
+    "slice_id": "VAL_FACTORY_HEAVY_04",
+    "phase": "F16",
+    "risk_effective": "R4",
+    "surfaces": [
+      "release",
+      "production",
+      "cloud",
+      "infra",
+      "iam",
+      "kms",
+      "dns",
+      "monitoring",
+      "secrets"
+    ],
+    "executor_identity": "release-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "executor_identity",
+      "reviewer_identity",
+      "done_definition"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/cloud-release-r4.md"
+    ],
+    "authority_max": "no real release",
+    "forbidden_actions": [
+      "deploy",
+      "iam_change",
+      "dns_change",
+      "secret_access",
+      "production_release"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "independent_review_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "requires_execution"
+}

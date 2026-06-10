@@ -1,0 +1,85 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T02:25:02+00:00",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DISPOSABLE-RUNTIME-SMOKE",
+    "slice_id": "VFINAL_HERMES_DISPOSABLE_RUNTIME",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "control-tower"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable adapter runtime smoke passed before-ready, before-done and bridge checks.",
+  "tool_or_profile": "adapters/hermes/disposable_runtime_smoke.py",
+  "executed_by": "remote-proof-runner",
+  "failures": [],
+  "ready_transition_action": "allow_and_create_worker_tasks",
+  "ready_retry_created": [],
+  "before_done_workers_satisfied": [
+    "codex-security",
+    "independent-reviewer",
+    "human-gate-clerk",
+    "implementation-worker",
+    "qa-verification-worker",
+    "autoreview-gate",
+    "security-orchestrator",
+    "appsec-owasp-specialist",
+    "agentic-ai-security-specialist",
+    "cloud-infra-security-specialist",
+    "remote-proof-runner",
+    "handoff-packer",
+    "factory-maturity-auditor"
+  ],
+  "done_missing_transition_action": "block_transition",
+  "done_satisfied_transition_action": "allow_done",
+  "bridge_ready_transition_action": "allow_and_create_worker_tasks",
+  "bridge_done_transition_action": "allow_done",
+  "control_tower_required_workers": [
+    "agentic-method-router",
+    "control-tower-projection-worker",
+    "discord-control-tower-bridge",
+    "factory-concierge",
+    "factory-orchestrator",
+    "handoff-packer",
+    "independent-reviewer",
+    "qa-verification-worker",
+    "security-orchestrator"
+  ],
+  "control_tower_blocked_workers": [
+    "control-tower-projection-worker",
+    "discord-control-tower-bridge",
+    "factory-concierge",
+    "security-orchestrator"
+  ],
+  "evidence_refs": [
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/cards/vfinal-r3-missing-security-access.md",
+    "validation/cards/vfinal-control-tower-missing-interface.md",
+    "validation/hermes-disposable-runtime/before-ready-technical-hook-result.json",
+    "validation/hermes-disposable-runtime/before-ready-technical-retry-hook-result.json",
+    "validation/hermes-disposable-runtime/before-ready-missing-inputs-hook-result.json",
+    "validation/hermes-disposable-runtime/before-ready-control-tower-hook-result.json",
+    "validation/hermes-disposable-runtime/before-done-missing-results-hook-result.json",
+    "validation/hermes-disposable-runtime/before-done-satisfied-hook-result.json",
+    "validation/hermes-disposable-runtime/bridge-before-ready-hook-result.json",
+    "validation/hermes-disposable-runtime/bridge-before-done-hook-result.json",
+    "validation/hermes-disposable-runtime/synthetic-receipt-five.json",
+    "validation/hermes-disposable-runtime/worker-results"
+  ],
+  "next_action": "Install this same hook path into a disposable live Hermes runtime and prove CLI/dashboard/API parity."
+}

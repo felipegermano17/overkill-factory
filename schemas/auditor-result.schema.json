@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/auditor-result.schema.json",
+  "title": "Overkill Factory Auditor Result",
+  "type": "object",
+  "required": [
+    "record_type",
+    "result",
+    "audit_mode",
+    "tool_or_profile",
+    "executed_by",
+    "blocking_findings",
+    "findings_summary",
+    "evidence_refs",
+    "next_action"
+  ],
+  "properties": {
+    "record_type": { "const": "auditor_result" },
+    "result": { "enum": ["PASS", "FAIL", "WAIVED", "PENDING"] },
+    "audit_mode": { "enum": ["preflight", "code_audit"] },
+    "preflight_only": { "type": "boolean" },
+    "auditor_head": { "type": "string" },
+    "corpus_files_loaded": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "checklist_coverage": { "type": "object" },
+    "known_vectors_coverage": { "type": "object" },
+    "instruction_matrix": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "state_model": { "type": "object" },
+    "findings": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "waivers": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "additionalProperties": true
+}

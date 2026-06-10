@@ -1,0 +1,110 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T02:45:47Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-WORKER-REAL-PROCESS-LOCAL-STUB-SMOKE",
+    "slice_id": "VFINAL_HERMES_WORKER_REAL_PROCESS_LOCAL_STUB",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "worker-routing",
+      "worker-results"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes smoke passed for real child process spawn, local stub tool-call completion and parent worker-result ingestion.",
+  "tool_or_profile": "Hermes disposable installed runtime; real dispatcher spawn; local OpenAI-compatible tool-call stub",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy, external model endpoint or real Hermes runtime mutation.",
+  "checks": {
+    "dispatcher_spawned_real_process": "PASS",
+    "stub_received_chat_request": "PASS",
+    "stub_saw_kanban_complete_tool": "PASS",
+    "stub_sent_kanban_complete_tool_call": "PASS",
+    "worker_completed_task": "PASS",
+    "worker_result_ingested": "PASS",
+    "child_events_written": "PASS",
+    "parent_event_written": "PASS"
+  },
+  "disposable_task_evidence": {
+    "board_slug": "of-real-worker-stub-1781059538",
+    "parent_task_ref": "redacted-disposable-parent",
+    "child_task_ref": "redacted-disposable-child",
+    "worker_id": "software-development-planner",
+    "record_type": "software_development_plan_result",
+    "dispatch_spawned_count": 1,
+    "worker_pid_observed": true,
+    "final_child_status": "done",
+    "poll_statuses": [
+      "running",
+      "running",
+      "running",
+      "running",
+      "running",
+      "running",
+      "running",
+      "running",
+      "done"
+    ],
+    "cleanup_result": "not-needed",
+    "stub_request_summaries": [
+      {
+        "path": "/v1/chat/completions",
+        "model": "overkill-local-tool-smoke-model",
+        "message_count": 2,
+        "tool_count": 36,
+        "has_kanban_complete": true
+      },
+      {
+        "path": "/v1/chat/completions",
+        "model": "overkill-local-tool-smoke-model",
+        "message_count": 4,
+        "tool_count": 36,
+        "has_kanban_complete": true
+      }
+    ],
+    "child_event_kinds": [
+      "created",
+      "claimed",
+      "spawned",
+      "heartbeat",
+      "completed",
+      "overkill_worker_result_ingested"
+    ],
+    "parent_event_kinds": [
+      "created",
+      "overkill_worker_tasks_materialized",
+      "overkill_factory_transition_gate",
+      "overkill_worker_result_ingested"
+    ],
+    "worker_result_files": [
+      "software_development_plan_result.json"
+    ]
+  },
+  "important_limitations": [
+    "This proves the real Hermes child process can receive the kanban tool surface and call kanban_complete through a local stub.",
+    "The model was a deterministic local OpenAI-compatible stub, not a real reasoning model.",
+    "This does not prove specialist output quality, external tool authentication, cloud access, repository mutation, deployment, rollback or production readiness.",
+    "This does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/worker-real-process-local-stub-smoke.json",
+    "validation/hermes-installed-runtime-smoke/worker-dispatch-completion-smoke.json",
+    "validation/hermes-installed-runtime-smoke/worker-profile-readiness-local-stub-smoke.json"
+  ],
+  "next_action": "Run a bounded real-model worker proof with provisioned profile, tool auth, structured worker_result evidence and rollback receipt before production update."
+}

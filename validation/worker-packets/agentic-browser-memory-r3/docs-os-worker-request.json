@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:20+00:00",
+  "source_card_path": "validation/cards/agentic-browser-memory-r3.md",
+  "worker": {
+    "id": "docs-os-worker",
+    "name": "Documentation OS Worker",
+    "factory_phase": "F10",
+    "tool_required": "docs, ADR and contract generation workflow"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "documentation OS not required by current card",
+    "timing": "after approved architecture and before decomposition",
+    "blocking_policy": "Implementation cards cannot rely on architecture prose without durable executable docs."
+  },
+  "card_ref": {
+    "card_id": "VAL-AGENTIC-BROWSER-MEMORY-R3",
+    "slice_id": "VAL_FACTORY_HEAVY_02",
+    "phase": "F14",
+    "risk_effective": "R3",
+    "surfaces": [
+      "agent",
+      "llm",
+      "browser",
+      "tools",
+      "memory",
+      "security"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "done_definition",
+      "acceptance_criteria",
+      "target_repo_paths"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/agentic-browser-memory-r3.md"
+    ],
+    "authority_max": "no external mutation",
+    "forbidden_actions": [
+      "credential_use",
+      "external_mutation",
+      "private_profile_use"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "documentation_os_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/legacy-migration-plan.schema.json",
+  "diagnosis": "Map current behavior before changing code.",
+  "compatibility_plan": ["preserve existing API behavior", "run regression checks"],
+  "rollback_plan": "revert migration slice",
+  "test_plan": ["baseline test", "post-change regression"],
+  "evidence_refs": ["legacy-migration-plan.md"]
+}

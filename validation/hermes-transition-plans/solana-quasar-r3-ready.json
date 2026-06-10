@@ -1,0 +1,1011 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-transition-plan.schema.json",
+  "plan_type": "hermes_kanban_transition_plan",
+  "created_at": "2026-06-06T05:19:37+00:00",
+  "source_card_path": "validation/cards/solana-quasar-r3.md",
+  "event": {
+    "from_status": "draft",
+    "to_status": "ready",
+    "card_id": "VAL-SOLANA-QUASAR-R3"
+  },
+  "transition_action": "allow_and_create_worker_tasks",
+  "blocked_reasons": [],
+  "gate_report": {
+    "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+    "report_type": "factory_gate_preflight",
+    "created_at": "2026-06-06T05:19:37+00:00",
+    "card_id": "VAL-SOLANA-QUASAR-R3",
+    "risk_effective": "R3",
+    "surfaces": [
+      "solana-quasar",
+      "account-pda",
+      "cpi",
+      "compute-units",
+      "funds"
+    ],
+    "gate_status": "ready_for_worker_execution",
+    "required_workers": [
+      "codex-security",
+      "solana-quasar-auditor",
+      "independent-reviewer",
+      "human-gate-clerk",
+      "factory-orchestrator",
+      "qa-verification-worker",
+      "autoreview-gate",
+      "security-orchestrator",
+      "crypto-key-management-specialist",
+      "remote-proof-runner",
+      "handoff-packer",
+      "supply-chain-gate"
+    ],
+    "blocked_workers": [],
+    "card_validation_errors": [],
+    "workers": {
+      "codex-security": {
+        "required": true,
+        "reason": "risk, code, public, agentic or sensitive surface requires security evidence",
+        "status": "requires_execution"
+      },
+      "solana-quasar-auditor": {
+        "required": true,
+        "reason": "onchain/Solana/Quasar surface detected",
+        "status": "requires_execution"
+      },
+      "product-face": {
+        "required": false,
+        "reason": "no visible product surface detected",
+        "status": "not_required_by_current_card"
+      },
+      "independent-reviewer": {
+        "required": true,
+        "reason": "R2+ or explicit independent review required",
+        "status": "requires_execution"
+      },
+      "human-gate-clerk": {
+        "required": true,
+        "reason": "architecture/high-risk/human gate detected",
+        "status": "requires_execution"
+      },
+      "factory-orchestrator": {
+        "required": true,
+        "reason": "factory card needs routing and state control",
+        "status": "requires_execution"
+      },
+      "source-ledger-worker": {
+        "required": false,
+        "reason": "source ledger already past early intake",
+        "status": "not_required_by_current_card"
+      },
+      "product-sot-planner": {
+        "required": false,
+        "reason": "not a Product SOT phase",
+        "status": "not_required_by_current_card"
+      },
+      "product-architect": {
+        "required": false,
+        "reason": "not an architecture phase",
+        "status": "not_required_by_current_card"
+      },
+      "docs-os-worker": {
+        "required": false,
+        "reason": "documentation OS not required by current card",
+        "status": "not_required_by_current_card"
+      },
+      "decomposition-planner": {
+        "required": false,
+        "reason": "not a decomposition phase",
+        "status": "not_required_by_current_card"
+      },
+      "implementation-worker": {
+        "required": false,
+        "reason": "not an implementation card",
+        "status": "not_required_by_current_card"
+      },
+      "qa-verification-worker": {
+        "required": true,
+        "reason": "verification/review risk detected",
+        "status": "requires_execution"
+      },
+      "autoreview-gate": {
+        "required": true,
+        "reason": "code or pre-landing review surface detected",
+        "status": "requires_execution"
+      },
+      "security-orchestrator": {
+        "required": true,
+        "reason": "security-sensitive or R2+ card needs routed controls",
+        "status": "requires_execution"
+      },
+      "appsec-owasp-specialist": {
+        "required": false,
+        "reason": "no OWASP AppSec surface detected",
+        "status": "not_required_by_current_card"
+      },
+      "agentic-ai-security-specialist": {
+        "required": false,
+        "reason": "no agentic AI security trigger",
+        "status": "not_required_by_current_card"
+      },
+      "cloud-infra-security-specialist": {
+        "required": false,
+        "reason": "no cloud/infra trigger",
+        "status": "not_required_by_current_card"
+      },
+      "crypto-key-management-specialist": {
+        "required": true,
+        "reason": "crypto/key/custody surface detected",
+        "status": "requires_execution"
+      },
+      "remote-proof-runner": {
+        "required": true,
+        "reason": "high-risk or explicit remote proof required",
+        "status": "requires_execution"
+      },
+      "release-ops-worker": {
+        "required": false,
+        "reason": "not a release/promotion card",
+        "status": "not_required_by_current_card"
+      },
+      "handoff-packer": {
+        "required": true,
+        "reason": "phase or risk requires portable handoff",
+        "status": "requires_execution"
+      },
+      "memory-steward": {
+        "required": false,
+        "reason": "no memory stewardship trigger",
+        "status": "not_required_by_current_card"
+      },
+      "skill-eval-distiller": {
+        "required": false,
+        "reason": "no skill evolution trigger",
+        "status": "not_required_by_current_card"
+      },
+      "public-safety-gate": {
+        "required": false,
+        "reason": "not a public/release artifact",
+        "status": "not_required_by_current_card"
+      },
+      "supply-chain-gate": {
+        "required": true,
+        "reason": "code/dependency/high-risk supply-chain trigger detected",
+        "status": "requires_execution"
+      },
+      "detection-monitoring-worker": {
+        "required": false,
+        "reason": "no detection/monitoring trigger",
+        "status": "not_required_by_current_card"
+      }
+    }
+  },
+  "worker_tasks": [
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "codex-security",
+      "title": "Codex Security Runner: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "codex-security",
+          "name": "Codex Security Runner",
+          "factory_phase": "F8/F13",
+          "tool_required": "Codex Security plugin or Hermes cybersecurity profile"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "risk, code, public, agentic or sensitive surface requires security evidence",
+          "timing": "after a security_scan_packet exists and before done/promotion",
+          "blocking_policy": "R3/R4, security, onchain, wallet, funds, mainnet, API, auth, or infra work cannot be completed without a real scan result or explicit human waiver."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "security_scan_packet",
+            "target_repo_paths",
+            "forbidden_actions"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "security_scan_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "security_scan_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "solana-quasar-auditor",
+      "title": "Solana/Quasar Auditor Runner: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "solana-quasar-auditor",
+          "name": "Solana/Quasar Auditor Runner",
+          "factory_phase": "F7/F13",
+          "tool_required": "solanabr/Auditor with Quasar-aware onchain package"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "onchain/Solana/Quasar surface detected",
+          "timing": "after onchain_work_package and before any onchain ready/done promotion",
+          "blocking_policy": "Solana/Quasar work cannot advance as complete until Auditor evidence or an explicit human waiver is attached. Anchor assumptions are forbidden."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "onchain_work_package",
+            "target_repo_paths",
+            "risk_effective"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "auditor_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "auditor_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "independent-reviewer",
+      "title": "Independent Reviewer: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "independent-reviewer",
+          "name": "Independent Reviewer",
+          "factory_phase": "F14",
+          "tool_required": "different Hermes/Codex reviewer identity"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "R2+ or explicit independent review required",
+          "timing": "after worker evidence exists and before done/promotion",
+          "blocking_policy": "Executor and reviewer must be different. Review is mandatory for R2+ work and whenever Receipt Five says reviewer_required=true."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "executor_identity",
+            "reviewer_identity",
+            "done_definition"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "independent_review_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "independent_review_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "human-gate-clerk",
+      "title": "Human Gate Clerk: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "human-gate-clerk",
+          "name": "Human Gate Clerk",
+          "factory_phase": "F9/F15/F16",
+          "tool_required": "explicit human decision recorded in Hermes"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "architecture/high-risk/human gate detected",
+          "timing": "at architecture approval, R3/R4 exception, R4 promotion, or requested human gate",
+          "blocking_policy": "Architecture approval and R4 promotion require a real human decision. Missing approval keeps the work blocked."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "human_gate_packet",
+            "security_scan_packet",
+            "rollback_or_recovery"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "human_gate_record",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": true
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "human_gate_record",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "factory-orchestrator",
+      "title": "Factory Orchestrator: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-ready",
+      "required_before": "ready",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "factory-orchestrator",
+          "name": "Factory Orchestrator",
+          "factory_phase": "F0-F18",
+          "tool_required": "Hermes Kanban plus factory gate report"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "factory card needs routing and state control",
+          "timing": "at phase changes, gate preparation, worker routing, and blocked-state triage",
+          "blocking_policy": "The orchestrator routes work and records state, but cannot approve product, security, onchain, R3/R4, release, or human gates."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "phase",
+            "risk_effective",
+            "surfaces",
+            "done_definition"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "orchestration_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "orchestration_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "qa-verification-worker",
+      "title": "QA Verification Worker: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "qa-verification-worker",
+          "name": "QA Verification Worker",
+          "factory_phase": "F13-F15",
+          "tool_required": "tests, screenshots, logs, scanners and evidence capture"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "verification/review risk detected",
+          "timing": "after implementation evidence and before independent review/done",
+          "blocking_policy": "No product-facing or risk-bearing card is done without objective verification evidence."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "acceptance_criteria",
+            "done_definition",
+            "target_repo_paths"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "qa_verification_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "qa_verification_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "autoreview-gate",
+      "title": "AutoReview Gate: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "autoreview-gate",
+          "name": "AutoReview Gate",
+          "factory_phase": "F14/F15",
+          "tool_required": "autoreview skill or equivalent structured code-review runner"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "code or pre-landing review surface detected",
+          "timing": "after code/diff evidence and before landing or promotion",
+          "blocking_policy": "AutoReview can find issues, but it never replaces independent review or human gates."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "target_repo_paths",
+            "done_definition"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "autoreview_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "autoreview_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "security-orchestrator",
+      "title": "Security Orchestrator: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "security-orchestrator",
+          "name": "Security Orchestrator",
+          "factory_phase": "F6-F16",
+          "tool_required": "security control matrix and threat model router"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "security-sensitive or R2+ card needs routed controls",
+          "timing": "when any security-sensitive surface or R2+ risk exists",
+          "blocking_policy": "Security is routed to specific specialists; a generic security comment is not enough."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "security_contract",
+            "security_scan_packet",
+            "risk_effective"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "security_orchestration_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "security_orchestration_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "crypto-key-management-specialist",
+      "title": "Crypto and Key Management Specialist: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "crypto-key-management-specialist",
+          "name": "Crypto and Key Management Specialist",
+          "factory_phase": "F7/F15/F16",
+          "tool_required": "secrets, signing, custody, key rotation and cryptography review"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "crypto/key/custody surface detected",
+          "timing": "before any signing, custody, key, funds or crypto-sensitive promotion",
+          "blocking_policy": "This worker reviews contracts and evidence; it must not touch real keys, funds or signing authority."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "security_contract",
+            "forbidden_actions",
+            "risk_effective"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "crypto_key_management_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "crypto_key_management_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "remote-proof-runner",
+      "title": "Remote Proof Runner: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "remote-proof-runner",
+          "name": "Remote Proof Runner",
+          "factory_phase": "F13-F16",
+          "tool_required": "Crabbox/Testbox/container with artifact, cost, TTL and cleanup contract"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "high-risk or explicit remote proof required",
+          "timing": "when local proof is insufficient or parity/heavy validation is required",
+          "blocking_policy": "Remote proof cannot receive secrets by default and must return logs, artifacts and cleanup evidence."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "runtime_contract",
+            "target_repo_paths",
+            "done_definition"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "remote_proof_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "remote_proof_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "handoff-packer",
+      "title": "Handoff Packer: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-done",
+      "required_before": "done",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "handoff-packer",
+          "name": "Handoff Packer",
+          "factory_phase": "F9-F15",
+          "tool_required": "path-free handoff workflow with state, constraints, evidence and replay notes"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "phase or risk requires portable handoff",
+          "timing": "at worker transfer, context compaction, pause, phase change or R2+ handoff",
+          "blocking_policy": "Handoff is not a pretty summary; it must preserve constraints, evidence, decisions and next action."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "target_repo_paths",
+            "done_definition"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "handoff_packet_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "handoff_packet_result",
+      "status": "requires_execution"
+    },
+    {
+      "task_type": "worker_subtask",
+      "worker_id": "supply-chain-gate",
+      "title": "Supply Chain Gate: VAL-SOLANA-QUASAR-R3",
+      "queue_class": "blocking-before-ready",
+      "required_before": "ready",
+      "packet": {
+        "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+        "packet_type": "worker_execution_request",
+        "created_at": "2026-06-06T05:19:37+00:00",
+        "source_card_path": "validation/cards/solana-quasar-r3.md",
+        "worker": {
+          "id": "supply-chain-gate",
+          "name": "Supply Chain Gate",
+          "factory_phase": "F11/F13/F16",
+          "tool_required": "dependency, CI, secret, SBOM and provenance checks"
+        },
+        "trigger": {
+          "required": true,
+          "reason": "code/dependency/high-risk supply-chain trigger detected",
+          "timing": "before ready/done/release for code, dependency, CI or package work",
+          "blocking_policy": "Code and dependency work needs reproducible tests, secret scan and dependency risk checks."
+        },
+        "card_ref": {
+          "card_id": "VAL-SOLANA-QUASAR-R3",
+          "slice_id": "VAL_FACTORY_HEAVY_03",
+          "phase": "F13",
+          "risk_effective": "R3",
+          "surfaces": [
+            "solana-quasar",
+            "account-pda",
+            "cpi",
+            "compute-units",
+            "funds"
+          ],
+          "executor_identity": "onchain-worker",
+          "reviewer_identity": "security-reviewer"
+        },
+        "input_contract": {
+          "required_fields": [
+            "target_repo_paths",
+            "runtime_contract",
+            "security_scan_packet"
+          ],
+          "missing_fields": [],
+          "target_repo_paths": [
+            "validation/cards/solana-quasar-r3.md"
+          ],
+          "authority_max": "no chain write",
+          "forbidden_actions": [
+            "deploy",
+            "devnet_write",
+            "mainnet_write",
+            "signing",
+            "funds"
+          ]
+        },
+        "output_contract": {
+          "receipt_field": "supply_chain_result",
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "human_approval_must_be_real": false
+        },
+        "status": "requires_execution"
+      },
+      "expected_receipt_field": "supply_chain_result",
+      "status": "requires_execution"
+    }
+  ],
+  "completion_reconciliation": null
+}

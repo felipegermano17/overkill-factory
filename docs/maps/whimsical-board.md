@@ -1,16 +1,22 @@
-# Whimsical Board
+# Legacy Whimsical Board
 
-Primary editable map:
+Historical Factory 10 editable map:
 
-[Overkill Factory - Factory 10+ Fluxo Linear Legivel](https://whimsical.com/felipe-s-workspace2684/overkill-factory-factory-10-fluxo-linear-legivel-XVvfzkVyVEwiPMQM9TNP84)
+The editable Whimsical board lives in the maintainer's private visual
+workspace. Public snapshots and source diagrams are kept in this repository.
+This file documents the older Factory 10 board, not the current vFinal map.
 
-Board id: `XVvfzk`
+The current vFinal mind-map source is:
+
+```text
+docs/maps/overkill-factory-vfinal-mindmap.md
+```
 
 Local snapshot:
 
 `docs/maps/overkill-factory-factory-10-readable-flow-snapshot.png`
 
-## Why This Is The Primary Map
+## Why This Legacy Map Still Matters
 
 This board uses a vertical production-line spine. Each phase has its explanation
 attached to the side, so the user can follow the full sequence without hidden
@@ -26,12 +32,10 @@ It includes:
 - Factory 10 + Hermes V3.5 + Hermes V2 completion compatibility.
 - Critical workers and agent misread warnings.
 
-## Supporting Board
+## Supporting Diagram
 
-[Overkill Factory - Factory 10+ Mapa Mental Linear](https://whimsical.com/felipe-s-workspace2684/overkill-factory-factory-10-mapa-mental-linear-6w7EX7at5MQ5suQFzRxRXp)
+`docs/maps/factory-10-flow.mmd`
 
-Board id: `6w7EX7`
-
-This supporting board is a strict mind-map chain: phase -> explanation -> next
-phase. It is useful for zoomed navigation, but the primary board is easier to
-read at a glance.
+This supporting diagram is a strict mind-map chain: phase -> explanation ->
+next phase. It is useful for review and regeneration when the editable board is
+updated.

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-maturity-scorecard.schema.json",
+  "project_type": "high-risk product change",
+  "areas_checked": [
+    "outcome",
+    "method",
+    "software plan",
+    "product experience",
+    "security architecture",
+    "access",
+    "production",
+    "evidence"
+  ],
+  "missing_areas": [],
+  "risk_residuals": ["residual risk and owner"],
+  "decision": "pass_with_owner",
+  "evidence_refs": ["factory-maturity.md"]
+}

@@ -1,0 +1,44 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -948,9 +948,19 @@ def delete_task(task_id: str, board: Optional[str] = Query(None)):
+     board = _resolve_board(board)
+     conn = _conn(board=board)
+     try:
+-        ok = kanban_db.delete_task(conn, task_id)
+-        if not ok:
++        task = kanban_db.get_task(conn, task_id)
++        if task is None:
+             raise HTTPException(status_code=404, detail=f"task {task_id} not found")
++        if _is_overkill_factory_card(task) or _is_overkill_worker_subtask(task):
++            raise HTTPException(
++                status_code=409,
++                detail=(
++                    "Overkill Factory cards and worker subtasks cannot be "
++                    "hard-deleted from dashboard/API; close with Receipt Five "
++                    "or archive through an explicit operator-safe path."
++                ),
++            )
++        kanban_db.delete_task(conn, task_id)
+         return {"deleted": True, "task_id": task_id}
+     finally:
+         conn.close()
+@@ -989,7 +1000,18 @@ def _is_overkill_factory_card(task: kanban_db.Task) -> bool:
+     except Exception:
+         return False
+
+
++def _is_overkill_worker_subtask(task: kanban_db.Task) -> bool:
++    """Return True when the task body is an Overkill Factory worker subtask."""
++    parser = getattr(kanban_db, "_overkill_parse_worker_subtask_body", None)
++    if not callable(parser):
++        return False
++    try:
++        return parser(task.body or "") is not None
++    except Exception:
++        return False
++
++
+ def _set_ready_status(
+     conn: sqlite3.Connection,
+     task_id: str,

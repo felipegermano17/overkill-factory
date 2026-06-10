@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/method-contract.schema.json",
+  "title": "Overkill Factory Method Contract",
+  "type": "object",
+  "required": [
+    "selected_method",
+    "why_this_method",
+    "risk_tier",
+    "required_plans",
+    "required_gates",
+    "waivers"
+  ],
+  "properties": {
+    "selected_method": { "type": "string", "minLength": 3 },
+    "why_this_method": { "type": "string", "minLength": 3 },
+    "risk_tier": { "enum": ["R0", "R1", "R2", "R3", "R4"] },
+    "required_plans": { "type": "array", "items": { "type": "string" } },
+    "required_gates": { "type": "array", "items": { "type": "string" } },
+    "waivers": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": true
+}

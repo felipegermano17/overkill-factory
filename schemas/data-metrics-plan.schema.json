@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/data-metrics-plan.schema.json",
+  "title": "Overkill Factory Data Metrics Plan",
+  "type": "object",
+  "required": ["success_metrics", "events", "owners", "privacy_limits"],
+  "properties": {
+    "success_metrics": { "type": "array", "items": { "type": "string" } },
+    "events": { "type": "array", "items": { "type": "string" } },
+    "owners": { "type": "array", "items": { "type": "string" } },
+    "privacy_limits": { "type": "array", "items": { "type": "string" } },
+    "dashboards": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

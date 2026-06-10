@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/security-architecture-plan.schema.json",
+  "title": "Overkill Factory Security Architecture Plan",
+  "type": "object",
+  "required": [
+    "trust_boundaries",
+    "data_flows",
+    "authn_authz",
+    "secrets_and_keys",
+    "logging_and_detection",
+    "threats",
+    "security_owner"
+  ],
+  "properties": {
+    "trust_boundaries": { "type": "array", "items": { "type": "string" } },
+    "data_flows": { "type": "array", "items": { "type": "string" } },
+    "authn_authz": { "type": "array", "items": { "type": "string" } },
+    "secrets_and_keys": { "type": "array", "items": { "type": "string" } },
+    "logging_and_detection": { "type": "array", "items": { "type": "string" } },
+    "threats": { "type": "array", "items": { "type": "string" } },
+    "security_owner": { "type": "string", "minLength": 3 },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

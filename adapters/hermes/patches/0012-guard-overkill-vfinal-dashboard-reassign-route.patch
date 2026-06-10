@@ -1,0 +1,21 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -1792,6 +1792,17 @@ def reassign_task_endpoint(
+     board = _resolve_board(board)
+     conn = _conn(board=board)
+     try:
++        task = kanban_db.get_task(conn, task_id)
++        if task is not None and (_is_overkill_factory_card(task) or _is_overkill_worker_subtask(task)):
++            raise HTTPException(
++                status_code=409,
++                detail=(
++                    "Overkill Factory cards and worker subtasks cannot be "
++                    "reassigned from dashboard/API; worker identity is part "
++                    "of the Factory method contract. Use an explicit "
++                    "operator-safe recovery workflow."
++                ),
++            )
+         ok = kanban_db.reassign_task(
+             conn, task_id,
+             payload.profile or None,

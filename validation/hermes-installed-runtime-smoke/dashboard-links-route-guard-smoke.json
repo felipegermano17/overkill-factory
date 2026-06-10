@@ -1,0 +1,91 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T05:25:15Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-LINKS-ROUTE-GUARD-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_LINKS_ROUTE_GUARD",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API link-route guard smoke passed: manual dependency edits are blocked for vFinal cards and worker subtasks, worker links are preserved, and ordinary disposable task links still work.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches including candidate 0009",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [
+    "adapters/hermes/patches/0009-guard-overkill-vfinal-dashboard-links-route.patch"
+  ],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_delete_worker_parent_link_blocked": "PASS",
+    "dashboard_add_factory_link_blocked": "PASS",
+    "dashboard_normal_link_add_delete_allowed": "PASS",
+    "worker_prerequisite_links_preserved": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_links_evidence": {
+    "board_slug": "of-dashboard-links-1781069114",
+    "parent_task_id": "t_0495507b",
+    "worker_task_id": "ofw_189ed653dbe38737",
+    "worker_count_before": 23,
+    "worker_count_after": 23,
+    "delete_worker_parent_link_attempt": {
+      "ok": false,
+      "http_status": 409,
+      "detail": "Overkill Factory card dependencies cannot be edited from dashboard/API; regenerate worker subtasks through the Factory gate or use an explicit operator-safe dependency workflow."
+    },
+    "add_factory_link_attempt": {
+      "ok": false,
+      "http_status": 409,
+      "detail": "Overkill Factory card dependencies cannot be edited from dashboard/API; regenerate worker subtasks through the Factory gate or use an explicit operator-safe dependency workflow."
+    },
+    "normal_link_attempt": {
+      "parent_task_id": "t_a3d64135",
+      "child_task_id": "t_9731c174",
+      "add": {
+        "ok": true,
+        "http_status": null,
+        "result": {
+          "ok": true
+        }
+      },
+      "delete": {
+        "ok": true,
+        "http_status": null,
+        "result": {
+          "ok": true
+        }
+      }
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime after candidate patch 0009.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not define a future operator-approved dependency edit workflow.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0009-guard-overkill-vfinal-dashboard-links-route.patch",
+    "adapters/hermes/dashboard_links_route_guard_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-links-route-guard-smoke.json"
+  ],
+  "next_action": "Add patch 0009 to the update sequence and continue proving remaining dashboard/API route families."
+}

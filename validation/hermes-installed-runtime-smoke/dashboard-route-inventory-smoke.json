@@ -1,0 +1,584 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T11:42:45Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-ROUTE-INVENTORY",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_ROUTE_PARITY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API route inventory generated. Covered and pending mutating route families are listed explicitly.",
+  "tool_or_profile": "adapters/hermes/dashboard_route_inventory.py",
+  "executed_by": "remote-proof-runner",
+  "route_inventory": {
+    "source_ref": "external:plugin_api.py",
+    "total_routes": 41,
+    "read_only_routes": 17,
+    "mutating_routes": 24,
+    "covered_mutating_route_families": 24,
+    "pending_mutating_route_families": 0,
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/board",
+        "function": "get_board",
+        "line": 378,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "GET",
+        "path": "/tasks/{task_id}",
+        "function": "get_task",
+        "line": 517,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks",
+        "function": "create_task",
+        "line": 597,
+        "mutating": true,
+        "parity_status": "covered_for_create_before_ready",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "GET",
+        "path": "/tasks/{task_id}/attachments",
+        "function": "list_task_attachments",
+        "line": 671,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/attachments",
+        "function": "upload_task_attachment",
+        "line": 687,
+        "mutating": true,
+        "parity_status": "covered_for_attachment_route_safety",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "GET",
+        "path": "/attachments/{attachment_id}",
+        "function": "download_attachment",
+        "line": 762,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "DELETE",
+        "path": "/attachments/{attachment_id}",
+        "function": "remove_attachment",
+        "line": 789,
+        "mutating": true,
+        "parity_status": "covered_for_attachment_route_safety",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "PATCH",
+        "path": "/tasks/{task_id}",
+        "function": "update_task",
+        "line": 831,
+        "mutating": true,
+        "parity_status": "covered_for_ready_and_done_status",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "DELETE",
+        "path": "/tasks/{task_id}",
+        "function": "delete_task",
+        "line": 956,
+        "mutating": true,
+        "parity_status": "covered_for_delete_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/comments",
+        "function": "add_comment",
+        "line": 1262,
+        "mutating": true,
+        "parity_status": "covered_for_comments_append_only",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/links",
+        "function": "add_link",
+        "line": 1288,
+        "mutating": true,
+        "parity_status": "covered_for_dependency_link_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "DELETE",
+        "path": "/links",
+        "function": "delete_link",
+        "line": 1302,
+        "mutating": true,
+        "parity_status": "covered_for_dependency_link_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/bulk",
+        "function": "bulk_update",
+        "line": 1334,
+        "mutating": true,
+        "parity_status": "covered_for_ready_done_and_archive_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "GET",
+        "path": "/diagnostics",
+        "function": "list_diagnostics",
+        "line": 1453,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "GET",
+        "path": "/workers/active",
+        "function": "list_active_workers",
+        "line": 1541,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "GET",
+        "path": "/runs/{run_id}",
+        "function": "get_run_endpoint",
+        "line": 1602,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "GET",
+        "path": "/runs/{run_id}/inspect",
+        "function": "inspect_run_endpoint",
+        "line": 1624,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "POST",
+        "path": "/runs/{run_id}/terminate",
+        "function": "terminate_run_endpoint",
+        "line": 1696,
+        "mutating": true,
+        "parity_status": "covered_for_reclaim_terminate_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/reclaim",
+        "function": "reclaim_task_endpoint",
+        "line": 1754,
+        "mutating": true,
+        "parity_status": "covered_for_reclaim_terminate_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/specify",
+        "function": "specify_task_endpoint",
+        "line": 1794,
+        "mutating": true,
+        "parity_status": "covered_for_specify_route_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/reassign",
+        "function": "reassign_task_endpoint",
+        "line": 1860,
+        "mutating": true,
+        "parity_status": "covered_for_reassign_route_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "GET",
+        "path": "/config",
+        "function": "get_config",
+        "line": 1910,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "GET",
+        "path": "/home-channels",
+        "function": "get_home_channels",
+        "line": 1999,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/home-subscribe/{platform}",
+        "function": "subscribe_home",
+        "line": 2033,
+        "mutating": true,
+        "parity_status": "covered_for_home_subscribe_visibility_only",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "DELETE",
+        "path": "/tasks/{task_id}/home-subscribe/{platform}",
+        "function": "unsubscribe_home",
+        "line": 2068,
+        "mutating": true,
+        "parity_status": "covered_for_home_subscribe_visibility_only",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "GET",
+        "path": "/stats",
+        "function": "get_stats",
+        "line": 2097,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "GET",
+        "path": "/assignees",
+        "function": "get_assignees",
+        "line": 2113,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "GET",
+        "path": "/tasks/{task_id}/log",
+        "function": "get_task_log",
+        "line": 2134,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "POST",
+        "path": "/dispatch",
+        "function": "dispatch",
+        "line": 2174,
+        "mutating": true,
+        "parity_status": "covered_for_dispatch_route_mechanics",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "GET",
+        "path": "/boards",
+        "function": "list_boards",
+        "line": 2233,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "POST",
+        "path": "/boards",
+        "function": "create_board_endpoint",
+        "line": 2245,
+        "mutating": true,
+        "parity_status": "covered_for_board_lifecycle_operational_safety",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "PATCH",
+        "path": "/boards/{slug}",
+        "function": "rename_board",
+        "line": 2266,
+        "mutating": true,
+        "parity_status": "covered_for_board_lifecycle_operational_safety",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "DELETE",
+        "path": "/boards/{slug}",
+        "function": "delete_board",
+        "line": 2285,
+        "mutating": true,
+        "parity_status": "covered_for_board_delete_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/boards/{slug}/switch",
+        "function": "switch_board",
+        "line": 2296,
+        "mutating": true,
+        "parity_status": "covered_for_board_lifecycle_operational_safety",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "GET",
+        "path": "/profiles",
+        "function": "list_profile_roster",
+        "line": 2336,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "PATCH",
+        "path": "/profiles/{profile_name}",
+        "function": "update_profile_description",
+        "line": 2366,
+        "mutating": true,
+        "parity_status": "covered_for_profile_routes_operational_safety",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/profiles/{profile_name}/describe-auto",
+        "function": "auto_describe_profile",
+        "line": 2399,
+        "mutating": true,
+        "parity_status": "covered_for_profile_routes_operational_safety",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/decompose",
+        "function": "decompose_task_endpoint",
+        "line": 2435,
+        "mutating": true,
+        "parity_status": "covered_for_decompose_route_guard",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "GET",
+        "path": "/orchestration",
+        "function": "get_orchestration_settings",
+        "line": 2502,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      },
+      {
+        "method": "PUT",
+        "path": "/orchestration",
+        "function": "set_orchestration_settings",
+        "line": 2545,
+        "mutating": true,
+        "parity_status": "covered_for_orchestration_route_operational_safety",
+        "gate_relevance": "status_transition_gate"
+      },
+      {
+        "method": "WEBSOCKET",
+        "path": "/events",
+        "function": "stream_events",
+        "line": 2616,
+        "mutating": false,
+        "parity_status": "not_required_read_only",
+        "gate_relevance": "read_only"
+      }
+    ]
+  },
+  "coverage_summary": {
+    "covered": [
+      {
+        "method": "POST",
+        "path": "/tasks",
+        "function": "create_task",
+        "parity_status": "covered_for_create_before_ready"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/attachments",
+        "function": "upload_task_attachment",
+        "parity_status": "covered_for_attachment_route_safety"
+      },
+      {
+        "method": "DELETE",
+        "path": "/attachments/{attachment_id}",
+        "function": "remove_attachment",
+        "parity_status": "covered_for_attachment_route_safety"
+      },
+      {
+        "method": "PATCH",
+        "path": "/tasks/{task_id}",
+        "function": "update_task",
+        "parity_status": "covered_for_ready_and_done_status"
+      },
+      {
+        "method": "DELETE",
+        "path": "/tasks/{task_id}",
+        "function": "delete_task",
+        "parity_status": "covered_for_delete_guard"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/comments",
+        "function": "add_comment",
+        "parity_status": "covered_for_comments_append_only"
+      },
+      {
+        "method": "POST",
+        "path": "/links",
+        "function": "add_link",
+        "parity_status": "covered_for_dependency_link_guard"
+      },
+      {
+        "method": "DELETE",
+        "path": "/links",
+        "function": "delete_link",
+        "parity_status": "covered_for_dependency_link_guard"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/bulk",
+        "function": "bulk_update",
+        "parity_status": "covered_for_ready_done_and_archive_guard"
+      },
+      {
+        "method": "POST",
+        "path": "/runs/{run_id}/terminate",
+        "function": "terminate_run_endpoint",
+        "parity_status": "covered_for_reclaim_terminate_guard"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/reclaim",
+        "function": "reclaim_task_endpoint",
+        "parity_status": "covered_for_reclaim_terminate_guard"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/specify",
+        "function": "specify_task_endpoint",
+        "parity_status": "covered_for_specify_route_guard"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/reassign",
+        "function": "reassign_task_endpoint",
+        "parity_status": "covered_for_reassign_route_guard"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/home-subscribe/{platform}",
+        "function": "subscribe_home",
+        "parity_status": "covered_for_home_subscribe_visibility_only"
+      },
+      {
+        "method": "DELETE",
+        "path": "/tasks/{task_id}/home-subscribe/{platform}",
+        "function": "unsubscribe_home",
+        "parity_status": "covered_for_home_subscribe_visibility_only"
+      },
+      {
+        "method": "POST",
+        "path": "/dispatch",
+        "function": "dispatch",
+        "parity_status": "covered_for_dispatch_route_mechanics"
+      },
+      {
+        "method": "POST",
+        "path": "/boards",
+        "function": "create_board_endpoint",
+        "parity_status": "covered_for_board_lifecycle_operational_safety"
+      },
+      {
+        "method": "PATCH",
+        "path": "/boards/{slug}",
+        "function": "rename_board",
+        "parity_status": "covered_for_board_lifecycle_operational_safety"
+      },
+      {
+        "method": "DELETE",
+        "path": "/boards/{slug}",
+        "function": "delete_board",
+        "parity_status": "covered_for_board_delete_guard"
+      },
+      {
+        "method": "POST",
+        "path": "/boards/{slug}/switch",
+        "function": "switch_board",
+        "parity_status": "covered_for_board_lifecycle_operational_safety"
+      },
+      {
+        "method": "PATCH",
+        "path": "/profiles/{profile_name}",
+        "function": "update_profile_description",
+        "parity_status": "covered_for_profile_routes_operational_safety"
+      },
+      {
+        "method": "POST",
+        "path": "/profiles/{profile_name}/describe-auto",
+        "function": "auto_describe_profile",
+        "parity_status": "covered_for_profile_routes_operational_safety"
+      },
+      {
+        "method": "POST",
+        "path": "/tasks/{task_id}/decompose",
+        "function": "decompose_task_endpoint",
+        "parity_status": "covered_for_decompose_route_guard"
+      },
+      {
+        "method": "PUT",
+        "path": "/orchestration",
+        "function": "set_orchestration_settings",
+        "parity_status": "covered_for_orchestration_route_operational_safety"
+      }
+    ],
+    "pending": []
+  },
+  "important_limitations": [
+    "This is an inventory and classification receipt, not route execution proof.",
+    "It does not start a dashboard server or mutate a runtime.",
+    "It must be regenerated whenever dashboard/API routes change."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/dashboard_route_inventory.py",
+    "validation/hermes-installed-runtime-smoke/dashboard-create-route-parity-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-route-parity-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-done-route-parity-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-dispatch-route-parity-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-delete-route-guard-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-links-route-guard-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-attachment-route-safety-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-bulk-archive-guard-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-reassign-route-guard-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-reclaim-terminate-guard-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-specify-route-guard-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-decompose-route-guard-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-comments-route-append-only-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-home-subscribe-route-visibility-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-board-delete-route-guard-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-board-lifecycle-operational-safety-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-profile-routes-operational-safety-smoke.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-orchestration-route-operational-safety-smoke.json"
+  ],
+  "next_action": "Keep this inventory at zero pending mutating route families before any real runtime update."
+}

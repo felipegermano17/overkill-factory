@@ -1,0 +1,100 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T04:26:49Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-DISPATCH-ROUTE-PARITY-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_DISPATCH_ROUTE_PARITY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api",
+      "dispatcher"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API dispatch-route parity smoke passed: POST /dispatch did not spawn blocked worker subtasks, did not spawn the parent Factory card, and did spawn only the selected ready worker through a stubbed spawn function.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches; dispatcher spawn function stubbed",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_dispatch_blocked_workers_no_spawn": "PASS",
+    "dashboard_dispatch_parent_not_spawned_before_workers_done": "PASS",
+    "dashboard_dispatch_selected_ready_worker_spawned": "PASS",
+    "dashboard_dispatch_stubbed_worker_running": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_dispatch_evidence": {
+    "blocked_worker_board": {
+      "board_slug": "of-dashboard-dispatch-blocked-1781065608",
+      "parent_task_id": "t_baa03df8",
+      "parent_status_after_dispatch": "todo",
+      "worker_status_counts_after_dispatch": {
+        "blocked": 23
+      },
+      "dispatch_spawned_count": 0,
+      "route_result_keys": [
+        "auto_assigned_default",
+        "auto_blocked",
+        "crashed",
+        "promoted",
+        "rate_limited",
+        "reclaimed",
+        "respawn_guarded",
+        "skipped_nonspawnable",
+        "skipped_per_profile_capped",
+        "skipped_unassigned",
+        "spawned",
+        "stale",
+        "timed_out"
+      ]
+    },
+    "spawnable_worker_board": {
+      "board_slug": "of-dashboard-dispatch-spawn-1781065609",
+      "parent_task_id": "t_752289df",
+      "parent_status_after_dispatch": "todo",
+      "selected_worker_id": "ofw_189ed653dbe38737",
+      "dispatch_spawned_ids": [
+        "ofw_189ed653dbe38737"
+      ],
+      "spawned_calls": [
+        {
+          "task_id": "ofw_189ed653dbe38737",
+          "assignee": "software-development-planner",
+          "workspace_ref": "disposable-worker-workspace",
+          "board": "of-dashboard-dispatch-spawn-1781065609"
+        }
+      ],
+      "worker_status_counts_after_dispatch": {
+        "running": 1,
+        "ready": 22
+      }
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime.",
+    "The spawn function was stubbed; no real Hermes child process, model call or specialist execution happened.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not prove real worker execution, real model/tool auth, or production readiness."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/dashboard_dispatch_route_parity_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-dispatch-route-parity-smoke.json"
+  ],
+  "next_action": "Continue proving remaining dashboard/API route families and run non-stub model/tool-auth worker proof before any real-runtime update."
+}

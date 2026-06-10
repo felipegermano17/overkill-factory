@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/control-tower-readonly-smoke.schema.json",
+  "title": "Overkill Factory Control Tower Read-Only Smoke",
+  "type": "object",
+  "required": [
+    "$schema",
+    "smoke_id",
+    "result",
+    "projection",
+    "event",
+    "approval_request",
+    "mapping",
+    "readonly_checks"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/control-tower-readonly-smoke.schema.json"
+    },
+    "smoke_id": { "type": "string", "minLength": 3 },
+    "result": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "projection": { "type": "object" },
+    "event": { "type": "object" },
+    "approval_request": { "type": "object" },
+    "mapping": { "type": "object" },
+    "readonly_checks": {
+      "type": "object",
+      "required": [
+        "runtime_snapshot_unchanged",
+        "projection_derived_from_runtime",
+        "approval_pending_only",
+        "mapping_redacted",
+        "no_discord_mutation_claim"
+      ],
+      "properties": {
+        "runtime_snapshot_unchanged": { "type": "boolean" },
+        "projection_derived_from_runtime": { "type": "boolean" },
+        "approval_pending_only": { "type": "boolean" },
+        "mapping_redacted": { "type": "boolean" },
+        "no_discord_mutation_claim": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": true
+}

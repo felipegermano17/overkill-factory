@@ -1,0 +1,18 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
+  "approval_id": "appr_example",
+  "project_id": "example-project",
+  "task_id": "task_example",
+  "approval_type": "access",
+  "status": "pending",
+  "risk": "R2",
+  "scope": "Allow repository write access for the implementation worker on the scoped branch.",
+  "consequence": "Execution can start after the ready gate passes.",
+  "not_authorized": ["production deploy", "secret rotation", "billing changes"],
+  "requested_by": "factory-concierge",
+  "decided_by": "",
+  "decision_event_ref": "",
+  "evidence_refs": [],
+  "expires_at": "2026-06-10T00:00:00Z",
+  "created_at": "2026-06-09T00:00:00Z"
+}

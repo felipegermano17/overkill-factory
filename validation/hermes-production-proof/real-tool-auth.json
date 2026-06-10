@@ -1,0 +1,24 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-production-proof.schema.json",
+  "record_type": "hermes_production_proof",
+  "created_at": "2026-06-10T18:04:00Z",
+  "proof_type": "real_tool_auth",
+  "result": "PASS",
+  "summary": "A bounded real Hermes public-safety-gate worker used the local terminal tool in a real workspace, completed through kanban_complete, and produced a structured public-safe result without local model or tool stubs.",
+  "scope": "real Hermes runtime, public-safety-gate worker, local terminal tool authorization, read-only workspace checks",
+  "environment_ref": "redacted-real-hermes-runtime",
+  "evidence_refs": [
+    "validation/hermes-real-runtime-smoke/real-worker-local-tool-quality-smoke.json",
+    "validation/hermes-real-runtime-smoke/real-worker-parent-done-reconciliation-smoke.json",
+    "validation/hermes-real-runtime-smoke/worker-profile-live-auth-matrix-smoke.json",
+    "validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results/public_safety_result.json"
+  ],
+  "limits": [
+    "This proof satisfies real_tool_auth for the current production preflight only for the local Hermes terminal tool path used by the bounded worker smoke.",
+    "It does not prove Discord, external SaaS, cloud, browser, GitHub mutation, scanner credential or every future worker-tool integration.",
+    "Raw runtime output, local paths, runtime ids, session files and provider logs are intentionally not stored in the public repository."
+  ],
+  "decision": {
+    "real_runtime_update": "not_applicable"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-face-result.schema.json",
+  "record_type": "product_face_result",
+  "created_at": "2026-06-06T05:41:47+00:00",
+  "worker": {
+    "id": "product-face",
+    "name": "Product Face Validator",
+    "factory_phase": "F5/F13"
+  },
+  "card_ref": {
+    "card_id": "PRODUCT-FACE-PROOF",
+    "phase": "F5",
+    "risk_effective": "R2",
+    "surfaces": [
+      "ux",
+      "frontend",
+      "mobile",
+      "product-face"
+    ]
+  },
+  "target": "pilots/quasar-vault-guard-test/product-face/prototype.html",
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Browser proof captured for screenshots, console, DOM state, a11y basics, overlap and performance note.",
+  "tool_or_profile": "playwright-static-product-face-proof",
+  "executed_by": "product-face-proof-runner",
+  "screenshots": [
+    "validation/product-face/screenshots/desktop.png",
+    "validation/product-face/screenshots/mobile.png"
+  ],
+  "viewports": [
+    "desktop 1440x900",
+    "mobile 390x844"
+  ],
+  "checked_states": [
+    "default",
+    "empty",
+    "loading",
+    "error",
+    "success"
+  ],
+  "user_journeys_checked": [
+    "open-prototype",
+    "inspect-wallet-disabled",
+    "inspect-mobile"
+  ],
+  "a11y": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM-level accessible-name, title, lang, image alt and landmark checks; not a full WCAG audit."
+  },
+  "overlap_check": {
+    "status": "pass",
+    "issues": [],
+    "basis": "DOM rectangle intersection scan; nested parent-child overlaps are ignored."
+  },
+  "performance_note": "desktop render duration 8 ms, dom nodes 102; mobile render duration 7 ms, dom nodes 102; browser-local static proof only, not a production performance benchmark",
+  "evidence_refs": [
+    "validation/product-face/state.json",
+    "validation/product-face/console.json",
+    "validation/product-face/screenshots/desktop.png",
+    "validation/product-face/screenshots/mobile.png",
+    "validation/product-face/product-face-report.md",
+    "validation/product-face/qvg-product-face-result.json"
+  ],
+  "next_action": "Attach product_face_result to the completion receipt.",
+  "console": {
+    "status": "pass",
+    "messages_ref": "validation/product-face/console.json",
+    "error_count": 0,
+    "page_error_count": 0
+  }
+}

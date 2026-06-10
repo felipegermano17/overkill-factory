@@ -1,0 +1,302 @@
+diff --git a/hermes_cli/kanban_db.py b/hermes_cli/kanban_db.py
+index 09f6e23..07be8fa 100644
+--- a/hermes_cli/kanban_db.py
++++ b/hermes_cli/kanban_db.py
+@@ -237,6 +237,8 @@ def _overkill_transition_event_payload(
+         payload["transition_action"] = result.get("transition_action")
+         payload["blocked_reasons"] = result.get("blocked_reasons", [])
+         payload["hook_result_ref"] = result.get("hook_result_ref")
++        if "materialized_worker_tasks" in result:
++            payload["materialized_worker_tasks"] = result.get("materialized_worker_tasks")
+     return payload
+
+
+@@ -280,6 +282,213 @@ def _overkill_append_transition_event(
+         )
+
+
++def _overkill_create_worker_tasks_enabled() -> bool:
++    return _overkill_env_truthy("OVERKILL_FACTORY_CREATE_WORKER_TASKS")
++
++
++def _overkill_worker_task_initial_status() -> str:
++    raw = (os.environ.get("OVERKILL_FACTORY_WORKER_TASK_STATUS") or "blocked").strip().lower()
++    if raw in {"blocked", "todo", "ready"}:
++        return raw
++    return "blocked"
++
++
++def _overkill_worker_task_body(parent_task_id: str, worker_task: dict) -> str:
++    payload = {
++        "record_type": "overkill_factory_worker_subtask",
++        "parent_task_id": parent_task_id,
++        "worker_task_id": worker_task.get("task_id"),
++        "card_id": worker_task.get("card_id"),
++        "worker_id": worker_task.get("worker_id"),
++        "queue_class": worker_task.get("queue_class"),
++        "required_before": worker_task.get("required_before"),
++        "expected_receipt_field": worker_task.get("expected_receipt_field"),
++        "packet": worker_task.get("packet"),
++    }
++    return json.dumps(payload, indent=2, ensure_ascii=False)
++
++
++def _overkill_load_worker_ledger(result: Optional[dict]) -> Optional[dict]:
++    if not isinstance(result, dict):
++        return None
++    ledger_ref = result.get("ledger")
++    ledger_path = None
++    if isinstance(ledger_ref, dict):
++        raw = ledger_ref.get("ledger_path")
++        if isinstance(raw, str) and raw.strip():
++            ledger_path = Path(raw).expanduser()
++    if ledger_path is None or not ledger_path.exists():
++        return None
++    try:
++        data = json.loads(ledger_path.read_text(encoding="utf-8"))
++    except Exception:
++        return None
++    return data if isinstance(data, dict) else None
++
++
++def _overkill_materialize_worker_tasks_in_txn(
++    conn: sqlite3.Connection,
++    parent_task_id: str,
++    result: Optional[dict],
++) -> Optional[dict]:
++    if not _overkill_create_worker_tasks_enabled():
++        return None
++    if not isinstance(result, dict) or result.get("transition_action") != "allow_and_create_worker_tasks":
++        return None
++
++    ledger = _overkill_load_worker_ledger(result)
++    if ledger is None:
++        return {
++            "enabled": True,
++            "created": [],
++            "updated": [],
++            "unchanged": [],
++            "skipped": ["worker ledger not found"],
++        }
++    tasks = ledger.get("tasks")
++    if not isinstance(tasks, dict):
++        return {
++            "enabled": True,
++            "created": [],
++            "updated": [],
++            "unchanged": [],
++            "skipped": ["worker ledger tasks missing"],
++        }
++
++    parent = conn.execute(
++        "SELECT tenant, workspace_kind, workspace_path FROM tasks WHERE id = ?",
++        (parent_task_id,),
++    ).fetchone()
++    if parent is None:
++        return {
++            "enabled": True,
++            "created": [],
++            "updated": [],
++            "unchanged": [],
++            "skipped": ["parent task not found"],
++        }
++
++    now = int(time.time())
++    created: list[str] = []
++    updated: list[str] = []
++    unchanged: list[str] = []
++    skipped: list[str] = []
++    desired_status = _overkill_worker_task_initial_status()
++
++    for ident, worker_task in sorted(tasks.items()):
++        if not isinstance(worker_task, dict):
++            skipped.append(str(ident))
++            continue
++        worker_task_id = str(worker_task.get("task_id") or ident).strip()
++        worker_id = str(worker_task.get("worker_id") or "").strip()
++        if not worker_task_id or not worker_id:
++            skipped.append(str(ident))
++            continue
++        title = str(worker_task.get("title") or f"Overkill Worker: {worker_id}").strip()
++        body = _overkill_worker_task_body(parent_task_id, worker_task)
++        assignee = _canonical_assignee(worker_id)
++        existing = conn.execute(
++            "SELECT title, body, assignee, status FROM tasks WHERE id = ?",
++            (worker_task_id,),
++        ).fetchone()
++        if existing is None:
++            conn.execute(
++                "INSERT INTO tasks "
++                "(id, title, body, assignee, status, priority, created_by, created_at, "
++                " workspace_kind, workspace_path, tenant) "
++                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
++                (
++                    worker_task_id,
++                    title,
++                    body,
++                    assignee,
++                    desired_status,
++                    -1,
++                    "overkill-factory",
++                    now,
++                    parent["workspace_kind"] or "scratch",
++                    parent["workspace_path"],
++                    parent["tenant"],
++                ),
++            )
++            conn.execute(
++                "INSERT OR IGNORE INTO task_links (parent_id, child_id) VALUES (?, ?)",
++                (parent_task_id, worker_task_id),
++            )
++            _append_event(
++                conn,
++                worker_task_id,
++                "created",
++                {
++                    "by": "overkill-factory",
++                    "from_overkill_parent": parent_task_id,
++                    "worker_id": worker_id,
++                    "status": desired_status,
++                },
++            )
++            if desired_status == "blocked":
++                _append_event(
++                    conn,
++                    worker_task_id,
++                    "blocked",
++                    {
++                        "reason": "Overkill Factory worker task materialized blocked until worker-route parity is proven."
++                    },
++                )
++            created.append(worker_task_id)
++            continue
++
++        if existing["status"] in ("running", "done", "archived"):
++            unchanged.append(worker_task_id)
++            continue
++        changes: list[str] = []
++        params: list[Any] = []
++        if existing["title"] != title:
++            changes.append("title = ?")
++            params.append(title)
++        if (existing["body"] or "") != body:
++            changes.append("body = ?")
++            params.append(body)
++        if existing["assignee"] != assignee:
++            changes.append("assignee = ?")
++            params.append(assignee)
++        if existing["status"] != desired_status and existing["status"] in ("blocked", "todo", "ready"):
++            changes.append("status = ?")
++            params.append(desired_status)
++        if changes:
++            params.append(worker_task_id)
++            conn.execute(
++                f"UPDATE tasks SET {', '.join(changes)} WHERE id = ?",
++                tuple(params),
++            )
++            conn.execute(
++                "INSERT OR IGNORE INTO task_links (parent_id, child_id) VALUES (?, ?)",
++                (parent_task_id, worker_task_id),
++            )
++            _append_event(
++                conn,
++                worker_task_id,
++                "overkill_worker_task_updated",
++                {"from_overkill_parent": parent_task_id, "worker_id": worker_id},
++            )
++            updated.append(worker_task_id)
++        else:
++            unchanged.append(worker_task_id)
++
++    materialized = {
++        "enabled": True,
++        "status": desired_status,
++        "created": created,
++        "updated": updated,
++        "unchanged": unchanged,
++        "skipped": skipped,
++        "task_count": len(created) + len(updated) + len(unchanged),
++    }
++    result["materialized_worker_tasks"] = materialized
++    _append_event(conn, parent_task_id, "overkill_worker_tasks_materialized", materialized)
++    return materialized
++
++
+ def _overkill_run_transition_gate_for_payload(
+     task_id: str,
+     payload: dict,
+@@ -2606,6 +2815,12 @@ def create_task(
+                 if overkill_gate_action is not None:
+                     if overkill_gate_action == "block":
+                         _append_event(conn, task_id, "blocked", {"reason": overkill_gate_message})
++                    elif overkill_gate_action == "allow":
++                        _overkill_materialize_worker_tasks_in_txn(
++                            conn,
++                            task_id,
++                            overkill_gate_result,
++                        )
+                     _overkill_append_transition_event_in_txn(
+                         conn,
+                         task_id,
+@@ -3320,6 +3535,11 @@ def recompute_ready(
+                     )
+                 _append_event(conn, task_id, "promoted", None)
+                 if gate_result is not None:
++                    _overkill_materialize_worker_tasks_in_txn(
++                        conn,
++                        task_id,
++                        gate_result,
++                    )
+                     _overkill_append_transition_event_in_txn(
+                         conn,
+                         task_id,
+@@ -4566,16 +4786,6 @@ def promote_task(
+             result=exc.result,
+         )
+         return False, str(exc)
+-    if gate_result is not None:
+-        _overkill_append_transition_event(
+-            conn,
+-            task_id,
+-            to_status="ready",
+-            action="allow",
+-            message="Overkill Factory transition gate allowed ready.",
+-            result=gate_result,
+-        )
+-
+     with write_txn(conn):
+         upd = conn.execute(
+             "UPDATE tasks SET status = 'ready' "
+@@ -4590,6 +4800,20 @@ def promote_task(
+             "promoted_manual",
+             {"actor": actor, "reason": reason, "forced": force},
+         )
++        if gate_result is not None:
++            _overkill_materialize_worker_tasks_in_txn(
++                conn,
++                task_id,
++                gate_result,
++            )
++            _overkill_append_transition_event_in_txn(
++                conn,
++                task_id,
++                to_status="ready",
++                action="allow",
++                message="Overkill Factory transition gate allowed ready.",
++                result=gate_result,
++            )
+
+     return True, None
+
+@@ -4663,6 +4887,11 @@ def unblock_task(conn: sqlite3.Connection, task_id: str) -> bool:
+             {"status": new_status} if new_status != "ready" else None,
+         )
+         if gate_result is not None:
++            _overkill_materialize_worker_tasks_in_txn(
++                conn,
++                task_id,
++                gate_result,
++            )
+             _overkill_append_transition_event_in_txn(
+                 conn,
+                 task_id,

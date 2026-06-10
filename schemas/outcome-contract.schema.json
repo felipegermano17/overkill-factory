@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/outcome-contract.schema.json",
+  "title": "Overkill Factory Outcome Contract",
+  "type": "object",
+  "required": [
+    "outcome",
+    "users_or_actors",
+    "problem",
+    "success_signals",
+    "non_goals",
+    "open_questions"
+  ],
+  "properties": {
+    "outcome": { "type": "string", "minLength": 3 },
+    "users_or_actors": { "type": "array", "items": { "type": "string" } },
+    "problem": { "type": "string", "minLength": 3 },
+    "success_signals": { "type": "array", "items": { "type": "string" } },
+    "non_goals": { "type": "array", "items": { "type": "string" } },
+    "open_questions": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

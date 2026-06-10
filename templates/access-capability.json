@@ -1,0 +1,10 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/access-capability.schema.json",
+  "status": "planning_only",
+  "required_capabilities": ["repository write access", "cloud project access"],
+  "available_capabilities": ["repository read access"],
+  "missing_capabilities": ["cloud project access"],
+  "owner": "product-owner",
+  "execution_limit": "Planning may continue. Material execution is blocked until status is ready.",
+  "evidence_refs": ["access-check.md"]
+}

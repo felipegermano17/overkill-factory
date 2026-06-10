@@ -1,0 +1,474 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-worker-route-readiness.schema.json",
+  "schema": "overkill_factory_hermes_worker_route_readiness.v1",
+  "ledger_ref": "validation/hermes-disposable-runtime/worker-ledger.json",
+  "hermes_home_ref": "redacted-hermes-home",
+  "result": "BLOCKED",
+  "worker_count": 23,
+  "blocked_worker_count": 23,
+  "blocked_workers": [
+    "access-capability-worker",
+    "agent-eval-worker",
+    "agentic-ai-security-specialist",
+    "agentic-method-router",
+    "appsec-owasp-specialist",
+    "autoreview-gate",
+    "budget-cost-worker",
+    "cloud-infra-security-specialist",
+    "codex-security",
+    "data-metrics-worker",
+    "dependency-integration-worker",
+    "factory-maturity-auditor",
+    "factory-orchestrator",
+    "handoff-packer",
+    "human-gate-clerk",
+    "implementation-worker",
+    "independent-reviewer",
+    "qa-verification-worker",
+    "remote-proof-runner",
+    "security-architect-worker",
+    "security-orchestrator",
+    "software-development-planner",
+    "supply-chain-gate"
+  ],
+  "checks": [
+    {
+      "worker_id": "access-capability-worker",
+      "task_id": "ofw_1ea0fe703c416e59",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "agent-eval-worker",
+      "task_id": "ofw_7c111e0cd040697f",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "agentic-ai-security-specialist",
+      "task_id": "ofw_83245247144de8c8",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "agentic-method-router",
+      "task_id": "ofw_a8cf30992fb5750d",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "appsec-owasp-specialist",
+      "task_id": "ofw_90e5d25568301f7f",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "autoreview-gate",
+      "task_id": "ofw_c71b608e72e33028",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "budget-cost-worker",
+      "task_id": "ofw_75922eafc7baeb44",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "cloud-infra-security-specialist",
+      "task_id": "ofw_d81700f2d8f03f74",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "codex-security",
+      "task_id": "ofw_b117c8d88748d87f",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "data-metrics-worker",
+      "task_id": "ofw_5a17a3d64d09ded9",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "dependency-integration-worker",
+      "task_id": "ofw_a78fd6a0ea3ce05f",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "factory-maturity-auditor",
+      "task_id": "ofw_68231b3ffff370cd",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "factory-orchestrator",
+      "task_id": "ofw_6167257a2136e322",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "handoff-packer",
+      "task_id": "ofw_8c951f81bf589aae",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "human-gate-clerk",
+      "task_id": "ofw_e37742119ec01db9",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "implementation-worker",
+      "task_id": "ofw_db4d2fefb13ce327",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "independent-reviewer",
+      "task_id": "ofw_d907966e76027763",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "qa-verification-worker",
+      "task_id": "ofw_6a349caa4a34b253",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "remote-proof-runner",
+      "task_id": "ofw_593736537f8a911a",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "security-architect-worker",
+      "task_id": "ofw_4adda35255d9b61d",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "security-orchestrator",
+      "task_id": "ofw_603d5cb31f5bf0a9",
+      "required_before": "done",
+      "queue_class": "blocking-before-done",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "software-development-planner",
+      "task_id": "ofw_189ed653dbe38737",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    },
+    {
+      "worker_id": "supply-chain-gate",
+      "task_id": "ofw_4c165ce13c17c430",
+      "required_before": "ready",
+      "queue_class": "blocking-before-ready",
+      "status": "blocked",
+      "profile_exists": false,
+      "config_ref": null,
+      "model_configured": false,
+      "provider_configured": false,
+      "credential_status": "fail",
+      "credential_evidence": [
+        "profile_or_config_missing"
+      ],
+      "blocked_reasons": [
+        "profile_missing",
+        "profile_or_config_missing"
+      ]
+    }
+  ],
+  "production_rule": "Do not set OVERKILL_FACTORY_WORKER_TASK_STATUS=ready in production while result is BLOCKED."
+}

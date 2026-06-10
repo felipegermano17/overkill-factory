@@ -48,14 +48,14 @@ paper
 Receipt Five now supports both Factory 10/Hermes V3.5 and the older Hermes V2
 completion gate.
 
-Required when `hermes_kaxis_v2_completion_required=true`:
+Required when `hermes_legacy_completion_required=true`:
 
 - evidence paths;
 - `verification.passed=true` with commands;
 - `sandbox.passed=true` with invariants;
 - `rollback.verified=true` with evidence;
 - approvals for QA, independent review, security, cybersecurity, CTO and
-  Felipe gate.
+  product-owner gate.
 
 Why better than a plain Receipt Five: Hermes can reject weak closure even when a
 worker writes confident prose.

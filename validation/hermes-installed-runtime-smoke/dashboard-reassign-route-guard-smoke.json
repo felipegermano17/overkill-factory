@@ -1,0 +1,89 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T06:33:48Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-REASSIGN-ROUTE-GUARD-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_REASSIGN_ROUTE_GUARD",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API reassign-route guard smoke passed: vFinal parent cards and worker subtasks cannot be manually reassigned, while ordinary disposable task reassign still works.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches including candidate 0012",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [
+    "adapters/hermes/patches/0012-guard-overkill-vfinal-dashboard-reassign-route.patch"
+  ],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_reassign_parent_vfinal_blocked": "PASS",
+    "dashboard_reassign_worker_subtask_blocked": "PASS",
+    "dashboard_reassign_normal_task_allowed": "PASS",
+    "worker_prerequisite_count_preserved": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_reassign_evidence": {
+    "board_slug": "of-dashboard-reassign-1781073227",
+    "parent_task_id": "t_cf746176",
+    "worker_task_id": "ofw_189ed653dbe38737",
+    "normal_task_id": "t_d9d934fd",
+    "worker_count": 23,
+    "attempts": {
+      "parent": {
+        "ok": false,
+        "http_status": 409,
+        "detail": "Overkill Factory cards and worker subtasks cannot be reassigned from dashboard/API; worker identity is part of the Factory method contract. Use an explicit operator-safe recovery w"
+      },
+      "worker": {
+        "ok": false,
+        "http_status": 409,
+        "detail": "Overkill Factory cards and worker subtasks cannot be reassigned from dashboard/API; worker identity is part of the Factory method contract. Use an explicit operator-safe recovery w"
+      },
+      "normal": {
+        "ok": true,
+        "http_status": null,
+        "result": {
+          "ok": true,
+          "task_id": "t_d9d934fd",
+          "assignee": "after-profile"
+        }
+      }
+    },
+    "assignee_after": {
+      "parent": "factory-orchestrator",
+      "worker": "software-development-planner",
+      "normal": "after-profile"
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime after candidate patch 0012.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not define a future operator-approved reassign workflow.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0012-guard-overkill-vfinal-dashboard-reassign-route.patch",
+    "adapters/hermes/dashboard_reassign_route_guard_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-reassign-route-guard-smoke.json"
+  ],
+  "next_action": "Add patch 0012 to the update sequence and continue proving remaining dashboard/API route families."
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/budget-contract.schema.json",
+  "title": "Overkill Factory Budget Contract",
+  "type": "object",
+  "required": ["budget_owner", "limit", "cost_triggers", "cleanup"],
+  "properties": {
+    "budget_owner": { "type": "string", "minLength": 3 },
+    "limit": { "type": "string", "minLength": 1 },
+    "cost_triggers": { "type": "array", "items": { "type": "string" } },
+    "cleanup": { "type": "string", "minLength": 3 },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

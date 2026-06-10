@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/worker-contract.schema.json",
+  "title": "Overkill Factory Worker Contract",
+  "type": "object",
+  "required": [
+    "worker_id",
+    "mode",
+    "phase",
+    "triggers",
+    "inputs",
+    "tools",
+    "output_contract",
+    "authority_max",
+    "veto_conditions",
+    "evidence_required",
+    "kanban_transition_rules",
+    "promotion_rule",
+    "public_safety_notes"
+  ],
+  "properties": {
+    "worker_id": { "type": "string", "minLength": 3 },
+    "mode": { "enum": ["open", "closed", "hybrid", "human"] },
+    "phase": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 }
+    },
+    "triggers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "tools": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 2 }
+    },
+    "output_contract": { "type": "string", "minLength": 3 },
+    "authority_max": { "type": "string", "minLength": 3 },
+    "veto_conditions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "evidence_required": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "kanban_transition_rules": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "promotion_rule": { "type": "string", "minLength": 3 },
+    "public_safety_notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

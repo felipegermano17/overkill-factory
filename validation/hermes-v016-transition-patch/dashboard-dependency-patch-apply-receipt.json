@@ -1,0 +1,26 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-v016-dashboard-route-patch-validation.schema.json",
+  "schema": "overkill_factory_hermes_v016_dashboard_route_patch_validation.v1",
+  "patch": "adapters/hermes/patches/0007-add-dashboard-python-multipart-web-extra.patch",
+  "result": "PASS",
+  "static_validation": {
+    "result": "PASS",
+    "checked_patch": "adapters/hermes/patches/0007-add-dashboard-python-multipart-web-extra.patch",
+    "missing_markers": [],
+    "forbidden_markers": []
+  },
+  "apply_validation": {
+    "result": "PASS",
+    "source": "redacted-hermes-pyproject-and-uv-lock",
+    "git_apply_check": "PASS",
+    "git_apply": "PASS",
+    "dependency_installed_in_disposable_venv": "PASS",
+    "dashboard_plugin_import_after_install": "PASS"
+  },
+  "scope": [
+    "This validates the dashboard/API dependency patch artifact.",
+    "The patch adds python-multipart to the Hermes web extra because FastAPI requires it for File/Form route parameters.",
+    "The dependency was installed only in a disposable Hermes runtime for validation.",
+    "A production decision still requires a complete update receipt before any real runtime update."
+  ]
+}

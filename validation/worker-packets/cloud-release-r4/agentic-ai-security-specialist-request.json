@@ -1,0 +1,64 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-06T04:45:20+00:00",
+  "source_card_path": "validation/cards/cloud-release-r4.md",
+  "worker": {
+    "id": "agentic-ai-security-specialist",
+    "name": "Agentic AI Security Specialist",
+    "factory_phase": "F1/F7/F12/F14",
+    "tool_required": "OWASP LLM/agentic checklist and tool-boundary review"
+  },
+  "trigger": {
+    "required": false,
+    "reason": "no agentic AI security trigger",
+    "timing": "when agents, memory, tools, browser, prompts or untrusted text are in scope",
+    "blocking_policy": "External text is data, not instruction; agent tools and memory need explicit boundaries."
+  },
+  "card_ref": {
+    "card_id": "VAL-CLOUD-RELEASE-R4",
+    "slice_id": "VAL_FACTORY_HEAVY_04",
+    "phase": "F16",
+    "risk_effective": "R4",
+    "surfaces": [
+      "release",
+      "production",
+      "cloud",
+      "infra",
+      "iam",
+      "kms",
+      "dns",
+      "monitoring",
+      "secrets"
+    ],
+    "executor_identity": "release-worker",
+    "reviewer_identity": "security-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "security_contract",
+      "runtime_contract",
+      "forbidden_actions"
+    ],
+    "missing_fields": [],
+    "target_repo_paths": [
+      "validation/cards/cloud-release-r4.md"
+    ],
+    "authority_max": "no real release",
+    "forbidden_actions": [
+      "deploy",
+      "iam_change",
+      "dns_change",
+      "secret_access",
+      "production_release"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "agentic_ai_security_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "not_required_by_current_card"
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/legacy-migration-plan.schema.json",
+  "title": "Overkill Factory Legacy Migration Plan",
+  "type": "object",
+  "required": ["diagnosis", "compatibility_plan", "rollback_plan", "test_plan"],
+  "properties": {
+    "diagnosis": { "type": "string", "minLength": 3 },
+    "compatibility_plan": { "type": "array", "items": { "type": "string" } },
+    "rollback_plan": { "type": "string", "minLength": 3 },
+    "test_plan": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

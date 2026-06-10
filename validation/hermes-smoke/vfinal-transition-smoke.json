@@ -1,0 +1,63 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T02:25:01+00:00",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-ADAPTER-SMOKE",
+    "slice_id": "VFINAL_ADAPTER_SMOKE",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "adapter",
+      "vfinal"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "vFinal transition hook smoke passed.",
+  "tool_or_profile": "adapters/hermes/vfinal-smoke.py",
+  "executed_by": "remote-proof-runner",
+  "ready_transition_action": "allow_and_create_worker_tasks",
+  "blocked_transition_action": "block_transition",
+  "bridge_transition_action": "allow_and_create_worker_tasks",
+  "bridge_worker_spawned": false,
+  "ready_workers_checked": [
+    "access-capability-worker",
+    "agent-eval-worker",
+    "agentic-method-router",
+    "budget-cost-worker",
+    "data-metrics-worker",
+    "dependency-integration-worker",
+    "factory-maturity-auditor",
+    "security-architect-worker",
+    "software-development-planner"
+  ],
+  "missing_ready_workers": [],
+  "blocked_reasons": [
+    "dependency_map required for vFinal dependency/integration surfaces",
+    "security_architecture_plan required for vFinal R3/R4 or security-sensitive work",
+    "access_capability required before vFinal material execution",
+    "autonomy_readiness_packet required before vFinal material execution",
+    "human-gate-clerk missing inputs for blocking-before-done",
+    "dependency-integration-worker missing inputs for blocking-before-ready",
+    "access-capability-worker missing inputs for blocking-before-ready",
+    "security-architect-worker missing inputs for blocking-before-ready",
+    "factory-maturity-auditor missing inputs for blocking-before-done"
+  ],
+  "missing_block_reasons": [],
+  "evidence_refs": [
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/cards/vfinal-r3-missing-security-access.md",
+    "adapters/hermes/kanban_event_bridge.py",
+    "validation/hermes-smoke/vfinal-transition-smoke.json"
+  ],
+  "next_action": "Run the same transition path against a disposable real Hermes runtime before a product pilot."
+}

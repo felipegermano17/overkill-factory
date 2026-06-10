@@ -1,0 +1,57 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-real-runtime-smoke.schema.json",
+  "record_type": "hermes_real_runtime_smoke",
+  "created_at": "2026-06-10T16:24:05Z",
+  "result": "PASS",
+  "smoke_type": "real_worker_terminal_completion_smoke",
+  "scope": "real Hermes runtime, disposable board, explicit kanban_complete instruction",
+  "environment_ref": "redacted-real-hermes-runtime",
+  "checks": {
+    "official_hermes_docs_studied_first": true,
+    "implementation_completion_path_studied_first": true,
+    "disposable_board_created": true,
+    "disposable_task_created": true,
+    "explicit_terminal_instruction_given": true,
+    "worker_profile_had_kanban_worker_skill": true,
+    "dispatch_command_passed": true,
+    "worker_spawned": true,
+    "global_provider_live_probe_passed": true,
+    "worker_profile_live_probe_passed": true,
+    "profile_local_auth_shadow_removed": true,
+    "terminal_status_reached": true,
+    "task_completed": true,
+    "task_blocked_by_worker": false,
+    "kanban_complete_observed": true,
+    "kanban_block_observed": false,
+    "summary_marker_observed": true,
+    "provider_live_auth_blocker_observed": false,
+    "cleanup_verified": true,
+    "board_was_archived": true
+  },
+  "auth_resolution": {
+    "result": "PASS",
+    "method": "OpenAI Codex device-code auth refreshed at the global Hermes home, then the stale local openai-codex shadow was removed from the factory-orchestrator profile so the profile used the validated global fallback.",
+    "profile_ref": "factory-orchestrator",
+    "provider_ref": "openai-codex",
+    "model_ref": "gpt-5.5",
+    "status_only_auth_rejected_as_proof": true,
+    "global_provider_probe": "PASS",
+    "worker_profile_provider_probe": "PASS"
+  },
+  "cleanup": {
+    "method": "bounded timeout, process absence check, recoverable board archive",
+    "result": "PASS"
+  },
+  "evidence_refs": [
+    "docs/research/hermes-worker-completion-source-notes.md",
+    "validation/hermes-real-runtime-smoke/real-worker-dispatch-bounded-smoke.json",
+    "docs/roadmap/real-worker-completion-diagnostic.md"
+  ],
+  "limits": [
+    "This receipt is sanitized for the public repository.",
+    "The raw runtime output is intentionally not stored because it contains runtime-local paths, ids and auth/provider details.",
+    "This smoke proves real worker spawn, live provider/model auth for the worker profile, kanban_show visibility, kanban_complete execution and cleanup after studying official Hermes documentation.",
+    "It does not prove specialist output quality, parent done reconciliation, production rollback or release readiness.",
+    "The raw runtime output is intentionally not stored; the public receipt records only sanitized proof markers and boolean checks."
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/software-development-plan.schema.json",
+  "work_units": ["bounded implementation slice"],
+  "qa_plan": ["unit test", "integration smoke", "manual check when needed"],
+  "review_plan": ["independent review before done"],
+  "release_or_block_rule": "Release is blocked until verification, review and required gates pass.",
+  "evidence_refs": ["software-development-plan.md"]
+}

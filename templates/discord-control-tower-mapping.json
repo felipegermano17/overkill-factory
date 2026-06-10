@@ -1,0 +1,14 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-mapping.schema.json",
+  "project_id": "example-project",
+  "runtime": "hermes",
+  "board_ref": "example-board",
+  "guild_ref": "redacted-guild",
+  "dashboard_channel_ref": "factory-dashboard",
+  "dashboard_message_ref": "redacted-message",
+  "approval_channel_ref": "owner-approvals",
+  "project_thread_ref": "example-project-thread",
+  "evidence_channel_ref": "evidence-feed",
+  "bot_health_channel_ref": "bot-health",
+  "last_synced_at": "2026-06-09T00:00:00Z"
+}

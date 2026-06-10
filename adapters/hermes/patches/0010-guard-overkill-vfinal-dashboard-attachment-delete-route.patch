@@ -1,0 +1,24 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -791,9 +791,19 @@ def remove_attachment(attachment_id: int, board: Optional[str] = Query(None)):
+     board = _resolve_board(board)
+     conn = _conn(board=board)
+     try:
+-        att = kanban_db.delete_attachment(conn, attachment_id)
++        att = kanban_db.get_attachment(conn, attachment_id)
+         if att is None:
+             raise HTTPException(status_code=404, detail="attachment not found")
++        root = kanban_db.attachments_root(board=board).resolve()
++        try:
++            stored = Path(att.stored_path).resolve()
++            stored.relative_to(root)
++        except (ValueError, OSError):
++            raise HTTPException(
++                status_code=409,
++                detail="attachment file path is outside the board attachment root",
++            )
++        kanban_db.delete_attachment(conn, attachment_id)
+         return {"ok": True, "id": attachment_id}
+     finally:
+         conn.close()

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
+  "receipt_five": {
+    "changed": "Synthetic disposable adapter run completed without product or runtime mutation.",
+    "artifact_paths": [
+      "validation/hermes-disposable-runtime/disposable-runtime-smoke.json",
+      "validation/hermes-disposable-runtime/worker-results"
+    ],
+    "verification_commands": [
+      "python adapters/hermes/disposable_runtime_smoke.py"
+    ],
+    "verification_result": "PASS",
+    "reviewer_required": true,
+    "reviewer_result": "Synthetic independent-review worker result attached.",
+    "next_action": "Wire this same hook path into a disposable live Hermes runtime."
+  },
+  "kanban_transition_event": {
+    "from_status": "ready",
+    "to_status": "done",
+    "actor": "disposable-runtime-smoke",
+    "worker": "factory-orchestrator",
+    "receipt_refs": [
+      "validation/hermes-disposable-runtime/synthetic-receipt-five.json"
+    ],
+    "artifact_refs": [
+      "validation/hermes-disposable-runtime/worker-results"
+    ]
+  },
+  "hermes_legacy_completion_required": false,
+  "evidence_paths": [
+    "validation/hermes-disposable-runtime/disposable-runtime-smoke.json"
+  ],
+  "verification": {
+    "passed": true,
+    "commands": [
+      "python adapters/hermes/disposable_runtime_smoke.py"
+    ]
+  },
+  "sandbox": {
+    "passed": true,
+    "invariants": [
+      "No live Hermes state changed.",
+      "No Discord API call executed.",
+      "No production deployment ran."
+    ]
+  },
+  "rollback": {
+    "verified": true,
+    "evidence": "No rollback required because the smoke is local and synthetic."
+  }
+}

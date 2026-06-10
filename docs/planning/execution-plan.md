@@ -11,10 +11,10 @@ Completed.
 Evidence:
 
 ```text
-Hermes branch: codex/kaxis-factory-10-gates
+Hermes branch: codex/overkill-factory-10-gates
 Commit: d297c0c78900d6858384297895ef4392e6fb85b9
 Tests: 72 passed
-Patch: adapters/hermes/patches/0001-add-kaxis-factory-10-kanban-gates.patch
+Patch: adapters/hermes/patches/0001-add-overkill-factory-10-kanban-gates.patch
 ```
 
 ## Now

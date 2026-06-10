@@ -1,0 +1,90 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T00:36:00Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-WORKER-SUBTASKS-IDEMPOTENCY-SMOKE",
+    "slice_id": "VFINAL_HERMES_WORKER_SUBTASKS_IDEMPOTENCY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "worker-routing",
+      "control-tower"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes CLI/Kanban smoke passed for worker-subtask idempotency. A complete vFinal card created 23 real blocked worker subtasks. After the parent was blocked and then unblocked through the vFinal gate, Hermes kept the same 23 child links, created no duplicate child links, and recorded the second materialization as updates rather than new tasks.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with patches 0002 and 0003 applied",
+  "executed_by": "remote-proof-runner",
+  "hermes_version_observed": "Hermes Agent v0.16.0 (2026.6.5)",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy or real Hermes runtime mutation.",
+  "patches": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch"
+  ],
+  "checks": {
+    "fresh_parent_ready_allowed": "PASS",
+    "first_materialization_created_23_worker_subtasks": "PASS",
+    "parent_blocked_for_second_gate_pass": "PASS",
+    "parent_unblocked_through_vfinal_gate": "PASS",
+    "second_materialization_created_zero_new_subtasks": "PASS",
+    "second_materialization_updated_23_existing_subtasks": "PASS",
+    "child_count_stayed_23": "PASS",
+    "child_links_stayed_unique": "PASS",
+    "same_child_ids_after_unblock": "PASS",
+    "worker_subtasks_remained_blocked": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "disposable_task_evidence": {
+    "parent_task_id": "t_c01c71bc",
+    "synthetic_card_id": "VAL-VFINAL-R3-IDEMP-20260609213111",
+    "initial_parent_status": "ready",
+    "after_block_parent_status": "blocked",
+    "after_unblock_parent_status": "ready",
+    "child_count_before_retry": 23,
+    "child_count_after_retry": 23,
+    "unique_child_count_after_retry": 23,
+    "materialized_event_count_after_retry": 2,
+    "first_materialized_created_count": 23,
+    "second_materialized_created_count": 0,
+    "second_materialized_updated_count": 23,
+    "second_materialized_skipped_count": 0,
+    "worker_subtask_statuses_after_retry": [
+      "blocked"
+    ],
+    "worker_subtask_created_by_after_retry": [
+      "overkill-factory"
+    ],
+    "transition_action_after_retry": "allow_and_create_worker_tasks",
+    "transition_event_message_after_retry": "Overkill Factory transition gate allowed unblock to ready.",
+    "transition_event_hook_ref_after_retry": "runtime-artifact:t_c01c71bc/ready-hook-result.json",
+    "duplicate_child_links_after_retry": false,
+    "same_child_ids_after_retry": true
+  },
+  "important_limitations": [
+    "This proves retry/idempotency for create -> block parent -> unblock parent in a disposable installed Hermes CLI/Kanban runtime.",
+    "It does not yet prove dashboard/API/worker-route parity.",
+    "It does not yet prove autonomous worker result ingestion from real worker execution.",
+    "It does not yet prove real-service rollback.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+    "validation/hermes-installed-runtime-smoke/worker-subtasks-smoke.json",
+    "validation/hermes-installed-runtime-smoke/worker-subtasks-idempotency-smoke.json"
+  ],
+  "next_action": "Prove dashboard/API/worker-route parity, autonomous worker result ingestion and real-service rollback before any real-runtime update."
+}

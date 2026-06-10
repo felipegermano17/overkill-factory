@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/access-capability.schema.json",
+  "title": "Overkill Factory Access and Capability Gate",
+  "type": "object",
+  "required": [
+    "status",
+    "required_capabilities",
+    "available_capabilities",
+    "missing_capabilities",
+    "owner",
+    "execution_limit"
+  ],
+  "properties": {
+    "status": { "enum": ["ready", "blocked", "planning_only"] },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "available_capabilities": { "type": "array", "items": { "type": "string" } },
+    "missing_capabilities": { "type": "array", "items": { "type": "string" } },
+    "owner": { "type": "string", "minLength": 3 },
+    "execution_limit": { "type": "string", "minLength": 3 },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

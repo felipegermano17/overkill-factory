@@ -1,0 +1,43 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/human-gate-record.schema.json",
+  "record_type": "human_gate_record",
+  "gate_type": "R3",
+  "card_id": "VAL-VFINAL-R3-READY",
+  "card_ref": {
+    "card_id": "VAL-VFINAL-R3-READY",
+    "slice_id": "VAL_VFINAL_02",
+    "phase": "F12",
+    "risk_effective": "R3",
+    "surfaces": [
+      "code",
+      "api",
+      "auth",
+      "cloud",
+      "dependency",
+      "access",
+      "metrics",
+      "agent"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "decision": "approved",
+  "human_actor": "synthetic-owner",
+  "decision_at": "2026-06-10T02:25:01+00:00",
+  "approved_scope": [
+    "preflight validation only"
+  ],
+  "forbidden_scope": [
+    "deploy",
+    "secret_access",
+    "production_change"
+  ],
+  "required_changes": [],
+  "risk_owner": "product-owner",
+  "security_owner": "security-owner",
+  "rollback_owner": "release-owner",
+  "evidence_refs": [
+    "validation/hermes-disposable-runtime/evidence/human-gate-clerk.md"
+  ],
+  "notes": "Synthetic owner approval used only to prove before-done reconciliation."
+}

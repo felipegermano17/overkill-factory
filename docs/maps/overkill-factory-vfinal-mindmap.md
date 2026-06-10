@@ -1,0 +1,161 @@
+# Overkill Factory vFinal Mind Map Source
+
+This file is the source outline for the Whimsical mind map.
+
+```text
+Overkill Factory vFinal
+- Purpose
+  - Turns messy product input into production-ready work
+  - Autonomous but gated
+  - Evidence before done
+  - Runtime truth beats chat
+- Owner And Runtime
+  - Owner
+    - Gives direction
+    - Grants access
+    - Approves material risk
+  - Factory Concierge
+    - Speaks with owner
+    - Explains state simply
+    - Records structured decisions
+  - Hermes
+    - Durable Kanban state
+    - Workers and runs
+    - Gates before ready and done
+  - Discord Control Tower
+    - Human cockpit
+    - Not source of truth
+    - Status, blockers, approvals, health
+- Journey
+  - Intake
+    - Classify request
+    - Identify owner and risk
+    - Decide planning or execution
+  - Source Ledger
+    - Record sources
+    - Separate strong and weak evidence
+    - Preserve conflicts and gaps
+  - Source Resolution
+    - Facts
+    - Inference
+    - Decisions
+    - Open questions
+  - Outcome And Discovery
+    - Who is it for
+    - What changes
+    - Success metric
+    - Assumptions
+  - Product SOT
+    - Scope
+    - Out of scope
+    - Risks
+    - Acceptance criteria
+  - Agentic Method Router
+    - Chooses method mix
+    - Explains waivers
+    - Routes to packs and gates
+  - Method Contract
+    - Required artifacts
+    - Workers
+    - Gates
+    - Evidence
+    - Done definition
+  - Product And Surface Packs
+    - Domain rules
+    - UI or surface proof
+    - Product Experience OS
+  - Risk, Access, Budget
+    - Authority
+    - Dependencies
+    - Required accounts
+    - Cost limits
+  - Security Architecture
+    - Trust boundaries
+    - Auth and secrets
+    - Data flows
+    - Abuse cases
+  - Software And Experience Plans
+    - PRD or TRD when needed
+    - Spec graph
+    - Loop plan
+    - Product Face proof
+  - Autonomy Readiness
+    - Repos
+    - Cloud
+    - Secrets path
+    - Runtime profiles
+    - Human approvers
+  - Ready Gate
+    - Blocks missing indispensable inputs
+    - Material execution starts only when safe
+  - Control Tower Projection
+    - Owner can see state
+    - Approvals are structured
+    - Discord cannot bypass gates
+    - Bridge health has its own proof contract
+  - Runtime Execution
+    - Worker subtasks
+    - Normal dispatcher path
+    - No conversational done
+  - Worker Results
+    - PASS
+    - FAIL
+    - BLOCKED
+    - Evidence refs
+  - Verification And Review
+    - Tests
+    - Scans
+    - Browser or UI proof
+    - Independent review
+  - Receipt Five
+    - What changed
+    - Where it is
+    - How verified
+    - Who reviewed
+    - Next step
+  - Completion Audit
+    - Promise versus delivery
+    - Missing proof blocks
+  - Production Operations
+    - Release channel
+    - Rollback
+    - Monitoring
+    - Incident and support
+  - Learnback
+    - Tests
+    - Skills
+    - Gates
+    - Templates
+  - Factory Maturity Audit
+    - Did the factory miss anything
+    - Improve the system
+- Parallel Work
+  - Subagents
+    - Independent audits
+    - Disjoint write scopes
+    - Main agent integrates
+  - Worktrees
+    - Isolated edits
+    - Lane contract
+    - validate-lane preflight
+    - Scoped validation
+    - No private artifacts
+  - Cleanup
+    - Inventory first
+    - Classify before deleting
+    - Validate after cleanup
+- Production Readiness
+  - Already Proven
+    - Non-stub worker
+    - Real terminal tool auth
+    - Specialist scanner quality
+    - Parent done reconciliation
+    - Gateway recovery and monitoring
+  - Current Blockers
+    - Operator Control Tower real proof
+    - Passing update receipt
+  - Final Release Rule
+    - Preflight PASS
+    - Operator gate
+    - No raw private evidence in public repo
+```

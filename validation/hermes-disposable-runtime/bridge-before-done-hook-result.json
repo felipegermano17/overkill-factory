@@ -1,0 +1,2422 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-transition-hook.schema.json",
+  "hook_type": "overkill_factory_hermes_transition_hook",
+  "transition_action": "allow_done",
+  "blocked_reasons": [],
+  "completion_reconciliation": {
+    "closure_type": "worker_result_reconciliation",
+    "required_workers": [
+      "codex-security",
+      "independent-reviewer",
+      "human-gate-clerk",
+      "factory-orchestrator",
+      "implementation-worker",
+      "qa-verification-worker",
+      "autoreview-gate",
+      "security-orchestrator",
+      "appsec-owasp-specialist",
+      "agentic-ai-security-specialist",
+      "cloud-infra-security-specialist",
+      "remote-proof-runner",
+      "handoff-packer",
+      "supply-chain-gate",
+      "agentic-method-router",
+      "software-development-planner",
+      "data-metrics-worker",
+      "agent-eval-worker",
+      "dependency-integration-worker",
+      "access-capability-worker",
+      "security-architect-worker",
+      "budget-cost-worker",
+      "factory-maturity-auditor"
+    ],
+    "missing_blocking_workers": [],
+    "invalid_blocking_workers": [],
+    "workers": {
+      "codex-security": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "security_scan_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/codex-security-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "independent-reviewer": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "independent_review_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/independent-reviewer-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "human-gate-clerk": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "human_gate_record",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/human-gate-clerk-result.json",
+        "result": "approved",
+        "validation_errors": []
+      },
+      "factory-orchestrator": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "orchestration_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "implementation-worker": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "implementation_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/implementation-worker-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "qa-verification-worker": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "qa_verification_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/qa-verification-worker-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "autoreview-gate": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "autoreview_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/autoreview-gate-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "security-orchestrator": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "security_orchestration_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/security-orchestrator-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "appsec-owasp-specialist": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "appsec_owasp_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/appsec-owasp-specialist-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "agentic-ai-security-specialist": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "agentic_ai_security_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/agentic-ai-security-specialist-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "cloud-infra-security-specialist": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "cloud_infra_security_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/cloud-infra-security-specialist-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "remote-proof-runner": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "remote_proof_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/remote-proof-runner-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "handoff-packer": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "handoff_packet_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/handoff-packer-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      },
+      "supply-chain-gate": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "supply_chain_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "agentic-method-router": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "method_contract_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "software-development-planner": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "software_development_plan_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "data-metrics-worker": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "data_metrics_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "agent-eval-worker": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "agent_eval_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "dependency-integration-worker": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "dependency_integration_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "access-capability-worker": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "access_capability_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "security-architect-worker": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "security_architecture_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "budget-cost-worker": {
+        "queue_class": "blocking-before-ready",
+        "required_for_done": false,
+        "output_field": "budget_cost_result",
+        "satisfied": false,
+        "evidence_ref": null,
+        "result": null,
+        "validation_errors": []
+      },
+      "factory-maturity-auditor": {
+        "queue_class": "blocking-before-done",
+        "required_for_done": true,
+        "output_field": "factory_maturity_result",
+        "satisfied": true,
+        "evidence_ref": "validation/hermes-disposable-runtime/worker-results/factory-maturity-auditor-result.json",
+        "result": "PASS",
+        "validation_errors": []
+      }
+    }
+  },
+  "plan": {
+    "$schema": "https://overkill-factory.dev/schemas/hermes-transition-plan.schema.json",
+    "plan_type": "hermes_kanban_transition_plan",
+    "created_at": "2026-06-10T02:25:02+00:00",
+    "source_card_path": "external:hermes-kanban-card.json",
+    "event": {
+      "from_status": "ready",
+      "to_status": "done",
+      "card_id": "VAL-VFINAL-R3-READY"
+    },
+    "transition_action": "allow_done",
+    "blocked_reasons": [],
+    "gate_report": {
+      "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+      "report_type": "factory_gate_preflight",
+      "created_at": "2026-06-10T02:25:02+00:00",
+      "card_id": "VAL-VFINAL-R3-READY",
+      "risk_effective": "R3",
+      "surfaces": [
+        "code",
+        "api",
+        "auth",
+        "cloud",
+        "dependency",
+        "access",
+        "metrics",
+        "agent"
+      ],
+      "gate_status": "ready_for_worker_execution",
+      "required_workers": [
+        "codex-security",
+        "independent-reviewer",
+        "human-gate-clerk",
+        "factory-orchestrator",
+        "implementation-worker",
+        "qa-verification-worker",
+        "autoreview-gate",
+        "security-orchestrator",
+        "appsec-owasp-specialist",
+        "agentic-ai-security-specialist",
+        "cloud-infra-security-specialist",
+        "remote-proof-runner",
+        "handoff-packer",
+        "supply-chain-gate",
+        "agentic-method-router",
+        "software-development-planner",
+        "data-metrics-worker",
+        "agent-eval-worker",
+        "dependency-integration-worker",
+        "access-capability-worker",
+        "security-architect-worker",
+        "budget-cost-worker",
+        "factory-maturity-auditor"
+      ],
+      "blocked_workers": [],
+      "card_validation_errors": [],
+      "workers": {
+        "codex-security": {
+          "required": true,
+          "reason": "risk, code, public, agentic or sensitive surface requires security evidence",
+          "status": "requires_execution"
+        },
+        "solana-quasar-auditor": {
+          "required": false,
+          "reason": "no onchain surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "product-face": {
+          "required": false,
+          "reason": "no visible product surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "independent-reviewer": {
+          "required": true,
+          "reason": "R2+ or explicit independent review required",
+          "status": "requires_execution"
+        },
+        "human-gate-clerk": {
+          "required": true,
+          "reason": "architecture/high-risk/human gate detected",
+          "status": "requires_execution"
+        },
+        "factory-orchestrator": {
+          "required": true,
+          "reason": "factory card needs routing and state control",
+          "status": "requires_execution"
+        },
+        "source-ledger-worker": {
+          "required": false,
+          "reason": "source ledger already past early intake",
+          "status": "not_required_by_current_card"
+        },
+        "product-sot-planner": {
+          "required": false,
+          "reason": "not a Product SOT phase",
+          "status": "not_required_by_current_card"
+        },
+        "product-architect": {
+          "required": false,
+          "reason": "not an architecture phase",
+          "status": "not_required_by_current_card"
+        },
+        "docs-os-worker": {
+          "required": false,
+          "reason": "documentation OS not required by current card",
+          "status": "not_required_by_current_card"
+        },
+        "decomposition-planner": {
+          "required": false,
+          "reason": "not a decomposition phase",
+          "status": "not_required_by_current_card"
+        },
+        "implementation-worker": {
+          "required": true,
+          "reason": "implementation surface detected",
+          "status": "requires_execution"
+        },
+        "qa-verification-worker": {
+          "required": true,
+          "reason": "verification/review risk detected",
+          "status": "requires_execution"
+        },
+        "autoreview-gate": {
+          "required": true,
+          "reason": "code or pre-landing review surface detected",
+          "status": "requires_execution"
+        },
+        "security-orchestrator": {
+          "required": true,
+          "reason": "security-sensitive or R2+ card needs routed controls",
+          "status": "requires_execution"
+        },
+        "appsec-owasp-specialist": {
+          "required": true,
+          "reason": "OWASP Web/API/AppSec surface detected",
+          "status": "requires_execution"
+        },
+        "agentic-ai-security-specialist": {
+          "required": true,
+          "reason": "agentic AI/tool/memory surface detected",
+          "status": "requires_execution"
+        },
+        "cloud-infra-security-specialist": {
+          "required": true,
+          "reason": "cloud/infra/IaC/deploy surface detected",
+          "status": "requires_execution"
+        },
+        "crypto-key-management-specialist": {
+          "required": false,
+          "reason": "no crypto/key trigger",
+          "status": "not_required_by_current_card"
+        },
+        "remote-proof-runner": {
+          "required": true,
+          "reason": "high-risk or explicit remote proof required",
+          "status": "requires_execution"
+        },
+        "release-ops-worker": {
+          "required": false,
+          "reason": "not a release/promotion card",
+          "status": "not_required_by_current_card"
+        },
+        "handoff-packer": {
+          "required": true,
+          "reason": "phase or risk requires portable handoff",
+          "status": "requires_execution"
+        },
+        "memory-steward": {
+          "required": false,
+          "reason": "no memory stewardship trigger",
+          "status": "not_required_by_current_card"
+        },
+        "skill-eval-distiller": {
+          "required": false,
+          "reason": "no skill evolution trigger",
+          "status": "not_required_by_current_card"
+        },
+        "public-safety-gate": {
+          "required": false,
+          "reason": "not a public/release artifact",
+          "status": "not_required_by_current_card"
+        },
+        "supply-chain-gate": {
+          "required": true,
+          "reason": "code/dependency/high-risk supply-chain trigger detected",
+          "status": "requires_execution"
+        },
+        "detection-monitoring-worker": {
+          "required": false,
+          "reason": "no detection/monitoring trigger",
+          "status": "not_required_by_current_card"
+        },
+        "product-outcome-discovery-worker": {
+          "required": false,
+          "reason": "outcome/discovery already outside this worker trigger",
+          "status": "not_required_by_current_card"
+        },
+        "agentic-method-router": {
+          "required": true,
+          "reason": "vFinal or method routing surface detected",
+          "status": "requires_execution"
+        },
+        "software-development-planner": {
+          "required": true,
+          "reason": "vFinal software planning trigger detected",
+          "status": "requires_execution"
+        },
+        "product-experience-router": {
+          "required": false,
+          "reason": "no vFinal product experience trigger",
+          "status": "not_required_by_current_card"
+        },
+        "data-metrics-worker": {
+          "required": true,
+          "reason": "vFinal data/metrics surface detected",
+          "status": "requires_execution"
+        },
+        "agent-eval-worker": {
+          "required": true,
+          "reason": "vFinal agentic/AI behavior needs evals",
+          "status": "requires_execution"
+        },
+        "dependency-integration-worker": {
+          "required": true,
+          "reason": "vFinal dependency/integration or high-risk trigger detected",
+          "status": "requires_execution"
+        },
+        "access-capability-worker": {
+          "required": true,
+          "reason": "vFinal material execution needs access/capability gate",
+          "status": "requires_execution"
+        },
+        "security-architect-worker": {
+          "required": true,
+          "reason": "vFinal R3/R4 or security-sensitive work needs security architecture",
+          "status": "requires_execution"
+        },
+        "privacy-compliance-worker": {
+          "required": false,
+          "reason": "no vFinal privacy/compliance trigger",
+          "status": "not_required_by_current_card"
+        },
+        "budget-cost-worker": {
+          "required": true,
+          "reason": "vFinal budget/cost trigger detected",
+          "status": "requires_execution"
+        },
+        "production-readiness-worker": {
+          "required": false,
+          "reason": "no vFinal production readiness trigger",
+          "status": "not_required_by_current_card"
+        },
+        "incident-support-worker": {
+          "required": false,
+          "reason": "no vFinal incident/support trigger",
+          "status": "not_required_by_current_card"
+        },
+        "legacy-migration-worker": {
+          "required": false,
+          "reason": "no vFinal legacy/migration trigger",
+          "status": "not_required_by_current_card"
+        },
+        "platform-devex-worker": {
+          "required": false,
+          "reason": "no vFinal platform/DevEx trigger",
+          "status": "not_required_by_current_card"
+        },
+        "user-docs-onboarding-worker": {
+          "required": false,
+          "reason": "no vFinal user docs/onboarding trigger",
+          "status": "not_required_by_current_card"
+        },
+        "factory-concierge": {
+          "required": false,
+          "reason": "no vFinal owner interface trigger",
+          "status": "not_required_by_current_card"
+        },
+        "discord-control-tower-bridge": {
+          "required": false,
+          "reason": "no vFinal Discord control tower trigger",
+          "status": "not_required_by_current_card"
+        },
+        "control-tower-projection-worker": {
+          "required": false,
+          "reason": "no vFinal control tower projection trigger",
+          "status": "not_required_by_current_card"
+        },
+        "factory-maturity-auditor": {
+          "required": true,
+          "reason": "vFinal maturity audit trigger detected",
+          "status": "requires_execution"
+        }
+      }
+    },
+    "worker_tasks": [
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "codex-security",
+        "title": "Codex Security Runner: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "codex-security",
+            "name": "Codex Security Runner",
+            "factory_phase": "F8/F13",
+            "tool_required": "Codex Security plugin or Hermes cybersecurity profile"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "risk, code, public, agentic or sensitive surface requires security evidence",
+            "timing": "after a security_scan_packet exists and before done/promotion",
+            "blocking_policy": "R3/R4, security, onchain, wallet, funds, mainnet, API, auth, or infra work cannot be completed without a real scan result or explicit human waiver."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "security_scan_packet",
+              "target_repo_paths",
+              "forbidden_actions"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "security_scan_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "security_scan_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "independent-reviewer",
+        "title": "Independent Reviewer: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "independent-reviewer",
+            "name": "Independent Reviewer",
+            "factory_phase": "F14",
+            "tool_required": "different Hermes/Codex reviewer identity"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "R2+ or explicit independent review required",
+            "timing": "after worker evidence exists and before done/promotion",
+            "blocking_policy": "Executor and reviewer must be different. Review is mandatory for R2+ work and whenever Receipt Five says reviewer_required=true."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "executor_identity",
+              "reviewer_identity",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "independent_review_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "independent_review_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "human-gate-clerk",
+        "title": "Human Gate Clerk: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "human-gate-clerk",
+            "name": "Human Gate Clerk",
+            "factory_phase": "F9/F15/F16",
+            "tool_required": "explicit human decision recorded in Hermes"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "architecture/high-risk/human gate detected",
+            "timing": "at architecture approval, R3/R4 exception, R4 promotion, or requested human gate",
+            "blocking_policy": "Architecture approval and R4 promotion require a real human decision. Missing approval keeps the work blocked."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "human_gate_packet",
+              "security_scan_packet",
+              "rollback_or_recovery"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "human_gate_record",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": true
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "human_gate_record",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "factory-orchestrator",
+        "title": "Factory Orchestrator: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "factory-orchestrator",
+            "name": "Factory Orchestrator",
+            "factory_phase": "F0-F18",
+            "tool_required": "Hermes Kanban plus factory gate report"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "factory card needs routing and state control",
+            "timing": "at phase changes, gate preparation, worker routing, and blocked-state triage",
+            "blocking_policy": "The orchestrator routes work and records state, but cannot approve product, security, onchain, R3/R4, release, or human gates."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "phase",
+              "risk_effective",
+              "surfaces",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "orchestration_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "orchestration_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "implementation-worker",
+        "title": "Implementation Worker: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "implementation-worker",
+            "name": "Implementation Worker",
+            "factory_phase": "F12",
+            "tool_required": "bounded coding/runtime tools selected by card"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "implementation surface detected",
+            "timing": "only after Hermes Ready Gate",
+            "blocking_policy": "Implementation cannot expand scope, change architecture, touch forbidden surfaces or self-approve."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "scope_in",
+              "scope_out",
+              "forbidden_actions",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "implementation_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "implementation_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "qa-verification-worker",
+        "title": "QA Verification Worker: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "qa-verification-worker",
+            "name": "QA Verification Worker",
+            "factory_phase": "F13-F15",
+            "tool_required": "tests, screenshots, logs, scanners and evidence capture"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "verification/review risk detected",
+            "timing": "after implementation evidence and before independent review/done",
+            "blocking_policy": "No product-facing or risk-bearing card is done without objective verification evidence."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "acceptance_criteria",
+              "done_definition",
+              "target_repo_paths"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "qa_verification_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "qa_verification_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "autoreview-gate",
+        "title": "AutoReview Gate: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "autoreview-gate",
+            "name": "AutoReview Gate",
+            "factory_phase": "F14/F15",
+            "tool_required": "autoreview skill or equivalent structured code-review runner"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "code or pre-landing review surface detected",
+            "timing": "after code/diff evidence and before landing or promotion",
+            "blocking_policy": "AutoReview can find issues, but it never replaces independent review or human gates."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "target_repo_paths",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "autoreview_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "autoreview_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "security-orchestrator",
+        "title": "Security Orchestrator: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "security-orchestrator",
+            "name": "Security Orchestrator",
+            "factory_phase": "F6-F16",
+            "tool_required": "security control matrix and threat model router"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "security-sensitive or R2+ card needs routed controls",
+            "timing": "when any security-sensitive surface or R2+ risk exists",
+            "blocking_policy": "Security is routed to specific specialists; a generic security comment is not enough."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "security_contract",
+              "security_scan_packet",
+              "risk_effective"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "security_orchestration_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "security_orchestration_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "appsec-owasp-specialist",
+        "title": "AppSec OWASP Specialist: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "appsec-owasp-specialist",
+            "name": "AppSec OWASP Specialist",
+            "factory_phase": "F7/F14/F15",
+            "tool_required": "OWASP Web/API/AppSec checklist and code/runtime evidence"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "OWASP Web/API/AppSec surface detected",
+            "timing": "before done for web, API, auth, backend, frontend or session surfaces",
+            "blocking_policy": "OWASP-sensitive work cannot close without control coverage or explicit waiver."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "security_scan_packet",
+              "target_repo_paths",
+              "acceptance_criteria"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "appsec_owasp_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "appsec_owasp_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "agentic-ai-security-specialist",
+        "title": "Agentic AI Security Specialist: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "agentic-ai-security-specialist",
+            "name": "Agentic AI Security Specialist",
+            "factory_phase": "F1/F7/F12/F14",
+            "tool_required": "OWASP LLM/agentic checklist and tool-boundary review"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "agentic AI/tool/memory surface detected",
+            "timing": "when agents, memory, tools, browser, prompts or untrusted text are in scope",
+            "blocking_policy": "External text is data, not instruction; agent tools and memory need explicit boundaries."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "security_contract",
+              "runtime_contract",
+              "forbidden_actions"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "agentic_ai_security_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "agentic_ai_security_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "cloud-infra-security-specialist",
+        "title": "Cloud and Infrastructure Security Specialist: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "cloud-infra-security-specialist",
+            "name": "Cloud and Infrastructure Security Specialist",
+            "factory_phase": "F7/F14/F16",
+            "tool_required": "cloud/IaC/IAM/KMS/CI/CD posture checks"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "cloud/infra/IaC/deploy surface detected",
+            "timing": "before release for infra, deploy, IAM, KMS, CI/CD, DNS or cloud surfaces",
+            "blocking_policy": "Infrastructure and deploy work require least privilege, rollback, logs and ownership."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "security_scan_packet",
+              "runtime_contract",
+              "rollback_or_recovery"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "cloud_infra_security_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "cloud_infra_security_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "remote-proof-runner",
+        "title": "Remote Proof Runner: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "remote-proof-runner",
+            "name": "Remote Proof Runner",
+            "factory_phase": "F13-F16",
+            "tool_required": "Crabbox/Testbox/container with artifact, cost, TTL and cleanup contract"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "high-risk or explicit remote proof required",
+            "timing": "when local proof is insufficient or parity/heavy validation is required",
+            "blocking_policy": "Remote proof cannot receive secrets by default and must return logs, artifacts and cleanup evidence."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "runtime_contract",
+              "target_repo_paths",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "remote_proof_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "remote_proof_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "handoff-packer",
+        "title": "Handoff Packer: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "handoff-packer",
+            "name": "Handoff Packer",
+            "factory_phase": "F9-F15",
+            "tool_required": "path-free handoff workflow with state, constraints, evidence and replay notes"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "phase or risk requires portable handoff",
+            "timing": "at worker transfer, context compaction, pause, phase change or R2+ handoff",
+            "blocking_policy": "Handoff is not a pretty summary; it must preserve constraints, evidence, decisions and next action."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "target_repo_paths",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "handoff_packet_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "handoff_packet_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "supply-chain-gate",
+        "title": "Supply Chain Gate: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "supply-chain-gate",
+            "name": "Supply Chain Gate",
+            "factory_phase": "F11/F13/F16",
+            "tool_required": "dependency, CI, secret, SBOM and provenance checks"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "code/dependency/high-risk supply-chain trigger detected",
+            "timing": "before ready/done/release for code, dependency, CI or package work",
+            "blocking_policy": "Code and dependency work needs reproducible tests, secret scan and dependency risk checks."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "target_repo_paths",
+              "runtime_contract",
+              "security_scan_packet"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "supply_chain_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "supply_chain_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "agentic-method-router",
+        "title": "Agentic Method Router: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "agentic-method-router",
+            "name": "Agentic Method Router",
+            "factory_phase": "F6-F7",
+            "tool_required": "method contract router"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal or method routing surface detected",
+            "timing": "after outcome/discovery and before detailed plans",
+            "blocking_policy": "Method choice must be explained; risky work cannot proceed from an implicit process."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "outcome_contract",
+              "risk_effective",
+              "surfaces"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "method_contract_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "method_contract_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "software-development-planner",
+        "title": "Software Development Planner: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "software-development-planner",
+            "name": "Software Development Planner",
+            "factory_phase": "F11",
+            "tool_required": "software development OS planning workflow"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal software planning trigger detected",
+            "timing": "before spec graph, card graph or implementation",
+            "blocking_policy": "Software work needs an explicit development, QA, review and release plan proportional to risk."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "method_contract",
+              "acceptance_criteria",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "software_development_plan_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "software_development_plan_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "data-metrics-worker",
+        "title": "Data, Metrics and Analytics Worker: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "data-metrics-worker",
+            "name": "Data, Metrics and Analytics Worker",
+            "factory_phase": "F13",
+            "tool_required": "metrics plan and event contract workflow"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal data/metrics surface detected",
+            "timing": "before measured product behavior or production release",
+            "blocking_policy": "Products that need measurement must define events, metrics, owners and privacy limits before release."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "outcome_contract",
+              "data_metrics_plan"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "data_metrics_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "data_metrics_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "agent-eval-worker",
+        "title": "Agent Quality and Evals Worker: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "agent-eval-worker",
+            "name": "Agent Quality and Evals Worker",
+            "factory_phase": "F14",
+            "tool_required": "agent eval plan and regression workflow"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal agentic/AI behavior needs evals",
+            "timing": "before agentic/AI behavior is trusted",
+            "blocking_policy": "Agent, prompt, tool or model behavior needs reproducible eval evidence, not only manual confidence."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "method_contract",
+              "agent_eval_plan"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "agent_eval_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "agent_eval_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "dependency-integration-worker",
+        "title": "Dependency and Integration Worker: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "dependency-integration-worker",
+            "name": "Dependency and Integration Worker",
+            "factory_phase": "F9",
+            "tool_required": "dependency map and integration contract workflow"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal dependency/integration or high-risk trigger detected",
+            "timing": "before access readiness and implementation",
+            "blocking_policy": "External APIs, providers, SDKs and accounts must be mapped before autonomous execution."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "runtime_contract",
+              "dependency_map"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "dependency_integration_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "dependency_integration_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "access-capability-worker",
+        "title": "Access and Capability Worker: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "access-capability-worker",
+            "name": "Access and Capability Worker",
+            "factory_phase": "F9/F17",
+            "tool_required": "access and capability gate checklist"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal material execution needs access/capability gate",
+            "timing": "before material execution",
+            "blocking_policy": "Material execution cannot start until indispensable access, accounts, tools and limits are ready or explicitly blocked."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "access_capability"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "access_capability_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "access_capability_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "security-architect-worker",
+        "title": "Security Architect Worker: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "security-architect-worker",
+            "name": "Security Architect Worker",
+            "factory_phase": "F10",
+            "tool_required": "security architecture plan and threat model workflow"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal R3/R4 or security-sensitive work needs security architecture",
+            "timing": "before material implementation for security-sensitive or high-risk work",
+            "blocking_policy": "Security review does not replace security architecture; material risk must be designed safe before implementation."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "security_contract",
+              "security_architecture_plan"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "security_architecture_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "security_architecture_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "budget-cost-worker",
+        "title": "Budget and Cost Worker: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "budget-cost-worker",
+            "name": "Budget and Cost Worker",
+            "factory_phase": "F9-F17",
+            "tool_required": "budget contract and cleanup plan"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal budget/cost trigger detected",
+            "timing": "before expensive, remote or long-running execution",
+            "blocking_policy": "Expensive or remote execution needs budget, owner, limit and cleanup evidence."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "budget_contract"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "budget_cost_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "budget_cost_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "factory-maturity-auditor",
+        "title": "Factory Maturity Auditor: VAL-VFINAL-R3-READY",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:02+00:00",
+          "source_card_path": "external:hermes-kanban-card.json",
+          "worker": {
+            "id": "factory-maturity-auditor",
+            "name": "Factory Maturity Auditor",
+            "factory_phase": "F31",
+            "tool_required": "factory maturity scorecard and blind-spot coverage matrix"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal maturity audit trigger detected",
+            "timing": "before high-risk vFinal closure and after major learnback",
+            "blocking_policy": "The factory must prove it is mature enough for the type of work it is trying to run."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-R3-READY",
+            "slice_id": "VAL_VFINAL_02",
+            "phase": "F12",
+            "risk_effective": "R3",
+            "surfaces": [
+              "code",
+              "api",
+              "auth",
+              "cloud",
+              "dependency",
+              "access",
+              "metrics",
+              "agent"
+            ],
+            "executor_identity": "implementation-worker",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "factory_maturity_scorecard"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-r3-ready.md"
+            ],
+            "authority_max": "bounded_execution",
+            "forbidden_actions": [
+              "deploy",
+              "secret_access",
+              "production_change"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "factory_maturity_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "factory_maturity_result",
+        "status": "requires_execution"
+      }
+    ],
+    "completion_reconciliation": {
+      "closure_type": "worker_result_reconciliation",
+      "required_workers": [
+        "codex-security",
+        "independent-reviewer",
+        "human-gate-clerk",
+        "factory-orchestrator",
+        "implementation-worker",
+        "qa-verification-worker",
+        "autoreview-gate",
+        "security-orchestrator",
+        "appsec-owasp-specialist",
+        "agentic-ai-security-specialist",
+        "cloud-infra-security-specialist",
+        "remote-proof-runner",
+        "handoff-packer",
+        "supply-chain-gate",
+        "agentic-method-router",
+        "software-development-planner",
+        "data-metrics-worker",
+        "agent-eval-worker",
+        "dependency-integration-worker",
+        "access-capability-worker",
+        "security-architect-worker",
+        "budget-cost-worker",
+        "factory-maturity-auditor"
+      ],
+      "missing_blocking_workers": [],
+      "invalid_blocking_workers": [],
+      "workers": {
+        "codex-security": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "security_scan_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/codex-security-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "independent-reviewer": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "independent_review_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/independent-reviewer-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "human-gate-clerk": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "human_gate_record",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/human-gate-clerk-result.json",
+          "result": "approved",
+          "validation_errors": []
+        },
+        "factory-orchestrator": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "orchestration_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "implementation-worker": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "implementation_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/implementation-worker-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "qa-verification-worker": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "qa_verification_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/qa-verification-worker-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "autoreview-gate": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "autoreview_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/autoreview-gate-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "security-orchestrator": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "security_orchestration_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/security-orchestrator-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "appsec-owasp-specialist": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "appsec_owasp_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/appsec-owasp-specialist-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "agentic-ai-security-specialist": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "agentic_ai_security_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/agentic-ai-security-specialist-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "cloud-infra-security-specialist": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "cloud_infra_security_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/cloud-infra-security-specialist-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "remote-proof-runner": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "remote_proof_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/remote-proof-runner-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "handoff-packer": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "handoff_packet_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/handoff-packer-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        },
+        "supply-chain-gate": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "supply_chain_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "agentic-method-router": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "method_contract_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "software-development-planner": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "software_development_plan_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "data-metrics-worker": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "data_metrics_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "agent-eval-worker": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "agent_eval_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "dependency-integration-worker": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "dependency_integration_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "access-capability-worker": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "access_capability_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "security-architect-worker": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "security_architecture_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "budget-cost-worker": {
+          "queue_class": "blocking-before-ready",
+          "required_for_done": false,
+          "output_field": "budget_cost_result",
+          "satisfied": false,
+          "evidence_ref": null,
+          "result": null,
+          "validation_errors": []
+        },
+        "factory-maturity-auditor": {
+          "queue_class": "blocking-before-done",
+          "required_for_done": true,
+          "output_field": "factory_maturity_result",
+          "satisfied": true,
+          "evidence_ref": "validation/hermes-disposable-runtime/worker-results/factory-maturity-auditor-result.json",
+          "result": "PASS",
+          "validation_errors": []
+        }
+      }
+    }
+  },
+  "ledger": {
+    "ledger_path": "validation/hermes-disposable-runtime/bridge-done-worker-ledger.json",
+    "created": [],
+    "updated": [
+      "ofw_b117c8d88748d87f",
+      "ofw_d907966e76027763",
+      "ofw_e37742119ec01db9",
+      "ofw_6167257a2136e322",
+      "ofw_db4d2fefb13ce327",
+      "ofw_6a349caa4a34b253",
+      "ofw_c71b608e72e33028",
+      "ofw_603d5cb31f5bf0a9",
+      "ofw_90e5d25568301f7f",
+      "ofw_83245247144de8c8",
+      "ofw_d81700f2d8f03f74",
+      "ofw_593736537f8a911a",
+      "ofw_8c951f81bf589aae",
+      "ofw_4c165ce13c17c430",
+      "ofw_a8cf30992fb5750d",
+      "ofw_189ed653dbe38737",
+      "ofw_5a17a3d64d09ded9",
+      "ofw_7c111e0cd040697f",
+      "ofw_a78fd6a0ea3ce05f",
+      "ofw_1ea0fe703c416e59",
+      "ofw_4adda35255d9b61d",
+      "ofw_75922eafc7baeb44",
+      "ofw_68231b3ffff370cd"
+    ],
+    "unchanged": [],
+    "task_count": 23
+  },
+  "bridge": {
+    "bridge_type": "overkill_factory_hermes_kanban_event_bridge",
+    "source": "hermes_kanban_task_json",
+    "task_id": "redacted",
+    "task_title": "OF-DISPOSABLE-BRIDGE-DONE",
+    "task_status": "ready",
+    "from_status": "ready",
+    "to_status": "done",
+    "worker_spawned": false
+  }
+}

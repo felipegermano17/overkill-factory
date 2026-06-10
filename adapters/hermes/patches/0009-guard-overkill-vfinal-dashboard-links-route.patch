@@ -1,0 +1,58 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -1008,10 +1008,38 @@ def _is_overkill_worker_subtask(task: kanban_db.Task) -> bool:
+     except Exception:
+         return False
+
+
++def _guard_overkill_link_edit(
++    conn: sqlite3.Connection,
++    parent_id: str,
++    child_id: str,
++) -> None:
++    """Block manual dependency edits for Overkill Factory-controlled tasks."""
++    parent = kanban_db.get_task(conn, parent_id)
++    child = kanban_db.get_task(conn, child_id)
++    missing = parent_id if parent is None else child_id if child is None else None
++    if missing is not None:
++        raise HTTPException(status_code=404, detail=f"task {missing} not found")
++    touches_factory = (
++        _is_overkill_factory_card(parent)
++        or _is_overkill_worker_subtask(parent)
++        or _is_overkill_factory_card(child)
++        or _is_overkill_worker_subtask(child)
++    )
++    if touches_factory:
++        raise HTTPException(
++            status_code=409,
++            detail=(
++                "Overkill Factory card dependencies cannot be edited from "
++                "dashboard/API; regenerate worker subtasks through the Factory "
++                "gate or use an explicit operator-safe dependency workflow."
++            ),
++        )
++
++
+ def _set_ready_status(
+     conn: sqlite3.Connection,
+     task_id: str,
+     *,
+     actor: str,
+     reason: str,
+@@ -1191,6 +1218,7 @@ def add_link(payload: LinkBody, board: Optional[str] = Query(None)):
+     board = _resolve_board(board)
+     conn = _conn(board=board)
+     try:
++        _guard_overkill_link_edit(conn, payload.parent_id, payload.child_id)
+         kanban_db.link_tasks(conn, payload.parent_id, payload.child_id)
+         return {"ok": True}
+     except ValueError as e:
+@@ -1208,6 +1236,7 @@ def delete_link(
+     board = _resolve_board(board)
+     conn = _conn(board=board)
+     try:
++        _guard_overkill_link_edit(conn, parent_id, child_id)
+         ok = kanban_db.unlink_tasks(conn, parent_id, child_id)
+         return {"ok": bool(ok)}
+     finally:

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json",
+  "record_type": "factory_production_readiness",
+  "created_at": "2026-06-10T21:39:37Z",
+  "result": "BLOCKED",
+  "summary": "Factory vFinal is not production-ready; required production gates are still blocked.",
+  "components": [
+    {
+      "id": "hermes_real_runtime_update_preflight",
+      "status": "BLOCKED",
+      "raw_result": "BLOCKED",
+      "evidence_ref": "validation/hermes-production-update-preflight/real-runtime-update-blocked.json",
+      "reason": "result is BLOCKED, expected PASS"
+    },
+    {
+      "id": "operator_control_tower_production_readiness",
+      "status": "BLOCKED",
+      "raw_result": "BLOCKED",
+      "evidence_ref": "validation/control-tower/operator-control-tower-production-readiness.json",
+      "reason": "result is BLOCKED, expected PASS"
+    },
+    {
+      "id": "operator_control_tower_private_evidence_doctor",
+      "status": "BLOCKED",
+      "raw_result": "BLOCKED",
+      "evidence_ref": "validation/control-tower/operator-control-tower-private-evidence-doctor.json",
+      "reason": "result is BLOCKED, expected PASS"
+    },
+    {
+      "id": "worktree_release_inventory",
+      "status": "ATTENTION",
+      "raw_result": "ATTENTION",
+      "evidence_ref": "validation/release/worktree-release-inventory.json",
+      "reason": null
+    },
+    {
+      "id": "release_integration_preflight",
+      "status": "BLOCKED",
+      "raw_result": "BLOCKED",
+      "evidence_ref": "validation/release/release-integration-preflight.json",
+      "reason": "result is BLOCKED, expected PASS"
+    },
+    {
+      "id": "public_safety_worktree",
+      "status": "PASS",
+      "raw_result": "PASS",
+      "evidence_ref": "validation/public-safety/worktree-summary.json",
+      "reason": null
+    },
+    {
+      "id": "public_safety_head",
+      "status": "BLOCKED",
+      "raw_result": "FAIL",
+      "evidence_ref": "validation/public-safety/head-summary.json",
+      "reason": "result is FAIL, expected PASS"
+    },
+    {
+      "id": "public_safety_origin_main",
+      "status": "BLOCKED",
+      "raw_result": "FAIL",
+      "evidence_ref": "validation/public-safety/origin-main-summary.json",
+      "reason": "result is FAIL, expected PASS"
+    }
+  ],
+  "blocking_items": [
+    "hermes_real_runtime_update_preflight",
+    "operator_control_tower_private_evidence_doctor",
+    "operator_control_tower_production_readiness",
+    "preflight:complete_update_receipt",
+    "preflight:operator_control_tower",
+    "public_safety_head",
+    "public_safety_origin_main",
+    "release_integration_preflight"
+  ],
+  "attention_items": [
+    "worktree_release_inventory"
+  ],
+  "evidence_refs": [
+    "validation/control-tower/operator-control-tower-private-evidence-doctor.json",
+    "validation/control-tower/operator-control-tower-production-readiness.json",
+    "validation/hermes-production-update-preflight/real-runtime-update-blocked.json",
+    "validation/public-safety/head-summary.json",
+    "validation/public-safety/origin-main-summary.json",
+    "validation/public-safety/worktree-summary.json",
+    "validation/release/release-integration-preflight.json",
+    "validation/release/worktree-release-inventory.json"
+  ],
+  "next_required_actions": [
+    "replace private Control Tower placeholders with real cockpit/runtime evidence",
+    "rerun operator_control_tower_private_evidence_doctor.py until it passes",
+    "run operator_control_tower_proof.py to create the production proof",
+    "regenerate the complete Hermes update receipt",
+    "pass the release integration preflight",
+    "integrate the public-safe worktree into the release ref and rerun public-safety scans for HEAD and origin/main"
+  ],
+  "limits": [
+    "This aggregate receipt is public-safe and intentionally omits raw private evidence.",
+    "It summarizes existing receipts; it does not replace the underlying gate receipts.",
+    "A PASS result still requires explicit operator approval before any real runtime update."
+  ]
+}

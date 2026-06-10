@@ -1,0 +1,88 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T03:29:13Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-DONE-ROUTE-PARITY-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_DONE_ROUTE_PARITY",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API done-route parity smoke passed: weak done was refused, valid done was allowed, and bulk weak done was refused.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "weak_dashboard_done_rejected_by_gate": "PASS",
+    "positive_dashboard_done_allowed_by_gate": "PASS",
+    "bulk_dashboard_done_rejected_by_gate": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_done_evidence": {
+    "board_slug": "of-dashboard-done-1781062151",
+    "weak_patch": {
+      "route": "plugins.kanban.dashboard.plugin_api.update_task status=done",
+      "synthetic_card_ref": "validation/cards/vfinal-r3-missing-security-access.md",
+      "before_status": "blocked",
+      "after_status": "blocked",
+      "http_status": 409,
+      "gate_actions": [
+        "block"
+      ],
+      "blocked_by_gate": true,
+      "error_summary": "status transition to 'done' not valid from current state"
+    },
+    "positive_patch": {
+      "route": "plugins.kanban.dashboard.plugin_api.update_task status=done",
+      "synthetic_card_ref": "validation/cards/vfinal-r3-ready.md",
+      "before_status": "blocked",
+      "after_status": "done",
+      "gate_actions": [
+        "allow"
+      ],
+      "allowed_by_gate": true
+    },
+    "weak_bulk": {
+      "route": "plugins.kanban.dashboard.plugin_api.bulk_update status=done",
+      "synthetic_card_ref": "validation/cards/vfinal-r3-missing-security-access.md",
+      "before_status": "blocked",
+      "after_status": "blocked",
+      "bulk_ok": false,
+      "gate_actions": [
+        "block"
+      ],
+      "blocked_by_gate": true
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not prove real worker execution, real model/tool auth, or production readiness."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/dashboard_done_route_parity_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/cards/vfinal-r3-missing-security-access.md",
+    "validation/hermes-disposable-runtime/synthetic-receipt-five.json",
+    "validation/hermes-installed-runtime-smoke/dashboard-done-route-parity-smoke.json"
+  ],
+  "next_action": "Prove remaining dashboard/API/worker routes that can mutate status, then run a bounded non-stub worker proof."
+}

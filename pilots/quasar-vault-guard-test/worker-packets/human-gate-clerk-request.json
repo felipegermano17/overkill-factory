@@ -33,7 +33,7 @@
       "compute-units"
     ],
     "executor_identity": "codex-overkill-factory",
-    "reviewer_identity": "kaxis-reviewer"
+    "reviewer_identity": "independent-reviewer"
   },
   "input_contract": {
     "required_fields": [

@@ -1,0 +1,487 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T02:54:10Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-WORKER-REAL-PROCESS-MATRIX-LOCAL-STUB-SMOKE",
+    "slice_id": "VFINAL_HERMES_WORKER_REAL_PROCESS_MATRIX_LOCAL_STUB",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "worker-routing",
+      "worker-results"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes matrix smoke passed for 23/23 workers through real child process local-stub completion.",
+  "tool_or_profile": "Hermes disposable installed runtime; real dispatcher spawn matrix; local OpenAI-compatible tool-call stub",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy, external model endpoint or real Hermes runtime mutation.",
+  "worker_count": 23,
+  "passed_worker_count": 23,
+  "failed_worker_count": 0,
+  "failed_workers": [],
+  "worker_results": [
+    {
+      "worker_id": "access-capability-worker",
+      "result": "PASS",
+      "record_type": "access_capability_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "access_capability_result.json"
+      ]
+    },
+    {
+      "worker_id": "agent-eval-worker",
+      "result": "PASS",
+      "record_type": "agent_eval_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "agent_eval_result.json"
+      ]
+    },
+    {
+      "worker_id": "agentic-ai-security-specialist",
+      "result": "PASS",
+      "record_type": "agentic_ai_security_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "agentic_ai_security_result.json"
+      ]
+    },
+    {
+      "worker_id": "agentic-method-router",
+      "result": "PASS",
+      "record_type": "method_contract_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "method_contract_result.json"
+      ]
+    },
+    {
+      "worker_id": "appsec-owasp-specialist",
+      "result": "PASS",
+      "record_type": "appsec_owasp_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "appsec_owasp_result.json"
+      ]
+    },
+    {
+      "worker_id": "autoreview-gate",
+      "result": "PASS",
+      "record_type": "autoreview_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "autoreview_result.json"
+      ]
+    },
+    {
+      "worker_id": "budget-cost-worker",
+      "result": "PASS",
+      "record_type": "budget_cost_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "budget_cost_result.json"
+      ]
+    },
+    {
+      "worker_id": "cloud-infra-security-specialist",
+      "result": "PASS",
+      "record_type": "cloud_infra_security_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "cloud_infra_security_result.json"
+      ]
+    },
+    {
+      "worker_id": "codex-security",
+      "result": "PASS",
+      "record_type": "security_scan_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "security_scan_result.json"
+      ]
+    },
+    {
+      "worker_id": "data-metrics-worker",
+      "result": "PASS",
+      "record_type": "data_metrics_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "data_metrics_result.json"
+      ]
+    },
+    {
+      "worker_id": "dependency-integration-worker",
+      "result": "PASS",
+      "record_type": "dependency_integration_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "dependency_integration_result.json"
+      ]
+    },
+    {
+      "worker_id": "factory-maturity-auditor",
+      "result": "PASS",
+      "record_type": "factory_maturity_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "factory_maturity_result.json"
+      ]
+    },
+    {
+      "worker_id": "factory-orchestrator",
+      "result": "PASS",
+      "record_type": "orchestration_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "orchestration_result.json"
+      ]
+    },
+    {
+      "worker_id": "handoff-packer",
+      "result": "PASS",
+      "record_type": "handoff_packet_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "handoff_packet_result.json"
+      ]
+    },
+    {
+      "worker_id": "human-gate-clerk",
+      "result": "PASS",
+      "record_type": "human_gate_record",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "human_gate_record.json"
+      ]
+    },
+    {
+      "worker_id": "implementation-worker",
+      "result": "PASS",
+      "record_type": "implementation_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "implementation_result.json"
+      ]
+    },
+    {
+      "worker_id": "independent-reviewer",
+      "result": "PASS",
+      "record_type": "independent_review_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "independent_review_result.json"
+      ]
+    },
+    {
+      "worker_id": "qa-verification-worker",
+      "result": "PASS",
+      "record_type": "qa_verification_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "qa_verification_result.json"
+      ]
+    },
+    {
+      "worker_id": "remote-proof-runner",
+      "result": "PASS",
+      "record_type": "remote_proof_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "remote_proof_result.json"
+      ]
+    },
+    {
+      "worker_id": "security-architect-worker",
+      "result": "PASS",
+      "record_type": "security_architecture_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "security_architecture_result.json"
+      ]
+    },
+    {
+      "worker_id": "security-orchestrator",
+      "result": "PASS",
+      "record_type": "security_orchestration_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "security_orchestration_result.json"
+      ]
+    },
+    {
+      "worker_id": "software-development-planner",
+      "result": "PASS",
+      "record_type": "software_development_plan_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "software_development_plan_result.json"
+      ]
+    },
+    {
+      "worker_id": "supply-chain-gate",
+      "result": "PASS",
+      "record_type": "supply_chain_result",
+      "final_child_status": "done",
+      "checks": {
+        "dispatcher_spawned_real_process": "PASS",
+        "stub_received_chat_request": "PASS",
+        "stub_saw_kanban_complete_tool": "PASS",
+        "stub_sent_kanban_complete_tool_call": "PASS",
+        "worker_completed_task": "PASS",
+        "worker_result_ingested": "PASS",
+        "child_events_written": "PASS",
+        "parent_event_written": "PASS"
+      },
+      "worker_result_files": [
+        "supply_chain_result.json"
+      ]
+    }
+  ],
+  "important_limitations": [
+    "This proves broad real Hermes child-process/tool-loop parity against a deterministic local stub.",
+    "It does not prove non-stub model quality, real tool authentication, cloud access, repository mutation, deployment, rollback or production readiness.",
+    "This does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "validation/hermes-disposable-runtime/worker-ledger.json",
+    "validation/hermes-installed-runtime-smoke/worker-real-process-matrix-local-stub-smoke.json",
+    "validation/hermes-installed-runtime-smoke/worker-real-process-local-stub-smoke.json",
+    "validation/hermes-installed-runtime-smoke/worker-profile-readiness-local-stub-smoke.json"
+  ],
+  "next_action": "Run a bounded non-stub model/tool-auth worker proof and then a real-service rollback drill before production update."
+}

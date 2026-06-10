@@ -25,7 +25,7 @@
       "compute-units"
     ],
     "executor_identity": "codex-overkill-factory",
-    "reviewer_identity": "kaxis-reviewer"
+    "reviewer_identity": "independent-reviewer"
   },
   "result": "PASS",
   "blocking_findings": false,

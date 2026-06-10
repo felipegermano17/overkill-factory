@@ -1,0 +1,162 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T07:37:58Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-DASHBOARD-RECLAIM-TERMINATE-GUARD-SMOKE",
+    "slice_id": "VFINAL_HERMES_DASHBOARD_RECLAIM_TERMINATE_GUARD",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "dashboard-api"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Dashboard/API reclaim and terminate guard smoke passed: vFinal worker subtasks cannot be generically reclaimed or terminated, while ordinary disposable task recovery still works.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with vFinal adapter patches including candidate 0013",
+  "executed_by": "remote-proof-runner",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; direct Python calls into dashboard plugin route functions; no production dashboard server.",
+  "patches": [
+    "adapters/hermes/patches/0013-guard-overkill-vfinal-dashboard-reclaim-terminate-routes.patch"
+  ],
+  "checks": {
+    "disposable_checkout_guard": "PASS",
+    "disposable_home_guard": "PASS",
+    "dashboard_reclaim_worker_subtask_blocked": "PASS",
+    "dashboard_terminate_worker_run_blocked": "PASS",
+    "worker_reclaim_run_preserved_after_block": "PASS",
+    "worker_terminate_run_preserved_after_block": "PASS",
+    "dashboard_reclaim_normal_task_allowed": "PASS",
+    "dashboard_terminate_normal_run_allowed": "PASS",
+    "worker_prerequisite_count_preserved": "PASS",
+    "no_real_runtime_mutation": "PASS"
+  },
+  "dashboard_reclaim_terminate_evidence": {
+    "board_slug": "of-dashboard-reclaim-terminate-1781077077",
+    "parent_task_id": "t_a0371187",
+    "worker_count": 23,
+    "task_ids": {
+      "reclaim_worker": "ofw_189ed653dbe38737",
+      "terminate_worker": "ofw_1ea0fe703c416e59",
+      "normal_reclaim": "t_e9e7cbd6",
+      "normal_terminate": "t_21fc76cb"
+    },
+    "run_ids": {
+      "reclaim_worker": 1,
+      "terminate_worker": 2,
+      "normal_reclaim": 3,
+      "normal_terminate": 4
+    },
+    "attempts": {
+      "worker_reclaim": {
+        "ok": false,
+        "http_status": 409,
+        "detail": "Overkill Factory cards and worker subtasks cannot be reclaimed from dashboard/API; use an explicit operator-safe recovery workflow."
+      },
+      "worker_terminate": {
+        "ok": false,
+        "http_status": 409,
+        "detail": "Overkill Factory cards and worker subtasks cannot be terminated from dashboard/API; use an explicit operator-safe recovery workflow."
+      },
+      "normal_reclaim": {
+        "ok": true,
+        "http_status": null,
+        "result": {
+          "ok": true,
+          "task_id": "t_e9e7cbd6"
+        }
+      },
+      "normal_terminate": {
+        "ok": true,
+        "http_status": null,
+        "result": {
+          "ok": true,
+          "run_id": 4,
+          "task_id": "t_21fc76cb"
+        }
+      }
+    },
+    "task_states": {
+      "reclaim_worker": {
+        "id": "ofw_189ed653dbe38737",
+        "status": "running",
+        "claim_lock_present": true,
+        "current_run_id": 1
+      },
+      "terminate_worker": {
+        "id": "ofw_1ea0fe703c416e59",
+        "status": "running",
+        "claim_lock_present": true,
+        "current_run_id": 2
+      },
+      "normal_reclaim": {
+        "id": "t_e9e7cbd6",
+        "status": "ready",
+        "claim_lock_present": false,
+        "current_run_id": null
+      },
+      "normal_terminate": {
+        "id": "t_21fc76cb",
+        "status": "ready",
+        "claim_lock_present": false,
+        "current_run_id": null
+      }
+    },
+    "run_states": {
+      "reclaim_worker": {
+        "run_id": 1,
+        "task_id": "ofw_189ed653dbe38737",
+        "status": "running",
+        "outcome": null,
+        "ended": false
+      },
+      "terminate_worker": {
+        "run_id": 2,
+        "task_id": "ofw_1ea0fe703c416e59",
+        "status": "running",
+        "outcome": null,
+        "ended": false
+      },
+      "normal_reclaim": {
+        "run_id": 3,
+        "task_id": "t_e9e7cbd6",
+        "status": "reclaimed",
+        "outcome": "reclaimed",
+        "ended": true
+      },
+      "normal_terminate": {
+        "run_id": 4,
+        "task_id": "t_21fc76cb",
+        "status": "reclaimed",
+        "outcome": "reclaimed",
+        "ended": true
+      }
+    }
+  },
+  "important_limitations": [
+    "This proves direct dashboard plugin route functions in a disposable installed Hermes runtime after candidate patch 0013.",
+    "The smoke arranges disposable task state directly to create running controls without spawning real workers.",
+    "It does not start an authenticated HTTP dashboard server.",
+    "It does not define a future operator-approved recovery workflow.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0013-guard-overkill-vfinal-dashboard-reclaim-terminate-routes.patch",
+    "adapters/hermes/dashboard_reclaim_terminate_guard_smoke.py",
+    "validation/cards/vfinal-r3-ready.md",
+    "validation/hermes-installed-runtime-smoke/dashboard-reclaim-terminate-guard-smoke.json"
+  ],
+  "next_action": "Add patch 0013 to the update sequence and continue proving remaining dashboard/API route families."
+}

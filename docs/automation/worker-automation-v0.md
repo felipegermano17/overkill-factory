@@ -28,8 +28,8 @@ python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face
 python scripts/factoryctl.py validate-receipt examples/receipts/v35_valid_completion_metadata.json
 python scripts/factoryctl.py gate-report --card examples/cards/v35_valid_onchain_auditor_scan.md
 python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
-python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor kaxis-cybersecurity --evidence-ref reports/security-scan.md
-python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor Felipe --evidence-ref decisions/r3-human-approval.md
+python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref reports/security-scan.md
+python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor product-owner --evidence-ref decisions/r3-human-approval.md
 ```
 
 ## Workers Covered
@@ -40,7 +40,7 @@ python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_o
 | Solana/Quasar Auditor Runner | onchain/Solana/Quasar surface | `auditor_result` | no complete onchain work without Auditor evidence or waiver |
 | Product Face Validator | UX/frontend/mobile/wallet UI surface | `product_face_result` | no product completion without visible screen/state/mobile/a11y evidence |
 | Independent Reviewer | R2+ or explicit review | `independent_review_result` | no self-review; executor and reviewer must differ |
-| Human Gate Clerk | architecture, R3/R4, CTO/Felipe gate | `human_gate_record` | no fake approval; missing human decision keeps card blocked |
+| Human Gate Clerk | architecture, R3/R4, CTO/product-owner gate | `human_gate_record` | no fake approval; missing human decision keeps card blocked |
 
 ## Status Values
 
@@ -97,7 +97,7 @@ gate report as either proof of failure or proof of completion.
 
 ## Hermes V2/V3.5 Completion Metadata
 
-For high-risk Hermes/KAXIS completion, Receipt Five must carry both the Factory
+For high-risk Hermes/Overkill completion, Receipt Five must carry both the Factory
 10 fields and the legacy Hermes V2 fields.
 
 Required V3.5 security result fields:
@@ -109,26 +109,88 @@ Required V3.5 security result fields:
 - `findings_summary`
 - `evidence_refs`
 
-Required V2 metadata when `hermes_kaxis_v2_completion_required=true`:
+Required V2 metadata when `hermes_legacy_completion_required=true`:
 
 - `evidence_paths`
 - `verification.passed=true`
 - `sandbox.passed=true`
 - `rollback.verified=true`
 - approval records for QA, independent review, security, cybersecurity, CTO
-  and Felipe gate
+  and product-owner gate
 
 This is intentionally stricter than a normal task receipt. Hermes should reject
 weak completion before agents can mark high-risk work done.
 
 ## Next Runtime Hook
 
-Hermes should call `factoryctl.py gate-report` when a card is created or moved
-toward `ready`, then create worker subtasks for every worker with
-`requires_execution`.
+Hermes should use the executable transition hook instead of a simple helper
+call:
+
+```bash
+python adapters/hermes/transition_hook.py \
+  --card path/to/card.md \
+  --from-status draft \
+  --to-status ready \
+  --ledger path/to/worker-ledger.json \
+  --out path/to/ready-hook-result.json
+
+python adapters/hermes/transition_hook.py \
+  --card path/to/card.md \
+  --from-status ready \
+  --to-status done \
+  --receipt path/to/receipt-five.json \
+  --worker-results-dir path/to/worker-results \
+  --ledger path/to/worker-ledger.json \
+  --out path/to/done-hook-result.json \
+  --enforce
+```
+
+At `ready`, Hermes should:
+
+- call the factory gate/reporting layer for the card;
+- produce a `hermes_kanban_transition_plan`;
+- create or update one Hermes subtask for each required worker;
+- route each subtask by `queue_class`;
+- preserve the worker packet on the subtask so the assigned worker receives the
+  exact input and output contract;
+- reject `ready` when card validation fails or a required worker packet is
+  `blocked_missing_inputs`.
+
+At `done`, Hermes should:
+
+- reload the required-worker set for the card;
+- inspect delivered worker results;
+- reconcile each result against its expected Receipt Five field;
+- reject missing, failed, unsupported or preflight-only results;
+- reject Receipt Five without required evidence refs and transition metadata;
+- allow done only when worker results and Receipt Five agree.
 
 Hermes should reject a transition when:
 
 - `card_validation_errors` is not empty;
 - a required worker packet is `blocked_missing_inputs`;
 - a required evidence field is missing from Receipt Five metadata at `done`.
+
+The hook writes a durable worker ledger and returns a machine-readable action:
+`allow_and_create_worker_tasks`, `allow_done` or `block_transition`. With
+`--enforce`, blocked transitions return a non-zero exit code so Hermes cannot
+silently ignore the gate.
+
+## What Integration Still Needs
+
+The public repository currently documents and validates the contract, and now
+includes the executable hook Hermes should call. It does not yet make a live
+Hermes runtime perform automatic orchestration without wiring this hook into the
+runtime.
+
+Real integration still needs:
+
+- Kanban transition event wiring for `ready` and `done`;
+- mapping hook ledger rows to real Hermes subtasks;
+- queue mapping for `blocking-before-ready`, `blocking-before-done` and
+  `advisory-review`;
+- result ingestion from worker artifacts into card metadata or Receipt Five;
+- a single gate path shared by CLI, dashboard, API and worker-driven updates;
+- clear blocked-state messages for missing inputs and missing evidence;
+- regression tests proving dashboard/API paths cannot bypass CLI behavior;
+- a disposable Hermes smoke before any real runtime update.

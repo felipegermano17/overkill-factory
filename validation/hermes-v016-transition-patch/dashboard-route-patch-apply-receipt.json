@@ -1,0 +1,27 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-v016-dashboard-route-patch-validation.schema.json",
+  "schema": "overkill_factory_hermes_v016_dashboard_route_patch_validation.v1",
+  "patch": "adapters/hermes/patches/0004-guard-overkill-vfinal-dashboard-ready-route.patch",
+  "result": "PASS",
+  "static_validation": {
+    "result": "PASS",
+    "checked_patch": "adapters/hermes/patches/0004-guard-overkill-vfinal-dashboard-ready-route.patch",
+    "missing_markers": [],
+    "forbidden_markers": []
+  },
+  "apply_validation": {
+    "result": "PASS",
+    "source": "redacted-plugin-api.py",
+    "git_apply_check": "PASS",
+    "git_apply_check_detail": "",
+    "git_apply": "PASS",
+    "git_apply_detail": "",
+    "py_compile": "PASS",
+    "py_compile_detail": ""
+  },
+  "scope": [
+    "This validates the dashboard/API ready-route patch artifact.",
+    "The patch is intended to be applied after the vFinal kanban_db patches that provide promote_task and the Overkill transition gate.",
+    "A production decision still requires disposable installed-Hermes smoke evidence before any real runtime update."
+  ]
+}

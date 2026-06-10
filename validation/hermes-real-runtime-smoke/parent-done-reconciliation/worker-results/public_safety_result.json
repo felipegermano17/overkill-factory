@@ -1,0 +1,32 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "public_safety_result",
+  "created_at": "2026-06-10T17:52:59Z",
+  "worker": {
+    "id": "public-safety-gate",
+    "name": "Public Safety Gate",
+    "factory_phase": "F16/F17"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-REAL-WORKER-PARENT-DONE-RECONCILIATION",
+    "slice_id": "VFINAL_HERMES_REAL_PARENT_DONE",
+    "phase": "F8",
+    "risk_effective": "R1",
+    "surfaces": ["docs"],
+    "executor_identity": "public-safety-gate",
+    "reviewer_identity": "not-required"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Real Hermes public-safety-gate worker used the terminal tool for read-only public-safe workspace checks and found no blocking public-safety issue in the bounded smoke.",
+  "tool_or_profile": "Hermes public-safety-gate profile with local terminal tool",
+  "executed_by": "public-safety-gate",
+  "evidence_refs": [
+    "validation/hermes-real-runtime-smoke/real-worker-local-tool-quality-smoke.json",
+    "README.md",
+    "scripts/factoryctl.py"
+  ],
+  "next_action": "Use this sanitized worker result for parent done reconciliation proof.",
+  "public_safety_scope": "bounded real Hermes worker smoke",
+  "raw_runtime_data_policy": "raw board ids, task ids, run ids, provider logs and local absolute paths are intentionally excluded from this public artifact"
+}

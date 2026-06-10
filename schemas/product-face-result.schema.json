@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-face-result.schema.json",
+  "title": "Overkill Factory Product Face Result",
+  "type": "object",
+  "required": [
+    "result",
+    "tool_or_profile",
+    "executed_by",
+    "screenshots",
+    "viewports",
+    "checked_states",
+    "user_journeys_checked",
+    "a11y",
+    "overlap_check",
+    "performance_note",
+    "blocking_findings",
+    "evidence_refs",
+    "next_action"
+  ],
+  "properties": {
+    "result": {
+      "enum": ["PASS", "WAIVED"]
+    },
+    "tool_or_profile": {
+      "type": "string",
+      "minLength": 3
+    },
+    "executed_by": {
+      "type": "string",
+      "minLength": 3
+    },
+    "screenshots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "viewports": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "checked_states": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "user_journeys_checked": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "a11y": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "overlap_check": {
+      "type": "object",
+      "minProperties": 1
+    },
+    "performance_note": {
+      "type": "string",
+      "minLength": 3
+    },
+    "blocking_findings": {
+      "type": "boolean"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "next_action": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

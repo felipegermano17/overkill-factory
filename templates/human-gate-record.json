@@ -1,17 +1,17 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/human-gate-record.schema.json",
   "record_type": "human_gate_record",
-  "gate_type": "architecture|R3|R4|promotion",
+  "gate_type": "R3",
   "card_id": "TBD",
-  "decision": "approved|rejected|changes_requested",
-  "human_actor": "TBD",
-  "decision_at": "TBD",
-  "approved_scope": [],
-  "forbidden_scope": [],
+  "decision": "approved",
+  "human_actor": "product-owner",
+  "decision_at": "2026-06-06T00:00:00+00:00",
+  "approved_scope": ["dry validation"],
+  "forbidden_scope": ["deploy", "mainnet", "funds"],
   "required_changes": [],
-  "risk_owner": "TBD",
-  "security_owner": "TBD",
-  "rollback_owner": "TBD",
-  "evidence_refs": [],
-  "notes": "TBD"
+  "risk_owner": "product-owner",
+  "security_owner": "security-owner",
+  "rollback_owner": "release-owner",
+  "evidence_refs": ["decisions/r3-approval.md"],
+  "notes": "Example only. Human approval must be real in live work."
 }

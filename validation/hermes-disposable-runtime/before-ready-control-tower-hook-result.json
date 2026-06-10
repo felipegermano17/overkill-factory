@@ -1,0 +1,940 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-transition-hook.schema.json",
+  "hook_type": "overkill_factory_hermes_transition_hook",
+  "transition_action": "block_transition",
+  "blocked_reasons": [
+    "security-orchestrator missing inputs for blocking-before-done",
+    "factory-concierge missing inputs for blocking-before-ready",
+    "discord-control-tower-bridge missing inputs for blocking-before-ready",
+    "control-tower-projection-worker missing inputs for blocking-before-ready"
+  ],
+  "completion_reconciliation": null,
+  "plan": {
+    "$schema": "https://overkill-factory.dev/schemas/hermes-transition-plan.schema.json",
+    "plan_type": "hermes_kanban_transition_plan",
+    "created_at": "2026-06-10T02:25:01+00:00",
+    "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+    "event": {
+      "from_status": "draft",
+      "to_status": "ready",
+      "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE"
+    },
+    "transition_action": "block_transition",
+    "blocked_reasons": [
+      "security-orchestrator missing inputs for blocking-before-done",
+      "factory-concierge missing inputs for blocking-before-ready",
+      "discord-control-tower-bridge missing inputs for blocking-before-ready",
+      "control-tower-projection-worker missing inputs for blocking-before-ready"
+    ],
+    "gate_report": {
+      "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
+      "report_type": "factory_gate_preflight",
+      "created_at": "2026-06-10T02:25:01+00:00",
+      "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+      "risk_effective": "R2",
+      "surfaces": [
+        "discord",
+        "control-tower",
+        "owner-interface",
+        "approval",
+        "forecast"
+      ],
+      "gate_status": "blocked",
+      "required_workers": [
+        "independent-reviewer",
+        "factory-orchestrator",
+        "qa-verification-worker",
+        "security-orchestrator",
+        "handoff-packer",
+        "agentic-method-router",
+        "factory-concierge",
+        "discord-control-tower-bridge",
+        "control-tower-projection-worker"
+      ],
+      "blocked_workers": [
+        "security-orchestrator",
+        "factory-concierge",
+        "discord-control-tower-bridge",
+        "control-tower-projection-worker"
+      ],
+      "card_validation_errors": [],
+      "workers": {
+        "codex-security": {
+          "required": false,
+          "reason": "no R3/R4, code, public, agentic or sensitive surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "solana-quasar-auditor": {
+          "required": false,
+          "reason": "no onchain surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "product-face": {
+          "required": false,
+          "reason": "no visible product surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "independent-reviewer": {
+          "required": true,
+          "reason": "R2+ or explicit independent review required",
+          "status": "requires_execution"
+        },
+        "human-gate-clerk": {
+          "required": false,
+          "reason": "no human gate trigger detected",
+          "status": "not_required_by_current_card"
+        },
+        "factory-orchestrator": {
+          "required": true,
+          "reason": "factory card needs routing and state control",
+          "status": "requires_execution"
+        },
+        "source-ledger-worker": {
+          "required": false,
+          "reason": "source ledger already past early intake",
+          "status": "not_required_by_current_card"
+        },
+        "product-sot-planner": {
+          "required": false,
+          "reason": "not a Product SOT phase",
+          "status": "not_required_by_current_card"
+        },
+        "product-architect": {
+          "required": false,
+          "reason": "not an architecture phase",
+          "status": "not_required_by_current_card"
+        },
+        "docs-os-worker": {
+          "required": false,
+          "reason": "documentation OS not required by current card",
+          "status": "not_required_by_current_card"
+        },
+        "decomposition-planner": {
+          "required": false,
+          "reason": "not a decomposition phase",
+          "status": "not_required_by_current_card"
+        },
+        "implementation-worker": {
+          "required": false,
+          "reason": "not an implementation card",
+          "status": "not_required_by_current_card"
+        },
+        "qa-verification-worker": {
+          "required": true,
+          "reason": "verification/review risk detected",
+          "status": "requires_execution"
+        },
+        "autoreview-gate": {
+          "required": false,
+          "reason": "no code/pre-landing trigger",
+          "status": "not_required_by_current_card"
+        },
+        "security-orchestrator": {
+          "required": true,
+          "reason": "security-sensitive or R2+ card needs routed controls",
+          "status": "blocked_missing_inputs"
+        },
+        "appsec-owasp-specialist": {
+          "required": false,
+          "reason": "no OWASP AppSec surface detected",
+          "status": "not_required_by_current_card"
+        },
+        "agentic-ai-security-specialist": {
+          "required": false,
+          "reason": "no agentic AI security trigger",
+          "status": "not_required_by_current_card"
+        },
+        "cloud-infra-security-specialist": {
+          "required": false,
+          "reason": "no cloud/infra trigger",
+          "status": "not_required_by_current_card"
+        },
+        "crypto-key-management-specialist": {
+          "required": false,
+          "reason": "no crypto/key trigger",
+          "status": "not_required_by_current_card"
+        },
+        "remote-proof-runner": {
+          "required": false,
+          "reason": "local proof is sufficient by current card",
+          "status": "not_required_by_current_card"
+        },
+        "release-ops-worker": {
+          "required": false,
+          "reason": "not a release/promotion card",
+          "status": "not_required_by_current_card"
+        },
+        "handoff-packer": {
+          "required": true,
+          "reason": "phase or risk requires portable handoff",
+          "status": "requires_execution"
+        },
+        "memory-steward": {
+          "required": false,
+          "reason": "no memory stewardship trigger",
+          "status": "not_required_by_current_card"
+        },
+        "skill-eval-distiller": {
+          "required": false,
+          "reason": "no skill evolution trigger",
+          "status": "not_required_by_current_card"
+        },
+        "public-safety-gate": {
+          "required": false,
+          "reason": "not a public/release artifact",
+          "status": "not_required_by_current_card"
+        },
+        "supply-chain-gate": {
+          "required": false,
+          "reason": "no supply-chain trigger",
+          "status": "not_required_by_current_card"
+        },
+        "detection-monitoring-worker": {
+          "required": false,
+          "reason": "no detection/monitoring trigger",
+          "status": "not_required_by_current_card"
+        },
+        "product-outcome-discovery-worker": {
+          "required": false,
+          "reason": "outcome/discovery already outside this worker trigger",
+          "status": "not_required_by_current_card"
+        },
+        "agentic-method-router": {
+          "required": true,
+          "reason": "vFinal or method routing surface detected",
+          "status": "requires_execution"
+        },
+        "software-development-planner": {
+          "required": false,
+          "reason": "no vFinal software planning trigger",
+          "status": "not_required_by_current_card"
+        },
+        "product-experience-router": {
+          "required": false,
+          "reason": "no vFinal product experience trigger",
+          "status": "not_required_by_current_card"
+        },
+        "data-metrics-worker": {
+          "required": false,
+          "reason": "no vFinal data/metrics trigger",
+          "status": "not_required_by_current_card"
+        },
+        "agent-eval-worker": {
+          "required": false,
+          "reason": "no vFinal agent eval trigger",
+          "status": "not_required_by_current_card"
+        },
+        "dependency-integration-worker": {
+          "required": false,
+          "reason": "no vFinal dependency trigger",
+          "status": "not_required_by_current_card"
+        },
+        "access-capability-worker": {
+          "required": false,
+          "reason": "no vFinal access/capability trigger",
+          "status": "not_required_by_current_card"
+        },
+        "security-architect-worker": {
+          "required": false,
+          "reason": "no vFinal security architecture trigger",
+          "status": "not_required_by_current_card"
+        },
+        "privacy-compliance-worker": {
+          "required": false,
+          "reason": "no vFinal privacy/compliance trigger",
+          "status": "not_required_by_current_card"
+        },
+        "budget-cost-worker": {
+          "required": false,
+          "reason": "no vFinal budget/cost trigger",
+          "status": "not_required_by_current_card"
+        },
+        "production-readiness-worker": {
+          "required": false,
+          "reason": "no vFinal production readiness trigger",
+          "status": "not_required_by_current_card"
+        },
+        "incident-support-worker": {
+          "required": false,
+          "reason": "no vFinal incident/support trigger",
+          "status": "not_required_by_current_card"
+        },
+        "legacy-migration-worker": {
+          "required": false,
+          "reason": "no vFinal legacy/migration trigger",
+          "status": "not_required_by_current_card"
+        },
+        "platform-devex-worker": {
+          "required": false,
+          "reason": "no vFinal platform/DevEx trigger",
+          "status": "not_required_by_current_card"
+        },
+        "user-docs-onboarding-worker": {
+          "required": false,
+          "reason": "no vFinal user docs/onboarding trigger",
+          "status": "not_required_by_current_card"
+        },
+        "factory-concierge": {
+          "required": true,
+          "reason": "vFinal owner interface trigger detected",
+          "status": "blocked_missing_inputs"
+        },
+        "discord-control-tower-bridge": {
+          "required": true,
+          "reason": "vFinal Discord control tower trigger detected",
+          "status": "blocked_missing_inputs"
+        },
+        "control-tower-projection-worker": {
+          "required": true,
+          "reason": "vFinal control tower projection trigger detected",
+          "status": "blocked_missing_inputs"
+        },
+        "factory-maturity-auditor": {
+          "required": false,
+          "reason": "no vFinal maturity trigger",
+          "status": "not_required_by_current_card"
+        }
+      }
+    },
+    "worker_tasks": [
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "independent-reviewer",
+        "title": "Independent Reviewer: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "independent-reviewer",
+            "name": "Independent Reviewer",
+            "factory_phase": "F14",
+            "tool_required": "different Hermes/Codex reviewer identity"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "R2+ or explicit independent review required",
+            "timing": "after worker evidence exists and before done/promotion",
+            "blocking_policy": "Executor and reviewer must be different. Review is mandatory for R2+ work and whenever Receipt Five says reviewer_required=true."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "executor_identity",
+              "reviewer_identity",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "independent_review_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "independent_review_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "factory-orchestrator",
+        "title": "Factory Orchestrator: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "factory-orchestrator",
+            "name": "Factory Orchestrator",
+            "factory_phase": "F0-F18",
+            "tool_required": "Hermes Kanban plus factory gate report"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "factory card needs routing and state control",
+            "timing": "at phase changes, gate preparation, worker routing, and blocked-state triage",
+            "blocking_policy": "The orchestrator routes work and records state, but cannot approve product, security, onchain, R3/R4, release, or human gates."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "phase",
+              "risk_effective",
+              "surfaces",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "orchestration_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "orchestration_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "qa-verification-worker",
+        "title": "QA Verification Worker: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "qa-verification-worker",
+            "name": "QA Verification Worker",
+            "factory_phase": "F13-F15",
+            "tool_required": "tests, screenshots, logs, scanners and evidence capture"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "verification/review risk detected",
+            "timing": "after implementation evidence and before independent review/done",
+            "blocking_policy": "No product-facing or risk-bearing card is done without objective verification evidence."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "acceptance_criteria",
+              "done_definition",
+              "target_repo_paths"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "qa_verification_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "qa_verification_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "security-orchestrator",
+        "title": "Security Orchestrator: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "security-orchestrator",
+            "name": "Security Orchestrator",
+            "factory_phase": "F6-F16",
+            "tool_required": "security control matrix and threat model router"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "security-sensitive or R2+ card needs routed controls",
+            "timing": "when any security-sensitive surface or R2+ risk exists",
+            "blocking_policy": "Security is routed to specific specialists; a generic security comment is not enough."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "security_contract",
+              "security_scan_packet",
+              "risk_effective"
+            ],
+            "missing_fields": [
+              "security_scan_packet"
+            ],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "security_orchestration_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "blocked_missing_inputs"
+        },
+        "expected_receipt_field": "security_orchestration_result",
+        "status": "blocked_missing_inputs"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "handoff-packer",
+        "title": "Handoff Packer: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-done",
+        "required_before": "done",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "handoff-packer",
+            "name": "Handoff Packer",
+            "factory_phase": "F9-F15",
+            "tool_required": "path-free handoff workflow with state, constraints, evidence and replay notes"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "phase or risk requires portable handoff",
+            "timing": "at worker transfer, context compaction, pause, phase change or R2+ handoff",
+            "blocking_policy": "Handoff is not a pretty summary; it must preserve constraints, evidence, decisions and next action."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "target_repo_paths",
+              "done_definition"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "handoff_packet_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "handoff_packet_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "agentic-method-router",
+        "title": "Agentic Method Router: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "agentic-method-router",
+            "name": "Agentic Method Router",
+            "factory_phase": "F6-F7",
+            "tool_required": "method contract router"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal or method routing surface detected",
+            "timing": "after outcome/discovery and before detailed plans",
+            "blocking_policy": "Method choice must be explained; risky work cannot proceed from an implicit process."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "outcome_contract",
+              "risk_effective",
+              "surfaces"
+            ],
+            "missing_fields": [],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "method_contract_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "requires_execution"
+        },
+        "expected_receipt_field": "method_contract_result",
+        "status": "requires_execution"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "factory-concierge",
+        "title": "Factory Concierge: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "factory-concierge",
+            "name": "Factory Concierge",
+            "factory_phase": "F19/F24/F29",
+            "tool_required": "owner interface with runtime readback and structured approval records"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal owner interface trigger detected",
+            "timing": "when owner visibility, approval, forecast or blocker communication is required",
+            "blocking_policy": "Owner-facing decisions must be structured and registered in the runtime; chat cannot approve by itself."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "project_projection",
+              "approval_request",
+              "control_tower_event"
+            ],
+            "missing_fields": [
+              "project_projection",
+              "approval_request",
+              "control_tower_event"
+            ],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "owner_interface_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "blocked_missing_inputs"
+        },
+        "expected_receipt_field": "owner_interface_result",
+        "status": "blocked_missing_inputs"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "discord-control-tower-bridge",
+        "title": "Discord Control Tower Bridge: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "discord-control-tower-bridge",
+            "name": "Discord Control Tower Bridge",
+            "factory_phase": "F19/F29",
+            "tool_required": "Discord event/interaction bridge with Hermes or runtime registration"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal Discord control tower trigger detected",
+            "timing": "when Discord is used as the factory cockpit",
+            "blocking_policy": "Discord can mirror and ask, but cannot become a parallel source of truth."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "control_tower_event",
+              "discord_control_tower_mapping"
+            ],
+            "missing_fields": [
+              "control_tower_event",
+              "discord_control_tower_mapping"
+            ],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "control_tower_bridge_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "blocked_missing_inputs"
+        },
+        "expected_receipt_field": "control_tower_bridge_result",
+        "status": "blocked_missing_inputs"
+      },
+      {
+        "task_type": "worker_subtask",
+        "worker_id": "control-tower-projection-worker",
+        "title": "Control Tower Projection Worker: VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+        "queue_class": "blocking-before-ready",
+        "required_before": "ready",
+        "packet": {
+          "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+          "packet_type": "worker_execution_request",
+          "created_at": "2026-06-10T02:25:01+00:00",
+          "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+          "worker": {
+            "id": "control-tower-projection-worker",
+            "name": "Control Tower Projection Worker",
+            "factory_phase": "F19",
+            "tool_required": "project projection renderer backed by runtime state"
+          },
+          "trigger": {
+            "required": true,
+            "reason": "vFinal control tower projection trigger detected",
+            "timing": "before material execution when owner visibility is required",
+            "blocking_policy": "Material execution that requires owner visibility must expose fresh blockers, forecast and approvals."
+          },
+          "card_ref": {
+            "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+            "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+            "phase": "F19",
+            "risk_effective": "R2",
+            "surfaces": [
+              "discord",
+              "control-tower",
+              "owner-interface",
+              "approval",
+              "forecast"
+            ],
+            "executor_identity": "discord-control-tower-bridge",
+            "reviewer_identity": "independent-reviewer"
+          },
+          "input_contract": {
+            "required_fields": [
+              "project_projection"
+            ],
+            "missing_fields": [
+              "project_projection"
+            ],
+            "target_repo_paths": [
+              "validation/cards/vfinal-control-tower-missing-interface.md"
+            ],
+            "authority_max": "preflight_only",
+            "forbidden_actions": [
+              "real_discord_message",
+              "approval_spoofing",
+              "production_change",
+              "secret_access"
+            ]
+          },
+          "output_contract": {
+            "receipt_field": "project_projection_result",
+            "must_attach_artifact_refs": true,
+            "must_state_blocking_findings": true,
+            "must_record_tool_or_profile": true,
+            "human_approval_must_be_real": false
+          },
+          "status": "blocked_missing_inputs"
+        },
+        "expected_receipt_field": "project_projection_result",
+        "status": "blocked_missing_inputs"
+      }
+    ],
+    "completion_reconciliation": null
+  },
+  "ledger": {
+    "ledger_path": "validation/hermes-disposable-runtime/control-tower-worker-ledger.json",
+    "created": [],
+    "updated": [
+      "ofw_f33f47349e5e409b",
+      "ofw_7146a6fa316e80f6",
+      "ofw_435dc56c1c499452",
+      "ofw_e3ec6d67042400ee",
+      "ofw_2867e5179b149139",
+      "ofw_231d2a9170997ae7",
+      "ofw_ce279b09e606361b",
+      "ofw_54cacc4906001fae",
+      "ofw_9e013330062efe7c"
+    ],
+    "unchanged": [],
+    "task_count": 9
+  }
+}

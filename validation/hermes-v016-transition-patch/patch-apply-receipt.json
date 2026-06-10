@@ -1,0 +1,72 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-v016-transition-patch-validation.schema.json",
+  "schema": "overkill_factory_hermes_v016_transition_patch_validation.v1",
+  "patch": "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+  "patches": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+    "adapters/hermes/patches/0005-ingest-overkill-worker-results-from-subtasks.patch",
+    "adapters/hermes/patches/0006-fix-overkill-worker-subtask-dependency-direction.patch"
+  ],
+  "result": "PASS",
+  "static_validation": {
+    "result": "PASS",
+    "checked_patches": [
+      "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+      "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+      "adapters/hermes/patches/0005-ingest-overkill-worker-results-from-subtasks.patch",
+      "adapters/hermes/patches/0006-fix-overkill-worker-subtask-dependency-direction.patch"
+    ],
+    "missing_markers": [],
+    "forbidden_markers": []
+  },
+  "apply_validation": {
+    "result": "PASS",
+    "source": "redacted-kanban-db.py",
+    "git_apply_check": "PASS",
+    "git_apply_check_detail": "",
+    "git_apply": "PASS",
+    "git_apply_detail": "",
+    "patch_steps": [
+      {
+        "patch": "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+        "git_apply_check": "PASS",
+        "git_apply_check_detail": "",
+        "git_apply": "PASS",
+        "git_apply_detail": ""
+      },
+      {
+        "patch": "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+        "git_apply_check": "PASS",
+        "git_apply_check_detail": "",
+        "git_apply": "PASS",
+        "git_apply_detail": ""
+      },
+      {
+        "patch": "adapters/hermes/patches/0005-ingest-overkill-worker-results-from-subtasks.patch",
+        "git_apply_check": "PASS",
+        "git_apply_check_detail": "",
+        "git_apply": "PASS",
+        "git_apply_detail": ""
+      },
+      {
+        "patch": "adapters/hermes/patches/0006-fix-overkill-worker-subtask-dependency-direction.patch",
+        "git_apply_check": "PASS",
+        "git_apply_check_detail": "",
+        "git_apply": "PASS",
+        "git_apply_detail": ""
+      }
+    ],
+    "py_compile": "PASS",
+    "py_compile_detail": ""
+  },
+  "remaining_runtime_scope": [
+    "This validates the candidate patch artifact only.",
+    "A production decision still requires a disposable installed-Hermes smoke through real Kanban state.",
+    "Dashboard/API ready-route, worker-result ingestion and stubbed worker dispatch have separate disposable proofs; real profile/model execution, wider route parity and rollback still need proof before production use.",
+    "The patch now covers direct ready creation, automatic ready recompute, manual promote, unblock-to-ready and done transitions.",
+    "The worker-subtask patch materializes ledger rows as real blocked Hermes tasks only when explicitly enabled.",
+    "The worker-result patch ingests completed worker subtasks into parent worker-result artifacts for done reconciliation.",
+    "The worker-dependency patch links worker subtasks as prerequisites of the parent Factory card, so workers can dispatch before the parent closes."
+  ]
+}

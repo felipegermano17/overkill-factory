@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-worker-ledger.schema.json",
+  "title": "Overkill Factory Hermes Worker Ledger",
+  "type": "object",
+  "required": ["ledger_type", "tasks"],
+  "properties": {
+    "ledger_type": { "const": "overkill_factory_hermes_worker_ledger" },
+    "tasks": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "task_id",
+          "card_id",
+          "worker_id",
+          "queue_class",
+          "required_before",
+          "expected_receipt_field",
+          "status",
+          "packet"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "last_transition": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "last_action": {
+      "enum": ["allow", "allow_and_create_worker_tasks", "allow_done", "block_transition"]
+    }
+  },
+  "additionalProperties": true
+}

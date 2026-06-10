@@ -1,0 +1,56 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-real-runtime-smoke.schema.json",
+  "record_type": "hermes_real_runtime_smoke",
+  "created_at": "2026-06-10T18:02:17Z",
+  "result": "PASS",
+  "smoke_type": "real_worker_parent_done_reconciliation_smoke",
+  "scope": "real Hermes public-safety-gate worker result, sanitized worker-result artifact, local parent done transition hook reconciliation",
+  "environment_ref": "redacted-real-hermes-runtime",
+  "worker_ref": "public-safety-gate",
+  "checks": {
+    "official_hermes_kanban_docs_checked_first": true,
+    "real_gateway_running_checked_first": true,
+    "disposable_board_created": true,
+    "real_worker_spawned": true,
+    "real_worker_reached_done": true,
+    "kanban_complete_observed": true,
+    "terminal_tool_signal_observed": true,
+    "public_safety_result_observed": true,
+    "public_safety_result_sanitized": true,
+    "worker_result_contract_valid": true,
+    "parent_done_hook_executed": true,
+    "parent_done_transition_allowed": true,
+    "missing_blocking_workers_empty": true,
+    "invalid_blocking_workers_empty": true,
+    "public_safety_gate_satisfied": true,
+    "cleanup_verified": true,
+    "board_was_archived": true,
+    "no_raw_runtime_logs_stored": true
+  },
+  "summary": {
+    "worker": "public-safety-gate",
+    "profile_mode": "closed",
+    "real_worker_terminal_status": "done",
+    "hook_transition_action": "allow_done",
+    "satisfied_before_done_worker": "public-safety-gate",
+    "worker_result_ref": "validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results/public_safety_result.json",
+    "hook_result_ref": "validation/hermes-real-runtime-smoke/parent-done-reconciliation/hook-result.json"
+  },
+  "cleanup": {
+    "method": "bounded task completion followed by recoverable board archive",
+    "result": "PASS"
+  },
+  "evidence_refs": [
+    "validation/hermes-real-runtime-smoke/real-worker-local-tool-quality-smoke.json",
+    "validation/hermes-real-runtime-smoke/parent-done-reconciliation/worker-results/public_safety_result.json",
+    "validation/hermes-real-runtime-smoke/parent-done-reconciliation/receipt-five.json",
+    "validation/hermes-real-runtime-smoke/parent-done-reconciliation/hook-result.json",
+    "validation/cards/real-worker-parent-done-reconciliation-r1.md"
+  ],
+  "limits": [
+    "This receipt is sanitized for the public repository.",
+    "It proves parent done reconciliation against a public-safe result produced by a real Hermes worker.",
+    "It does not prove broad specialist quality for all workers, external SaaS credentials, Discord, cloud, security scanner credentials, production rollback or a complete real Hermes update.",
+    "Raw runtime output is intentionally not stored because it can contain runtime-local paths, ids, session files or provider details."
+  ]
+}

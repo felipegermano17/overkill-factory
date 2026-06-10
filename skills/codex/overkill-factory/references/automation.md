@@ -10,8 +10,8 @@ python scripts/factoryctl.py validate-card path/to/card.md
 python scripts/factoryctl.py validate-receipt path/to/receipt.json
 python scripts/factoryctl.py gate-report --card path/to/card.md
 python scripts/factoryctl.py worker-packet --worker all --card path/to/card.md --out path/to/worker-packets
-python scripts/factoryctl.py evidence-record --worker codex-security --card path/to/card.md --result PASS --tool codex-security:security-scan --actor kaxis-cybersecurity --evidence-ref path/to/report.md
-python scripts/factoryctl.py human-gate-record --card path/to/card.md --decision approved --human-actor Felipe --evidence-ref path/to/decision.md
+python scripts/factoryctl.py evidence-record --worker codex-security --card path/to/card.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref path/to/report.md
+python scripts/factoryctl.py human-gate-record --card path/to/card.md --decision approved --human-actor product-owner --evidence-ref path/to/decision.md
 ```
 
 ## Worker Packets

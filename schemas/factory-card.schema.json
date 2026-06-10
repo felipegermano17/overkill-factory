@@ -35,7 +35,7 @@
   ],
   "properties": {
     "factory_method_version": {
-      "enum": ["KAXIS_V3_5_AGENT_WORKFORCE", "KAXIS_V3_5_FACTORY_10"]
+      "enum": ["OVERKILL_V3_5_AGENT_WORKFORCE", "OVERKILL_V3_5_FACTORY_10", "OVERKILL_VFINAL"]
     },
     "source_state": {
       "enum": ["backlog", "compiled", "inference", "promoted", "raw", "rejected"]
@@ -61,7 +61,29 @@
     "onchain_work_package": { "type": "object" },
     "security_scan_packet": { "type": "object" },
     "human_gate_packet": { "type": "object" },
-    "r4_gate": { "type": "object" }
+    "r4_gate": { "type": "object" },
+    "outcome_contract": { "type": "object" },
+    "discovery_brief": { "type": "object" },
+    "method_contract": { "type": "object" },
+    "software_development_plan": { "type": "object" },
+    "product_experience_plan": { "type": "object" },
+    "data_metrics_plan": { "type": "object" },
+    "agent_eval_plan": { "type": "object" },
+    "dependency_map": { "type": "object" },
+    "access_capability": { "type": "object" },
+    "autonomy_readiness_packet": { "type": "object" },
+    "security_architecture_plan": { "type": "object" },
+    "privacy_compliance_plan": { "type": "object" },
+    "budget_contract": { "type": "object" },
+    "production_readiness_plan": { "type": "object" },
+    "incident_support_plan": { "type": "object" },
+    "legacy_migration_plan": { "type": "object" },
+    "platform_devex_plan": { "type": "object" },
+    "user_docs_onboarding_plan": { "type": "object" },
+    "factory_maturity_scorecard": { "type": "object" },
+    "loop_plan": { "type": "object" },
+    "material_execution": { "type": "boolean" },
+    "requires_access": { "type": "boolean" }
   },
   "additionalProperties": true
 }

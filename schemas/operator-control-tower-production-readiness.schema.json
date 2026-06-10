@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operator-control-tower-production-readiness.schema.json",
+  "title": "Overkill Factory Operator Control Tower Production Readiness",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "checks",
+    "blocking_items",
+    "evidence_refs",
+    "limits"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/operator-control-tower-production-readiness.schema.json"
+    },
+    "record_type": {
+      "const": "operator_control_tower_production_readiness"
+    },
+    "created_at": { "type": "string", "minLength": 1 },
+    "result": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+    "checks": {
+      "type": "object",
+      "required": [
+        "control_tower_readonly_contract_passed",
+        "approval_registration_contract_passed",
+        "real_discord_mapping_present",
+        "real_discord_mapping_has_non_placeholder_refs",
+        "runtime_registration_event_present",
+        "runtime_registration_event_registers_owner_decision",
+        "mapping_runtime_project_matches",
+        "bridge_health_present",
+        "bridge_health_uses_contract",
+        "bridge_health_checks_passed",
+        "bridge_health_has_real_evidence_refs"
+      ],
+      "properties": {
+        "control_tower_readonly_contract_passed": { "type": "boolean" },
+        "approval_registration_contract_passed": { "type": "boolean" },
+        "real_discord_mapping_present": { "type": "boolean" },
+        "real_discord_mapping_has_non_placeholder_refs": { "type": "boolean" },
+        "runtime_registration_event_present": { "type": "boolean" },
+        "runtime_registration_event_registers_owner_decision": { "type": "boolean" },
+        "mapping_runtime_project_matches": { "type": "boolean" },
+        "bridge_health_present": { "type": "boolean" },
+        "bridge_health_uses_contract": { "type": "boolean" },
+        "bridge_health_checks_passed": { "type": "boolean" },
+        "bridge_health_has_real_evidence_refs": { "type": "boolean" }
+      },
+      "additionalProperties": { "type": "boolean" }
+    },
+    "blocking_items": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,51 @@
+diff --git a/plugins/kanban/dashboard/plugin_api.py b/plugins/kanban/dashboard/plugin_api.py
+index 0000000..0000000 100644
+--- a/plugins/kanban/dashboard/plugin_api.py
++++ b/plugins/kanban/dashboard/plugin_api.py
+@@ -1041,9 +1041,28 @@ def _guard_overkill_link_edit(
+             ),
+         )
+
+
++def _guard_overkill_recovery_action(
++    task: Optional[kanban_db.Task],
++    *,
++    action: str,
++) -> None:
++    """Block generic dashboard recovery actions for Factory-controlled tasks."""
++    if task is None:
++        return
++    if _is_overkill_factory_card(task) or _is_overkill_worker_subtask(task):
++        raise HTTPException(
++            status_code=409,
++            detail=(
++                "Overkill Factory cards and worker subtasks cannot be "
++                f"{action} from dashboard/API; use an explicit "
++                "operator-safe recovery workflow."
++            ),
++        )
++
++
+ def _set_ready_status(
+     conn: sqlite3.Connection,
+     task_id: str,
+     *,
+     actor: str,
+@@ -1680,6 +1699,8 @@ def terminate_run_endpoint(
+                 status_code=409,
+                 detail=f"run {run_id} already ended",
+             )
++        task = kanban_db.get_task(conn, r.task_id)
++        _guard_overkill_recovery_action(task, action="terminated")
+         ok = kanban_db.reclaim_task(conn, r.task_id, reason=payload.reason)
+         if not ok:
+             raise HTTPException(
+@@ -1715,6 +1736,8 @@ def reclaim_task_endpoint(
+     board = _resolve_board(board)
+     conn = _conn(board=board)
+     try:
++        task = kanban_db.get_task(conn, task_id)
++        _guard_overkill_recovery_action(task, action="reclaimed")
+         ok = kanban_db.reclaim_task(conn, task_id, reason=payload.reason)
+         if not ok:
+             raise HTTPException(

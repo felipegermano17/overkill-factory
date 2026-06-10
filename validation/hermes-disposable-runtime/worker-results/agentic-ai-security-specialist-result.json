@@ -1,0 +1,37 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "agentic_ai_security_result",
+  "created_at": "2026-06-10T02:25:01+00:00",
+  "worker": {
+    "id": "agentic-ai-security-specialist",
+    "name": "Agentic AI Security Specialist",
+    "factory_phase": "F1/F7/F12/F14"
+  },
+  "card_ref": {
+    "card_id": "VAL-VFINAL-R3-READY",
+    "slice_id": "VAL_VFINAL_02",
+    "phase": "F12",
+    "risk_effective": "R3",
+    "surfaces": [
+      "code",
+      "api",
+      "auth",
+      "cloud",
+      "dependency",
+      "access",
+      "metrics",
+      "agent"
+    ],
+    "executor_identity": "implementation-worker",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Synthetic PASS for agentic-ai-security-specialist before-done reconciliation.",
+  "tool_or_profile": "synthetic-agentic-ai-security-specialist",
+  "executed_by": "disposable-runtime-smoke",
+  "evidence_refs": [
+    "validation/hermes-disposable-runtime/evidence/agentic-ai-security-specialist.md"
+  ],
+  "next_action": "No action; this record is local adapter proof only."
+}

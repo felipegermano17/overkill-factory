@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/dependency-map.schema.json",
+  "title": "Overkill Factory Dependency Map",
+  "type": "object",
+  "required": ["dependencies", "owners", "failure_modes", "access_needed"],
+  "properties": {
+    "dependencies": { "type": "array", "items": { "type": "string" } },
+    "owners": { "type": "array", "items": { "type": "string" } },
+    "failure_modes": { "type": "array", "items": { "type": "string" } },
+    "access_needed": { "type": "array", "items": { "type": "string" } },
+    "fallbacks": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

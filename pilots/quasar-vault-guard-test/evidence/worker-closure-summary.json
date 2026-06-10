@@ -1,4 +1,5 @@
 {
+  "$schema": "https://overkill-factory.dev/schemas/worker-closure-summary.schema.json",
   "record_type": "worker_closure_summary",
   "scope": "dry_pilot_only",
   "important_note": "gate-report-first-slice.json is a preflight report. It correctly marks critical workers as requires_execution before results exist. This closure summary records the post-execution state.",
@@ -36,7 +37,7 @@
       "evidence_refs": [
         "evidence/independent-review-report.md",
         "worker-results/independent-review-result.json",
-        "evidence/hermes-kaxis-reviewer-review.md"
+        "evidence/hermes-independent-reviewer-review.md"
       ]
     },
     "human-gate-clerk": {
@@ -45,15 +46,15 @@
       "evidence_refs": [
         "evidence/human-gate-record.json"
       ],
-      "boundary": "Felipe authorization is limited to the dry pilot and does not approve production."
+      "boundary": "Product-owner authorization is limited to the dry pilot and does not approve production."
     }
   },
   "hermes_profile_reviews": [
-    "evidence/hermes-kaxis-qa-review.md",
-    "evidence/hermes-kaxis-security-review.md",
-    "evidence/hermes-kaxis-cybersecurity-review.md",
-    "evidence/hermes-kaxis-cto-review.md",
-    "evidence/hermes-kaxis-reviewer-review.md"
+    "evidence/hermes-qa-reviewer-review.md",
+    "evidence/hermes-security-reviewer-review.md",
+    "evidence/hermes-security-runner-review.md",
+    "evidence/hermes-architecture-reviewer-review.md",
+    "evidence/hermes-independent-reviewer-review.md"
   ],
   "result": "PASS_WITH_BOUNDARIES",
   "forbidden_authority": [

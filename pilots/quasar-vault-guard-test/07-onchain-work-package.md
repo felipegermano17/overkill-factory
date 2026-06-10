@@ -13,7 +13,7 @@ shape that a later Quasar program card must satisfy.
 
 | Account | Purpose | Authority |
 | --- | --- | --- |
-| `vault_state` | Holds vault status and policy hash. | KAXIS vault authority. |
+| `vault_state` | Holds vault status and policy hash. | example vault authority. |
 | `operator_identity` | Links operator wallet to allowed action review. | Human-approved operator. |
 | `pending_instruction` | Represents instruction candidate being reviewed. | Read-only in pilot. |
 | `audit_receipt` | Stores hash/reference of Auditor evidence when real program exists. | Security owner. |

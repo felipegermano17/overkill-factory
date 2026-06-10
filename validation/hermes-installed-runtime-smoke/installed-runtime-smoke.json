@@ -1,0 +1,108 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-09T23:55:00+00:00",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-INSTALLED-RUNTIME-SMOKE",
+    "slice_id": "VFINAL_HERMES_INSTALLED_RUNTIME",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "control-tower"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes CLI/Kanban smoke passed for direct ready creation blocking, positive ready allowance with worker ledger creation, done blocking without receipt metadata, positive done allowance with Receipt Five plus worker results, manual unblock-to-ready blocking and automatic recompute-to-ready blocking.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime with adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+  "executed_by": "remote-proof-runner",
+  "hermes_version_observed": "Hermes Agent v0.16.0 (2026.6.5)",
+  "runtime_scope": "disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy or real Hermes runtime mutation",
+  "runtime_final_state": "patch reversed after successful smoke to prove rollback; reapply the patch before additional disposable parity tests",
+  "patch": "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+  "patch_apply_safety_note": "The patch must be applied from a real disposable checkout root or a temp tree with its own .git directory. Do not trust git apply from a folder nested inside another repository.",
+  "checks": {
+    "editable_install": "PASS",
+    "cli_version": "PASS",
+    "kanban_init_isolated_home": "PASS",
+    "patch_symbol_present": "PASS",
+    "direct_ready_creation_blocked": "PASS",
+    "positive_ready_allowed": "PASS",
+    "positive_ready_worker_ledger_created": "PASS",
+    "done_without_receipt_metadata_blocked": "PASS",
+    "positive_done_with_receipt_and_worker_results_allowed": "PASS",
+    "manual_unblock_to_ready_blocked": "PASS",
+    "automatic_recompute_to_ready_blocked": "PASS",
+    "block_events_recorded": "PASS",
+    "hook_receipts_written": "PASS",
+    "worker_ledger_written": "PASS",
+    "patch_reverse_rollback": "PASS",
+    "rollback_py_compile_after_reverse": "PASS",
+    "gate_symbols_absent_after_rollback": "PASS"
+  },
+  "disposable_task_evidence": {
+    "direct_ready_block_task_id": "t_b12fc692",
+    "direct_ready_final_status": "blocked",
+    "direct_ready_events": [
+      "blocked",
+      "overkill_factory_transition_gate",
+      "overkill_factory_transition_blocked"
+    ],
+    "done_negative_task_id": "t_b12fc692",
+    "done_negative_final_status": "blocked",
+    "done_negative_block_reason": "receipt metadata is required for done transition",
+    "manual_unblock_task_id": "t_b12fc692",
+    "manual_unblock_final_status": "blocked",
+    "positive_ready_done_task_id": "t_3bc927a0",
+    "positive_ready_status_after_create": "ready",
+    "positive_ready_transition_action": "allow_and_create_worker_tasks",
+    "positive_ready_worker_task_count": 23,
+    "positive_ready_ledger_created_count": 23,
+    "positive_done_final_status": "done",
+    "positive_done_transition_action": "allow_done",
+    "recompute_parent_task_id": "t_f0512d92",
+    "recompute_parent_final_status": "done",
+    "recompute_child_task_id": "t_5926bc96",
+    "recompute_child_initial_status": "todo",
+    "recompute_child_final_status": "blocked",
+    "recompute_child_events": [
+      "created",
+      "blocked",
+      "overkill_factory_transition_gate",
+      "overkill_factory_transition_blocked"
+    ]
+  },
+  "important_limitations": [
+    "This proves the installed CLI/Kanban path in a disposable runtime.",
+    "It does not yet prove dashboard parity.",
+    "It does not yet prove API parity.",
+    "It does not yet prove worker-route parity.",
+    "It proves done allowance with metadata pointing to Receipt Five and worker result artifacts, but not autonomous worker result ingestion from real worker execution.",
+    "It proves patch reversal rollback on the disposable installed runtime, but not full service rollback for a real Hermes runtime.",
+    "It does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "validation/hermes-v016-transition-patch/patch-apply-receipt.json",
+    "validation/hermes-disposable-runtime/disposable-runtime-smoke.json",
+    "validation/hermes-installed-runtime-smoke/installed-runtime-smoke.json"
+  ],
+  "rollback_evidence": {
+    "git_apply_reverse": "PASS",
+    "py_compile_after_reverse": "PASS",
+    "gate_class_present_after_reverse": false,
+    "gate_env_marker_present_after_reverse": false
+  },
+  "next_action": "Prove dashboard/API/worker-route parity, autonomous worker result ingestion and real-service rollback before any real-runtime update."
+}

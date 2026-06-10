@@ -1,0 +1,87 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+  "record_type": "remote_proof_result",
+  "created_at": "2026-06-10T01:38:31Z",
+  "worker": {
+    "id": "remote-proof-runner",
+    "name": "Remote Proof Runner",
+    "factory_phase": "F13-F16"
+  },
+  "card_ref": {
+    "card_id": "VFINAL-HERMES-WORKER-REAL-PROCESS-AUTH-BLOCK-SMOKE",
+    "slice_id": "VFINAL_HERMES_WORKER_REAL_PROCESS_AUTH_BLOCK",
+    "phase": "F13",
+    "risk_effective": "R3",
+    "surfaces": [
+      "hermes",
+      "kanban",
+      "adapter",
+      "vfinal",
+      "worker-routing",
+      "auth-gate"
+    ],
+    "executor_identity": "remote-proof-runner",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "result": "PASS",
+  "blocking_findings": false,
+  "findings_summary": "Disposable installed Hermes smoke started a real worker process through the default dispatcher spawn path and blocked it safely when the disposable profile had no provider/model credentials.",
+  "tool_or_profile": "Hermes v0.16.0 disposable installed runtime; _default_spawn real process; ambient provider credentials removed for this smoke",
+  "executed_by": "remote-proof-runner",
+  "hermes_version_observed": "Hermes Agent v0.16.0 (2026.6.5)",
+  "runtime_scope": "Disposable installed Hermes checkout and isolated HERMES_HOME/HOME; no production board, secrets, deploy, real model call or real Hermes runtime mutation.",
+  "patches": [
+    "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+    "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+    "adapters/hermes/patches/0005-ingest-overkill-worker-results-from-subtasks.patch",
+    "adapters/hermes/patches/0006-fix-overkill-worker-subtask-dependency-direction.patch"
+  ],
+  "checks": {
+    "profile_exists": "PASS",
+    "real_default_spawn_used": "PASS",
+    "spawned_task_running_initially": "PASS",
+    "reap_tick_ran_without_new_spawn": "PASS",
+    "worker_became_blocked": "PASS",
+    "failure_counter_tripped_once": "PASS",
+    "spawned_event_written": "PASS",
+    "crash_or_gave_up_event_written": "PASS",
+    "missing_provider_visible_in_log": "PASS"
+  },
+  "disposable_task_evidence": {
+    "board_slug": "of-worker-realproc-1781055492",
+    "parent_task_id": "t_77ccb6e3",
+    "child_count": 23,
+    "spawned_task_id": "ofw_03e0c4ad2f0fa2d3",
+    "spawned_assignee": "factory-orchestrator",
+    "spawned_pid_recorded": true,
+    "initial_status_after_spawn": "running",
+    "final_status_after_reap": "blocked",
+    "consecutive_failures": 1,
+    "last_failure_error_kind": "nonzero_exit_or_crash",
+    "event_kinds": [
+      "created",
+      "claimed",
+      "spawned",
+      "crashed",
+      "gave_up"
+    ],
+    "run_outcomes": [
+      "crashed"
+    ],
+    "log_markers": [
+      "hermes model"
+    ]
+  },
+  "important_limitations": [
+    "This proves real Hermes worker process launch and safe failure handling only.",
+    "The disposable profile intentionally had no provider/model credentials, so no real model call or specialist work happened.",
+    "Real profile configuration, toolsets, model auth, autonomous completion and specialist output quality remain unproven.",
+    "This does not authorize updating a real Hermes runtime."
+  ],
+  "evidence_refs": [
+    "validation/hermes-installed-runtime-smoke/worker-real-process-auth-block-smoke.json",
+    "validation/hermes-installed-runtime-smoke/worker-dispatch-route-smoke.json",
+    "adapters/hermes/patches/0006-fix-overkill-worker-subtask-dependency-direction.patch"
+  ],
+  "next_action": "Prove real profile/model/tool execution with a deliberately provisioned disposable profile, then verify autonomous worker completion and result quality before any real-runtime update."
+}

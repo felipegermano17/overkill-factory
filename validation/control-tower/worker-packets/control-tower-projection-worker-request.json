@@ -1,0 +1,59 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
+  "packet_type": "worker_execution_request",
+  "created_at": "2026-06-09T22:21:50+00:00",
+  "source_card_path": "validation/cards/vfinal-control-tower-missing-interface.md",
+  "worker": {
+    "id": "control-tower-projection-worker",
+    "name": "Control Tower Projection Worker",
+    "factory_phase": "F19",
+    "tool_required": "project projection renderer backed by runtime state"
+  },
+  "trigger": {
+    "required": true,
+    "reason": "vFinal control tower projection trigger detected",
+    "timing": "before material execution when owner visibility is required",
+    "blocking_policy": "Material execution that requires owner visibility must expose fresh blockers, forecast and approvals."
+  },
+  "card_ref": {
+    "card_id": "VAL-VFINAL-CONTROL-TOWER-MISSING-INTERFACE",
+    "slice_id": "VAL_VFINAL_CONTROL_TOWER_01",
+    "phase": "F19",
+    "risk_effective": "R2",
+    "surfaces": [
+      "discord",
+      "control-tower",
+      "owner-interface",
+      "approval",
+      "forecast"
+    ],
+    "executor_identity": "discord-control-tower-bridge",
+    "reviewer_identity": "independent-reviewer"
+  },
+  "input_contract": {
+    "required_fields": [
+      "project_projection"
+    ],
+    "missing_fields": [
+      "project_projection"
+    ],
+    "target_repo_paths": [
+      "validation/cards/vfinal-control-tower-missing-interface.md"
+    ],
+    "authority_max": "preflight_only",
+    "forbidden_actions": [
+      "real_discord_message",
+      "approval_spoofing",
+      "production_change",
+      "secret_access"
+    ]
+  },
+  "output_contract": {
+    "receipt_field": "project_projection_result",
+    "must_attach_artifact_refs": true,
+    "must_state_blocking_findings": true,
+    "must_record_tool_or_profile": true,
+    "human_approval_must_be_real": false
+  },
+  "status": "blocked_missing_inputs"
+}
