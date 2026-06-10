@@ -211,6 +211,9 @@ trash and not as product work. A dirty worktree that contains only refreshed
 receipts is not evidence that the factory product files are still unintegrated.
 The final hygiene proof is still a clean `git status` after the receipts are
 committed.
+The preflight detects generated receipt paths directly from `git status`, so the
+release result stays stable even when validation scripts refresh receipts in a
+different order.
 
 ## Required Validation Before Claiming Progress
 

@@ -150,6 +150,9 @@ candidate changes. This avoids a circular proof problem where the scripts dirty
 the worktree by refreshing validation receipts and then mistake those generated
 receipts for unintegrated product work. Generated receipts are counted for
 transparency, but they do not by themselves make the release ref unintegrated.
+The release integration preflight also detects generated receipt paths directly
+from `git status`, so the result does not depend on a perfectly ordered receipt
+generation sequence.
 
 Before publishing, validate the exact release tree or target commit, not only
 the dirty local worktree.

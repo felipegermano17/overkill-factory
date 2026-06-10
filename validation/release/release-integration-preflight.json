@@ -1,17 +1,18 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/release-integration-preflight.schema.json",
   "record_type": "release_integration_preflight",
-  "created_at": "2026-06-10T22:12:27Z",
+  "created_at": "2026-06-10T22:16:54Z",
   "result": "BLOCKED",
   "branch": {
     "current": "codex/vfinal-release-candidate",
     "is_main": false
   },
   "counts": {
-    "status_entries": 12,
-    "unintegrated_release_entries": 6,
-    "release_candidate_entries": 6,
-    "generated_receipt_entries": 6,
+    "status_entries": 6,
+    "generated_status_entries": 2,
+    "unintegrated_release_entries": 4,
+    "release_candidate_entries": 4,
+    "generated_receipt_entries": 2,
     "needs_human_review_entries": 0,
     "safe_cleanup_candidates": 0
   },

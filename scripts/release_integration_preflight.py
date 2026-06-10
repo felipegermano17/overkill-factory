@@ -17,6 +17,14 @@ DEFAULT_INVENTORY = ROOT / "validation" / "release" / "worktree-release-inventor
 DEFAULT_PUBLIC_WORKTREE = ROOT / "validation" / "public-safety" / "worktree-summary.json"
 DEFAULT_PUBLIC_HEAD = ROOT / "validation" / "public-safety" / "head-summary.json"
 DEFAULT_PUBLIC_ORIGIN = ROOT / "validation" / "public-safety" / "origin-main-summary.json"
+GENERATED_RECEIPT_PATHS = {
+    "validation/factory-production-readiness/current-readiness.json",
+    "validation/public-safety/head-summary.json",
+    "validation/public-safety/origin-main-summary.json",
+    "validation/public-safety/worktree-summary.json",
+    "validation/release/release-integration-preflight.json",
+    "validation/release/worktree-release-inventory.json",
+}
 
 
 def utc_now() -> str:
@@ -51,9 +59,32 @@ def git_text(*args: str) -> str:
     return result.stdout.strip()
 
 
-def status_entry_count() -> int:
-    raw = git_text("status", "--porcelain=v1")
-    return len([line for line in raw.splitlines() if line.strip()])
+def status_entry_counts() -> tuple[int, int]:
+    result = subprocess.run(
+        ["git", "status", "--porcelain=v1", "-z"],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    chunks = result.stdout.decode("utf-8", errors="replace").split("\0")
+    total = 0
+    generated_receipts = 0
+    index = 0
+    while index < len(chunks):
+        chunk = chunks[index]
+        index += 1
+        if not chunk:
+            continue
+        total += 1
+        status = chunk[:2]
+        path = chunk[3:].replace("\\", "/")
+        if path in GENERATED_RECEIPT_PATHS:
+            generated_receipts += 1
+        if status.startswith("R") or status.startswith("C"):
+            if index < len(chunks):
+                index += 1
+    return total, generated_receipts
 
 
 def build_preflight(
@@ -65,6 +96,7 @@ def build_preflight(
     created_at: str | None = None,
     branch_name: str | None = None,
     status_entries: int | None = None,
+    generated_status_entries: int | None = None,
 ) -> dict[str, Any]:
     inventory = load_json(inventory_path)
     public_worktree = load_json(public_worktree_path)
@@ -72,13 +104,19 @@ def build_preflight(
     public_origin = load_json(public_origin_path)
 
     branch = branch_name if branch_name is not None else git_text("branch", "--show-current")
-    entries = status_entries if status_entries is not None else status_entry_count()
+    actual_status_entries = actual_generated_entries = 0
+    if status_entries is None or generated_status_entries is None:
+        actual_status_entries, actual_generated_entries = status_entry_counts()
+    entries = status_entries if status_entries is not None else actual_status_entries
+    generated_from_status = (
+        generated_status_entries if generated_status_entries is not None else actual_generated_entries
+    )
     cleanup_policy = inventory.get("cleanup_policy") if isinstance(inventory.get("cleanup_policy"), dict) else {}
     release_candidate_entries = int(cleanup_policy.get("release_candidate_entries") or 0)
-    generated_receipt_entries = int(cleanup_policy.get("generated_receipt_entries") or 0)
+    generated_receipt_entries = max(int(cleanup_policy.get("generated_receipt_entries") or 0), generated_from_status)
     needs_human_review_entries = int(cleanup_policy.get("needs_human_review_entries") or 0)
     safe_cleanup_candidates = int(cleanup_policy.get("safe_cleanup_candidates") or 0)
-    unintegrated_release_entries = max(entries - generated_receipt_entries, 0)
+    unintegrated_release_entries = max(entries - generated_from_status, 0)
 
     checks = {
         "worktree_public_safety_passed": public_worktree.get("result") == "PASS",
@@ -130,6 +168,7 @@ def build_preflight(
         },
         "counts": {
             "status_entries": entries,
+            "generated_status_entries": generated_from_status,
             "unintegrated_release_entries": unintegrated_release_entries,
             "release_candidate_entries": release_candidate_entries,
             "generated_receipt_entries": generated_receipt_entries,

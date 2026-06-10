@@ -95,11 +95,13 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 public_origin_path=paths["origin"],
                 branch_name="codex/release",
                 status_entries=4,
+                generated_status_entries=4,
                 created_at="2026-06-10T00:00:00Z",
             )
 
         self.assertEqual(receipt["result"], "PASS")
         self.assertTrue(receipt["checks"]["release_ref_has_no_unintegrated_worktree_entries"])
+        self.assertEqual(receipt["counts"]["generated_status_entries"], 4)
         self.assertEqual(receipt["counts"]["unintegrated_release_entries"], 0)
         self.assertEqual(receipt["attention_items"], [])
 

@@ -1,35 +1,35 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/worktree-release-inventory.schema.json",
   "record_type": "worktree_release_inventory",
-  "created_at": "2026-06-10T22:12:27Z",
+  "created_at": "2026-06-10T22:16:54Z",
   "result": "ATTENTION",
   "scope": "current git worktree release hygiene summary",
   "counts": {
-    "entries": 12,
-    "modified": 12,
+    "entries": 5,
+    "modified": 5,
     "added": 0,
     "deleted": 0,
     "renamed": 0,
     "untracked": 0
   },
   "status_counts": {
-    " M": 12
+    " M": 5
   },
   "top_level_counts": {
     "docs": 2,
-    "scripts": 2,
-    "tests": 2,
-    "validation": 6
+    "scripts": 1,
+    "tests": 1,
+    "validation": 1
   },
   "classification_counts": {
-    "generated_receipt": 6,
-    "release_candidate_material": 6
+    "generated_receipt": 1,
+    "release_candidate_material": 4
   },
   "cleanup_policy": {
     "broad_cleanup_allowed": false,
     "safe_cleanup_candidates": 0,
-    "release_candidate_entries": 6,
-    "generated_receipt_entries": 6,
+    "release_candidate_entries": 4,
+    "generated_receipt_entries": 1,
     "needs_human_review_entries": 0
   },
   "blocking_items": [],
