@@ -75,8 +75,10 @@ def build_preflight(
     entries = status_entries if status_entries is not None else status_entry_count()
     cleanup_policy = inventory.get("cleanup_policy") if isinstance(inventory.get("cleanup_policy"), dict) else {}
     release_candidate_entries = int(cleanup_policy.get("release_candidate_entries") or 0)
+    generated_receipt_entries = int(cleanup_policy.get("generated_receipt_entries") or 0)
     needs_human_review_entries = int(cleanup_policy.get("needs_human_review_entries") or 0)
     safe_cleanup_candidates = int(cleanup_policy.get("safe_cleanup_candidates") or 0)
+    unintegrated_release_entries = max(entries - generated_receipt_entries, 0)
 
     checks = {
         "worktree_public_safety_passed": public_worktree.get("result") == "PASS",
@@ -85,8 +87,8 @@ def build_preflight(
         "worktree_inventory_has_no_unknown_entries": needs_human_review_entries == 0,
         "worktree_inventory_has_no_cleanup_candidates": safe_cleanup_candidates == 0,
         "worktree_has_release_candidate_material": release_candidate_entries > 0,
-        "release_ref_has_no_unintegrated_worktree_entries": entries == 0,
-        "current_branch_is_not_dirty_main": not (branch == "main" and entries > 0),
+        "release_ref_has_no_unintegrated_worktree_entries": unintegrated_release_entries == 0,
+        "current_branch_is_not_dirty_main": not (branch == "main" and unintegrated_release_entries > 0),
     }
     release_candidate_safe_to_prepare = (
         checks["worktree_public_safety_passed"]
@@ -97,7 +99,7 @@ def build_preflight(
 
     blocking_items = [key for key, value in checks.items() if not value and key != "worktree_has_release_candidate_material"]
     attention_items: list[str] = []
-    if checks["worktree_has_release_candidate_material"] and entries > 0:
+    if checks["worktree_has_release_candidate_material"] and unintegrated_release_entries > 0:
         attention_items.append("release_candidate_material_waiting_for_integration")
 
     if blocking_items:
@@ -128,7 +130,9 @@ def build_preflight(
         },
         "counts": {
             "status_entries": entries,
+            "unintegrated_release_entries": unintegrated_release_entries,
             "release_candidate_entries": release_candidate_entries,
+            "generated_receipt_entries": generated_receipt_entries,
             "needs_human_review_entries": needs_human_review_entries,
             "safe_cleanup_candidates": safe_cleanup_candidates,
         },

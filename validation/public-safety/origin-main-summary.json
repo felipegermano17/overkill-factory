@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/public-safety-scan-summary.schema.json",
   "record_type": "public_safety_scan_summary",
-  "created_at": "2026-06-10T21:18:18Z",
+  "created_at": "2026-06-10T22:12:27Z",
   "target": {
     "kind": "git_ref",
     "ref": "origin/main"

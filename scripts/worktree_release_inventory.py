@@ -38,6 +38,14 @@ PRODUCT_TOP_LEVELS = {
 }
 SAFE_CLEANUP_SUFFIXES = {".pyc", ".pyo", ".tmp", ".temp", ".log"}
 SAFE_CLEANUP_PARTS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".coverage"}
+GENERATED_RECEIPT_PATHS = {
+    "validation/factory-production-readiness/current-readiness.json",
+    "validation/public-safety/head-summary.json",
+    "validation/public-safety/origin-main-summary.json",
+    "validation/public-safety/worktree-summary.json",
+    "validation/release/release-integration-preflight.json",
+    "validation/release/worktree-release-inventory.json",
+}
 
 
 def utc_now() -> str:
@@ -80,6 +88,8 @@ def classify(path: str, status: str) -> str:
     name = normalized.rsplit("/", 1)[-1]
     parts = set(normalized.split("/"))
     suffix = Path(name).suffix.lower()
+    if normalized in GENERATED_RECEIPT_PATHS:
+        return "generated_receipt"
     if suffix in SAFE_CLEANUP_SUFFIXES or parts.intersection(SAFE_CLEANUP_PARTS):
         return "safe_cleanup_candidate"
     if status == "??" and top_level(path) not in PRODUCT_TOP_LEVELS:
@@ -129,6 +139,7 @@ def build_inventory(entries: list[tuple[str, str]], created_at: str | None = Non
     safe_cleanup = classifications.get("safe_cleanup_candidate", 0)
     needs_review = classifications.get("needs_human_review", 0)
     release_material = classifications.get("release_candidate_material", 0)
+    generated_receipts = classifications.get("generated_receipt", 0)
     blocking_items: list[str] = []
     if safe_cleanup:
         blocking_items.append("safe_cleanup_candidates_present")
@@ -153,12 +164,14 @@ def build_inventory(entries: list[tuple[str, str]], created_at: str | None = Non
             "broad_cleanup_allowed": False,
             "safe_cleanup_candidates": safe_cleanup,
             "release_candidate_entries": release_material,
+            "generated_receipt_entries": generated_receipts,
             "needs_human_review_entries": needs_review,
         },
         "blocking_items": blocking_items,
         "limits": [
             "This public-safe report intentionally omits raw file paths.",
             "ATTENTION can still mean expected release material is present.",
+            "Generated validation receipts are classified separately from release-candidate product changes.",
             "Do not run broad cleanup from this report; inspect and classify exact paths outside the public receipt first.",
         ],
     }

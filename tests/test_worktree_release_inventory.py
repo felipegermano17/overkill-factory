@@ -54,6 +54,20 @@ class WorktreeReleaseInventoryTest(unittest.TestCase):
         self.assertEqual(report["cleanup_policy"]["safe_cleanup_candidates"], 1)
         self.assertIn("safe_cleanup_candidates_present", report["blocking_items"])
 
+    def test_generated_validation_receipts_are_not_release_material(self) -> None:
+        report = inventory.build_inventory(
+            [
+                (" M", "validation/release/worktree-release-inventory.json"),
+                (" M", "validation/public-safety/head-summary.json"),
+            ],
+            created_at="2026-06-10T00:00:00Z",
+        )
+
+        self.assertEqual(report["classification_counts"]["generated_receipt"], 2)
+        self.assertEqual(report["cleanup_policy"]["generated_receipt_entries"], 2)
+        self.assertEqual(report["cleanup_policy"]["release_candidate_entries"], 0)
+        self.assertEqual(report["blocking_items"], [])
+
 
 if __name__ == "__main__":
     unittest.main()

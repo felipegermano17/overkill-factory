@@ -77,14 +77,50 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
         self.assertEqual(receipt["result"], "BLOCKED")
         self.assertFalse(receipt["release_candidate_plan"]["safe_to_prepare_candidate_branch"])
 
-    def _fixtures(self, root: Path, *, worktree: str, head: str, origin: str) -> dict[str, Path]:
+    def test_generated_receipts_do_not_count_as_unintegrated_release_work(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._fixtures(
+                Path(tmp),
+                worktree="PASS",
+                head="PASS",
+                origin="PASS",
+                release_candidate_entries=0,
+                generated_receipt_entries=4,
+            )
+
+            receipt = preflight.build_preflight(
+                inventory_path=paths["inventory"],
+                public_worktree_path=paths["worktree"],
+                public_head_path=paths["head"],
+                public_origin_path=paths["origin"],
+                branch_name="codex/release",
+                status_entries=4,
+                created_at="2026-06-10T00:00:00Z",
+            )
+
+        self.assertEqual(receipt["result"], "PASS")
+        self.assertTrue(receipt["checks"]["release_ref_has_no_unintegrated_worktree_entries"])
+        self.assertEqual(receipt["counts"]["unintegrated_release_entries"], 0)
+        self.assertEqual(receipt["attention_items"], [])
+
+    def _fixtures(
+        self,
+        root: Path,
+        *,
+        worktree: str,
+        head: str,
+        origin: str,
+        release_candidate_entries: int = 7,
+        generated_receipt_entries: int = 0,
+    ) -> dict[str, Path]:
         inventory = root / "inventory.json"
         inventory.write_text(
             json.dumps(
                 {
                     "result": "ATTENTION",
                     "cleanup_policy": {
-                        "release_candidate_entries": 7,
+                        "release_candidate_entries": release_candidate_entries,
+                        "generated_receipt_entries": generated_receipt_entries,
                         "needs_human_review_entries": 0,
                         "safe_cleanup_candidates": 0,
                     },

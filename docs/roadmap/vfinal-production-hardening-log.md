@@ -145,6 +145,12 @@ latest result is `ATTENTION`, not `BLOCKED`: the tree still needs release
 integration, but the changes classify as release-candidate material rather than
 cleanup trash.
 
+The inventory also separates `generated_receipt` entries from real release
+candidate changes. This avoids a circular proof problem where the scripts dirty
+the worktree by refreshing validation receipts and then mistake those generated
+receipts for unintegrated product work. Generated receipts are counted for
+transparency, but they do not by themselves make the release ref unintegrated.
+
 Before publishing, validate the exact release tree or target commit, not only
 the dirty local worktree.
 
@@ -190,6 +196,7 @@ python -m unittest tests.test_operator_control_tower_private_evidence_init -q
 python -m unittest tests.test_operator_control_tower_private_evidence_doctor -q
 python -m unittest tests.test_release_integration_preflight -q
 python -m unittest tests.test_worktree_release_inventory -q
+python -m unittest tests.test_release_integration_preflight tests.test_worktree_release_inventory -q
 python -m unittest tests.test_hermes_production_update_preflight -q
 python -m unittest discover -s tests -p "test_*.py" -q
 ```

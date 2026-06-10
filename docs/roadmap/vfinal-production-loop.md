@@ -205,6 +205,13 @@ If `safe_to_prepare_candidate_branch` is true, the recommended path is:
 Do not publish `origin/main` while exact `HEAD` and `origin/main` scans fail.
 Do not treat a release candidate branch as production readiness.
 
+Generated validation receipts are tracked separately from product/release
+changes. In the inventory they appear as `generated_receipt`, not as cleanup
+trash and not as product work. A dirty worktree that contains only refreshed
+receipts is not evidence that the factory product files are still unintegrated.
+The final hygiene proof is still a clean `git status` after the receipts are
+committed.
+
 ## Required Validation Before Claiming Progress
 
 Run the narrowest useful set first, then the full set before a production claim:

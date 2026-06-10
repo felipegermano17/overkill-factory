@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json",
   "record_type": "factory_production_readiness",
-  "created_at": "2026-06-10T21:39:37Z",
+  "created_at": "2026-06-10T22:12:27Z",
   "result": "BLOCKED",
   "summary": "Factory vFinal is not production-ready; required production gates are still blocked.",
   "components": [
@@ -49,10 +49,10 @@
     },
     {
       "id": "public_safety_head",
-      "status": "BLOCKED",
-      "raw_result": "FAIL",
+      "status": "PASS",
+      "raw_result": "PASS",
       "evidence_ref": "validation/public-safety/head-summary.json",
-      "reason": "result is FAIL, expected PASS"
+      "reason": null
     },
     {
       "id": "public_safety_origin_main",
@@ -68,7 +68,6 @@
     "operator_control_tower_production_readiness",
     "preflight:complete_update_receipt",
     "preflight:operator_control_tower",
-    "public_safety_head",
     "public_safety_origin_main",
     "release_integration_preflight"
   ],

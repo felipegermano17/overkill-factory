@@ -1,52 +1,42 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/worktree-release-inventory.schema.json",
   "record_type": "worktree_release_inventory",
-  "created_at": "2026-06-10T21:40:12Z",
+  "created_at": "2026-06-10T22:12:27Z",
   "result": "ATTENTION",
   "scope": "current git worktree release hygiene summary",
   "counts": {
-    "entries": 283,
-    "modified": 74,
+    "entries": 12,
+    "modified": 12,
     "added": 0,
-    "deleted": 10,
+    "deleted": 0,
     "renamed": 0,
-    "untracked": 199
+    "untracked": 0
   },
   "status_counts": {
-    " D": 10,
-    " M": 74,
-    "??": 199
+    " M": 12
   },
   "top_level_counts": {
-    ".github": 1,
-    "LICENSE": 1,
-    "NOTICE.md": 1,
-    "README.md": 1,
-    "adapters": 54,
-    "agents": 4,
-    "docs": 22,
-    "examples": 39,
-    "pilots": 37,
-    "schemas": 54,
-    "scripts": 14,
-    "skills": 4,
-    "templates": 31,
-    "tests": 19,
-    "validation": 1
+    "docs": 2,
+    "scripts": 2,
+    "tests": 2,
+    "validation": 6
   },
   "classification_counts": {
-    "release_candidate_material": 283
+    "generated_receipt": 6,
+    "release_candidate_material": 6
   },
   "cleanup_policy": {
     "broad_cleanup_allowed": false,
     "safe_cleanup_candidates": 0,
-    "release_candidate_entries": 283,
+    "release_candidate_entries": 6,
+    "generated_receipt_entries": 6,
     "needs_human_review_entries": 0
   },
   "blocking_items": [],
   "limits": [
     "This public-safe report intentionally omits raw file paths.",
     "ATTENTION can still mean expected release material is present.",
+    "Generated validation receipts are classified separately from release-candidate product changes.",
     "Do not run broad cleanup from this report; inspect and classify exact paths outside the public receipt first."
   ]
 }
