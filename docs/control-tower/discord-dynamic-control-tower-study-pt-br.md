@@ -63,6 +63,7 @@ Isso permite uma interface mais parecida com um painel operacional:
 - botoes em portugues para navegar ou iniciar decisoes;
 - formularios para coletar dados estruturados;
 - tags visuais para fase, bloqueio, revisao e producao;
+- mensagens fixadas curtas em cada canal operacional;
 - sala de voz com o GERENTE quando fizer sentido.
 
 ## O que o Hermes ja permite
@@ -130,8 +131,13 @@ O dono usa principalmente um unico canal:
 #falar-com-gerente
 ```
 
-Mas esse canal nao pode virar um corredor infinito de mensagens. A regra de UX
-da fabrica e:
+Esse e o ponto principal: o dono nao deve ter duas portas para o mesmo ato.
+Paper, piloto, pedido novo e duvida comecam pelo GERENTE. O canal
+`#projetos-recebidos` existe como registro operacional, nao como segundo lugar
+para o dono mandar o paper.
+
+Mas o chat principal nao pode virar um corredor infinito de mensagens. A regra
+de UX da fabrica e:
 
 ```text
 duvida curta -> o GERENTE responde no proprio chat
@@ -212,6 +218,16 @@ Todo paper, briefing longo, novo produto ou pedido de piloto precisa gerar:
 4. uma ligacao public-safe com o estado real no Hermes quando o runtime criar
    ou atualizar a card graph.
 
+Regra para mensagens ativas do bot:
+
+```text
+notificacao / health / painel -> pode ficar sem thread
+pergunta / decisao / acesso / bloqueio / revisao / projeto -> thread
+```
+
+Se a mensagem chama o dono para uma acao ou conversa, ela deve abrir thread,
+estar dentro de uma thread ou apontar para a thread certa.
+
 O nome do topico deve ser humano e curto, por exemplo:
 
 ```text
@@ -223,7 +239,7 @@ O forum e o quadro visual. Hermes continua sendo a fonte de verdade.
 
 ## Modelo visual recomendado
 
-### 01 PAINEL DA FABRICA
+### 01 COMECE AQUI
 
 Lugar para ver e falar com a fabrica.
 
@@ -234,18 +250,26 @@ Lugar para ver e falar com a fabrica.
 | `#saude-do-bot` | health do bot, Hermes, gateway e ponte |
 | `sala-de-voz-gerente` | conversa por voz quando fizer sentido |
 
-### 02 OPERACAO
+### 02 PROJETOS E KANBAN
+
+Lugar para entrada e acompanhamento visual.
+
+| Canal | Uso |
+| --- | --- |
+| `#projetos-recebidos` | registro operacional do que entrou pela porta do GERENTE |
+| `kanban-da-fabrica` | forum com um topico por projeto |
+
+### 03 DECISOES E PENDENCIAS
 
 Lugar para entrada, decisao e desbloqueio.
 
 | Canal | Uso |
 | --- | --- |
-| `#novos-projetos` | paper, ideia, pedido novo ou briefing inicial |
 | `#aprovacoes-formais` | decisoes formais que precisam virar evento no Hermes |
 | `#acessos-pendentes` | cloud, GitHub, contas, chaves e permissoes |
 | `#bloqueios-reais` | o que impede a fabrica de avancar |
 
-### 03 ENTREGA
+### 04 PROVAS E PRODUCAO
 
 Lugar para prova e promocao.
 
@@ -253,15 +277,6 @@ Lugar para prova e promocao.
 | --- | --- |
 | `#provas-e-evidencias` | recibos, validacoes e provas public-safe |
 | `#producao-e-releases` | release, rollback, producao e decisao final |
-
-### 04 PROJETOS
-
-Lugar para acompanhar cada projeto sem bagunca.
-
-| Canal | Uso |
-| --- | --- |
-| `kanban-da-fabrica` | forum com um topico por projeto |
-| `#arquivo-projetos-antigo` | legado ou material antigo |
 
 ### 99 ARQUIVO
 
@@ -313,11 +328,14 @@ A estrutura real foi ajustada para:
 
 - categorias em portugues;
 - canais com nomes em portugues;
+- categorias em ordem de uso: comecar, projetos, decisoes, entrega;
 - forum de projetos;
 - canal direto `#falar-com-gerente`;
 - sala de voz do GERENTE;
 - dashboard fixado com atalhos;
-- topicos explicativos nos canais;
+- mensagens fixadas explicativas em todos os canais operacionais;
+- canal `#projetos-recebidos` como registro operacional, nao segunda porta de entrada;
+- guia do Kanban separado por tag `Guia`, sem parecer projeto bloqueado;
 - canais padrao antigos arquivados ou removidos quando vazios;
 - health real enviado pelo bot.
 
