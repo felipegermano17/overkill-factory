@@ -79,6 +79,14 @@ roles are implemented by these registered workers:
 | Bot Health Monitor | `discord-control-tower-bridge` and bridge-health validation |
 | Factory Maturity Auditor | `skill-eval-distiller` with `independent-reviewer` for adversarial review |
 
+These conceptual role names must not be installed as separate Hermes executor
+profiles unless they go through the full worker promotion path: registry,
+profile, binding, permission class, packet route, smoke and eval proof. If they
+exist as loose profiles, they create ambiguous routing because the Kanban cannot
+know whether to call the official worker or the duplicate profile. The exception
+is `overkill-factory-gerente`, which is an official Discord interface profile,
+not a worker executor.
+
 ## Promotion Rule
 
 A new executable worker is created only when all of this is true:

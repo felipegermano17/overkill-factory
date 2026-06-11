@@ -25,9 +25,28 @@ runtime treats them differently:
 | Reviewer/proof runner | Verifies, challenges or packages work done by another operator. | `independent-reviewer`, `autoreview-gate`, `remote-proof-runner` |
 | Specialist gate | Blocks a risk surface until evidence exists. | `codex-security`, `appsec-owasp-specialist`, `supply-chain-gate` |
 | Human-support gate | Records a real human decision. | `human-gate-clerk` |
+| Interface profile | Talks to the human and mirrors cockpit state without executing product work. | `overkill-factory-gerente` |
 
 This distinction matters. A gate can be operable without being a builder, and a
 builder can be autonomous without being allowed to approve itself.
+
+## Conceptual Role Drift Rule
+
+Some canonical-stage names are intentionally plain: Method Router, Product
+Outcome Worker, Product Experience Router, Security Architect, Production
+Readiness and similar names. In runtime they are mapped to registered workers in
+`docs/agents/factory-stage-agent-map.md`.
+
+Do not create separate Hermes executor profiles for those conceptual names by
+default. A loose profile with a good-sounding name is weaker than an official
+worker because it has no registry entry, no binding, no permission class, no
+packet route and no validation proof. If such a profile appears in Hermes, treat
+it as profile drift unless it has been promoted through the worker contract.
+
+The dedicated exception is `overkill-factory-gerente`: it is a gateway/interface
+profile for Discord. It may talk to the operator, receive inputs and register
+intent, but it must not choose specialists outside the Kanban, execute material
+work or mark cards done.
 
 ## Builder Layer
 

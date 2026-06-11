@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -23,9 +24,52 @@ factoryctl = load_module("factoryctl_for_profiles", ROOT / "scripts" / "factoryc
 profile_validator = load_module("validate_worker_profiles", ROOT / "scripts" / "validate_worker_profiles.py")
 
 
+CONCEPTUAL_ROLE_PROFILE_DUPLICATES = {
+    "access-capability-worker",
+    "agent-eval-worker",
+    "agentic-method-router",
+    "budget-cost-worker",
+    "data-metrics-worker",
+    "dependency-integration-worker",
+    "factory-concierge",
+    "factory-maturity-auditor",
+    "incident-support-worker",
+    "platform-devex-worker",
+    "privacy-compliance-worker",
+    "product-experience-router",
+    "product-outcome-discovery-worker",
+    "production-readiness-worker",
+    "security-architect-worker",
+    "software-development-planner",
+    "user-docs-onboarding-worker",
+}
+
+
 class WorkerProfilesTest(unittest.TestCase):
     def test_worker_profiles_are_complete_and_bound_to_hermes(self) -> None:
         self.assertEqual(profile_validator.validate(), [])
+
+    def test_conceptual_role_names_are_not_registered_as_loose_workers(self) -> None:
+        registry = json.loads((ROOT / "agents" / "worker-registry.public.json").read_text(encoding="utf-8"))
+        profiles = json.loads((ROOT / "agents" / "worker-profiles.public.json").read_text(encoding="utf-8"))
+        bindings = json.loads((ROOT / "agents" / "hermes-profile-bindings.public.json").read_text(encoding="utf-8"))
+        permissions = json.loads((ROOT / "agents" / "worker-permission-classes.public.json").read_text(encoding="utf-8"))
+
+        registered_workers = {worker["worker_id"] for worker in registry["workers"]}
+        official_profiles = set(profiles["profiles"])
+        official_bindings = set(bindings["bindings"])
+        worker_permissions = set(permissions["worker_assignments"])
+        gateway_profiles = set(permissions["gateway_profile_assignments"])
+
+        for profile_name in sorted(CONCEPTUAL_ROLE_PROFILE_DUPLICATES):
+            with self.subTest(profile_name=profile_name):
+                self.assertNotIn(profile_name, registered_workers)
+                self.assertNotIn(profile_name, official_profiles)
+                self.assertNotIn(profile_name, official_bindings)
+                self.assertNotIn(profile_name, worker_permissions)
+                self.assertNotIn(profile_name, gateway_profiles)
+
+        self.assertEqual(gateway_profiles, {"overkill-factory-gerente"})
 
     def test_worker_packet_carries_profile_binding(self) -> None:
         card_path = ROOT / "examples" / "cards" / "v35_valid_product_face.md"

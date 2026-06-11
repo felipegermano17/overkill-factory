@@ -41,6 +41,7 @@
         "dedicated_gerente_gateway_running",
         "private_product_profile_not_factory_gateway",
         "factory_worker_profiles_present",
+        "factory_profile_set_has_no_conceptual_duplicates",
         "raw_private_values_omitted"
       ],
       "properties": {
@@ -51,6 +52,7 @@
         "dedicated_gerente_gateway_running": { "type": "boolean" },
         "private_product_profile_not_factory_gateway": { "type": "boolean" },
         "factory_worker_profiles_present": { "type": "boolean" },
+        "factory_profile_set_has_no_conceptual_duplicates": { "type": "boolean" },
         "raw_private_values_omitted": { "type": "boolean" }
       },
       "additionalProperties": false

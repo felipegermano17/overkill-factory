@@ -86,6 +86,9 @@ class PrepilotMasterTaskReadinessTest(unittest.TestCase):
         self.assertTrue(provider_audit["checks"]["private_product_profile_not_used_as_factory_gateway"])
         self.assertTrue(provider_audit["checks"]["factory_scope_uses_canonical_provider_model"])
         self.assertTrue(provider_audit["checks"]["factory_scope_auth_present"])
+        self.assertTrue(provider_audit["checks"]["no_duplicate_conceptual_profiles_present"])
+        self.assertEqual(provider_audit["counts"]["conceptual_duplicate_profiles_removed"], 17)
+        self.assertEqual(provider_audit["counts"]["unexpected_factory_duplicate_profiles"], 0)
 
         self.assertEqual(runtime_status["result"], "PASS")
         self.assertTrue(runtime_status["checks"]["hermes_status_readonly_passed"])
@@ -94,6 +97,7 @@ class PrepilotMasterTaskReadinessTest(unittest.TestCase):
         self.assertTrue(runtime_status["checks"]["discord_configured"])
         self.assertTrue(runtime_status["checks"]["dedicated_gerente_gateway_running"])
         self.assertTrue(runtime_status["checks"]["private_product_profile_not_factory_gateway"])
+        self.assertTrue(runtime_status["checks"]["factory_profile_set_has_no_conceptual_duplicates"])
         self.assertTrue(runtime_status["checks"]["raw_private_values_omitted"])
 
         self.assertEqual(bridge_readiness["result"], "PASS")

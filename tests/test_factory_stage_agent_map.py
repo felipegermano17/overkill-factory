@@ -28,6 +28,7 @@ class FactoryStageAgentMapTest(unittest.TestCase):
         allowed_non_workers = {
             "Factory Concierge",
             "factory-critic",
+            "overkill-factory-gerente",
         }
         worker_refs = {
             ref

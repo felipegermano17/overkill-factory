@@ -1,0 +1,84 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/hermes-profile-drift-cleanup.schema.json",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "scope",
+    "runtime_ref",
+    "deleted_profile_refs",
+    "preserved_profile_refs",
+    "post_cleanup_counts",
+    "backup_ref",
+    "checks",
+    "evidence_refs",
+    "limits"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/hermes-profile-drift-cleanup.schema.json"
+    },
+    "record_type": {
+      "const": "hermes_profile_drift_cleanup"
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "result": {
+      "enum": ["PASS", "ATTENTION", "BLOCKED"]
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 3
+    },
+    "runtime_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "deleted_profile_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "preserved_profile_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "post_cleanup_counts": {
+      "type": "object",
+      "required": [
+        "public_worker_profiles",
+        "gateway_interface_profiles",
+        "unexpected_conceptual_duplicate_profiles",
+        "profile_exports_created"
+      ],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "backup_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": false
+}
