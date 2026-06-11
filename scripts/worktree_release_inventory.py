@@ -146,9 +146,12 @@ def build_inventory(entries: list[tuple[str, str]], created_at: str | None = Non
     if needs_review:
         blocking_items.append("needs_human_review_entries_present")
 
-    result = "PASS" if not entries else "ATTENTION"
     if needs_review:
         result = "BLOCKED"
+    elif safe_cleanup or release_material:
+        result = "ATTENTION"
+    else:
+        result = "PASS"
 
     inventory = {
         "$schema": "https://overkill-factory.dev/schemas/worktree-release-inventory.schema.json",
@@ -186,6 +189,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if not args.out.is_absolute():
+        args.out = ROOT / args.out
     inventory = build_inventory(run_git_status())
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
