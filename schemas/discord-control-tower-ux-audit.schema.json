@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/discord-control-tower-ux-audit.schema.json",
+  "title": "Overkill Factory Discord Control Tower UX Audit",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "scope",
+    "observed_model",
+    "checks",
+    "findings",
+    "live_corrections",
+    "next_required_actions",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/discord-control-tower-ux-audit.schema.json"
+    },
+    "record_type": {
+      "const": "discord_control_tower_ux_audit"
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "result": {
+      "enum": ["PASS", "ATTENTION", "BLOCKED"]
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 3
+    },
+    "observed_model": {
+      "type": "object",
+      "required": [
+        "runtime",
+        "owner_language",
+        "source_of_truth",
+        "discord_role"
+      ],
+      "properties": {
+        "runtime": { "type": "string", "minLength": 3 },
+        "owner_language": { "type": "string", "minLength": 2 },
+        "source_of_truth": { "type": "string", "minLength": 3 },
+        "discord_role": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "checks": {
+      "type": "object",
+      "required": [
+        "portuguese_first_structure",
+        "gerente_channel_exists",
+        "kanban_forum_exists",
+        "kanban_forum_has_phase_tags",
+        "pilot_project_thread_created",
+        "pilot_forum_card_created",
+        "free_response_threading_conflict_documented",
+        "thread_first_project_intake_automated"
+      ],
+      "properties": {
+        "portuguese_first_structure": { "type": "boolean" },
+        "gerente_channel_exists": { "type": "boolean" },
+        "kanban_forum_exists": { "type": "boolean" },
+        "kanban_forum_has_phase_tags": { "type": "boolean" },
+        "pilot_project_thread_created": { "type": "boolean" },
+        "pilot_forum_card_created": { "type": "boolean" },
+        "free_response_threading_conflict_documented": { "type": "boolean" },
+        "thread_first_project_intake_automated": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "findings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["severity", "finding", "impact", "required_fix"],
+        "properties": {
+          "severity": { "enum": ["P0", "P1", "P2", "P3"] },
+          "finding": { "type": "string", "minLength": 3 },
+          "impact": { "type": "string", "minLength": 3 },
+          "required_fix": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "live_corrections": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "next_required_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    }
+  },
+  "additionalProperties": false
+}

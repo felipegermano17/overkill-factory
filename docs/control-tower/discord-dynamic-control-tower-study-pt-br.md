@@ -130,6 +130,20 @@ O dono usa principalmente um unico canal:
 #falar-com-gerente
 ```
 
+Mas esse canal nao pode virar um corredor infinito de mensagens. A regra de UX
+da fabrica e:
+
+```text
+duvida curta -> o GERENTE responde no proprio chat
+paper, briefing ou projeto novo -> abre topico do projeto e cartao no Kanban visual
+```
+
+Isso e importante porque o Hermes nativo trata `free_response_channels` como
+chat leve: o usuario nao precisa mencionar o bot, mas a resposta tende a ficar
+inline. A fabrica nao deve depender apenas desse comportamento nativo para
+intake de projeto. O `Factory Concierge Discord Bridge` precisa reconhecer
+pedido grande, criar o topico certo e apontar o dono para la.
+
 Exemplos de pedidos naturais:
 
 ```text
@@ -186,6 +200,26 @@ Projeto A    Projeto B         Projeto C       Projeto D      Projeto E    Proje
 
 Essa mensagem deve ser atualizada pela ponte. Se o Hermes mudar, o Discord
 muda. Se o Discord estiver desatualizado, o Hermes continua valendo.
+
+## Regra thread-first para projeto
+
+Todo paper, briefing longo, novo produto ou pedido de piloto precisa gerar:
+
+1. um topico de conversa ligado a mensagem original ou ao canal de intake;
+2. um cartao no forum `kanban-da-fabrica`;
+3. uma resposta curta no `#falar-com-gerente` dizendo onde o projeto passou a
+   morar;
+4. uma ligacao public-safe com o estado real no Hermes quando o runtime criar
+   ou atualizar a card graph.
+
+O nome do topico deve ser humano e curto, por exemplo:
+
+```text
+Piloto - Front jogo da fabrica
+```
+
+O topico nao substitui o Hermes. Ele e a sala visual do projeto para o dono.
+O forum e o quadro visual. Hermes continua sendo a fonte de verdade.
 
 ## Modelo visual recomendado
 
@@ -317,6 +351,10 @@ Cada projeto no forum deve ter:
 - proximas etapas previstas;
 - evidencias principais;
 - historico resumido.
+
+Esse topico deve nascer no intake, nao depois que o projeto ja virou um bloco
+de conversa perdido no chat. Se o dono mandar o paper em `#falar-com-gerente`,
+a ponte deve criar o topico e o cartao automaticamente.
 
 ### 3. Aprovacao com botao e formulario
 

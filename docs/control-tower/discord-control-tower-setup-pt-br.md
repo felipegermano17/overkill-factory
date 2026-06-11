@@ -169,8 +169,6 @@ O repo publico nao pode conter:
 
 | Canal | Para que serve | Quem fala ali |
 | --- | --- | --- |
-| Canal | Para que serve | Quem fala ali |
-| --- | --- | --- |
 | `#torre-de-controle` | status resumido, fase atual, previsao e proximos passos | Concierge |
 | `#falar-com-gerente` | conversa direta com o GERENTE | dono e Concierge |
 | `#novos-projetos` | entrada de novos projetos, papers e pedidos | dono e Concierge |
@@ -187,6 +185,20 @@ O canal `#falar-com-gerente` pode ser configurado como canal livre: o dono fala
 com o GERENTE sem precisar mencionar o bot. Os outros canais devem ser mais
 controlados para evitar barulho e aprovacao acidental.
 
+Essa decisao tem um detalhe importante: no Hermes nativo, canal livre responde
+inline e pode pular auto-thread. Por isso, `#falar-com-gerente` nao pode ser o
+unico mecanismo de organizacao de projetos. A experiencia certa e:
+
+```text
+mensagem curta -> resposta curta no chat
+paper/projeto/piloto -> topico do projeto + cartao no forum
+```
+
+Se `DISCORD_NO_THREAD_CHANNELS` incluir `#falar-com-gerente`, isso deve ser
+tratado como configuracao apenas para conversa curta. A fabrica ainda precisa
+do `Factory Concierge Discord Bridge` para criar topicos de projeto e cartoes
+no `kanban-da-fabrica`.
+
 ## Camada dinamica
 
 O Discord nao deve ser apenas um chat. O modelo recomendado e:
@@ -194,6 +206,7 @@ O Discord nao deve ser apenas um chat. O modelo recomendado e:
 - `#torre-de-controle` com uma mensagem fixada e atualizada em vez de spam;
 - botoes de atalho para os canais principais;
 - forum com um topico por projeto;
+- intake thread-first: paper ou briefing nunca fica apenas como mensagem solta;
 - tags de fase no forum;
 - `#aprovacoes-formais` para decisoes formais;
 - `#acessos-pendentes` como checklist do que falta para autonomia;
