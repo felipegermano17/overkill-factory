@@ -100,6 +100,36 @@ dono fala com o GERENTE
 
 ## Achados principais
 
+### Resolvido: superficies bridge-owned nao sao conversa
+
+`#torre-de-controle`, `#projetos-recebidos`, `kanban-da-fabrica`,
+`#acessos-pendentes`, `#bloqueios-reais`, `#provas-e-evidencias`,
+`#producao-e-releases` e `#saude-do-bot` sao superficies de exibicao,
+registro ou health. O GERENTE nao deve conversar ali.
+
+A conversa humana fica em `#falar-com-gerente` e nas threads abertas a partir
+dele. A excecao operacional e `#aprovacoes-formais`, que pode receber clique
+ou evento de decisao, mas ainda nao deve virar sala de conversa.
+
+### Resolvido: pedido operacional nao vira projeto
+
+A automacao de intake agora rejeita pedidos sobre Discord, canal, thread,
+botao, mensagem, limpeza, recriacao ou correcao visual. Uma frase como
+"recrie o projeto/produto nesses dois canais" e manutencao do cockpit, nao
+briefing de produto.
+
+Um projeto novo precisa ter intencao clara: paper, briefing, novo produto,
+pedido explicito de criar/construir produto, texto longo de demanda ou anexo
+de entrada. Palavras soltas como "projeto" e "produto" nao bastam.
+
+### Resolvido: GERENTE sem bastidor tecnico no Discord
+
+O GERENTE nao deve exibir progresso interno de ferramenta no Discord. Mensagens
+como leitura de arquivo, patch, terminal, busca ou rascunho intermediario
+poluem a experiencia e confundem o dono. O perfil de producao deve manter o
+progresso de ferramentas e mensagens intermediarias desligados no Discord,
+entregando resposta final limpa ou evento estruturado da ponte.
+
 ### Resolvido: intake thread-first pelo GERENTE
 
 A automacao `factory_concierge_discord_automation.py` escaneia

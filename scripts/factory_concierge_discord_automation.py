@@ -21,6 +21,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -82,6 +83,69 @@ PIPELINE = [
     "Operacao/aprendizado",
 ]
 
+PROJECT_INTAKE_KEYWORDS = [
+    "paper",
+    "briefing",
+    "projeto",
+    "produto",
+    "piloto",
+    "construir",
+    "criar",
+    "fabrica",
+    "factory",
+    "front",
+    "jogo",
+    "sot",
+]
+
+PROJECT_INTAKE_STRONG_PHRASES = [
+    "paper do projeto",
+    "paper:",
+    "briefing do projeto",
+    "briefing:",
+    "novo projeto",
+    "novo produto",
+    "criar um produto",
+    "construir um produto",
+    "quero criar",
+    "quero construir",
+    "vamos criar",
+    "vamos construir",
+    "produto sera",
+    "produto será",
+    "demanda do projeto",
+]
+
+OPERATIONAL_DISCORD_PHRASES = [
+    "recrie",
+    "recriar",
+    "corrija",
+    "arrume",
+    "apague",
+    "delete",
+    "limpe",
+    "atualize",
+    "mova",
+    "mande",
+    "envie",
+    "poste",
+    "canal",
+    "canais",
+    "thread",
+    "tread",
+    "mensagem",
+    "discord",
+    "torre de controle",
+    "aprovacao",
+    "aprovação",
+    "botao",
+    "botão",
+    "kanban",
+    "projetos-recebidos",
+    "nao funcionou",
+    "não funcionou",
+]
+
 
 def utc_now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -125,28 +189,43 @@ def stable_project_id(title: str) -> str:
     return bridge.normalize_name(title)
 
 
+def normalize_intake_text(value: str) -> str:
+    without_marks = "".join(
+        char
+        for char in unicodedata.normalize("NFKD", value.lower())
+        if not unicodedata.combining(char)
+    )
+    return re.sub(r"\s+", " ", without_marks).strip()
+
+
+def has_phrase(text: str, phrases: list[str]) -> bool:
+    normalized_phrases = [normalize_intake_text(phrase) for phrase in phrases]
+    return any(phrase in text for phrase in normalized_phrases)
+
+
 def looks_like_project_intake(message: dict[str, Any]) -> bool:
     author = message.get("author") or {}
     if author.get("bot"):
         return False
-    content = str(message.get("content") or "")
+    content = str(message.get("content") or "").strip()
     attachments = message.get("attachments") or []
-    low = content.lower()
-    keywords = [
-        "paper",
-        "projeto",
-        "produto",
-        "piloto",
-        "construir",
-        "criar",
-        "fabrica",
-        "factory",
-        "front",
-        "jogo",
-        "sot",
-    ]
-    hits = sum(1 for word in keywords if word in low)
-    return bool(attachments) or len(content) >= 240 or hits >= 2
+    low = normalize_intake_text(content)
+    if not content and not attachments:
+        return False
+
+    has_strong_project_intent = has_phrase(low, PROJECT_INTAKE_STRONG_PHRASES)
+    has_operational_discord_intent = has_phrase(low, OPERATIONAL_DISCORD_PHRASES)
+    if has_operational_discord_intent and not has_strong_project_intent:
+        return False
+
+    hits = sum(1 for word in PROJECT_INTAKE_KEYWORDS if normalize_intake_text(word) in low)
+    if has_strong_project_intent:
+        return True
+    if attachments:
+        return True
+    if "paper" in low and hits >= 1 and len(content) >= 80:
+        return True
+    return len(content) >= 700 and hits >= 2
 
 
 def default_projection_from_intake(message: dict[str, Any], now: str | None = None) -> dict[str, Any]:
