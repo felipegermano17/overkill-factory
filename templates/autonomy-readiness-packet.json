@@ -5,8 +5,57 @@
   "tools_ready": false,
   "environment_ready": false,
   "cost_limit": "No material spend approved.",
-  "forbidden_actions": ["deploy", "secret_access", "billing_change"],
+  "forbidden_actions": [
+    "deploy",
+    "secret_access",
+    "billing_change"
+  ],
   "rollback_path": "No material execution allowed yet.",
-  "human_gates": ["Access & Capability Gate"],
-  "evidence_refs": ["autonomy-readiness.md"]
+  "human_gates": [
+    "Access & Capability Gate"
+  ],
+  "evidence_refs": [
+    "autonomy-readiness.md"
+  ],
+  "required_resources": {
+    "github": [
+      "repo access"
+    ],
+    "cloud": [],
+    "billing": [],
+    "database": [],
+    "storage": [],
+    "dns_domains": [],
+    "external_apis": [],
+    "payment_accounts": [],
+    "app_store": [],
+    "secrets_refs": [
+      "secret reference only, never secret value"
+    ],
+    "environments": [
+      "local"
+    ],
+    "observability": [],
+    "runtime": [
+      "Hermes"
+    ],
+    "profiles": [
+      "factory-orchestrator"
+    ]
+  },
+  "resource_statuses": [
+    {
+      "resource": "github.repo_access",
+      "status": "pending"
+    },
+    {
+      "resource": "runtime.hermes",
+      "status": "granted"
+    }
+  ],
+  "approval_channel": "Hermes human gate or Control Tower registered approval",
+  "owners": [
+    "product-owner",
+    "operator"
+  ]
 }

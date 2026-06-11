@@ -58,7 +58,9 @@
         "integration_build_result",
         "test_automation_result",
         "infra_devops_result",
-        "agent_runtime_result"
+        "agent_runtime_result",
+        "project_projection_result",
+        "control_tower_bridge_result"
       ]
     },
     "created_at": {
@@ -124,7 +126,8 @@
         "PASS",
         "FAIL",
         "WAIVED",
-        "PENDING"
+        "PENDING",
+        "BLOCKED"
       ]
     },
     "blocking_findings": {

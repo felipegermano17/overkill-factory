@@ -1,0 +1,20 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-sot.schema.json",
+  "what_it_is": "A short, concrete description of the product or slice.",
+  "target_users": ["primary user or actor"],
+  "why_it_matters": "Why this outcome is worth building now.",
+  "outcome": "The result the product must create.",
+  "scope_in": ["included behavior or deliverable"],
+  "scope_out": ["explicit non-goal"],
+  "risks": ["material product, technical, security or operational risk"],
+  "authority": "Who may approve scope, execution, release or waiver.",
+  "data_and_metrics": ["success metric or risk metric that matters"],
+  "dependencies": ["external or internal dependency"],
+  "access_and_capabilities": ["repo/cloud/API/account/tool access required"],
+  "compliance_privacy": ["privacy, legal, license or compliance note"],
+  "cost_relevance": "No material spend, or named budget/cost boundary.",
+  "operations_expected": ["how the product is expected to run or be supported"],
+  "success_criteria": ["observable criterion for success"],
+  "open_decisions": ["decision that is not closed yet"],
+  "evidence_refs": ["source-ledger.md"]
+}

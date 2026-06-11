@@ -9,21 +9,28 @@ The live-agent layer is separate:
   refusal rules, evidence, review, handoff and failure behavior.
 - `agents/hermes-profile-bindings.public.json` maps each worker to the Hermes
   profile name, dispatch queue, skill refs and result schema.
+- `agents/worker-permission-classes.public.json` maps each worker to its
+  permission class and authority boundary.
 - `scripts/factoryctl.py` injects this binding into generated worker packets so
   Hermes can hand the task to the correct profile.
 
 A worker in this roster is not considered operable unless it has a profile,
 binding, packet route and validation coverage.
 
-The roster has 38 public-safe operators:
+For the full process map, see
+`docs/agents/factory-stage-agent-map.md`. It maps each canonical factory stage
+to a real registered worker, supporting workers, proof and blocker.
+
+The roster has 40 public-safe operators:
 
 - 7 planning/documentation/router workers.
 - 10 specialist builders plus 1 generic fallback builder.
 - 6 proof/review/handoff/closure workers.
 - 10 security/onchain/release-safety workers.
 - 4 human, release, memory and learning support workers.
+- 2 Control Tower cockpit workers.
 
-That number is intentionally split by ownership. It is not meant to create 37
+That number is intentionally split by ownership. It is not meant to create 40
 parallel personalities. A card should call only the operators whose surface,
 risk and phase match the work.
 
@@ -43,13 +50,13 @@ needed.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `factory-orchestrator` | hybrid | F0-F18 | Maintains phase, risk, routing, blockers and Kanban state. It does not approve product, security or R3/R4 gates. |
-| `source-ledger-worker` | open | F0-F1 | Separates source, inference, decision, conflict and gap before any SOT claim is promoted. |
-| `product-sot-planner` | open | F2-F3 | Turns source ledger and answers into a Product SOT candidate. Candidate is not approval. |
-| `product-architect` | open | F4-F6 | Creates architecture candidate, boundaries, tradeoffs and risk map from the SOT. |
+| `factory-orchestrator` | hybrid | F0-F18 | Maintains phase, risk, routing, Method Contract, capability coverage, readiness, blockers and Kanban state. It does not approve product, security or R3/R4 gates. |
+| `source-ledger-worker` | open | F0-F1 | Separates source, inference, decision, conflict, stale material and gap before any SOT claim is promoted. |
+| `product-sot-planner` | open | F2-F3 | Owns Outcome/Discovery and turns source ledger plus answers into a Product SOT candidate. Candidate is not approval. |
+| `product-architect` | open | F4-F6 | Creates architecture candidate, boundaries, tradeoffs, trust boundaries and risk map from the SOT. |
 | `product-face` | hybrid | F5/F13 | Defines and validates screens, states, mobile, wallet UX, accessibility, performance and visual evidence. |
 | `docs-os-worker` | closed/hybrid | F10 | Converts approved architecture into specs, ADRs, diagrams, contracts and evidence paths. |
-| `decomposition-planner` | closed | F11 | Produces work packages and Hermes card graph with risk, runtime, reviewer and gate contracts. |
+| `decomposition-planner` | closed | F11 | Produces Spec Graph, Loop Plan, work packages and Hermes card graph with risk, runtime, reviewer, lane/worktree and gate contracts. |
 
 ## Execution Builders
 
@@ -77,7 +84,7 @@ the card.
 |---|---|---|---|
 | `qa-verification-worker` | closed/hybrid | F13-F15 | Runs tests, screenshots, logs, regressions and evidence checks. |
 | `independent-reviewer` | hybrid | F14 | Reviews another worker's output. Executor and reviewer must differ. |
-| `evidence-reconciler` | deterministic | F15 | Selects current worker results, records superseded stale evidence and blocks Receipt Five/done when closure evidence is invalid. |
+| `evidence-reconciler` | deterministic | F13-F16 | Selects current worker results, records superseded stale evidence and blocks Closure Summary, Completion Audit, Receipt Five or done when closure evidence is invalid. |
 | `autoreview-gate` | closed | F14/F15 | Runs structured pre-landing code review. It finds issues but does not replace independent review. |
 | `remote-proof-runner` | closed | F13-F16 | Uses Crabbox/Testbox/container fallback for heavy or clean-environment proof with TTL, cost and cleanup evidence. |
 | `handoff-packer` | closed | F9-F15 | Creates portable handoff packets for worker transfer, pause, context compaction or phase change. |
@@ -86,7 +93,7 @@ the card.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `security-orchestrator` | hybrid | F6-F16 | Chooses required security specialists and prevents generic security comments from passing as evidence. |
+| `security-orchestrator` | hybrid | F4-F16 | Chooses Security Architecture Plan routes, required security specialists and prevents generic security comments from passing as evidence. |
 | `codex-security` | hybrid | F8/F13 | Runs Codex Security or equivalent scoped scans when the card requires it. |
 | `appsec-owasp-specialist` | hybrid | F7/F14/F15 | Covers OWASP Web/API/AppSec, auth, session, validation and safe errors. |
 | `agentic-ai-security-specialist` | hybrid | F1/F7/F12/F14 | Covers prompt injection, tool misuse, browser risk, memory poisoning and excessive agency. |
@@ -94,17 +101,24 @@ the card.
 | `crypto-key-management-specialist` | hybrid | F7/F15/F16 | Covers secrets, signing, custody, cryptography and key lifecycle. It never touches real keys or funds. |
 | `solana-quasar-auditor` | hybrid | F7/F13/F15 | Runs or prepares Auditor evidence for Solana/Quasar work. Anchor assumptions are forbidden. |
 | `supply-chain-gate` | closed/hybrid | F11/F13/F16 | Checks dependencies, CI, secret scan, SBOM/provenance and workflow risk. |
-| `detection-monitoring-worker` | closed/hybrid | F16-F17 | Ensures logs, metrics, alerts, incident owner and rollback evidence exist. |
+| `detection-monitoring-worker` | closed/hybrid | F4/F16-F17 | Owns Data/Metrics planning and ensures logs, metrics, alerts, incident owner and rollback evidence exist. |
 
 ## Human, Release And Learning
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `human-gate-clerk` | human-support | F9/F15/F16 | Prepares and records real human decisions. It cannot invent approval. |
-| `release-ops-worker` | closed/hybrid | F16-F17 | Handles promotion packet, smoke, canary, rollback readiness and monitoring. |
+| `human-gate-clerk` | human-support | F9/F15/F16 | Prepares and records real human decisions for authority, access, budget, waiver and release. It cannot invent approval. |
+| `release-ops-worker` | closed/hybrid | F16-F17 | Handles release channel, production operations, promotion packet, smoke, canary, rollback readiness and monitoring. |
 | `public-safety-gate` | closed | F16-F17 | Blocks public artifacts containing private paths, internal names, raw source extraction or private links. |
 | `memory-steward` | hybrid | F0/F1/F18 | Treats memory as a risk surface with source, trust tier, freshness and poisoning controls. |
-| `skill-eval-distiller` | hybrid | F18 | Turns repeated success/failure into compact skills, evals, templates or checklists. |
+| `skill-eval-distiller` | hybrid | F8/F18 | Owns Agent Quality, Learnback and Factory Maturity audits, then turns repeated success/failure into compact skills, evals, templates, checklists or pack/worker changes. |
+
+## Control Tower
+
+| Worker | Mode | Enters | What it does |
+|---|---|---|---|
+| `control-tower-projection-worker` | read-only projection | F19 | Projects Hermes state into the operator cockpit without deciding gates or mutating cards. |
+| `discord-control-tower-bridge` | bridge | F19/F29 | Maps Hermes and Discord events, emits bridge health and records operator responses through the runtime contract. |
 
 ## Non-Executable Critical Roles
 
@@ -113,7 +127,7 @@ they get a machine-readable contract in `agents/worker-registry.public.json`.
 
 | Role | Mode | Enters | What it does |
 |---|---|---|---|
-| `factory-critic` | open | F18 | Attacks the methodology for ambiguity, over-complexity, under-specification and agent misinterpretation. |
+| `factory-critic` | open stance | F18 | Review stance used by `skill-eval-distiller` and `independent-reviewer` to attack ambiguity, over-complexity, under-specification and agent misinterpretation. It is not a separate executable worker until it has registry, profile, binding and eval proof. |
 
 ## Anti-Theater Rules
 

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/qa-verification-plan.schema.json",
+  "title": "Overkill Factory QA Verification Plan",
+  "type": "object",
+  "required": [
+    "record_type",
+    "qa_mode",
+    "surfaces",
+    "risk_effective",
+    "required_checks",
+    "evidence_required",
+    "loop_limit",
+    "pass_rule",
+    "block_rule"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 10 },
+    "record_type": { "const": "qa_verification_plan" },
+    "qa_mode": {
+      "enum": [
+        "quick",
+        "standard",
+        "exhaustive",
+        "regression",
+        "visual",
+        "accessibility",
+        "performance",
+        "property",
+        "fuzz",
+        "chaos"
+      ]
+    },
+    "surfaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 }
+    },
+    "risk_effective": { "enum": ["R0", "R1", "R2", "R3", "R4"] },
+    "required_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "evidence_required": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "loop_limit": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "pass_rule": { "type": "string", "minLength": 8 },
+    "block_rule": { "type": "string", "minLength": 8 },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": false
+}

@@ -3,13 +3,158 @@
   "$id": "https://overkill-factory.dev/schemas/software-development-plan.schema.json",
   "title": "Overkill Factory Software Development Plan",
   "type": "object",
-  "required": ["work_units", "qa_plan", "review_plan", "release_or_block_rule"],
+  "required": [
+    "work_units",
+    "work_unit_contracts",
+    "qa_plan",
+    "review_plan",
+    "reviewer_selection_plan",
+    "release_or_block_rule",
+    "required_artifacts",
+    "skipped_artifacts",
+    "prd",
+    "trd",
+    "domain_map",
+    "acceptance_examples",
+    "stories",
+    "factory_cards",
+    "slice_plan",
+    "test_plan",
+    "security_architecture_ref",
+    "legacy_migration_decision",
+    "platform_devex_decision",
+    "release_plan",
+    "documentation_plan"
+  ],
   "properties": {
-    "work_units": { "type": "array", "items": { "type": "string" } },
-    "qa_plan": { "type": "array", "items": { "type": "string" } },
-    "review_plan": { "type": "array", "items": { "type": "string" } },
-    "release_or_block_rule": { "type": "string", "minLength": 3 },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "work_units": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "work_unit_contracts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "qa_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "review_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reviewer_selection_plan": {
+      "type": "string",
+      "minLength": 3
+    },
+    "release_or_block_rule": {
+      "type": "string",
+      "minLength": 3
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skipped_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact",
+          "reason"
+        ],
+        "properties": {
+          "artifact": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "prd": {
+      "type": "string"
+    },
+    "trd": {
+      "type": "string"
+    },
+    "domain_map": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "acceptance_examples": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "stories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "factory_cards": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "slice_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "test_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "security_architecture_ref": {
+      "type": "string"
+    },
+    "legacy_migration_decision": {
+      "type": "string"
+    },
+    "platform_devex_decision": {
+      "type": "string"
+    },
+    "release_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "documentation_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "additionalProperties": true
 }

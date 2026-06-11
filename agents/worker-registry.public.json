@@ -7,18 +7,38 @@
       "mode": "hybrid",
       "phase": [
         "F0",
-        "F18"
+        "F18",
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "F11",
+        "F15"
       ],
       "triggers": [
         "phase change",
         "blocked work",
-        "worker routing"
+        "worker routing",
+        "method routing",
+        "method contract",
+        "capability pack selection",
+        "surface pack selection",
+        "autonomy readiness",
+        "ready gate",
+        "access gate",
+        "budget gate"
       ],
       "inputs": [
         "phase",
         "risk_effective",
         "surfaces",
-        "done_definition"
+        "done_definition",
+        "method_contract",
+        "capability_pack_contract",
+        "autonomy_readiness_packet",
+        "dependency_map",
+        "access_capability",
+        "budget_contract"
       ],
       "tools": [
         "Hermes Kanban",
@@ -29,12 +49,19 @@
       "veto_conditions": [
         "missing phase",
         "missing risk",
-        "missing evidence chain"
+        "missing evidence chain",
+        "missing method contract",
+        "missing capability coverage",
+        "execution requested without autonomy readiness"
       ],
       "evidence_required": [
         "gate report",
         "routing decision",
-        "next action"
+        "next action",
+        "method contract",
+        "capability coverage report",
+        "autonomy readiness packet",
+        "ready gate verdict"
       ],
       "kanban_transition_rules": [
         "never unblock R3/R4 without required gates"
@@ -52,11 +79,18 @@
       "triggers": [
         "raw paper",
         "new source",
-        "source conflict"
+        "source conflict",
+        "source resolution",
+        "claim conflict",
+        "stale source",
+        "source gap"
       ],
       "inputs": [
         "source_refs",
-        "source_state"
+        "source_state",
+        "raw_sources",
+        "source_conflicts",
+        "prior_decisions"
       ],
       "tools": [
         "repo search",
@@ -72,7 +106,10 @@
       "evidence_required": [
         "source map",
         "conflict list",
-        "gap list"
+        "gap list",
+        "source resolution notes",
+        "promoted claims",
+        "rejected claims"
       ],
       "kanban_transition_rules": [
         "Product SOT waits for source resolution"
@@ -89,13 +126,20 @@
       ],
       "triggers": [
         "source ledger ready",
-        "alignment questions answered"
+        "alignment questions answered",
+        "outcome discovery",
+        "assumption ledger",
+        "product outcome",
+        "discovery gap"
       ],
       "inputs": [
         "source_refs",
         "acceptance_criteria",
         "scope_in",
-        "scope_out"
+        "scope_out",
+        "outcome_contract",
+        "discovery_notes",
+        "assumption_ledger"
       ],
       "tools": [
         "planning model",
@@ -110,7 +154,10 @@
       "evidence_required": [
         "SOT candidate",
         "open questions",
-        "decision boundaries"
+        "decision boundaries",
+        "outcome contract",
+        "discovery notes",
+        "assumption ledger"
       ],
       "kanban_transition_rules": [
         "architecture waits for SOT candidate and open risk list"
@@ -127,13 +174,19 @@
       ],
       "triggers": [
         "SOT candidate ready",
-        "architecture review needed"
+        "architecture review needed",
+        "security architecture route",
+        "trust boundary",
+        "architecture risk"
       ],
       "inputs": [
         "scope_in",
         "scope_out",
         "risk_class",
-        "runtime_contract"
+        "runtime_contract",
+        "security_architecture_plan",
+        "risk_route",
+        "dependency_map"
       ],
       "tools": [
         "architecture review",
@@ -149,7 +202,10 @@
       "evidence_required": [
         "architecture packet",
         "tradeoff list",
-        "risk matrix"
+        "risk matrix",
+        "trust boundary map",
+        "security architecture route",
+        "architecture decision record"
       ],
       "kanban_transition_rules": [
         "no decomposition before architecture gate"
@@ -192,7 +248,8 @@
         "desktop screenshot",
         "mobile screenshot",
         "state matrix",
-        "a11y notes"
+        "a11y notes",
+        "journey proof"
       ],
       "kanban_transition_rules": [
         "product-facing done waits for Product Face evidence"
@@ -516,7 +573,8 @@
       "inputs": [
         "executor_identity",
         "reviewer_identity",
-        "done_definition"
+        "done_definition",
+        "reviewer_selection_plan"
       ],
       "tools": [
         "different reviewer identity",
@@ -532,7 +590,8 @@
       "evidence_required": [
         "review report",
         "accepted findings",
-        "residual risk"
+        "residual risk",
+        "reviewer-selection ref"
       ],
       "kanban_transition_rules": [
         "R2+ waits for independent review before done"
@@ -544,7 +603,10 @@
       "worker_id": "evidence-reconciler",
       "mode": "deterministic",
       "phase": [
-        "F15"
+        "F15",
+        "F13",
+        "F14",
+        "F16"
       ],
       "triggers": [
         "done promotion",
@@ -553,13 +615,20 @@
         "stale failed evidence",
         "R2",
         "R3",
-        "R4"
+        "R4",
+        "closure summary",
+        "completion audit",
+        "missing proof",
+        "gate skipped"
       ],
       "inputs": [
         "done_definition",
         "target_repo_paths",
         "worker_result_artifacts",
-        "kanban_transition_event_ref"
+        "kanban_transition_event_ref",
+        "closure_summary",
+        "completion_audit",
+        "receipt_five_draft"
       ],
       "tools": [
         "Receipt Five evidence indexer",
@@ -579,7 +648,9 @@
         "effective worker result index",
         "supersession ledger",
         "missing/blocking evidence list",
-        "Receipt Five readiness verdict"
+        "Receipt Five readiness verdict",
+        "closure summary",
+        "completion audit verdict"
       ],
       "kanban_transition_rules": [
         "runs after required worker artifacts exist",
@@ -601,12 +672,20 @@
         "architecture approval",
         "R3",
         "R4",
-        "promotion"
+        "promotion",
+        "access approval",
+        "budget approval",
+        "privacy approval",
+        "legal approval",
+        "material authority"
       ],
       "inputs": [
         "human_gate_packet",
         "security_scan_packet",
-        "rollback_or_recovery"
+        "rollback_or_recovery",
+        "access_capability",
+        "budget_contract",
+        "waiver_request"
       ],
       "tools": [
         "Hermes decision record",
@@ -624,7 +703,10 @@
         "scope",
         "actor",
         "time",
-        "evidence refs"
+        "evidence refs",
+        "approval scope",
+        "decision actor role",
+        "durable runtime event"
       ],
       "kanban_transition_rules": [
         "architecture and R4 promotion wait for real human decision"
@@ -662,7 +744,8 @@
       "evidence_required": [
         "docs index",
         "ADR refs",
-        "contract refs"
+        "contract refs",
+        "doc-shape routing"
       ],
       "kanban_transition_rules": [
         "decomposition waits for durable docs"
@@ -679,13 +762,21 @@
       "triggers": [
         "documentation OS ready",
         "card graph needed",
-        "decomposition"
+        "decomposition",
+        "spec graph",
+        "loop plan",
+        "parallel lane",
+        "worktree isolation"
       ],
       "inputs": [
         "done_definition",
         "risk_effective",
         "runtime_contract",
-        "security_contract"
+        "security_contract",
+        "loop_plan",
+        "software_development_plan",
+        "spec_graph",
+        "parallel_lane_contract"
       ],
       "tools": [
         "Hermes card graph planner",
@@ -701,7 +792,12 @@
       "evidence_required": [
         "card graph",
         "dependencies",
-        "gate mapping"
+        "gate mapping",
+        "work-unit contracts",
+        "reviewer-selection plan",
+        "Spec Graph",
+        "Loop Plan",
+        "lane/worktree isolation notes"
       ],
       "kanban_transition_rules": [
         "cards without required contracts are rejected"
@@ -1163,7 +1259,8 @@
         "runtime_contract",
         "security_contract",
         "scope_in",
-        "done_definition"
+        "done_definition",
+        "agent_eval_plan"
       ],
       "tools": [
         "Hermes adapter tests",
@@ -1180,7 +1277,8 @@
       "evidence_required": [
         "adapter test refs",
         "profile/binding refs",
-        "safety review handoff"
+        "safety review handoff",
+        "agent eval plan"
       ],
       "kanban_transition_rules": [
         "agent runtime work waits for agentic AI security, public safety and profile validation"
@@ -1224,7 +1322,8 @@
         "commands",
         "outputs",
         "artifacts",
-        "pass/fail"
+        "pass/fail",
+        "QA mode coverage"
       ],
       "kanban_transition_rules": [
         "done waits for objective verification"
@@ -1237,17 +1336,29 @@
       "mode": "hybrid",
       "phase": [
         "F6",
-        "F16"
+        "F16",
+        "F4",
+        "F7",
+        "F8",
+        "F13"
       ],
       "triggers": [
         "R2+",
         "security-sensitive surface",
-        "specialist routing"
+        "specialist routing",
+        "security architecture plan",
+        "privacy route",
+        "compliance route",
+        "threat model",
+        "pre-decomposition security"
       ],
       "inputs": [
         "security_contract",
         "security_scan_packet",
-        "risk_effective"
+        "risk_effective",
+        "security_architecture_plan",
+        "privacy_compliance_route",
+        "threat_model"
       ],
       "tools": [
         "security control matrix",
@@ -1263,7 +1374,10 @@
       "evidence_required": [
         "specialist matrix",
         "owner mapping",
-        "blocking policy"
+        "blocking policy",
+        "Security Architecture Plan",
+        "specialist routing rationale",
+        "required security gates"
       ],
       "kanban_transition_rules": [
         "security-sensitive done waits for routed controls"
@@ -1371,12 +1485,18 @@
         "promotion",
         "production",
         "rollback",
-        "monitoring"
+        "monitoring",
+        "release channel",
+        "production readiness",
+        "release candidate",
+        "rollback drill"
       ],
       "inputs": [
         "done_definition",
         "rollback_or_recovery",
-        "human_gate_packet"
+        "human_gate_packet",
+        "release_plan",
+        "production_operations_plan"
       ],
       "tools": [
         "release packet",
@@ -1395,7 +1515,10 @@
         "release plan",
         "rollback plan",
         "smoke result",
-        "monitoring refs"
+        "monitoring refs",
+        "release channel evidence",
+        "rollback proof",
+        "production smoke"
       ],
       "kanban_transition_rules": [
         "R4 release waits for human gate and rollback evidence"
@@ -1449,18 +1572,28 @@
       "worker_id": "skill-eval-distiller",
       "mode": "hybrid",
       "phase": [
-        "F18"
+        "F18",
+        "F8"
       ],
       "triggers": [
         "skill",
         "eval",
         "repeated workflow",
-        "learning loop"
+        "learning loop",
+        "agent quality plan",
+        "factory maturity audit",
+        "blind spot",
+        "methodology audit",
+        "agent eval plan",
+        "agent coverage"
       ],
       "inputs": [
         "evidence_expected",
         "done_definition",
-        "source_refs"
+        "source_refs",
+        "agent_eval_plan",
+        "factory_maturity_scorecard",
+        "worker_coverage_map"
       ],
       "tools": [
         "skill distillation",
@@ -1476,7 +1609,12 @@
       "evidence_required": [
         "repetition evidence",
         "eval cases",
-        "before/after result"
+        "before/after result",
+        "promotion decision",
+        "permission class",
+        "agent quality plan",
+        "factory maturity scorecard",
+        "missing coverage register"
       ],
       "kanban_transition_rules": [
         "closed specialists need eval-backed promotion"
@@ -1578,7 +1716,8 @@
       "mode": "hybrid",
       "phase": [
         "F16",
-        "F17"
+        "F17",
+        "F4"
       ],
       "triggers": [
         "logs",
@@ -1586,12 +1725,22 @@
         "alerting",
         "incident",
         "production",
-        "observability"
+        "observability",
+        "data metrics plan",
+        "analytics",
+        "events",
+        "dashboard",
+        "product health",
+        "success metric",
+        "risk metric"
       ],
       "inputs": [
         "rollback_or_recovery",
         "security_contract",
-        "done_definition"
+        "done_definition",
+        "data_metrics_plan",
+        "event_contract",
+        "dashboard_contract"
       ],
       "tools": [
         "logging review",
@@ -1608,13 +1757,104 @@
       "evidence_required": [
         "monitoring plan",
         "alert owner",
-        "incident response notes"
+        "incident response notes",
+        "data metrics plan",
+        "event instrumentation proof",
+        "dashboard or health evidence",
+        "privacy visibility notes"
       ],
       "kanban_transition_rules": [
         "production promotion waits for monitoring evidence"
       ],
       "promotion_rule": "hybrid because runtime signals are product-specific",
       "public_safety_notes": "No private dashboards or log samples in public repo."
+    },
+    {
+      "worker_id": "control-tower-projection-worker",
+      "mode": "closed",
+      "phase": [
+        "F19"
+      ],
+      "triggers": [
+        "runtime status changed",
+        "blocker changed",
+        "approval state changed",
+        "evidence state changed"
+      ],
+      "inputs": [
+        "runtime_state_ref",
+        "project_projection",
+        "gate_report",
+        "worker_result"
+      ],
+      "tools": [
+        "Hermes readback",
+        "project projection renderer",
+        "Control Tower dashboard contract"
+      ],
+      "output_contract": "project_projection_result",
+      "authority_max": "mirror runtime state for owner visibility; cannot change Hermes state",
+      "veto_conditions": [
+        "projection is stale",
+        "blocker is hidden",
+        "Discord state is treated as source of truth"
+      ],
+      "evidence_required": [
+        "projection artifact",
+        "last source timestamp",
+        "runtime state ref",
+        "staleness note"
+      ],
+      "kanban_transition_rules": [
+        "when the owner Control Tower is active, material execution waits for a fresh projection"
+      ],
+      "promotion_rule": "closed because projection rendering is deterministic from runtime state once the mapping contract exists",
+      "public_safety_notes": "Use redacted runtime refs and never publish raw Discord ids, private board ids, private URLs or logs."
+    },
+    {
+      "worker_id": "discord-control-tower-bridge",
+      "mode": "closed",
+      "phase": [
+        "F19",
+        "F29"
+      ],
+      "triggers": [
+        "control tower event",
+        "approval response",
+        "health alert",
+        "runtime status change"
+      ],
+      "inputs": [
+        "discord_control_tower_mapping",
+        "control_tower_event",
+        "runtime_registration_path",
+        "bridge_health"
+      ],
+      "tools": [
+        "Discord Control Tower mapping",
+        "Hermes runtime event bridge",
+        "bridge health schema"
+      ],
+      "output_contract": "control_tower_bridge_result",
+      "authority_max": "deliver cockpit messages and register structured responses; cannot approve gates or mutate card state directly",
+      "veto_conditions": [
+        "approval is free-form chat only",
+        "runtime registration path is missing",
+        "bridge health does not follow the schema",
+        "Discord message is treated as canonical evidence"
+      ],
+      "evidence_required": [
+        "redacted mapping ref",
+        "runtime registration event ref",
+        "bridge health proof",
+        "negative approval test"
+      ],
+      "kanban_transition_rules": [
+        "Discord responses are advisory until the runtime records a valid structured event",
+        "the bridge never marks ready, done, released or approved by itself"
+      ],
+      "promotion_rule": "closed because event mapping and delivery are repeatable after private mapping and bridge health proof",
+      "public_safety_notes": "Keep real Discord ids, role ids, message ids, webhook URLs, private runtime ids and logs outside the public repo."
     }
   ]
 }

@@ -1,10 +1,24 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json",
   "record_type": "factory_production_readiness",
-  "created_at": "2026-06-11T00:50:44Z",
-  "result": "PASS",
-  "summary": "Factory vFinal production readiness evidence is complete.",
+  "created_at": "2026-06-11T05:57:39Z",
+  "result": "BLOCKED",
+  "summary": "Factory vFinal is not production-ready; required production gates are still blocked.",
   "components": [
+    {
+      "id": "prepilot_master_task_readiness",
+      "status": "PASS",
+      "raw_result": "PASS",
+      "evidence_ref": "validation/prepilot/master-task-readiness.json",
+      "reason": null
+    },
+    {
+      "id": "hermes_vfinal_runtime_status_check",
+      "status": "PASS",
+      "raw_result": "PASS",
+      "evidence_ref": "validation/hermes-live/factory-vfinal-runtime-status-check.json",
+      "reason": null
+    },
     {
       "id": "hermes_real_runtime_update_preflight",
       "status": "PASS",
@@ -28,17 +42,17 @@
     },
     {
       "id": "worktree_release_inventory",
-      "status": "PASS",
-      "raw_result": "PASS",
+      "status": "ATTENTION",
+      "raw_result": "ATTENTION",
       "evidence_ref": "validation/release/worktree-release-inventory.json",
       "reason": null
     },
     {
       "id": "release_integration_preflight",
-      "status": "PASS",
-      "raw_result": "PASS",
+      "status": "BLOCKED",
+      "raw_result": "BLOCKED",
       "evidence_ref": "validation/release/release-integration-preflight.json",
-      "reason": null
+      "reason": "result is BLOCKED, expected PASS"
     },
     {
       "id": "public_safety_worktree",
@@ -62,12 +76,18 @@
       "reason": null
     }
   ],
-  "blocking_items": [],
-  "attention_items": [],
+  "blocking_items": [
+    "release_integration_preflight"
+  ],
+  "attention_items": [
+    "worktree_release_inventory"
+  ],
   "evidence_refs": [
     "validation/control-tower/operator-control-tower-private-evidence-doctor.json",
     "validation/control-tower/operator-control-tower-production-readiness.json",
+    "validation/hermes-live/factory-vfinal-runtime-status-check.json",
     "validation/hermes-production-update-preflight/real-runtime-update-blocked.json",
+    "validation/prepilot/master-task-readiness.json",
     "validation/public-safety/head-summary.json",
     "validation/public-safety/origin-main-summary.json",
     "validation/public-safety/worktree-summary.json",
@@ -75,8 +95,7 @@
     "validation/release/worktree-release-inventory.json"
   ],
   "next_required_actions": [
-    "perform final operator review",
-    "apply the explicit real-runtime update gate only after human approval"
+    "pass the release integration preflight"
   ],
   "limits": [
     "This aggregate receipt is public-safe and intentionally omits raw private evidence.",

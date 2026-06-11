@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/capability-pack-contract.schema.json",
+  "title": "Overkill Factory Capability Pack Contract",
+  "type": "object",
+  "required": [
+    "record_type",
+    "pack_id",
+    "status",
+    "covered_surfaces",
+    "specialist_workers",
+    "activation_evidence_refs",
+    "missing_capabilities",
+    "execution_rule",
+    "product_pack_id",
+    "product_pack_version",
+    "surface_pack_id",
+    "risk_addendum",
+    "templates_required",
+    "evidence_required",
+    "worker_mapping"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 10
+    },
+    "record_type": {
+      "const": "capability_pack_contract"
+    },
+    "pack_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "activated",
+        "blocked",
+        "needs_pack_creation"
+      ]
+    },
+    "covered_surfaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 2
+      }
+    },
+    "specialist_workers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "activation_evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "missing_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "execution_rule": {
+      "type": "string",
+      "minLength": 12
+    },
+    "product_pack_id": {
+      "type": "string",
+      "minLength": 2
+    },
+    "product_pack_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "surface_pack_id": {
+      "type": "string",
+      "minLength": 2
+    },
+    "risk_addendum": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "templates_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "worker_mapping": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

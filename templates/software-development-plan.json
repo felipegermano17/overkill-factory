@@ -1,8 +1,63 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/software-development-plan.schema.json",
-  "work_units": ["bounded implementation slice"],
-  "qa_plan": ["unit test", "integration smoke", "manual check when needed"],
-  "review_plan": ["independent review before done"],
+  "work_units": [
+    "bounded implementation slice"
+  ],
+  "work_unit_contracts": [
+    "templates/work-unit-contract.json"
+  ],
+  "qa_plan": [
+    "unit test",
+    "integration smoke",
+    "manual check when needed"
+  ],
+  "review_plan": [
+    "independent review before done"
+  ],
+  "reviewer_selection_plan": "templates/reviewer-selection-plan.json",
   "release_or_block_rule": "Release is blocked until verification, review and required gates pass.",
-  "evidence_refs": ["software-development-plan.md"]
+  "evidence_refs": [
+    "software-development-plan.md"
+  ],
+  "required_artifacts": [
+    "Factory Card",
+    "Work Unit Contract",
+    "QA Plan",
+    "Review Plan"
+  ],
+  "skipped_artifacts": [
+    {
+      "artifact": "Legacy/Migration Plan",
+      "reason": "No legacy/brownfield scope in this slice."
+    }
+  ],
+  "prd": "Short product requirement summary or ref.",
+  "trd": "Technical requirement summary or ref.",
+  "domain_map": [
+    "domain term or boundary"
+  ],
+  "acceptance_examples": [
+    "given/when/then or observable example"
+  ],
+  "stories": [
+    "as a user/actor, I need..."
+  ],
+  "factory_cards": [
+    "card id or template ref"
+  ],
+  "slice_plan": [
+    "bounded slice and ordering"
+  ],
+  "test_plan": [
+    "unit/integration/e2e/visual/eval as applicable"
+  ],
+  "security_architecture_ref": "security-architecture-plan not required for R0/R1 unless elevated",
+  "legacy_migration_decision": "not_applicable",
+  "platform_devex_decision": "not_applicable",
+  "release_plan": [
+    "release or block rule"
+  ],
+  "documentation_plan": [
+    "docs/onboarding/update notes as applicable"
+  ]
 }

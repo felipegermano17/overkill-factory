@@ -1,11 +1,48 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/security-architecture-plan.schema.json",
-  "trust_boundaries": ["user browser to backend", "backend to provider"],
-  "data_flows": ["what sensitive or important data moves where"],
-  "authn_authz": ["how identity and permissions are enforced"],
-  "secrets_and_keys": ["where secrets live and who may access them"],
-  "logging_and_detection": ["what must be logged and alerted"],
-  "threats": ["material threat and planned control"],
+  "trust_boundaries": [
+    "user browser to backend",
+    "backend to provider"
+  ],
+  "data_flows": [
+    "what sensitive or important data moves where"
+  ],
+  "authn_authz": [
+    "how identity and permissions are enforced"
+  ],
+  "secrets_and_keys": [
+    "where secrets live and who may access them"
+  ],
+  "logging_and_detection": [
+    "what must be logged and alerted"
+  ],
+  "threats": [
+    "material threat and planned control"
+  ],
   "security_owner": "security-owner",
-  "evidence_refs": ["security-architecture.md"]
+  "evidence_refs": [
+    "security-architecture.md"
+  ],
+  "permissions": [
+    "least privilege permission or role boundary"
+  ],
+  "sensitive_data": [
+    "data class and handling boundary"
+  ],
+  "access_flow": [
+    "who/what accesses which system and why"
+  ],
+  "abuse_cases": [
+    "likely abuse or misuse scenario"
+  ],
+  "preventive_controls": [
+    "control that prevents or limits the abuse"
+  ],
+  "rollback_or_mitigation": [
+    "how to reduce blast radius or recover"
+  ],
+  "human_gate_required": false,
+  "security_review_required": [
+    "security-orchestrator"
+  ]
 }

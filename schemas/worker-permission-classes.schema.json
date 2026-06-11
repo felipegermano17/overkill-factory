@@ -1,0 +1,93 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/worker-permission-classes.schema.json",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "version",
+    "source_of_truth",
+    "global_rules",
+    "classes",
+    "worker_assignments",
+    "gateway_profile_assignments"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/worker-permission-classes.schema.json"
+    },
+    "record_type": {
+      "const": "worker_permission_classes"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_of_truth": {
+      "type": "string",
+      "minLength": 1
+    },
+    "global_rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "classes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "label",
+          "plain_purpose",
+          "may",
+          "must_not",
+          "evidence_required",
+          "can_mutate_card_state",
+          "can_approve_final_gate"
+        ],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "plain_purpose": { "type": "string", "minLength": 1 },
+          "may": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "must_not": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "evidence_required": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "can_mutate_card_state": { "const": false },
+          "can_approve_final_gate": { "const": false }
+        },
+        "additionalProperties": false
+      }
+    },
+    "worker_assignments": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "gateway_profile_assignments": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": false
+}

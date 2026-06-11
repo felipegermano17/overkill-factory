@@ -1,0 +1,15 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/agent-eval-result.schema.json",
+  "record_type": "agent_eval_result",
+  "target_agent_or_skill": "agent-runtime-builder",
+  "result": "PENDING",
+  "cases_total": 8,
+  "cases_passed": 0,
+  "critical_failures": [],
+  "over_authority_failures": [],
+  "blocked_behavior_passed": false,
+  "reviewer_separation_passed": false,
+  "promotion_decision": "stay_existing_worker",
+  "evidence_refs": ["agent-eval-result.md"],
+  "next_action": "Run eval cases before promotion."
+}

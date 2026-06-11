@@ -13,6 +13,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "validation" / "factory-production-readiness" / "current-readiness.json"
 
+DEFAULT_PREPILOT_MASTER = ROOT / "validation" / "prepilot" / "master-task-readiness.json"
+DEFAULT_RUNTIME_STATUS = ROOT / "validation" / "hermes-live" / "factory-vfinal-runtime-status-check.json"
 DEFAULT_PREFLIGHT = ROOT / "validation" / "hermes-production-update-preflight" / "real-runtime-update-blocked.json"
 DEFAULT_CONTROL_TOWER = ROOT / "validation" / "control-tower" / "operator-control-tower-production-readiness.json"
 DEFAULT_CONTROL_TOWER_DOCTOR = ROOT / "validation" / "control-tower" / "operator-control-tower-private-evidence-doctor.json"
@@ -70,6 +72,8 @@ def component(component_id: str, path: Path, expected_pass: bool = True) -> dict
 
 def build_readiness(
     *,
+    prepilot_master_path: Path = DEFAULT_PREPILOT_MASTER,
+    runtime_status_path: Path = DEFAULT_RUNTIME_STATUS,
     preflight_path: Path = DEFAULT_PREFLIGHT,
     control_tower_path: Path = DEFAULT_CONTROL_TOWER,
     control_tower_doctor_path: Path = DEFAULT_CONTROL_TOWER_DOCTOR,
@@ -81,6 +85,8 @@ def build_readiness(
     created_at: str | None = None,
 ) -> dict[str, Any]:
     components = [
+        component("prepilot_master_task_readiness", prepilot_master_path),
+        component("hermes_vfinal_runtime_status_check", runtime_status_path),
         component("hermes_real_runtime_update_preflight", preflight_path),
         component("operator_control_tower_production_readiness", control_tower_path),
         component("operator_control_tower_private_evidence_doctor", control_tower_doctor_path),
@@ -119,6 +125,10 @@ def build_readiness(
     if component_status.get("operator_control_tower_private_evidence_doctor") != "PASS":
         next_required_actions.append("replace private Control Tower placeholders with real cockpit/runtime evidence")
         next_required_actions.append("rerun operator_control_tower_private_evidence_doctor.py until it passes")
+    if component_status.get("prepilot_master_task_readiness") != "PASS":
+        next_required_actions.append("complete the 9-task prepilot readiness receipt")
+    if component_status.get("hermes_vfinal_runtime_status_check") != "PASS":
+        next_required_actions.append("rerun and pass the public-safe read-only Hermes runtime status check")
     if component_status.get("operator_control_tower_production_readiness") != "PASS":
         next_required_actions.append("run operator_control_tower_proof.py to create the production proof")
     if component_status.get("hermes_real_runtime_update_preflight") != "PASS":

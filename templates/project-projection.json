@@ -7,12 +7,35 @@
   "execution_started": false,
   "risk": "R2",
   "forecast_confidence": "blocked",
-  "current_blockers": ["missing repository write access"],
-  "pending_access": ["github_write"],
+  "current_blockers": [
+    "missing repository write access"
+  ],
+  "pending_access": [
+    "github_write"
+  ],
   "pending_approvals": [],
-  "next_steps": ["grant access", "rerun ready gate", "start execution"],
+  "next_steps": [
+    "grant access",
+    "rerun ready gate",
+    "start execution"
+  ],
   "evidence_refs": [],
   "source_runtime": "hermes",
   "source_board": "example-board",
-  "last_synced_at": "2026-06-09T00:00:00Z"
+  "last_synced_at": "2026-06-09T00:00:00Z",
+  "planned_summary": [
+    "source resolution",
+    "method contract",
+    "ready gate"
+  ],
+  "missing_items": [
+    "github write access"
+  ],
+  "forecast_risks": [
+    "access delay can move execution date"
+  ],
+  "human_decisions_required": [
+    "grant or deny access"
+  ],
+  "truth_source_available": true
 }

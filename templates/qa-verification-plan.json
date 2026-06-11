@@ -1,0 +1,13 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/qa-verification-plan.schema.json",
+  "record_type": "qa_verification_plan",
+  "qa_mode": "standard",
+  "surfaces": ["frontend", "api"],
+  "risk_effective": "R2",
+  "required_checks": ["unit tests", "integration smoke", "state coverage"],
+  "evidence_required": ["command output", "artifact refs", "pass/fail matrix"],
+  "loop_limit": 3,
+  "pass_rule": "All required checks pass or explicit waiver is attached.",
+  "block_rule": "Any failed required check blocks done until fixed or waived.",
+  "evidence_refs": ["qa-verification-plan.md"]
+}

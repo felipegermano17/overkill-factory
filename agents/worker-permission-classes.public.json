@@ -1,0 +1,173 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-permission-classes.schema.json",
+  "record_type": "worker_permission_classes",
+  "version": "factory-vfinal-prepilot-2026-06-11",
+  "source_of_truth": "Hermes Kanban remains the durable source of truth; this file defines public worker permission classes only.",
+  "global_rules": [
+    "No public worker may directly approve its own output.",
+    "No public worker may directly mutate final card state; state changes go through Hermes adapter gates and durable events.",
+    "No public worker may touch production, signing authority, funds, secrets, cloud IAM, DNS, KMS or destructive cleanup without the matching human or runtime gate.",
+    "Discord is an operator cockpit only; it may request, display and record decisions, but Hermes remains authoritative.",
+    "Evidence must be public-safe before it is written to this repository."
+  ],
+  "classes": {
+    "orchestrator": {
+      "label": "Orchestrator",
+      "plain_purpose": "Keeps phase, risk, routing and blocked/ready decisions coherent.",
+      "may": ["route work", "request specialist packets", "block unsafe progression"],
+      "must_not": ["approve final gates", "execute implementation", "hide missing evidence"],
+      "evidence_required": ["routing summary", "blocked reason when blocked", "worker graph refs"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "memory_context": {
+      "label": "Memory and Context",
+      "plain_purpose": "Organizes sources, memory and context without turning memory into truth.",
+      "may": ["classify source status", "summarize context", "flag conflicts"],
+      "must_not": ["promote decisions alone", "overwrite product truth", "store private source material in public artifacts"],
+      "evidence_required": ["source summary", "conflict list", "public-safe references"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "planner": {
+      "label": "Planner",
+      "plain_purpose": "Turns approved inputs into plans, architecture, work graphs or documentation.",
+      "may": ["draft plans", "draft architecture", "create decomposition candidates"],
+      "must_not": ["implement its own plan", "skip gates", "approve architecture alone"],
+      "evidence_required": ["plan result", "assumptions", "open blockers"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "builder": {
+      "label": "Builder",
+      "plain_purpose": "Implements scoped, approved work.",
+      "may": ["edit approved files", "run scoped tests", "produce implementation evidence"],
+      "must_not": ["approve its own work", "expand scope silently", "deploy production without release gate"],
+      "evidence_required": ["changed scope", "test results", "rollback note when relevant"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "reviewer": {
+      "label": "Reviewer",
+      "plain_purpose": "Checks output and evidence independently.",
+      "may": ["review evidence", "find blockers", "recommend pass or block"],
+      "must_not": ["fix and approve the same work as sole reviewer", "waive human gates", "invent evidence"],
+      "evidence_required": ["review result", "findings", "residual risks"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "security_reviewer": {
+      "label": "Security Reviewer",
+      "plain_purpose": "Reviews security, privacy, supply chain, cloud, keys and agent boundaries.",
+      "may": ["scan", "threat-model", "veto unsafe progression"],
+      "must_not": ["forgive blocking findings alone", "touch secrets or funds", "turn preflight into release approval"],
+      "evidence_required": ["security result", "blocking findings", "waiver requirements"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "remote_proof": {
+      "label": "Remote Proof",
+      "plain_purpose": "Runs bounded proof in a disposable or controlled environment.",
+      "may": ["create bounded proof runs", "record setup and cleanup", "prove environment behavior"],
+      "must_not": ["receive secrets by default", "leave workers or resources running", "reuse proof as production approval"],
+      "evidence_required": ["ttl", "cleanup status", "artifact refs"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "release_operator": {
+      "label": "Release Operator",
+      "plain_purpose": "Prepares release, rollback and production readiness evidence.",
+      "may": ["assemble release packet", "check rollback path", "prepare monitoring evidence"],
+      "must_not": ["release without gate", "change production authority", "bypass human approval"],
+      "evidence_required": ["release checklist", "rollback proof", "monitoring proof"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "human_record": {
+      "label": "Human Record",
+      "plain_purpose": "Records a real human decision in durable form.",
+      "may": ["record explicit approval or rejection", "link decision to evidence", "flag ambiguous decisions"],
+      "must_not": ["invent approval", "interpret silence as approval", "approve on behalf of the owner"],
+      "evidence_required": ["decision record", "decider ref", "scope and consequence"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "discord_interface": {
+      "label": "Discord Interface",
+      "plain_purpose": "Talks to the human operator and presents the cockpit.",
+      "may": ["explain state", "receive input", "ask for decisions", "send public-safe status"],
+      "must_not": ["choose specialists outside Kanban", "mark work done", "store Discord as source of truth"],
+      "evidence_required": ["message intent", "Hermes event ref when applicable", "public-safe summary"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "bridge": {
+      "label": "Bridge",
+      "plain_purpose": "Maps Hermes events to Discord and Discord responses back to durable runtime events.",
+      "may": ["map channels and topics", "emit bridge health", "register operator response events"],
+      "must_not": ["decide product direction", "execute workers", "change card state without adapter contract"],
+      "evidence_required": ["mapping proof", "round-trip proof", "bridge health"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    },
+    "read_only_projection": {
+      "label": "Read-only Projection",
+      "plain_purpose": "Turns runtime state into a human-readable cockpit view.",
+      "may": ["read state", "summarize status", "forecast next visible steps"],
+      "must_not": ["change status", "approve gates", "hide blocked work"],
+      "evidence_required": ["source state ref", "projection result", "staleness note"],
+      "can_mutate_card_state": false,
+      "can_approve_final_gate": false
+    }
+  },
+  "worker_assignments": {
+    "factory-orchestrator": "orchestrator",
+    "source-ledger-worker": "memory_context",
+    "product-sot-planner": "planner",
+    "product-architect": "planner",
+    "product-face": "reviewer",
+    "solana-quasar-auditor": "security_reviewer",
+    "codex-security": "security_reviewer",
+    "appsec-owasp-specialist": "security_reviewer",
+    "agentic-ai-security-specialist": "security_reviewer",
+    "autoreview-gate": "reviewer",
+    "remote-proof-runner": "remote_proof",
+    "handoff-packer": "planner",
+    "independent-reviewer": "reviewer",
+    "evidence-reconciler": "reviewer",
+    "human-gate-clerk": "human_record",
+    "docs-os-worker": "planner",
+    "decomposition-planner": "planner",
+    "implementation-worker": "builder",
+    "frontend-builder": "builder",
+    "backend-api-builder": "builder",
+    "data-persistence-builder": "builder",
+    "solana-quasar-builder": "builder",
+    "solana-quasar-qa-engineer": "reviewer",
+    "wallet-transaction-builder": "builder",
+    "integration-builder": "builder",
+    "test-automation-builder": "builder",
+    "infra-devops-builder": "builder",
+    "agent-runtime-builder": "builder",
+    "qa-verification-worker": "reviewer",
+    "security-orchestrator": "security_reviewer",
+    "cloud-infra-security-specialist": "security_reviewer",
+    "crypto-key-management-specialist": "security_reviewer",
+    "release-ops-worker": "release_operator",
+    "memory-steward": "memory_context",
+    "skill-eval-distiller": "planner",
+    "public-safety-gate": "security_reviewer",
+    "supply-chain-gate": "security_reviewer",
+    "detection-monitoring-worker": "security_reviewer",
+    "control-tower-projection-worker": "read_only_projection",
+    "discord-control-tower-bridge": "bridge"
+  },
+  "gateway_profile_assignments": {
+    "overkill-factory-gerente": "discord_interface"
+  },
+  "limits": [
+    "This public matrix describes permission intent and required evidence. Runtime enforcement still lives in Hermes profiles, adapter gates, worker packets and human gates.",
+    "Adding a worker requires assigning a permission class before the profile is considered production-ready.",
+    "Granting production, signing, cloud or secret-bearing authority requires a separate gate and proof."
+  ]
+}

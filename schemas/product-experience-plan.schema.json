@@ -3,14 +3,87 @@
   "$id": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json",
   "title": "Overkill Factory Product Experience Plan",
   "type": "object",
-  "required": ["surface_type", "surface_pack", "states", "proof_required"],
+  "required": [
+    "surface_type",
+    "surface_pack",
+    "states",
+    "proof_required",
+    "experience_sot",
+    "prototype_decision",
+    "flows",
+    "docs_onboarding",
+    "experience_qa",
+    "product_face_result_required",
+    "reviewer_roles"
+  ],
   "properties": {
-    "surface_type": { "type": "string", "minLength": 2 },
-    "surface_pack": { "type": "string", "minLength": 2 },
-    "states": { "type": "array", "items": { "type": "string" } },
-    "proof_required": { "type": "array", "items": { "type": "string" } },
-    "accessibility_checks": { "type": "array", "items": { "type": "string" } },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "surface_type": {
+      "type": "string",
+      "minLength": 2
+    },
+    "surface_pack": {
+      "type": "string",
+      "minLength": 2
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "proof_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "accessibility_checks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "experience_sot": {
+      "type": "string",
+      "minLength": 3
+    },
+    "prototype_decision": {
+      "type": "string",
+      "minLength": 3
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "docs_onboarding": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "experience_qa": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "product_face_result_required": {
+      "type": "boolean"
+    },
+    "reviewer_roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "additionalProperties": true
 }

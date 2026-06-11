@@ -3,28 +3,103 @@
   "$id": "https://overkill-factory.dev/schemas/worker-closure-summary.schema.json",
   "title": "Overkill Factory Worker Closure Summary",
   "type": "object",
-  "required": ["record_type", "scope", "workers", "result"],
+  "required": [
+    "record_type",
+    "scope",
+    "workers",
+    "result",
+    "request_summary",
+    "delivery_summary",
+    "proof_refs",
+    "remaining_risks",
+    "waivers",
+    "approved_scope",
+    "forbidden_scope",
+    "next_step"
+  ],
   "properties": {
-    "record_type": { "const": "worker_closure_summary" },
-    "scope": { "type": "string", "minLength": 3 },
+    "record_type": {
+      "const": "worker_closure_summary"
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 3
+    },
     "workers": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
-        "required": ["required_by_gate_report", "result", "evidence_refs"],
+        "required": [
+          "required_by_gate_report",
+          "result",
+          "evidence_refs"
+        ],
         "properties": {
-          "required_by_gate_report": { "type": "boolean" },
-          "result": { "type": "string", "minLength": 3 },
+          "required_by_gate_report": {
+            "type": "boolean"
+          },
+          "result": {
+            "type": "string",
+            "minLength": 3
+          },
           "evidence_refs": {
             "type": "array",
             "minItems": 1,
-            "items": { "type": "string", "minLength": 3 }
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
           }
         },
         "additionalProperties": true
       }
     },
-    "result": { "type": "string", "minLength": 3 }
+    "result": {
+      "type": "string",
+      "minLength": 3
+    },
+    "request_summary": {
+      "type": "string",
+      "minLength": 3
+    },
+    "delivery_summary": {
+      "type": "string",
+      "minLength": 3
+    },
+    "proof_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "remaining_risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "waivers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "approved_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_step": {
+      "type": "string",
+      "minLength": 3
+    }
   },
   "additionalProperties": true
 }

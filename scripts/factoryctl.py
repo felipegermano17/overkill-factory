@@ -20,6 +20,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
+CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
 
 CARD_REQUIRED = {
     "factory_method_version",
@@ -38,6 +39,32 @@ CARD_REQUIRED = {
     "done_definition",
     "transition_event_required",
     "kanban_transition_event_ref",
+}
+
+VFINAL_REQUEST_TYPES = {
+    "product_new",
+    "slice",
+    "feature",
+    "bug",
+    "incident",
+    "release",
+    "migration",
+    "integration",
+    "doc",
+    "security",
+    "ux_ui",
+    "data_analytics",
+    "agent_skill",
+}
+
+VFINAL_CORE_CONTRACTS = {
+    "request_type",
+    "outcome_contract",
+    "product_sot",
+    "method_contract",
+    "capability_pack_contract",
+    "spec_graph",
+    "loop_plan",
 }
 
 RECEIPT_REQUIRED = {
@@ -145,6 +172,8 @@ QUASAR_TOOLCHAIN_PROOF_REQUIRED = (
     "test_status",
     "evidence_refs",
 )
+CAPABILITY_READY_STATES = {"core_ready", "pack_ready"}
+CAPABILITY_ACTIVATED_STATES = {"ready", "activated"}
 
 
 @dataclass(frozen=True)
@@ -210,7 +239,7 @@ WORKERS: dict[str, WorkerDefinition] = {
             "Executor and reviewer must be different. Review is mandatory for R2+ "
             "work and whenever Receipt Five says reviewer_required=true."
         ),
-        required_inputs=("executor_identity", "reviewer_identity", "done_definition"),
+        required_inputs=("executor_identity", "reviewer_identity", "done_definition", "reviewer_selection_plan"),
     ),
     "evidence-reconciler": WorkerDefinition(
         worker_id="evidence-reconciler",
@@ -299,7 +328,14 @@ WORKERS: dict[str, WorkerDefinition] = {
         tool_required="Hermes card graph planner",
         timing="after Documentation OS and before worker packet creation",
         blocking_policy="Cards without source, risk, acceptance, runtime, reviewer and gate contracts are rejected.",
-        required_inputs=("done_definition", "risk_effective", "runtime_contract", "security_contract"),
+        required_inputs=(
+            "done_definition",
+            "risk_effective",
+            "runtime_contract",
+            "security_contract",
+            "loop_plan",
+            "software_development_plan",
+        ),
     ),
     "implementation-worker": WorkerDefinition(
         worker_id="implementation-worker",
@@ -409,7 +445,7 @@ WORKERS: dict[str, WorkerDefinition] = {
         tool_required="Hermes adapter tests, profile tooling and skill packaging",
         timing="during scoped factory/agent runtime implementation, before profile validation and agentic security review",
         blocking_policy="Agent runtime work must prove profile/binding/packet operability and cannot self-approve tool or memory risk.",
-        required_inputs=("runtime_contract", "security_contract", "scope_in", "done_definition"),
+        required_inputs=("runtime_contract", "security_contract", "scope_in", "done_definition", "agent_eval_plan"),
     ),
     "qa-verification-worker": WorkerDefinition(
         worker_id="qa-verification-worker",
@@ -529,7 +565,7 @@ WORKERS: dict[str, WorkerDefinition] = {
         tool_required="skill compactness, eval and held-out regression workflow",
         timing="after repeated workflow failures or successful repetition",
         blocking_policy="A closed specialist or skill update needs repetition, predictable input and verifiable output.",
-        required_inputs=("evidence_expected", "done_definition", "source_refs"),
+        required_inputs=("evidence_expected", "done_definition", "source_refs", "agent_eval_plan"),
     ),
     "public-safety-gate": WorkerDefinition(
         worker_id="public-safety-gate",
@@ -560,6 +596,32 @@ WORKERS: dict[str, WorkerDefinition] = {
         timing="before production promotion and after release smoke",
         blocking_policy="Stable production requires observability, alerting, incident owner and rollback evidence.",
         required_inputs=("rollback_or_recovery", "security_contract", "done_definition"),
+    ),
+    "control-tower-projection-worker": WorkerDefinition(
+        worker_id="control-tower-projection-worker",
+        worker_name="Control Tower Projection Worker",
+        factory_phase="F19",
+        output_field="project_projection_result",
+        tool_required="Hermes readback plus project projection renderer",
+        timing="when owner-facing visibility is active and before material work becomes invisible",
+        blocking_policy=(
+            "The owner-facing cockpit must mirror runtime state. Projection work cannot invent "
+            "status, hide blockers, or become the source of truth."
+        ),
+        required_inputs=("runtime_state_ref", "project_projection", "done_definition"),
+    ),
+    "discord-control-tower-bridge": WorkerDefinition(
+        worker_id="discord-control-tower-bridge",
+        worker_name="Discord Control Tower Bridge",
+        factory_phase="F19/F29",
+        output_field="control_tower_bridge_result",
+        tool_required="Discord mapping, runtime event bridge and bridge health contract",
+        timing="when a Discord Control Tower must show state or register owner responses",
+        blocking_policy=(
+            "Discord is a cockpit only. Structured owner responses must be registered in the "
+            "runtime and rejected when malformed, expired, wrong-role, or out of scope."
+        ),
+        required_inputs=("discord_control_tower_mapping", "control_tower_event", "runtime_registration_path"),
     ),
 }
 
@@ -592,6 +654,67 @@ def load_profile_bindings() -> dict[str, dict[str, Any]]:
     if missing:
         raise ValueError("profile binding manifest missing workers: " + ", ".join(missing))
     return loaded
+
+
+def load_capability_packs() -> dict[str, dict[str, Any]]:
+    if not CAPABILITY_PACKS_PATH.exists():
+        return {}
+    data = json.loads(CAPABILITY_PACKS_PATH.read_text(encoding="utf-8"))
+    packs = data.get("packs", {})
+    if not isinstance(packs, dict):
+        raise ValueError("capability pack registry must contain a packs object")
+    return {str(pack_id): pack for pack_id, pack in packs.items() if isinstance(pack, dict)}
+
+
+def _activated_capability_pack_ids(contract: Any) -> set[str]:
+    if not isinstance(contract, dict):
+        return set()
+    status = str(contract.get("status") or "").strip().lower()
+    ids: set[str] = set()
+    pack_id = str(contract.get("pack_id") or "").strip()
+    if pack_id and status in CAPABILITY_ACTIVATED_STATES:
+        ids.add(pack_id)
+    pack_ids = contract.get("pack_ids")
+    if isinstance(pack_ids, list) and status in CAPABILITY_ACTIVATED_STATES:
+        ids.update(str(value).strip() for value in pack_ids if str(value).strip())
+    return ids
+
+
+def validate_capability_coverage(card: dict[str, Any]) -> list[str]:
+    packs = load_capability_packs()
+    if not packs:
+        return []
+    surfaces = normalized_surfaces(card)
+    if not surfaces:
+        return []
+
+    strict = card.get("capability_coverage_required") is True
+    activated_pack_ids = _activated_capability_pack_ids(card.get("capability_pack_contract"))
+    errors: list[str] = []
+    covered_surfaces: set[str] = set()
+
+    for surface in sorted(surfaces):
+        matching = [
+            (pack_id, pack)
+            for pack_id, pack in packs.items()
+            if surface in {str(value).strip().lower() for value in pack.get("covers_surfaces", [])}
+        ]
+        if not matching:
+            if strict:
+                errors.append(f"capability pack missing for surface {surface!r}")
+            continue
+        covered_surfaces.add(surface)
+        ready = any(str(pack.get("status") or "").strip() in CAPABILITY_READY_STATES for _, pack in matching)
+        activated = any(pack_id in activated_pack_ids for pack_id, _ in matching)
+        if not ready and not activated:
+            pack_ids = ", ".join(pack_id for pack_id, _ in matching)
+            errors.append(
+                f"capability_pack_contract ready/activated is required for surface {surface!r}; candidate packs: {pack_ids}"
+            )
+
+    if strict and not covered_surfaces:
+        errors.append("capability_coverage_required=true but no card surface is covered by the capability pack registry")
+    return errors
 
 
 def worker_result_schema_path(worker_id: str) -> str:
@@ -638,6 +761,10 @@ def _non_empty_string_list(value: Any) -> bool:
     return isinstance(value, list) and any(str(item).strip() for item in value)
 
 
+def _non_empty_dict(value: Any) -> bool:
+    return isinstance(value, dict) and bool(value)
+
+
 def normalized_surfaces(card: dict[str, Any]) -> set[str]:
     raw = card.get("surfaces", [])
     if not isinstance(raw, list):
@@ -647,6 +774,34 @@ def normalized_surfaces(card: dict[str, Any]) -> set[str]:
 
 def risk(card: dict[str, Any]) -> str:
     return str(card.get("risk_effective", "")).strip().upper()
+
+
+def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
+    if data.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+
+    errors: list[str] = []
+    missing = sorted(field for field in VFINAL_CORE_CONTRACTS if field not in data)
+    if missing:
+        errors.append("OVERKILL_VFINAL card missing core contracts: " + ", ".join(missing))
+
+    request_type = str(data.get("request_type") or "").strip()
+    if request_type and request_type not in VFINAL_REQUEST_TYPES:
+        errors.append("request_type must be one of " + ", ".join(sorted(VFINAL_REQUEST_TYPES)))
+
+    for field in sorted(VFINAL_CORE_CONTRACTS - {"request_type"}):
+        if field in data and not _non_empty_dict(data.get(field)):
+            errors.append(f"OVERKILL_VFINAL {field} must be a non-empty object")
+
+    method_contract = data.get("method_contract") if isinstance(data.get("method_contract"), dict) else {}
+    required_plans = method_contract.get("required_plans") if isinstance(method_contract, dict) else []
+    if isinstance(required_plans, list):
+        for plan in required_plans:
+            field = str(plan).strip()
+            if field and field not in data:
+                errors.append(f"method_contract required plan {field} is missing from card")
+
+    return errors
 
 
 def validate_card(data: dict[str, Any]) -> list[str]:
@@ -663,6 +818,8 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     source_state = str(data.get("source_state", "")).strip()
     if source_state and source_state not in ALLOWED_SOURCE_STATES:
         errors.append("source_state must be one of " + ", ".join(sorted(ALLOWED_SOURCE_STATES)))
+    errors.extend(validate_vfinal_card_contract(data))
+    errors.extend(validate_capability_coverage(data))
     if data.get("executor_identity") == data.get("reviewer_identity"):
         errors.append("executor_identity and reviewer_identity must differ")
     if surfaces & PRODUCT_FACE_SURFACES and not isinstance(data.get("product_face_packet"), dict):
@@ -1173,6 +1330,45 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         required = phase in {"F16", "F17"} or bool(surfaces & detection_surfaces)
         reason = "monitoring/incident/release trigger detected" if required else "no detection/monitoring trigger"
         return required, reason
+    if worker_id == "control-tower-projection-worker":
+        control_tower_contract = card.get("control_tower_contract")
+        control_tower_surfaces = {
+            "control-tower",
+            "operator",
+            "operator-cockpit",
+            "discord",
+            "projection",
+            "status",
+            "forecast",
+            "blocker",
+            "approval",
+        }
+        required = (
+            phase == "F19"
+            or bool(surfaces & control_tower_surfaces)
+            or (isinstance(control_tower_contract, dict) and control_tower_contract.get("enabled") is True)
+        )
+        reason = "owner-facing Control Tower projection required" if required else "no Control Tower projection trigger"
+        return required, reason
+    if worker_id == "discord-control-tower-bridge":
+        control_tower_contract = card.get("control_tower_contract")
+        bridge_surfaces = {
+            "control-tower",
+            "discord",
+            "operator-cockpit",
+            "approval",
+            "access",
+            "blocker",
+            "health",
+            "runtime-registration",
+        }
+        required = (
+            phase in {"F19", "F29"}
+            or bool(surfaces & bridge_surfaces)
+            or (isinstance(control_tower_contract, dict) and control_tower_contract.get("discord_bridge_required") is True)
+        )
+        reason = "Discord Control Tower bridge required" if required else "no Discord bridge trigger"
+        return required, reason
     raise KeyError(worker_id)
 
 
@@ -1304,6 +1500,8 @@ BEFORE_READY_WORKERS = {
     "source-ledger-worker",
     "product-sot-planner",
     "product-architect",
+    "control-tower-projection-worker",
+    "discord-control-tower-bridge",
     "docs-os-worker",
     "decomposition-planner",
     "supply-chain-gate",

@@ -25,6 +25,7 @@ class WorktreeReleaseInventoryTest(unittest.TestCase):
         report = inventory.build_inventory(
             [
                 (" M", "README.md"),
+                ("??", ".env.example"),
                 ("??", "schemas/example.schema.json"),
                 ("??", "scripts/example.py"),
             ],
@@ -32,7 +33,7 @@ class WorktreeReleaseInventoryTest(unittest.TestCase):
         )
 
         self.assertEqual(report["result"], "ATTENTION")
-        self.assertEqual(report["cleanup_policy"]["release_candidate_entries"], 3)
+        self.assertEqual(report["cleanup_policy"]["release_candidate_entries"], 4)
         self.assertEqual(report["cleanup_policy"]["safe_cleanup_candidates"], 0)
         self.assertFalse(report["cleanup_policy"]["broad_cleanup_allowed"])
 

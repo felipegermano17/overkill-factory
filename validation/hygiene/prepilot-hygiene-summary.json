@@ -1,0 +1,55 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/prepilot-hygiene-summary.schema.json",
+  "record_type": "prepilot_hygiene_summary",
+  "created_at": "2026-06-11T05:56:00Z",
+  "result": "ATTENTION",
+  "scope": "Public-safe hygiene summary before the first real Overkill Factory pilot.",
+  "checks": {
+    "repo_ignored_junk_removed": true,
+    "repo_inventory_has_no_unknown_entries": true,
+    "repo_inventory_has_no_cleanup_candidates": true,
+    "public_safety_passed": true,
+    "secret_safety_passed": true,
+    "minimal_example_ready": true,
+    "hermes_gateway_readonly_passed": true,
+    "discord_gateway_configured": true,
+    "kanban_has_no_ready_or_running_factory_tasks": true,
+    "release_worktree_integrated": false
+  },
+  "repo_inventory_summary": {
+    "entries": 110,
+    "modified": 59,
+    "untracked": 51,
+    "release_candidate_entries": 107,
+    "generated_receipt_entries": 3,
+    "needs_human_review_entries": 0,
+    "safe_cleanup_candidates": 0,
+    "blocking_items": []
+  },
+  "safe_cleanup_performed": [
+    "removed ignored local validation outputs under .tmp",
+    "removed Python cache directories under adapters, scripts and tests"
+  ],
+  "attention_items": [
+    "release candidate material is public-safe but not integrated into the target release ref",
+    "do not start the pilot from an ambiguous dirty worktree without an explicit operator decision"
+  ],
+  "must_not_clean_automatically": [
+    "untracked vFinal schemas, docs, tests, templates and validation receipts are release material, not trash",
+    "blocked Hermes/Kanban tasks can be intentional gates and must not be archived as cleanup without owner review",
+    "Codex memory, skills, plugin caches and private evidence stores must not be deleted by repo cleanup"
+  ],
+  "evidence_refs": [
+    "validation/release/worktree-release-inventory.json",
+    "validation/release/release-integration-preflight.json",
+    "validation/hermes-live/factory-vfinal-runtime-status-check.json",
+    "validation/prepilot/master-task-readiness.json",
+    "tests/test_open_source_docs.py",
+    "tests/test_worktree_release_inventory.py"
+  ],
+  "next_required_actions": [
+    "stage, commit and review the public-safe release candidate worktree",
+    "rerun release integration preflight on the committed target ref",
+    "rerun safety scans after any additional Hermes or Discord cleanup mutation"
+  ]
+}

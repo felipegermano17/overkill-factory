@@ -1,0 +1,16 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/spec-graph.schema.json",
+  "requirements": ["requirement or card objective"],
+  "outcome_links": ["outcome-contract field or Product SOT ref"],
+  "examples": ["acceptance example or scenario"],
+  "decisions": ["decision packet or ADR ref"],
+  "risks": ["risk and owner"],
+  "dependencies": ["dependency map ref"],
+  "access_needs": ["access/capability ref"],
+  "security_architecture_refs": ["security-architecture-plan ref"],
+  "data_refs": ["data-metrics-plan ref"],
+  "gates": ["Ready Gate", "Review Gate", "Done Gate"],
+  "workers": ["factory-orchestrator", "decomposition-planner", "qa-verification-worker"],
+  "proofs": ["test output", "review result", "Receipt Five"],
+  "evidence_refs": ["spec-graph.md"]
+}

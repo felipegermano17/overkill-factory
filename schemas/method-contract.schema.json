@@ -9,15 +9,124 @@
     "risk_tier",
     "required_plans",
     "required_gates",
-    "waivers"
+    "waivers",
+    "work_type",
+    "selected_methods",
+    "skipped_methods",
+    "required_artifacts",
+    "required_workers",
+    "reviewers",
+    "evidence_requirements",
+    "authority_limit",
+    "done_criteria"
   ],
   "properties": {
-    "selected_method": { "type": "string", "minLength": 3 },
-    "why_this_method": { "type": "string", "minLength": 3 },
-    "risk_tier": { "enum": ["R0", "R1", "R2", "R3", "R4"] },
-    "required_plans": { "type": "array", "items": { "type": "string" } },
-    "required_gates": { "type": "array", "items": { "type": "string" } },
-    "waivers": { "type": "array", "items": { "type": "object" } }
+    "selected_method": {
+      "type": "string",
+      "minLength": 3
+    },
+    "why_this_method": {
+      "type": "string",
+      "minLength": 3
+    },
+    "risk_tier": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ]
+    },
+    "required_plans": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "waivers": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "work_type": {
+      "type": "string",
+      "minLength": 3
+    },
+    "selected_methods": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 2
+      }
+    },
+    "skipped_methods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "method",
+          "reason"
+        ],
+        "properties": {
+          "method": {
+            "type": "string",
+            "minLength": 2
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "required_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 2
+      }
+    },
+    "required_workers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "reviewers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "evidence_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "authority_limit": {
+      "type": "string",
+      "minLength": 3
+    },
+    "done_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    }
   },
   "additionalProperties": true
 }

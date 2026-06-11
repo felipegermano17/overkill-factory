@@ -255,6 +255,29 @@ class FactoryCtlTest(unittest.TestCase):
         card = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md")
         self.assertEqual(factoryctl.validate_card(card), [])
 
+    def test_vfinal_card_requires_core_canonical_contracts(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        self.assertEqual(factoryctl.validate_card(card), [])
+
+        incomplete = dict(card)
+        incomplete.pop("product_sot")
+        incomplete.pop("spec_graph")
+
+        errors = factoryctl.validate_card(incomplete)
+
+        self.assertIn("OVERKILL_VFINAL card missing core contracts: product_sot, spec_graph", errors)
+
+    def test_vfinal_method_contract_requires_named_plan_fields(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["method_contract"] = dict(card["method_contract"])
+        card["method_contract"]["required_plans"] = ["software_development_plan", "agent_eval_plan"]
+        card.pop("agent_eval_plan", None)
+
+        self.assertIn(
+            "method_contract required plan agent_eval_plan is missing from card",
+            factoryctl.validate_card(card),
+        )
+
     def test_product_face_decomposition_requires_result_ref(self) -> None:
         card = dict(factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md"))
         card["phase"] = "F11"

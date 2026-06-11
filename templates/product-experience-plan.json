@@ -2,8 +2,42 @@
   "$schema": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json",
   "surface_type": "web app",
   "surface_pack": "web-app-surface-pack",
-  "states": ["empty", "loading", "success", "error"],
-  "proof_required": ["desktop screenshot", "mobile screenshot", "keyboard/a11y check"],
-  "accessibility_checks": ["labels", "contrast", "keyboard"],
-  "evidence_refs": ["product-experience-plan.md"]
+  "states": [
+    "empty",
+    "loading",
+    "success",
+    "error"
+  ],
+  "proof_required": [
+    "desktop screenshot",
+    "mobile screenshot",
+    "keyboard/a11y check"
+  ],
+  "accessibility_checks": [
+    "labels",
+    "contrast",
+    "keyboard"
+  ],
+  "evidence_refs": [
+    "product-experience-plan.md"
+  ],
+  "experience_sot": "What the user must be able to understand and accomplish.",
+  "prototype_decision": "prototype_not_required because flow is known; update when uncertainty exists",
+  "flows": [
+    "primary happy path",
+    "empty/loading/error path"
+  ],
+  "docs_onboarding": [
+    "first-use guidance if needed"
+  ],
+  "experience_qa": [
+    "responsive proof",
+    "state coverage",
+    "a11y basics"
+  ],
+  "product_face_result_required": true,
+  "reviewer_roles": [
+    "product-face",
+    "qa-verification-worker"
+  ]
 }

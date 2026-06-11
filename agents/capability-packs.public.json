@@ -1,0 +1,295 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/capability-pack-registry.schema.json",
+  "record_type": "capability_pack_registry",
+  "version": "factory-vfinal-prepilot-2026-06-11",
+  "global_rules": [
+    "A raw paper must pass capability coverage before material execution starts.",
+    "Generic implementation workers may not replace a missing domain specialist.",
+    "Core-ready packs can execute with existing workers.",
+    "Pack templates are not execution approval; they become usable only after specialist workers, permissions, evals, review and Hermes binding are created.",
+    "If a surface is unknown and capability_coverage_required=true, the card must block until a pack is created or explicitly waived by a human gate."
+  ],
+  "packs": {
+    "web-saas-core": {
+      "pack_id": "web-saas-core",
+      "status": "core_ready",
+      "plain_purpose": "Covers ordinary web apps, SaaS products, APIs, persistence, auth, integration, tests, docs, release and monitoring.",
+      "covers_surfaces": [
+        "code",
+        "implementation",
+        "frontend",
+        "browser",
+        "component",
+        "screen",
+        "ux",
+        "product-face",
+        "mobile",
+        "wallet-ui",
+        "backend",
+        "api",
+        "auth",
+        "session",
+        "server",
+        "service",
+        "database",
+        "data",
+        "schema",
+        "migration",
+        "storage",
+        "persistence",
+        "rls",
+        "integration",
+        "fullstack",
+        "full-stack",
+        "end-to-end",
+        "e2e",
+        "test",
+        "tests",
+        "qa",
+        "regression",
+        "docs",
+        "documentation"
+      ],
+      "existing_workers": [
+        "product-face",
+        "frontend-builder",
+        "backend-api-builder",
+        "data-persistence-builder",
+        "integration-builder",
+        "test-automation-builder",
+        "qa-verification-worker",
+        "docs-os-worker",
+        "release-ops-worker",
+        "detection-monitoring-worker"
+      ],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available by default for ordinary web/product software when no specialized template-only surface is present.",
+      "evidence_required": ["factoryctl gate report", "worker packets", "Receipt Five"],
+      "reference_sources": ["ring dev-team", "gstack qa/review/ship", "aiox-core development agents"]
+    },
+    "cloud-native-core": {
+      "pack_id": "cloud-native-core",
+      "status": "core_ready",
+      "plain_purpose": "Covers CI/CD, runtime, deploy wiring, cloud security, observability and rollback planning.",
+      "covers_surfaces": ["infra", "devops", "deploy", "ci", "cd", "cicd", "runtime", "environment", "workflow", "cloud", "iam", "kms", "dns", "monitoring", "observability", "logs", "alerting", "incident", "release", "rollback", "production"],
+      "existing_workers": ["infra-devops-builder", "cloud-infra-security-specialist", "supply-chain-gate", "release-ops-worker", "detection-monitoring-worker", "remote-proof-runner"],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available by default for non-secret cloud/runtime wiring; production authority still requires human and release gates.",
+      "evidence_required": ["runtime contract", "rollback proof", "monitoring proof"],
+      "reference_sources": ["ring devops/sre/obs-reviewer", "gstack canary/land-and-deploy"]
+    },
+    "agent-runtime-core": {
+      "pack_id": "agent-runtime-core",
+      "status": "core_ready",
+      "plain_purpose": "Covers Hermes, agents, skills, MCP, browser/memory/tool-risk and autonomous workflow changes.",
+      "covers_surfaces": ["agent", "agents", "agent design", "llm", "prompt", "memory", "tools", "mcp", "hermes", "factory", "adapter", "profile", "skill", "autonomous"],
+      "existing_workers": ["agent-runtime-builder", "agentic-ai-security-specialist", "memory-steward", "skill-eval-distiller", "qa-verification-worker", "independent-reviewer"],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available by default after agent_eval_plan, permission class and reviewer separation exist.",
+      "evidence_required": ["agent eval plan", "permission class", "security handoff", "profile/binding refs"],
+      "reference_sources": ["ring prompt-reviewer", "mattpocock/skills", "orca workflow/review"]
+    },
+    "solana-quasar-core": {
+      "pack_id": "solana-quasar-core",
+      "status": "core_ready",
+      "plain_purpose": "Covers Quasar-first Solana program work, PDA/CPI/account maps, compute units, wallet transactions and onchain QA.",
+      "covers_surfaces": ["solana", "solana-quasar", "quasar", "onchain", "program", "instruction", "pda", "account-pda", "cpi", "compute-units", "simulation", "devnet", "wallet", "transaction", "transactions", "signing", "funds", "mainnet"],
+      "existing_workers": ["solana-quasar-builder", "solana-quasar-qa-engineer", "solana-quasar-auditor", "wallet-transaction-builder", "crypto-key-management-specialist", "codex-security"],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available for Quasar-first work only; Anchor or Pinocchio require a separate optional pack and human decision.",
+      "evidence_required": ["onchain work package", "Auditor result", "signer boundary", "Quasar proof"],
+      "reference_sources": ["solanabr/solana-claude", "ring security-reviewer"]
+    },
+    "mobile-app-pack": {
+      "pack_id": "mobile-app-pack",
+      "status": "pack_template",
+      "plain_purpose": "Covers native or React Native mobile apps, device UX, app-store constraints, mobile wallet flows and mobile performance.",
+      "covers_surfaces": ["ios", "android", "react-native", "expo", "mobile-wallet", "deep-linking", "app-store", "play-store"],
+      "existing_workers": ["frontend-builder", "product-face", "qa-verification-worker", "wallet-transaction-builder"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "mobile-app-builder",
+          "why_needed": "Mobile apps need device lifecycle, native packaging, store constraints and mobile-specific performance ownership.",
+          "promotion_condition": "Create profile, permission class, mobile eval, simulator/device smoke and Product Face mobile proof."
+        },
+        {
+          "worker_id": "mobile-qa-specialist",
+          "why_needed": "Mobile execution needs device/simulator QA, deep-link, offline, permission and app lifecycle coverage.",
+          "promotion_condition": "Add mobile QA plan, simulator proof, accessibility proof and release checklist."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Block material mobile execution until the pack is activated or explicitly waived with a human gate.",
+      "evidence_required": ["mobile architecture packet", "device/simulator smoke", "mobile Product Face result"],
+      "reference_sources": ["solana-claude mobile-engineer", "gstack ios-qa/ios-fix/ios-design-review"]
+    },
+    "desktop-app-pack": {
+      "pack_id": "desktop-app-pack",
+      "status": "pack_template",
+      "plain_purpose": "Covers desktop apps, local runtime, installers, OS permissions, auto-update, packaging and desktop UX.",
+      "covers_surfaces": ["desktop", "electron", "tauri", "macos", "windows", "linux-desktop", "installer", "auto-update"],
+      "existing_workers": ["frontend-builder", "product-face", "infra-devops-builder", "qa-verification-worker"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "desktop-app-builder",
+          "why_needed": "Desktop products need packaging, OS integration, permissions and update-path ownership.",
+          "promotion_condition": "Create profile, packaging proof, installer smoke, rollback/update proof and desktop Product Face proof."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Block desktop execution until the pack is activated for the selected runtime.",
+      "evidence_required": ["desktop runtime decision", "packaging proof", "desktop QA proof"],
+      "reference_sources": ["ring dev-team frontend/devops", "gstack design-review/qa"]
+    },
+    "game-product-pack": {
+      "pack_id": "game-product-pack",
+      "status": "pack_template",
+      "plain_purpose": "Covers playable games, 2D/3D runtime, gameplay systems, asset pipeline, performance, economy and playtest loops.",
+      "covers_surfaces": ["game", "game-like", "2d", "3d", "threejs", "phaser", "unity", "unreal", "gameplay", "asset-pipeline", "economy", "playtest"],
+      "existing_workers": ["product-face", "frontend-builder", "qa-verification-worker", "test-automation-builder"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "game-runtime-builder",
+          "why_needed": "Games need runtime loop, physics/rendering, input, performance and asset-pipeline ownership.",
+          "promotion_condition": "Create runtime profile, playable smoke, FPS/performance proof and rollbackable asset pipeline."
+        },
+        {
+          "worker_id": "game-design-specialist",
+          "why_needed": "Playable products need mechanics, progression, feedback, onboarding and fun/clarity review.",
+          "promotion_condition": "Create design eval, playtest checklist and independent game UX review."
+        },
+        {
+          "worker_id": "game-qa-specialist",
+          "why_needed": "Game QA needs playtest, input, timing, frame, save-state and edge-case coverage.",
+          "promotion_condition": "Create playtest protocol, automated smoke and performance budget evidence."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Block game execution until the game pack is activated for 2D, 3D, web, mobile or onchain game scope.",
+      "evidence_required": ["game design packet", "runtime choice", "playable smoke", "performance budget"],
+      "reference_sources": ["solana-claude game-architect/unity-engineer", "gstack design-shotgun/design-review/qa"]
+    },
+    "ai-ml-product-pack": {
+      "pack_id": "ai-ml-product-pack",
+      "status": "pack_template",
+      "plain_purpose": "Covers AI/ML products, model selection, RAG, evaluation, data quality, prompt/tool safety and model monitoring.",
+      "covers_surfaces": ["ai", "ml", "model", "rag", "embedding", "embeddings", "vector-search", "fine-tuning", "classifier", "inference", "evaluation", "eval"],
+      "existing_workers": ["agent-runtime-builder", "agentic-ai-security-specialist", "data-persistence-builder", "qa-verification-worker", "skill-eval-distiller"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "ai-ml-product-builder",
+          "why_needed": "AI products need model/data/eval ownership beyond generic agent runtime work.",
+          "promotion_condition": "Create eval harness, model/data contract, safety review and monitoring proof."
+        },
+        {
+          "worker_id": "model-eval-worker",
+          "why_needed": "Model behavior must be evaluated with positive, negative, abuse, drift and regression cases.",
+          "promotion_condition": "Create dataset/eval schema, baseline, regression suite and reviewer separation."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Block AI/ML execution until model/data/eval contracts are activated.",
+      "evidence_required": ["model contract", "eval plan", "data policy", "safety review"],
+      "reference_sources": ["gstack benchmark-models/ML prompt-injection designs", "ring prompt-reviewer", "mattpocock/skills"]
+    },
+    "fintech-payments-pack": {
+      "pack_id": "fintech-payments-pack",
+      "status": "pack_template",
+      "plain_purpose": "Covers payments, ledgers, billing, reconciliation, financial correctness, fraud and compliance-sensitive money movement.",
+      "covers_surfaces": ["payment", "payments", "billing", "subscription", "ledger", "reconciliation", "fintech", "fraud", "kyc", "aml", "money"],
+      "existing_workers": ["backend-api-builder", "data-persistence-builder", "appsec-owasp-specialist", "crypto-key-management-specialist", "codex-security", "human-gate-clerk"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "payments-ledger-builder",
+          "why_needed": "Money movement needs ledger invariants, idempotency, reconciliation and refund/chargeback ownership.",
+          "promotion_condition": "Create ledger invariant tests, idempotency proof, reconciliation proof and human release gate."
+        },
+        {
+          "worker_id": "fintech-risk-specialist",
+          "why_needed": "Fintech work needs fraud, compliance, privacy and operational risk review before execution.",
+          "promotion_condition": "Create risk checklist, compliance matrix and independent review evidence."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Block fintech/payment execution until the pack is activated and human/security gates exist.",
+      "evidence_required": ["ledger model", "risk matrix", "security scan", "human gate"],
+      "reference_sources": ["ring tenancy/security/logic reviewers", "gstack cso/review"]
+    },
+    "regulated-domain-pack": {
+      "pack_id": "regulated-domain-pack",
+      "status": "pack_template",
+      "plain_purpose": "Covers domains where product correctness depends on regulation or high-stakes domain rules.",
+      "covers_surfaces": ["legal", "medical", "healthcare", "insurance", "education", "compliance", "privacy-regulated", "regulated"],
+      "existing_workers": ["product-sot-planner", "product-architect", "codex-security", "human-gate-clerk", "docs-os-worker"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "domain-compliance-specialist",
+          "why_needed": "Regulated products need domain-specific legal/compliance boundaries before implementation.",
+          "promotion_condition": "Create jurisdiction/domain evidence packet, compliance review, human gate and scope-limited disclaimers."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Block regulated-domain execution until a domain compliance pack is created for the exact jurisdiction and product class.",
+      "evidence_required": ["domain risk packet", "compliance owner", "human gate", "scope boundaries"],
+      "reference_sources": ["aiox-core analyst/pm/po gating", "ring product/PM standards"]
+    },
+    "data-analytics-pack": {
+      "pack_id": "data-analytics-pack",
+      "status": "pack_template",
+      "plain_purpose": "Covers analytics, ETL, metrics, dashboards, data quality, warehousing and BI surfaces.",
+      "covers_surfaces": ["analytics", "bi", "dashboard", "metrics", "etl", "data-pipeline", "warehouse", "reporting"],
+      "existing_workers": ["data-persistence-builder", "backend-api-builder", "detection-monitoring-worker", "docs-os-worker"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "data-analytics-builder",
+          "why_needed": "Analytics products need metric definitions, data quality, lineage and dashboard correctness.",
+          "promotion_condition": "Create metric contract, data quality tests, lineage proof and dashboard proof."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Block analytics-heavy execution until metric/data contracts are activated.",
+      "evidence_required": ["metric definitions", "data quality checks", "lineage note", "dashboard proof"],
+      "reference_sources": ["aiox-core data-engineer", "ring creating-grafana-dashboard skills"]
+    },
+    "browser-extension-pack": {
+      "pack_id": "browser-extension-pack",
+      "status": "pack_template",
+      "plain_purpose": "Covers browser extensions, Manifest V3, content scripts, extension permissions and store packaging.",
+      "covers_surfaces": ["browser-extension", "chrome-extension", "extension", "manifest-v3", "content-script"],
+      "existing_workers": ["frontend-builder", "agentic-ai-security-specialist", "product-face", "qa-verification-worker"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "browser-extension-builder",
+          "why_needed": "Extensions need permission, content-script, background/service worker and store review ownership.",
+          "promotion_condition": "Create extension profile, permission review, browser smoke and packaging proof."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Block extension execution until extension-specific security and packaging proof exist.",
+      "evidence_required": ["permission review", "browser smoke", "packaging proof"],
+      "reference_sources": ["gstack browser/sidebar designs", "ring prompt/security reviewers"]
+    },
+    "hardware-iot-pack": {
+      "pack_id": "hardware-iot-pack",
+      "status": "blocked_until_installed",
+      "plain_purpose": "Covers hardware, IoT, firmware, robotics and physical-device products.",
+      "covers_surfaces": ["hardware", "iot", "firmware", "robotics", "device", "embedded"],
+      "existing_workers": ["product-architect", "security-orchestrator", "human-gate-clerk"],
+      "missing_worker_templates": [
+        {
+          "worker_id": "hardware-iot-specialist",
+          "why_needed": "Physical products need device, firmware, safety and hardware test ownership not present in the current factory.",
+          "promotion_condition": "Create domain expert pack with hardware test bench, safety review and rollback/recovery model."
+        }
+      ],
+      "required_before_execution": true,
+      "activation_rule": "Always block until a dedicated hardware/IoT pack is installed for the exact product.",
+      "evidence_required": ["hardware safety packet", "device test plan", "domain expert review"],
+      "reference_sources": ["aiox-core architecture gates", "ring production-readiness patterns"]
+    }
+  }
+}

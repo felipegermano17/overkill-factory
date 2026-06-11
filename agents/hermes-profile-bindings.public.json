@@ -1146,6 +1146,69 @@
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
       "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "control-tower-projection-worker": {
+      "worker_id": "control-tower-projection-worker",
+      "profile_id": "control-tower-projection-worker.profile.v1",
+      "hermes_profile_name": "control-tower-projection-worker",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "project_projection_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Projection evidence must use repo-relative or redacted refs; raw runtime and Discord identifiers stay private.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready",
+          "advisory-review"
+        ]
+      },
+      "routing_moments": [
+        "control-tower-projection",
+        "operator-visibility",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    },
+    "discord-control-tower-bridge": {
+      "worker_id": "discord-control-tower-bridge",
+      "profile_id": "discord-control-tower-bridge.profile.v1",
+      "hermes_profile_name": "discord-control-tower-bridge",
+      "skill_refs": [
+        "overkill-factory",
+        "hermes-kanban"
+      ],
+      "result_schema": "schemas/worker-result.schema.json",
+      "receipt_field": "control_tower_bridge_result",
+      "can_mutate_card_state": false,
+      "evidence_path_policy": "Bridge evidence must use redacted or external refs; raw Discord ids, URLs, tokens, logs and runtime ids stay private.",
+      "dispatch_queue_policy": {
+        "source_of_truth": "factoryctl.worker_queue_class",
+        "default_queue": "blocking-before-ready",
+        "allowed_effective_queues": [
+          "blocking-before-ready",
+          "advisory-review"
+        ]
+      },
+      "routing_moments": [
+        "approval-registration",
+        "operator-visibility",
+        "bridge-health",
+        "pre-release"
+      ],
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
     }
   }
 }

@@ -50,7 +50,7 @@ SECURITY_CRITICAL_WORKERS = {
     "detection-monitoring-worker",
 }
 
-ALLOWED_PHASES = {f"F{index}" for index in range(19)}
+ALLOWED_PHASES = {f"F{index}" for index in range(30)}
 ALLOWED_RISKS = {"R0", "R1", "R2", "R3", "R4"}
 
 EARLY_SECURITY_WORKERS = {

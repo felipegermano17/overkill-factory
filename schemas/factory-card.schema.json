@@ -37,6 +37,23 @@
     "factory_method_version": {
       "enum": ["OVERKILL_V3_5_AGENT_WORKFORCE", "OVERKILL_V3_5_FACTORY_10", "OVERKILL_VFINAL"]
     },
+    "request_type": {
+      "enum": [
+        "product_new",
+        "slice",
+        "feature",
+        "bug",
+        "incident",
+        "release",
+        "migration",
+        "integration",
+        "doc",
+        "security",
+        "ux_ui",
+        "data_analytics",
+        "agent_skill"
+      ]
+    },
     "source_state": {
       "enum": ["backlog", "compiled", "inference", "promoted", "raw", "rejected"]
     },
@@ -64,11 +81,14 @@
     "r4_gate": { "type": "object" },
     "outcome_contract": { "type": "object" },
     "discovery_brief": { "type": "object" },
+    "product_sot": { "type": "object" },
     "method_contract": { "type": "object" },
+    "capability_pack_contract": { "type": "object" },
     "software_development_plan": { "type": "object" },
     "product_experience_plan": { "type": "object" },
     "data_metrics_plan": { "type": "object" },
     "agent_eval_plan": { "type": "object" },
+    "spec_graph": { "type": "object" },
     "dependency_map": { "type": "object" },
     "access_capability": { "type": "object" },
     "autonomy_readiness_packet": { "type": "object" },

@@ -3,14 +3,91 @@
   "$id": "https://overkill-factory.dev/schemas/data-metrics-plan.schema.json",
   "title": "Overkill Factory Data Metrics Plan",
   "type": "object",
-  "required": ["success_metrics", "events", "owners", "privacy_limits"],
+  "required": [
+    "success_metrics",
+    "events",
+    "owners",
+    "privacy_limits",
+    "risk_metrics",
+    "logs",
+    "alerts",
+    "personal_data",
+    "visibility",
+    "instrumentation_proof"
+  ],
   "properties": {
-    "success_metrics": { "type": "array", "items": { "type": "string" } },
-    "events": { "type": "array", "items": { "type": "string" } },
-    "owners": { "type": "array", "items": { "type": "string" } },
-    "privacy_limits": { "type": "array", "items": { "type": "string" } },
-    "dashboards": { "type": "array", "items": { "type": "string" } },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "success_metrics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "privacy_limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dashboards": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risk_metrics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "logs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "alerts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "personal_data": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "visibility": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "instrumentation_proof": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "additionalProperties": true
 }
