@@ -1,18 +1,18 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/release-integration-preflight.schema.json",
   "record_type": "release_integration_preflight",
-  "created_at": "2026-06-11T00:17:08Z",
+  "created_at": "2026-06-11T00:38:34Z",
   "result": "PASS",
   "branch": {
-    "current": "codex/vfinal-release-candidate",
+    "current": "codex/vfinal-main-reconcile-20260611",
     "is_main": false
   },
   "counts": {
-    "status_entries": 1,
-    "generated_status_entries": 1,
+    "status_entries": 4,
+    "generated_status_entries": 4,
     "unintegrated_release_entries": 0,
     "release_candidate_entries": 0,
-    "generated_receipt_entries": 1,
+    "generated_receipt_entries": 4,
     "needs_human_review_entries": 0,
     "safe_cleanup_candidates": 0
   },

@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/public-safety-scan-summary.schema.json",
   "record_type": "public_safety_scan_summary",
-  "created_at": "2026-06-10T23:26:28Z",
+  "created_at": "2026-06-11T00:38:34Z",
   "target": {
     "kind": "worktree"
   },
