@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
+  "title": "Overkill Factory User Docs Onboarding Plan",
+  "type": "object",
+  "required": ["audience", "first_success_path", "tasks_covered", "proof_required"],
+  "properties": {
+    "audience": { "type": "string", "minLength": 3 },
+    "first_success_path": { "type": "string", "minLength": 3 },
+    "tasks_covered": { "type": "array", "items": { "type": "string" } },
+    "proof_required": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

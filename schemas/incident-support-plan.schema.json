@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/incident-support-plan.schema.json",
+  "title": "Overkill Factory Incident Support Plan",
+  "type": "object",
+  "required": ["severity", "owner", "communication_path", "resolution_or_next_action"],
+  "properties": {
+    "severity": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string", "minLength": 3 },
+    "communication_path": { "type": "string", "minLength": 3 },
+    "resolution_or_next_action": { "type": "string", "minLength": 3 },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

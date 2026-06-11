@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/control-tower-event.schema.json",
+  "title": "Overkill Factory Control Tower Event",
+  "type": "object",
+  "required": [
+    "$schema",
+    "event_id",
+    "event_type",
+    "severity",
+    "project_id",
+    "source",
+    "summary",
+    "created_at"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/control-tower-event.schema.json"
+    },
+    "event_id": { "type": "string", "minLength": 3 },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "intake_received",
+        "phase_changed",
+        "gate_blocked",
+        "gate_passed",
+        "approval_requested",
+        "approval_recorded",
+        "access_missing",
+        "worker_started",
+        "worker_completed",
+        "worker_failed",
+        "evidence_recorded",
+        "release_candidate",
+        "incident_opened",
+        "incident_resolved",
+        "health_alert",
+        "forecast_changed"
+      ]
+    },
+    "severity": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] },
+    "project_id": { "type": "string", "minLength": 1 },
+    "task_id": { "type": "string" },
+    "source": { "type": "string", "enum": ["hermes", "factoryctl", "worker", "human", "bridge"] },
+    "summary": { "type": "string", "minLength": 3 },
+    "details": { "type": "string" },
+    "action_required": { "type": "boolean" },
+    "owner_role": { "type": "string" },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "discord_target": { "type": "string" },
+    "created_at": { "type": "string", "minLength": 10 }
+  },
+  "additionalProperties": true
+}

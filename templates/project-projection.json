@@ -1,0 +1,18 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/project-projection.schema.json",
+  "project_id": "example-project",
+  "name": "Example Project",
+  "phase": "access_gate",
+  "status": "waiting_access",
+  "execution_started": false,
+  "risk": "R2",
+  "forecast_confidence": "blocked",
+  "current_blockers": ["missing repository write access"],
+  "pending_access": ["github_write"],
+  "pending_approvals": [],
+  "next_steps": ["grant access", "rerun ready gate", "start execution"],
+  "evidence_refs": [],
+  "source_runtime": "hermes",
+  "source_board": "example-board",
+  "last_synced_at": "2026-06-09T00:00:00Z"
+}

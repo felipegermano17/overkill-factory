@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/loop-plan.schema.json",
+  "title": "Overkill Factory Loop Plan",
+  "type": "object",
+  "required": ["unit_of_work", "verify", "review", "rollback"],
+  "properties": {
+    "unit_of_work": { "type": "string", "minLength": 3 },
+    "verify": { "type": "array", "items": { "type": "string" } },
+    "review": { "type": "array", "items": { "type": "string" } },
+    "rollback": { "type": "string", "minLength": 3 },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

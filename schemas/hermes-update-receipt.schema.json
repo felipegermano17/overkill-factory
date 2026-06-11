@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-update-receipt.schema.json",
+  "title": "Overkill Factory Hermes Update Receipt",
+  "type": "object",
+  "required": [
+    "record_type",
+    "created_at",
+    "before",
+    "after",
+    "adapter_patch",
+    "checks",
+    "decision",
+    "evidence_refs"
+  ],
+  "properties": {
+    "record_type": { "const": "hermes_update_receipt" },
+    "created_at": { "type": "string", "minLength": 3 },
+    "scope": { "type": "string" },
+    "before": { "type": "object" },
+    "after": { "type": "object" },
+    "adapter_patch": { "type": "object" },
+    "checks": { "type": "object" },
+    "decision": { "type": "object" },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

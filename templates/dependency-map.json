@@ -1,0 +1,9 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/dependency-map.schema.json",
+  "dependencies": ["example provider", "example repository"],
+  "owners": ["product-owner"],
+  "failure_modes": ["provider unavailable", "missing account", "rate limit"],
+  "access_needed": ["provider sandbox access"],
+  "fallbacks": ["planning-only mode until access is ready"],
+  "evidence_refs": ["dependency-map.md"]
+}

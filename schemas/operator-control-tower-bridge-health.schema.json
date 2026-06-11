@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operator-control-tower-bridge-health.schema.json",
+  "title": "Overkill Factory Operator Control Tower Bridge Health",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "checks",
+    "evidence_refs",
+    "limits"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/operator-control-tower-bridge-health.schema.json"
+    },
+    "record_type": {
+      "const": "operator_control_tower_bridge_health"
+    },
+    "created_at": { "type": "string", "minLength": 10 },
+    "result": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+    "checks": {
+      "type": "object",
+      "required": [
+        "bot_reachable",
+        "bridge_reachable",
+        "runtime_readback_reachable",
+        "approval_registration_path_reachable",
+        "no_discord_source_of_truth",
+        "no_private_material_in_public_receipt"
+      ],
+      "properties": {
+        "bot_reachable": { "type": "boolean" },
+        "bridge_reachable": { "type": "boolean" },
+        "runtime_readback_reachable": { "type": "boolean" },
+        "approval_registration_path_reachable": { "type": "boolean" },
+        "no_discord_source_of_truth": { "type": "boolean" },
+        "no_private_material_in_public_receipt": { "type": "boolean" }
+      },
+      "additionalProperties": { "type": "boolean" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": true
+}

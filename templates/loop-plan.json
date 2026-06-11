@@ -1,0 +1,8 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/loop-plan.schema.json",
+  "unit_of_work": "one bounded slice",
+  "verify": ["run focused tests", "capture proof"],
+  "review": ["independent review before done"],
+  "rollback": "revert this slice without touching unrelated work",
+  "evidence_refs": ["loop-plan.md"]
+}

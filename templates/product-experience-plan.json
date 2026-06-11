@@ -1,0 +1,9 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json",
+  "surface_type": "web app",
+  "surface_pack": "web-app-surface-pack",
+  "states": ["empty", "loading", "success", "error"],
+  "proof_required": ["desktop screenshot", "mobile screenshot", "keyboard/a11y check"],
+  "accessibility_checks": ["labels", "contrast", "keyboard"],
+  "evidence_refs": ["product-experience-plan.md"]
+}

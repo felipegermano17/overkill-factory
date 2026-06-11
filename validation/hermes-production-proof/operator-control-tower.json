@@ -1,0 +1,26 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-production-proof.schema.json",
+  "record_type": "hermes_production_proof",
+  "created_at": "2026-06-11T00:11:32Z",
+  "proof_type": "operator_control_tower",
+  "result": "PASS",
+  "summary": "The owner-facing Control Tower has a real Discord mapping, a runtime-registerable approval event path, bridge health evidence, and passing public-safe contract smokes.",
+  "scope": "operator-facing Control Tower, Discord mapping, runtime approval registration path, bridge health evidence",
+  "environment_ref": "redacted-real-operator-control-tower",
+  "evidence_refs": [
+    "validation/control-tower/operator-control-tower-production-readiness.json",
+    "external:bridge-health",
+    "external:discord-control-tower-mapping",
+    "external:runtime-approval-event",
+    "validation/control-tower/control-tower-approval-registration-smoke.json",
+    "validation/control-tower/control-tower-readonly-smoke.json"
+  ],
+  "limits": [
+    "This proof is public-safe and does not store real Discord ids, runtime ids, private URLs, credentials or raw logs.",
+    "Discord remains the human cockpit only; Hermes or the selected runtime remains the durable source of truth.",
+    "Future channels, roles, approval kinds or bridge behavior changes need a fresh Control Tower proof."
+  ],
+  "decision": {
+    "real_runtime_update": "allowed_for_explicit_operator_gate"
+  }
+}

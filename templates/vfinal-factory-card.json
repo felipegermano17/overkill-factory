@@ -1,0 +1,58 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-card.schema.json",
+  "card_id": "OF-VFINAL-001",
+  "slice_id": "PRODUCT_SLICE_ID",
+  "owner_profile": "factory-orchestrator",
+  "source_refs": ["source-ledger.md"],
+  "source_state": "promoted",
+  "outcome": "Describe the concrete result this card must produce.",
+  "acceptance_criteria": ["observable acceptance criterion"],
+  "scope_in": ["what the worker may do"],
+  "scope_out": ["what the worker must not do"],
+  "risk_class": "R2-product-work",
+  "codex_mode": "plan_and_execute_with_gates",
+  "review": {
+    "independent_review_required": true,
+    "human_gate_required": false
+  },
+  "factory_method_version": "OVERKILL_VFINAL",
+  "phase": "F11",
+  "surfaces": ["code"],
+  "risk_initial": "R2",
+  "risk_effective": "R2",
+  "authority_max": "bounded_execution",
+  "owner_worker": "factory-orchestrator",
+  "executor_identity": "implementation-worker",
+  "reviewer_identity": "independent-reviewer",
+  "runtime_decision": "hermes_default",
+  "runtime_contract": { "mode": "bounded_worker" },
+  "security_contract": { "security_boundary": "no_sensitive_action" },
+  "forbidden_actions": ["deploy", "secret_access", "billing_change"],
+  "done_definition": ["work implemented", "tests pass", "review complete"],
+  "transition_event_required": true,
+  "kanban_transition_event_ref": "required_before_ready",
+  "target_repo_paths": ["src/or/docs"],
+  "outcome_contract": {
+    "outcome": "Concrete product result.",
+    "users_or_actors": ["target user"],
+    "problem": "Problem to solve.",
+    "success_signals": ["observable signal"],
+    "non_goals": ["out of scope"],
+    "open_questions": [],
+    "evidence_refs": ["source-ledger.md"]
+  },
+  "method_contract": {
+    "selected_method": "spec-first",
+    "why_this_method": "Risk and scope require a written plan before implementation.",
+    "risk_tier": "R2",
+    "required_plans": ["software_development_plan"],
+    "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
+    "waivers": []
+  },
+  "loop_plan": {
+    "unit_of_work": "one bounded implementation slice",
+    "verify": ["test command"],
+    "review": ["independent review"],
+    "rollback": "revert the slice"
+  }
+}

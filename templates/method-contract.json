@@ -1,0 +1,9 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/method-contract.schema.json",
+  "selected_method": "spec-first | test-first | behavior-first | discovery-first | prototype-first | legacy-diagnosis | incident-first",
+  "why_this_method": "Explain in plain language why this method fits this work.",
+  "risk_tier": "R2",
+  "required_plans": ["software_development_plan"],
+  "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
+  "waivers": []
+}

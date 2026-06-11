@@ -1,0 +1,8 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/incident-support-plan.schema.json",
+  "severity": "SEV-3",
+  "owner": "incident-owner",
+  "communication_path": "status update and owner note",
+  "resolution_or_next_action": "fix, rollback or keep blocked with owner",
+  "evidence_refs": ["incident-support-plan.md"]
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/budget-contract.schema.json",
+  "budget_owner": "product-owner",
+  "limit": "no material spend until approved",
+  "cost_triggers": ["remote proof", "cloud deploy", "long-running worker"],
+  "cleanup": "delete disposable resources after proof",
+  "evidence_refs": ["budget-contract.md"]
+}

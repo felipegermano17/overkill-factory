@@ -1,0 +1,8 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
+  "audience": "new user",
+  "first_success_path": "user completes the first useful task without external help",
+  "tasks_covered": ["setup", "first action", "troubleshooting"],
+  "proof_required": ["fresh-reader review", "broken-link check"],
+  "evidence_refs": ["user-docs-onboarding-plan.md"]
+}

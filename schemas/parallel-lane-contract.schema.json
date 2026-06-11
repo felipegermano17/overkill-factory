@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/parallel-lane-contract.schema.json",
+  "title": "Overkill Factory Parallel Lane Contract",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "lane_id",
+    "lane_kind",
+    "owner_agent",
+    "status",
+    "base_ref",
+    "worktree_ref",
+    "input_refs",
+    "intended_write_scope",
+    "forbidden_paths",
+    "changed_paths",
+    "expected_outputs",
+    "validation_commands",
+    "validation_result",
+    "evidence_refs",
+    "cleanup_status",
+    "integration_owner",
+    "residual_risks",
+    "public_safety_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/parallel-lane-contract.schema.json"
+    },
+    "record_type": { "const": "parallel_lane_contract" },
+    "lane_id": { "type": "string", "minLength": 3 },
+    "lane_kind": { "enum": ["read_only", "write"] },
+    "owner_agent": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": [
+        "planned",
+        "active",
+        "blocked",
+        "ready_for_integration",
+        "integrated",
+        "abandoned"
+      ]
+    },
+    "base_ref": { "type": "string", "minLength": 1 },
+    "worktree_ref": { "type": "string", "minLength": 1 },
+    "input_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "intended_write_scope": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "forbidden_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "changed_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expected_outputs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "validation_commands": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "validation_result": { "enum": ["NOT_RUN", "PASS", "FAIL", "BLOCKED", "WAIVED"] },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "cleanup_status": { "enum": ["not_started", "not_needed", "clean", "blocked"] },
+    "integration_owner": { "type": "string", "minLength": 1 },
+    "residual_risks": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "public_safety_boundary": {
+      "type": "object",
+      "required": [
+        "no_private_product_names",
+        "no_local_absolute_paths",
+        "no_private_ids",
+        "no_private_urls",
+        "no_credentials_or_raw_logs"
+      ],
+      "properties": {
+        "no_private_product_names": { "type": "boolean" },
+        "no_local_absolute_paths": { "type": "boolean" },
+        "no_private_ids": { "type": "boolean" },
+        "no_private_urls": { "type": "boolean" },
+        "no_credentials_or_raw_logs": { "type": "boolean" }
+      },
+      "additionalProperties": { "type": "boolean" }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/platform-devex-plan.schema.json",
+  "developer_workflow": ["install", "run tests", "start local service"],
+  "reliability_checks": ["clean checkout smoke", "CI parity"],
+  "owner": "platform-owner",
+  "rollback_plan": "restore previous tooling path",
+  "evidence_refs": ["platform-devex-plan.md"]
+}

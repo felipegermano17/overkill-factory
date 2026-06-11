@@ -1,0 +1,135 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/hermes-worker-route-readiness.schema.json",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "ledger_ref",
+    "hermes_home_ref",
+    "result",
+    "worker_count",
+    "blocked_worker_count",
+    "blocked_workers",
+    "checks",
+    "production_rule"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/hermes-worker-route-readiness.schema.json"
+    },
+    "schema": {
+      "const": "overkill_factory_hermes_worker_route_readiness.v1"
+    },
+    "ledger_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hermes_home_ref": {
+      "const": "redacted-hermes-home"
+    },
+    "result": {
+      "enum": [
+        "PASS",
+        "BLOCKED"
+      ]
+    },
+    "worker_count": {
+      "type": "integer"
+    },
+    "blocked_worker_count": {
+      "type": "integer"
+    },
+    "blocked_workers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "worker_id",
+          "task_id",
+          "status",
+          "profile_exists",
+          "model_configured",
+          "provider_configured",
+          "credential_status",
+          "credential_evidence",
+          "blocked_reasons"
+        ],
+        "properties": {
+          "worker_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "task_id": {
+            "type": "string"
+          },
+          "required_before": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "queue_class": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "blocked"
+            ]
+          },
+          "profile_exists": {
+            "type": "boolean"
+          },
+          "config_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model_configured": {
+            "type": "boolean"
+          },
+          "provider_configured": {
+            "type": "boolean"
+          },
+          "credential_status": {
+            "enum": [
+              "pass",
+              "fail"
+            ]
+          },
+          "credential_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "blocked_reasons": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "production_rule": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

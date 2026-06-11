@@ -1,0 +1,37 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-control-tower-private-evidence-doctor.schema.json",
+  "record_type": "operator_control_tower_private_evidence_doctor",
+  "created_at": "2026-06-11T00:17:09Z",
+  "result": "PASS",
+  "summary": "Private Operator Control Tower evidence is ready for the production proof.",
+  "scope": "private Control Tower mapping, runtime approval event and bridge health evidence",
+  "environment_ref": "redacted-private-operator-control-tower-evidence",
+  "evidence_refs": [
+    "external:bridge-health",
+    "external:discord-control-tower-mapping",
+    "external:runtime-approval-event"
+  ],
+  "limits": [
+    "This doctor report is public-safe and stores only redacted booleans and external evidence labels.",
+    "PASS only means the private evidence files are shaped well enough for the production proof harness.",
+    "The production proof and update receipt must still be generated separately."
+  ],
+  "decision": {
+    "operator_control_tower_production_proof_input": "ready",
+    "next_required_action": "run_operator_control_tower_proof"
+  },
+  "checks": {
+    "mapping_file_present": true,
+    "runtime_registration_event_file_present": true,
+    "bridge_health_file_present": true,
+    "mapping_has_real_refs": true,
+    "runtime_event_registers_owner_decision": true,
+    "mapping_runtime_project_matches": true,
+    "bridge_health_uses_contract": true,
+    "bridge_health_checks_pass": true,
+    "bridge_health_has_real_evidence_refs": true,
+    "private_inputs_schema_valid": true
+  },
+  "blocking_items": [],
+  "input_errors": []
+}

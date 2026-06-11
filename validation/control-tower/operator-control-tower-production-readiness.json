@@ -1,0 +1,32 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-control-tower-production-readiness.schema.json",
+  "record_type": "operator_control_tower_production_readiness",
+  "created_at": "2026-06-11T00:17:09Z",
+  "result": "PASS",
+  "checks": {
+    "control_tower_readonly_contract_passed": true,
+    "approval_registration_contract_passed": true,
+    "real_discord_mapping_present": true,
+    "real_discord_mapping_has_non_placeholder_refs": true,
+    "runtime_registration_event_present": true,
+    "runtime_registration_event_registers_owner_decision": true,
+    "mapping_runtime_project_matches": true,
+    "bridge_health_present": true,
+    "bridge_health_uses_contract": true,
+    "bridge_health_checks_passed": true,
+    "bridge_health_has_real_evidence_refs": true
+  },
+  "blocking_items": [],
+  "evidence_refs": [
+    "external:bridge-health",
+    "external:discord-control-tower-mapping",
+    "external:runtime-approval-event",
+    "validation/control-tower/control-tower-approval-registration-smoke.json",
+    "validation/control-tower/control-tower-readonly-smoke.json"
+  ],
+  "limits": [
+    "This receipt is public-safe and intentionally redacts real Discord, runtime and bridge identifiers.",
+    "PASS proves the operator-facing status, approval registration path and bridge health evidence shape for the current production preflight only.",
+    "It does not let Discord become the source of truth; Hermes/runtime gates remain authoritative."
+  ]
+}

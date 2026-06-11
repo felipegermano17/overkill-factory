@@ -1,0 +1,12 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/autonomy-readiness-packet.schema.json",
+  "execution_mode": "planning_only",
+  "accounts_ready": false,
+  "tools_ready": false,
+  "environment_ready": false,
+  "cost_limit": "No material spend approved.",
+  "forbidden_actions": ["deploy", "secret_access", "billing_change"],
+  "rollback_path": "No material execution allowed yet.",
+  "human_gates": ["Access & Capability Gate"],
+  "evidence_refs": ["autonomy-readiness.md"]
+}

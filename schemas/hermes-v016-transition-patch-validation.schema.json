@@ -1,0 +1,92 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/hermes-v016-transition-patch-validation.schema.json",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema",
+    "patch",
+    "result",
+    "static_validation",
+    "apply_validation",
+    "remaining_runtime_scope"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/hermes-v016-transition-patch-validation.schema.json"
+    },
+    "schema": {
+      "const": "overkill_factory_hermes_v016_transition_patch_validation.v1"
+    },
+    "patch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "patches": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "result": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "static_validation": {
+      "type": "object",
+      "required": [
+        "result",
+        "missing_markers",
+        "forbidden_markers"
+      ],
+      "properties": {
+        "result": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "missing_markers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forbidden_markers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "apply_validation": {
+      "type": "object",
+      "required": [
+        "result"
+      ],
+      "properties": {
+        "result": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "SKIPPED"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "remaining_runtime_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "additionalProperties": false
+}

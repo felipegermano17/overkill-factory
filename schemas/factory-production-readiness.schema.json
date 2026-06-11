@@ -1,0 +1,72 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "summary",
+    "components",
+    "blocking_items",
+    "attention_items",
+    "evidence_refs",
+    "next_required_actions",
+    "limits"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json"
+    },
+    "record_type": {
+      "const": "factory_production_readiness"
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "result": {
+      "enum": ["PASS", "ATTENTION", "BLOCKED"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 3
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "evidence_ref"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["PASS", "ATTENTION", "BLOCKED", "MISSING"] },
+          "evidence_ref": { "type": "string", "minLength": 1 },
+          "reason": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "blocking_items": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "attention_items": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "next_required_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": true
+}

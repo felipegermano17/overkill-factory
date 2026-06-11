@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/platform-devex-plan.schema.json",
+  "title": "Overkill Factory Platform DevEx Plan",
+  "type": "object",
+  "required": ["developer_workflow", "reliability_checks", "owner", "rollback_plan"],
+  "properties": {
+    "developer_workflow": { "type": "array", "items": { "type": "string" } },
+    "reliability_checks": { "type": "array", "items": { "type": "string" } },
+    "owner": { "type": "string", "minLength": 3 },
+    "rollback_plan": { "type": "string", "minLength": 3 },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

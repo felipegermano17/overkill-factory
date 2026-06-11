@@ -1,0 +1,31 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-control-tower-owner-setup-doctor.schema.json",
+  "record_type": "operator_control_tower_owner_setup_doctor",
+  "created_at": "2026-06-11T00:08:21Z",
+  "result": "PASS",
+  "summary": "Discord owner setup evidence is ready for the Operator Control Tower proof.",
+  "scope": "private Discord server, bot, intents, channel, permission and offboarding evidence",
+  "environment_ref": "redacted-private-discord-owner-setup",
+  "evidence_refs": [
+    "external:discord-owner-setup"
+  ],
+  "limits": [
+    "This doctor report is public-safe and stores only redacted booleans and external evidence labels.",
+    "PASS means the owner-side Discord setup evidence is shaped and complete enough for the Control Tower production proof.",
+    "It does not store real Discord ids, private credentials, private endpoints or raw logs."
+  ],
+  "decision": {
+    "owner_setup_input": "ready",
+    "next_required_action": "run_operator_control_tower_private_evidence_doctor"
+  },
+  "checks": {
+    "owner_setup_file_present": true,
+    "owner_setup_schema_valid": true,
+    "owner_setup_result_passed": true,
+    "required_owner_checks_passed": true,
+    "required_channel_refs_present": true,
+    "owner_setup_has_real_evidence_refs": true
+  },
+  "blocking_items": [],
+  "input_errors": []
+}

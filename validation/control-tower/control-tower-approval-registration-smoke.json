@@ -1,0 +1,117 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/control-tower-approval-registration-smoke.schema.json",
+  "smoke_id": "control-tower-approval-registration-smoke",
+  "result": "PASS",
+  "pending_approval": {
+    "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
+    "approval_id": "appr-example-plan",
+    "project_id": "example-control-tower-project",
+    "approval_type": "plan",
+    "status": "pending",
+    "risk": "R3",
+    "scope": "approve bounded execution plan for first safe slice",
+    "consequence": "The runtime may record a plan approval event, but execution still waits for Ready Gate.",
+    "not_authorized": [
+      "production release",
+      "unbounded spend",
+      "broad credential access"
+    ],
+    "requested_by": "factory-concierge",
+    "evidence_refs": [
+      "docs/control-tower/discord-control-tower-os.md"
+    ],
+    "expires_at": "2026-06-11T00:00:00Z",
+    "created_at": "2026-06-10T18:58:12Z"
+  },
+  "registered_approval": {
+    "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
+    "approval_id": "appr-example-plan",
+    "project_id": "example-control-tower-project",
+    "approval_type": "plan",
+    "status": "approved",
+    "risk": "R3",
+    "scope": "approve bounded execution plan for first safe slice",
+    "consequence": "The runtime may record a plan approval event, but execution still waits for Ready Gate.",
+    "not_authorized": [
+      "production release",
+      "unbounded spend",
+      "broad credential access"
+    ],
+    "requested_by": "factory-concierge",
+    "evidence_refs": [
+      "docs/control-tower/discord-control-tower-os.md"
+    ],
+    "expires_at": "2026-06-11T00:00:00Z",
+    "created_at": "2026-06-10T18:58:12Z",
+    "decided_by": "Factory Owner",
+    "decision_event_ref": "evt-approval-recorded-example-plan"
+  },
+  "approval_event": {
+    "$schema": "https://overkill-factory.dev/schemas/control-tower-event.schema.json",
+    "event_id": "evt-approval-recorded-example-plan",
+    "event_type": "approval_recorded",
+    "severity": "P2",
+    "project_id": "example-control-tower-project",
+    "source": "bridge",
+    "summary": "Structured owner plan approval is ready to register in the runtime.",
+    "details": "Contract-only smoke. No real runtime mutation is claimed.",
+    "action_required": false,
+    "owner_role": "Factory Owner",
+    "evidence_refs": [
+      "docs/control-tower/discord-control-tower-os.md"
+    ],
+    "discord_target": "owner-approvals",
+    "created_at": "2026-06-10T12:00:00Z"
+  },
+  "negative_cases": [
+    {
+      "case": "wrong_role",
+      "accepted": false,
+      "reasons": [
+        "actor role is not authorized"
+      ]
+    },
+    {
+      "case": "expired_decision",
+      "accepted": false,
+      "reasons": [
+        "approval request expired"
+      ]
+    },
+    {
+      "case": "scope_expansion",
+      "accepted": false,
+      "reasons": [
+        "decision scope does not match request"
+      ]
+    },
+    {
+      "case": "unknown_approval",
+      "accepted": false,
+      "reasons": [
+        "approval_id mismatch"
+      ]
+    },
+    {
+      "case": "ambiguous_decision",
+      "accepted": false,
+      "reasons": [
+        "decision is not structured"
+      ]
+    }
+  ],
+  "registration_checks": {
+    "valid_decision_records_event": true,
+    "wrong_role_rejected": true,
+    "expired_decision_rejected": true,
+    "scope_expansion_rejected": true,
+    "unknown_approval_rejected": true,
+    "ambiguous_decision_rejected": true,
+    "runtime_mutation_not_claimed": true
+  },
+  "evidence_refs": [
+    "docs/control-tower/discord-control-tower-os.md",
+    "docs/methodology/overkill-factory-vfinal.md"
+  ],
+  "created_at": "2026-06-10T18:58:12Z"
+}

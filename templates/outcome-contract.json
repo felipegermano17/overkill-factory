@@ -1,0 +1,10 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/outcome-contract.schema.json",
+  "outcome": "What concrete result should exist after this work?",
+  "users_or_actors": ["target user or actor"],
+  "problem": "What problem is being solved?",
+  "success_signals": ["observable signal that the outcome worked"],
+  "non_goals": ["what this work must not solve"],
+  "open_questions": ["unknown that must be resolved or accepted"],
+  "evidence_refs": ["source-ledger.md"]
+}
