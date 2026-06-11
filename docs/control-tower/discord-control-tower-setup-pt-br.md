@@ -215,6 +215,13 @@ O GERENTE deve usar `discord.require_mention=true`,
 menciona uma vez na portaria, o Hermes abre a thread, e dentro dela o dono nao
 precisa ficar mencionando o bot a cada resposta.
 
+Detalhe critico do runtime: no Hermes, variaveis do `.env` ganham do
+`config.yaml`. Entao o perfil de producao do GERENTE nao pode deixar o canal do
+GERENTE dentro de `DISCORD_NO_THREAD_CHANNELS` ou
+`DISCORD_FREE_RESPONSE_CHANNELS`, e `DISCORD_THREAD_REQUIRE_MENTION` precisa
+ser `false`. Se isso ficar errado, o bot responde por mencao, mas nao abre a
+thread de atendimento.
+
 Se alguem deixar um paper solto diretamente em `#falar-com-gerente`, a
 automacao publica ignora esse texto ate existir uma thread de atendimento. Isso
 evita criar um projeto novo para cada resposta do dono.

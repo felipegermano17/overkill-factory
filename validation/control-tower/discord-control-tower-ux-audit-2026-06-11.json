@@ -68,6 +68,7 @@
     "proved live Discord projection twice against the pilot: one project topic, one dashboard marker, one registry marker and one cockpit marker",
     "implemented thread-first GERENTE intake scan over manager attendance threads",
     "implemented raw reception message ignore behavior so loose project-like messages do not create duplicate projects",
+    "corrected live GERENTE Discord env overrides that were disabling auto-thread in the manager channel",
     "implemented active event lane projection with thread creation",
     "implemented Portuguese structured approval buttons and decision validation",
     "implemented bridge health projection",

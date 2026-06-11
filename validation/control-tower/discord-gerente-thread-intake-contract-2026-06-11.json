@@ -1,18 +1,24 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/hermes-update-receipt.schema.json",
   "record_type": "hermes_update_receipt",
-  "created_at": "2026-06-11T09:30:00Z",
+  "created_at": "2026-06-11T10:25:00Z",
   "scope": "Public-safe receipt for the live GERENTE Discord intake contract update.",
   "before": {
     "gerente_profile_exists": true,
-    "discord_require_mention": true,
-    "discord_auto_thread": true,
-    "discord_thread_require_mention": false,
-    "discord_free_response_channels_empty": true,
+    "yaml_discord_require_mention": true,
+    "yaml_discord_auto_thread": true,
+    "yaml_discord_thread_require_mention": false,
+    "live_env_overrode_yaml_thread_require_mention": true,
+    "live_env_blocked_manager_auto_thread": true,
     "soul_had_explicit_reception_thread_contract": false
   },
   "after": {
     "soul_has_explicit_reception_thread_contract": true,
+    "live_env_discord_require_mention": true,
+    "live_env_discord_auto_thread": true,
+    "live_env_discord_thread_require_mention": false,
+    "live_env_no_thread_channels_empty": true,
+    "live_env_free_response_channels_empty": true,
     "manager_channel_role": "reception_thread_launcher_only",
     "project_intake_location": "manager_attendance_thread",
     "project_questions_location": "same_manager_attendance_thread",
@@ -22,15 +28,17 @@
   "adapter_patch": {
     "public_automation": "factory_concierge_discord_automation now scans GERENTE attendance threads and ignores loose project-like reception messages.",
     "live_profile": "GERENTE SOUL now documents the reception/thread contract.",
-    "live_config": "Discord require_mention, auto_thread and thread_require_mention were read back as the expected values."
+    "live_config": "Discord env overrides were corrected so YAML and runtime agree: mention required in the reception channel, auto-thread enabled, no free-response/no-thread exception for the GERENTE channel, and no mention required inside the thread."
   },
   "checks": {
     "backup_created_before_live_soul_update": true,
+    "backup_created_before_live_env_update": true,
     "public_docs_updated": true,
     "public_schema_updated": true,
     "unit_tests_updated": true,
     "live_readback_passed": true,
     "live_discord_automation_smoke_passed": true,
+    "live_discord_thread_permission_probe_passed": true,
     "public_safe": true
   },
   "decision": {

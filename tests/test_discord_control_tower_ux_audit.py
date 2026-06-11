@@ -24,6 +24,8 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
         self.assertIn("mensagem no #falar-com-gerente com mencao ao GERENTE -> thread de atendimento", setup_guide)
         self.assertIn("owner mentions GERENTE in #falar-com-gerente -> Discord opens an attendance thread", os_doc)
         self.assertIn("raw project-like messages left directly in the", os_doc)
+        self.assertIn("env vars override `config.yaml`", os_doc)
+        self.assertIn("variaveis do `.env` ganham do", setup_guide)
         self.assertIn("#projetos-recebidos", combined)
         self.assertIn("not a second owner intake", os_doc)
         self.assertIn("project cockpit", os_doc)
@@ -63,6 +65,7 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
         self.assertTrue(audit["checks"]["live_runtime_projection_automated"])
         self.assertIn("created and reused a project conversation thread", "\n".join(audit["live_corrections"]))
         self.assertIn("raw reception message ignore behavior", "\n".join(audit["live_corrections"]))
+        self.assertIn("env overrides", "\n".join(audit["live_corrections"]))
         self.assertIn("retry-safe project mapping", "\n".join(audit["live_corrections"]))
         self.assertIn(
             "validation/control-tower/discord-bridge-projector-live-2026-06-11.json",
