@@ -65,6 +65,23 @@ class FakeDiscordClient:
             {"content": content, "author": {"id": "owner", "bot": False}, "attachments": []},
         )
 
+    def seed_manager_thread_message(
+        self,
+        content: str,
+        thread_name: str = "atendimento-gerente",
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        starter = self.seed_manager_message("@GERENTE iniciar atendimento")
+        thread = self.create_thread_from_message(
+            "chan-manager",
+            starter["id"],
+            {"name": thread_name, "auto_archive_duration": 10080},
+        )
+        message = self.post_message(
+            thread["id"],
+            {"content": content, "author": {"id": "owner", "bot": False}, "attachments": []},
+        )
+        return thread, message
+
     def get_current_user(self) -> dict[str, Any]:
         return {"id": "bot-user", "username": "GERENTE"}
 
@@ -149,9 +166,9 @@ def approval_request() -> dict[str, Any]:
 
 
 class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
-    def test_intake_scan_creates_manager_thread_and_project_surfaces(self) -> None:
+    def test_intake_scan_uses_existing_manager_thread_and_project_surfaces(self) -> None:
         client = FakeDiscordClient()
-        client.seed_manager_message(
+        intake_thread, _ = client.seed_manager_thread_message(
             "Paper do projeto: quero criar o front jogo da fabrica. "
             "Este piloto precisa acompanhar a esteira da Overkill Factory com UX visual."
         )
@@ -162,11 +179,30 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
 
         self.assertEqual(result["processed"], 1)
         item = result["results"][0]
+        self.assertTrue(item["thread_first"])
+        self.assertFalse(item["intake_thread_created"])
         self.assertTrue(item["intake_thread_resolved"])
         self.assertTrue(item["project_surface_resolved"])
         self.assertEqual(len([t for t in client.threads if t["parent_id"] == "chan-manager"]), 1)
+        self.assertEqual(state["projects"]["pilot-front-jogo-fabrica"]["intake_thread_id"], intake_thread["id"])
         self.assertEqual(len([t for t in client.threads if t["parent_id"] == "forum-kanban"]), 1)
         self.assertIn("pilot-front-jogo-fabrica", state["projects"])
+
+    def test_intake_scan_ignores_reception_messages_without_thread(self) -> None:
+        client = FakeDiscordClient()
+        client.seed_manager_message(
+            "Paper do projeto: quero criar o front jogo da fabrica. "
+            "Este piloto precisa acompanhar a esteira da Overkill Factory com UX visual."
+        )
+        state: dict[str, Any] = {"version": 1, "dashboard": {}, "projects": {}}
+        config = bridge.BridgeConfig(apply=True, guild_id=None, state_path=Path("private.json"))
+
+        result = automation.process_intake_messages(client, config, state, apply=True)
+
+        self.assertEqual(result["processed"], 0)
+        self.assertEqual(result["ignored_reception_messages"], 1)
+        self.assertEqual(len([t for t in client.threads if t["parent_id"] == "chan-manager"]), 0)
+        self.assertEqual(state["projects"], {})
 
     def test_active_event_sync_posts_lane_message_and_thread(self) -> None:
         client = FakeDiscordClient()

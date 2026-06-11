@@ -136,19 +136,20 @@ Paper, piloto, pedido novo e duvida comecam pelo GERENTE. O canal
 `#projetos-recebidos` existe como registro operacional, nao como segundo lugar
 para o dono mandar o paper.
 
-Mas o chat principal nao pode virar um corredor infinito de mensagens. A regra
-de UX da fabrica e:
+Mas o chat principal nao pode virar um corredor infinito de mensagens. Ele e
+portaria, nao sala de projeto. A regra de UX da fabrica e:
 
 ```text
-duvida curta -> o GERENTE responde no proprio chat
-paper, briefing ou projeto novo -> abre topico do projeto e cartao no Kanban visual
+@GERENTE no #falar-com-gerente -> abre thread de atendimento
+duvida curta -> o GERENTE responde dentro da thread
+paper, briefing ou projeto novo -> a mesma thread vira intake + cartao no Kanban visual
 ```
 
 Isso e importante porque o Hermes nativo trata `free_response_channels` como
-chat leve: o usuario nao precisa mencionar o bot, mas a resposta tende a ficar
-inline. A fabrica nao deve depender apenas desse comportamento nativo para
-intake de projeto. O `Factory Concierge Discord Bridge` precisa reconhecer
-pedido grande, criar o topico certo e apontar o dono para la.
+chat leve. Para a fabrica, o melhor comportamento e o oposto: o dono menciona
+o GERENTE uma vez no canal principal, o Hermes abre a thread, e a conversa
+continua ali sem nova mencao a cada resposta. A bridge reconhece o pedido
+grande dentro da thread, cria o topico certo e aponta o dono para la.
 
 Exemplos de pedidos naturais:
 
@@ -225,10 +226,9 @@ trabalha em mais de um produto ao mesmo tempo.
 
 Todo paper, briefing longo, novo produto ou pedido de piloto precisa gerar:
 
-1. um topico de conversa ligado a mensagem original ou ao canal de intake;
+1. uma thread de atendimento ligada ao `#falar-com-gerente`;
 2. um cartao no forum `kanban-da-fabrica`;
-3. uma resposta curta no `#falar-com-gerente` dizendo onde o projeto passou a
-   morar;
+3. uma resposta curta dentro da thread dizendo onde o projeto passou a morar;
 4. uma ligacao public-safe com o estado real no Hermes quando o runtime criar
    ou atualizar a card graph.
 
@@ -241,6 +241,10 @@ pergunta / decisao / acesso / bloqueio / revisao / projeto -> thread
 
 Se a mensagem chama o dono para uma acao ou conversa, ela deve abrir thread,
 estar dentro de uma thread ou apontar para a thread certa.
+
+Mensagem de projeto deixada solta no `#falar-com-gerente` nao deve ser
+processada como novo projeto. O dono precisa iniciar ou usar a thread de
+atendimento; isso evita que uma resposta de pergunta vire um segundo projeto.
 
 O nome do topico deve ser humano e curto, por exemplo:
 
@@ -319,7 +323,7 @@ Lugar para ver e falar com a fabrica.
 | Canal | Uso |
 | --- | --- |
 | `#torre-de-controle` | painel fixo com status, fase, pendencias e atalhos |
-| `#falar-com-gerente` | conversa direta com o GERENTE, sem precisar mencionar |
+| `#falar-com-gerente` | portaria: mencione o GERENTE para abrir atendimento |
 | `#saude-do-bot` | health do bot, Hermes, gateway e ponte |
 | `sala-de-voz-gerente` | conversa por voz quando fizer sentido |
 
@@ -444,8 +448,9 @@ Cada projeto no forum deve ter:
 - historico resumido.
 
 Esse topico deve nascer no intake, nao depois que o projeto ja virou um bloco
-de conversa perdido no chat. Se o dono mandar o paper em `#falar-com-gerente`,
-a ponte deve criar o topico e o cartao automaticamente.
+de conversa perdido no chat. O dono menciona o GERENTE no `#falar-com-gerente`,
+o Hermes abre a thread de atendimento, e a ponte cria o topico e o cartao a
+partir do conteudo dessa thread.
 
 ### 3. Aprovacao com botao e formulario
 

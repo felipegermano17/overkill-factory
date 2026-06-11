@@ -103,13 +103,17 @@ dono fala com o GERENTE
 ### Resolvido: intake thread-first pelo GERENTE
 
 A automacao `factory_concierge_discord_automation.py` escaneia
-`#falar-com-gerente`, detecta mensagens com cara de projeto/paper e cria ou
-reutiliza:
+threads de atendimento abaixo de `#falar-com-gerente`, detecta mensagens com
+cara de projeto/paper dentro dessas threads e cria ou reutiliza:
 
-- thread de intake no canal do GERENTE;
+- a propria thread de atendimento como thread de intake;
 - registro em `#projetos-recebidos`;
 - topico/cockpit no `kanban-da-fabrica`;
 - dashboard global atualizado.
+
+Mensagem de projeto solta diretamente em `#falar-com-gerente` e ignorada pela
+automacao. O canal principal fica como portaria: o dono menciona o GERENTE,
+entra na thread, e a conversa do projeto continua ali.
 
 ### Resolvido: mapping e cockpit projetado sem duplicar
 
