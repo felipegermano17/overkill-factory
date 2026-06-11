@@ -5,8 +5,9 @@ produto de uso real, nao como simples teste tecnico do bot.
 
 ## Veredito
 
-O Discord real ficou muito melhor como cockpit inicial, mas ainda nao deve ser
-tratado como Control Tower 100% dinamica.
+O Discord real agora tem uma Control Tower dinamica inicial, com intake,
+projecao, threads, aprovacoes estruturadas, canais operacionais e health
+provados no servidor real.
 
 O que esta corrigido:
 
@@ -24,17 +25,18 @@ O que esta corrigido:
   mesmas superficies, sem criar duplicata;
 - dashboard, registro de projeto, topico do Kanban e cockpit do piloto agora
   sao atualizados por `project-projection.json`.
+- intake do GERENTE cria ou reutiliza thread;
+- eventos ativos caem na lane correta e abrem thread;
+- aprovacao formal tem botoes em portugues e validacao de decisao;
+- health da ponte e atualizado em `#saude-do-bot`;
+- a automacao completa foi aplicada duas vezes e o read-back confirmou que nao
+  houve duplicata.
 
 O que ainda precisa virar produto:
 
-- a ponte precisa criar topico e card automaticamente quando um paper/projeto
-  chega pelo chat do GERENTE;
-- aprovacoes precisam virar interacoes estruturadas, com registro real no
-  Hermes;
-- acessos, bloqueios, provas, releases e saude precisam entrar no fluxo de
-  eventos vivos do Hermes para o Discord;
-- mensagens ativas do bot precisam nascer em thread, continuar em thread ou
-  apontar para a thread certa.
+- manter runner privado vivo, monitorado e sem rate-limit excessivo;
+- usar somente interacao real do dono ou evento duravel do Hermes para
+  aprovacoes que liberem execucao, gasto, release ou producao.
 
 ## Jornada revisada
 
@@ -98,11 +100,16 @@ dono fala com o GERENTE
 
 ## Achados principais
 
-### P1: intake de projeto ainda precisa de automacao real
+### Resolvido: intake thread-first pelo GERENTE
 
-O Discord real foi corrigido manualmente para o piloto, mas a ponte ainda
-precisa provar que cria topico e card automaticamente quando o dono manda um
-paper, briefing longo, novo produto ou piloto.
+A automacao `factory_concierge_discord_automation.py` escaneia
+`#falar-com-gerente`, detecta mensagens com cara de projeto/paper e cria ou
+reutiliza:
+
+- thread de intake no canal do GERENTE;
+- registro em `#projetos-recebidos`;
+- topico/cockpit no `kanban-da-fabrica`;
+- dashboard global atualizado.
 
 ### Resolvido: mapping e cockpit projetado sem duplicar
 
@@ -133,26 +140,43 @@ validation/control-tower/discord-bridge-projector-live-2026-06-11.json
 
 ### P1: aprovacoes ainda precisam de interacao estruturada
 
-Canal e orientacao existem, mas a UX madura precisa de botoes, menus ou
-formularios que gerem evento valido no Hermes. Texto livre nao deve aprovar
-risco, release, custo ou producao.
+Resolvido para a camada de ponte: a aprovacao aparece com botoes em portugues e
+a decisao precisa bater `approval_id`, papel, escopo e prazo antes de gerar um
+evento `approval_recorded`.
 
-### P2: canais vazios agora tem orientacao, mas precisam de projecao viva
+Limite importante: em producao, isso so pode liberar algo quando vier de clique
+real do dono ou evento duravel do Hermes. Smoke ou teste nao e aprovacao.
 
-Os canais deixaram de ser vazios e misteriosos, mas ainda devem receber estado
-projetado pelo Hermes: acessos, bloqueios, provas, releases e saude.
+### Resolvido: canais operacionais vivos
 
-### P2: o Kanban visual precisa ser espelho vivo
+Eventos da bridge agora caem nas lanes certas. O smoke live provou evento em
+`#acessos-pendentes`, aprovacao em `#aprovacoes-formais`, health em
+`#saude-do-bot` e cockpit no topico do projeto.
 
-O forum esta certo como indice visual, mas a ponte precisa atualizar tags,
-resumos e o painel de esteira do projeto conforme o Hermes muda.
+### Resolvido: Kanban visual como espelho vivo
 
-### P2: regra de thread precisa ser aplicada pela ponte
+O forum atualiza tags, resumo e cockpit por `project-projection.json`. A camada
+de automacao tambem aceita diretorios privados de projeções/eventos/aprovacoes,
+o que permite runner recorrente sem mudar o contrato publico.
+
+### Resolvido: regra de thread aplicada pela ponte
 
 O principio correto e: mensagem ativa precisa de thread. A excecao sao
 notificacoes, health e painel. Pergunta, decisao, acesso, bloqueio, revisao,
 evidencia discutivel e projeto precisam nascer em thread, continuar em thread
 ou apontar para uma thread existente.
+
+O read-back live confirmou:
+
+```text
+1 topico do piloto no Kanban
+1 thread do piloto no GERENTE
+1 dashboard marcado
+1 registro marcado
+1 evento operacional marcado
+1 aprovacao marcada
+1 health marcado
+```
 
 ## Definicao de pronto UX
 
@@ -171,5 +195,8 @@ A Control Tower Discord fica pronta quando:
 - mensagens repetidas nao criam duplicatas;
 - health da ponte prova Discord, Hermes, mapping e registro de evento.
 
-Enquanto isso nao estiver provado, o Discord e um cockpit inicial bom, mas nao
-uma Control Tower completamente dinamica.
+O recibo live da automacao completa esta em:
+
+```text
+validation/control-tower/discord-control-tower-automation-live-2026-06-11.json
+```

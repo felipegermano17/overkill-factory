@@ -332,6 +332,47 @@ O recibo live atual esta em:
 validation/control-tower/discord-bridge-projector-live-2026-06-11.json
 ```
 
+## Automacao viva da Control Tower
+
+A camada completa de automacao e:
+
+```bash
+python scripts/factory_concierge_discord_automation.py \
+  --projection-dir /private/path/projections \
+  --event-dir /private/path/events \
+  --approval-dir /private/path/approvals \
+  --scan-intake \
+  --post-health \
+  --state /private/path/discord-bridge-state.json \
+  --env /private/path/hermes.env \
+  --apply \
+  --out /private/path/last-bridge-health.json
+```
+
+Ela cobre:
+
+- paper/projeto no `#falar-com-gerente` vira thread de intake;
+- projeto vira topico/cockpit no `kanban-da-fabrica`;
+- eventos de acesso, bloqueio, prova, release e health vao para os canais
+  certos;
+- mensagem ativa cria thread ou aponta para thread existente;
+- aprovacao formal aparece com botoes em portugues;
+- decisao de aprovacao so vira evento depois de validar id, papel, escopo e
+  prazo;
+- health da ponte e atualizado em `#saude-do-bot`;
+- repeticao da automacao atualiza as mesmas mensagens, sem duplicar.
+
+O recibo live da automacao completa esta em:
+
+```text
+validation/control-tower/discord-control-tower-automation-live-2026-06-11.json
+```
+
+Observacao importante: botao de aprovacao nao significa aprovacao magica. Em
+producao, a aprovacao so vale se vier de interacao real do dono ou evento
+duravel do Hermes. Smoke, teste ou silencio nunca aprovam execucao, gasto,
+release ou producao.
+
 ## Rollback seguro
 
 Se algo der errado:

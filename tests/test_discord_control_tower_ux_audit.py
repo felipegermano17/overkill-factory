@@ -35,12 +35,14 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
         self.assertIn("free_response_channels", combined)
         self.assertIn("Factory Concierge Discord Bridge", combined)
         self.assertIn("Bridge de projecao do projeto", setup_guide)
+        self.assertIn("factory_concierge_discord_automation.py", combined)
+        self.assertIn("Automacao viva da Control Tower", setup_guide)
 
     def test_ux_audit_records_live_fix_but_keeps_automation_attention(self) -> None:
         audit = json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
 
         self.assertEqual(audit["record_type"], "discord_control_tower_ux_audit")
-        self.assertEqual(audit["result"], "ATTENTION")
+        self.assertEqual(audit["result"], "PASS")
         self.assertTrue(audit["checks"]["pilot_project_thread_created"])
         self.assertTrue(audit["checks"]["pilot_forum_card_created"])
         self.assertTrue(audit["checks"]["single_owner_intake_door"])
@@ -52,19 +54,23 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
         self.assertTrue(audit["checks"]["project_pipeline_progress_visible"])
         self.assertTrue(audit["checks"]["multi_project_kanban_idempotence_automated"])
         self.assertTrue(audit["checks"]["project_pipeline_projection_automated"])
-        self.assertFalse(audit["checks"]["active_bot_messages_threaded_or_linked"])
-        self.assertFalse(audit["checks"]["thread_first_project_intake_automated"])
+        self.assertTrue(audit["checks"]["active_bot_messages_threaded_or_linked"])
+        self.assertTrue(audit["checks"]["thread_first_project_intake_automated"])
+        self.assertTrue(audit["checks"]["structured_approval_interactions_automated"])
+        self.assertTrue(audit["checks"]["live_runtime_projection_automated"])
         self.assertIn("created a project conversation thread", "\n".join(audit["live_corrections"]))
         self.assertIn("retry-safe project mapping", "\n".join(audit["live_corrections"]))
         self.assertIn(
             "validation/control-tower/discord-bridge-projector-live-2026-06-11.json",
             audit["evidence_refs"],
         )
+        self.assertIn(
+            "validation/control-tower/discord-control-tower-automation-live-2026-06-11.json",
+            audit["evidence_refs"],
+        )
 
         findings = "\n".join(item["finding"] for item in audit["findings"])
-        self.assertIn("Active bot messages", findings)
-        self.assertIn("Structured approval", findings)
-        self.assertIn("Live runtime projection", findings)
+        self.assertIn("Structured approval buttons", findings)
 
 
 if __name__ == "__main__":

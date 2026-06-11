@@ -1,8 +1,8 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-ux-audit.schema.json",
   "record_type": "discord_control_tower_ux_audit",
-  "created_at": "2026-06-11T07:30:00Z",
-  "result": "ATTENTION",
+  "created_at": "2026-06-11T08:00:00Z",
+  "result": "PASS",
   "scope": "Public-safe UX audit of the live Discord Control Tower during the first pilot intake, including channels, project intake, active-message threading, multi-project Kanban behavior and project-level pipeline predictability.",
   "observed_model": {
     "runtime": "Hermes",
@@ -39,36 +39,18 @@
     "pilot_project_thread_created": true,
     "pilot_forum_card_created": true,
     "kanban_guide_not_marked_as_blocked_project": true,
-    "active_bot_messages_threaded_or_linked": false,
+    "active_bot_messages_threaded_or_linked": true,
     "free_response_threading_conflict_documented": true,
-    "thread_first_project_intake_automated": false,
-    "structured_approval_interactions_automated": false,
-    "live_runtime_projection_automated": false
+    "thread_first_project_intake_automated": true,
+    "structured_approval_interactions_automated": true,
+    "live_runtime_projection_automated": true
   },
   "findings": [
     {
-      "severity": "P1",
-      "finding": "The owner now has one main intake door, but automatic project intake is not proven yet.",
-      "impact": "A paper can still require manual correction if the bridge does not create the project thread, project registry entry and Kanban card automatically.",
-      "required_fix": "Automate GERENTE intake so paper, long brief, new product or pilot creates or reuses the project surfaces."
-    },
-    {
-      "severity": "P1",
-      "finding": "Active bot messages do not yet have a proven runtime rule that creates or points to a thread.",
-      "impact": "A decision, access request, blocker or project conversation can still become loose chat if the bridge does not enforce the active-message threading rule.",
-      "required_fix": "Make every non-notification bot message create, continue or link a thread; exempt only dashboard, health and one-way notifications."
-    },
-    {
-      "severity": "P1",
-      "finding": "Structured approval interactions are not automated yet.",
-      "impact": "Approvals remain easy to misunderstand if they are handled as free-form chat instead of scoped runtime events.",
-      "required_fix": "Add Portuguese button/menu/modal approval flows and register the accepted or rejected event in Hermes."
-    },
-    {
-      "severity": "P2",
-      "finding": "Live runtime projection is not automated yet.",
-      "impact": "The Discord cockpit can become stale unless Hermes state updates dashboard, project cards, blockers, access requests, evidence and release channels.",
-      "required_fix": "Bridge Hermes runtime events into Discord updates with public-safe health evidence."
+      "severity": "P3",
+      "finding": "Structured approval buttons and decision validation are implemented, but a production approval still requires a real owner interaction or signed runtime event.",
+      "impact": "The bridge can render and validate approval decisions, but it must never treat a smoke decision or silence as owner approval.",
+      "required_fix": "Keep owner approvals tied to real Discord interactions or durable Hermes events before using them for execution, release, spend or production gates."
     }
   ],
   "live_corrections": [
@@ -81,13 +63,16 @@
     "created a project conversation thread for the active pilot",
     "created a visual forum card for the active pilot with the Entrada tag",
     "implemented the Factory Concierge Discord Bridge projector with retry-safe project mapping",
-    "proved live Discord projection twice against the pilot: one project topic, one dashboard marker, one registry marker and one cockpit marker"
+    "proved live Discord projection twice against the pilot: one project topic, one dashboard marker, one registry marker and one cockpit marker",
+    "implemented thread-first GERENTE intake scan",
+    "implemented active event lane projection with thread creation",
+    "implemented Portuguese structured approval buttons and decision validation",
+    "implemented bridge health projection",
+    "proved live Discord automation twice: one manager thread, one forum topic, one dashboard marker, one registry marker, one event marker, one approval marker and one health marker"
   ],
   "next_required_actions": [
-    "automate GERENTE project intake into project thread, project registry entry and Kanban forum card",
-    "enforce active-message threading for decisions, access, blockers, reviews, evidence discussions and project conversations",
-    "automate structured Portuguese approval interactions and Hermes registration",
-    "automate live runtime projection from Hermes to Discord"
+    "use only real owner interactions or signed runtime events for production-grade approvals",
+    "keep the private bridge runner healthy and monitor Discord rate limits"
   ],
   "evidence_refs": [
     "docs/control-tower/discord-control-tower-os.md",
@@ -101,7 +86,9 @@
     "external:live-discord-project-thread-created",
     "external:live-discord-kanban-forum-card-created",
     "validation/control-tower/discord-bridge-projector-live-2026-06-11.json",
+    "validation/control-tower/discord-control-tower-automation-live-2026-06-11.json",
     "scripts/factory_concierge_discord_bridge.py",
+    "scripts/factory_concierge_discord_automation.py",
     "tests/test_factory_concierge_discord_bridge.py"
   ]
 }
