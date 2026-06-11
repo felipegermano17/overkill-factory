@@ -1,0 +1,61 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-ux-audit.schema.json",
+  "record_type": "discord_control_tower_ux_audit",
+  "created_at": "2026-06-11T06:35:00Z",
+  "result": "ATTENTION",
+  "scope": "Public-safe UX audit of the live Discord Control Tower during the first pilot intake.",
+  "observed_model": {
+    "runtime": "Hermes",
+    "owner_language": "pt-BR",
+    "source_of_truth": "Hermes/Kanban",
+    "discord_role": "owner cockpit and project conversation surface"
+  },
+  "checks": {
+    "portuguese_first_structure": true,
+    "gerente_channel_exists": true,
+    "kanban_forum_exists": true,
+    "kanban_forum_has_phase_tags": true,
+    "pilot_project_thread_created": true,
+    "pilot_forum_card_created": true,
+    "free_response_threading_conflict_documented": true,
+    "thread_first_project_intake_automated": false
+  },
+  "findings": [
+    {
+      "severity": "P1",
+      "finding": "Project intake in the owner chat was able to remain as loose messages instead of becoming a project surface immediately.",
+      "impact": "The owner can lose the project context in a linear chat, and the visual Kanban no longer reflects the real pilot start.",
+      "required_fix": "Implement thread-first intake in the Factory Concierge Discord Bridge: paper, long brief, new product or pilot creates a project thread and a forum card."
+    },
+    {
+      "severity": "P1",
+      "finding": "The GERENTE channel is configured as a free-response channel, and Hermes native free-response behavior can answer inline instead of creating threads.",
+      "impact": "Relying only on native Hermes auto-thread is not enough for project intake.",
+      "required_fix": "Keep the low-friction owner chat, but make project/thread/card creation an explicit factory bridge responsibility."
+    },
+    {
+      "severity": "P2",
+      "finding": "The current Discord structure is usable, but the owner still has to infer the difference between chat, project topic, approval channel and Kanban forum.",
+      "impact": "The cockpit can feel like multiple chats instead of one guided control surface.",
+      "required_fix": "Add one pinned Portuguese onboarding message that explains the cockpit after the thread-first project flow is automated."
+    }
+  ],
+  "live_corrections": [
+    "created a project conversation thread for the active pilot",
+    "created a visual forum card for the active pilot with the Entrada tag",
+    "posted a short pointer in the owner chat so the pilot no longer lives only as loose chat"
+  ],
+  "next_required_actions": [
+    "build or configure the Factory Concierge Discord Bridge to create project threads and forum cards automatically",
+    "make project-intake creation idempotent so retries do not duplicate threads or cards",
+    "add a private bridge health receipt proving the real Discord mapping, project thread and forum card round-trip",
+    "only after the flow is stable, update the pinned onboarding message in Discord"
+  ],
+  "evidence_refs": [
+    "docs/control-tower/discord-control-tower-os.md",
+    "docs/control-tower/discord-control-tower-setup-pt-br.md",
+    "docs/control-tower/discord-dynamic-control-tower-study-pt-br.md",
+    "external:live-discord-project-thread-created",
+    "external:live-discord-kanban-forum-card-created"
+  ]
+}

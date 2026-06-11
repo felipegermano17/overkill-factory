@@ -58,6 +58,29 @@ It asks for:
 - release approval;
 - production approval.
 
+## Project Intake UX Contract
+
+The owner can start from `#falar-com-gerente`, but a project must not live as a
+loose chat transcript.
+
+The bridge must separate two cases:
+
+```text
+short operational question -> answer in the same chat
+paper, long brief, new product or pilot -> create project thread and forum card
+```
+
+For a project intake, the Discord layer should create:
+
+- a project conversation thread tied to the intake message or intake channel;
+- a `kanban-da-fabrica` forum post with the initial phase tag;
+- a short pointer message in `#falar-com-gerente`;
+- a runtime mapping record once Hermes creates or updates the durable card.
+
+Hermes native Discord free-response channels are useful for low-friction chat,
+but they are not enough for factory intake. They can answer inline. The factory
+needs the Concierge bridge to create the project surface deliberately.
+
 ## What This Layer Must Not Do
 
 It must not:
@@ -98,6 +121,8 @@ maps structured owner responses back to durable runtime events.
 It must be idempotent.
 
 Retrying an event must not duplicate approvals, blockers or worker tasks.
+Retrying a project-intake event must not create duplicate project threads or
+duplicate forum cards.
 
 The bridge has no authority to mark factory work `ready`, `done`, released, or
 approved by itself. It can only request that the runtime records a structured

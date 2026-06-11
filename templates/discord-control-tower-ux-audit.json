@@ -1,0 +1,38 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-ux-audit.schema.json",
+  "record_type": "discord_control_tower_ux_audit",
+  "created_at": "2026-06-11T00:00:00Z",
+  "result": "ATTENTION",
+  "scope": "Public-safe UX audit of a Discord Control Tower setup.",
+  "observed_model": {
+    "runtime": "Hermes",
+    "owner_language": "pt-BR",
+    "source_of_truth": "Hermes/Kanban",
+    "discord_role": "owner cockpit and project conversation surface"
+  },
+  "checks": {
+    "portuguese_first_structure": false,
+    "gerente_channel_exists": false,
+    "kanban_forum_exists": false,
+    "kanban_forum_has_phase_tags": false,
+    "pilot_project_thread_created": false,
+    "pilot_forum_card_created": false,
+    "free_response_threading_conflict_documented": false,
+    "thread_first_project_intake_automated": false
+  },
+  "findings": [
+    {
+      "severity": "P1",
+      "finding": "todo",
+      "impact": "todo",
+      "required_fix": "todo"
+    }
+  ],
+  "live_corrections": [],
+  "next_required_actions": [
+    "todo"
+  ],
+  "evidence_refs": [
+    "external:private-discord-audit"
+  ]
+}
