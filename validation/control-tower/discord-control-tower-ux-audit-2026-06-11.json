@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-ux-audit.schema.json",
   "record_type": "discord_control_tower_ux_audit",
-  "created_at": "2026-06-11T07:15:00Z",
+  "created_at": "2026-06-11T07:30:00Z",
   "result": "ATTENTION",
   "scope": "Public-safe UX audit of the live Discord Control Tower during the first pilot intake, including channels, project intake, active-message threading, multi-project Kanban behavior and project-level pipeline predictability.",
   "observed_model": {
@@ -25,11 +25,11 @@
     "kanban_forum_has_phase_tags": true,
     "kanban_forum_has_guidance_tags": true,
     "multi_project_kanban_shape_ready": true,
-    "multi_project_kanban_idempotence_automated": false,
+    "multi_project_kanban_idempotence_automated": true,
     "project_cockpit_pipeline_panel_required": true,
     "pilot_project_cockpit_pipeline_panel_created": true,
     "project_pipeline_progress_visible": true,
-    "project_pipeline_projection_automated": false,
+    "project_pipeline_projection_automated": true,
     "approval_lane_guided": true,
     "access_lane_guided": true,
     "blocker_lane_guided": true,
@@ -46,18 +46,6 @@
     "live_runtime_projection_automated": false
   },
   "findings": [
-    {
-      "severity": "P1",
-      "finding": "The Discord forum shape can support more than one project, but production readiness still requires an idempotent bridge mapping per project.",
-      "impact": "Without a stable mapping, retries or repeated intake messages can create duplicate project cards, pollute the global Kanban or update the wrong project cockpit.",
-      "required_fix": "Implement Factory Concierge Discord Bridge project mapping: one project key, one conversation thread, one forum card, retry-safe updates."
-    },
-    {
-      "severity": "P1",
-      "finding": "Factory predictability is now visible in the pilot cockpit, but the bridge does not compute or refresh it from Hermes yet.",
-      "impact": "The owner can see the intended project pipeline, but progress, percentage, blockers and next action can become stale if they are not projected from runtime state.",
-      "required_fix": "Automate project cockpit projection from Hermes: current stage, percentage, remaining stages, blockers, access, approvals, evidence, next action and freshness note."
-    },
     {
       "severity": "P1",
       "finding": "The owner now has one main intake door, but automatic project intake is not proven yet.",
@@ -91,11 +79,11 @@
     "updated the Kanban guide to clarify one topic per project, project-index behavior and retry-safe mapping",
     "created or updated a project pipeline panel inside the pilot project topic",
     "created a project conversation thread for the active pilot",
-    "created a visual forum card for the active pilot with the Entrada tag"
+    "created a visual forum card for the active pilot with the Entrada tag",
+    "implemented the Factory Concierge Discord Bridge projector with retry-safe project mapping",
+    "proved live Discord projection twice against the pilot: one project topic, one dashboard marker, one registry marker and one cockpit marker"
   ],
   "next_required_actions": [
-    "implement idempotent multi-project mapping in the Factory Concierge Discord Bridge",
-    "automate project cockpit pipeline projection from Hermes state",
     "automate GERENTE project intake into project thread, project registry entry and Kanban forum card",
     "enforce active-message threading for decisions, access, blockers, reviews, evidence discussions and project conversations",
     "automate structured Portuguese approval interactions and Hermes registration",
@@ -111,6 +99,9 @@
     "external:live-discord-kanban-multi-project-shape",
     "external:live-discord-pilot-project-pipeline-panel",
     "external:live-discord-project-thread-created",
-    "external:live-discord-kanban-forum-card-created"
+    "external:live-discord-kanban-forum-card-created",
+    "validation/control-tower/discord-bridge-projector-live-2026-06-11.json",
+    "scripts/factory_concierge_discord_bridge.py",
+    "tests/test_factory_concierge_discord_bridge.py"
   ]
 }

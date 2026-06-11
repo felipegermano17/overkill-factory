@@ -1,0 +1,38 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-control-tower-bridge-health.schema.json",
+  "applied_to_discord": true,
+  "checks": {
+    "approval_registration_path_reachable": true,
+    "bot_reachable": true,
+    "bridge_reachable": true,
+    "channels_resolved": true,
+    "cockpit_upserted": true,
+    "dashboard_upserted": true,
+    "guild_resolved": true,
+    "no_discord_source_of_truth": true,
+    "no_private_material_in_public_receipt": true,
+    "private_state_path_used": true,
+    "project_thread_resolved": true,
+    "registry_upserted": true,
+    "runtime_readback_reachable": true
+  },
+  "created_at": "2026-06-11T07:26:36Z",
+  "evidence_refs": [
+    "docs/control-tower/discord-control-tower-os.md",
+    "docs/control-tower/discord-control-tower-setup-pt-br.md",
+    "external:discord-bridge-projector",
+    "external:discord-project-thread-present",
+    "external:discord-dashboard-message-present",
+    "external:discord-registry-message-present",
+    "external:discord-cockpit-message-present"
+  ],
+  "limits": [
+    "Discord is the owner cockpit only; Hermes remains the source of truth.",
+    "The public receipt redacts Discord ids and private file paths.",
+    "Structured approval buttons and inbound approval registration are separate contracts."
+  ],
+  "project_id": "pilot-front-jogo-fabrica",
+  "projection_freshness": "runtime_fresh",
+  "record_type": "operator_control_tower_bridge_health",
+  "result": "PASS"
+}

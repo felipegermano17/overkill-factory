@@ -19,20 +19,22 @@ O que esta corrigido:
 - piloto ativo com topico de conversa e card visual no forum.
 - painel global ajustado para portfolio, sem despejar detalhe de cada projeto;
 - piloto ativo com painel de esteira dentro do topico do projeto.
+- bridge de projecao criada como ferramenta real da fabrica;
+- mapping idempotente provado no Discord real: repetir a projecao atualiza as
+  mesmas superficies, sem criar duplicata;
+- dashboard, registro de projeto, topico do Kanban e cockpit do piloto agora
+  sao atualizados por `project-projection.json`.
 
 O que ainda precisa virar produto:
 
 - a ponte precisa criar topico e card automaticamente quando um paper/projeto
   chega pelo chat do GERENTE;
-- o Kanban multi-projeto precisa de mapping idempotente para cada topico/card;
-- a previsibilidade por projeto precisa ser automatizada pela bridge a partir
-  do Hermes;
 - aprovacoes precisam virar interacoes estruturadas, com registro real no
   Hermes;
-- acessos, bloqueios, provas, releases e saude precisam ser projetados do
-  Hermes para o Discord sem depender de postagem manual;
-- retries precisam ser idempotentes, sem duplicar card, thread ou pedido de
-  aprovacao.
+- acessos, bloqueios, provas, releases e saude precisam entrar no fluxo de
+  eventos vivos do Hermes para o Discord;
+- mensagens ativas do bot precisam nascer em thread, continuar em thread ou
+  apontar para a thread certa.
 
 ## Jornada revisada
 
@@ -102,21 +104,32 @@ O Discord real foi corrigido manualmente para o piloto, mas a ponte ainda
 precisa provar que cria topico e card automaticamente quando o dono manda um
 paper, briefing longo, novo produto ou piloto.
 
-### P1: Kanban multi-projeto precisa de idempotencia provada
+### Resolvido: mapping e cockpit projetado sem duplicar
 
-O forum do Discord suporta varios topicos, entao o desenho visual e adequado
-para varios projetos se o forum for usado como indice. O detalhe precisa morar
-dentro do topico/cockpit de cada projeto. Isso so fica pronto para producao
-quando a ponte usa um mapping estavel por projeto e atualiza o card existente em
-vez de duplicar topicos em retries.
+A bridge `factory_concierge_discord_bridge.py` recebe um
+`project-projection.json` e atualiza quatro superficies:
 
-### P1: previsibilidade precisa virar superficie de produto
+- dashboard global em `#torre-de-controle`;
+- registro em `#projetos-recebidos`;
+- topico do projeto no `kanban-da-fabrica`;
+- painel de esteira dentro do topico do projeto.
 
-A fabrica e previsivel por desenho, mas isso precisa aparecer visualmente. Cada
-topico de projeto precisa ter um painel de esteira com etapa atual, percentual,
-etapas restantes, bloqueios, acessos, aprovacoes, proxima acao e ultima prova.
-Hoje o painel do piloto foi criado como correcao visual, mas ainda falta a
-bridge projetar esse painel automaticamente a partir do Hermes.
+Ela grava o mapping em estado privado e tambem procura mensagens/topicos
+existentes por marcador ou titulo. Isso permite repetir a execucao sem criar
+duplicata. A prova live foi feita duas vezes no Discord real e confirmou:
+
+```text
+1 topico do piloto
+1 dashboard marcado
+1 registro marcado
+1 cockpit marcado
+```
+
+O recibo publico-safe esta em:
+
+```text
+validation/control-tower/discord-bridge-projector-live-2026-06-11.json
+```
 
 ### P1: aprovacoes ainda precisam de interacao estruturada
 

@@ -155,8 +155,18 @@ as a project index, not as the full project workspace:
 - guide/help topics tagged as `Guia`, not as blocked projects;
 - retries update the existing topic instead of creating duplicates.
 
-If the bridge cannot prove idempotent project mapping, the Kanban is only a
-manual visual aid, not a production-ready multi-project cockpit.
+Without idempotent project mapping, the Kanban is only a manual visual aid, not
+a production-ready multi-project cockpit.
+
+The current public implementation for that mapping is:
+
+```text
+scripts/factory_concierge_discord_bridge.py
+```
+
+It receives a `project-projection.json`, updates the global dashboard, the
+project registry, the project forum topic and the project cockpit, then stores
+real Discord ids only in a private state file outside the public repository.
 
 The forum must stay clean. It should answer:
 
@@ -209,6 +219,11 @@ done | current | pending | blocked | skipped
 The percentage is an operator forecast, not proof by itself. It becomes
 trustworthy only when the bridge computes it from runtime state and labels stale
 or manual projections clearly.
+
+The bridge projector treats `project-projection.schema.json` as the boundary.
+If the projection says `runtime_fresh`, it can show fresh state. If the upstream
+runtime export is stale or manual, the projection must say so; the Discord layer
+must not hide that from the owner.
 
 ## View Hierarchy
 
@@ -268,6 +283,22 @@ duplicate forum cards.
 The bridge has no authority to mark factory work `ready`, `done`, released, or
 approved by itself. It can only request that the runtime records a structured
 event. The runtime and Overkill gates decide whether that event is valid.
+
+The practical project projection command is:
+
+```bash
+python scripts/factory_concierge_discord_bridge.py \
+  --projection /private/path/to/project-projection.json \
+  --state /private/path/to/discord-bridge-state.json \
+  --env /private/path/to/hermes.env \
+  --apply \
+  --out /private/path/to/bridge-health.json
+```
+
+Use `--dry-run` first when wiring a new server. The state file is private
+because it contains Discord ids. The output receipt must follow
+`schemas/operator-control-tower-bridge-health.schema.json` and the public copy
+must redact ids, paths, tokens, URLs and logs.
 
 ## Minimum Contracts
 
