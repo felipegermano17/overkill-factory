@@ -89,14 +89,17 @@ asking which channel to use.
 The practical contract is:
 
 - `#falar-com-gerente` is the main door;
-- `#torre-de-controle` is the current state, not a message dump;
-- `kanban-da-fabrica` is the visual project map;
+- `#torre-de-controle` is the global portfolio view, not a message dump;
+- `kanban-da-fabrica` is the project index, not the place for every detail;
+- each project topic is the project cockpit;
 - `#projetos-recebidos` is an operational registry, not a second owner intake
   door;
 - approvals, access, blockers, evidence and releases each have their own lane;
 - every operational channel has a short pinned Portuguese guide;
 - the Kanban forum has guide/status tags that distinguish a real project from
   help content;
+- every project cockpit shows the factory pipeline, progress, blockers,
+  missing gates, next action and forecast;
 - retries must not create duplicate project threads, forum cards, approvals or
   blocker messages.
 
@@ -107,10 +110,11 @@ internals. The GERENTE explains, routes and points to the visual surface.
 
 | Surface | Owner meaning | Required behavior |
 | --- | --- | --- |
-| `#torre-de-controle` | "Where are we?" | One pinned dashboard, edited when possible, with channel shortcuts. |
+| `#torre-de-controle` | "What is happening across the factory?" | Portfolio dashboard with active projects, stage, progress and alerts. |
 | `#falar-com-gerente` | "Talk to the factory" | Short questions stay inline; project intake gets project surface. |
 | `#projetos-recebidos` | "What entered?" | Registry of received projects; points to the project thread/card. |
-| `kanban-da-fabrica` | "Visual project board" | One topic per project, phase tags, guide tag for help content. |
+| `kanban-da-fabrica` | "Which projects exist?" | One topic per project; it is an index, not a detailed task board. |
+| project topic | "Where is this project, exactly?" | Project cockpit with pipeline, percent, blockers and next action. |
 | `#aprovacoes-formais` | "My decisions" | Approvals must carry scope, risk, deadline and runtime registration. |
 | `#acessos-pendentes` | "What do I need to grant?" | Shows missing accounts, permissions and impact without exposing secrets. |
 | `#bloqueios-reais` | "Why did it stop?" | Shows only blockers that materially stop or limit progress. |
@@ -143,7 +147,7 @@ unsearchable transcript.
 ## Multi-Project Kanban Rule
 
 The Discord Kanban can support multiple projects if the bridge treats the forum
-as a project index:
+as a project index, not as the full project workspace:
 
 - one forum topic per project;
 - one stable project mapping per topic;
@@ -153,6 +157,70 @@ as a project index:
 
 If the bridge cannot prove idempotent project mapping, the Kanban is only a
 manual visual aid, not a production-ready multi-project cockpit.
+
+The forum must stay clean. It should answer:
+
+```text
+which projects exist?
+which phase is each project in?
+which project needs attention?
+```
+
+It should not show every microtask from every project at once.
+
+## Project Cockpit and Predictability
+
+The project topic is the detailed cockpit for one project.
+
+Every active project topic must have a pinned or easily findable pipeline panel
+that shows:
+
+- project name;
+- current factory stage;
+- estimated completion percentage;
+- completed stages;
+- current stage;
+- remaining stages;
+- next action;
+- missing access;
+- pending approvals;
+- real blockers;
+- latest evidence;
+- forecast confidence;
+- source/runtime freshness note.
+
+The factory pipeline is predictable, so the cockpit must make that visible. The
+owner should never need to infer progress from scattered messages.
+
+Recommended pipeline display:
+
+```text
+Entrada -> Fonte/SOT -> Metodo/planejamento -> Arquitetura/UX/seguranca
+-> Acessos/gates -> Execucao -> Revisao/provas -> Producao
+-> Operacao/aprendizado
+```
+
+Each stage should be one of:
+
+```text
+done | current | pending | blocked | skipped
+```
+
+The percentage is an operator forecast, not proof by itself. It becomes
+trustworthy only when the bridge computes it from runtime state and labels stale
+or manual projections clearly.
+
+## View Hierarchy
+
+The Discord UX follows this hierarchy:
+
+```text
+#falar-com-gerente = one human door
+#torre-de-controle = global portfolio dashboard
+kanban-da-fabrica = project index
+project topic = project cockpit and pipeline progress
+decision/access/blocker/evidence/release channels = alert lanes with links back
+```
 
 ## What This Layer Must Not Do
 

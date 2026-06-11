@@ -11,6 +11,46 @@
     "execution_started": false,
     "risk": "R3",
     "forecast_confidence": "blocked",
+    "completion_percent": 35,
+    "pipeline_stages": [
+      {
+        "name": "Entrada",
+        "status": "done",
+        "summary": "Project intake and owner-facing surface exist"
+      },
+      {
+        "name": "Fonte/SOT",
+        "status": "done",
+        "summary": "Project truth can be projected from runtime state"
+      },
+      {
+        "name": "Metodo/planejamento",
+        "status": "current",
+        "summary": "Ready Gate preparation is waiting on access inputs"
+      },
+      {
+        "name": "Acessos/gates",
+        "status": "blocked",
+        "summary": "Execution cannot start before required access and approval"
+      },
+      {
+        "name": "Execucao",
+        "status": "pending",
+        "summary": "Execution starts only after the Ready Gate clears"
+      },
+      {
+        "name": "Revisao/provas",
+        "status": "pending",
+        "summary": "Verification and review follow worker execution"
+      },
+      {
+        "name": "Producao",
+        "status": "pending",
+        "summary": "Release requires evidence and approval"
+      }
+    ],
+    "next_action": "grant required access and record the approval in runtime",
+    "projection_freshness": "runtime_fresh",
     "current_blockers": [
       "missing repository write access",
       "missing staging budget approval"
@@ -32,7 +72,26 @@
     ],
     "source_runtime": "hermes",
     "source_board": "redacted-board",
-    "last_synced_at": "2026-06-10T18:58:13Z"
+    "last_synced_at": "2026-06-11T07:11:00Z",
+    "planned_summary": [
+      "access gate",
+      "ready gate",
+      "worker execution",
+      "verification",
+      "review"
+    ],
+    "missing_items": [
+      "missing repository write access",
+      "missing staging budget approval"
+    ],
+    "forecast_risks": [
+      "execution cannot start until required access and budget approval are recorded",
+      "forecast stays blocked while the Ready Gate has unresolved inputs"
+    ],
+    "human_decisions_required": [
+      "access.appr-example-access"
+    ],
+    "truth_source_available": true
   },
   "event": {
     "$schema": "https://overkill-factory.dev/schemas/control-tower-event.schema.json",
@@ -49,7 +108,7 @@
       "docs/control-tower/discord-control-tower-os.md"
     ],
     "discord_target": "owner-approvals",
-    "created_at": "2026-06-10T18:58:13Z"
+    "created_at": "2026-06-11T07:11:00Z"
   },
   "approval_request": {
     "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
@@ -70,7 +129,7 @@
       "docs/control-tower/discord-control-tower-os.md"
     ],
     "expires_at": "2026-06-11T00:00:00Z",
-    "created_at": "2026-06-10T18:58:13Z"
+    "created_at": "2026-06-11T07:11:00Z"
   },
   "mapping": {
     "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-mapping.schema.json",
@@ -84,7 +143,7 @@
     "project_thread_ref": "redacted-project-thread",
     "evidence_channel_ref": "redacted-evidence-channel",
     "bot_health_channel_ref": "redacted-bot-health-channel",
-    "last_synced_at": "2026-06-10T18:58:13Z"
+    "last_synced_at": "2026-06-11T07:11:00Z"
   },
   "readonly_checks": {
     "runtime_snapshot_unchanged": true,
@@ -97,5 +156,5 @@
     "docs/control-tower/discord-control-tower-os.md",
     "docs/methodology/overkill-factory-vfinal.md"
   ],
-  "created_at": "2026-06-10T18:58:13Z"
+  "created_at": "2026-06-11T07:11:00Z"
 }

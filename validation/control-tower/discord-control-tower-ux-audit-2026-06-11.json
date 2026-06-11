@@ -1,9 +1,9 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-ux-audit.schema.json",
   "record_type": "discord_control_tower_ux_audit",
-  "created_at": "2026-06-11T06:50:00Z",
+  "created_at": "2026-06-11T07:15:00Z",
   "result": "ATTENTION",
-  "scope": "Public-safe UX audit of the live Discord Control Tower during the first pilot intake, including channels, project intake, active-message threading and multi-project Kanban behavior.",
+  "scope": "Public-safe UX audit of the live Discord Control Tower during the first pilot intake, including channels, project intake, active-message threading, multi-project Kanban behavior and project-level pipeline predictability.",
   "observed_model": {
     "runtime": "Hermes",
     "owner_language": "pt-BR",
@@ -15,6 +15,8 @@
     "operator_journey_categories_ordered": true,
     "channel_names_are_owner_readable": true,
     "single_owner_intake_door": true,
+    "global_portfolio_view_defined": true,
+    "project_index_not_detail_dump": true,
     "main_dashboard_pinned": true,
     "per_channel_onboarding_pinned": true,
     "gerente_channel_exists": true,
@@ -24,6 +26,10 @@
     "kanban_forum_has_guidance_tags": true,
     "multi_project_kanban_shape_ready": true,
     "multi_project_kanban_idempotence_automated": false,
+    "project_cockpit_pipeline_panel_required": true,
+    "pilot_project_cockpit_pipeline_panel_created": true,
+    "project_pipeline_progress_visible": true,
+    "project_pipeline_projection_automated": false,
     "approval_lane_guided": true,
     "access_lane_guided": true,
     "blocker_lane_guided": true,
@@ -43,8 +49,14 @@
     {
       "severity": "P1",
       "finding": "The Discord forum shape can support more than one project, but production readiness still requires an idempotent bridge mapping per project.",
-      "impact": "Without a stable mapping, retries or repeated intake messages can create duplicate project cards or update the wrong topic.",
+      "impact": "Without a stable mapping, retries or repeated intake messages can create duplicate project cards, pollute the global Kanban or update the wrong project cockpit.",
       "required_fix": "Implement Factory Concierge Discord Bridge project mapping: one project key, one conversation thread, one forum card, retry-safe updates."
+    },
+    {
+      "severity": "P1",
+      "finding": "Factory predictability is now visible in the pilot cockpit, but the bridge does not compute or refresh it from Hermes yet.",
+      "impact": "The owner can see the intended project pipeline, but progress, percentage, blockers and next action can become stale if they are not projected from runtime state.",
+      "required_fix": "Automate project cockpit projection from Hermes: current stage, percentage, remaining stages, blockers, access, approvals, evidence, next action and freshness note."
     },
     {
       "severity": "P1",
@@ -73,15 +85,17 @@
   ],
   "live_corrections": [
     "renamed the project intake lane to a project registry lane so the GERENTE remains the single owner intake door",
-    "updated the main dashboard to explain single-door intake, multi-project Kanban and active-message threading",
+    "updated the main dashboard to act as a global portfolio view instead of a detail dump",
     "updated the GERENTE channel guide to say papers and pilots start there",
     "updated the project registry guide to say it is not a second paper submission channel",
-    "updated the Kanban guide to clarify one topic per project and retry-safe mapping",
+    "updated the Kanban guide to clarify one topic per project, project-index behavior and retry-safe mapping",
+    "created or updated a project pipeline panel inside the pilot project topic",
     "created a project conversation thread for the active pilot",
     "created a visual forum card for the active pilot with the Entrada tag"
   ],
   "next_required_actions": [
     "implement idempotent multi-project mapping in the Factory Concierge Discord Bridge",
+    "automate project cockpit pipeline projection from Hermes state",
     "automate GERENTE project intake into project thread, project registry entry and Kanban forum card",
     "enforce active-message threading for decisions, access, blockers, reviews, evidence discussions and project conversations",
     "automate structured Portuguese approval interactions and Hermes registration",
@@ -93,7 +107,9 @@
     "docs/control-tower/discord-dynamic-control-tower-study-pt-br.md",
     "docs/control-tower/discord-control-tower-ux-audit-pt-br.md",
     "external:live-discord-single-owner-intake-door-correction",
+    "external:live-discord-global-portfolio-view",
     "external:live-discord-kanban-multi-project-shape",
+    "external:live-discord-pilot-project-pipeline-panel",
     "external:live-discord-project-thread-created",
     "external:live-discord-kanban-forum-card-created"
   ]

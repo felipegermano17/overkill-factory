@@ -85,6 +85,46 @@ def build_projection(snapshot: dict[str, Any]) -> dict[str, Any]:
         "execution_started": snapshot["execution_started"],
         "risk": snapshot["risk"],
         "forecast_confidence": "blocked",
+        "completion_percent": 35,
+        "pipeline_stages": [
+            {
+                "name": "Entrada",
+                "status": "done",
+                "summary": "Project intake and owner-facing surface exist",
+            },
+            {
+                "name": "Fonte/SOT",
+                "status": "done",
+                "summary": "Project truth can be projected from runtime state",
+            },
+            {
+                "name": "Metodo/planejamento",
+                "status": "current",
+                "summary": "Ready Gate preparation is waiting on access inputs",
+            },
+            {
+                "name": "Acessos/gates",
+                "status": "blocked",
+                "summary": "Execution cannot start before required access and approval",
+            },
+            {
+                "name": "Execucao",
+                "status": "pending",
+                "summary": "Execution starts only after the Ready Gate clears",
+            },
+            {
+                "name": "Revisao/provas",
+                "status": "pending",
+                "summary": "Verification and review follow worker execution",
+            },
+            {
+                "name": "Producao",
+                "status": "pending",
+                "summary": "Release requires evidence and approval",
+            },
+        ],
+        "next_action": "grant required access and record the approval in runtime",
+        "projection_freshness": "runtime_fresh",
         "current_blockers": list(snapshot["current_blockers"]),
         "pending_access": list(snapshot["pending_access"]),
         "pending_approvals": list(snapshot["pending_approvals"]),
