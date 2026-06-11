@@ -218,10 +218,12 @@ no `kanban-da-fabrica`.
 
 O Discord nao deve ser apenas um chat. O modelo recomendado e:
 
-- `#torre-de-controle` com uma mensagem fixada e atualizada em vez de spam;
+- `#torre-de-controle` como portfolio global, com projetos ativos, etapa,
+  percentual, alerta e proximo marco;
 - mensagem fixada curta em cada canal operacional explicando quando usar;
 - botoes de atalho para os canais principais;
-- forum com um topico por projeto;
+- forum como indice limpo de projetos, com um topico por projeto;
+- cockpit detalhado dentro de cada topico de projeto;
 - intake thread-first: paper ou briefing nunca fica apenas como mensagem solta;
 - tags de fase no forum;
 - `#aprovacoes-formais` para decisoes formais;
@@ -230,6 +232,57 @@ O Discord nao deve ser apenas um chat. O modelo recomendado e:
 - `#provas-e-evidencias` para provas e recibos;
 - `#saude-do-bot` para health;
 - voz apenas quando ajudar a conversa com o GERENTE.
+
+O Kanban global nao deve carregar tudo. Se houver muitos projetos, ele continua
+legivel porque mostra apenas o indice:
+
+```text
+Projeto | etapa | porcentagem | alerta | proxima acao
+```
+
+O detalhe mora dentro do topico de cada projeto.
+
+## Cockpit por projeto
+
+Cada topico de projeto precisa ter um painel de esteira.
+
+Esse painel responde, de forma visual e direta:
+
+- em que etapa estamos;
+- qual porcentagem estimada da fabrica ja foi vencida;
+- quais etapas faltam;
+- o que falta para avancar;
+- se existe bloqueio real;
+- quais acessos faltam;
+- quais aprovacoes faltam;
+- qual e a proxima acao;
+- qual foi a ultima prova;
+- se o dado veio do Hermes ou e projecao manual/stale.
+
+Modelo simples:
+
+```text
+Projeto: Nome
+Etapa atual: Planejamento
+Conclusao estimada: 22%
+Proxima acao: fechar Product SOT
+Bloqueado por: nenhum
+Falta para avancar: acesso X + aprovacao Y
+
+Entrada: done
+Fonte/SOT: current
+Metodo/planejamento: pending
+Arquitetura/UX/seguranca: pending
+Acessos/gates: pending
+Execucao: pending
+Revisao/provas: pending
+Producao: pending
+Operacao/aprendizado: pending
+```
+
+A porcentagem nao deve ser inventada como certeza. Ela e previsao operacional e
+precisa ser recalculada pela bridge a partir do Hermes quando a automacao
+existir. Enquanto for manual, deve ser marcada como estimativa visual.
 
 Para o dono, a experiencia principal deve ser um unico chat:
 

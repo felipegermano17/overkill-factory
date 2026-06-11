@@ -7,6 +7,31 @@
   "execution_started": false,
   "risk": "R2",
   "forecast_confidence": "blocked",
+  "completion_percent": 35,
+  "pipeline_stages": [
+    {
+      "name": "Entrada",
+      "status": "done",
+      "summary": "Project intake exists"
+    },
+    {
+      "name": "Fonte/SOT",
+      "status": "done",
+      "summary": "Source and product truth are known"
+    },
+    {
+      "name": "Metodo/planejamento",
+      "status": "current",
+      "summary": "Plan is waiting for access confirmation"
+    },
+    {
+      "name": "Acessos/gates",
+      "status": "blocked",
+      "summary": "Repository write access is missing"
+    }
+  ],
+  "next_action": "grant repository write access",
+  "projection_freshness": "runtime_fresh",
   "current_blockers": [
     "missing repository write access"
   ],

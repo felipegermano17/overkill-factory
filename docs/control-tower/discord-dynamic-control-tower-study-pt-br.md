@@ -177,7 +177,8 @@ areas organizadas que o GERENTE usa para mostrar o trabalho.
 
 ## Kanban visual recomendado
 
-O Kanban visual no Discord deve ser um espelho do Kanban real do Hermes.
+O Kanban visual no Discord deve ser um indice visual limpo do Kanban real do
+Hermes, nao um despejo de todas as tarefas.
 
 Modelo:
 
@@ -187,12 +188,14 @@ Forum: kanban-da-fabrica
 Topico: Nome do projeto
 Tags: Planejamento / Executando / Bloqueado / Revisao / Producao
 
-Mensagem fixa do topico:
+Painel do topico:
 - fase atual
+- porcentagem estimada da esteira
 - dono da proxima acao
 - bloqueios
 - acessos faltantes
 - aprovacoes pendentes
+- etapas restantes
 - proximos passos
 - ultima evidencia
 ```
@@ -206,6 +209,17 @@ Projeto A    Projeto B         Projeto C       Projeto D      Projeto E    Proje
 
 Essa mensagem deve ser atualizada pela ponte. Se o Hermes mudar, o Discord
 muda. Se o Discord estiver desatualizado, o Hermes continua valendo.
+
+Para varios projetos, o forum mostra apenas a lista limpa:
+
+```text
+Projeto A - Planejamento - 18% - sem bloqueio
+Projeto B - Execucao - 47% - acesso pendente
+Projeto C - Revisao - 76% - aprovacao pendente
+```
+
+O detalhe fica dentro de cada topico. Isso evita poluicao quando a fabrica
+trabalha em mais de um produto ao mesmo tempo.
 
 ## Regra thread-first para projeto
 
@@ -236,6 +250,65 @@ Piloto - Front jogo da fabrica
 
 O topico nao substitui o Hermes. Ele e a sala visual do projeto para o dono.
 O forum e o quadro visual. Hermes continua sendo a fonte de verdade.
+
+## Cockpit do projeto
+
+O topico de projeto precisa ser mais do que conversa. Ele deve ser o cockpit
+visual daquele projeto.
+
+Toda fabrica e previsivel por definicao. Por isso, cada projeto precisa mostrar
+uma esteira com:
+
+- etapa atual;
+- percentual estimado;
+- etapas concluidas;
+- etapas pendentes;
+- bloqueios reais;
+- acessos faltantes;
+- aprovacoes pendentes;
+- proxima acao;
+- ultima prova;
+- previsao/frescor do dado.
+
+Modelo recomendado:
+
+```text
+Painel de Esteira do Projeto
+
+Etapa atual: Fonte/SOT
+Conclusao estimada: 12%
+Proxima acao: consolidar Product SOT
+Bloqueio: nenhum
+Falta para avancar: confirmar escopo e acessos
+
+Entrada: done
+Fonte/SOT: current
+Metodo/planejamento: pending
+Arquitetura/UX/seguranca: pending
+Acessos/gates: pending
+Execucao: pending
+Revisao/provas: pending
+Producao: pending
+Operacao/aprendizado: pending
+```
+
+Esse painel deve ser editado pela ponte, nao duplicado a cada evento.
+
+## Hierarquia anti-poluicao
+
+```text
+#torre-de-controle
+  portfolio global: poucos projetos, etapa, porcentagem, alerta
+
+kanban-da-fabrica
+  indice: um topico por projeto
+
+topico do projeto
+  cockpit: esteira, previsibilidade, bloqueios, acessos, provas, decisoes
+
+canais de decisao/acesso/bloqueio/prova/release
+  alertas e registros com link de volta para o topico do projeto
+```
 
 ## Modelo visual recomendado
 

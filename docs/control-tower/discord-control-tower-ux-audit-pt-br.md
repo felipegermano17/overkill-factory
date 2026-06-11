@@ -17,12 +17,16 @@ O que esta corrigido:
 - Kanban visual com topico de guia separado de projeto real;
 - tags adicionais no Kanban para guia, acao do dono e fabrica trabalhando;
 - piloto ativo com topico de conversa e card visual no forum.
+- painel global ajustado para portfolio, sem despejar detalhe de cada projeto;
+- piloto ativo com painel de esteira dentro do topico do projeto.
 
 O que ainda precisa virar produto:
 
 - a ponte precisa criar topico e card automaticamente quando um paper/projeto
   chega pelo chat do GERENTE;
 - o Kanban multi-projeto precisa de mapping idempotente para cada topico/card;
+- a previsibilidade por projeto precisa ser automatizada pela bridge a partir
+  do Hermes;
 - aprovacoes precisam virar interacoes estruturadas, com registro real no
   Hermes;
 - acessos, bloqueios, provas, releases e saude precisam ser projetados do
@@ -41,6 +45,8 @@ dono fala com o GERENTE
 -> GERENTE entende se e duvida curta ou projeto
 -> duvida curta fica no chat
 -> projeto cria topico + card no Kanban
+-> topico vira cockpit do projeto
+-> cockpit mostra etapa, porcentagem, bloqueio, falta e proxima acao
 -> registro aparece em #projetos-recebidos
 -> pendencias aparecem nas lanes certas
 -> decisoes formais sao registradas no Hermes
@@ -79,7 +85,8 @@ dono fala com o GERENTE
 | `#torre-de-controle` | Mostrar estado atual, atalhos e como usar o cockpit. |
 | `#falar-com-gerente` | Porta principal de conversa com o dono. |
 | `#projetos-recebidos` | Registro operacional do que entrou pela porta do GERENTE. |
-| `kanban-da-fabrica` | Espelho visual por projeto, com tags de fase. |
+| `kanban-da-fabrica` | Indice visual de projetos, com um topico por projeto. |
+| topico do projeto | Cockpit do projeto, com esteira, percentual, faltas e bloqueios. |
 | `#aprovacoes-formais` | Decisoes com escopo, risco e validade. |
 | `#acessos-pendentes` | O que falta conceder antes de executar com autonomia. |
 | `#bloqueios-reais` | O que esta impedindo progresso de verdade. |
@@ -98,9 +105,18 @@ paper, briefing longo, novo produto ou piloto.
 ### P1: Kanban multi-projeto precisa de idempotencia provada
 
 O forum do Discord suporta varios topicos, entao o desenho visual e adequado
-para varios projetos. Mas isso so fica pronto para producao quando a ponte usa
-um mapping estavel por projeto e atualiza o card existente em vez de duplicar
-topicos em retries.
+para varios projetos se o forum for usado como indice. O detalhe precisa morar
+dentro do topico/cockpit de cada projeto. Isso so fica pronto para producao
+quando a ponte usa um mapping estavel por projeto e atualiza o card existente em
+vez de duplicar topicos em retries.
+
+### P1: previsibilidade precisa virar superficie de produto
+
+A fabrica e previsivel por desenho, mas isso precisa aparecer visualmente. Cada
+topico de projeto precisa ter um painel de esteira com etapa atual, percentual,
+etapas restantes, bloqueios, acessos, aprovacoes, proxima acao e ultima prova.
+Hoje o painel do piloto foi criado como correcao visual, mas ainda falta a
+bridge projetar esse painel automaticamente a partir do Hermes.
 
 ### P1: aprovacoes ainda precisam de interacao estruturada
 
@@ -115,8 +131,8 @@ projetado pelo Hermes: acessos, bloqueios, provas, releases e saude.
 
 ### P2: o Kanban visual precisa ser espelho vivo
 
-O forum esta certo como forma visual, mas a ponte precisa atualizar tags,
-resumos e proximos passos conforme o Hermes muda.
+O forum esta certo como indice visual, mas a ponte precisa atualizar tags,
+resumos e o painel de esteira do projeto conforme o Hermes muda.
 
 ### P2: regra de thread precisa ser aplicada pela ponte
 
@@ -134,6 +150,8 @@ A Control Tower Discord fica pronta quando:
 - o canal `#projetos-recebidos` funciona como registro, nao como segunda porta;
 - o Kanban visual reflete fase, bloqueio, acesso, aprovacao e evidencia;
 - o Kanban atualiza varios projetos sem duplicar topicos;
+- cada projeto tem cockpit proprio com esteira e percentual;
+- o portfolio global mostra poucos dados por projeto e nao fica poluido;
 - aprovacoes passam por interacao estruturada e registro real no Hermes;
 - mensagens ativas do bot usam thread ou link claro para thread;
 - o dashboard principal e editado em vez de gerar spam;

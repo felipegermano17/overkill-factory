@@ -12,6 +12,10 @@
     "execution_started",
     "risk",
     "forecast_confidence",
+    "completion_percent",
+    "pipeline_stages",
+    "next_action",
+    "projection_freshness",
     "last_synced_at",
     "planned_summary",
     "missing_items",
@@ -72,6 +76,39 @@
         "low",
         "blocked"
       ]
+    },
+    "completion_percent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "pipeline_stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "status"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": ["done", "current", "pending", "blocked", "skipped"]
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projection_freshness": {
+      "enum": ["runtime_fresh", "manual_estimate", "stale", "blocked"]
     },
     "current_blockers": {
       "type": "array",

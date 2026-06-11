@@ -26,6 +26,12 @@ class ControlTowerReadOnlySmokeTest(unittest.TestCase):
         self.assertTrue(receipt["readonly_checks"]["approval_pending_only"])
         self.assertTrue(receipt["readonly_checks"]["mapping_redacted"])
         self.assertEqual(receipt["projection"]["status"], "waiting_access")
+        self.assertEqual(receipt["projection"]["completion_percent"], 35)
+        self.assertEqual(receipt["projection"]["projection_freshness"], "runtime_fresh")
+        self.assertEqual(receipt["projection"]["next_action"], "grant required access and record the approval in runtime")
+        stage_statuses = {stage["name"]: stage["status"] for stage in receipt["projection"]["pipeline_stages"]}
+        self.assertEqual(stage_statuses["Metodo/planejamento"], "current")
+        self.assertEqual(stage_statuses["Acessos/gates"], "blocked")
         self.assertEqual(receipt["event"]["event_type"], "access_missing")
         self.assertEqual(receipt["approval_request"]["status"], "pending")
 
