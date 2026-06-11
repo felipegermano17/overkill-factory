@@ -36,24 +36,24 @@ Overkill Factory Control Tower
 Estrutura recomendada:
 
 ```text
-01 PAINEL DA FABRICA
+01 COMECE AQUI
   #torre-de-controle
   #falar-com-gerente
   #saude-do-bot
   sala-de-voz-gerente
 
-02 OPERACAO
-  #novos-projetos
+02 PROJETOS E KANBAN
+  #projetos-recebidos
+  kanban-da-fabrica
+
+03 DECISOES E PENDENCIAS
   #aprovacoes-formais
   #acessos-pendentes
   #bloqueios-reais
 
-03 ENTREGA
+04 PROVAS E PRODUCAO
   #provas-e-evidencias
   #producao-e-releases
-
-04 PROJETOS
-  kanban-da-fabrica
 
 99 ARQUIVO
   canais antigos ou migrados
@@ -106,8 +106,8 @@ Depois que o servidor e o token existem, a fabrica executa esta sequencia:
 2. Reinicia ou recarrega o gateway do Hermes.
 3. Confirma que `hermes status` mostra Discord configurado.
 4. Confirma que o bot aparece online no servidor.
-5. Envia uma mensagem de health em `#bot-health`.
-6. Publica ou atualiza o dashboard em `#dashboard`.
+5. Envia uma mensagem de health em `#saude-do-bot`.
+6. Publica ou atualiza o dashboard em `#torre-de-controle`.
 7. Registra uma aprovacao estruturada de teste em `#owner-approvals`.
 8. Confirma que essa aprovacao foi registrada de volta no Hermes.
 9. Preenche o kit privado de evidencia.
@@ -171,7 +171,7 @@ O repo publico nao pode conter:
 | --- | --- | --- |
 | `#torre-de-controle` | status resumido, fase atual, previsao e proximos passos | Concierge |
 | `#falar-com-gerente` | conversa direta com o GERENTE | dono e Concierge |
-| `#novos-projetos` | entrada de novos projetos, papers e pedidos | dono e Concierge |
+| `#projetos-recebidos` | registro operacional de projetos recebidos | Concierge |
 | `#aprovacoes-formais` | aprovacoes estruturadas | dono e ponte |
 | `#acessos-pendentes` | pedidos de acesso, contas, cloud, GitHub e chaves | Concierge |
 | `#bloqueios-reais` | bloqueios que impedem progresso | Concierge |
@@ -181,7 +181,7 @@ O repo publico nao pode conter:
 | `kanban-da-fabrica` | um topico por projeto | Concierge e dono |
 | `#arquivo-projetos-antigo` | arquivo, nao uso diario | ponte |
 
-O canal `#falar-com-gerente` pode ser configurado como canal livre: o dono fala
+O canal `#falar-com-gerente` e a porta humana principal: o dono fala
 com o GERENTE sem precisar mencionar o bot. Os outros canais devem ser mais
 controlados para evitar barulho e aprovacao acidental.
 
@@ -194,6 +194,21 @@ mensagem curta -> resposta curta no chat
 paper/projeto/piloto -> topico do projeto + cartao no forum
 ```
 
+`#projetos-recebidos` nao deve ser uma segunda porta humana para mandar paper.
+Ele existe para registrar que um projeto entrou e apontar para o topico/card
+correto. Se o dono estiver em duvida, deve falar com o GERENTE.
+
+Mensagens ativas tambem precisam seguir uma regra simples:
+
+```text
+notificacao, health ou painel -> pode ficar sem thread
+pergunta, decisao, acesso, bloqueio, evidencia discutivel ou projeto -> thread
+```
+
+Em outras palavras: toda mensagem do bot que convida conversa ou acao deve
+nascer com thread, estar dentro de uma thread ou apontar claramente para a
+thread certa. Apenas notificacoes puramente informativas devem ficar soltas.
+
 Se `DISCORD_NO_THREAD_CHANNELS` incluir `#falar-com-gerente`, isso deve ser
 tratado como configuracao apenas para conversa curta. A fabrica ainda precisa
 do `Factory Concierge Discord Bridge` para criar topicos de projeto e cartoes
@@ -204,6 +219,7 @@ no `kanban-da-fabrica`.
 O Discord nao deve ser apenas um chat. O modelo recomendado e:
 
 - `#torre-de-controle` com uma mensagem fixada e atualizada em vez de spam;
+- mensagem fixada curta em cada canal operacional explicando quando usar;
 - botoes de atalho para os canais principais;
 - forum com um topico por projeto;
 - intake thread-first: paper ou briefing nunca fica apenas como mensagem solta;

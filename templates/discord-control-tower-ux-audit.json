@@ -12,13 +12,32 @@
   },
   "checks": {
     "portuguese_first_structure": false,
+    "operator_journey_categories_ordered": false,
+    "channel_names_are_owner_readable": false,
+    "single_owner_intake_door": false,
+    "main_dashboard_pinned": false,
+    "per_channel_onboarding_pinned": false,
     "gerente_channel_exists": false,
+    "project_registry_channel_exists": false,
     "kanban_forum_exists": false,
     "kanban_forum_has_phase_tags": false,
+    "kanban_forum_has_guidance_tags": false,
+    "multi_project_kanban_shape_ready": false,
+    "multi_project_kanban_idempotence_automated": false,
+    "approval_lane_guided": false,
+    "access_lane_guided": false,
+    "blocker_lane_guided": false,
+    "evidence_lane_guided": false,
+    "release_lane_guided": false,
+    "health_lane_guided": false,
     "pilot_project_thread_created": false,
     "pilot_forum_card_created": false,
+    "kanban_guide_not_marked_as_blocked_project": false,
+    "active_bot_messages_threaded_or_linked": false,
     "free_response_threading_conflict_documented": false,
-    "thread_first_project_intake_automated": false
+    "thread_first_project_intake_automated": false,
+    "structured_approval_interactions_automated": false,
+    "live_runtime_projection_automated": false
   },
   "findings": [
     {

@@ -81,6 +81,79 @@ Hermes native Discord free-response channels are useful for low-friction chat,
 but they are not enough for factory intake. They can answer inline. The factory
 needs the Concierge bridge to create the project surface deliberately.
 
+## Complete UX Contract
+
+The Discord layer is good only when the owner understands the system without
+asking which channel to use.
+
+The practical contract is:
+
+- `#falar-com-gerente` is the main door;
+- `#torre-de-controle` is the current state, not a message dump;
+- `kanban-da-fabrica` is the visual project map;
+- `#projetos-recebidos` is an operational registry, not a second owner intake
+  door;
+- approvals, access, blockers, evidence and releases each have their own lane;
+- every operational channel has a short pinned Portuguese guide;
+- the Kanban forum has guide/status tags that distinguish a real project from
+  help content;
+- retries must not create duplicate project threads, forum cards, approvals or
+  blocker messages.
+
+The owner should not need to remember commands, English words or Hermes
+internals. The GERENTE explains, routes and points to the visual surface.
+
+## Channel UX Map
+
+| Surface | Owner meaning | Required behavior |
+| --- | --- | --- |
+| `#torre-de-controle` | "Where are we?" | One pinned dashboard, edited when possible, with channel shortcuts. |
+| `#falar-com-gerente` | "Talk to the factory" | Short questions stay inline; project intake gets project surface. |
+| `#projetos-recebidos` | "What entered?" | Registry of received projects; points to the project thread/card. |
+| `kanban-da-fabrica` | "Visual project board" | One topic per project, phase tags, guide tag for help content. |
+| `#aprovacoes-formais` | "My decisions" | Approvals must carry scope, risk, deadline and runtime registration. |
+| `#acessos-pendentes` | "What do I need to grant?" | Shows missing accounts, permissions and impact without exposing secrets. |
+| `#bloqueios-reais` | "Why did it stop?" | Shows only blockers that materially stop or limit progress. |
+| `#provas-e-evidencias` | "What was proven?" | Mirrors receipts, tests and validation references without becoming canonical. |
+| `#producao-e-releases` | "Can this go live?" | Shows readiness, rollback and production decision state. |
+| `#saude-do-bot` | "Is the cockpit alive?" | Shows bot, Hermes, gateway and bridge health. |
+
+## Thread Rule
+
+The owner is right to expect active bot messages to create a conversation
+surface.
+
+Rule:
+
+```text
+notification, health ping or dashboard update -> no thread required
+question, decision, access, blocker, evidence discussion, review or project
+conversation -> thread required
+```
+
+For active work, the bot should either:
+
+- create the thread;
+- post inside the existing thread; or
+- point clearly to the existing thread.
+
+This keeps `#falar-com-gerente` useful without letting it become a long,
+unsearchable transcript.
+
+## Multi-Project Kanban Rule
+
+The Discord Kanban can support multiple projects if the bridge treats the forum
+as a project index:
+
+- one forum topic per project;
+- one stable project mapping per topic;
+- phase tags updated from runtime state;
+- guide/help topics tagged as `Guia`, not as blocked projects;
+- retries update the existing topic instead of creating duplicates.
+
+If the bridge cannot prove idempotent project mapping, the Kanban is only a
+manual visual aid, not a production-ready multi-project cockpit.
+
 ## What This Layer Must Not Do
 
 It must not:
@@ -241,21 +314,21 @@ When this layer is active, the factory needs:
 The recommended Discord setup is intentionally small, but it should be clear
 and Portuguese-first for the owner:
 
-- `01 PAINEL DA FABRICA`
+- `01 COMECE AQUI`
   - `#torre-de-controle`
   - `#falar-com-gerente`
   - `#saude-do-bot`
   - `sala-de-voz-gerente`
-- `02 OPERACAO`
-  - `#novos-projetos`
+- `02 PROJETOS E KANBAN`
+  - `#projetos-recebidos`
+  - `kanban-da-fabrica`
+- `03 DECISOES E PENDENCIAS`
   - `#aprovacoes-formais`
   - `#acessos-pendentes`
   - `#bloqueios-reais`
-- `03 ENTREGA`
+- `04 PROVAS E PRODUCAO`
   - `#provas-e-evidencias`
   - `#producao-e-releases`
-- `04 PROJETOS`
-  - `kanban-da-fabrica`
 - `99 ARQUIVO`
   - canais antigos ou migrados.
 

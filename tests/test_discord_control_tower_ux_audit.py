@@ -23,6 +23,9 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
         self.assertIn("paper, briefing ou projeto novo -> abre topico do projeto", dynamic_study)
         self.assertIn("paper/projeto/piloto -> topico do projeto + cartao no forum", setup_guide)
         self.assertIn("paper, long brief, new product or pilot -> create project thread and forum card", os_doc)
+        self.assertIn("#projetos-recebidos", combined)
+        self.assertIn("not a second owner intake", os_doc)
+        self.assertIn("mensagem do bot que convida conversa ou acao deve", setup_guide)
         self.assertIn("free_response_channels", combined)
         self.assertIn("Factory Concierge Discord Bridge", combined)
 
@@ -33,11 +36,16 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
         self.assertEqual(audit["result"], "ATTENTION")
         self.assertTrue(audit["checks"]["pilot_project_thread_created"])
         self.assertTrue(audit["checks"]["pilot_forum_card_created"])
+        self.assertTrue(audit["checks"]["single_owner_intake_door"])
+        self.assertTrue(audit["checks"]["multi_project_kanban_shape_ready"])
+        self.assertFalse(audit["checks"]["multi_project_kanban_idempotence_automated"])
+        self.assertFalse(audit["checks"]["active_bot_messages_threaded_or_linked"])
         self.assertFalse(audit["checks"]["thread_first_project_intake_automated"])
         self.assertIn("created a project conversation thread", "\n".join(audit["live_corrections"]))
 
         findings = "\n".join(item["finding"] for item in audit["findings"])
-        self.assertIn("loose messages", findings)
+        self.assertIn("more than one project", findings)
+        self.assertIn("Active bot messages", findings)
 
 
 if __name__ == "__main__":
