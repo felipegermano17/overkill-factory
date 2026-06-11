@@ -84,6 +84,12 @@ but they are not the right default for factory intake. The factory expects
 `discord.thread_require_mention=false`: the owner mentions the GERENTE once in
 the reception channel, then the whole attendance continues in the thread.
 
+Important runtime detail: Hermes Discord env vars override `config.yaml`. A
+production GERENTE profile must not put the manager channel in
+`DISCORD_NO_THREAD_CHANNELS` or `DISCORD_FREE_RESPONSE_CHANNELS`, and
+`DISCORD_THREAD_REQUIRE_MENTION` must be `false`. Otherwise the bot can answer
+mentions correctly while still failing to open the attendance thread.
+
 ## Complete UX Contract
 
 The Discord layer is good only when the owner understands the system without
