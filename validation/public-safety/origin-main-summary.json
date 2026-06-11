@@ -1,31 +1,14 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/public-safety-scan-summary.schema.json",
   "record_type": "public_safety_scan_summary",
-  "created_at": "2026-06-10T22:12:27Z",
+  "created_at": "2026-06-10T23:27:21Z",
   "target": {
     "kind": "git_ref",
     "ref": "origin/main"
   },
-  "result": "FAIL",
-  "finding_count": 474,
-  "categories": [
-    {
-      "id": "private_environment_marker",
-      "count": 7
-    },
-    {
-      "id": "private_owner_marker",
-      "count": 49
-    },
-    {
-      "id": "private_product_marker",
-      "count": 404
-    },
-    {
-      "id": "private_runtime_path",
-      "count": 14
-    }
-  ],
+  "result": "PASS",
+  "finding_count": 0,
+  "categories": [],
   "limits": [
     "This summary is public-safe and intentionally omits raw matching lines and raw private markers.",
     "Use the scanner stderr output in a private operator context for exact remediation paths."

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-owner-setup.schema.json",
+  "record_type": "discord_control_tower_owner_setup",
+  "created_at": "2026-06-10T00:00:00Z",
+  "result": "BLOCKED",
+  "project_id": "todo",
+  "checks": {
+    "server_exists": false,
+    "bot_application_created": false,
+    "bot_invited_to_server": false,
+    "message_content_intent_enabled": false,
+    "server_members_intent_enabled": false,
+    "owner_user_allowlisted": false,
+    "required_channels_exist": false,
+    "owner_approval_channel_restricted": false,
+    "bot_health_channel_available": false,
+    "least_privilege_permissions_reviewed": false,
+    "token_stored_outside_public_repo": true,
+    "offboarding_plan_ready": false
+  },
+  "required_channels": {
+    "dashboard": "todo",
+    "intake": "todo",
+    "owner_approvals": "todo",
+    "access_requests": "todo",
+    "blockers": "todo",
+    "evidence_feed": "todo",
+    "release_room": "todo",
+    "bot_health": "todo",
+    "projects_area": "todo"
+  },
+  "evidence_refs": [
+    "todo"
+  ],
+  "limits": [
+    "This public template is not production evidence.",
+    "Copy it to a private operator evidence folder and replace placeholders with real server, bot, channel and permission evidence."
+  ]
+}

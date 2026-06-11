@@ -114,14 +114,21 @@ def build_readiness(
         result = "PASS"
         summary = "Factory vFinal production readiness evidence is complete."
 
-    next_required_actions = [
-        "replace private Control Tower placeholders with real cockpit/runtime evidence",
-        "rerun operator_control_tower_private_evidence_doctor.py until it passes",
-        "run operator_control_tower_proof.py to create the production proof",
-        "regenerate the complete Hermes update receipt",
-        "pass the release integration preflight",
-        "integrate the public-safe worktree into the release ref and rerun public-safety scans for HEAD and origin/main",
-    ]
+    component_status = {item["id"]: item["status"] for item in components}
+    next_required_actions: list[str] = []
+    if component_status.get("operator_control_tower_private_evidence_doctor") != "PASS":
+        next_required_actions.append("replace private Control Tower placeholders with real cockpit/runtime evidence")
+        next_required_actions.append("rerun operator_control_tower_private_evidence_doctor.py until it passes")
+    if component_status.get("operator_control_tower_production_readiness") != "PASS":
+        next_required_actions.append("run operator_control_tower_proof.py to create the production proof")
+    if component_status.get("hermes_real_runtime_update_preflight") != "PASS":
+        next_required_actions.append("regenerate the complete Hermes update receipt and rerun the real-runtime update preflight")
+    if component_status.get("release_integration_preflight") != "PASS":
+        next_required_actions.append("pass the release integration preflight")
+    if component_status.get("public_safety_origin_main") != "PASS":
+        next_required_actions.append("integrate the public-safe worktree into the release ref and rerun public-safety scans for HEAD and origin/main")
+    if not next_required_actions and attention_items:
+        next_required_actions.append("review attention items before final production approval")
     if not blocking_items:
         next_required_actions = [
             "perform final operator review",

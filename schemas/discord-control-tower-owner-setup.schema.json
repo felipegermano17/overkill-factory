@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/discord-control-tower-owner-setup.schema.json",
+  "title": "Overkill Factory Discord Control Tower Owner Setup Evidence",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "project_id",
+    "checks",
+    "required_channels",
+    "evidence_refs",
+    "limits"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/discord-control-tower-owner-setup.schema.json"
+    },
+    "record_type": {
+      "const": "discord_control_tower_owner_setup"
+    },
+    "created_at": { "type": "string", "minLength": 10 },
+    "result": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+    "project_id": { "type": "string", "minLength": 1 },
+    "checks": {
+      "type": "object",
+      "required": [
+        "server_exists",
+        "bot_application_created",
+        "bot_invited_to_server",
+        "message_content_intent_enabled",
+        "server_members_intent_enabled",
+        "owner_user_allowlisted",
+        "required_channels_exist",
+        "owner_approval_channel_restricted",
+        "bot_health_channel_available",
+        "least_privilege_permissions_reviewed",
+        "token_stored_outside_public_repo",
+        "offboarding_plan_ready"
+      ],
+      "properties": {
+        "server_exists": { "type": "boolean" },
+        "bot_application_created": { "type": "boolean" },
+        "bot_invited_to_server": { "type": "boolean" },
+        "message_content_intent_enabled": { "type": "boolean" },
+        "server_members_intent_enabled": { "type": "boolean" },
+        "owner_user_allowlisted": { "type": "boolean" },
+        "required_channels_exist": { "type": "boolean" },
+        "owner_approval_channel_restricted": { "type": "boolean" },
+        "bot_health_channel_available": { "type": "boolean" },
+        "least_privilege_permissions_reviewed": { "type": "boolean" },
+        "token_stored_outside_public_repo": { "type": "boolean" },
+        "offboarding_plan_ready": { "type": "boolean" }
+      },
+      "additionalProperties": { "type": "boolean" }
+    },
+    "required_channels": {
+      "type": "object",
+      "required": [
+        "dashboard",
+        "intake",
+        "owner_approvals",
+        "access_requests",
+        "blockers",
+        "evidence_feed",
+        "release_room",
+        "bot_health",
+        "projects_area"
+      ],
+      "properties": {
+        "dashboard": { "type": "string", "minLength": 1 },
+        "intake": { "type": "string", "minLength": 1 },
+        "owner_approvals": { "type": "string", "minLength": 1 },
+        "access_requests": { "type": "string", "minLength": 1 },
+        "blockers": { "type": "string", "minLength": 1 },
+        "evidence_feed": { "type": "string", "minLength": 1 },
+        "release_room": { "type": "string", "minLength": 1 },
+        "bot_health": { "type": "string", "minLength": 1 },
+        "projects_area": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": true
+}

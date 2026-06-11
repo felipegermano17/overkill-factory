@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operator-control-tower-owner-setup-doctor.schema.json",
+  "title": "Overkill Factory Operator Control Tower Owner Setup Doctor",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "summary",
+    "scope",
+    "environment_ref",
+    "evidence_refs",
+    "limits",
+    "decision",
+    "checks",
+    "blocking_items",
+    "input_errors"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/operator-control-tower-owner-setup-doctor.schema.json"
+    },
+    "record_type": {
+      "const": "operator_control_tower_owner_setup_doctor"
+    },
+    "created_at": { "type": "string", "minLength": 10 },
+    "result": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "scope": { "type": "string", "minLength": 1 },
+    "environment_ref": { "type": "string", "minLength": 1 },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "owner_setup_input",
+        "next_required_action"
+      ],
+      "properties": {
+        "owner_setup_input": { "enum": ["ready", "blocked"] },
+        "next_required_action": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "checks": {
+      "type": "object",
+      "required": [
+        "owner_setup_file_present",
+        "owner_setup_schema_valid",
+        "owner_setup_result_passed",
+        "required_owner_checks_passed",
+        "required_channel_refs_present",
+        "owner_setup_has_real_evidence_refs"
+      ],
+      "properties": {
+        "owner_setup_file_present": { "type": "boolean" },
+        "owner_setup_schema_valid": { "type": "boolean" },
+        "owner_setup_result_passed": { "type": "boolean" },
+        "required_owner_checks_passed": { "type": "boolean" },
+        "required_channel_refs_present": { "type": "boolean" },
+        "owner_setup_has_real_evidence_refs": { "type": "boolean" }
+      },
+      "additionalProperties": { "type": "boolean" }
+    },
+    "blocking_items": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "input_errors": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": true
+}

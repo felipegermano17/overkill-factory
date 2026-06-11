@@ -1,0 +1,102 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-update-receipt.schema.json",
+  "record_type": "hermes_update_receipt",
+  "created_at": "2026-06-10T23:25:00Z",
+  "scope": "Overkill Factory vFinal Discord Control Tower activation on the real Hermes runtime; public-safe receipt with private evidence kept outside the repository",
+  "before": {
+    "runtime_ref": "redacted-real-hermes-runtime",
+    "gateway_health": "PASS",
+    "kanban_cli_health": "PASS",
+    "discord_status": "not_configured",
+    "worker_profiles": "46 non-human vFinal profiles passed live provider/model probe"
+  },
+  "after": {
+    "runtime_ref": "redacted-real-hermes-runtime",
+    "status": "applied",
+    "discord_status": "configured",
+    "gateway_health": "PASS",
+    "discord_home_channel_send": "PASS",
+    "control_tower_runtime_roundtrip": "PASS",
+    "rollback_path": "gateway env backup and Restart=always service recovery path available"
+  },
+  "adapter_patch": {
+    "paths": [
+      "adapters/hermes/patches/0002-add-overkill-vfinal-kanban-transition-hook.patch",
+      "adapters/hermes/patches/0003-materialize-overkill-vfinal-worker-subtasks.patch",
+      "adapters/hermes/patches/0004-guard-overkill-vfinal-dashboard-ready-route.patch",
+      "adapters/hermes/patches/0005-ingest-overkill-worker-results-from-subtasks.patch",
+      "adapters/hermes/patches/0006-fix-overkill-worker-subtask-dependency-direction.patch",
+      "adapters/hermes/patches/0007-add-dashboard-python-multipart-web-extra.patch",
+      "adapters/hermes/patches/0008-guard-overkill-vfinal-dashboard-delete-route.patch",
+      "adapters/hermes/patches/0009-guard-overkill-vfinal-dashboard-links-route.patch",
+      "adapters/hermes/patches/0010-guard-overkill-vfinal-dashboard-attachment-delete-route.patch",
+      "adapters/hermes/patches/0011-guard-overkill-vfinal-dashboard-bulk-archive-route.patch",
+      "adapters/hermes/patches/0012-guard-overkill-vfinal-dashboard-reassign-route.patch",
+      "adapters/hermes/patches/0013-guard-overkill-vfinal-dashboard-reclaim-terminate-routes.patch",
+      "adapters/hermes/patches/0014-guard-overkill-vfinal-dashboard-specify-route.patch",
+      "adapters/hermes/patches/0015-guard-overkill-vfinal-dashboard-decompose-route.patch",
+      "adapters/hermes/patches/0016-guard-overkill-vfinal-dashboard-board-delete-route.patch"
+    ],
+    "apply_result": "PASS in disposable validation",
+    "real_runtime_apply_result": "PASS for Discord Control Tower configuration and gateway restart"
+  },
+  "checks": {
+    "compatibility_check": "PASS",
+    "unit_tests": "PASS",
+    "public_safety_scan": "PASS",
+    "secret_safety_scan": "PASS",
+    "public_json_validation": "PASS",
+    "disposable_installed_hermes_runtime_smoke": "PASS",
+    "dashboard_route_inventory_zero_pending": "PASS",
+    "worker_profile_live_auth_matrix": "PASS",
+    "real_tool_auth": "PASS",
+    "specialist_output_quality": "PASS",
+    "real_worker_done_reconciliation": "PASS",
+    "production_rollback_monitoring": "PASS",
+    "control_tower_readonly_contract": "PASS",
+    "control_tower_approval_registration_contract": "PASS",
+    "operator_control_tower_owner_setup_doctor": "PASS",
+    "operator_control_tower_private_evidence_bundle": "PASS",
+    "operator_control_tower_private_evidence_doctor": "PASS",
+    "operator_control_tower_production_readiness_harness": "PASS",
+    "operator_control_tower_production_proof": "PASS",
+    "discord_server_mapping": "PASS",
+    "bridge_health": "PASS",
+    "runtime_registration_path_for_owner_approvals": "PASS",
+    "worktree_release_inventory": "ATTENTION"
+  },
+  "decision": {
+    "real_runtime_update": "allowed_for_explicit_operator_gate",
+    "worker_task_status": "ready_requires_operator_gate",
+    "risk_owner": "Factory Owner",
+    "rollback_plan": "Restore the backed-up Hermes environment file, restart the gateway service, revoke the Discord bot credential if needed, and rerun the Control Tower proof to return the gate to BLOCKED.",
+    "next_required_gate": "release_integration"
+  },
+  "evidence_refs": [
+    "adapters/hermes/update-runbook.md",
+    "adapters/hermes/compatibility-check.py",
+    "docs/control-tower/discord-control-tower-os.md",
+    "docs/control-tower/discord-control-tower-setup-pt-br.md",
+    "docs/control-tower/operator-control-tower-private-evidence-kit.md",
+    "validation/control-tower/control-tower-readonly-smoke.json",
+    "validation/control-tower/control-tower-approval-registration-smoke.json",
+    "validation/control-tower/operator-control-tower-owner-setup-doctor.json",
+    "validation/control-tower/operator-control-tower-private-evidence-doctor.json",
+    "validation/control-tower/operator-control-tower-production-readiness.json",
+    "validation/hermes-production-proof/operator-control-tower.json",
+    "validation/hermes-production-proof/non-stub-worker-execution.json",
+    "validation/hermes-production-proof/real-tool-auth.json",
+    "validation/hermes-production-proof/specialist-output-quality.json",
+    "validation/hermes-production-proof/real-worker-done-reconciliation.json",
+    "validation/hermes-production-proof/production-rollback-monitoring.json",
+    "validation/hermes-real-runtime-smoke/production-rollback-monitoring-smoke.json",
+    "validation/release/worktree-release-inventory.json",
+    "validation/public-safety/worktree-summary.json",
+    "validation/public-safety/head-summary.json"
+  ],
+  "limits": [
+    "This receipt is public-safe and intentionally omits raw Discord ids, private runtime ids, private paths, credentials and raw logs.",
+    "Discord is the operator cockpit only; Hermes remains the durable source of truth.",
+    "Release integration and publication still require their own final gate."
+  ]
+}

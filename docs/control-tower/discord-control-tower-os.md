@@ -6,6 +6,18 @@ Factory.
 It makes the factory understandable and operable without turning Discord into
 the source of truth.
 
+For the practical Portuguese production setup guide, see:
+
+```text
+docs/control-tower/discord-control-tower-setup-pt-br.md
+```
+
+For the study on making Discord dynamic instead of a plain chat feed, see:
+
+```text
+docs/control-tower/discord-dynamic-control-tower-study-pt-br.md
+```
+
 ## Decision
 
 ```text
@@ -201,20 +213,32 @@ When this layer is active, the factory needs:
 
 ## Minimum Practical Server Shape
 
-The recommended Discord setup is intentionally small:
+The recommended Discord setup is intentionally small, but it should be clear
+and Portuguese-first for the owner:
 
-- one dashboard channel;
-- one intake channel;
-- one owner-approvals channel;
-- one access-requests channel;
-- one blockers channel;
-- one evidence-feed channel;
-- one release-room channel;
-- one bot-health channel;
-- one project forum or thread area.
+- `01 PAINEL DA FABRICA`
+  - `#torre-de-controle`
+  - `#falar-com-gerente`
+  - `#saude-do-bot`
+  - `sala-de-voz-gerente`
+- `02 OPERACAO`
+  - `#novos-projetos`
+  - `#aprovacoes-formais`
+  - `#acessos-pendentes`
+  - `#bloqueios-reais`
+- `03 ENTREGA`
+  - `#provas-e-evidencias`
+  - `#producao-e-releases`
+- `04 PROJETOS`
+  - `kanban-da-fabrica`
+- `99 ARQUIVO`
+  - canais antigos ou migrados.
 
 The server can become richer later, but the factory should not require a large
 Discord bureaucracy to start.
+
+The dashboard should be updated in place when possible. The Control Tower is a
+human cockpit over runtime state, not a message dump.
 
 ## Human Setup Boundary
 

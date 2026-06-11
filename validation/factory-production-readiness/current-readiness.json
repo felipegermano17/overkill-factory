@@ -1,30 +1,30 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json",
   "record_type": "factory_production_readiness",
-  "created_at": "2026-06-10T22:16:54Z",
+  "created_at": "2026-06-11T00:15:11Z",
   "result": "BLOCKED",
   "summary": "Factory vFinal is not production-ready; required production gates are still blocked.",
   "components": [
     {
       "id": "hermes_real_runtime_update_preflight",
-      "status": "BLOCKED",
-      "raw_result": "BLOCKED",
+      "status": "PASS",
+      "raw_result": "PASS",
       "evidence_ref": "validation/hermes-production-update-preflight/real-runtime-update-blocked.json",
-      "reason": "result is BLOCKED, expected PASS"
+      "reason": null
     },
     {
       "id": "operator_control_tower_production_readiness",
-      "status": "BLOCKED",
-      "raw_result": "BLOCKED",
+      "status": "PASS",
+      "raw_result": "PASS",
       "evidence_ref": "validation/control-tower/operator-control-tower-production-readiness.json",
-      "reason": "result is BLOCKED, expected PASS"
+      "reason": null
     },
     {
       "id": "operator_control_tower_private_evidence_doctor",
-      "status": "BLOCKED",
-      "raw_result": "BLOCKED",
+      "status": "PASS",
+      "raw_result": "PASS",
       "evidence_ref": "validation/control-tower/operator-control-tower-private-evidence-doctor.json",
-      "reason": "result is BLOCKED, expected PASS"
+      "reason": null
     },
     {
       "id": "worktree_release_inventory",
@@ -56,19 +56,13 @@
     },
     {
       "id": "public_safety_origin_main",
-      "status": "BLOCKED",
-      "raw_result": "FAIL",
+      "status": "PASS",
+      "raw_result": "PASS",
       "evidence_ref": "validation/public-safety/origin-main-summary.json",
-      "reason": "result is FAIL, expected PASS"
+      "reason": null
     }
   ],
   "blocking_items": [
-    "hermes_real_runtime_update_preflight",
-    "operator_control_tower_private_evidence_doctor",
-    "operator_control_tower_production_readiness",
-    "preflight:complete_update_receipt",
-    "preflight:operator_control_tower",
-    "public_safety_origin_main",
     "release_integration_preflight"
   ],
   "attention_items": [
@@ -85,12 +79,7 @@
     "validation/release/worktree-release-inventory.json"
   ],
   "next_required_actions": [
-    "replace private Control Tower placeholders with real cockpit/runtime evidence",
-    "rerun operator_control_tower_private_evidence_doctor.py until it passes",
-    "run operator_control_tower_proof.py to create the production proof",
-    "regenerate the complete Hermes update receipt",
-    "pass the release integration preflight",
-    "integrate the public-safe worktree into the release ref and rerun public-safety scans for HEAD and origin/main"
+    "pass the release integration preflight"
   ],
   "limits": [
     "This aggregate receipt is public-safe and intentionally omits raw private evidence.",

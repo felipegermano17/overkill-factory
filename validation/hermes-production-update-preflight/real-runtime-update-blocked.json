@@ -1,9 +1,9 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/hermes-production-update-preflight.schema.json",
   "record_type": "hermes_production_update_preflight",
-  "created_at": "2026-06-10T21:19:17Z",
+  "created_at": "2026-06-11T00:08:21Z",
   "target": "real-hermes-runtime-update",
-  "result": "BLOCKED",
+  "result": "PASS",
   "required_proofs": [
     {
       "id": "non_stub_worker_execution",
@@ -42,26 +42,23 @@
     },
     {
       "id": "operator_control_tower",
-      "status": "BLOCKED",
+      "status": "PASS",
       "proof_ref": "validation/hermes-production-proof/operator-control-tower.json",
       "description": "The operator-facing control tower is ready for status, approval and incident visibility.",
-      "reason": "proof file does not exist"
+      "reason": null
     },
     {
       "id": "complete_update_receipt",
-      "status": "BLOCKED",
-      "proof_ref": "validation/hermes-production-update-preflight/current-update-receipt-blocked.json",
+      "status": "PASS",
+      "proof_ref": "validation/hermes-production-update-preflight/current-update-receipt.json",
       "description": "A complete Hermes update receipt exists for the exact target runtime update.",
-      "reason": "real_runtime_update decision is blocked"
+      "reason": null
     }
   ],
-  "blocking_items": [
-    "operator_control_tower",
-    "complete_update_receipt"
-  ],
+  "blocking_items": [],
   "decision": {
-    "real_runtime_update": "blocked",
-    "worker_task_status": "keep_blocked"
+    "real_runtime_update": "allowed_for_explicit_operator_gate",
+    "worker_task_status": "ready_requires_operator_gate"
   },
   "evidence_refs": [
     "validation/hermes-production-proof/non-stub-worker-execution.json",
@@ -70,7 +67,7 @@
     "validation/hermes-production-proof/real-tool-auth.json",
     "validation/hermes-production-proof/real-worker-done-reconciliation.json",
     "validation/hermes-production-proof/specialist-output-quality.json",
-    "validation/hermes-production-update-preflight/current-update-receipt-blocked.json"
+    "validation/hermes-production-update-preflight/current-update-receipt.json"
   ],
   "limits": [
     "This preflight does not touch real Hermes.",

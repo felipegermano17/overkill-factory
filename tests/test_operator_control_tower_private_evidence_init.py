@@ -37,6 +37,7 @@ class OperatorControlTowerPrivateEvidenceInitTest(unittest.TestCase):
             summary = init.init_bundle(out_dir, created_at="2026-06-10T00:00:00Z")
 
             self.assertEqual(summary["result"], "initialized")
+            self.assertTrue((out_dir / "discord-owner-setup.json").exists())
             self.assertTrue((out_dir / "discord-control-tower-mapping.json").exists())
             self.assertTrue((out_dir / "runtime-approval-event.json").exists())
             self.assertTrue((out_dir / "bridge-health.json").exists())

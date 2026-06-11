@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Initialize a private Operator Control Tower evidence bundle.
 
-This creates the three private JSON files expected by
-operator_control_tower_proof.py. It refuses to write inside the public
+This creates the private JSON files expected by
+operator_control_tower_proof.py and the owner setup doctor. It refuses to write inside the public
 repository and intentionally leaves placeholder values that the doctor will
 block until replaced with real cockpit/runtime evidence.
 """
@@ -53,6 +53,47 @@ def mapping_template(created_at: str) -> dict[str, Any]:
             "evidence_channel_ref": "todo",
             "bot_health_channel_ref": "todo",
             "last_synced_at": created_at,
+        }
+    )
+    return data
+
+
+def owner_setup_template(created_at: str) -> dict[str, Any]:
+    data = json.loads((TEMPLATES / "discord-control-tower-owner-setup.json").read_text(encoding="utf-8"))
+    data.update(
+        {
+            "created_at": created_at,
+            "result": "BLOCKED",
+            "project_id": "todo",
+            "checks": {
+                "server_exists": False,
+                "bot_application_created": False,
+                "bot_invited_to_server": False,
+                "message_content_intent_enabled": False,
+                "server_members_intent_enabled": False,
+                "owner_user_allowlisted": False,
+                "required_channels_exist": False,
+                "owner_approval_channel_restricted": False,
+                "bot_health_channel_available": False,
+                "least_privilege_permissions_reviewed": False,
+                "token_stored_outside_public_repo": True,
+                "offboarding_plan_ready": False,
+            },
+            "required_channels": {
+                "dashboard": "todo",
+                "intake": "todo",
+                "owner_approvals": "todo",
+                "access_requests": "todo",
+                "blockers": "todo",
+                "evidence_feed": "todo",
+                "release_room": "todo",
+                "bot_health": "todo",
+                "projects_area": "todo",
+            },
+            "evidence_refs": ["todo"],
+            "limits": [
+                "Private placeholder. Replace with real Discord owner setup evidence before running the owner setup doctor."
+            ],
         }
     )
     return data
@@ -110,9 +151,17 @@ This folder is intentionally outside the public repository.
 
 Fill these files from the real cockpit/runtime evidence:
 
+- `discord-owner-setup.json`
 - `discord-control-tower-mapping.json`
 - `runtime-approval-event.json`
 - `bridge-health.json`
+
+First run:
+
+```bash
+python scripts/operator_control_tower_owner_setup_doctor.py \
+  --owner-setup <this-folder>/discord-owner-setup.json
+```
 
 Then run:
 
@@ -133,6 +182,7 @@ def init_bundle(out_dir: Path, *, force: bool = False, created_at: str | None = 
     timestamp = created_at or utc_now()
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    write_json(out_dir / "discord-owner-setup.json", owner_setup_template(timestamp), force=force)
     write_json(out_dir / "discord-control-tower-mapping.json", mapping_template(timestamp), force=force)
     write_json(out_dir / "runtime-approval-event.json", runtime_event_template(timestamp), force=force)
     write_json(out_dir / "bridge-health.json", bridge_health_template(timestamp), force=force)
@@ -144,6 +194,7 @@ def init_bundle(out_dir: Path, *, force: bool = False, created_at: str | None = 
     return {
         "result": "initialized",
         "files": [
+            "discord-owner-setup.json",
             "discord-control-tower-mapping.json",
             "runtime-approval-event.json",
             "bridge-health.json",
