@@ -246,6 +246,12 @@ Mensagem de projeto deixada solta no `#falar-com-gerente` nao deve ser
 processada como novo projeto. O dono precisa iniciar ou usar a thread de
 atendimento; isso evita que uma resposta de pergunta vire um segundo projeto.
 
+Pedido de manutencao da propria Control Tower nao e intake. Se o dono pedir
+para recriar, corrigir, limpar ou mover mensagem, canal, thread, botao,
+Kanban, aprovacao ou painel, a fabrica deve tratar isso como ajuste do
+Discord/cockpit. A palavra "projeto" dentro dessa frase nao autoriza criar
+produto novo.
+
 O nome do topico deve ser humano e curto, por exemplo:
 
 ```text

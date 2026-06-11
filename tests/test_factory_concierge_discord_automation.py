@@ -204,6 +204,33 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
         self.assertEqual(len([t for t in client.threads if t["parent_id"] == "chan-manager"]), 0)
         self.assertEqual(state["projects"], {})
 
+    def test_intake_scan_rejects_operational_discord_repair_request(self) -> None:
+        client = FakeDiscordClient()
+        client.seed_manager_thread_message(
+            "preciso que voce recrie o projeto/produto nesses dois canais",
+            thread_name="ajuste-discord",
+        )
+        state: dict[str, Any] = {"version": 1, "dashboard": {}, "projects": {}}
+        config = bridge.BridgeConfig(apply=True, guild_id=None, state_path=Path("private.json"))
+
+        result = automation.process_intake_messages(client, config, state, apply=True)
+
+        self.assertEqual(result["processed"], 0)
+        self.assertEqual(state["projects"], {})
+        self.assertEqual(len([t for t in client.threads if t["parent_id"] == "forum-kanban"]), 0)
+
+    def test_project_intake_accepts_explicit_product_briefing(self) -> None:
+        message = {
+            "author": {"id": "owner", "bot": False},
+            "attachments": [],
+            "content": (
+                "Briefing do projeto: quero construir um produto local para acompanhar "
+                "a fabrica, com etapas, aprovacoes e progresso visual."
+            ),
+        }
+
+        self.assertTrue(automation.looks_like_project_intake(message))
+
     def test_active_event_sync_posts_lane_message_and_thread(self) -> None:
         client = FakeDiscordClient()
         state: dict[str, Any] = {"version": 1, "dashboard": {}, "projects": {"p1": {}}}

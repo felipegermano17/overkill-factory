@@ -169,16 +169,16 @@ O repo publico nao pode conter:
 
 | Canal | Para que serve | Quem fala ali |
 | --- | --- | --- |
-| `#torre-de-controle` | status resumido, fase atual, previsao e proximos passos | Concierge |
-| `#falar-com-gerente` | conversa direta com o GERENTE | dono e Concierge |
-| `#projetos-recebidos` | registro operacional de projetos recebidos | Concierge |
-| `#aprovacoes-formais` | aprovacoes estruturadas | dono e ponte |
-| `#acessos-pendentes` | pedidos de acesso, contas, cloud, GitHub e chaves | Concierge |
-| `#bloqueios-reais` | bloqueios que impedem progresso | Concierge |
+| `#torre-de-controle` | status resumido, fase atual, previsao e proximos passos | ponte |
+| `#falar-com-gerente` | conversa direta com o GERENTE | dono e GERENTE |
+| `#projetos-recebidos` | registro operacional de projetos recebidos | ponte |
+| `#aprovacoes-formais` | aprovacoes estruturadas | dono por botao/evento e ponte |
+| `#acessos-pendentes` | pedidos de acesso, contas, cloud, GitHub e chaves | ponte |
+| `#bloqueios-reais` | bloqueios que impedem progresso | ponte |
 | `#provas-e-evidencias` | links de evidencia e recibos | ponte |
-| `#producao-e-releases` | decisao de release e producao | dono e Concierge |
+| `#producao-e-releases` | decisao de release e producao | ponte |
 | `#saude-do-bot` | health do bot, ponte e Hermes | ponte |
-| `kanban-da-fabrica` | um topico por projeto | Concierge e dono |
+| `kanban-da-fabrica` | um topico por projeto | ponte |
 | `#arquivo-projetos-antigo` | arquivo, nao uso diario | ponte |
 
 O canal `#falar-com-gerente` e a portaria humana principal. O dono menciona o
@@ -198,6 +198,11 @@ paper/projeto/piloto -> mesma thread vira intake + cartao no forum
 `#projetos-recebidos` nao deve ser uma segunda porta humana para mandar paper.
 Ele existe para registrar que um projeto entrou e apontar para o topico/card
 correto. Se o dono estiver em duvida, deve falar com o GERENTE.
+
+Pedido operacional sobre Discord, canal, thread, botao, mensagem, limpeza,
+recriacao ou correcao visual nao e intake de projeto. Mesmo que a frase tenha
+as palavras "projeto" ou "produto", ela deve ser tratada como manutencao da
+torre de controle, nao como novo produto.
 
 Importante: a thread do projeto nao e o lugar da aprovacao formal. A thread
 pode explicar que existe uma decisao pendente e apontar para ela, mas o pedido
@@ -220,6 +225,20 @@ O GERENTE deve usar `discord.require_mention=true`,
 `discord.auto_thread=true` e `discord.thread_require_mention=false`: o dono
 menciona uma vez na portaria, o Hermes abre a thread, e dentro dela o dono nao
 precisa ficar mencionando o bot a cada resposta.
+
+Os canais de cockpit precisam ser protegidos por politica de canal. O runtime
+deve deixar `DISCORD_FREE_RESPONSE_CHANNELS` e `DISCORD_NO_THREAD_CHANNELS`
+vazios, permitir conversa apenas na portaria e na lane de aprovacao formal, e
+colocar as superficies de painel/registro em `DISCORD_IGNORED_CHANNELS`. Isso
+impede que o GERENTE responda em `#torre-de-controle`,
+`#projetos-recebidos`, `kanban-da-fabrica`, evidencias, bloqueios, acessos,
+producao e health.
+
+O perfil GERENTE tambem deve desligar progresso interno no Discord:
+`display.platforms.discord.tool_progress=off`,
+`interim_assistant_messages=false`, `long_running_notifications=false` e
+`busy_ack_detail=false`. O dono precisa ver resposta final limpa; leitura de
+arquivo, patch, terminal e rascunho do agente nao sao UI da fabrica.
 
 Detalhe critico do runtime: no Hermes, variaveis do `.env` ganham do
 `config.yaml`. Entao o perfil de producao do GERENTE nao pode deixar o canal do
