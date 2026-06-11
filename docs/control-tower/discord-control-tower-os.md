@@ -300,6 +300,46 @@ because it contains Discord ids. The output receipt must follow
 `schemas/operator-control-tower-bridge-health.schema.json` and the public copy
 must redact ids, paths, tokens, URLs and logs.
 
+## Automation Layer
+
+The project projector handles one projection. The full owner UX automation uses:
+
+```text
+scripts/factory_concierge_discord_automation.py
+```
+
+It composes the projector with the remaining Control Tower behavior:
+
+- scan `#falar-com-gerente` for project-like intake messages;
+- create or reuse an intake thread for project messages;
+- create or reuse the project forum topic and cockpit;
+- project runtime events into the correct operational lane;
+- create threads for active events such as access, blockers and approvals;
+- render Portuguese approval buttons with scoped `custom_id` values;
+- validate a decision payload before producing an `approval_recorded` event;
+- update bridge health in `#saude-do-bot`;
+- read projections, events and approvals from private inbox directories for
+  recurring execution.
+
+The recurring command shape is:
+
+```bash
+python scripts/factory_concierge_discord_automation.py \
+  --projection-dir /private/path/projections \
+  --event-dir /private/path/events \
+  --approval-dir /private/path/approvals \
+  --scan-intake \
+  --post-health \
+  --state /private/path/discord-bridge-state.json \
+  --env /private/path/hermes.env \
+  --apply \
+  --out /private/path/last-bridge-health.json
+```
+
+This can run from Hermes cron, systemd timer, or another private scheduler. The
+public repository ships the deterministic bridge behavior; the private runner
+owns real Discord ids, tokens, paths and local runtime schedules.
+
 ## Minimum Contracts
 
 The control layer uses:

@@ -131,7 +131,13 @@ class DiscordClient(Protocol):
     def create_forum_thread(self, channel_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         ...
 
+    def create_thread_from_message(self, channel_id: str, message_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        ...
+
     def edit_channel(self, channel_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        ...
+
+    def list_guild_roles(self, guild_id: str) -> list[dict[str, Any]]:
         ...
 
 
@@ -195,7 +201,7 @@ class DiscordApi:
                     delay = float(json.loads(body_text).get("retry_after", 1.0))
                 except Exception:
                     delay = 1.0
-                time.sleep(min(delay, 5.0))
+                time.sleep(min(delay + 0.5, 65.0))
                 return self._request(method, route, payload, retry=False)
             raise RuntimeError(f"Discord API {method} {route} failed with HTTP {exc.code}: {body_text}") from exc
 
@@ -225,8 +231,14 @@ class DiscordApi:
     def create_forum_thread(self, channel_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request("POST", f"/channels/{channel_id}/threads", payload)
 
+    def create_thread_from_message(self, channel_id: str, message_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request("POST", f"/channels/{channel_id}/messages/{message_id}/threads", payload)
+
     def edit_channel(self, channel_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request("PATCH", f"/channels/{channel_id}", payload)
+
+    def list_guild_roles(self, guild_id: str) -> list[dict[str, Any]]:
+        return list(self._request("GET", f"/guilds/{guild_id}/roles"))
 
 
 def utc_now() -> str:
