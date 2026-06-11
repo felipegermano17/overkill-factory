@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -249,6 +252,45 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
         self.assertTrue(health["message_resolved"])
         self.assertEqual(receipt["result"], "PASS")
         self.assertNotIn("chan-health", json.dumps(receipt))
+
+    def test_run_automation_empty_inboxes_posts_idle_health_receipt(self) -> None:
+        client = FakeDiscordClient()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("projections", "events", "approvals"):
+                (root / name).mkdir()
+            args = argparse.Namespace(
+                projection=None,
+                projection_dir=root / "projections",
+                event=None,
+                event_dir=root / "events",
+                approval=None,
+                approval_dir=root / "approvals",
+                decision=None,
+                decision_time=None,
+                scan_intake=True,
+                post_health=True,
+                max_messages=20,
+                state=root / "state.json",
+                out=root / "receipt.json",
+                env=None,
+                guild_id=None,
+                api_base="https://discord.test/api",
+                timeout=1.0,
+                apply=True,
+            )
+            with patch.dict(automation.os.environ, {"DISCORD_BOT_TOKEN": "test-token"}), patch.object(
+                automation.bridge, "DiscordApi", return_value=client
+            ):
+                receipt = automation.run_automation(args)
+
+        self.assertEqual(receipt["result"], "PASS")
+        self.assertTrue(receipt["checks"]["thread_first_project_intake_automated"])
+        self.assertTrue(receipt["checks"]["active_bot_messages_threaded_or_linked"])
+        self.assertTrue(receipt["checks"]["structured_approval_interactions_automated"])
+        self.assertTrue(receipt["checks"]["live_runtime_projection_automated"])
+        self.assertTrue(receipt["checks"]["operational_channels_projected"])
+        self.assertTrue(receipt["checks"]["health_anti_stale_posted"])
 
 
 if __name__ == "__main__":

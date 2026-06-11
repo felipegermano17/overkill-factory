@@ -741,6 +741,9 @@ def run_automation(args: argparse.Namespace) -> dict[str, Any]:
 
     projections = [item for item in [load_json(args.projection)] if item]
     projections.extend(load_json_dir(args.projection_dir))
+    has_projection_inputs = bool(projections)
+    if not has_projection_inputs:
+        results["live_runtime_projection_automated"] = True
     for projection in projections:
         bridge_result = bridge.project_bridge_apply(projection, client, config, state)
         results["live_runtime_projection_automated"] = bool((bridge_result.get("project_thread") or {}).get("thread_id")) or not args.apply
@@ -756,6 +759,8 @@ def run_automation(args: argparse.Namespace) -> dict[str, Any]:
 
     events = [item for item in [load_json(args.event)] if item]
     events.extend(load_json_dir(args.event_dir))
+    if not events:
+        results["operational_channels_projected"] = True
     for event in events:
         event_result = sync_event(event, client, config, state, apply=bool(args.apply))
         results["event"] = event_result
@@ -768,6 +773,8 @@ def run_automation(args: argparse.Namespace) -> dict[str, Any]:
     approvals = [item for item in [load_json(args.approval)] if item]
     approvals.extend(load_json_dir(args.approval_dir))
     approval = approvals[0] if approvals else None
+    if not approvals:
+        results["structured_approval_interactions_automated"] = True
     for approval_item in approvals:
         approval_result = post_approval_request(approval_item, client, config, state, apply=bool(args.apply))
         results["approval"] = approval_result
@@ -799,7 +806,7 @@ def run_automation(args: argparse.Namespace) -> dict[str, Any]:
             extra_checks={
                 "threading_rule_ready": bool(results["active_bot_messages_threaded_or_linked"]),
                 "approval_components_ready": bool(results["structured_approval_interactions_automated"] or not approval),
-                "projection_ready": bool(results["live_runtime_projection_automated"] or not projection),
+                "projection_ready": bool(results["live_runtime_projection_automated"] or not has_projection_inputs),
             },
         )
         results["health"] = health_result
