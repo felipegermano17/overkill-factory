@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json",
   "record_type": "factory_production_readiness",
-  "created_at": "2026-06-11T00:38:34Z",
+  "created_at": "2026-06-11T00:50:44Z",
   "result": "PASS",
   "summary": "Factory vFinal production readiness evidence is complete.",
   "components": [
