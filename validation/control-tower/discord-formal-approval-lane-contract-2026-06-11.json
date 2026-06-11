@@ -20,7 +20,7 @@
   "adapter_patch": {
     "live_profile": "GERENTE SOUL now requires formal approval requests to be created through a structured approval-request and rendered in the approvals lane.",
     "public_docs": "Control Tower docs now state that project threads may point to formal approvals but cannot host free-form approval requests.",
-    "live_bridge_smoke": "A pending G0 planning-boundary approval request was posted through the bridge with structured buttons and public-safe limits."
+    "live_bridge_smoke": "A pending G0 planning-boundary approval request was posted through the bridge with structured buttons, a short text fallback for expired interactions and public-safe limits."
   },
   "checks": {
     "backup_created_before_live_soul_update": true,
@@ -32,7 +32,7 @@
   },
   "decision": {
     "result": "PASS",
-    "operator_effect": "The project thread should no longer be used as the formal approval surface; approval requests belong in the approvals lane with explicit scope and buttons."
+    "operator_effect": "The project thread should no longer be used as the formal approval surface; approval requests belong in the approvals lane with explicit scope, buttons and a short fallback in the approval thread."
   },
   "evidence_refs": [
     "docs/control-tower/discord-control-tower-os.md",

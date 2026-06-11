@@ -401,9 +401,12 @@ Quem aprovou: dono autorizado
 Registro: evento real no Hermes
 ```
 
-No Discord isso pode aparecer como botao, menu ou formulario. Mas o clique so
-vale depois que a ponte valida usuario, canal, prazo, escopo e registra o evento
-no Hermes.
+No Discord, a versao correta para aprovacao formal e um pedido estruturado com
+botoes claros: `Aprovar`, `Rejeitar` e `Pedir ajuste`. Se o Discord responder
+que a interacao falhou ou o botao expirar, o fallback humano e responder
+`aprovado`, `rejeitado` ou `pedir ajuste` na thread daquele pedido. A decisao
+so vale depois que a ponte valida usuario, canal, prazo, escopo e registra o
+evento no Hermes.
 
 A thread do projeto pode avisar "ha uma aprovacao pendente" e apontar para o
 canal certo. Ela nao deve conter o pedido formal como texto solto. Pedido
@@ -463,12 +466,21 @@ de conversa perdido no chat. O dono menciona o GERENTE no `#falar-com-gerente`,
 o Hermes abre a thread de atendimento, e a ponte cria o topico e o cartao a
 partir do conteudo dessa thread.
 
-### 3. Aprovacao com botao e formulario
+### 3. Aprovacao com botao e fallback curto
 
-O dono deve conseguir aprovar pelo Discord, mas a ponte precisa registrar isso
-no Hermes como evento estruturado.
+O dono deve conseguir aprovar pelo Discord sem burocracia. O caminho atual e
+clicar no botao da mensagem de aprovacao:
 
-O Discord pode coletar a decisao. Hermes decide se a decisao e valida.
+```text
+Aprovar
+Rejeitar
+Pedir ajuste
+```
+
+Se o botao expirar ou o Discord falhar, a resposta curta na thread do pedido
+resolve: `aprovado`, `rejeitado` ou `pedir ajuste`.
+
+O Discord coleta a decisao. Hermes decide se a decisao e valida.
 
 ### 4. Pedidos de acesso como checklist
 

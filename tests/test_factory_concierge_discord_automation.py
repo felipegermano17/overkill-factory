@@ -278,8 +278,32 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
         self.assertTrue(result["thread_resolved"])
         components = client.messages["chan-approvals"][0]["components"][0]["components"]
         self.assertEqual([button["label"] for button in components], ["Aprovar", "Rejeitar", "Pedir ajuste"])
+        fallback_field = client.messages["chan-approvals"][0]["embeds"][0]["fields"][5]
+        self.assertEqual(fallback_field["name"], "Se o botao falhar")
         self.assertEqual(registered["status"], "needs_changes")
         self.assertEqual(event["event_type"], "approval_recorded")
+
+    def test_approval_text_fallback_registers_owner_decision(self) -> None:
+        client = FakeDiscordClient()
+        state: dict[str, Any] = {"version": 1, "dashboard": {}, "projects": {}}
+        config = bridge.BridgeConfig(apply=True, guild_id=None, state_path=Path("private.json"))
+        approval = approval_request()
+        automation.post_approval_request(approval, client, config, state, apply=True)
+        thread_id = state["approvals"][approval["approval_id"]]["thread_id"]
+        client.messages[thread_id].append(
+            {
+                "id": "owner-decision",
+                "content": "aprovado",
+                "author": {"id": "owner", "bot": False},
+            }
+        )
+
+        result = automation.sync_approval_text_decision(approval, client, config, state, apply=True)
+
+        self.assertTrue(result["accepted"])
+        self.assertEqual(result["decision"], "approved")
+        self.assertEqual(state["approval_events"][approval["approval_id"]]["status"], "approved")
+        self.assertEqual(client.messages["chan-approvals"][0]["embeds"][0]["fields"][2]["value"], "approved")
 
     def test_health_and_public_receipt_cover_remaining_discord_fronts(self) -> None:
         client = FakeDiscordClient()

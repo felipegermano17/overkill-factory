@@ -8,8 +8,8 @@ UX automation:
   project surfaces.
 - Active-message threading: events and approvals that invite action get a
   thread or a clear existing thread.
-- Structured approvals: approval requests render as Portuguese buttons and a
-  decision payload is validated before producing a runtime-registerable event.
+- Structured approvals: approval requests render as Portuguese buttons, with a
+  short text fallback in the approval thread when Discord interactions expire.
 - Operational lanes: access, blockers, evidence, release and health events are
   projected into their channels without making Discord the source of truth.
 """
@@ -40,6 +40,23 @@ INTAKE_MARKER_PREFIX = "of-intake:"
 EVENT_MARKER_PREFIX = "of-event:"
 APPROVAL_MARKER_PREFIX = "of-approval:"
 HEALTH_MARKER = "of-health:bridge"
+APPROVAL_DECISION_LABELS = {
+    "approved": "Aprovar",
+    "rejected": "Rejeitar",
+    "needs_changes": "Pedir ajuste",
+}
+APPROVAL_TEXT_DECISIONS = {
+    "aprovado": "approved",
+    "aprovar": "approved",
+    "sim aprovado": "approved",
+    "rejeitado": "rejected",
+    "rejeitar": "rejected",
+    "nao aprovado": "rejected",
+    "não aprovado": "rejected",
+    "pedir ajuste": "needs_changes",
+    "ajuste": "needs_changes",
+    "precisa ajuste": "needs_changes",
+}
 
 ACTIVE_EVENT_TYPES = {
     "intake_received",
@@ -566,8 +583,13 @@ def approval_payload(approval: dict[str, Any]) -> dict[str, Any]:
                         "inline": False,
                     },
                     {
-                        "name": "Nao autorizado por este botao",
+                        "name": "Nao autorizado por este pedido",
                         "value": bridge.truncate(bridge.bullet_list(bridge.non_empty_list(approval.get("not_authorized"))), 1024),
+                        "inline": False,
+                    },
+                    {
+                        "name": "Se o botao falhar",
+                        "value": "Responda `aprovado`, `rejeitado` ou `pedir ajuste` na thread deste pedido. A ponte valida escopo, dono e prazo antes de registrar.",
                         "inline": False,
                     },
                 ],
@@ -643,6 +665,88 @@ def post_approval_request(
         "message_resolved": bool(message_result.get("message_id")) or not apply,
         "thread_resolved": bool(thread_result.get("thread_id")) or not apply,
         "components_rendered": True,
+        "decision_controls_rendered": bool(message_result.get("message_id")) or not apply,
+    }
+
+
+def allowed_discord_user_ids() -> set[str]:
+    raw = os.environ.get("DISCORD_ALLOWED_USERS", "")
+    return {part.strip() for part in raw.split(",") if part.strip()}
+
+
+def text_decision_from_message(message: dict[str, Any]) -> str | None:
+    content = normalize_intake_text(str(message.get("content") or ""))
+    content = re.sub(r"\s+", " ", content).strip(" .!?,;:")
+    return APPROVAL_TEXT_DECISIONS.get(content)
+
+
+def text_decision_for_approval(
+    client: bridge.DiscordClient,
+    thread_id: str,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    allowed = allowed_discord_user_ids()
+    found: list[tuple[str, dict[str, Any]]] = []
+    for message in client.list_messages(thread_id, limit=50):
+        author = message.get("author") or {}
+        if author.get("bot"):
+            continue
+        user_id = str(author.get("id") or "")
+        if allowed and user_id not in allowed:
+            continue
+        decision = text_decision_from_message(message)
+        if decision:
+            found.append((decision, message))
+    if not found:
+        return None, []
+    decisions = sorted({decision for decision, _ in found})
+    if len(decisions) > 1:
+        return None, [f"multiple text decisions found: {', '.join(decisions)}"]
+    decision, _ = found[0]
+    return {"actor_role": "Factory Owner", "decision": decision}, []
+
+
+def sync_approval_text_decision(
+    approval: dict[str, Any],
+    client: bridge.DiscordClient,
+    config: bridge.BridgeConfig,
+    state: dict[str, Any],
+    *,
+    apply: bool,
+) -> dict[str, Any]:
+    validate_artifact(approval)
+    approval_state = state.setdefault("approvals", {}).setdefault(str(approval["approval_id"]), {})
+    thread_id = approval_state.get("thread_id")
+    if not thread_id:
+        return {"approval_id": str(approval["approval_id"]), "decision_found": False, "accepted": False}
+    decision, reasons = text_decision_for_approval(client, str(thread_id))
+    if reasons:
+        return {"approval_id": str(approval["approval_id"]), "decision_found": True, "accepted": False, "reasons": reasons}
+    if not decision:
+        return {"approval_id": str(approval["approval_id"]), "decision_found": False, "accepted": False}
+    decision.update({"approval_id": approval["approval_id"], "scope": approval["scope"]})
+    registered, event = register_approval_decision(approval, decision)
+    if not event.get("accepted", True):
+        return {
+            "approval_id": str(approval["approval_id"]),
+            "decision_found": True,
+            "accepted": False,
+            "reasons": list(event.get("reasons", [])),
+        }
+    if apply:
+        post_approval_request(registered, client, config, state, apply=apply)
+        sync_event(event, client, config, state, apply=apply)
+        state.setdefault("approval_events", {})[str(approval["approval_id"])] = {
+            "status": registered.get("status"),
+            "event_id": event.get("event_id"),
+            "synced_at": utc_now(),
+            "source": "discord_text_fallback",
+        }
+    return {
+        "approval_id": str(approval["approval_id"]),
+        "decision_found": True,
+        "accepted": True,
+        "decision": registered.get("status"),
+        "event_id": event.get("event_id"),
     }
 
 
@@ -886,23 +990,44 @@ def run_automation(args: argparse.Namespace) -> dict[str, Any]:
         approval_result = post_approval_request(approval_item, client, config, state, apply=bool(args.apply))
         results["approval"] = approval_result
         results["structured_approval_interactions_automated"] = (
-            approval_result["message_resolved"] and approval_result["thread_resolved"] and approval_result["components_rendered"]
+            approval_result["message_resolved"]
+            and approval_result["thread_resolved"]
+            and approval_result["decision_controls_rendered"]
         )
         results["active_bot_messages_threaded_or_linked"] = (
             results["active_bot_messages_threaded_or_linked"] or approval_result["thread_resolved"]
         )
 
+    if approvals and args.scan_approval_text:
+        text_results = []
+        for approval_item in approvals:
+            text_result = sync_approval_text_decision(approval_item, client, config, state, apply=bool(args.apply))
+            text_results.append(text_result)
+            if text_result.get("accepted"):
+                results["approval_registration_path_reachable"] = True
+                results["structured_approval_interactions_automated"] = True
+        results["approval_text_fallback"] = text_results
+
     decision = load_json(args.decision)
     if approval and decision:
         registered, approval_event = register_approval_decision(approval, decision, now=args.decision_time)
+        if approval_event.get("accepted") is False:
+            results["approval_decision"] = {
+                "accepted": False,
+                "reasons": list(approval_event.get("reasons", [])),
+            }
+        else:
+            if args.apply:
+                post_approval_request(registered, client, config, state, apply=bool(args.apply))
+            sync_result = sync_event(approval_event, client, config, state, apply=bool(args.apply))
+            results["approval_decision"] = {"accepted": True, "event_synced": sync_result["message_resolved"]}
+            results["approval_registration_path_reachable"] = True
         state.setdefault("approval_events", {})[str(approval["approval_id"])] = {
             "status": registered.get("status"),
-            "event_id": approval_event.get("event_id"),
+            "event_id": approval_event.get("event_id") if approval_event.get("accepted") is not False else None,
             "synced_at": utc_now(),
+            "source": "explicit_decision_file",
         }
-        sync_result = sync_event(approval_event, client, config, state, apply=bool(args.apply))
-        results["approval_decision"] = {"accepted": True, "event_synced": sync_result["message_resolved"]}
-        results["approval_registration_path_reachable"] = True
 
     if args.post_health:
         health_result = post_health(
@@ -937,6 +1062,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--approval-dir", type=Path)
     parser.add_argument("--decision", type=Path)
     parser.add_argument("--decision-time")
+    parser.add_argument("--scan-approval-text", action="store_true")
     parser.add_argument("--scan-intake", action="store_true")
     parser.add_argument("--post-health", action="store_true")
     parser.add_argument("--max-messages", type=int, default=50)
