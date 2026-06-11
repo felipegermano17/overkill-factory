@@ -218,6 +218,25 @@ def find_named_thread(
     return None
 
 
+def list_child_threads(
+    client: bridge.DiscordClient,
+    guild_id: str,
+    parent_id: str,
+) -> list[dict[str, Any]]:
+    return [
+        thread
+        for thread in client.list_active_threads(guild_id)
+        if str(thread.get("parent_id")) == str(parent_id)
+    ]
+
+
+def first_project_intake_message(messages: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for message in reversed(messages):
+        if looks_like_project_intake(message):
+            return message
+    return None
+
+
 def ensure_thread_from_message(
     client: bridge.DiscordClient,
     guild_id: str,
@@ -276,34 +295,35 @@ def process_intake_messages(
     guild_id, channels = resolve_channels(client, config)
     manager_id = str(channels["manager"]["id"])
     state.setdefault("intake", {}).setdefault("processed_messages", {})
+    state.setdefault("intake", {}).setdefault("processed_threads", {})
     results: list[dict[str, Any]] = []
-    messages = client.list_messages(manager_id, limit=max_messages)
-    for message in reversed(messages):
+    reception_messages = client.list_messages(manager_id, limit=max_messages)
+    ignored_reception_messages = sum(1 for message in reception_messages if looks_like_project_intake(message))
+    manager_threads = list_child_threads(client, guild_id, manager_id)
+    for thread in manager_threads:
+        thread_id = str(thread.get("id") or "")
+        if not thread_id or thread_id in state["intake"]["processed_threads"]:
+            continue
+        thread_messages = client.list_messages(thread_id, limit=max_messages)
+        message = first_project_intake_message(thread_messages)
+        if not message:
+            continue
         message_id = str(message.get("id") or "")
         if not message_id or message_id in state["intake"]["processed_messages"]:
-            continue
-        if not looks_like_project_intake(message):
             continue
         projection = default_projection_from_intake(message)
         project_id = str(projection["project_id"])
         state.setdefault("projects", {}).setdefault(project_id, {})
         project_state = state["projects"][project_id]
-        intake_thread = ensure_thread_from_message(
-            client,
-            guild_id,
-            manager_id,
-            message_id,
-            str(projection["name"]),
-            project_state,
-            "intake_thread_id",
-            apply,
-        )
+        if apply:
+            project_state["intake_thread_id"] = thread_id
+            project_state["intake_thread_source"] = "manager_thread"
         bridge_result = bridge.project_bridge_apply(projection, client, config, state)
         cockpit_thread_id = (bridge_result.get("project_thread") or {}).get("thread_id")
-        if intake_thread.get("thread_id"):
+        if thread_id:
             bridge.upsert_message(
                 client=client,
-                channel_id=str(intake_thread["thread_id"]),
+                channel_id=thread_id,
                 payload=intake_message_payload(projection, cockpit_thread_id),
                 expected_marker=f"{INTAKE_MARKER_PREFIX}{project_id}",
                 state_ref=project_state,
@@ -315,17 +335,25 @@ def process_intake_messages(
                 "project_id": project_id,
                 "processed_at": utc_now(),
             }
+            state["intake"]["processed_threads"][thread_id] = {
+                "project_id": project_id,
+                "processed_at": utc_now(),
+            }
         results.append(
             {
                 "project_id": project_id,
                 "message_processed": True,
-                "intake_thread_created": bool(intake_thread.get("created")),
-                "intake_thread_resolved": bool(intake_thread.get("thread_id")),
+                "thread_first": True,
+                "intake_thread_created": False,
+                "intake_thread_resolved": bool(thread_id),
                 "project_surface_resolved": bool(cockpit_thread_id),
             }
         )
     return {
-        "scanned": len(messages),
+        "scanned": len(manager_threads),
+        "scanned_threads": len(manager_threads),
+        "scanned_reception_messages": len(reception_messages),
+        "ignored_reception_messages": ignored_reception_messages,
         "processed": len(results),
         "results": results,
     }

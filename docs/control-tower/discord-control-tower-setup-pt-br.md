@@ -181,17 +181,18 @@ O repo publico nao pode conter:
 | `kanban-da-fabrica` | um topico por projeto | Concierge e dono |
 | `#arquivo-projetos-antigo` | arquivo, nao uso diario | ponte |
 
-O canal `#falar-com-gerente` e a porta humana principal: o dono fala
-com o GERENTE sem precisar mencionar o bot. Os outros canais devem ser mais
-controlados para evitar barulho e aprovacao acidental.
+O canal `#falar-com-gerente` e a portaria humana principal. O dono menciona o
+GERENTE ali para abrir uma thread de atendimento. Depois disso, conversa,
+perguntas, respostas, paper e decisoes daquele atendimento ficam dentro da
+thread.
 
-Essa decisao tem um detalhe importante: no Hermes nativo, canal livre responde
-inline e pode pular auto-thread. Por isso, `#falar-com-gerente` nao pode ser o
-unico mecanismo de organizacao de projetos. A experiencia certa e:
+Essa decisao tem um detalhe importante: o canal principal nao e sala de projeto.
+Ele so abre a porta. A experiencia certa e:
 
 ```text
-mensagem curta -> resposta curta no chat
-paper/projeto/piloto -> topico do projeto + cartao no forum
+mensagem no #falar-com-gerente com mencao ao GERENTE -> thread de atendimento
+duvida curta -> resposta dentro da thread de atendimento
+paper/projeto/piloto -> mesma thread vira intake + cartao no forum
 ```
 
 `#projetos-recebidos` nao deve ser uma segunda porta humana para mandar paper.
@@ -209,10 +210,14 @@ Em outras palavras: toda mensagem do bot que convida conversa ou acao deve
 nascer com thread, estar dentro de uma thread ou apontar claramente para a
 thread certa. Apenas notificacoes puramente informativas devem ficar soltas.
 
-Se `DISCORD_NO_THREAD_CHANNELS` incluir `#falar-com-gerente`, isso deve ser
-tratado como configuracao apenas para conversa curta. A fabrica ainda precisa
-do `Factory Concierge Discord Bridge` para criar topicos de projeto e cartoes
-no `kanban-da-fabrica`.
+O GERENTE deve usar `discord.require_mention=true`,
+`discord.auto_thread=true` e `discord.thread_require_mention=false`: o dono
+menciona uma vez na portaria, o Hermes abre a thread, e dentro dela o dono nao
+precisa ficar mencionando o bot a cada resposta.
+
+Se alguem deixar um paper solto diretamente em `#falar-com-gerente`, a
+automacao publica ignora esse texto ate existir uma thread de atendimento. Isso
+evita criar um projeto novo para cada resposta do dono.
 
 ## Camada dinamica
 
@@ -224,7 +229,7 @@ O Discord nao deve ser apenas um chat. O modelo recomendado e:
 - botoes de atalho para os canais principais;
 - forum como indice limpo de projetos, com um topico por projeto;
 - cockpit detalhado dentro de cada topico de projeto;
-- intake thread-first: paper ou briefing nunca fica apenas como mensagem solta;
+- intake thread-first: paper ou briefing nasce dentro da thread de atendimento;
 - tags de fase no forum;
 - `#aprovacoes-formais` para decisoes formais;
 - `#acessos-pendentes` como checklist do que falta para autonomia;
@@ -351,7 +356,8 @@ python scripts/factory_concierge_discord_automation.py \
 
 Ela cobre:
 
-- paper/projeto no `#falar-com-gerente` vira thread de intake;
+- thread de atendimento do GERENTE vira intake quando contem paper/projeto;
+- mensagem solta no `#falar-com-gerente` nao vira projeto automaticamente;
 - projeto vira topico/cockpit no `kanban-da-fabrica`;
 - eventos de acesso, bloqueio, prova, release e health vao para os canais
   certos;

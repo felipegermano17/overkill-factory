@@ -63,23 +63,26 @@ It asks for:
 The owner can start from `#falar-com-gerente`, but a project must not live as a
 loose chat transcript.
 
-The bridge must separate two cases:
+The manager channel is a reception desk, not the project room:
 
 ```text
-short operational question -> answer in the same chat
-paper, long brief, new product or pilot -> create project thread and forum card
+owner mentions GERENTE in #falar-com-gerente -> Discord opens an attendance thread
+short operational question -> answer inside that attendance thread
+paper, long brief, new product or pilot -> same thread becomes project intake + forum card
 ```
 
 For a project intake, the Discord layer should create:
 
-- a project conversation thread tied to the intake message or intake channel;
+- a project conversation thread under `#falar-com-gerente`;
 - a `kanban-da-fabrica` forum post with the initial phase tag;
-- a short pointer message in `#falar-com-gerente`;
+- a short pointer inside the existing attendance thread;
 - a runtime mapping record once Hermes creates or updates the durable card.
 
 Hermes native Discord free-response channels are useful for low-friction chat,
-but they are not enough for factory intake. They can answer inline. The factory
-needs the Concierge bridge to create the project surface deliberately.
+but they are not the right default for factory intake. The factory expects
+`discord.require_mention=true`, `discord.auto_thread=true` and
+`discord.thread_require_mention=false`: the owner mentions the GERENTE once in
+the reception channel, then the whole attendance continues in the thread.
 
 ## Complete UX Contract
 
@@ -89,6 +92,8 @@ asking which channel to use.
 The practical contract is:
 
 - `#falar-com-gerente` is the main door;
+- the main door stays clean: analysis, questions and project decisions happen
+  in the attendance/project thread;
 - `#torre-de-controle` is the global portfolio view, not a message dump;
 - `kanban-da-fabrica` is the project index, not the place for every detail;
 - each project topic is the project cockpit;
@@ -111,7 +116,7 @@ internals. The GERENTE explains, routes and points to the visual surface.
 | Surface | Owner meaning | Required behavior |
 | --- | --- | --- |
 | `#torre-de-controle` | "What is happening across the factory?" | Portfolio dashboard with active projects, stage, progress and alerts. |
-| `#falar-com-gerente` | "Talk to the factory" | Short questions stay inline; project intake gets project surface. |
+| `#falar-com-gerente` | "Talk to the factory" | Reception only: a mention opens an attendance thread; work continues there. |
 | `#projetos-recebidos` | "What entered?" | Registry of received projects; points to the project thread/card. |
 | `kanban-da-fabrica` | "Which projects exist?" | One topic per project; it is an index, not a detailed task board. |
 | project topic | "Where is this project, exactly?" | Project cockpit with pipeline, percent, blockers and next action. |
@@ -130,6 +135,7 @@ surface.
 Rule:
 
 ```text
+reception channel -> thread launcher only
 notification, health ping or dashboard update -> no thread required
 question, decision, access, blocker, evidence discussion, review or project
 conversation -> thread required
@@ -142,7 +148,9 @@ For active work, the bot should either:
 - point clearly to the existing thread.
 
 This keeps `#falar-com-gerente` useful without letting it become a long,
-unsearchable transcript.
+unsearchable transcript. Raw project-like messages left directly in the
+reception channel are ignored by the automation until the owner starts or uses
+an attendance thread.
 
 ## Multi-Project Kanban Rule
 
@@ -310,8 +318,8 @@ scripts/factory_concierge_discord_automation.py
 
 It composes the projector with the remaining Control Tower behavior:
 
-- scan `#falar-com-gerente` for project-like intake messages;
-- create or reuse an intake thread for project messages;
+- scan GERENTE attendance threads under `#falar-com-gerente`;
+- ignore raw project-like messages left directly in the reception channel;
 - create or reuse the project forum topic and cockpit;
 - project runtime events into the correct operational lane;
 - create threads for active events such as access, blockers and approvals;

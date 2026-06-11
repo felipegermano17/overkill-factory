@@ -41,6 +41,8 @@
     "kanban_guide_not_marked_as_blocked_project": false,
     "active_bot_messages_threaded_or_linked": false,
     "free_response_threading_conflict_documented": false,
+    "manager_reception_thread_launcher_only": false,
+    "project_conversation_stays_in_single_thread": false,
     "thread_first_project_intake_automated": false,
     "structured_approval_interactions_automated": false,
     "live_runtime_projection_automated": false
