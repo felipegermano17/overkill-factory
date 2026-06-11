@@ -20,6 +20,16 @@
   "owner_worker": "factory-orchestrator",
   "executor_identity": "implementation-worker",
   "reviewer_identity": "independent-reviewer",
+  "reviewer_selection_plan": {
+    "record_type": "reviewer_selection_plan",
+    "changed_surfaces": ["agent", "llm", "browser", "tools", "memory", "security"],
+    "risk_effective": "R3",
+    "executor_identity": "implementation-worker",
+    "forbidden_reviewers": ["implementation-worker"],
+    "required_reviewers": ["independent-reviewer", "agentic-ai-security-specialist", "memory-steward"],
+    "selection_rule": "Agentic R3 work needs independent, agentic-security and memory-trust review.",
+    "evidence_refs": ["validation/cards/agentic-browser-memory-r3.md"]
+  },
   "runtime_decision": "local browser only",
   "runtime_contract": {
     "browser_profile": "isolated",

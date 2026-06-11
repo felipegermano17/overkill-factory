@@ -50,6 +50,36 @@
   "owner_worker": "Solana/Quasar Architect",
   "executor_identity": "onchain-worker",
   "reviewer_identity": "security-reviewer",
+  "reviewer_selection_plan": {
+    "record_type": "reviewer_selection_plan",
+    "changed_surfaces": ["solana-quasar", "account-pda", "cpi", "compute-units"],
+    "risk_effective": "R3",
+    "executor_identity": "onchain-worker",
+    "forbidden_reviewers": ["onchain-worker"],
+    "required_reviewers": ["security-reviewer", "solana-quasar-auditor", "independent-reviewer"],
+    "reviewer_matrix": [
+      {
+        "reviewer_worker": "security-reviewer",
+        "covers": ["security", "risk"],
+        "reason": "R3 onchain work needs a security reviewer separate from execution.",
+        "mandatory": true
+      },
+      {
+        "reviewer_worker": "solana-quasar-auditor",
+        "covers": ["solana-quasar", "account-pda", "cpi", "compute-units"],
+        "reason": "Quasar onchain changes need Auditor-aware coverage.",
+        "mandatory": true
+      },
+      {
+        "reviewer_worker": "independent-reviewer",
+        "covers": ["evidence", "gate-completeness"],
+        "reason": "The final review must check evidence completeness apart from specialist findings.",
+        "mandatory": true
+      }
+    ],
+    "selection_rule": "For R3 onchain work, require security, Auditor and independent evidence review while excluding the executor.",
+    "evidence_refs": ["solanabr/Auditor requirement", "Quasar non-Anchor constraint"]
+  },
   "runtime_decision": "codex_security_required",
   "runtime_contract": {"mode": "read_only_gate_test"},
   "security_contract": {"security_boundary": "auditor_and_scan_required"},

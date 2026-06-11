@@ -38,6 +38,30 @@
   "owner_worker": "Product Face Designer",
   "executor_identity": "frontend-worker",
   "reviewer_identity": "independent-reviewer",
+  "reviewer_selection_plan": {
+    "record_type": "reviewer_selection_plan",
+    "changed_surfaces": ["ux", "frontend", "wallet-ui"],
+    "risk_effective": "R2",
+    "executor_identity": "frontend-worker",
+    "forbidden_reviewers": ["frontend-worker"],
+    "required_reviewers": ["independent-reviewer", "appsec-owasp-specialist"],
+    "reviewer_matrix": [
+      {
+        "reviewer_worker": "independent-reviewer",
+        "covers": ["ux", "frontend", "evidence"],
+        "reason": "The executor cannot review its own Product Face evidence.",
+        "mandatory": true
+      },
+      {
+        "reviewer_worker": "appsec-owasp-specialist",
+        "covers": ["wallet-ui", "frontend"],
+        "reason": "Wallet-like UI states need AppSec-oriented review even in gate tests.",
+        "mandatory": true
+      }
+    ],
+    "selection_rule": "Route review from changed surfaces and exclude the executor.",
+    "evidence_refs": ["Overkill Factory v3.5 agent-workforce methodology"]
+  },
   "runtime_decision": "hermes_default",
   "runtime_contract": {"mode": "read_only_gate_test"},
   "security_contract": {"security_boundary": "no_sensitive_action"},

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/agent-eval-result.schema.json",
+  "title": "Overkill Factory Agent Eval Result",
+  "type": "object",
+  "required": [
+    "record_type",
+    "target_agent_or_skill",
+    "result",
+    "cases_total",
+    "cases_passed",
+    "critical_failures",
+    "over_authority_failures",
+    "blocked_behavior_passed",
+    "reviewer_separation_passed",
+    "promotion_decision",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 10 },
+    "record_type": { "const": "agent_eval_result" },
+    "target_agent_or_skill": { "type": "string", "minLength": 3 },
+    "result": { "enum": ["PASS", "FAIL", "PENDING", "WAIVED"] },
+    "cases_total": { "type": "integer", "minimum": 1 },
+    "cases_passed": { "type": "integer", "minimum": 0 },
+    "critical_failures": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "over_authority_failures": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "blocked_behavior_passed": { "type": "boolean" },
+    "reviewer_separation_passed": { "type": "boolean" },
+    "promotion_decision": {
+      "enum": ["core", "optional_pack", "backlog", "reject", "stay_skill", "stay_existing_worker"]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "next_action": { "type": "string" }
+  },
+  "additionalProperties": false
+}

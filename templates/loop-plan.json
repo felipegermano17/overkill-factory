@@ -1,8 +1,65 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/loop-plan.schema.json",
   "unit_of_work": "one bounded slice",
-  "verify": ["run focused tests", "capture proof"],
-  "review": ["independent review before done"],
+  "work_unit_contract_ref": "templates/work-unit-contract.json",
+  "verify": [
+    "run focused tests",
+    "capture proof"
+  ],
+  "review": [
+    "independent review before done"
+  ],
+  "reviewer_selection_ref": "templates/reviewer-selection-plan.json",
   "rollback": "revert this slice without touching unrelated work",
-  "evidence_refs": ["loop-plan.md"]
+  "evidence_refs": [
+    "loop-plan.md"
+  ],
+  "lanes": [
+    "implementation",
+    "verification",
+    "review"
+  ],
+  "order": [
+    "plan",
+    "build",
+    "verify",
+    "review",
+    "reconcile"
+  ],
+  "inputs": [
+    "method_contract",
+    "software_development_plan",
+    "work_unit_contract"
+  ],
+  "workers": [
+    "implementation-worker",
+    "qa-verification-worker",
+    "independent-reviewer",
+    "evidence-reconciler"
+  ],
+  "limits": [
+    "do not touch out-of-scope paths",
+    "no production mutation"
+  ],
+  "timeouts": [
+    "stop and block after repeated failure or missing access"
+  ],
+  "budget": "no material spend without Budget Gate",
+  "access_required": [
+    "repo read/write according to card authority"
+  ],
+  "expected_evidence": [
+    "test output",
+    "review result",
+    "Receipt Five readiness"
+  ],
+  "stop_criteria": [
+    "done definition satisfied"
+  ],
+  "block_criteria": [
+    "missing access",
+    "failing tests",
+    "missing review",
+    "missing evidence"
+  ]
 }

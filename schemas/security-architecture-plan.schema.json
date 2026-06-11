@@ -10,17 +10,108 @@
     "secrets_and_keys",
     "logging_and_detection",
     "threats",
-    "security_owner"
+    "security_owner",
+    "permissions",
+    "sensitive_data",
+    "access_flow",
+    "abuse_cases",
+    "preventive_controls",
+    "rollback_or_mitigation",
+    "human_gate_required",
+    "security_review_required"
   ],
   "properties": {
-    "trust_boundaries": { "type": "array", "items": { "type": "string" } },
-    "data_flows": { "type": "array", "items": { "type": "string" } },
-    "authn_authz": { "type": "array", "items": { "type": "string" } },
-    "secrets_and_keys": { "type": "array", "items": { "type": "string" } },
-    "logging_and_detection": { "type": "array", "items": { "type": "string" } },
-    "threats": { "type": "array", "items": { "type": "string" } },
-    "security_owner": { "type": "string", "minLength": 3 },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "trust_boundaries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "data_flows": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "authn_authz": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "secrets_and_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "logging_and_detection": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "threats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "security_owner": {
+      "type": "string",
+      "minLength": 3
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sensitive_data": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "access_flow": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "abuse_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preventive_controls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rollback_or_mitigation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "human_gate_required": {
+      "type": "boolean"
+    },
+    "security_review_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "additionalProperties": true
 }

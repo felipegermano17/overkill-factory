@@ -20,6 +20,16 @@
   "owner_worker": "public-safety-gate",
   "executor_identity": "implementation-worker",
   "reviewer_identity": "independent-reviewer",
+  "reviewer_selection_plan": {
+    "record_type": "reviewer_selection_plan",
+    "changed_surfaces": ["public", "docs", "code", "ci", "supply-chain"],
+    "risk_effective": "R2",
+    "executor_identity": "implementation-worker",
+    "forbidden_reviewers": ["implementation-worker"],
+    "required_reviewers": ["independent-reviewer", "public-safety-gate", "supply-chain-gate"],
+    "selection_rule": "Public release work needs independent, public-safety and supply-chain review.",
+    "evidence_refs": ["validation/cards/public-repo-release-r2.md"]
+  },
   "runtime_decision": "local CI checks",
   "runtime_contract": {"local_tests_required": true},
   "security_contract": {"public_safety_scan_required": true, "supply_chain_check_required": true},

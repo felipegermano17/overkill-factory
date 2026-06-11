@@ -12,15 +12,29 @@
     "execution_started",
     "risk",
     "forecast_confidence",
-    "last_synced_at"
+    "last_synced_at",
+    "planned_summary",
+    "missing_items",
+    "forecast_risks",
+    "human_decisions_required",
+    "truth_source_available"
   ],
   "properties": {
     "$schema": {
       "const": "https://overkill-factory.dev/schemas/project-projection.schema.json"
     },
-    "project_id": { "type": "string", "minLength": 1 },
-    "name": { "type": "string", "minLength": 1 },
-    "phase": { "type": "string", "minLength": 1 },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase": {
+      "type": "string",
+      "minLength": 1
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -37,17 +51,95 @@
         "closed"
       ]
     },
-    "execution_started": { "type": "boolean" },
-    "risk": { "type": "string", "enum": ["R0", "R1", "R2", "R3", "R4"] },
-    "forecast_confidence": { "type": "string", "enum": ["high", "medium", "low", "blocked"] },
-    "current_blockers": { "type": "array", "items": { "type": "string" } },
-    "pending_access": { "type": "array", "items": { "type": "string" } },
-    "pending_approvals": { "type": "array", "items": { "type": "string" } },
-    "next_steps": { "type": "array", "items": { "type": "string" } },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } },
-    "source_runtime": { "type": "string" },
-    "source_board": { "type": "string" },
-    "last_synced_at": { "type": "string", "minLength": 10 }
+    "execution_started": {
+      "type": "boolean"
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3",
+        "R4"
+      ]
+    },
+    "forecast_confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low",
+        "blocked"
+      ]
+    },
+    "current_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pending_access": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pending_approvals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_runtime": {
+      "type": "string"
+    },
+    "source_board": {
+      "type": "string"
+    },
+    "last_synced_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "planned_summary": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "missing_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forecast_risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "human_decisions_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "truth_source_available": {
+      "type": "boolean"
+    }
   },
   "additionalProperties": true
 }

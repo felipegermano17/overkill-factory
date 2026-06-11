@@ -1,0 +1,17 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/work-unit-contract.schema.json",
+  "record_type": "work_unit_contract",
+  "unit_id": "unit-001",
+  "objective": "Deliver one bounded implementation slice with proof.",
+  "scope_in": ["the files and behavior explicitly named by the card"],
+  "scope_out": ["unrelated refactors", "unapproved production mutation"],
+  "owner_worker": "implementation-worker",
+  "supporting_workers": ["test-automation-builder", "qa-verification-worker"],
+  "required_inputs": ["scope_in", "scope_out", "done_definition"],
+  "expected_outputs": ["diff refs", "test refs", "rollback note"],
+  "acceptance_checks": ["focused tests pass", "evidence refs attached"],
+  "blocked_when": ["required access missing", "reviewer selection missing", "scope unclear"],
+  "reviewer_selection_ref": "templates/reviewer-selection-plan.json",
+  "rollback_or_recovery": "Revert this slice without touching unrelated work.",
+  "evidence_refs": ["work-unit-contract.md"]
+}

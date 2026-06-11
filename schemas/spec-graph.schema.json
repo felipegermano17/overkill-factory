@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/spec-graph.schema.json",
+  "title": "Overkill Factory Spec Graph",
+  "type": "object",
+  "required": [
+    "requirements",
+    "outcome_links",
+    "examples",
+    "decisions",
+    "risks",
+    "dependencies",
+    "access_needs",
+    "security_architecture_refs",
+    "data_refs",
+    "gates",
+    "workers",
+    "proofs"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/spec-graph.schema.json" },
+    "requirements": { "type": "array", "items": { "type": "string" } },
+    "outcome_links": { "type": "array", "items": { "type": "string" } },
+    "examples": { "type": "array", "items": { "type": "string" } },
+    "decisions": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "dependencies": { "type": "array", "items": { "type": "string" } },
+    "access_needs": { "type": "array", "items": { "type": "string" } },
+    "security_architecture_refs": { "type": "array", "items": { "type": "string" } },
+    "data_refs": { "type": "array", "items": { "type": "string" } },
+    "gates": { "type": "array", "items": { "type": "string" } },
+    "workers": { "type": "array", "items": { "type": "string" } },
+    "proofs": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

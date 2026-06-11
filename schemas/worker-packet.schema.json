@@ -66,7 +66,9 @@
             "integration-builder",
             "test-automation-builder",
             "infra-devops-builder",
-            "agent-runtime-builder"
+            "agent-runtime-builder",
+            "control-tower-projection-worker",
+            "discord-control-tower-bridge"
           ]
         }
       },

@@ -30,8 +30,8 @@ For each profile:
 
 ## Current Status
 
-PASS: 37/37 profiles passed the public-safe structural smoke after the Factory
-13 builder-layer patch.
+PASS: 40/40 profiles passed the public-safe structural smoke after the Factory
+13 builder-layer and Control Tower worker patch.
 
 ## Smoke Result
 
@@ -74,6 +74,8 @@ PASS: 37/37 profiles passed the public-safe structural smoke after the Factory
 | `public-safety-gate` | PASS |
 | `supply-chain-gate` | PASS |
 | `detection-monitoring-worker` | PASS |
+| `control-tower-projection-worker` | PASS |
+| `discord-control-tower-bridge` | PASS |
 
 ## What Passed
 

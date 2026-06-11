@@ -20,9 +20,35 @@
   "owner_worker": "product-face",
   "executor_identity": "frontend-worker",
   "reviewer_identity": "independent-reviewer",
+  "reviewer_selection_plan": {
+    "record_type": "reviewer_selection_plan",
+    "changed_surfaces": ["frontend", "mobile", "product-face"],
+    "risk_effective": "R2",
+    "executor_identity": "frontend-worker",
+    "forbidden_reviewers": ["frontend-worker"],
+    "required_reviewers": ["independent-reviewer", "product-face", "appsec-owasp-specialist"],
+    "selection_rule": "Visible R2 frontend work needs independent review plus Product Face and AppSec coverage.",
+    "evidence_refs": ["validation/cards/product-face-saas-r2.md"]
+  },
   "runtime_decision": "browser proof required",
   "runtime_contract": {"local_browser_ok": true},
   "security_contract": {"no_secrets": true},
+  "software_development_plan": {
+    "work_units": ["validate visible SaaS states"],
+    "work_unit_contracts": ["validation/cards/product-face-saas-r2.md#work-unit"],
+    "qa_plan": ["browser proof", "mobile viewport", "a11y checks"],
+    "review_plan": ["independent reviewer", "Product Face evidence review"],
+    "reviewer_selection_plan": "validation/cards/product-face-saas-r2.md#reviewer-selection",
+    "release_or_block_rule": "Block done until Product Face, security and independent review evidence exist."
+  },
+  "loop_plan": {
+    "unit_of_work": "visible SaaS Product Face validation",
+    "work_unit_contract_ref": "validation/cards/product-face-saas-r2.md#work-unit",
+    "verify": ["capture desktop/mobile states", "run a11y checks"],
+    "review": ["independent-reviewer", "product-face"],
+    "reviewer_selection_ref": "validation/cards/product-face-saas-r2.md#reviewer-selection",
+    "rollback": "Keep validation blocked; no product mutation is performed."
+  },
   "security_scan_packet": {
     "security_owner": "appsec-reviewer",
     "scanner_agent": "appsec-owasp-specialist",

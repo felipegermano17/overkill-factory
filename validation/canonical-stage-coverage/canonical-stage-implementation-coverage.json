@@ -1,0 +1,385 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/canonical-stage-implementation-coverage.schema.json",
+  "record_type": "canonical_stage_implementation_coverage",
+  "canonical_doc_ref": "external:OVERKILL_FACTORY_VFINAL_DOCUMENTO_FINAL_CANONICO_2026-06-09.md#8",
+  "coverage_rule": "A canonical stage is covered only when it has at least one repo artifact stronger than documentation: schema, template, script, test, worker registry, worker profile, profile binding, runtime adapter or validation artifact.",
+  "stages": [
+    {
+      "stage_number": 1,
+      "stage_name": "Intake",
+      "canonical_promises": ["classify request type", "capture source refs", "route first phase and risk"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/factory-card.schema.json", "covers": "request_type enum and card intake fields"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "OVERKILL_VFINAL request type validation"},
+        {"kind": "template", "path": "templates/vfinal-factory-card.json", "covers": "vFinal intake-ready card template"},
+        {"kind": "worker_registry", "path": "agents/worker-registry.public.json", "covers": "factory-orchestrator intake ownership"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 2,
+      "stage_name": "Source Ledger",
+      "canonical_promises": ["register source refs", "separate raw source from memory or chat claims", "block unsourced claims"],
+      "implementation_refs": [
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "source_refs and source_state are required card fields"},
+        {"kind": "worker_registry", "path": "agents/worker-registry.public.json", "covers": "source-ledger-worker output contract"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "source-ledger-worker source separation rules"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 3,
+      "stage_name": "Source Resolution",
+      "canonical_promises": ["mark fact, inference, decision, conflict, stale material and gap", "block stale claims promoted as facts"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/factory-card.schema.json", "covers": "source_state enum"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "source_state validation and source-ledger routing"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "source resolution notes and conflict/gap duties"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 4,
+      "stage_name": "Product Outcome and Discovery",
+      "canonical_promises": ["define outcome", "name user and problem", "track success metric, risk metric, assumptions and human questions"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/outcome-contract.schema.json", "covers": "outcome, behavior change, risk signals, assumptions and discovery depth"},
+        {"kind": "template", "path": "templates/outcome-contract.json", "covers": "outcome/discovery contract example"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "product-sot-planner owns outcome and discovery"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 5,
+      "stage_name": "Product SOT",
+      "canonical_promises": ["create product source of truth", "record scope, risks, dependencies, access, compliance, cost, ops and success criteria", "keep candidate separate from approval"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/product-sot.schema.json", "covers": "Product SOT required fields"},
+        {"kind": "template", "path": "templates/product-sot.json", "covers": "Product SOT contract template"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "vFinal card blocks without product_sot"},
+        {"kind": "test", "path": "tests/test_factoryctl.py", "covers": "vFinal Product SOT requirement regression test"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 6,
+      "stage_name": "Agentic Method Router",
+      "canonical_promises": ["choose method weight", "route artifacts, gates, workers and reviewers", "avoid habit-based execution"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/method-contract.schema.json", "covers": "selected and skipped method requirements"},
+        {"kind": "template", "path": "templates/method-contract.json", "covers": "method routing example"},
+        {"kind": "worker_registry", "path": "agents/worker-registry.public.json", "covers": "factory-orchestrator routing ownership"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 7,
+      "stage_name": "Method Contract",
+      "canonical_promises": ["record selected/skipped methods", "record artifacts, gates, workers, reviewers, authority and done criteria"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/method-contract.schema.json", "covers": "method contract required fields"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "vFinal card blocks missing required plans named by method_contract"},
+        {"kind": "test", "path": "tests/test_factoryctl.py", "covers": "required_plans must exist on the card"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 8,
+      "stage_name": "Product Pack and Surface Pack Selection",
+      "canonical_promises": ["select product pack", "select surface pack", "block unsupported capability coverage"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/capability-pack-contract.schema.json", "covers": "capability pack contract"},
+        {"kind": "worker_registry", "path": "agents/capability-packs.public.json", "covers": "modular product/surface pack registry"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "validate_capability_coverage blocks unsupported surfaces"},
+        {"kind": "test", "path": "tests/test_capability_packs.py", "covers": "capability coverage regression tests"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 9,
+      "stage_name": "Risk, Authority, Dependency, Compliance, Access and Budget Gates",
+      "canonical_promises": ["separate plan, execute, test, publish and operate authority", "block material execution without needed access", "track dependencies, compliance and budget"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/access-capability.schema.json", "covers": "access/capability contract"},
+        {"kind": "schema", "path": "schemas/budget-contract.schema.json", "covers": "budget gate contract"},
+        {"kind": "schema", "path": "schemas/dependency-map.schema.json", "covers": "dependency gate contract"},
+        {"kind": "schema", "path": "schemas/privacy-compliance-plan.schema.json", "covers": "privacy/compliance gate contract"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "risk, human gate and security packet blockers"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 10,
+      "stage_name": "Security Architecture Plan",
+      "canonical_promises": ["define trust boundaries, auth, permissions, sensitive data and controls", "route security specialists before implementation when risk exists"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/security-architecture-plan.schema.json", "covers": "security architecture required fields"},
+        {"kind": "template", "path": "templates/security-architecture-plan.json", "covers": "security architecture plan template"},
+        {"kind": "worker_registry", "path": "agents/worker-registry.public.json", "covers": "security-orchestrator and specialist routing"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "high-risk security scan and human gate blockers"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 11,
+      "stage_name": "Software Development Plan",
+      "canonical_promises": ["produce PRD, TRD, domain map, acceptance examples, stories, cards, slice plan, test plan, release plan and docs plan"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/software-development-plan.schema.json", "covers": "software plan required artifacts"},
+        {"kind": "template", "path": "templates/software-development-plan.json", "covers": "software plan template"},
+        {"kind": "schema", "path": "schemas/work-unit-contract.schema.json", "covers": "work unit contract"},
+        {"kind": "schema", "path": "schemas/reviewer-selection-plan.schema.json", "covers": "reviewer selection contract"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 12,
+      "stage_name": "Product Experience Plan",
+      "canonical_promises": ["cover websites, apps, mobile, desktop, CLI/docs and agentic interfaces", "define flows, states, proof and QA per surface"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/product-experience-plan.schema.json", "covers": "Product Experience OS plan"},
+        {"kind": "template", "path": "templates/product-experience-plan.json", "covers": "Product Experience plan template"},
+        {"kind": "schema", "path": "schemas/product-face-result.schema.json", "covers": "Product Face proof result"},
+        {"kind": "test", "path": "tests/test_product_face_proof.py", "covers": "Product Face proof regression tests"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 13,
+      "stage_name": "Data, Metrics and Analytics Plan",
+      "canonical_promises": ["define success metrics, risk metrics, events, dashboards, logs, alerts, privacy and instrumentation proof"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/data-metrics-plan.schema.json", "covers": "data and metrics plan required fields"},
+        {"kind": "template", "path": "templates/data-metrics-plan.json", "covers": "data and metrics plan template"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "detection-monitoring-worker data/metrics ownership"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 14,
+      "stage_name": "Agent Quality and Evals Plan",
+      "canonical_promises": ["define agent tests, authority tests, evidence tests, regression and model/prompt/skill versioning"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/agent-eval-plan.schema.json", "covers": "agent eval plan"},
+        {"kind": "schema", "path": "schemas/agent-eval-result.schema.json", "covers": "agent eval result"},
+        {"kind": "template", "path": "templates/agent-eval-plan.json", "covers": "agent eval plan template"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "skill-eval-distiller eval ownership"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 15,
+      "stage_name": "Spec Graph",
+      "canonical_promises": ["connect requirements, outcomes, examples, decisions, risks, dependencies, access, security, data, gates, workers and proofs"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/spec-graph.schema.json", "covers": "Spec Graph contract"},
+        {"kind": "template", "path": "templates/spec-graph.json", "covers": "Spec Graph template"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "vFinal card blocks without spec_graph"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "decomposition-planner spec graph ownership"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 16,
+      "stage_name": "Loop Plan",
+      "canonical_promises": ["define lanes, order, inputs, workers, limits, timeouts, budget, access, evidence, stop criteria and block criteria"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/loop-plan.schema.json", "covers": "Loop Plan contract"},
+        {"kind": "template", "path": "templates/loop-plan.json", "covers": "Loop Plan template"},
+        {"kind": "schema", "path": "schemas/parallel-lane-contract.schema.json", "covers": "parallel lane/worktree contract"},
+        {"kind": "script", "path": "scripts/production_full_product_worker_graph.py", "covers": "lane validation in full product worker graph"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 17,
+      "stage_name": "Autonomy Readiness Packet",
+      "canonical_promises": ["map GitHub, cloud, billing, DB, DNS, APIs, secrets, observability, runtime, profiles, owners and approvals before execution"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/autonomy-readiness-packet.schema.json", "covers": "autonomy readiness resource/status contract"},
+        {"kind": "template", "path": "templates/autonomy-readiness-packet.json", "covers": "autonomy readiness template"},
+        {"kind": "profile_binding", "path": "agents/hermes-profile-bindings.public.json", "covers": "runtime profile bindings"},
+        {"kind": "test", "path": "tests/test_materialize_hermes_profiles.py", "covers": "Hermes profile materialization safety"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 18,
+      "stage_name": "Ready Gate",
+      "canonical_promises": ["block execution until required artifacts, access, gates, workers, evidence plan and forbidden actions are clear"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/gate-report.schema.json", "covers": "gate report contract"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "gate-report and transition-plan blockers"},
+        {"kind": "test", "path": "tests/test_factoryctl.py", "covers": "ready transition blocks missing worker results"},
+        {"kind": "validation_artifact", "path": "validation/hermes-transition-plans/solana-quasar-r3-ready.json", "covers": "ready gate blocked transition example"}
+      ],
+      "coverage_status": "implemented_by_runtime"
+    },
+    {
+      "stage_number": 19,
+      "stage_name": "Control Tower Projection and Owner Interface",
+      "canonical_promises": ["show phase, blockers, missing items, next steps, forecast and human decisions without replacing Hermes as truth"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/project-projection.schema.json", "covers": "operator projection fields"},
+        {"kind": "template", "path": "templates/project-projection.json", "covers": "project projection template"},
+        {"kind": "schema", "path": "schemas/operator-control-tower-bridge-health.schema.json", "covers": "Control Tower bridge health contract"},
+        {"kind": "test", "path": "tests/test_operator_control_tower_proof.py", "covers": "Control Tower production readiness proof"}
+      ],
+      "coverage_status": "bounded_public_proof"
+    },
+    {
+      "stage_number": 20,
+      "stage_name": "Execution",
+      "canonical_promises": ["run scoped workers only after Ready Gate", "route surface builders instead of generic execution when possible"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/worker-packet.schema.json", "covers": "worker execution packet"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "worker-packet generation and required worker routing"},
+        {"kind": "worker_registry", "path": "agents/worker-registry.public.json", "covers": "surface builder workers"},
+        {"kind": "test", "path": "tests/test_factoryctl.py", "covers": "required-only worker packet routing"}
+      ],
+      "coverage_status": "implemented_by_runtime"
+    },
+    {
+      "stage_number": 21,
+      "stage_name": "Worker Result",
+      "canonical_promises": ["workers return PASS, FAIL, WAIVED, PENDING or BLOCKED with evidence and receipt field alignment"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/worker-result.schema.json", "covers": "worker result enum and evidence fields"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "worker result builder and validation"},
+        {"kind": "test", "path": "tests/test_factoryctl.py", "covers": "worker result evidence and receipt field tests"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 22,
+      "stage_name": "Verification",
+      "canonical_promises": ["prove behavior with tests, build, screenshots, scans, evals, dependency checks, logs, smoke and monitoring evidence"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/qa-verification-plan.schema.json", "covers": "QA verification plan"},
+        {"kind": "template", "path": "templates/qa-verification-plan.json", "covers": "QA verification template"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "qa-verification-worker proof duties"},
+        {"kind": "test", "path": "tests/test_product_face_proof.py", "covers": "visual proof verification examples"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 23,
+      "stage_name": "Review",
+      "canonical_promises": ["review independently", "prevent executor self-review", "include AutoReview and security review where needed"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/reviewer-selection-plan.schema.json", "covers": "reviewer selection contract"},
+        {"kind": "template", "path": "templates/reviewer-selection-plan.json", "covers": "reviewer selection template"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "executor/reviewer identity separation"},
+        {"kind": "test", "path": "tests/test_factoryctl.py", "covers": "self-review rejection"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 24,
+      "stage_name": "Human Gate",
+      "canonical_promises": ["require real human decision for production, signing, funds, custody, mainnet, R4, legal, privacy, budget and critical access"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/human-gate-record.schema.json", "covers": "human gate decision record"},
+        {"kind": "template", "path": "templates/human-gate-record.json", "covers": "human gate template"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "human approval evidence requirement"},
+        {"kind": "test", "path": "tests/test_factoryctl.py", "covers": "human approval requires evidence"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 25,
+      "stage_name": "Closure Summary",
+      "canonical_promises": ["summarize request, delivery, proofs, remaining risks, waivers, approved scope, forbidden scope and next step"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/worker-closure-summary.schema.json", "covers": "closure summary required fields"},
+        {"kind": "validation_artifact", "path": "pilots/quasar-vault-guard-test/evidence/worker-closure-summary.json", "covers": "schema-backed closure summary example"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "evidence-reconciler closure ownership"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 26,
+      "stage_name": "Receipt Five",
+      "canonical_promises": ["answer what changed, where it is, how it was verified, who reviewed and what is next"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/receipt-five.schema.json", "covers": "Receipt Five contract"},
+        {"kind": "template", "path": "templates/receipt-five.json", "covers": "Receipt Five template"},
+        {"kind": "script", "path": "scripts/factoryctl.py", "covers": "receipt validation and transition enforcement"},
+        {"kind": "test", "path": "tests/test_factoryctl.py", "covers": "receipt and worker result reconciliation tests"}
+      ],
+      "coverage_status": "implemented_by_runtime"
+    },
+    {
+      "stage_number": 27,
+      "stage_name": "Completion Audit",
+      "canonical_promises": ["compare required versus delivered", "detect skipped methods, gates and evidence"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/completion-audit.schema.json", "covers": "completion audit contract"},
+        {"kind": "schema", "path": "schemas/factory-completion-audit.schema.json", "covers": "factory completion audit contract"},
+        {"kind": "script", "path": "scripts/factory_completion_audit.py", "covers": "factory completion audit builder"},
+        {"kind": "test", "path": "tests/test_factory_completion_audit.py", "covers": "completion audit regression tests"}
+      ],
+      "coverage_status": "implemented_by_runtime"
+    },
+    {
+      "stage_number": 28,
+      "stage_name": "Production Operations",
+      "canonical_promises": ["prepare environment, owner, health, logs, metrics, rollback, release channel, support and deploy evidence"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/production-readiness-plan.schema.json", "covers": "production readiness plan"},
+        {"kind": "template", "path": "templates/production-readiness-plan.json", "covers": "production readiness template"},
+        {"kind": "script", "path": "scripts/production_release_gate.py", "covers": "release ops and rollback evidence builder"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "release-ops-worker production ops responsibilities"}
+      ],
+      "coverage_status": "bounded_public_proof"
+    },
+    {
+      "stage_number": 29,
+      "stage_name": "Release or Block",
+      "canonical_promises": ["produce release, release candidate, done, blocked, superseded or archived decision with evidence and authority"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/release-integration-preflight.schema.json", "covers": "release integration preflight contract"},
+        {"kind": "schema", "path": "schemas/project-projection.schema.json", "covers": "release candidate and blocked status projection"},
+        {"kind": "script", "path": "scripts/production_release_gate.py", "covers": "release ops result and human gate record generation"},
+        {"kind": "worker_registry", "path": "agents/worker-registry.public.json", "covers": "release-ops-worker authority boundary"}
+      ],
+      "coverage_status": "bounded_public_proof"
+    },
+    {
+      "stage_number": 30,
+      "stage_name": "Monitoring, Incident and Support",
+      "canonical_promises": ["track health, alerts, metrics, incidents, support, rollback, postmortem and learnback"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/incident-support-plan.schema.json", "covers": "incident/support plan"},
+        {"kind": "template", "path": "templates/incident-support-plan.json", "covers": "incident/support template"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "detection-monitoring-worker incident and health responsibilities"},
+        {"kind": "schema", "path": "schemas/data-metrics-plan.schema.json", "covers": "monitoring signals and alerts"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 31,
+      "stage_name": "Learnback",
+      "canonical_promises": ["turn repeated learning into tests, evals, skills, policies, templates, docs, gates, workers or pack updates"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/agent-eval-result.schema.json", "covers": "agent eval/learnback result contract"},
+        {"kind": "schema", "path": "schemas/factory-maturity-scorecard.schema.json", "covers": "learnback into maturity scorecard"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "skill-eval-distiller learnback ownership"},
+        {"kind": "test", "path": "tests/test_agent_reference_study_execution.py", "covers": "agent study execution became templates/contracts/workers"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    },
+    {
+      "stage_number": 32,
+      "stage_name": "Factory Maturity Audit",
+      "canonical_promises": ["attack blind spots", "find weak agents, weak packs and missing proof", "produce missing coverage register"],
+      "implementation_refs": [
+        {"kind": "schema", "path": "schemas/factory-maturity-scorecard.schema.json", "covers": "factory maturity scorecard"},
+        {"kind": "template", "path": "templates/factory-maturity-scorecard.json", "covers": "factory maturity template"},
+        {"kind": "worker_profile", "path": "agents/worker-profiles.public.json", "covers": "skill-eval-distiller maturity audit duty"},
+        {"kind": "test", "path": "tests/test_factory_stage_agent_map.py", "covers": "all canonical stages have mapped worker ownership"}
+      ],
+      "coverage_status": "implemented_by_contract"
+    }
+  ]
+}

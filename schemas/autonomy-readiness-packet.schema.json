@@ -11,18 +11,180 @@
     "cost_limit",
     "forbidden_actions",
     "rollback_path",
-    "human_gates"
+    "human_gates",
+    "required_resources",
+    "resource_statuses",
+    "approval_channel",
+    "owners"
   ],
   "properties": {
-    "execution_mode": { "enum": ["planning_only", "bounded_execution", "material_execution"] },
-    "accounts_ready": { "type": "boolean" },
-    "tools_ready": { "type": "boolean" },
-    "environment_ready": { "type": "boolean" },
-    "cost_limit": { "type": "string", "minLength": 1 },
-    "forbidden_actions": { "type": "array", "items": { "type": "string" } },
-    "rollback_path": { "type": "string", "minLength": 3 },
-    "human_gates": { "type": "array", "items": { "type": "string" } },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "execution_mode": {
+      "enum": [
+        "planning_only",
+        "bounded_execution",
+        "material_execution"
+      ]
+    },
+    "accounts_ready": {
+      "type": "boolean"
+    },
+    "tools_ready": {
+      "type": "boolean"
+    },
+    "environment_ready": {
+      "type": "boolean"
+    },
+    "cost_limit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "forbidden_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rollback_path": {
+      "type": "string",
+      "minLength": 3
+    },
+    "human_gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_resources": {
+      "type": "object",
+      "properties": {
+        "github": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cloud": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "billing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "database": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "storage": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dns_domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "external_apis": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "payment_accounts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "app_store": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "secrets_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "environments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "observability": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "runtime": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "resource_statuses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "resource",
+          "status"
+        ],
+        "properties": {
+          "resource": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "granted",
+              "pending",
+              "not_needed",
+              "needed_later",
+              "blocking_now"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "approval_channel": {
+      "type": "string",
+      "minLength": 3
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "additionalProperties": true
 }

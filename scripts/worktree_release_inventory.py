@@ -92,10 +92,10 @@ def classify(path: str, status: str) -> str:
         return "generated_receipt"
     if suffix in SAFE_CLEANUP_SUFFIXES or parts.intersection(SAFE_CLEANUP_PARTS):
         return "safe_cleanup_candidate"
-    if status == "??" and top_level(path) not in PRODUCT_TOP_LEVELS:
-        return "needs_human_review"
-    if top_level(path) in PRODUCT_TOP_LEVELS or path in {"README.md", "LICENSE", "NOTICE.md"}:
+    if top_level(path) in PRODUCT_TOP_LEVELS or path in {"README.md", "LICENSE", "NOTICE.md", ".env.example"}:
         return "release_candidate_material"
+    if status == "??":
+        return "needs_human_review"
     return "needs_human_review"
 
 

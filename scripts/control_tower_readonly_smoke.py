@@ -93,6 +93,20 @@ def build_projection(snapshot: dict[str, Any]) -> dict[str, Any]:
         "source_runtime": snapshot["runtime"],
         "source_board": snapshot["board_ref"],
         "last_synced_at": snapshot["updated_at"],
+        "planned_summary": [
+            "access gate",
+            "ready gate",
+            "worker execution",
+            "verification",
+            "review",
+        ],
+        "missing_items": list(snapshot["current_blockers"]),
+        "forecast_risks": [
+            "execution cannot start until required access and budget approval are recorded",
+            "forecast stays blocked while the Ready Gate has unresolved inputs",
+        ],
+        "human_decisions_required": list(snapshot["pending_approvals"]),
+        "truth_source_available": True,
     }
 
 

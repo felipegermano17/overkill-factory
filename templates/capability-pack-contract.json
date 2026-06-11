@@ -1,0 +1,47 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/capability-pack-contract.schema.json",
+  "record_type": "capability_pack_contract",
+  "pack_id": "web-saas-core",
+  "status": "ready",
+  "covered_surfaces": [
+    "frontend",
+    "backend",
+    "api",
+    "database"
+  ],
+  "specialist_workers": [
+    "frontend-builder",
+    "backend-api-builder",
+    "data-persistence-builder",
+    "qa-verification-worker"
+  ],
+  "activation_evidence_refs": [
+    "agents/capability-packs.public.json#web-saas-core"
+  ],
+  "missing_capabilities": [],
+  "execution_rule": "Execution can start only when every specialized surface is covered by a ready core pack or an activated modular pack.",
+  "product_pack_id": "web-saas-core",
+  "product_pack_version": "v1",
+  "surface_pack_id": "web-app-surface-pack",
+  "risk_addendum": [
+    "ordinary web product risk; elevate if auth, payments, regulated data or production release appears"
+  ],
+  "templates_required": [
+    "templates/product-experience-plan.json",
+    "templates/software-development-plan.json"
+  ],
+  "evidence_required": [
+    "capability coverage report",
+    "worker packet coverage"
+  ],
+  "worker_mapping": {
+    "product-experience": [
+      "product-face",
+      "frontend-builder"
+    ],
+    "verification": [
+      "qa-verification-worker",
+      "independent-reviewer"
+    ]
+  }
+}

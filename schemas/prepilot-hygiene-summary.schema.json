@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/prepilot-hygiene-summary.schema.json",
+  "title": "Overkill Factory Prepilot Hygiene Summary",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "scope",
+    "checks",
+    "repo_inventory_summary",
+    "safe_cleanup_performed",
+    "attention_items",
+    "must_not_clean_automatically",
+    "evidence_refs",
+    "next_required_actions"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/prepilot-hygiene-summary.schema.json"
+    },
+    "record_type": {
+      "const": "prepilot_hygiene_summary"
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "result": {
+      "enum": ["PASS", "ATTENTION", "BLOCKED"]
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 3
+    },
+    "checks": {
+      "type": "object",
+      "required": [
+        "repo_ignored_junk_removed",
+        "repo_inventory_has_no_unknown_entries",
+        "repo_inventory_has_no_cleanup_candidates",
+        "public_safety_passed",
+        "secret_safety_passed",
+        "minimal_example_ready",
+        "hermes_gateway_readonly_passed",
+        "discord_gateway_configured",
+        "kanban_has_no_ready_or_running_factory_tasks",
+        "release_worktree_integrated"
+      ],
+      "properties": {
+        "repo_ignored_junk_removed": { "type": "boolean" },
+        "repo_inventory_has_no_unknown_entries": { "type": "boolean" },
+        "repo_inventory_has_no_cleanup_candidates": { "type": "boolean" },
+        "public_safety_passed": { "type": "boolean" },
+        "secret_safety_passed": { "type": "boolean" },
+        "minimal_example_ready": { "type": "boolean" },
+        "hermes_gateway_readonly_passed": { "type": "boolean" },
+        "discord_gateway_configured": { "type": "boolean" },
+        "kanban_has_no_ready_or_running_factory_tasks": { "type": "boolean" },
+        "release_worktree_integrated": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "safe_cleanup_performed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "repo_inventory_summary": {
+      "type": "object",
+      "required": [
+        "entries",
+        "modified",
+        "untracked",
+        "release_candidate_entries",
+        "generated_receipt_entries",
+        "needs_human_review_entries",
+        "safe_cleanup_candidates",
+        "blocking_items"
+      ],
+      "properties": {
+        "entries": { "type": "integer", "minimum": 0 },
+        "modified": { "type": "integer", "minimum": 0 },
+        "untracked": { "type": "integer", "minimum": 0 },
+        "release_candidate_entries": { "type": "integer", "minimum": 0 },
+        "generated_receipt_entries": { "type": "integer", "minimum": 0 },
+        "needs_human_review_entries": { "type": "integer", "minimum": 0 },
+        "safe_cleanup_candidates": { "type": "integer", "minimum": 0 },
+        "blocking_items": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "attention_items": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "must_not_clean_automatically": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "next_required_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    }
+  },
+  "additionalProperties": false
+}

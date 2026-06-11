@@ -1,217 +1,177 @@
 # Overkill Factory
 
-Overkill Factory is an open product-production factory for autonomous agents.
+Overkill Factory is an open source production line for agentic product work.
+It helps a Hermes operator turn a raw product or project paper into a controlled
+sequence of source resolution, planning, architecture, specialist work,
+evidence, review, gates and receipts.
 
-It turns a messy product paper into a controlled production line:
+The project is not a chat prompt. It is a set of public contracts, worker
+profiles, adapter hooks, examples and validation scripts that make agent work
+inspectable before it is allowed to move forward.
+
+## What It Is
+
+Overkill Factory gives Hermes a product-production method:
 
 ```text
-raw product paper
+paper or project brief
 -> source resolution
 -> Product SOT
--> architecture
--> specialist reviews
--> documentation OS
--> decomposition
--> Hermes Kanban cards
--> agent execution
--> evidence
--> independent review
--> human gates
--> stable release
+-> architecture and risk routing
+-> Hermes worker cards
+-> specialist execution
+-> evidence and Receipt Five
+-> independent review and human gates
+-> release readiness
 ```
 
-The core belief is simple: autonomous agents do not need prettier prose. They
-need contracts, gates, receipts, and a runtime that refuses weak work.
+The repository contains the public method, card and receipt schemas, worker
+registry, Hermes profile bindings, adapter scripts, validation fixtures and a
+small runnable example.
 
-## What This Repository Contains
+## Who It Is For
 
-- The Overkill Factory methodology.
-- Machine-checkable card and receipt contracts.
-- Hermes/Kanban adapter patches.
-- Example cards, worker packets, gate reports, and Receipt Five metadata.
-- A Codex skill for operating the factory.
-- Initial automation for critical factory workers: Product Face, Codex Security,
-  onchain auditor, independent reviewer, and human gate clerk.
-- Factory 11 hardening: public source policy, security control matrix, worker
-  registry, Hermes update safety, public-safety scan and CI.
-- Factory 12 agent hardening: every registered worker now has a public-safe
-  agent profile, Hermes profile binding, operator-understanding contract,
-  bounded failure policy and validation script.
-- Live Hermes Kanban adapter evidence: real board, main card, required worker
-  cards, dependency links, negative done block, positive done reconciliation.
-- Real Hermes specialist dispatch evidence: `public-safety-gate` preloaded the
-  factory skill, ran a public-safety scan and completed with Receipt Five.
-- Official Hermes main patch smoke: the public adapter patch applied to official
-  Hermes commit `56236b16e383cc656bb8c88429902f4de83f1faf` and the focused
-  regression suite passed.
-- Real supply-chain gate evidence: Hermes `supply-chain-gate` validated
-  least-privilege CI permissions, commit-pinned GitHub Actions, public scans,
-  source SBOM and unit tests on a clean public clone.
-- Final practical completion evidence: real Hermes V2 worker cards completed
-  remote proof, release control and production graph lanes; the completion audit
-  now reports `COMPLETE`, `completion_claim_allowed=true` and `10/10`.
-- Production full product worker graph evidence: QVG reconciles nine current
-  real lanes into one public validation product graph with
-  `reusable_for_product=true` and `completion_claim_allowed=true`.
-- Crabbox managed-container remote proof: Hermes `remote-proof-runner` ran a
-  real Crabbox `local-container` proof with TTL, command transcript, validation
-  checks, `leaseStopped=true` and zero active local-container leases afterward.
-- Production release-control proof: human-gate and release-ops records now
-  exist for the public validation product, with rollback, monitoring and
-  no-deploy boundaries recorded.
-- Production-like Product Face proof: Hermes `product-face` validated the QVG
-  public validation product as a reusable Product Face lane with scoped product
-  id, production-like static artifact class, screenshots, DOM state, console,
-  a11y basics, overlap checks and target hash.
-- Production-validation Quasar Auditor proof: Hermes `solana-quasar-auditor`
-  validated the QVG public validation product source under `products/` with a
-  clean Docker Quasar build/test, Auditor corpus/checklist coverage and a
-  scoped reusable Auditor lane.
-- Production-validation Quasar CU/SVM/economic proof: the QVG public validation
-  product source under `products/` now has a clean QuasarSVM transaction
-  harness with real CU measurements, success/error flows, economic no-mutation
-  checks and scoped reusable evidence for that source hash.
-- Multi-context validation battery artifacts with Product Face, security,
-  onchain, release, agentic and public-repo stress scenarios.
+Use it when you already run, or want to run, product work with Hermes and need:
 
-## Why Hermes Is Required
+- repeatable gates instead of informal agent handoffs;
+- explicit worker roles for planning, building, security, proof and release;
+- evidence that survives beyond a chat transcript;
+- a way to let agents work while still preserving human authority for high-risk
+  decisions.
 
-The first supported runtime is Hermes.
+It is especially useful for product teams, solo builders and agent operators who
+want autonomous help without pretending that autonomy removes gates, access
+control, review or release responsibility.
 
-Hermes is the factory floor: the agents live there, the work moves through its
-Kanban, and the gates block bad transitions before autonomous execution starts.
+## What It Does
 
-Overkill Factory stays separate from Hermes so the methodology remains its own
-project, but the Hermes adapter is a first-class and required integration.
+Overkill Factory provides:
 
-## Current Status
+- a card contract for describing phase, risk, scope, runtime, security and done
+  evidence;
+- a worker registry and Hermes profile bindings for routing work to the right
+  role;
+- a capability pack registry for checking whether the product type has ready
+  specialist coverage before execution;
+- `factoryctl.py` helpers for validating cards, creating gate reports and
+  generating worker packets;
+- a Hermes adapter and transition hook that can block weak `ready` and `done`
+  transitions;
+- public-safe examples, worker packets, receipts and validation artifacts;
+- safety scans for secrets and private/public boundary mistakes.
 
-Factory 10 has been validated in a real Hermes runtime and in a multi-context
-offline battery.
+## What It Does Not Do
 
-The portable Hermes adapter patch is kept under `adapters/hermes/patches/`.
-The live adapter entrypoint is `adapters/hermes/live_kanban_adapter.py`.
-Official-main patch evidence is recorded in
-`validation/hermes-live/official-main-patch-smoke.md`.
+Overkill Factory does not automatically:
 
-The first dry pilot is complete and kept under:
+- understand your business without source material;
+- approve architecture, security, release or human gates;
+- deploy to production;
+- move funds, sign transactions or handle real keys;
+- replace Codex Security, Auditor, Product Face proof, QA or human review;
+- require Discord as a source of truth;
+- make every registered worker run on every card;
+- pretend every product type already has executable specialists. If a paper
+  asks for mobile, desktop, game, AI/ML, fintech, regulated, analytics,
+  browser-extension or hardware work, capability-pack validation can block until
+  the matching pack is activated.
 
-```text
-pilot: pilots/quasar-vault-guard-test
-status: done
-```
+Hermes and Receipt Five remain the source of truth. Discord or another Control
+Tower can be a cockpit, but it is not the evidence store.
 
-## Quick Start
+## How Hermes Fits
 
-Read these in order:
+Hermes is the first supported runtime. Overkill Factory supplies the factory
+method and contracts; Hermes supplies the Kanban floor where cards, workers and
+state transitions live.
 
-1. `docs/methodology/overkill-factory-v0.md`
-2. `docs/methodology/overkill-factory-v3-6.md`
-3. `docs/planning/execution-plan.md`
-4. `docs/automation/worker-automation-v0.md`
-5. `adapters/hermes/README.md`
-6. `agents/worker-roster.md`
-7. `agents/worker-registry.public.json`
-8. `agents/worker-profiles.public.json`
-9. `agents/hermes-profile-bindings.public.json`
-10. `docs/agents/live-agent-configuration.md`
-11. `docs/agents/security-specialist-matrix.md`
-12. `docs/security/security-control-matrix.md`
-13. `adapters/hermes/compatibility-manifest.md`
-14. `docs/maps/whimsical-board.md`
-15. `pilots/quasar-vault-guard-test/README.md`
-16. `docs/roadmap/factory-11-action-plan.md`
-17. `docs/methodology/factory-11-operational-hardening.md`
-18. `docs/validation/heavy-validation-results.md`
-19. `docs/reviews/heavy-validation-adversarial-review.md`
+The adapter files are under `adapters/hermes/`:
 
-Run the local preflight:
+- `adapters/hermes/README.md` explains the patch and transition model.
+- `adapters/hermes/transition_hook.py` prepares worker routing and done-time
+  evidence reconciliation.
+- `agents/hermes-profile-bindings.public.json` maps public workers to Hermes
+  profile names, queues, skills and receipt fields.
+
+You can run local validation without Discord. Configure a Control Tower only
+after the local card, worker packet and receipt path is clear.
+
+## Quickstart
+
+Start here:
+
+1. Read `docs/getting-started/quickstart-hermes.md`.
+2. Run the validation commands in `docs/operations/validation-and-release.md`.
+3. Generate a gate report from `examples/minimal-hermes-project/card.md`.
+4. Review worker responsibilities in `docs/agents/worker-profiles.md`.
+5. Review stage ownership in `docs/agents/factory-stage-agent-map.md`.
+6. Review product-type coverage in `docs/agents/capability-packs.md`.
+7. Add Hermes and optional Control Tower configuration with `.env.example`.
+
+Minimal local smoke:
 
 ```bash
-python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md
-python scripts/factoryctl.py gate-report --card examples/cards/v35_valid_onchain_auditor_scan.md
-python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
-python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
-python scripts/factoryctl.py validate-completion --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json
-python scripts/factory_battery.py
-python adapters/hermes/compatibility-check.py
-python scripts/supply_chain_proof.py --check --no-write
-python scripts/full_product_worker_graph.py --require-pass
-python scripts/managed_remote_proof_probe.py
-python scripts/crabbox_local_container_remote_proof.py --crabbox-bin /path/to/crabbox
-python scripts/production_release_gate.py
-python scripts/production_full_product_worker_graph.py --require-pass
-python scripts/factory_completion_audit.py
-python scripts/validate_worker_profiles.py
-python scripts/public_safety_scan.py
+python scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
+python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
+python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
 
-For final practical closure, `python scripts/factory_completion_audit.py
---no-write --require-complete` must pass. If it fails, the repo is no longer in
-the Factory 10 completed state and the failing blocker should be treated as the
-next factory task.
+On Windows PowerShell, create the output directory first if your shell does not
+create it through the helper:
 
-After a specialist really runs, write structured evidence metadata:
-
-```bash
-python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref reports/security-scan.md
-python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor product-owner --evidence-ref decisions/r3-human-approval.md
+```powershell
+New-Item -ItemType Directory -Force .tmp\minimal-worker-packets
+python scripts\factoryctl.py worker-packet --worker all --required-only --card examples\minimal-hermes-project\card.md --out .tmp\minimal-worker-packets
 ```
 
-## Current Boundaries
+## Current Status
 
-The repo prepares contracts and worker packets. It does not fake scanner output,
-Auditor results, screenshots, independent approval, or human decisions.
+The public repository has validated schemas, worker profiles, Hermes profile
+bindings, adapter fixtures, safety scans and a public validation product. The
+adapter patch and transition hook are public, and the local validation suite is
+the required first check before publication or release work.
 
-The dry pilot proves the factory process and Hermes gates. It does not prove
-production readiness, deploy readiness, real onchain program safety, wallet
-signing, devnet/mainnet behavior, funds movement, or custody safety.
+The project is still not a hosted service and not a production launch. A user
+must connect it to their own Hermes runtime, configure any real tools they want
+workers to use, and provide real approval records for high-risk work.
 
-The live Hermes smoke proves that the adapter can materialize a synthetic
-Solana/Quasar R3 card into real Hermes Kanban tasks and block/allow completion
-based on worker results. The smoke worker results are intentionally marked as
-synthetic and cannot be reused as real product evidence.
+## Documentation Map
 
-The real profile dispatch smoke proves one specialist profile can be spawned by
-Hermes, load the factory skill, run a scoped scanner and complete with Receipt
-Five. It does not prove all specialist profiles or product-specific execution.
+- `docs/getting-started/quickstart-hermes.md`: first run with your own Hermes.
+- `docs/concepts/factory-flow.md`: core concepts and phase flow.
+- `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
+  evidence.
+- `docs/agents/factory-stage-agent-map.md`: which worker owns each canonical
+  factory stage and what proof blocks the next step.
+- `docs/agents/capability-packs.md`: ready product coverage and pack activation
+  rules.
+- `docs/control-tower/open-source-setup.md`: optional Discord/Control Tower
+  setup.
+- `docs/operations/validation-and-release.md`: validation and release checklist.
+- `docs/operations/troubleshooting.md`: common failures and how to continue.
+- `docs/architecture/hermes-integration.md`: adapter and runtime integration.
+- `docs/roadmap/factory-vfinal-prepilot-roadmap.md`: prepilot backlog and
+  follow-up rules that must stay outside the canonical narrative.
+- `examples/minimal-hermes-project/README.md`: small public-safe example.
+- `.env.example`: safe environment variable template.
 
-The official-main patch smoke proves the public patch applies to the tested
-Hermes main commit and keeps focused Kanban/dashboard regression tests green. It
-does not prove future Hermes releases will remain compatible without rerunning
-the compatibility manifest.
+Longer method, validation and historical artifacts remain in `docs/methodology/`,
+`docs/validation/`, `validation/` and `pilots/`. Treat those as supporting
+evidence, not as the first user path.
 
-The Factory 10 practical audit is complete for the QVG public validation product
-and the current public branch state. That means the factory process can claim
-practical 10/10 for this validation context.
+## Public Safety
 
-This is still not a real production launch. No deploy, funds movement, wallet
-signing, devnet/mainnet write, secret disclosure, infrastructure mutation, DNS
-change, IAM change, KMS change or history rewrite was performed. Crabbox proof
-used a real managed local-container lease, not a brokered cloud lease or
-Blacksmith Testbox. Future real products must rerun the relevant product,
-security, remote-proof, release and monitoring gates against their own source
-and environment.
+Public artifacts must not contain secrets, private source dumps, local absolute
+paths, private board links, raw logs or private operational history.
 
-The QVG full product graph now proves bounded product-specific reconciliation
-across Product Face, Security, Auditor, CU/SVM/economic proof, Remote Proof,
-Independent Review, Human Gate, Release Ops, Supply Chain and Receipt Five. It
-now includes reusable Product Face and Quasar Auditor lanes, but it is
-intentionally not reusable as production approval because the remaining critical
-lanes keep production boundaries.
+Run these before publishing:
 
-The managed remote-proof probe records the current provider gap explicitly:
-static SSH proof exists, but managed Crabbox broker / Blacksmith Testbox still
-needs credentials, a provider-backed run handle, transcript, artifacts and
-cleanup evidence.
-
-## Public Repository Safety
-
-Raw study material, screenshots of private sessions, private source ledgers,
-local paths, private board links and internal project names do not belong in
-this repository. Run `python scripts/public_safety_scan.py` before publishing or
-opening a pull request.
+```bash
+python scripts/secret_safety_scan.py
+python scripts/public_safety_scan.py
+python scripts/validate_public_json_artifacts.py
+```
 
 ## License
 

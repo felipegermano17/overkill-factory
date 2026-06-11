@@ -1,9 +1,42 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/data-metrics-plan.schema.json",
-  "success_metrics": ["activation rate", "task completion"],
-  "events": ["feature_viewed", "primary_action_completed"],
-  "owners": ["product-owner"],
-  "privacy_limits": ["no sensitive payloads in events"],
-  "dashboards": ["product health dashboard"],
-  "evidence_refs": ["data-metrics-plan.md"]
+  "success_metrics": [
+    "activation rate",
+    "task completion"
+  ],
+  "events": [
+    "feature_viewed",
+    "primary_action_completed"
+  ],
+  "owners": [
+    "product-owner"
+  ],
+  "privacy_limits": [
+    "no sensitive payloads in events"
+  ],
+  "dashboards": [
+    "product health dashboard"
+  ],
+  "evidence_refs": [
+    "data-metrics-plan.md"
+  ],
+  "risk_metrics": [
+    "error rate",
+    "drop-off or blocked flow"
+  ],
+  "logs": [
+    "structured event or runtime log needed for health"
+  ],
+  "alerts": [
+    "alert condition and owner"
+  ],
+  "personal_data": [
+    "none, or named data classes with privacy limit"
+  ],
+  "visibility": [
+    "who can view metric/dashboard/log"
+  ],
+  "instrumentation_proof": [
+    "test, screenshot, dashboard ref or log sample ref"
+  ]
 }

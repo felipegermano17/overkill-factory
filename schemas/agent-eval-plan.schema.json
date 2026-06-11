@@ -3,13 +3,160 @@
   "$id": "https://overkill-factory.dev/schemas/agent-eval-plan.schema.json",
   "title": "Overkill Factory Agent Eval Plan",
   "type": "object",
-  "required": ["behaviors", "eval_cases", "failure_modes", "pass_rule"],
+  "required": [
+    "record_type",
+    "target_agent_or_skill",
+    "behaviors",
+    "eval_cases",
+    "negative_cases",
+    "over_authority_cases",
+    "blocked_cases",
+    "failure_modes",
+    "reviewer_separation",
+    "pass_rule",
+    "promotion_decision",
+    "test_inputs",
+    "expected_behavior",
+    "failure_criteria",
+    "versioned_model_prompt_skill",
+    "eval_execution_proof"
+  ],
   "properties": {
-    "behaviors": { "type": "array", "items": { "type": "string" } },
-    "eval_cases": { "type": "array", "items": { "type": "string" } },
-    "failure_modes": { "type": "array", "items": { "type": "string" } },
-    "pass_rule": { "type": "string", "minLength": 3 },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "record_type": {
+      "const": "agent_eval_plan"
+    },
+    "target_agent_or_skill": {
+      "type": "string",
+      "minLength": 3
+    },
+    "behaviors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "eval_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "negative_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "over_authority_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocked_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "failure_modes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reviewer_separation": {
+      "type": "object",
+      "required": [
+        "executor_must_not_review",
+        "reviewer_worker",
+        "human_gate_when"
+      ],
+      "properties": {
+        "executor_must_not_review": {
+          "type": "boolean"
+        },
+        "reviewer_worker": {
+          "type": "string",
+          "minLength": 3
+        },
+        "human_gate_when": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "pass_rule": {
+      "type": "string",
+      "minLength": 3
+    },
+    "promotion_decision": {
+      "enum": [
+        "core",
+        "optional_pack",
+        "backlog",
+        "reject",
+        "stay_skill",
+        "stay_existing_worker"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "test_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected_behavior": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "failure_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "versioned_model_prompt_skill": {
+      "type": "object",
+      "required": [
+        "model_or_provider",
+        "prompt_or_soul_ref",
+        "skill_refs"
+      ],
+      "properties": {
+        "model_or_provider": {
+          "type": "string"
+        },
+        "prompt_or_soul_ref": {
+          "type": "string"
+        },
+        "skill_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "eval_execution_proof": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "additionalProperties": true
 }

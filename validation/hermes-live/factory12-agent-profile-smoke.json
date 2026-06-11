@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/hermes-profile-smoke.schema.json",
   "smoke_type": "hermes_profile_structural_smoke",
-  "created_at": "2026-06-06T21:16:35+00:00",
+  "created_at": "2026-06-11T03:08:46+00:00",
   "profile_registry_ref": "agents/worker-profiles.public.json",
   "binding_registry_ref": "agents/hermes-profile-bindings.public.json",
   "rows": [
@@ -978,6 +978,58 @@
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
       "command_or_adapter_used": "remote-profile-structural-smoke via Hermes profile inspection adapter",
       "worker_packet_ref": "generated:factoryctl worker-packet --worker detection-monitoring-worker",
+      "response_shape": "profile-presence, SOUL contract, binding, queue policy and result schema checks",
+      "result_schema": "schemas/worker-result.schema.json",
+      "checks": {
+        "profile_exists": true,
+        "profile_yaml_present": true,
+        "soul_md_present": true,
+        "profile_description_strong": true,
+        "binding_present": true,
+        "queue_source_verified": true,
+        "result_schema_verified": true,
+        "skills_verified": true,
+        "domain_contract_verified": true,
+        "waiver_contract_verified": true
+      }
+    },
+    {
+      "worker_id": "control-tower-projection-worker",
+      "hermes_profile_name": "control-tower-projection-worker",
+      "status": "PASS",
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "profile_yaml_ref": "redacted:hermes-profile/control-tower-projection-worker/profile.yaml",
+      "soul_ref": "redacted:hermes-profile/control-tower-projection-worker/SOUL.md",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "command_or_adapter_used": "remote-profile-structural-smoke via Hermes profile inspection adapter",
+      "worker_packet_ref": "generated:factoryctl worker-packet --worker control-tower-projection-worker",
+      "response_shape": "profile-presence, SOUL contract, binding, queue policy and result schema checks",
+      "result_schema": "schemas/worker-result.schema.json",
+      "checks": {
+        "profile_exists": true,
+        "profile_yaml_present": true,
+        "soul_md_present": true,
+        "profile_description_strong": true,
+        "binding_present": true,
+        "queue_source_verified": true,
+        "result_schema_verified": true,
+        "skills_verified": true,
+        "domain_contract_verified": true,
+        "waiver_contract_verified": true
+      }
+    },
+    {
+      "worker_id": "discord-control-tower-bridge",
+      "hermes_profile_name": "discord-control-tower-bridge",
+      "status": "PASS",
+      "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
+      "profile_description_ref": "agents/worker-profiles.public.json",
+      "profile_yaml_ref": "redacted:hermes-profile/discord-control-tower-bridge/profile.yaml",
+      "soul_ref": "redacted:hermes-profile/discord-control-tower-bridge/SOUL.md",
+      "skill_install_ref": "docs/agents/live-agent-configuration.md",
+      "command_or_adapter_used": "remote-profile-structural-smoke via Hermes profile inspection adapter",
+      "worker_packet_ref": "generated:factoryctl worker-packet --worker discord-control-tower-bridge",
       "response_shape": "profile-presence, SOUL contract, binding, queue policy and result schema checks",
       "result_schema": "schemas/worker-result.schema.json",
       "checks": {

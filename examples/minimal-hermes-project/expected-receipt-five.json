@@ -1,0 +1,49 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
+  "record_type": "receipt_five_example",
+  "result": "PASS",
+  "public_safe": true,
+  "receipt_five": {
+    "changed": "Added a public-safe minimal Hermes example and documented expected factory flow.",
+    "artifact_paths": [
+      "examples/minimal-hermes-project/input-paper.md",
+      "examples/minimal-hermes-project/card.md",
+      "examples/minimal-hermes-project/expected-flow.md"
+    ],
+    "verification_commands": [
+      "python scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md",
+      "python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md",
+      "python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets"
+    ],
+    "verification_result": "PASS for local contract generation when commands complete without errors.",
+    "reviewer_required": true,
+    "reviewer_result": "Required before real done transition.",
+    "next_action": "Connect to a local Hermes test runtime and attach current worker results."
+  },
+  "kanban_transition_event": {
+    "from_status": "ready",
+    "to_status": "done",
+    "actor": "example-operator",
+    "worker": "evidence-reconciler",
+    "receipt_refs": [
+      "examples/minimal-hermes-project/expected-receipt-five.json"
+    ],
+    "artifact_refs": [
+      "examples/minimal-hermes-project/expected-flow.md"
+    ]
+  },
+  "verification": {
+    "passed": true,
+    "commands": [
+      "python scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md"
+    ]
+  },
+  "approvals": {
+    "qa": "required_for_real_run",
+    "independent_review": "required_for_real_run",
+    "security_review": "not_required_for_local_fixture",
+    "cybersecurity_review": "not_required_for_local_fixture",
+    "cto_gate": "not_required_for_local_fixture",
+    "human_gate": "not_required_for_local_fixture"
+  }
+}

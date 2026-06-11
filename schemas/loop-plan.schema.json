@@ -3,13 +3,123 @@
   "$id": "https://overkill-factory.dev/schemas/loop-plan.schema.json",
   "title": "Overkill Factory Loop Plan",
   "type": "object",
-  "required": ["unit_of_work", "verify", "review", "rollback"],
+  "required": [
+    "unit_of_work",
+    "work_unit_contract_ref",
+    "verify",
+    "review",
+    "reviewer_selection_ref",
+    "rollback",
+    "lanes",
+    "order",
+    "inputs",
+    "workers",
+    "limits",
+    "timeouts",
+    "budget",
+    "access_required",
+    "expected_evidence",
+    "stop_criteria",
+    "block_criteria"
+  ],
   "properties": {
-    "unit_of_work": { "type": "string", "minLength": 3 },
-    "verify": { "type": "array", "items": { "type": "string" } },
-    "review": { "type": "array", "items": { "type": "string" } },
-    "rollback": { "type": "string", "minLength": 3 },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "unit_of_work": {
+      "type": "string",
+      "minLength": 3
+    },
+    "work_unit_contract_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "verify": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "review": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reviewer_selection_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "rollback": {
+      "type": "string",
+      "minLength": 3
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lanes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "workers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "timeouts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "budget": {
+      "type": "string"
+    },
+    "access_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "stop_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "block_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
   },
   "additionalProperties": true
 }

@@ -203,6 +203,7 @@
         "blocked_reasons": [
           "product_face_packet required for product-facing surfaces",
           "product-face",
+          "independent-reviewer",
           "security-orchestrator",
           "appsec-owasp-specialist"
         ],
@@ -221,6 +222,7 @@
         ],
         "blocked_workers": [
           "product-face",
+          "independent-reviewer",
           "security-orchestrator",
           "appsec-owasp-specialist"
         ]
@@ -241,6 +243,7 @@
           "human_gate_packet required for R3/R4 work",
           "security_role_separation=true or security_role_separation_exception required for R3/R4 security-sensitive work",
           "codex-security",
+          "independent-reviewer",
           "human-gate-clerk",
           "security-orchestrator",
           "supply-chain-gate"
@@ -261,6 +264,7 @@
         ],
         "blocked_workers": [
           "codex-security",
+          "independent-reviewer",
           "human-gate-clerk",
           "security-orchestrator",
           "supply-chain-gate"
@@ -282,6 +286,7 @@
           "human_gate_packet required for R3/R4 work",
           "r4_gate required for R4 work",
           "codex-security",
+          "independent-reviewer",
           "human-gate-clerk",
           "security-orchestrator",
           "cloud-infra-security-specialist",
@@ -308,6 +313,7 @@
         ],
         "blocked_workers": [
           "codex-security",
+          "independent-reviewer",
           "human-gate-clerk",
           "security-orchestrator",
           "cloud-infra-security-specialist",
@@ -330,6 +336,7 @@
           "security_scan_packet required for R3/R4 work",
           "human_gate_packet required for R3/R4 work",
           "codex-security",
+          "independent-reviewer",
           "human-gate-clerk",
           "security-orchestrator",
           "supply-chain-gate"
@@ -348,6 +355,7 @@
         ],
         "blocked_workers": [
           "codex-security",
+          "independent-reviewer",
           "human-gate-clerk",
           "security-orchestrator",
           "supply-chain-gate"

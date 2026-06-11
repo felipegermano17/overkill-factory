@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/work-unit-contract.schema.json",
+  "title": "Overkill Factory Work Unit Contract",
+  "type": "object",
+  "required": [
+    "record_type",
+    "unit_id",
+    "objective",
+    "scope_in",
+    "scope_out",
+    "owner_worker",
+    "required_inputs",
+    "expected_outputs",
+    "acceptance_checks",
+    "blocked_when",
+    "reviewer_selection_ref",
+    "rollback_or_recovery",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 10 },
+    "record_type": { "const": "work_unit_contract" },
+    "unit_id": { "type": "string", "minLength": 3 },
+    "objective": { "type": "string", "minLength": 12 },
+    "scope_in": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "scope_out": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "owner_worker": { "type": "string", "minLength": 3 },
+    "supporting_workers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "required_inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "expected_outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "acceptance_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "blocked_when": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "reviewer_selection_ref": { "type": "string", "minLength": 3 },
+    "rollback_or_recovery": { "type": "string", "minLength": 3 },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": false
+}

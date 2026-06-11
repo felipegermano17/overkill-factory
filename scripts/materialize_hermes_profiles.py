@@ -316,9 +316,18 @@ def main() -> int:
 
     profiles_dir = args.profiles_dir
     source_dir = profiles_dir / args.source_profile
-    if not source_dir.exists():
-        print(f"ERROR: source profile not found: {args.source_profile}", file=sys.stderr)
-        return 2
+    source_exists = source_dir.exists()
+    if not source_exists:
+        if args.apply and not args.hermes_bin:
+            print(f"ERROR: source profile not found: {args.source_profile}", file=sys.stderr)
+            return 2
+        if args.copy_auth_from_source:
+            print(f"ERROR: source profile not found for auth copy: {args.source_profile}", file=sys.stderr)
+            return 2
+        print(
+            f"DRY-RUN note: source profile {args.source_profile!r} was not found; "
+            "profile copy will require an existing source profile or --hermes-bin when applying."
+        )
 
     env = os.environ.copy()
     if "HERMES_HOME" not in env:
@@ -344,14 +353,19 @@ def main() -> int:
         if not profile_dir.exists():
             if args.hermes_bin:
                 create_profile_with_cli(args.hermes_bin, profile_name, args.source_profile, description, env, args.apply)
-            else:
+            elif source_exists:
                 copy_minimum_profile(source_dir, profile_dir, args.apply)
+            elif not args.apply:
+                print(
+                    f"DRY-RUN create minimal profile shell for {profile_name} "
+                    f"after source profile {args.source_profile!r} is available"
+                )
 
         if args.apply:
             profile_dir.mkdir(parents=True, exist_ok=True)
             (profile_dir / "profile.yaml").write_text(yaml_description(description), encoding="utf-8")
             (profile_dir / "SOUL.md").write_text(render_soul(worker, binding), encoding="utf-8")
-            if not (profile_dir / "config.yaml").exists():
+            if source_exists and not (profile_dir / "config.yaml").exists():
                 src = source_dir / "config.yaml"
                 if src.exists():
                     shutil.copy2(src, profile_dir / "config.yaml")

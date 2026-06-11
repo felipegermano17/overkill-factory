@@ -1,0 +1,25 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/reviewer-selection-plan.schema.json",
+  "record_type": "reviewer_selection_plan",
+  "changed_surfaces": ["frontend", "api"],
+  "risk_effective": "R2",
+  "executor_identity": "frontend-builder",
+  "forbidden_reviewers": ["frontend-builder"],
+  "required_reviewers": ["independent-reviewer", "product-face", "appsec-owasp-specialist"],
+  "reviewer_matrix": [
+    {
+      "reviewer_worker": "independent-reviewer",
+      "covers": ["done evidence", "scope discipline"],
+      "reason": "Executor and reviewer must be different.",
+      "mandatory": true
+    },
+    {
+      "reviewer_worker": "product-face",
+      "covers": ["visible product surface", "state coverage"],
+      "reason": "Frontend work needs captured user-facing evidence.",
+      "mandatory": true
+    }
+  ],
+  "selection_rule": "Pick the smallest reviewer set that covers changed surfaces, risk and evidence type without self-review.",
+  "evidence_refs": ["reviewer-selection-plan.md"]
+}

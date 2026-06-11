@@ -9,16 +9,83 @@
     "problem",
     "success_signals",
     "non_goals",
-    "open_questions"
+    "open_questions",
+    "behavior_change",
+    "risk_signals",
+    "assumptions",
+    "human_questions",
+    "discovery_depth"
   ],
   "properties": {
-    "outcome": { "type": "string", "minLength": 3 },
-    "users_or_actors": { "type": "array", "items": { "type": "string" } },
-    "problem": { "type": "string", "minLength": 3 },
-    "success_signals": { "type": "array", "items": { "type": "string" } },
-    "non_goals": { "type": "array", "items": { "type": "string" } },
-    "open_questions": { "type": "array", "items": { "type": "string" } },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "outcome": {
+      "type": "string",
+      "minLength": 3
+    },
+    "users_or_actors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "problem": {
+      "type": "string",
+      "minLength": 3
+    },
+    "success_signals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "non_goals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "behavior_change": {
+      "type": "string",
+      "minLength": 3
+    },
+    "risk_signals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "human_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "discovery_depth": {
+      "enum": [
+        "none",
+        "light",
+        "standard",
+        "deep",
+        "research_required"
+      ]
+    }
   },
   "additionalProperties": true
 }

@@ -20,6 +20,16 @@
   "owner_worker": "release-ops-worker",
   "executor_identity": "release-worker",
   "reviewer_identity": "security-reviewer",
+  "reviewer_selection_plan": {
+    "record_type": "reviewer_selection_plan",
+    "changed_surfaces": ["release", "production", "cloud", "infra", "iam", "kms", "dns", "monitoring", "secrets"],
+    "risk_effective": "R4",
+    "executor_identity": "release-worker",
+    "forbidden_reviewers": ["release-worker"],
+    "required_reviewers": ["independent-reviewer", "cloud-infra-security-specialist", "crypto-key-management-specialist", "detection-monitoring-worker"],
+    "selection_rule": "R4 release work needs independent, cloud, key-management and monitoring review before any release claim.",
+    "evidence_refs": ["validation/cards/cloud-release-r4.md"]
+  },
   "runtime_decision": "dry release only",
   "runtime_contract": {
     "remote_proof_required": true,

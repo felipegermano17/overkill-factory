@@ -20,6 +20,16 @@
   "owner_worker": "solana-quasar-auditor",
   "executor_identity": "onchain-worker",
   "reviewer_identity": "security-reviewer",
+  "reviewer_selection_plan": {
+    "record_type": "reviewer_selection_plan",
+    "changed_surfaces": ["solana-quasar", "account-pda", "cpi", "compute-units", "funds"],
+    "risk_effective": "R3",
+    "executor_identity": "onchain-worker",
+    "forbidden_reviewers": ["onchain-worker"],
+    "required_reviewers": ["independent-reviewer", "solana-quasar-auditor", "codex-security"],
+    "selection_rule": "Onchain R3 work needs independent, Auditor and security review; executor cannot review.",
+    "evidence_refs": ["validation/cards/solana-quasar-r3.md"]
+  },
   "runtime_decision": "Auditor preflight only",
   "runtime_contract": {
     "remote_proof_required": true,
