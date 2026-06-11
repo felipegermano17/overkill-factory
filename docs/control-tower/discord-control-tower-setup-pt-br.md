@@ -303,6 +303,35 @@ Hermes antes de valerem.
 Especialistas nao devem ficar interrompendo o dono diretamente. Eles falam com
 o runtime; o Concierge consolida o que importa.
 
+## Bridge de projecao do projeto
+
+A ponte real para projetar um projeto no Discord e:
+
+```bash
+python scripts/factory_concierge_discord_bridge.py \
+  --projection /private/path/project-projection.json \
+  --state /private/path/discord-bridge-state.json \
+  --env /private/path/hermes.env \
+  --apply \
+  --out /private/path/bridge-health.json
+```
+
+Antes de usar `--apply`, rode `--dry-run`. A bridge deve:
+
+- achar o servidor e os canais pelo bot;
+- atualizar o dashboard global em `#torre-de-controle`;
+- atualizar o registro em `#projetos-recebidos`;
+- criar ou reutilizar um topico no `kanban-da-fabrica`;
+- atualizar o painel de esteira dentro do topico;
+- salvar IDs reais apenas no estado privado;
+- gerar recibo publico-safe sem IDs, tokens, paths privados ou logs crus.
+
+O recibo live atual esta em:
+
+```text
+validation/control-tower/discord-bridge-projector-live-2026-06-11.json
+```
+
 ## Rollback seguro
 
 Se algo der errado:
