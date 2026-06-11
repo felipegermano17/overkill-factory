@@ -199,6 +199,12 @@ paper/projeto/piloto -> mesma thread vira intake + cartao no forum
 Ele existe para registrar que um projeto entrou e apontar para o topico/card
 correto. Se o dono estiver em duvida, deve falar com o GERENTE.
 
+Importante: a thread do projeto nao e o lugar da aprovacao formal. A thread
+pode explicar que existe uma decisao pendente e apontar para ela, mas o pedido
+formal precisa aparecer em `#aprovacoes-formais`, criado pela bridge a partir
+de um `approval-request` estruturado. Mensagem solta na thread, mesmo escrita
+pelo GERENTE, nao aprova gate.
+
 Mensagens ativas tambem precisam seguir uma regra simples:
 
 ```text
@@ -370,6 +376,8 @@ Ela cobre:
   certos;
 - mensagem ativa cria thread ou aponta para thread existente;
 - aprovacao formal aparece com botoes em portugues;
+- aprovacao formal nasce em `#aprovacoes-formais`, nao como texto solto na
+  thread do projeto;
 - decisao de aprovacao so vira evento depois de validar id, papel, escopo e
   prazo;
 - health da ponte e atualizado em `#saude-do-bot`;

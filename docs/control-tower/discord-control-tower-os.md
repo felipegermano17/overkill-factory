@@ -158,6 +158,13 @@ unsearchable transcript. Raw project-like messages left directly in the
 reception channel are ignored by the automation until the owner starts or uses
 an attendance thread.
 
+Formal approvals are the exception to "keep the project conversation in the
+project thread". The project thread may explain that a decision is needed and
+link to it, but the formal approval request itself must be rendered by the
+bridge in `#aprovacoes-formais` with structured scope, risk, buttons and a
+runtime-registration path. A free-form approval message in a project thread is
+only context; it is not a valid factory approval.
+
 ## Multi-Project Kanban Rule
 
 The Discord Kanban can support multiple projects if the bridge treats the forum

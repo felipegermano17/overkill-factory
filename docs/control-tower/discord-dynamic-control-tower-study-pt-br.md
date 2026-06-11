@@ -399,6 +399,11 @@ No Discord isso pode aparecer como botao, menu ou formulario. Mas o clique so
 vale depois que a ponte valida usuario, canal, prazo, escopo e registra o evento
 no Hermes.
 
+A thread do projeto pode avisar "ha uma aprovacao pendente" e apontar para o
+canal certo. Ela nao deve conter o pedido formal como texto solto. Pedido
+formal fica em `#aprovacoes-formais`, com escopo, risco, botoes e caminho de
+registro no Hermes.
+
 ## O que ja esta pronto no Discord real
 
 A estrutura real foi ajustada para:

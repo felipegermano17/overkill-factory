@@ -44,6 +44,7 @@
     "manager_reception_thread_launcher_only": true,
     "project_conversation_stays_in_single_thread": true,
     "thread_first_project_intake_automated": true,
+    "formal_approvals_lane_bound": true,
     "structured_approval_interactions_automated": true,
     "live_runtime_projection_automated": true
   },
@@ -69,6 +70,7 @@
     "implemented thread-first GERENTE intake scan over manager attendance threads",
     "implemented raw reception message ignore behavior so loose project-like messages do not create duplicate projects",
     "corrected live GERENTE Discord env overrides that were disabling auto-thread in the manager channel",
+    "formalized that project threads can point to approvals but formal approval requests must live in the approvals lane",
     "implemented active event lane projection with thread creation",
     "implemented Portuguese structured approval buttons and decision validation",
     "implemented bridge health projection",
