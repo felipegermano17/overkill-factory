@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import importlib.util
+import contextlib
+import io
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -67,6 +71,19 @@ class WorktreeReleaseInventoryTest(unittest.TestCase):
         self.assertEqual(report["cleanup_policy"]["generated_receipt_entries"], 2)
         self.assertEqual(report["cleanup_policy"]["release_candidate_entries"], 0)
         self.assertEqual(report["blocking_items"], [])
+        self.assertEqual(report["result"], "PASS")
+
+    def test_external_out_path_reports_redacted_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "inventory.json"
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                rc = inventory.main(["--out", str(out)])
+
+            self.assertEqual(rc, 0)
+            self.assertTrue(out.exists())
+            printed = json.loads(stdout.getvalue())
+            self.assertEqual(printed["out"], "external:inventory.json")
 
 
 if __name__ == "__main__":

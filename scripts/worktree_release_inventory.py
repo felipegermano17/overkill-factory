@@ -194,7 +194,11 @@ def main(argv: list[str] | None = None) -> int:
     inventory = build_inventory(run_git_status())
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"result": inventory["result"], "out": str(args.out.relative_to(ROOT)).replace("\\", "/")}))
+    try:
+        out_ref = str(args.out.relative_to(ROOT)).replace("\\", "/")
+    except ValueError:
+        out_ref = f"external:{args.out.name}"
+    print(json.dumps({"result": inventory["result"], "out": out_ref}))
     return 0
 
 
