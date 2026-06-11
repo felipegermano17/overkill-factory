@@ -86,6 +86,7 @@
         "manager_reception_thread_launcher_only",
         "project_conversation_stays_in_single_thread",
         "thread_first_project_intake_automated",
+        "formal_approvals_lane_bound",
         "structured_approval_interactions_automated",
         "live_runtime_projection_automated"
       ],
@@ -123,6 +124,7 @@
         "manager_reception_thread_launcher_only": { "type": "boolean" },
         "project_conversation_stays_in_single_thread": { "type": "boolean" },
         "thread_first_project_intake_automated": { "type": "boolean" },
+        "formal_approvals_lane_bound": { "type": "boolean" },
         "structured_approval_interactions_automated": { "type": "boolean" },
         "live_runtime_projection_automated": { "type": "boolean" }
       },

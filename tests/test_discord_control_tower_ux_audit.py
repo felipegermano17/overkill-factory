@@ -26,6 +26,8 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
         self.assertIn("raw project-like messages left directly in the", os_doc)
         self.assertIn("env vars override `config.yaml`", os_doc)
         self.assertIn("variaveis do `.env` ganham do", setup_guide)
+        self.assertIn("the formal approval request itself must be rendered", os_doc)
+        self.assertIn("aprovacao formal nasce em `#aprovacoes-formais`", setup_guide)
         self.assertIn("#projetos-recebidos", combined)
         self.assertIn("not a second owner intake", os_doc)
         self.assertIn("project cockpit", os_doc)
@@ -61,11 +63,13 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
         self.assertTrue(audit["checks"]["manager_reception_thread_launcher_only"])
         self.assertTrue(audit["checks"]["project_conversation_stays_in_single_thread"])
         self.assertTrue(audit["checks"]["thread_first_project_intake_automated"])
+        self.assertTrue(audit["checks"]["formal_approvals_lane_bound"])
         self.assertTrue(audit["checks"]["structured_approval_interactions_automated"])
         self.assertTrue(audit["checks"]["live_runtime_projection_automated"])
         self.assertIn("created and reused a project conversation thread", "\n".join(audit["live_corrections"]))
         self.assertIn("raw reception message ignore behavior", "\n".join(audit["live_corrections"]))
         self.assertIn("env overrides", "\n".join(audit["live_corrections"]))
+        self.assertIn("formal approval requests must live in the approvals lane", "\n".join(audit["live_corrections"]))
         self.assertIn("retry-safe project mapping", "\n".join(audit["live_corrections"]))
         self.assertIn(
             "validation/control-tower/discord-bridge-projector-live-2026-06-11.json",
