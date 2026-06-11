@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/prepilot-master-task-readiness.schema.json",
   "record_type": "prepilot_master_task_readiness",
-  "created_at": "2026-06-11T01:35:00Z",
+  "created_at": "2026-06-11T09:09:35Z",
   "result": "PASS",
   "readiness_level": "PASS_PREPILOT_READY_WITH_REDACTED_PRIVATE_PROOF",
   "source_plan": "Chat-approved 9-task prepilot plan: agents, GERENTE, Discord bridge, private profile separation, provider/model lock, public repo alignment, permissions, reference repo execution and prepilot battery.",
@@ -12,7 +12,7 @@
       "task_id": "classify_vfinal_agents",
       "plain_goal": "Classify vFinal agents as required core, optional pack, private, backlog or remove.",
       "status": "PASS_PUBLIC_CONTRACT",
-      "implementation_summary": "The public roster, registry, profiles and capability packs separate core workers from optional packs and document ownership for each canonical stage.",
+      "implementation_summary": "The public roster, registry, profiles and capability packs separate core workers from optional packs, document ownership for each canonical stage and block conceptual role names from becoming loose executor profiles.",
       "evidence_refs": [
         {
           "kind": "worker_roster",
@@ -38,6 +38,11 @@
           "kind": "test",
           "path": "tests/test_worker_profiles.py",
           "covers": "profile integrity checks"
+        },
+        {
+          "kind": "validation_artifact",
+          "path": "validation/hermes-live/factory-vfinal-profile-drift-cleanup.json",
+          "covers": "public-safe proof that duplicate conceptual Hermes profiles were exported, removed and kept out of the worker layer"
         },
         {
           "kind": "test",
@@ -152,7 +157,7 @@
       "task_id": "lock_canonical_provider_model",
       "plain_goal": "Lock the canonical provider/model and prove auth per profile.",
       "status": "PASS_PRIVATE_PROOF_REDACTED",
-      "implementation_summary": "The provider/model audit and profile smoke prove the public worker set and dedicated gateway profile against the canonical model with private details redacted.",
+      "implementation_summary": "The provider/model audit, profile smoke and drift cleanup prove the public worker set and dedicated gateway profile against the canonical model with private details redacted.",
       "evidence_refs": [
         {
           "kind": "schema",
@@ -173,6 +178,11 @@
           "kind": "validation_artifact",
           "path": "validation/hermes-live/factory-vfinal-runtime-status-check.json",
           "covers": "current read-only runtime status confirms profile list and gateway state"
+        },
+        {
+          "kind": "validation_artifact",
+          "path": "validation/hermes-live/factory-vfinal-profile-drift-cleanup.json",
+          "covers": "conceptual duplicate profile cleanup and preserved GERENTE gateway"
         },
         {
           "kind": "script",

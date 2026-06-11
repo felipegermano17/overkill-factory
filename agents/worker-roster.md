@@ -30,6 +30,10 @@ The roster has 40 public-safe operators:
 - 4 human, release, memory and learning support workers.
 - 2 Control Tower cockpit workers.
 
+The Discord gateway profile `overkill-factory-gerente` is official, but it is
+not counted as a worker. It is an interface profile: it talks to the operator
+and registers intent through Hermes without executing product work.
+
 That number is intentionally split by ownership. It is not meant to create 40
 parallel personalities. A card should call only the operators whose surface,
 risk and phase match the work.
@@ -140,6 +144,12 @@ they get a machine-readable contract in `agents/worker-registry.public.json`.
   matches, the fallback worker is not required.
 - Solana work uses `solana-quasar-builder`, `solana-quasar-qa-engineer` and
   `solana-quasar-auditor`; build, QA and audit are separate.
+- Conceptual role names such as Method Router, Product Experience Router,
+  Security Architect, Production Readiness, Access Capability and Factory
+  Maturity Auditor are mapped to official workers in
+  `docs/agents/factory-stage-agent-map.md`. They must not exist as loose Hermes
+  executor profiles unless promoted through registry, profile, binding,
+  permission class, packet route and proof.
 
 ## Why This Roster Is Better
 
