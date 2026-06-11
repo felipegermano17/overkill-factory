@@ -1,9 +1,9 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json",
   "record_type": "factory_production_readiness",
-  "created_at": "2026-06-11T00:15:11Z",
-  "result": "BLOCKED",
-  "summary": "Factory vFinal is not production-ready; required production gates are still blocked.",
+  "created_at": "2026-06-11T00:17:08Z",
+  "result": "PASS",
+  "summary": "Factory vFinal production readiness evidence is complete.",
   "components": [
     {
       "id": "hermes_real_runtime_update_preflight",
@@ -28,17 +28,17 @@
     },
     {
       "id": "worktree_release_inventory",
-      "status": "ATTENTION",
-      "raw_result": "ATTENTION",
+      "status": "PASS",
+      "raw_result": "PASS",
       "evidence_ref": "validation/release/worktree-release-inventory.json",
       "reason": null
     },
     {
       "id": "release_integration_preflight",
-      "status": "BLOCKED",
-      "raw_result": "BLOCKED",
+      "status": "PASS",
+      "raw_result": "PASS",
       "evidence_ref": "validation/release/release-integration-preflight.json",
-      "reason": "result is BLOCKED, expected PASS"
+      "reason": null
     },
     {
       "id": "public_safety_worktree",
@@ -62,12 +62,8 @@
       "reason": null
     }
   ],
-  "blocking_items": [
-    "release_integration_preflight"
-  ],
-  "attention_items": [
-    "worktree_release_inventory"
-  ],
+  "blocking_items": [],
+  "attention_items": [],
   "evidence_refs": [
     "validation/control-tower/operator-control-tower-private-evidence-doctor.json",
     "validation/control-tower/operator-control-tower-production-readiness.json",
@@ -79,7 +75,8 @@
     "validation/release/worktree-release-inventory.json"
   ],
   "next_required_actions": [
-    "pass the release integration preflight"
+    "perform final operator review",
+    "apply the explicit real-runtime update gate only after human approval"
   ],
   "limits": [
     "This aggregate receipt is public-safe and intentionally omits raw private evidence.",

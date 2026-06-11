@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/operator-control-tower-production-readiness.schema.json",
   "record_type": "operator_control_tower_production_readiness",
-  "created_at": "2026-06-11T00:11:32Z",
+  "created_at": "2026-06-11T00:17:09Z",
   "result": "PASS",
   "checks": {
     "control_tower_readonly_contract_passed": true,

@@ -1,7 +1,7 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/hermes-production-proof.schema.json",
   "record_type": "hermes_production_proof",
-  "created_at": "2026-06-11T00:11:32Z",
+  "created_at": "2026-06-11T00:17:09Z",
   "proof_type": "operator_control_tower",
   "result": "PASS",
   "summary": "The owner-facing Control Tower has a real Discord mapping, a runtime-registerable approval event path, bridge health evidence, and passing public-safe contract smokes.",
