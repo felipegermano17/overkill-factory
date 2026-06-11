@@ -172,7 +172,7 @@ O repo publico nao pode conter:
 | `#torre-de-controle` | status resumido, fase atual, previsao e proximos passos | ponte |
 | `#falar-com-gerente` | conversa direta com o GERENTE | dono e GERENTE |
 | `#projetos-recebidos` | registro operacional de projetos recebidos | ponte |
-| `#aprovacoes-formais` | aprovacoes estruturadas | dono por botao/evento e ponte |
+| `#aprovacoes-formais` | aprovacoes estruturadas | dono por botao/fallback/evento e ponte |
 | `#acessos-pendentes` | pedidos de acesso, contas, cloud, GitHub e chaves | ponte |
 | `#bloqueios-reais` | bloqueios que impedem progresso | ponte |
 | `#provas-e-evidencias` | links de evidencia e recibos | ponte |
@@ -332,10 +332,12 @@ nativos em ingles, eles ficam como camada tecnica por baixo. A interface humana
 deve ser em portugues, conduzida pelo GERENTE e por botoes, menus ou formularios
 em portugues.
 
-Para botoes operacionais, formularios e aprovacoes clicaveis, a fabrica precisa
-da `Factory Concierge Discord Bridge`. O Hermes ja suporta perguntas com botoes
-via `clarify`, mas aprovacoes de fabrica precisam ser validadas e registradas no
-Hermes antes de valerem.
+Para atalhos operacionais e formularios, a fabrica precisa da
+`Factory Concierge Discord Bridge`. O Hermes ja suporta perguntas com botoes via
+`clarify`. Aprovacao formal no Discord usa botoes claros: `Aprovar`,
+`Rejeitar` e `Pedir ajuste`. Se a interacao expirar, o fallback e responder
+`aprovado`, `rejeitado` ou `pedir ajuste` na thread daquele pedido. A ponte
+valida usuario, escopo, prazo e registra o evento no Hermes antes de valer.
 
 Especialistas nao devem ficar interrompendo o dono diretamente. Eles falam com
 o runtime; o Concierge consolida o que importa.
@@ -394,7 +396,7 @@ Ela cobre:
 - eventos de acesso, bloqueio, prova, release e health vao para os canais
   certos;
 - mensagem ativa cria thread ou aponta para thread existente;
-- aprovacao formal aparece com botoes em portugues;
+- aprovacao formal aparece com reacoes simples em portugues;
 - aprovacao formal nasce em `#aprovacoes-formais`, nao como texto solto na
   thread do projeto;
 - decisao de aprovacao so vira evento depois de validar id, papel, escopo e
@@ -408,10 +410,10 @@ O recibo live da automacao completa esta em:
 validation/control-tower/discord-control-tower-automation-live-2026-06-11.json
 ```
 
-Observacao importante: botao de aprovacao nao significa aprovacao magica. Em
-producao, a aprovacao so vale se vier de interacao real do dono ou evento
-duravel do Hermes. Smoke, teste ou silencio nunca aprovam execucao, gasto,
-release ou producao.
+Observacao importante: botao ou texto curto nao significa aprovacao magica. Em
+producao, so vale depois que a ponte confirma dono autorizado, escopo, prazo e
+evento duravel no Hermes. Smoke, teste ou silencio nunca aprovam execucao,
+gasto, release ou producao.
 
 ## Rollback seguro
 

@@ -29,7 +29,7 @@
   "limits": [
     "Discord is the owner cockpit only; Hermes remains the source of truth.",
     "The public receipt redacts Discord ids and private file paths.",
-    "Structured approval buttons and inbound approval registration are separate contracts."
+    "Structured approval buttons, text fallback and inbound approval registration are separate contracts."
   ],
   "project_id": "pilot-front-jogo-fabrica",
   "projection_freshness": "runtime_fresh",

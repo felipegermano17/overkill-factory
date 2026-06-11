@@ -1,0 +1,42 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-control-tower-bridge-health.schema.json",
+  "record_type": "operator_control_tower_bridge_health",
+  "created_at": "2026-06-11T11:36:50Z",
+  "result": "PASS",
+  "applied_to_discord": true,
+  "audit_scope": "Public-safe receipt for the Discord formal approval UX fallback fix after an expired or failed interaction.",
+  "checks": {
+    "bot_reachable": true,
+    "bridge_reachable": true,
+    "runtime_readback_reachable": true,
+    "approval_registration_path_reachable": true,
+    "approval_buttons_remain_primary": true,
+    "approval_text_fallback_documented": true,
+    "approval_text_fallback_validated_by_tests": true,
+    "g0_owner_decision_registered": true,
+    "pilot_projection_advanced_to_planning": true,
+    "material_execution_still_blocked": true,
+    "bridge_health_passed": true,
+    "no_discord_source_of_truth": true,
+    "no_private_material_in_public_receipt": true
+  },
+  "corrections": [
+    "restored Portuguese approval buttons as the primary operator action",
+    "added a short text fallback in the approval thread for expired or failed Discord interactions",
+    "updated the pilot G0 approval state to approved for planning only",
+    "updated the pilot cockpit projection from waiting owner to planning"
+  ],
+  "evidence_refs": [
+    "scripts/factory_concierge_discord_automation.py",
+    "tests/test_factory_concierge_discord_automation.py",
+    "docs/control-tower/discord-control-tower-os.md",
+    "docs/control-tower/discord-control-tower-setup-pt-br.md",
+    "docs/control-tower/discord-control-tower-ux-audit-pt-br.md",
+    "external:private-discord-g0-approval-readback"
+  ],
+  "limits": [
+    "This approves only planning and initial architecture for the pilot.",
+    "It does not approve material execution, deploy, spend, secrets, production changes, worker packet changes, release or production.",
+    "Discord remains the cockpit; Hermes remains the durable source of truth."
+  ]
+}

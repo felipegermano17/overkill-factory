@@ -51,7 +51,7 @@
   "findings": [
     {
       "severity": "P3",
-      "finding": "Structured approval buttons and decision validation are implemented, but a production approval still requires a real owner interaction or signed runtime event.",
+      "finding": "Structured approval buttons, short text fallback and decision validation are implemented, but a production approval still requires a real owner interaction or signed runtime event.",
       "impact": "The bridge can render and validate approval decisions, but it must never treat a smoke decision or silence as owner approval.",
       "required_fix": "Keep owner approvals tied to real Discord interactions or durable Hermes events before using them for execution, release, spend or production gates."
     }
@@ -72,7 +72,7 @@
     "corrected live GERENTE Discord env overrides that were disabling auto-thread in the manager channel",
     "formalized that project threads can point to approvals but formal approval requests must live in the approvals lane",
     "implemented active event lane projection with thread creation",
-    "implemented Portuguese structured approval buttons and decision validation",
+    "implemented Portuguese structured approval buttons, short text fallback and decision validation",
     "implemented bridge health projection",
     "proved live Discord automation after the GERENTE thread contract update with thread-first and health checks passing",
     "proved live Discord automation twice: one manager thread, one forum topic, one dashboard marker, one registry marker, one event marker, one approval marker and one health marker"

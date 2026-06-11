@@ -27,7 +27,7 @@ O que esta corrigido:
   sao atualizados por `project-projection.json`.
 - intake do GERENTE cria ou reutiliza thread;
 - eventos ativos caem na lane correta e abrem thread;
-- aprovacao formal tem botoes em portugues e validacao de decisao;
+- aprovacao formal tem reacoes simples em portugues e validacao de decisao;
 - health da ponte e atualizado em `#saude-do-bot`;
 - a automacao completa foi aplicada duas vezes e o read-back confirmou que nao
   houve duplicata.
@@ -172,14 +172,26 @@ O recibo publico-safe esta em:
 validation/control-tower/discord-bridge-projector-live-2026-06-11.json
 ```
 
-### P1: aprovacoes ainda precisam de interacao estruturada
+### Resolvido: aprovacao simples por botao com fallback
 
-Resolvido para a camada de ponte: a aprovacao aparece com botoes em portugues e
-a decisao precisa bater `approval_id`, papel, escopo e prazo antes de gerar um
-evento `approval_recorded`.
+Quando o botao expira, o Discord responde "Esta interacao falhou". Isso nao
+pode virar uma explicacao burocratica. A camada de ponte deve manter botoes
+claros e aceitar um fallback curto na thread do pedido:
+
+```text
+Aprovar
+Rejeitar
+Pedir ajuste
+fallback: aprovado / rejeitado / pedir ajuste
+```
+
+A decisao so vale quando a ponte valida dono autorizado, `approval_id`, papel,
+escopo e prazo antes de gerar um evento
+`approval_recorded`.
 
 Limite importante: em producao, isso so pode liberar algo quando vier de clique
-real do dono ou evento duravel do Hermes. Smoke ou teste nao e aprovacao.
+real, fallback textual claro do dono na thread correta ou evento duravel do
+Hermes. Smoke ou teste nao e aprovacao.
 
 ### Resolvido: canais operacionais vivos
 

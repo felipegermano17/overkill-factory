@@ -29,7 +29,8 @@
     "single_current_project_cockpit_readback": true,
     "dashboard_single_panel_readback": true,
     "registry_current_project_readback": true,
-    "formal_approval_buttons_readback": true
+    "formal_approval_buttons_readback": true,
+    "formal_approval_text_fallback_readback": true
   },
   "public_safe_cleanup_summary": {
     "cleanup_actions_count": 25,

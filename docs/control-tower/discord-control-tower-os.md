@@ -162,8 +162,11 @@ Formal approvals are the exception to "keep the project conversation in the
 project thread". The project thread may explain that a decision is needed and
 link to it, but the formal approval request itself must be rendered by the
 bridge in `#aprovacoes-formais` with structured scope, risk, buttons and a
-runtime-registration path. A free-form approval message in a project thread is
-only context; it is not a valid factory approval.
+runtime-registration path. If a Discord interaction expires, a short fallback
+reply in the approval thread can be accepted only when it maps to the same
+pending approval and passes the same owner, scope and deadline validation. A
+free-form approval message in a project thread is only context; it is not a
+valid factory approval.
 
 ## Multi-Project Kanban Rule
 
@@ -336,7 +339,8 @@ It composes the projector with the remaining Control Tower behavior:
 - create or reuse the project forum topic and cockpit;
 - project runtime events into the correct operational lane;
 - create threads for active events such as access, blockers and approvals;
-- render Portuguese approval buttons with scoped `custom_id` values;
+- render Portuguese approval buttons with scoped `custom_id` values and a short
+  text fallback for expired interactions;
 - validate a decision payload before producing an `approval_recorded` event;
 - update bridge health in `#saude-do-bot`;
 - read projections, events and approvals from private inbox directories for
