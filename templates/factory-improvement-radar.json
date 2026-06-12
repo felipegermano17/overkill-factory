@@ -1,0 +1,39 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-improvement-radar.schema.json",
+  "record_type": "factory_improvement_radar",
+  "cadence": "weekly",
+  "source_watchlist": [
+    {
+      "source_type": "hermes_release",
+      "source_ref": "external:hermes-release-notes",
+      "purpose": "Find runtime capabilities that may improve worker dispatch, approvals, proof or rollback."
+    },
+    {
+      "source_type": "execution_history",
+      "source_ref": "external:factory-run-summaries",
+      "purpose": "Find repeated blockers, skipped evidence, weak worker packets or slow gates."
+    },
+    {
+      "source_type": "worker_feedback",
+      "source_ref": "external:worker-result-notes",
+      "purpose": "Find repeated friction reported by factory workers or reviewers."
+    }
+  ],
+  "signals": [
+    {
+      "source_type": "hermes_release",
+      "source_ref": "external:hermes-release-notes",
+      "public_safe_summary": "Hermes announces a worker/thread orchestration capability.",
+      "benefit_hypothesis": "The factory may reduce manual worker routing if the adapter can use the capability safely.",
+      "risk": "Adapter compatibility, unexpected card mutation, approval bypass or rollback weakness.",
+      "recommended_action": "create_issue",
+      "validation_expected": "Run disposable Hermes smoke, no-spawn safety check, compatibility manifest and rollback plan before changing the adapter.",
+      "raw_evidence_included": false
+    }
+  ],
+  "issues_to_create": [
+    "Evaluate Hermes orchestration update for factory worker dispatch"
+  ],
+  "rejections": [],
+  "human_approval_boundary": "Changing Hermes adapter/runtime behavior, worker registry, binding, permission class, security gate, release gate or methodology requires explicit human approval."
+}

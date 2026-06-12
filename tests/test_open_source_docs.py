@@ -110,6 +110,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             ".github/ISSUE_TEMPLATE/factory_improvement.yml",
             ".github/ISSUE_TEMPLATE/config.yml",
             ".github/pull_request_template.md",
+            "schemas/factory-improvement-radar.schema.json",
+            "templates/factory-improvement-radar.json",
         ]
 
         for rel in required_paths:
@@ -253,6 +255,10 @@ class OpenSourceDocsTest(unittest.TestCase):
 
         for phrase in [
             "public-safe factory improvement issue",
+            "Factory Improvement Radar",
+            "Hermes Update Example",
+            "templates/factory-improvement-radar.json",
+            "schemas/factory-improvement-radar.schema.json",
             "not a separate executable worker",
             "must not mutate critical factory state",
             "This issue is factory-wide",
@@ -265,6 +271,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "private logs, raw historical evidence",
             "local paths, secrets or chat transcripts",
             "project-specific recurring maintenance loop",
+            "approval bypass",
         ]:
             with self.subTest(forbidden=forbidden):
                 self.assertIn(forbidden, combined)

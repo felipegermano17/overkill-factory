@@ -7,6 +7,8 @@ Templates are starter contract files paired with schemas and tests.
 - Public card, gate, receipt, plan and result templates.
 - Minimal JSON or Markdown starting points that match schemas.
 - Templates that help an operator create a valid factory artifact faster.
+- `factory-improvement-radar.json`, the starter record for active factory
+  improvement source watches.
 
 ## What Does Not Belong Here
 

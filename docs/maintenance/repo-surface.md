@@ -26,6 +26,8 @@ Files maintainers change when contracts evolve:
 - `adapters/`
 - `tests/`
 - `docs/maintenance/factory-mechanic-loop.md`
+- `templates/factory-improvement-radar.json`
+- `schemas/factory-improvement-radar.schema.json`
 
 These are allowed to be dense. They should not be the first path a new user
 must understand.

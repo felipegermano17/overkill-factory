@@ -40,4 +40,4 @@ Start with `docs/index.md`, then read
 `docs/reference/cli.md`, `docs/concepts/factory-flow.md` and
 `docs/operations/validation-and-release.md`. Maintainers use
 `docs/maintenance/factory-mechanic-loop.md` when converting factory learnback
-into public-safe improvement issues.
+and active radar signals into public-safe improvement issues.

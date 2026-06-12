@@ -119,7 +119,7 @@ Load only what is needed:
   release hygiene, public safety, or comparisons with other open-source repos.
 - `docs/maintenance/factory-mechanic-loop.md` when turning learnback, maturity
   findings, Hermes updates, worker feedback or execution history into
-  public-safe factory improvement issues.
+  active radar records and public-safe factory improvement issues.
 - `agents/worker-registry.public.json`, `agents/worker-profiles.public.json`
   and `agents/hermes-profile-bindings.public.json` before changing worker
   profiles or dispatch behavior.
@@ -180,6 +180,11 @@ running on the Hermes adapter.
   public-safe improvement issues, but critical registry, binding, adapter,
   security, release, methodology or authority changes require explicit human
   approval before mutation.
+- Treat Factory Improvement Radar as the active source-watch layer for Factory
+  Mechanic. It may inspect Hermes updates, execution history, worker feedback,
+  repo signals, dependencies and public research, then produce
+  `factory_improvement_radar` records, issues, rejection rationale or human
+  decision requests.
 - Do not create project-specific recurring maintenance loops from Factory
   Mechanic findings unless a human grants separate scope, cadence, budget and
   stop condition.

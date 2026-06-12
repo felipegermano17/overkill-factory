@@ -4202,6 +4202,9 @@
           "agent-coverage",
           "factory-mechanic-loop",
           "factory-improvement",
+          "factory-radar",
+          "update-watch",
+          "source-radar",
           "github-issue",
           "hermes-update",
           "worker-feedback",
@@ -4223,6 +4226,10 @@
           "agent eval plan",
           "agent coverage",
           "factory mechanic",
+          "factory radar",
+          "improvement radar",
+          "update watch",
+          "source radar",
           "factory improvement issue",
           "create issue",
           "GitHub issue",
@@ -4284,6 +4291,7 @@
           "agent_eval_plan",
           "factory_maturity_scorecard",
           "worker_coverage_map",
+          "factory_improvement_radar",
           "improvement_signal",
           "issue_boundary"
         ],
@@ -4305,6 +4313,7 @@
           "factory maturity scorecard",
           "missing coverage register",
           "factory improvement issue or rejection rationale",
+          "factory improvement radar",
           "human approval boundary"
         ],
         "done_definition": "The skill or profile change is justified by repeated need and validated by held-out evidence."
@@ -4320,6 +4329,7 @@
           "factory maturity scorecard",
           "missing coverage register",
           "factory improvement issue or proposal packet",
+          "factory improvement radar",
           "human approval boundary"
         ],
         "not_valid_evidence": [

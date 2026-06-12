@@ -10,6 +10,8 @@ gates and worker outputs.
   scripts.
 - Contracts that scripts and adapters can enforce without relying on chat
   memory.
+- `factory-improvement-radar.schema.json`, which records active improvement
+  signals before they become issues or proposals.
 
 ## What Does Not Belong Here
 

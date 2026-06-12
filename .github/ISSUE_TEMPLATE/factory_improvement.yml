@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this for factory-wide process, worker, Hermes, gate, repo, docs or validation improvements.
+        Use this for factory-wide process, worker, Hermes, gate, repo, docs, radar or validation improvements.
         Do not paste private logs, raw historical evidence, screenshots, local paths, secrets or chat transcripts.
   - type: textarea
     id: problem

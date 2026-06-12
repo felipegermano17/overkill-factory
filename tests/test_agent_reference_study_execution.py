@@ -18,6 +18,7 @@ class AgentReferenceStudyExecutionTest(unittest.TestCase):
             "templates/reviewer-selection-plan.json": "schemas/reviewer-selection-plan.schema.json",
             "templates/qa-verification-plan.json": "schemas/qa-verification-plan.schema.json",
             "templates/agent-eval-result.json": "schemas/agent-eval-result.schema.json",
+            "templates/factory-improvement-radar.json": "schemas/factory-improvement-radar.schema.json",
         }
 
         for template_path, schema_path in pairs.items():
@@ -45,10 +46,12 @@ class AgentReferenceStudyExecutionTest(unittest.TestCase):
 
         skill_eval = profiles["skill-eval-distiller"]
         self.assertIn("agent_eval_plan", skill_eval["input_contract"]["required"])
+        self.assertIn("factory_improvement_radar", skill_eval["input_contract"]["required"])
         self.assertIn("permission class", skill_eval["output_contract"]["required_sections"])
         self.assertIn("create public-safe factory improvement issues", skill_eval["authority"]["may"])
         self.assertIn("mutate critical factory contracts without explicit human gate", skill_eval["authority"]["must_not"])
         self.assertIn("factory improvement issue or rejection rationale", skill_eval["output_contract"]["required_sections"])
+        self.assertIn("factory improvement radar", skill_eval["output_contract"]["required_sections"])
         self.assertIn("critical factory contract change", skill_eval["authority"]["human_gate_required_when"])
         self.assertIn("project-specific maintenance loops", " ".join(skill_eval["authority"]["must_not"]))
 

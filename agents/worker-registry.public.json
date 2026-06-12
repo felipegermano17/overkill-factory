@@ -1587,6 +1587,10 @@
         "agent eval plan",
         "agent coverage",
         "factory mechanic loop",
+        "factory radar",
+        "improvement radar",
+        "update watch",
+        "source radar",
         "factory improvement issue",
         "Hermes update",
         "worker feedback",
@@ -1599,6 +1603,7 @@
         "agent_eval_plan",
         "factory_maturity_scorecard",
         "worker_coverage_map",
+        "factory_improvement_radar",
         "improvement_signal",
         "issue_boundary"
       ],
@@ -1627,6 +1632,7 @@
         "agent quality plan",
         "factory maturity scorecard",
         "missing coverage register",
+        "factory improvement radar",
         "factory improvement issue or rejection rationale",
         "human approval boundary"
       ],

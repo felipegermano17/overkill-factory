@@ -224,6 +224,7 @@ class FactoryCtlTest(unittest.TestCase):
         card["agent_eval_plan"] = {"record_type": "agent_eval_plan"}
         card["factory_maturity_scorecard"] = {"record_type": "factory_maturity_scorecard"}
         card["worker_coverage_map"] = {"skill-eval-distiller": "owns factory improvement loop"}
+        card["factory_improvement_radar"] = {"record_type": "factory_improvement_radar"}
         card["improvement_signal"] = "repeated worker feedback"
         card["issue_boundary"] = "public-safe proposal only; no critical mutation without human approval"
 
@@ -232,6 +233,22 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertTrue(report["workers"]["skill-eval-distiller"]["required"])
         self.assertEqual(report["workers"]["skill-eval-distiller"]["status"], "requires_execution")
         self.assertIn("skill-eval-distiller", report["required_workers"])
+
+    def test_factory_radar_surface_triggers_skill_eval_distiller(self) -> None:
+        card = dict(load_card("v35_valid_product_face.md"))
+        card["surfaces"] = ["factory-radar", "update-watch", "hermes-update"]
+        card["evidence_expected"] = "active radar pass"
+        card["agent_eval_plan"] = {"record_type": "agent_eval_plan"}
+        card["factory_maturity_scorecard"] = {"record_type": "factory_maturity_scorecard"}
+        card["worker_coverage_map"] = {"skill-eval-distiller": "owns radar triage"}
+        card["factory_improvement_radar"] = {"record_type": "factory_improvement_radar"}
+        card["improvement_signal"] = "Hermes release may improve worker dispatch"
+        card["issue_boundary"] = "create issue or reject; do not mutate adapter without human approval"
+
+        report = factoryctl.build_gate_report(card)
+
+        self.assertTrue(report["workers"]["skill-eval-distiller"]["required"])
+        self.assertEqual(report["workers"]["skill-eval-distiller"]["status"], "requires_execution")
 
     def test_security_scan_packet_can_require_codex_security_on_r2_product_face(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
