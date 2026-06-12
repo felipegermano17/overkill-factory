@@ -22,8 +22,10 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/OWNER/overkill-factory"
-Issues = "https://github.com/OWNER/overkill-factory/issues"
+Homepage = "https://overkill-factory.dev"
+Documentation = "https://overkill-factory.dev/docs"
+Repository = "https://overkill-factory.dev/source"
+Issues = "https://overkill-factory.dev/issues"
 
 [project.scripts]
 factoryctl = "scripts.factoryctl:main"

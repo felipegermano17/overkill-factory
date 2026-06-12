@@ -18,7 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "supply-chain"
 
 WORKFLOW_DIR = ROOT / ".github" / "workflows"
-PINNED_ACTION_RE = re.compile(r"^-?\s*uses:\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([A-Fa-f0-9]{40})\s*(?:#.*)?$")
+PINNED_ACTION_RE = re.compile(
+    r"^-?\s*uses:\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*)@([A-Fa-f0-9]{40})\s*(?:#.*)?$"
+)
 USES_RE = re.compile(r"uses:\s*(\S+)")
 
 SKIP_PARTS = {".git", "__pycache__", ".mypy_cache", ".pytest_cache"}
@@ -94,8 +96,10 @@ def validate_workflow(path: Path) -> dict[str, Any]:
         findings.append("top-level permissions block is missing")
     if not re.search(r"^\s+contents:\s*read\s*$", permissions_text, re.MULTILINE):
         findings.append("top-level permissions must include contents: read")
-    if re.search(r":\s*(write|admin)\s*$", permissions_text, re.MULTILINE):
-        findings.append("workflow permissions include write/admin scope")
+    for permission_line in permissions_text.splitlines():
+        stripped = permission_line.strip()
+        if re.search(r":\s*(write|admin)\s*$", stripped) and stripped != "security-events: write":
+            findings.append("workflow permissions include write/admin scope")
 
     for line_number, line in enumerate(lines, start=1):
         match = USES_RE.search(line)

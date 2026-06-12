@@ -17,7 +17,9 @@ Discord is optional cockpit UI. It is not the source of truth.
 ```bash
 git clone https://github.com/<owner>/overkill-factory.git
 cd overkill-factory
-python scripts/quickstart_smoke.py
+python -m pip install -e .
+factoryctl doctor
+factoryctl run minimal
 ```
 
 Expected first value: a `PASS` line within a few minutes on a normal Python
@@ -37,14 +39,18 @@ Those files are local outputs. Keep generated worker packets and gate reports in
 
 ## Optional Local CLI
 
-Install the editable package when you want shell commands instead of script
-paths:
+The CLI is the recommended public path:
 
 ```bash
 python -m pip install -e .
-overkill-quickstart
+factoryctl doctor
+factoryctl run minimal
+factoryctl init --out ../my-product-factory --project-name my-product
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 ```
+
+`python scripts/quickstart_smoke.py` and `overkill-quickstart` remain available
+for compatibility.
 
 ## What To Inspect
 
@@ -89,15 +95,16 @@ Introduce the adapter in a test runtime before any real product or release work.
 
 For your own project:
 
-1. Start with a short paper or product brief.
-2. Create a factory card from the relevant example in `examples/cards/`.
-3. Fill source refs, scope, risk, runtime, security, forbidden actions and done
+1. Run `factoryctl init --out ../my-product-factory --project-name my-product`.
+2. Start with a short paper or product brief.
+3. Create or edit a factory card from the relevant example in `examples/cards/`.
+4. Fill source refs, scope, risk, runtime, security, forbidden actions and done
    definition.
-4. Run `factoryctl validate-card`.
-5. Run `factoryctl gate-report`.
-6. Generate required worker packets.
-7. Let Hermes create or route worker cards.
-8. Attach worker results and Receipt Five before any `done` transition.
+5. Run `factoryctl validate-card`.
+6. Run `factoryctl gate-report`.
+7. Generate required worker packets.
+8. Let Hermes create or route worker cards.
+9. Attach worker results and Receipt Five before any `done` transition.
 
 ## Before Release
 

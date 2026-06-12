@@ -8,12 +8,15 @@ run before claiming that a checkout is ready.
 Use this before editing cards, docs or examples:
 
 ```bash
-python scripts/quickstart_smoke.py
+factoryctl doctor
+factoryctl run minimal
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/validate_public_json_artifacts.py
+python scripts/validate_worker_profiles.py
 python scripts/secret_safety_scan.py
 python scripts/public_safety_scan.py
+python scripts/supply_chain_proof.py --check --no-write
 ```
 
 ## Factory Contract Check
@@ -21,9 +24,9 @@ python scripts/public_safety_scan.py
 Use a card-specific check before sending work to Hermes:
 
 ```bash
-python scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
-python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
-python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+factoryctl validate-card examples/minimal-hermes-project/card.md
+factoryctl gate-report --card examples/minimal-hermes-project/card.md
+factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 ```
 
 What this proves:
@@ -50,12 +53,15 @@ provided. Generated summaries must not be committed as release proof.
 For a stronger local pass:
 
 ```bash
+factoryctl doctor
+factoryctl run minimal
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/validate_worker_profiles.py
 python scripts/validate_public_json_artifacts.py
 python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
+python scripts/supply_chain_proof.py --check --no-write
 python scripts/factory_completion_audit.py --no-write --require-complete
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
@@ -69,6 +75,8 @@ PowerShell examples:
 
 ```powershell
 New-Item -ItemType Directory -Force .tmp
+factoryctl doctor
+factoryctl run minimal
 python -m unittest discover -s tests -p "test_*.py" -q
 python scripts\release_integration_preflight.py --out .tmp\release-check.json
 python scripts\factory_production_readiness.py --out .tmp\readiness-check.json

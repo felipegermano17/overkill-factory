@@ -22,7 +22,13 @@ longer support window.
 Before public release work, run:
 
 ```bash
+factoryctl doctor
 python scripts/secret_safety_scan.py
 python scripts/public_safety_scan.py
 python scripts/validate_public_json_artifacts.py
+python scripts/supply_chain_proof.py --check --no-write
 ```
+
+GitHub also runs CodeQL, Dependency Review, Dependabot configuration checks and
+the public security workflow. Those repository checks do not replace
+product-specific security review, Auditor evidence or human gates.

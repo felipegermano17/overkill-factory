@@ -53,8 +53,8 @@ Overkill Factory provides:
   role;
 - a capability pack registry for checking whether the product type has ready
   specialist coverage before execution;
-- `factoryctl.py` helpers for validating cards, creating gate reports and
-  generating worker packets;
+- a single `factoryctl` CLI for install health, project init, local smoke,
+  card validation, gate reports and worker packets;
 - a Hermes adapter and transition hook that can block weak `ready` and `done`
   transitions;
 - public-safe examples and receipt contracts;
@@ -96,14 +96,33 @@ The adapter files are under `adapters/hermes/`:
 You can run local validation without Discord. Configure a Control Tower only
 after the local card, worker packet and receipt path is clear.
 
+## Operator Path
+
+For a person or AI installing the factory into their own Hermes, use the CLI
+path first and open dense contracts only when needed:
+
+```bash
+python -m pip install -e .
+factoryctl doctor
+factoryctl run minimal
+factoryctl init --out ../my-product-factory --project-name my-product
+```
+
+Then read `docs/getting-started/install-in-hermes.md` and connect generated
+worker packets to your Hermes test runtime. The factory is easy to maintain
+when common user flows go through `factoryctl` and maintainer internals stay
+behind docs, schemas and tests.
+
 ## Quickstart
 
-Three-command local smoke:
+Three-command local smoke from a fresh checkout:
 
 ```bash
 git clone https://github.com/<owner>/overkill-factory.git
 cd overkill-factory
-python scripts/quickstart_smoke.py
+python -m pip install -e .
+factoryctl doctor
+factoryctl run minimal
 ```
 
 The smoke writes `.tmp/quickstart-result.json` and required worker packets under
@@ -111,8 +130,9 @@ The smoke writes `.tmp/quickstart-result.json` and required worker packets under
 `docs/getting-started/quickstart-hermes.md` for the same path with Hermes
 configuration notes.
 
-For packaging, install the local CLI with `python -m pip install -e .`, then use
-`factoryctl` or `overkill-quickstart`.
+`python scripts/quickstart_smoke.py` and `overkill-quickstart` remain
+compatibility entrypoints, but `factoryctl run minimal` is the public operator
+path.
 
 ## First Value In 10 Minutes
 
@@ -190,7 +210,11 @@ adapter rule or receipt contract.
 
 - `docs/governance/document-governance.md`: what belongs in public docs versus
   local/private evidence.
+- `docs/index.md`: docs home and navigation.
 - `docs/getting-started/quickstart-hermes.md`: first run with your own Hermes.
+- `docs/getting-started/install-in-hermes.md`: install and connect the factory
+  to an operator-owned Hermes runtime.
+- `docs/reference/cli.md`: supported `factoryctl` commands.
 - `docs/concepts/factory-flow.md`: core concepts and phase flow.
 - `docs/concepts/overkill-factory-method.md`: human-readable method guide.
 - `docs/concepts/operator-journey.md`: step-by-step operator journey.
@@ -204,10 +228,18 @@ adapter rule or receipt contract.
 - `docs/control-tower/open-source-setup.md`: optional Discord/Control Tower
   setup.
 - `docs/operations/validation-and-release.md`: validation and release checklist.
+- `docs/operations/release-policy.md`: semantic versioning, release checks and
+  point-5 boundary.
 - `docs/operations/troubleshooting.md`: common failures and how to continue.
 - `docs/architecture/hermes-integration.md`: adapter and runtime integration.
+- `docs/examples/gallery.md`: which example to use for minimal, Product Face,
+  security and onchain paths.
+- `docs/security/oss-security.md`: repository security controls.
+- `docs/maintenance/repo-surface.md`: operator surface versus maintainer
+  internals and generated output.
 - `examples/minimal-hermes-project/README.md`: small public-safe example.
 - `.env.example`: safe environment variable template.
+- `CHANGELOG.md`: public release history.
 - `CONTRIBUTING.md`: contribution rules and required checks.
 - `SECURITY.md`: security reporting and public-boundary policy.
 
