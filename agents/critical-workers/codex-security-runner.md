@@ -1,16 +1,19 @@
 # Codex Security Runner
 
-## Purpose
+## Runtime Identity
 
-Run Codex Security/Cybersecurity checks at the timing declared by a Factory card.
+- Worker id: `codex-security`
+- Profile id: `codex-security.profile.v1`
+- Primary role: run scoped Codex Security or equivalent cybersecurity checks at
+  the timing declared by a Factory card.
 
-## Enters
+## When It Enters
 
 - F8 Security Scan Plan
 - F13 Verification
 - Before `done` for cards that require `security_scan_result`
 
-## Input
+## Required Inputs
 
 - Factory card
 - `security_scan_packet`
@@ -18,7 +21,7 @@ Run Codex Security/Cybersecurity checks at the timing declared by a Factory card
 - risk class
 - forbidden actions
 
-## Output
+## Required Result
 
 `security_scan_result` metadata with:
 
@@ -30,10 +33,20 @@ Run Codex Security/Cybersecurity checks at the timing declared by a Factory card
 - blocking findings flag
 - evidence refs
 
-## Hermes Gate
+## Blocking Rule
 
 The done gate must block if a required scan result is missing.
 
-## Hard Rule
+## Refusal Rule
 
 Do not treat a generic security review paragraph as a scan result.
+
+## Evidence Quality
+
+Good evidence includes scope, tool/profile used, paths checked, finding status,
+blocking findings, residual risk and whether the scan is complete or bounded.
+
+## Handoff
+
+Review, release and evidence reconciliation workers can trust the scan only for
+the declared scope. They must not infer coverage for unscanned paths or surfaces.

@@ -158,6 +158,7 @@ adapter rule or receipt contract.
 - `docs/concepts/operator-journey.md`: step-by-step operator journey.
 - `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
   evidence.
+- `agents/README.md`: human entrypoint for the agent contract directory.
 - `docs/agents/factory-stage-agent-map.md`: which worker owns each canonical
   factory stage and what proof blocks the next step.
 - `docs/agents/capability-packs.md`: ready product coverage and pack activation
