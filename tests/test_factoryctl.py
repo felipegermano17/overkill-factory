@@ -65,9 +65,17 @@ def worker_result(record_type: str, *, result: str = "PASS", source_card: dict |
         "tool_or_profile": "fixture-tool",
         "executed_by": "fixture-runner",
         "evidence_refs": ["README.md"],
+        "artifact_contract": factoryctl.artifact_contract_for_refs(["README.md"]),
+        "artifact_classifications": factoryctl.artifact_contract_for_refs(["README.md"])["classifications"],
         "evidence_kind": "synthetic",
         "reusable_for_product": False,
         "next_action": "none",
+        "promotion_authority": {
+            "result": "PASS" if result in {"PASS", "WAIVED"} else "BLOCK",
+            "predicate": "synthetic fixture authority",
+            "allowed_transition_scopes": ["done"] if result in {"PASS", "WAIVED"} else [],
+            "active": True,
+        },
     }
     if record_type == "security_scan_result":
         payload["scanner_agent"] = "codex-security-runner"
@@ -86,6 +94,8 @@ def worker_result(record_type: str, *, result: str = "PASS", source_card: dict |
         payload["artifact_refs"] = ["reports/fixture.md"]
     if record_type == "handoff_packet_result":
         payload["handoff_packet_ref"] = "reports/fixture.md"
+    if record_type == "receipt_five_reconciliation_result":
+        payload["valid"] = result == "PASS"
     if result == "WAIVED":
         payload["waiver"] = {
             "owner": "fixture-owner",
@@ -112,6 +122,7 @@ def human_gate_record(source_card: dict | None = None) -> dict:
         "decision": "approved",
         "human_actor": "product-owner",
         "decision_at": "2026-06-06T00:00:00+00:00",
+        "approval_event_id": "evt_fixture_human_approval",
         "approved_scope": ["dry validation"],
         "forbidden_scope": ["deploy"],
         "risk_owner": "product-owner",
@@ -374,7 +385,9 @@ class FactoryCtlTest(unittest.TestCase):
                 "worker": "product-face",
                 "receipt_refs": ["receipt_five", "product_face_result"],
                 "artifact_refs": ["examples/cards/v35_valid_product_face.md", "reports/product-face.md"],
+                "allowed": True,
             },
+            "independent_review_result": worker_result("independent_review_result", source_card=card),
             "product_face_result": {
                 "result": "PASS",
                 "tool_or_profile": "browser-proof-runner",
@@ -698,7 +711,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(result["tool"], "codex-security:scoped-security-scan")
         self.assertIn("PDA", " ".join(result["scope"]))
 
-    def test_duplicate_worker_result_records_do_not_satisfy_gate(self) -> None:
+    def test_duplicate_worker_result_records_choose_latest_active_result(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md")
         result = factoryctl.build_worker_result(
             "codex-security",
@@ -719,10 +732,8 @@ class FactoryCtlTest(unittest.TestCase):
 
             records = factoryctl.collect_worker_result_fields(card, results_dir)
 
-        self.assertFalse(records["security_scan_result"]["valid"])
-        self.assertTrue(
-            any("duplicate worker result records for security_scan_result" in error for error in records["security_scan_result"]["validation_errors"])
-        )
+        self.assertTrue(records["security_scan_result"]["valid"])
+        self.assertEqual(records["security_scan_result"]["result"], "PASS")
 
     def test_inline_worker_result_requires_existing_evidence_ref_for_done(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
@@ -931,6 +942,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "worker": "implementation-worker",
                 "receipt_refs": ["receipt_five"],
                 "artifact_refs": ["artifact"],
+                "allowed": True,
             },
         }
 
@@ -967,6 +979,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "worker": "implementation-worker",
                 "receipt_refs": ["receipt_five"],
                 "artifact_refs": ["artifact"],
+                "allowed": True,
             },
             "security_scan_result": worker_result("security_scan_result", source_card=card),
             "auditor_result": worker_result("auditor_result", result="WAIVED", source_card=card),

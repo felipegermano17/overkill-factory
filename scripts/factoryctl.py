@@ -81,6 +81,11 @@ RECEIPT_REQUIRED = {
     "reviewer_required",
     "next_action",
 }
+
+PROMOTION_PASS_RESULTS = {"PASS", "WAIVED"}
+ARTIFACT_PUBLIC_CLASSES = {"public_safe", "sanitized_report", "publication_candidate"}
+ARTIFACT_PRIVATE_CLASSES = {"private_run_evidence", "transient_cache"}
+PUBLICATION_SCANNER_FIELDS = ("public_safety_scan", "secret_safety_scan")
 V2_APPROVAL_KEYS = [
     "qa",
     "independent_review",
@@ -795,6 +800,61 @@ def source_card_ref(source_path: Path) -> str:
         return f"external:{source_path.name or 'source-card'}"
 
 
+def classify_artifact_ref(ref: Any) -> dict[str, Any]:
+    value = str(ref or "").strip()
+    normalized = value.replace("\\", "/")
+    if not value:
+        return {"ref": value, "artifact_class": "invalid", "public_safe": False, "reason": "empty artifact ref"}
+    if value.startswith("external:"):
+        return {"ref": value, "artifact_class": "sanitized_report", "public_safe": True, "reason": "explicit external/sanitized ref"}
+    if value.startswith(("http://", "https://", "file://")) or Path(value).is_absolute() or ":" in normalized.split("/", 1)[0]:
+        return {"ref": value, "artifact_class": "private_run_evidence", "public_safe": False, "reason": "absolute, URL, or private runtime ref"}
+    if normalized.startswith((".tmp/", "tmp/", "reports/private/", "private/", "run-evidence/")) or "/.tmp/" in normalized:
+        return {"ref": value, "artifact_class": "private_run_evidence", "public_safe": False, "reason": "private or transient evidence location"}
+    if normalized.startswith(("dist/", "site/", "public/", "release/", "publication-candidates/")):
+        return {"ref": value, "artifact_class": "publication_candidate", "public_safe": True, "reason": "repo publication surface"}
+    return {"ref": value, "artifact_class": "public_safe", "public_safe": True, "reason": "repo-relative artifact ref"}
+
+
+def artifact_contract_for_refs(refs: list[str]) -> dict[str, Any]:
+    classifications = [classify_artifact_ref(ref) for ref in refs]
+    return {
+        "artifact_classes_checked": sorted({item["artifact_class"] for item in classifications}),
+        "classifications": classifications,
+        "publication_candidates": [
+            item["ref"] for item in classifications if item["artifact_class"] == "publication_candidate"
+        ],
+        "private_run_evidence": [
+            item["ref"] for item in classifications if item["artifact_class"] in ARTIFACT_PRIVATE_CLASSES
+        ],
+        "public_safe": all(bool(item.get("public_safe")) for item in classifications),
+    }
+
+
+def scan_result_passed(value: Any) -> bool:
+    if value is True:
+        return True
+    if isinstance(value, dict):
+        return str(value.get("result") or value.get("status") or "").strip().upper() == "PASS"
+    return False
+
+
+def artifact_publication_errors(metadata: dict[str, Any]) -> list[str]:
+    receipt = metadata.get("receipt_five") if isinstance(metadata.get("receipt_five"), dict) else {}
+    artifact_refs = string_list(receipt.get("artifact_paths"))
+    event = metadata.get("kanban_transition_event") if isinstance(metadata.get("kanban_transition_event"), dict) else {}
+    artifact_refs.extend(string_list(event.get("artifact_refs")))
+    contract = artifact_contract_for_refs(sorted(set(artifact_refs)))
+    errors: list[str] = []
+    if contract["private_run_evidence"]:
+        errors.append("publication artifacts must not reference private_run_evidence or transient_cache")
+    if contract["publication_candidates"]:
+        for field in PUBLICATION_SCANNER_FIELDS:
+            if not scan_result_passed(metadata.get(field)):
+                errors.append(f"publication_candidate artifacts require {field}=PASS")
+    return errors
+
+
 def read_project_version() -> str:
     if not PYPROJECT_PATH.exists():
         return "0.0.0"
@@ -1452,8 +1512,19 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
     missing = sorted(RECEIPT_REQUIRED - set(receipt))
     if missing:
         errors.append("missing receipt_five fields: " + ", ".join(missing))
+    verification_result = str(receipt.get("verification_result") or "").strip().upper()
+    if verification_result and verification_result not in {"PASS", "BLOCKED", "WAIVED"}:
+        errors.append("receipt_five.verification_result must be PASS, BLOCKED or WAIVED")
+    if verification_result == "PASS" and not string_list(receipt.get("verification_commands")):
+        errors.append("receipt_five PASS requires verification_commands")
     if receipt.get("reviewer_required") is True and not receipt.get("reviewer_result"):
         errors.append("reviewer_result required when reviewer_required=true")
+    if (
+        receipt.get("reviewer_required") is True
+        and verification_result == "PASS"
+        and str(receipt.get("reviewer_result") or "").strip().upper() != "PASS"
+    ):
+        errors.append("reviewer_result must be PASS when reviewer_required=true")
     transition_event = data.get("kanban_transition_event")
     if not isinstance(transition_event, dict):
         errors.append("kanban_transition_event object is required")
@@ -1468,6 +1539,13 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
         for field in ("receipt_refs", "artifact_refs"):
             if field in transition_event and not _non_empty_string_list(transition_event.get(field)):
                 errors.append(f"kanban_transition_event.{field} must be a non-empty string array")
+        allowed = transition_event.get("allowed")
+        event_to_status = str(transition_event.get("to_status") or "").strip().lower()
+        if allowed is not None and event_to_status in {"done", "closed", "complete"} and allowed is not True:
+            errors.append("kanban_transition_event.allowed must be true for promotion")
+        event_result = str(transition_event.get("result") or transition_event.get("predicate_result") or "").strip().upper()
+        if event_result and event_result not in {"PASS", "ALLOW", "APPROVED"}:
+            errors.append("kanban_transition_event result must be PASS, ALLOW or APPROVED")
     scan = data.get("security_scan_result")
     if isinstance(scan, dict):
         required = ["scanner_agent", "tool", "result", "findings_summary"]
@@ -1491,6 +1569,14 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
     auditor = data.get("auditor_result")
     if isinstance(auditor, dict):
         errors.extend(validate_auditor_result(auditor))
+    reconciliation = data.get("receipt_five_reconciliation_result")
+    if isinstance(reconciliation, dict):
+        reconciliation_result = str(reconciliation.get("result") or "").strip().upper()
+        if reconciliation_result not in {"PASS", "BLOCKED"}:
+            errors.append("receipt_five_reconciliation_result.result must be PASS or BLOCKED")
+        if reconciliation.get("valid") is True and reconciliation_result != "PASS":
+            errors.append("receipt_five_reconciliation_result.valid=true requires result PASS")
+    errors.extend(artifact_publication_errors(data))
     if data.get("hermes_legacy_completion_required") is True:
         if not any(_non_empty_string_list(data.get(field)) for field in ("evidence_paths", "evidence", "artifacts")):
             errors.append("Hermes V2 metadata requires evidence_paths, evidence or artifacts")
@@ -1530,6 +1616,11 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
 
 def validate_completion(card: dict[str, Any], metadata: dict[str, Any]) -> list[str]:
     errors = validate_receipt(metadata)
+    receipt = metadata.get("receipt_five") if isinstance(metadata.get("receipt_five"), dict) else {}
+    if receipt.get("reviewer_required") is True and str(receipt.get("reviewer_result") or "").strip().upper() != "PASS":
+        errors.append("reviewer_result must be PASS when reviewer_required=true")
+    if receipt.get("reviewer_required") is True and "independent_review_result" not in metadata:
+        errors.append("independent_review_result is required when receipt_five.reviewer_required=true")
     if product_face_result_required(card):
         product_face = metadata.get("product_face_result")
         if not isinstance(product_face, dict):
@@ -1820,6 +1911,42 @@ def missing_required_inputs(worker: WorkerDefinition, card: dict[str, Any]) -> l
     return missing
 
 
+def unblock_guidance(missing_inputs: list[str]) -> list[dict[str, str]]:
+    return [
+        {
+            "field": field,
+            "action": f"populate card.{field} with public-safe contract data or attach the required worker evidence",
+            "authority": "operator may edit planning fields; worker/human evidence must be produced by the assigned authority",
+        }
+        for field in missing_inputs
+    ]
+
+
+def runtime_decision_profile(card: dict[str, Any]) -> dict[str, Any]:
+    decision = str(card.get("runtime_decision") or "").strip().lower()
+    contract = card.get("runtime_contract") if isinstance(card.get("runtime_contract"), dict) else {}
+    runtime = str(contract.get("runtime") or contract.get("adapter") or decision or "hermes").strip().lower()
+    if "local" in decision or runtime in {"factoryctl", "local", "none"}:
+        scope = "local_factoryctl_only"
+        allowed = ["validate-card", "gate-report", "worker-packet", "transition-plan"]
+        forbidden = ["spawn-worker", "mutate-live-board", "complete-main-task"]
+    elif "external" in decision:
+        scope = "external_runtime"
+        allowed = ["create-public-safe-packet", "wait-for-external-result"]
+        forbidden = ["assume-external-pass", "copy-private-auth", "complete-main-task-without-receipt"]
+    else:
+        scope = "hermes_runtime"
+        allowed = ["materialize-blocked-tasks", "link-worker-tasks", "enforce-done-after-pass"]
+        forbidden = ["spawn-without-route-readiness", "complete-without-receipt-five", "treat-artifact-existence-as-pass"]
+    return {
+        "decision": decision or "hermes_default",
+        "scope": scope,
+        "runtime_contract": contract,
+        "allowed_runtime_actions": allowed,
+        "forbidden_runtime_actions": forbidden,
+    }
+
+
 def required_worker_ids(card: dict[str, Any]) -> list[str]:
     return [worker_id for worker_id in WORKERS if worker_required(worker_id, card)[0]]
 
@@ -1830,6 +1957,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
     required, reason = worker_required(worker_id, card)
     missing_inputs = missing_required_inputs(worker, card)
     missing_profile_binding = profile_binding is None
+    runtime_decision = runtime_decision_profile(card)
     status = "requires_execution" if required else "not_required_by_current_card"
     if required and missing_inputs:
         status = "blocked_missing_inputs"
@@ -1865,16 +1993,28 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
         "input_contract": {
             "required_fields": list(worker.required_inputs),
             "missing_fields": missing_inputs,
+            "unblock_guidance": unblock_guidance(missing_inputs),
             "target_repo_paths": card.get("target_repo_paths", []),
             "authority_max": card.get("authority_max"),
             "forbidden_actions": card.get("forbidden_actions", []),
         },
+        "runtime_decision": runtime_decision,
         "output_contract": {
             "receipt_field": worker.output_field,
             "must_attach_artifact_refs": True,
             "must_state_blocking_findings": True,
             "must_record_tool_or_profile": True,
             "human_approval_must_be_real": worker_id == "human-gate-clerk",
+            "promotion_authority": {
+                "positive_results": sorted(PROMOTION_PASS_RESULTS),
+                "requires_valid_record": True,
+                "requires_blocking_findings_false": worker_id != "human-gate-clerk",
+            },
+            "artifact_policy": {
+                "allowed_public_classes": sorted(ARTIFACT_PUBLIC_CLASSES),
+                "private_classes": sorted(ARTIFACT_PRIVATE_CLASSES),
+                "publication_candidates_require_scanners": list(PUBLICATION_SCANNER_FIELDS),
+            },
         },
         "status": status,
     }
@@ -1906,7 +2046,13 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
     for worker_id in WORKERS:
         required, reason = worker_required(worker_id, card)
         status = build_worker_packet(worker_id, card, Path("<memory>"))["status"]
-        worker_rows[worker_id] = {"required": required, "reason": reason, "status": status}
+        missing_inputs = missing_required_inputs(WORKERS[worker_id], card)
+        worker_rows[worker_id] = {
+            "required": required,
+            "reason": reason,
+            "status": status,
+            "unblock_guidance": unblock_guidance(missing_inputs),
+        }
         if required:
             required_workers.append(worker_id)
         if str(status).startswith("blocked_"):
@@ -1925,9 +2071,20 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         "risk_effective": card.get("risk_effective"),
         "surfaces": card.get("surfaces", []),
         "gate_status": gate_status,
+        "gate_predicate_result": "BLOCK" if gate_status == "blocked" else "PASS",
+        "promotion_authority": {
+            "predicate": "card validation has no errors and all required worker inputs are present",
+            "result": "BLOCK" if gate_status == "blocked" else "PASS",
+            "allowed_transition_scopes": [] if gate_status == "blocked" else ["create_worker_tasks"],
+        },
         "required_workers": required_workers,
         "blocked_workers": blocked_workers,
         "card_validation_errors": validation_errors,
+        "next_safe_actions": [
+            guidance
+            for row in worker_rows.values()
+            for guidance in row.get("unblock_guidance", [])
+        ],
         "workers": worker_rows,
     }
 
@@ -2018,6 +2175,25 @@ def _field_mismatch_errors(data: dict[str, Any], card: dict[str, Any] | None) ->
     expected_slice = card.get("slice_id")
     if expected_slice and card_ref.get("slice_id") != expected_slice:
         errors.append("card_ref.slice_id must match current card")
+    return errors
+
+
+def validate_human_gate_freshness(data: dict[str, Any], card: dict[str, Any] | None) -> list[str]:
+    errors: list[str] = []
+    if not str(data.get("decision_at") or "").strip():
+        errors.append("human gate decision_at is required")
+    if not str(data.get("approval_event_id") or data.get("approval_event_ref") or "").strip():
+        errors.append("human gate approval_event_id is required")
+    if card is None:
+        return errors
+    record_ref = data.get("card_ref") if isinstance(data.get("card_ref"), dict) else {}
+    for field in ("risk_effective", "phase"):
+        if record_ref.get(field) and card.get(field) and record_ref.get(field) != card.get(field):
+            errors.append(f"human gate card_ref.{field} must match current card")
+    forbidden = set(string_list(card.get("forbidden_actions")))
+    approved = set(string_list(data.get("approved_scope")))
+    if forbidden & approved:
+        errors.append("human gate approved_scope must not include forbidden_actions")
     return errors
 
 
@@ -2142,6 +2318,7 @@ def validate_worker_result_record(
         for field in ("risk_owner", "security_owner", "rollback_owner"):
             if not str(data.get(field) or "").strip() or str(data.get(field)).strip().upper() == "TBD":
                 errors.append(f"{field} must be explicit")
+        errors.extend(validate_human_gate_freshness(data, card))
     else:
         result = str(data.get("result") or "").strip()
         if result not in {"PASS", "WAIVED"}:
@@ -2158,12 +2335,26 @@ def validate_worker_result_record(
             expected_schema = worker_result_schema_url(expected_worker_id)
             if data.get("$schema") != expected_schema:
                 errors.append(f"$schema must be {expected_schema}")
+        authority = data.get("promotion_authority")
+        if not isinstance(authority, dict):
+            errors.append("promotion_authority object is required")
+        else:
+            if authority.get("active") is False:
+                errors.append("superseded worker result cannot satisfy promotion")
+            if str(authority.get("result") or "").strip().upper() != "PASS":
+                errors.append("promotion_authority.result must be PASS")
+            scopes = string_list(authority.get("allowed_transition_scopes"))
+            if "done" not in [scope.lower() for scope in scopes]:
+                errors.append("promotion_authority.allowed_transition_scopes must include done")
 
     evidence_refs = string_list(data.get("evidence_refs"))
     if not evidence_refs:
         errors.append("evidence_refs must contain at least one artifact ref")
     else:
         errors.extend(_evidence_ref_errors(evidence_refs, evidence_root))
+    contract = data.get("artifact_contract")
+    if isinstance(contract, dict) and contract.get("public_safe") is False and data.get("reusable_for_product") is True:
+        errors.append("private artifact_contract cannot be reusable_for_product=true")
     errors.extend(_field_mismatch_errors(data, card))
 
     evidence_kind = str(data.get("evidence_kind") or "").strip()
@@ -2188,37 +2379,40 @@ def validate_worker_result_record(
 def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None) -> dict[str, dict[str, Any]]:
     if results_dir is None or not results_dir.exists():
         return {}
-    records: dict[str, dict[str, Any]] = {}
-    paths_by_record_type: dict[str, list[str]] = {}
+    records_by_type: dict[str, list[dict[str, Any]]] = {}
     for path in sorted(results_dir.glob("*.json")):
         try:
             data = load_json_like(path)
         except (OSError, ValueError, json.JSONDecodeError):
             continue
         record_type = str(data.get("record_type") or "").strip()
-        if record_type:
-            paths_by_record_type.setdefault(record_type, []).append(source_card_ref(path))
-            expected_worker_id = _worker_id_for_output_field(record_type)
-            errors = validate_worker_result_record(
-                data,
-                expected_field=record_type,
-                expected_worker_id=expected_worker_id,
-                card=card,
-                evidence_root=ROOT,
-            )
-            records[record_type] = {
+        if not record_type:
+            continue
+        expected_worker_id = _worker_id_for_output_field(record_type)
+        errors = validate_worker_result_record(
+            data,
+            expected_field=record_type,
+            expected_worker_id=expected_worker_id,
+            card=card,
+            evidence_root=ROOT,
+        )
+        authority = data.get("promotion_authority") if isinstance(data.get("promotion_authority"), dict) else {}
+        records_by_type.setdefault(record_type, []).append(
+            {
                 "evidence_ref": source_card_ref(path),
+                "created_at": data.get("created_at") or data.get("decision_at"),
                 "result": data.get("result") or data.get("decision"),
+                "active": authority.get("active", data.get("active", True)) is not False and not data.get("superseded_by"),
                 "valid": not errors,
                 "validation_errors": errors,
             }
-    for record_type, paths in paths_by_record_type.items():
-        if len(paths) > 1 and record_type in records:
-            records[record_type]["valid"] = False
-            records[record_type]["validation_errors"] = [
-                *records[record_type].get("validation_errors", []),
-                f"duplicate worker result records for {record_type}: {', '.join(paths)}",
-            ]
+        )
+    records: dict[str, dict[str, Any]] = {}
+    for record_type, candidates in records_by_type.items():
+        active = [candidate for candidate in candidates if candidate.get("active")]
+        ordered = sorted(active or candidates, key=_worker_record_sort_key, reverse=True)
+        if ordered:
+            records[record_type] = ordered[0]
     return records
 
 
@@ -2246,6 +2440,13 @@ def receipt_result_fields(
                 "validation_errors": errors,
             }
     return fields
+
+
+def _worker_record_sort_key(record: dict[str, Any]) -> tuple[str, str]:
+    return (
+        str(record.get("created_at") or ""),
+        str(record.get("evidence_ref") or ""),
+    )
 
 
 def build_worker_task(worker_id: str, card: dict[str, Any], source_path: Path) -> dict[str, Any]:
@@ -2308,6 +2509,28 @@ def build_worker_closure(
     }
 
 
+def receipt_reconciliation_errors(metadata: dict[str, Any] | None) -> list[str]:
+    if not isinstance(metadata, dict):
+        return ["receipt_five_reconciliation_result is required for done promotion"]
+    event = metadata.get("kanban_transition_event") if isinstance(metadata.get("kanban_transition_event"), dict) else {}
+    if event.get("allowed") is not True:
+        errors = ["kanban_transition_event.allowed must be true for done promotion"]
+    else:
+        errors = []
+    reconciliation = metadata.get("receipt_five_reconciliation_result")
+    if not isinstance(reconciliation, dict):
+        errors.append("receipt_five_reconciliation_result is required for done promotion")
+        return errors
+    if str(reconciliation.get("result") or "").strip().upper() != "PASS":
+        errors.append("receipt_five_reconciliation_result.result must be PASS for done promotion")
+    if reconciliation.get("valid") is not True:
+        errors.append("receipt_five_reconciliation_result.valid must be true for done promotion")
+    authority = reconciliation.get("promotion_authority")
+    if isinstance(authority, dict) and str(authority.get("result") or "").strip().upper() != "PASS":
+        errors.append("receipt_five_reconciliation_result promotion_authority must be PASS")
+    return errors
+
+
 def build_transition_plan(
     card: dict[str, Any],
     source_path: Path,
@@ -2343,6 +2566,20 @@ def build_transition_plan(
         else:
             transition_action = "block_transition" if blocked_reasons else "allow_and_create_worker_tasks"
         completion = None
+    elif normalized_to in {"review", "review-ready", "ready_for_review"}:
+        blocked_reasons.extend(gate["card_validation_errors"])
+        for worker_id in gate["blocked_workers"]:
+            queue_class = worker_queue_class(worker_id, card)
+            blocked_reasons.append(f"{worker_id} missing inputs for {queue_class}")
+        before_ready = [
+            task["worker_id"]
+            for task in worker_tasks
+            if task["queue_class"] == "blocking-before-ready"
+        ]
+        for worker_id in before_ready:
+            blocked_reasons.append(f"{worker_id} result is required before review-ready")
+        transition_action = "block_transition" if blocked_reasons else "allow_review_ready"
+        completion = build_worker_closure(card, receipt or {}, worker_results_dir)
     elif normalized_to in {"done", "closed", "complete"}:
         blocked_reasons.extend(gate["card_validation_errors"])
         for worker_id in gate["blocked_workers"]:
@@ -2352,6 +2589,7 @@ def build_transition_plan(
             completion = build_worker_closure(card, {}, worker_results_dir)
         else:
             blocked_reasons.extend(validate_completion(card, receipt))
+            blocked_reasons.extend(receipt_reconciliation_errors(receipt))
             blocked_reasons.extend(
                 validate_transition_event_matches(
                     receipt,
@@ -2422,6 +2660,8 @@ def build_worker_result(
         raise ValueError("PASS cannot have blocking_findings=true")
 
     worker = WORKERS[worker_id]
+    artifact_contract = artifact_contract_for_refs(evidence_refs)
+    positive_authority = result in PROMOTION_PASS_RESULTS and blocking_findings is False
     payload = {
         "$schema": worker_result_schema_url(worker_id),
         "record_type": worker.output_field,
@@ -2438,9 +2678,17 @@ def build_worker_result(
         "tool_or_profile": tool_or_profile,
         "executed_by": executed_by,
         "evidence_refs": evidence_refs,
+        "artifact_contract": artifact_contract,
+        "artifact_classifications": artifact_contract["classifications"],
         "evidence_kind": evidence_kind,
         "reusable_for_product": reusable_for_product,
         "next_action": next_action,
+        "promotion_authority": {
+            "result": "PASS" if positive_authority else "BLOCK",
+            "predicate": "worker result is PASS/WAIVED, valid, scoped to the current card, and has blocking_findings=false",
+            "allowed_transition_scopes": ["done"] if positive_authority else [],
+            "active": True,
+        },
     }
     if worker_id == "codex-security":
         scan_packet = card.get("security_scan_packet", {}) if isinstance(card.get("security_scan_packet"), dict) else {}
@@ -2645,6 +2893,7 @@ def build_human_gate_record(
         "decision": decision,
         "human_actor": human_actor,
         "decision_at": utc_now(),
+        "approval_event_id": f"human:{card.get('card_id') or 'card'}:{utc_now()}",
         "approved_scope": approved_scope,
         "forbidden_scope": forbidden_scope or card.get("forbidden_actions", []),
         "required_changes": required_changes,
@@ -2717,6 +2966,25 @@ def command_gate_report(args: argparse.Namespace) -> int:
     card = load_json_like(args.card)
     write_json(args.out, build_gate_report(card))
     return 0
+
+
+def command_unblock_plan(args: argparse.Namespace) -> int:
+    report = build_gate_report(load_json_like(args.card))
+    plan = {
+        "$schema": "https://overkill-factory.dev/schemas/unblock-plan.schema.json",
+        "record_type": "operator_unblock_plan",
+        "created_at": utc_now(),
+        "card_id": report.get("card_id"),
+        "gate_predicate_result": report.get("gate_predicate_result"),
+        "blocked_workers": report.get("blocked_workers", []),
+        "next_safe_actions": report.get("next_safe_actions", []),
+        "limits": [
+            "This plan does not execute workers, approve gates, or bypass missing evidence.",
+            "Human/security/review evidence must be produced by the assigned authority.",
+        ],
+    }
+    write_json(args.out, plan)
+    return 1 if report.get("gate_predicate_result") == "BLOCK" else 0
 
 
 def command_evidence_record(args: argparse.Namespace) -> int:
@@ -2866,6 +3134,11 @@ def build_parser() -> argparse.ArgumentParser:
     gate_report_parser.add_argument("--out", type=Path)
     gate_report_parser.set_defaults(func=command_gate_report)
 
+    unblock_plan_parser = sub.add_parser("unblock-plan")
+    unblock_plan_parser.add_argument("--card", type=Path, required=True)
+    unblock_plan_parser.add_argument("--out", type=Path)
+    unblock_plan_parser.set_defaults(func=command_unblock_plan)
+
     evidence_record_parser = sub.add_parser("evidence-record")
     evidence_record_parser.add_argument(
         "--worker",
@@ -2873,7 +3146,7 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
     )
     evidence_record_parser.add_argument("--card", type=Path, required=True)
-    evidence_record_parser.add_argument("--result", choices=["PASS", "FAIL", "WAIVED", "PENDING"], required=True)
+    evidence_record_parser.add_argument("--result", choices=["PASS", "BLOCKED", "FAIL", "WAIVED", "PENDING"], required=True)
     evidence_record_parser.add_argument("--tool", required=True)
     evidence_record_parser.add_argument("--actor", required=True)
     evidence_record_parser.add_argument("--evidence-ref", action="append")

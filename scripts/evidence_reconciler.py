@@ -42,6 +42,11 @@ def result_entry(card: dict[str, Any], path: Path, data: dict[str, Any]) -> dict
         card=card,
         evidence_root=ROOT,
     )
+    authority = data.get("promotion_authority") if isinstance(data.get("promotion_authority"), dict) else {}
+    active = authority.get("active")
+    if active is None:
+        active = data.get("active", True)
+    superseded_by = data.get("superseded_by") or authority.get("superseded_by")
     return {
         "record_type": record_type,
         "worker_id": worker_ref.get("id"),
@@ -49,6 +54,11 @@ def result_entry(card: dict[str, Any], path: Path, data: dict[str, Any]) -> dict
         "blocking_findings": data.get("blocking_findings"),
         "created_at": data.get("created_at") or data.get("decision_at"),
         "evidence_ref": factoryctl.source_card_ref(path),
+        "active": bool(active) and not bool(superseded_by),
+        "supersession_key": data.get("supersession_key") or record_type,
+        "supersedes": data.get("supersedes") or authority.get("supersedes"),
+        "superseded_by": superseded_by,
+        "supersession_reason": data.get("supersession_reason") or authority.get("supersession_reason"),
         "valid_for_closure": not validation_errors,
         "validation_errors": validation_errors,
     }
@@ -117,16 +127,27 @@ def reconcile(
     superseded_results: list[dict[str, Any]] = []
 
     for record_type, entries in grouped.items():
-        ordered = sort_result_entries(entries)
+        explicit_inactive = [entry for entry in entries if not entry.get("active")]
+        ordered = sort_result_entries([entry for entry in entries if entry.get("active")])
         if not ordered:
+            superseded_results.extend(
+                {
+                    **entry,
+                    "effective_result": False,
+                    "supersession_reason": entry.get("supersession_reason") or "explicitly inactive result",
+                }
+                for entry in explicit_inactive
+            )
             continue
-        effective_results[record_type] = ordered[0]
-        for superseded in ordered[1:]:
+        effective_results[record_type] = {**ordered[0], "effective_result": True}
+        for superseded in [*explicit_inactive, *ordered[1:]]:
             superseded_results.append(
                 {
                     **superseded,
+                    "active": False,
+                    "effective_result": False,
                     "superseded_by": ordered[0]["evidence_ref"],
-                    "supersession_reason": "newer result for same receipt field",
+                    "supersession_reason": superseded.get("supersession_reason") or "newer active result for same receipt field",
                 }
             )
 
@@ -185,7 +206,7 @@ def build_reconciler_result(card: dict[str, Any], index_ref: str, index: dict[st
     payload = factoryctl.build_worker_result(
         "evidence-reconciler",
         card,
-        result="PASS" if ready else "FAIL",
+        result="PASS" if ready else "BLOCKED",
         tool_or_profile="scripts/evidence_reconciler.py",
         executed_by="evidence-reconciler",
         evidence_refs=[index_ref],
@@ -220,7 +241,7 @@ def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, i
             ],
         }
     )
-    return {
+    receipt = {
         "receipt_five": {
             "changed": card.get("done_definition") or "Reconciled worker evidence for done promotion.",
             "artifact_paths": artifact_paths,
@@ -240,8 +261,14 @@ def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, i
         },
         "receipt_five_reconciliation_result": {
             "evidence_ref": result_ref,
-            "result": "PASS" if index["receipt_five_ready"] else "FAIL",
+            "result": "PASS" if index["receipt_five_ready"] else "BLOCKED",
             "valid": bool(index["receipt_five_ready"]),
+            "promotion_authority": {
+                "result": "PASS" if index["receipt_five_ready"] else "BLOCK",
+                "predicate": "all required worker results are active, valid, non-blocking, and reconciled",
+                "allowed_transition_scopes": ["done"] if index["receipt_five_ready"] else [],
+                "active": True,
+            },
         },
         "worker_result_index": index_ref,
         "kanban_transition_event": {
@@ -259,6 +286,10 @@ def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, i
             "reason": "Receipt Five ready" if index["receipt_five_ready"] else "Receipt Five blocked by evidence reconciliation",
         },
     }
+    errors = factoryctl.validate_receipt(receipt)
+    if index["receipt_five_ready"] and errors:
+        raise ValueError("generated receipt draft is invalid: " + "; ".join(errors))
+    return receipt
 
 
 def command_reconcile(args: argparse.Namespace) -> int:

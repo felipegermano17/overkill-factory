@@ -154,7 +154,7 @@ class EvidenceReconcilerTest(unittest.TestCase):
 
         self.assertFalse(index["receipt_five_ready"])
         self.assertIn("security_scan_result", index["missing_required_fields"])
-        self.assertEqual(result["result"], "FAIL")
+        self.assertEqual(result["result"], "BLOCKED")
         self.assertTrue(result["blocking_findings"])
 
     def test_extra_result_path_is_indexed_with_worker_results(self) -> None:

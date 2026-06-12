@@ -62,6 +62,20 @@ Rotate any real credential that was committed. Replace public examples with
 short placeholders such as `example`, and keep real values in your private
 runtime environment.
 
+## Test Runner Or Sandbox Launch Fails
+
+Keep the worker result blocked until the same command is proven. Record the
+command as an argv list and rerun through the safest available local runner:
+
+```bash
+python -m unittest tests.test_factoryctl -q
+```
+
+Do not turn a shell launcher failure into a PASS. If the environment reports a
+runner error such as `CreateProcessAsUserW failed: 5`, use the pattern in
+`scripts/safe_shell.py` and record the result as `BLOCKED` with remediation.
+Only a later successful run of the same argv can supersede that blocker.
+
 ## Hermes Patch Does Not Apply
 
 Read `adapters/hermes/README.md` and rerun the patch check from a clean Hermes
