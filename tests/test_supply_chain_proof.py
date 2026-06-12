@@ -42,6 +42,29 @@ class SupplyChainProofTests(unittest.TestCase):
             self.assertEqual(result["result"], "FAIL")
             self.assertIn("not pinned", result["findings"][0])
 
+    def test_pinned_official_subaction_passes(self):
+        with TemporaryDirectory() as tmpdir:
+            workflow = Path(tmpdir) / "codeql.yml"
+            workflow.write_text(
+                "name: codeql\n"
+                "on: push\n"
+                "permissions:\n"
+                "  contents: read\n"
+                "  security-events: write\n"
+                "jobs:\n"
+                "  analyze:\n"
+                "    runs-on: ubuntu-latest\n"
+                "    steps:\n"
+                "      - uses: github/codeql-action/init@411bbbe57033eedfc1a82d68c01345aa96c737d7\n"
+                "      - uses: github/codeql-action/analyze@411bbbe57033eedfc1a82d68c01345aa96c737d7\n",
+                encoding="utf-8",
+            )
+
+            result = proof.validate_workflow(workflow)
+
+            self.assertEqual(result["result"], "PASS")
+            self.assertEqual(result["findings"], [])
+
     def test_pull_request_target_fails(self):
         with TemporaryDirectory() as tmpdir:
             workflow = Path(tmpdir) / "bad.yml"

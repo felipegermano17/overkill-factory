@@ -23,6 +23,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "What It Does",
             "What It Does Not Do",
             "How Hermes Fits",
+            "Operator Path",
             "Quickstart",
             "First Value In 10 Minutes",
             "Repository Shape",
@@ -46,14 +47,25 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/agents/capability-packs.md",
             "docs/control-tower/open-source-setup.md",
             "docs/operations/validation-and-release.md",
+            "docs/operations/release-policy.md",
             "docs/architecture/hermes-integration.md",
+            "docs/getting-started/install-in-hermes.md",
+            "docs/reference/cli.md",
+            "docs/examples/gallery.md",
+            "docs/security/oss-security.md",
+            "docs/maintenance/repo-surface.md",
             "examples/minimal-hermes-project/README.md",
             ".env.example",
+            "CHANGELOG.md",
             "CONTRIBUTING.md",
             "SECURITY.md",
         ]:
             with self.subTest(link=rel):
                 self.assertIn(rel.replace("\\", "/"), readme)
+
+        for command in ["factoryctl doctor", "factoryctl init", "factoryctl run minimal"]:
+            with self.subTest(command=command):
+                self.assertIn(command, readme)
 
     def test_public_docs_skeleton_exists(self) -> None:
         required_paths = [
@@ -68,16 +80,29 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/agents/capability-packs.md",
             "docs/control-tower/open-source-setup.md",
             "docs/operations/validation-and-release.md",
+            "docs/operations/release-policy.md",
             "docs/operations/troubleshooting.md",
             "docs/architecture/hermes-integration.md",
+            "docs/index.md",
+            "docs/getting-started/install-in-hermes.md",
+            "docs/reference/cli.md",
+            "docs/examples/gallery.md",
+            "docs/security/oss-security.md",
+            "docs/maintenance/repo-surface.md",
             "examples/minimal-hermes-project/README.md",
             "examples/minimal-hermes-project/input-paper.md",
             "examples/minimal-hermes-project/expected-flow.md",
             "examples/minimal-hermes-project/expected-receipt-five.json",
             ".env.example",
             "pyproject.toml",
+            "CHANGELOG.md",
+            "mkdocs.yml",
             "CONTRIBUTING.md",
             "SECURITY.md",
+            ".github/dependabot.yml",
+            ".github/workflows/codeql.yml",
+            ".github/workflows/dependency-review.yml",
+            ".github/workflows/security.yml",
             ".github/ISSUE_TEMPLATE/bug_report.yml",
             ".github/ISSUE_TEMPLATE/feature_request.yml",
             ".github/ISSUE_TEMPLATE/config.yml",
@@ -189,6 +214,58 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("references/documentation-standard.md", skill)
         self.assertIn("Every public folder needs a burden-of-proof decision", skill)
 
+    def test_docs_site_navigation_and_maintenance_boundaries_exist(self) -> None:
+        docs_index = read_text("docs/index.md")
+        mkdocs = read_text("mkdocs.yml")
+        cli = read_text("docs/reference/cli.md")
+        repo_surface = read_text("docs/maintenance/repo-surface.md")
+
+        for phrase in [
+            "Operator Path",
+            "Install In Your Hermes",
+            "CLI Reference",
+            "Examples",
+            "Security",
+            "Release",
+            "Maintainer Internals",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, docs_index)
+                self.assertIn(phrase, mkdocs)
+
+        for command in ["factoryctl doctor", "factoryctl init", "factoryctl run minimal"]:
+            with self.subTest(command=command):
+                self.assertIn(command, cli)
+
+        self.assertIn("Operator surface", repo_surface)
+        self.assertIn("Maintainer internals", repo_surface)
+        self.assertIn("Generated output", repo_surface)
+
+    def test_release_security_and_example_gallery_are_professional_surfaces(self) -> None:
+        changelog = read_text("CHANGELOG.md")
+        release_policy = read_text("docs/operations/release-policy.md")
+        oss_security = read_text("docs/security/oss-security.md")
+        gallery = read_text("docs/examples/gallery.md")
+        pyproject = read_text("pyproject.toml")
+
+        self.assertIn("Unreleased", changelog)
+        self.assertIn("semantic versioning", release_policy)
+        self.assertIn("CodeQL", oss_security)
+        self.assertIn("Dependency Review", oss_security)
+        self.assertIn("SBOM", oss_security)
+        self.assertIn("Point 5 is intentionally deferred", release_policy)
+        for example in [
+            "minimal-hermes-project",
+            "v35_valid_product_face.md",
+            "v35_valid_security_with_scan.md",
+            "v35_valid_onchain_auditor_scan.md",
+        ]:
+            with self.subTest(example=example):
+                self.assertIn(example, gallery)
+
+        self.assertNotIn("OWNER", pyproject)
+        self.assertIn("overkill-factory.dev", pyproject)
+
     def test_agent_public_doc_covers_every_registered_worker(self) -> None:
         registry = json.loads(read_text("agents/worker-registry.public.json"))
         agent_doc = read_text("docs/agents/worker-profiles.md")
@@ -218,17 +295,20 @@ class OpenSourceDocsTest(unittest.TestCase):
         operations = read_text("docs/operations/validation-and-release.md")
         combined = f"{quickstart}\n{operations}"
         required_commands = [
-            "python scripts/quickstart_smoke.py",
+            "factoryctl doctor",
+            "factoryctl run minimal",
             "python -m unittest discover -s tests",
             "python scripts/validate_document_governance.py",
             "python scripts/validate_public_json_artifacts.py",
+            "python scripts/validate_worker_profiles.py",
             "python scripts/secret_safety_scan.py",
             "python scripts/public_safety_scan.py",
+            "python scripts/supply_chain_proof.py --check --no-write",
             "python scripts/release_integration_preflight.py",
             "python scripts/factory_production_readiness.py",
             "python scripts/worktree_release_inventory.py",
-            "python scripts/factoryctl.py gate-report",
-            "python scripts/factoryctl.py worker-packet",
+            "factoryctl gate-report",
+            "factoryctl worker-packet",
         ]
 
         for command in required_commands:

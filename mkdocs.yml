@@ -1,0 +1,25 @@
+site_name: Overkill Factory
+site_description: Gated production line for Hermes-powered agentic product work.
+site_url: https://overkill-factory.dev
+repo_url: https://overkill-factory.dev/source
+docs_dir: docs
+nav:
+  - Operator Path: index.md
+  - Install In Your Hermes: getting-started/install-in-hermes.md
+  - CLI Reference: reference/cli.md
+  - Examples: examples/gallery.md
+  - Concepts:
+      - Factory Flow: concepts/factory-flow.md
+      - Operator Journey: concepts/operator-journey.md
+      - Method Guide: concepts/overkill-factory-method.md
+  - Agents:
+      - Worker Profiles: agents/worker-profiles.md
+      - Stage Map: agents/factory-stage-agent-map.md
+      - Capability Packs: agents/capability-packs.md
+  - Security:
+      - OSS Security: security/oss-security.md
+      - Security Matrix: security/security-control-matrix.md
+  - Release:
+      - Validation And Release: operations/validation-and-release.md
+      - Release Policy: operations/release-policy.md
+  - Maintainer Internals: maintenance/repo-surface.md

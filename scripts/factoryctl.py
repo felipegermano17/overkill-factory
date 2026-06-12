@@ -23,6 +23,10 @@ ROOT = Path(__file__).resolve().parents[1]
 PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
 CANONICAL_RUNTIME_ENFORCEMENT_PATH = ROOT / "scripts" / "canonical_runtime_enforcement.py"
+DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
+DEFAULT_QUICKSTART_OUT = ROOT / ".tmp" / "quickstart-result.json"
+DEFAULT_PACKETS_OUT = ROOT / ".tmp" / "minimal-worker-packets"
+PYPROJECT_PATH = ROOT / "pyproject.toml"
 
 CARD_REQUIRED = {
     "factory_method_version",
@@ -789,6 +793,235 @@ def source_card_ref(source_path: Path) -> str:
         if windows_path.is_absolute() or (len(raw_normalized) >= 2 and raw_normalized[1] == ":"):
             return f"external:{windows_path.name or 'source-card'}"
         return f"external:{source_path.name or 'source-card'}"
+
+
+def read_project_version() -> str:
+    if not PYPROJECT_PATH.exists():
+        return "0.0.0"
+    for line in PYPROJECT_PATH.read_text(encoding="utf-8").splitlines():
+        if line.strip().startswith("version"):
+            return line.split("=", 1)[1].strip().strip('"')
+    return "0.0.0"
+
+
+def build_minimal_run_result(card_path: Path, packets_out: Path) -> dict[str, Any]:
+    card = load_json_like(card_path)
+    validation_errors = validate_card(card)
+    gate_report = build_gate_report(card)
+    required_workers = list(gate_report.get("required_workers", []))
+
+    packets_out.mkdir(parents=True, exist_ok=True)
+    packet_paths: list[str] = []
+    for worker_id in required_workers:
+        packet = build_worker_packet(worker_id, card, card_path)
+        packet_path = packets_out / f"{worker_id}.json"
+        packet_path.write_text(json.dumps(packet, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+        packet_paths.append(source_card_ref(packet_path))
+
+    checks = [
+        {
+            "id": "card_contract",
+            "result": "PASS" if not validation_errors else "FAIL",
+            "details": validation_errors,
+        },
+        {
+            "id": "gate_report",
+            "result": "PASS" if gate_report.get("gate_status") == "ready_for_worker_execution" else "FAIL",
+            "details": [str(gate_report.get("gate_status"))],
+        },
+        {
+            "id": "worker_packets",
+            "result": "PASS" if packet_paths else "FAIL",
+            "details": packet_paths,
+        },
+    ]
+    result = "PASS" if all(check["result"] == "PASS" for check in checks) else "FAIL"
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/quickstart-smoke-result.schema.json",
+        "result_type": "quickstart_smoke_result",
+        "created_at": utc_now(),
+        "result": result,
+        "card": source_card_ref(card_path),
+        "gate_status": gate_report.get("gate_status"),
+        "required_workers": required_workers,
+        "worker_packet_count": len(packet_paths),
+        "worker_packet_dir": source_card_ref(packets_out),
+        "checks": checks,
+        "next_step": "Connect these packets to Hermes only after reviewing required workers and authority limits.",
+    }
+
+
+def doctor_check(check_id: str, status: str, summary: str, detail: dict[str, Any] | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {"id": check_id, "status": status, "summary": summary}
+    if detail:
+        payload["detail"] = detail
+    return payload
+
+
+def build_doctor_report(hermes_home: Path | None = None) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    py_ok = sys.version_info >= (3, 11)
+    checks.append(
+        doctor_check(
+            "python_version",
+            "PASS" if py_ok else "FAIL",
+            f"Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        )
+    )
+
+    pyproject_text = PYPROJECT_PATH.read_text(encoding="utf-8") if PYPROJECT_PATH.exists() else ""
+    metadata_ok = PYPROJECT_PATH.exists() and "name = \"overkill-factory\"" in pyproject_text and "OWNER" not in pyproject_text
+    checks.append(
+        doctor_check(
+            "package_metadata",
+            "PASS" if metadata_ok else "FAIL",
+            "Package metadata is present and public identity is configured." if metadata_ok else "Package metadata is missing or still uses placeholder OWNER.",
+        )
+    )
+
+    required_entrypoints = [
+        "README.md",
+        "docs/index.md",
+        "docs/getting-started/install-in-hermes.md",
+        "docs/reference/cli.md",
+        "examples/minimal-hermes-project/card.md",
+        "agents/hermes-profile-bindings.public.json",
+        "adapters/hermes/transition_hook.py",
+    ]
+    missing = [path for path in required_entrypoints if not (ROOT / path).is_file()]
+    checks.append(
+        doctor_check(
+            "repository_shape",
+            "PASS" if not missing else "FAIL",
+            "Public operator entrypoints are present." if not missing else "Public operator entrypoints are missing.",
+            {"missing": missing},
+        )
+    )
+
+    minimal_detail: dict[str, Any] = {}
+    try:
+        card = load_json_like(DEFAULT_MINIMAL_CARD)
+        errors = validate_card(card)
+        report = build_gate_report(card)
+        minimal_ok = not errors and report.get("gate_status") == "ready_for_worker_execution"
+        minimal_detail = {"validation_errors": errors, "gate_status": report.get("gate_status")}
+    except Exception as exc:  # pragma: no cover - defensive report detail
+        minimal_ok = False
+        minimal_detail = {"error": str(exc)}
+    checks.append(
+        doctor_check(
+            "minimal_example",
+            "PASS" if minimal_ok else "FAIL",
+            "Minimal example validates and reaches ready-for-worker-execution preflight." if minimal_ok else "Minimal example is not runnable.",
+            minimal_detail,
+        )
+    )
+
+    checks.append(
+        doctor_check(
+            "public_cli",
+            "PASS",
+            "Use factoryctl doctor, factoryctl init, and factoryctl run minimal as the public operator path.",
+        )
+    )
+
+    hermes_path = hermes_home
+    hermes_configured = hermes_path is not None and hermes_path.exists()
+    checks.append(
+        doctor_check(
+            "hermes_runtime_optional",
+            "PASS" if hermes_configured else "WARN",
+            (
+                f"Hermes home detected at {hermes_path}."
+                if hermes_configured
+                else "Hermes runtime was not checked. Local factory validation can run before Hermes integration."
+            ),
+        )
+    )
+    checks.append(
+        doctor_check(
+            "hermes_e2e_deferred",
+            "INFO",
+            "Point 5 is intentionally deferred: doctor does not claim a real Hermes E2E harness.",
+        )
+    )
+
+    result = "FAIL" if any(check["status"] == "FAIL" for check in checks) else "PASS"
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-doctor-result.schema.json",
+        "record_type": "factory_doctor_result",
+        "created_at": utc_now(),
+        "result": result,
+        "factory_version": read_project_version(),
+        "checks": checks,
+        "next_step": "Run factoryctl run minimal, then factoryctl init for your project workspace.",
+    }
+
+
+def write_operator_workspace(target: Path, project_name: str, hermes_home: Path | None, force: bool = False) -> None:
+    if target.exists() and any(target.iterdir()) and not force:
+        raise ValueError(f"{target} is not empty; use --force to write into it")
+    target.mkdir(parents=True, exist_ok=True)
+    for rel in ["cards", "worker-packets", "receipts", "worker-results", "reports"]:
+        directory = target / rel
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / ".gitkeep").write_text("", encoding="utf-8")
+
+    card_text = DEFAULT_MINIMAL_CARD.read_text(encoding="utf-8")
+    (target / "cards" / "minimal-card.md").write_text(card_text, encoding="utf-8")
+
+    config = {
+        "$schema": "https://overkill-factory.dev/schemas/operator-workspace.schema.json",
+        "project_name": project_name,
+        "factory_version": read_project_version(),
+        "created_at": utc_now(),
+        "runtime": {
+            "name": "Hermes",
+            "mode": "operator-owned",
+            "hermes_home": str(hermes_home) if hermes_home else "set HERMES_HOME or pass --hermes-home when integrating",
+        },
+        "paths": {
+            "cards": "cards",
+            "worker_packets": "worker-packets",
+            "worker_results": "worker-results",
+            "receipts": "receipts",
+            "reports": "reports",
+        },
+        "next_commands": [
+            "factoryctl doctor",
+            "factoryctl run minimal",
+            "factoryctl gate-report --card cards/minimal-card.md --out reports/minimal-gate-report.json",
+            "factoryctl worker-packet --worker all --required-only --card cards/minimal-card.md --out worker-packets",
+        ],
+    }
+    (target / "overkill.factory.json").write_text(json.dumps(config, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+    readme = f"""# {project_name}
+
+This workspace is ready for an operator-owned Hermes integration with Overkill
+Factory. It contains source cards, worker-packet output folders, receipt folders
+and a small public-safe starter card.
+
+## First Commands
+
+```bash
+factoryctl doctor
+factoryctl run minimal
+factoryctl gate-report --card cards/minimal-card.md --out reports/minimal-gate-report.json
+factoryctl worker-packet --worker all --required-only --card cards/minimal-card.md --out worker-packets
+```
+
+## Connect this workspace to your Hermes
+
+1. Review `overkill.factory.json`.
+2. Install the public Codex skill from `skills/codex/overkill-factory/`.
+3. Apply the Hermes adapter only in a test Hermes checkout first.
+4. Route generated worker packets into Hermes worker cards.
+5. Attach real worker results and Receipt Five before moving cards to `done`.
+
+Point 5 is intentionally deferred in this generated workspace: it does not claim
+that a real Hermes E2E harness has run.
+"""
+    (target / "README.md").write_text(readme, encoding="utf-8")
 
 
 def _non_empty_string_list(value: Any) -> bool:
@@ -2551,9 +2784,62 @@ def command_transition_plan(args: argparse.Namespace) -> int:
     return 1 if action.startswith("block") and args.enforce else 0
 
 
+def command_doctor(args: argparse.Namespace) -> int:
+    report = build_doctor_report(args.hermes_home)
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=True))
+    else:
+        print(f"Overkill Factory doctor: {report['result']}")
+        for check in report["checks"]:
+            print(f"- {check['status']}: {check['id']} - {check['summary']}")
+    return 0 if report["result"] == "PASS" else 1
+
+
+def command_init(args: argparse.Namespace) -> int:
+    try:
+        write_operator_workspace(
+            args.out,
+            project_name=args.project_name,
+            hermes_home=args.hermes_home,
+            force=args.force,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print(f"Initialized Overkill Factory workspace at {args.out}")
+    return 0
+
+
+def command_run_minimal(args: argparse.Namespace) -> int:
+    result = build_minimal_run_result(args.card, args.packets_out)
+    write_json(args.out, result)
+    print(f"{result['result']}: wrote {source_card_ref(args.out)}")
+    return 0 if result["result"] == "PASS" else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Overkill Factory control helper")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    doctor_parser = sub.add_parser("doctor", help="Check local factory install health without claiming Hermes E2E proof.")
+    doctor_parser.add_argument("--json", action="store_true")
+    doctor_parser.add_argument("--hermes-home", type=Path)
+    doctor_parser.set_defaults(func=command_doctor)
+
+    init_parser = sub.add_parser("init", help="Create a Hermes-friendly operator workspace.")
+    init_parser.add_argument("--out", type=Path, required=True)
+    init_parser.add_argument("--project-name", required=True)
+    init_parser.add_argument("--hermes-home", type=Path)
+    init_parser.add_argument("--force", action="store_true")
+    init_parser.set_defaults(func=command_init)
+
+    run_parser = sub.add_parser("run", help="Run public operator workflows.")
+    run_sub = run_parser.add_subparsers(dest="run_command", required=True)
+    minimal_parser = run_sub.add_parser("minimal", help="Run the minimal public factory smoke.")
+    minimal_parser.add_argument("--card", type=Path, default=DEFAULT_MINIMAL_CARD)
+    minimal_parser.add_argument("--out", type=Path, default=DEFAULT_QUICKSTART_OUT)
+    minimal_parser.add_argument("--packets-out", type=Path, default=DEFAULT_PACKETS_OUT)
+    minimal_parser.set_defaults(func=command_run_minimal)
 
     validate_card_parser = sub.add_parser("validate-card")
     validate_card_parser.add_argument("path", type=Path)

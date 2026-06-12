@@ -18,8 +18,9 @@ Scripts provide the public CLI path, validation tools and maintainer checks.
 ## Source Of Truth
 
 `scripts/factoryctl.py`, package entrypoints and tests define the supported
-operator path. Experimental helpers must either graduate into that path or stay
-clearly secondary.
+operator path. `factoryctl doctor`, `factoryctl init` and
+`factoryctl run minimal` are the first commands. Experimental helpers must
+either graduate into that path or stay clearly secondary.
 
 ## How It Is Validated
 
