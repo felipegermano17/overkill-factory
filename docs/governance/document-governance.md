@@ -13,7 +13,9 @@ Use this order when documents disagree:
 
 1. Executable gates: `scripts/factoryctl.py`, schemas, adapter hooks and tests.
 2. Current user path: `README.md`, `docs/getting-started/quickstart-hermes.md`,
-   `docs/concepts/factory-flow.md` and `docs/operations/validation-and-release.md`.
+   `docs/concepts/factory-flow.md`, `docs/concepts/overkill-factory-method.md`,
+   `docs/concepts/operator-journey.md` and
+   `docs/operations/validation-and-release.md`.
 3. Supporting guides: agent, worker, capability, security and Product Face docs.
 4. Machine-readable fixtures under `.tmp/factory-runs/` when a test or script directly
    needs them.

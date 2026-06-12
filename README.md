@@ -136,7 +136,9 @@ When documents disagree, use this order:
 
 1. `scripts/factoryctl.py`, schemas, adapter hooks and tests.
 2. `README.md`, `docs/getting-started/quickstart-hermes.md`,
-   `docs/concepts/factory-flow.md` and
+   `docs/concepts/factory-flow.md`,
+   `docs/concepts/overkill-factory-method.md`,
+   `docs/concepts/operator-journey.md` and
    `docs/operations/validation-and-release.md`.
 3. Agent, worker, capability, security and Product Face support docs.
 4. Generated local outputs under `.tmp/factory-runs/` only for the run that
@@ -152,6 +154,8 @@ adapter rule or receipt contract.
   local/private evidence.
 - `docs/getting-started/quickstart-hermes.md`: first run with your own Hermes.
 - `docs/concepts/factory-flow.md`: core concepts and phase flow.
+- `docs/concepts/overkill-factory-method.md`: human-readable method guide.
+- `docs/concepts/operator-journey.md`: step-by-step operator journey.
 - `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
   evidence.
 - `docs/agents/factory-stage-agent-map.md`: which worker owns each canonical
