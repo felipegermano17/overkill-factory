@@ -124,13 +124,70 @@ class OpenSourceDocsTest(unittest.TestCase):
 
         self.assertIn("Generated worker packets and gate reports belong in `.tmp/`", readme)
 
+    def test_high_noise_public_directories_have_entrypoint_readmes(self) -> None:
+        required_readmes = {
+            "adapters/README.md": ["runtime integrations", "Hermes"],
+            "agents/README.md": ["worker registry", "Hermes bindings"],
+            "docs/README.md": ["human guides", "public onboarding"],
+            "examples/README.md": ["source examples", ".tmp/"],
+            "products/README.md": ["public validation products", "not production approval"],
+            "schemas/README.md": ["machine contracts", "JSON Schema"],
+            "scripts/README.md": ["CLI", "validation"],
+            "skills/README.md": ["Codex skill", "public-safe"],
+            "templates/README.md": ["templates", "schemas"],
+            "tests/README.md": ["regression", "public path"],
+        }
+
+        for rel, expected_phrases in required_readmes.items():
+            with self.subTest(path=rel):
+                path = ROOT / rel
+                self.assertTrue(path.is_file())
+                text = read_text(rel)
+                for heading in [
+                    "## What Belongs Here",
+                    "## What Does Not Belong Here",
+                    "## Source Of Truth",
+                    "## How It Is Validated",
+                ]:
+                    self.assertIn(heading, text)
+                normalized = text.lower()
+                for phrase in expected_phrases:
+                    self.assertIn(phrase.lower(), normalized)
+
+    def test_examples_readme_keeps_generated_outputs_out_of_repo(self) -> None:
+        examples = read_text("examples/README.md")
+
+        self.assertIn("Generated worker packets and gate reports belong in `.tmp/`", examples)
+        self.assertIn("Do not commit generated run output", examples)
+        self.assertIn("examples/minimal-hermes-project/", examples)
+
+    def test_products_readme_sets_public_validation_boundary(self) -> None:
+        products = read_text("products/README.md")
+
+        self.assertIn("public validation products", products)
+        self.assertIn("not production approval", products)
+        self.assertIn("No private product material", products)
+
     def test_public_codex_skill_covers_open_source_stewardship(self) -> None:
         skill = read_text("skills/codex/overkill-factory/SKILL.md")
         open_source_ref = ROOT / "skills" / "codex" / "overkill-factory" / "references" / "open-source-github.md"
+        documentation_ref = (
+            ROOT
+            / "skills"
+            / "codex"
+            / "overkill-factory"
+            / "references"
+            / "documentation-standard.md"
+        )
 
         self.assertTrue(open_source_ref.is_file())
+        self.assertTrue(documentation_ref.is_file())
         self.assertIn("professional open-source GitHub stewardship", skill)
+        self.assertIn("Product Experience OS/Product Face", skill)
+        self.assertIn("Use this vFinal sequence", skill)
         self.assertIn("references/open-source-github.md", skill)
+        self.assertIn("references/documentation-standard.md", skill)
+        self.assertIn("Every public folder needs a burden-of-proof decision", skill)
 
     def test_agent_public_doc_covers_every_registered_worker(self) -> None:
         registry = json.loads(read_text("agents/worker-registry.public.json"))
