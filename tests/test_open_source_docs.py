@@ -100,7 +100,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "CONTRIBUTING.md",
             "SECURITY.md",
             ".github/dependabot.yml",
-            ".github/README.md",
+            ".github/PROJECT_SURFACE.md",
             ".github/workflows/codeql.yml",
             ".github/workflows/dependency-review.yml",
             ".github/workflows/security.yml",
@@ -150,10 +150,10 @@ class OpenSourceDocsTest(unittest.TestCase):
 
         self.assertIn("Generated worker packets and gate reports belong in `.tmp/`", readme)
 
-    def test_high_noise_public_directories_have_entrypoint_readmes(self) -> None:
-        required_readmes = {
+    def test_high_noise_public_directories_have_entrypoint_guides(self) -> None:
+        required_entrypoints = {
             "adapters/README.md": ["runtime integrations", "Hermes"],
-            ".github/README.md": ["GitHub project surface", "Dependabot"],
+            ".github/PROJECT_SURFACE.md": ["GitHub project surface", "Dependabot"],
             "agents/README.md": ["worker registry", "Hermes bindings"],
             "docs/README.md": ["human guides", "public onboarding"],
             "examples/README.md": ["source examples", ".tmp/"],
@@ -165,7 +165,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "tests/README.md": ["regression", "public path"],
         }
 
-        for rel, expected_phrases in required_readmes.items():
+        for rel, expected_phrases in required_entrypoints.items():
             with self.subTest(path=rel):
                 path = ROOT / rel
                 self.assertTrue(path.is_file())

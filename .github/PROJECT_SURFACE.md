@@ -4,6 +4,8 @@
 > Current authority: README.md, pyproject.toml, .github/workflows/, tests/
 > Runtime boundary: GitHub automation protects the public repository. Hermes
 > remains the runtime source of truth for real factory cards.
+> Naming note: this guide is intentionally not named README.md so GitHub keeps
+> the repository overview anchored to the product README at the repository root.
 
 ## What Belongs Here
 
