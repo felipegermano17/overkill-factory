@@ -48,7 +48,7 @@ Use the repo-level helper:
 python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md
 python scripts/factoryctl.py validate-receipt examples/receipts/v35_valid_completion_metadata.json
 python scripts/factoryctl.py gate-report --card examples/cards/v35_valid_onchain_auditor_scan.md
-python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out examples/worker-packets/onchain-card
+python scripts/factoryctl.py worker-packet --worker all --card examples/cards/v35_valid_onchain_auditor_scan.md --out .tmp/worker-packets/onchain-card
 python scripts/validate_worker_profiles.py
 python scripts/factoryctl.py evidence-record --worker codex-security --card examples/cards/v35_valid_security_with_scan.md --result PASS --tool codex-security:security-scan --actor security-runner --evidence-ref reports/security-scan.md
 python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_onchain_auditor_scan.md --decision approved --human-actor product-owner --evidence-ref decisions/r3-human-approval.md
@@ -118,6 +118,9 @@ This is separate from the gate report:
 
 This avoids a common agent error: treating `requires_execution` in a preflight
 gate report as either proof of failure or proof of completion.
+
+Generated worker packets and gate reports are local run outputs. Keep them in
+`.tmp/` or a private evidence store, not under `examples/`.
 
 ## Hermes V2/V3.5 Completion Metadata
 

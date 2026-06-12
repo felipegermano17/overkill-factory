@@ -1,6 +1,6 @@
 ---
 name: overkill-factory
-description: Operate the Overkill Factory product-production line. Use when turning raw product papers into Product SOT, architecture, Product Face, security/onchain review, Hermes Kanban cards, agent execution, Receipt Five evidence, human gates, pilots, or Factory VNext methodology updates.
+description: Operate the Overkill Factory product-production line. Use when turning raw product papers into Product SOT, architecture, Product Face, security/onchain review, Hermes Kanban cards, agent execution, Receipt Five evidence, human gates, pilots, Factory VNext methodology updates, or professional open-source GitHub stewardship for the public factory repository.
 ---
 
 # Overkill Factory
@@ -21,6 +21,9 @@ different runtime.
    recapturing browser or social content.
 6. Do not put raw study extraction, screenshots, private ledgers, local paths,
    private links or internal product names into the public factory repository.
+7. If the work touches the public GitHub repository, treat GitHub as a product
+   surface for an external operator with their own Hermes, not as an archive of
+   this workspace.
 
 ## Factory Spine
 
@@ -73,6 +76,9 @@ Block or revise cards when:
 - Done lacks Receipt Five and transition-event metadata.
 - Public artifacts contain private paths, internal names, raw source extraction
   or private workspace links.
+- The public repository contains partial manual mirrors of generated contracts,
+  historical evidence dumps, or folders that cannot justify their public
+  purpose, first-use path, source of truth and validation coverage.
 - Hermes updates have not passed compatibility manifest, update runbook,
   disposable smoke and rollback planning.
 
@@ -84,6 +90,9 @@ Load only what is needed:
 - `references/hermes-adapter.md` for Hermes/Kanban coupling and patch status.
 - `references/card-contract.md` for card and Receipt Five field rules.
 - `references/automation.md` for critical worker packets and `factoryctl.py`.
+- `references/open-source-github.md` when assessing or changing the public
+  GitHub repository, README, folder architecture, onboarding, examples, CI,
+  release hygiene, public safety, or comparisons with other open-source repos.
 - `agents/worker-profiles.public.json` and
   `agents/hermes-profile-bindings.public.json` before changing worker profiles
   or dispatch behavior.
@@ -128,6 +137,14 @@ running on the Hermes adapter.
   insufficient and must include TTL, cost, cleanup and artifact evidence.
 - Worker packets must not leak local absolute paths. Repo-local source cards use
   relative paths; external/private cards use redacted `external:<name>` refs.
+- Public GitHub work has a product bar: a newcomer must understand what the
+  project is, install or run a first-value path, know which folders matter, and
+  avoid private/internal context without needing this chat.
+- Every public folder needs a burden-of-proof decision: keep, merge, relocate,
+  generate, privatize, or delete. Do not preserve folders because they once
+  helped internal validation.
+- Do not add hand-written partial worker or contract guides. Summaries must
+  either cover the full public source of truth or be generated from it.
 - Worker packets must carry `profile_binding` so Hermes can dispatch to a real
   profile with skill refs, result schema and evidence policy.
 - Do not treat a worker name as an agent configuration. Agent configuration
