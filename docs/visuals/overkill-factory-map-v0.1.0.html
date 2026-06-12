@@ -1,0 +1,1875 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overkill Factory</title>
+<style>
+  :root {
+    --bg: #151514;
+    --surface: #20201e;
+    --surface-2: #2b2a27;
+    --ink: #fbf7ec;
+    --body: #d7d0c2;
+    --muted: #9b958b;
+    --line: #454139;
+    --line-soft: #302d28;
+    --truth: #74aaa3;
+    --truth-soft: rgba(116, 170, 163, 0.18);
+    --method: #a89bdb;
+    --method-soft: rgba(168, 155, 219, 0.17);
+    --risk: #e19b63;
+    --risk-soft: rgba(225, 155, 99, 0.18);
+    --exec: #79a9d4;
+    --exec-soft: rgba(121, 169, 212, 0.17);
+    --ops: #a4be77;
+    --ops-soft: rgba(164, 190, 119, 0.18);
+    --warn: #e17c73;
+    --warn-soft: rgba(225, 124, 115, 0.18);
+    --gold: #d0a956;
+    --shadow: rgba(0, 0, 0, 0.28);
+    --active: var(--truth);
+    --stage-progress: 3%;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --serif: ui-serif, Georgia, "Times New Roman", serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    min-height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--body);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line-soft);
+    background: color-mix(in srgb, var(--bg) 88%, var(--surface));
+    position: relative;
+    z-index: 20;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--surface) 68%, transparent);
+    overflow: hidden;
+  }
+
+  .topbar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: var(--stage-progress);
+    height: 2px;
+    background: linear-gradient(90deg, var(--truth), var(--method), var(--risk), var(--exec), var(--ops));
+    transition: width .24s ease;
+  }
+
+  .brand {
+    min-width: 0;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  h1 {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 560;
+    line-height: 1.1;
+    letter-spacing: 0;
+  }
+
+  .version-badge,
+  .step-control {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11.2px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .version-badge {
+    padding: 0 8px;
+    color: var(--ink);
+  }
+
+  .step-control {
+    gap: 5px;
+    padding: 0 7px;
+  }
+
+  .step-btn {
+    width: 22px;
+    height: 20px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid var(--line-soft);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1;
+    box-shadow: inset 0 -1px 0 var(--line-soft);
+  }
+
+  .step-btn:hover {
+    border-color: var(--muted);
+    background: color-mix(in srgb, var(--surface) 72%, var(--active));
+  }
+
+  .stage-state {
+    max-width: 170px;
+    overflow: hidden;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chips::-webkit-scrollbar { display: none; }
+
+  button {
+    font: inherit;
+  }
+
+  .chip {
+    min-height: 30px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11.8px;
+    letter-spacing: 0.02em;
+    padding: 6px 9px;
+    flex: 0 0 auto;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+
+  .chip:hover {
+    color: var(--ink);
+    border-color: var(--muted);
+  }
+
+  .step-btn:focus-visible,
+  .chip:focus-visible,
+  .node:focus-visible {
+    outline: 2px solid var(--active);
+    outline-offset: 2px;
+  }
+
+  .chip.on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--active) 22%, transparent);
+  }
+
+  .stage {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .map-scroll {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  svg#map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .zone rect {
+    fill: var(--zone-fill);
+    stroke: color-mix(in srgb, var(--line) 82%, transparent);
+    stroke-width: 1.25;
+    stroke-dasharray: 1 8;
+    stroke-linecap: round;
+    rx: 18;
+    transition: stroke .2s ease, fill .2s ease, opacity .2s ease;
+  }
+
+  .zone text {
+    font-family: var(--mono);
+    fill: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .zone .ztitle { font-size: 13.6px; font-weight: 700; }
+  .zone .zsub { font-size: 11.3px; opacity: .82; }
+
+  .node {
+    cursor: pointer;
+    transition: opacity .18s ease, filter .18s ease, transform .18s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .node rect {
+    fill: var(--surface);
+    stroke: var(--line);
+    stroke-width: 1.4;
+    rx: 8;
+    transition: stroke .14s ease, fill .14s ease, filter .14s ease;
+  }
+
+  .node .n {
+    fill: var(--muted);
+    font-family: var(--mono);
+    font-size: 10.6px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .node .t {
+    fill: var(--ink);
+    font-family: var(--sans);
+    font-size: 14.1px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .node .m {
+    fill: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    pointer-events: none;
+  }
+
+  .node:hover rect,
+  .node:focus-visible rect,
+  .node.sel rect {
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
+
+  .node.truth rect { fill: var(--truth-soft); stroke: var(--truth); }
+  .node.method rect { fill: var(--method-soft); stroke: var(--method); }
+  .node.risk rect { fill: var(--risk-soft); stroke: var(--risk); }
+  .node.exec rect { fill: var(--exec-soft); stroke: var(--exec); }
+  .node.ops rect { fill: var(--ops-soft); stroke: var(--ops); }
+  .node.bridge rect { fill: var(--warn-soft); stroke: var(--warn); }
+  .node.gate rect { stroke-width: 2; }
+  .node.warn rect { stroke: var(--warn); }
+
+  .edge {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.45;
+    stroke-dasharray: 1.2 8;
+    stroke-linecap: round;
+    opacity: .18;
+    marker-end: url(#arrow-muted);
+    transition: opacity .2s ease, stroke .2s ease, stroke-width .2s ease;
+  }
+
+  .edge.flow-edge {
+    opacity: .10;
+    stroke-dasharray: 1 11;
+  }
+
+  .edge.jump-edge {
+    stroke: color-mix(in srgb, var(--warn) 72%, var(--muted));
+    opacity: .22;
+    stroke-dasharray: 4 8;
+    marker-end: url(#arrow-warn);
+  }
+
+  .map.guided .edge { opacity: .035; }
+  .map.guided .node { opacity: .18; filter: saturate(.72); }
+  .map.guided .zone { opacity: .46; }
+  .map.guided .zone.active-zone { opacity: .95; }
+  .map.guided .zone.active-zone rect {
+    stroke: color-mix(in srgb, var(--active) 72%, var(--line));
+    stroke-width: 1.8;
+    fill: color-mix(in srgb, var(--zone-fill) 80%, var(--surface));
+  }
+  .map.guided .node.lit { opacity: .38; }
+  .map.guided .node.context { opacity: .62; }
+  .map.guided .node.focused {
+    opacity: 1;
+    filter: saturate(1);
+    transform: translateY(-2px);
+  }
+  .map.guided .node.focused rect {
+    stroke: var(--active);
+    stroke-width: 2.6;
+    filter: drop-shadow(0 9px 18px var(--shadow));
+    animation: focusPulse 1.8s ease-in-out infinite;
+  }
+  .map.guided .node.context rect {
+    stroke-width: 2;
+    filter: drop-shadow(0 4px 10px var(--shadow));
+  }
+  .map.guided .edge.lit {
+    opacity: .12;
+    stroke: color-mix(in srgb, var(--active) 58%, var(--muted));
+    marker-end: url(#arrow-muted);
+  }
+  .map.guided .edge.flow-edge.lit { opacity: .085; }
+  .map.guided .edge.jump-edge.lit { opacity: .10; }
+  .map.guided .edge.active {
+    opacity: .92;
+    stroke: var(--active);
+    stroke-width: 2.6;
+    stroke-dasharray: 7 7;
+    animation: dashFlow .8s linear infinite;
+    marker-end: url(#arrow-ink);
+  }
+  .map.guided .edge.flow-edge.active,
+  .map.guided .edge.jump-edge.active { opacity: .74; }
+
+  @keyframes dashFlow {
+    to { stroke-dashoffset: -14; }
+  }
+
+  @keyframes focusPulse {
+    0%, 100% { filter: drop-shadow(0 7px 14px color-mix(in srgb, var(--active) 22%, transparent)); }
+    50% { filter: drop-shadow(0 12px 24px color-mix(in srgb, var(--active) 36%, transparent)); }
+  }
+
+  .panel, .flowcard {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 12px 34px var(--shadow);
+  }
+
+  .panel {
+    right: 18px;
+    bottom: auto;
+    top: 76px;
+    width: min(540px, calc(100vw - 36px));
+    max-height: calc(100vh - 142px);
+    padding: 18px 19px 17px;
+    overflow: auto;
+    z-index: 10;
+    transition: left .2s ease, right .2s ease, transform .2s ease, box-shadow .2s ease;
+  }
+
+  .panel::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    background: var(--active);
+    border-radius: 8px 8px 0 0;
+  }
+
+  .panel.alt {
+    left: 18px;
+    right: auto;
+  }
+
+  .panel h2 {
+    margin: 0 0 4px;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 560;
+    line-height: 1.16;
+    letter-spacing: 0;
+  }
+
+  .meta {
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11.2px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .panel p {
+    margin: 0 0 12px;
+    font-size: 15.1px;
+    line-height: 1.5;
+  }
+
+  .detail-copy {
+    overflow: visible;
+    padding-right: 4px;
+  }
+
+  .detail-section {
+    border-top: 1px solid var(--line-soft);
+    padding-top: 10px;
+    margin-top: 10px;
+  }
+
+  .detail-section.quick {
+    border-top: 0;
+    margin-top: 0;
+    padding: 10px 11px 11px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--active) 8%, var(--surface-2));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--active) 24%, transparent);
+  }
+
+  .detail-section.decision {
+    padding: 9px 11px 10px;
+    border-radius: 7px;
+    background: var(--surface-2);
+  }
+
+  .detail-label {
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 11.1px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .detail-section ul {
+    margin: 0;
+    padding-left: 17px;
+  }
+
+  .detail-section li {
+    margin: 5px 0;
+    font-size: 14.2px;
+    line-height: 1.43;
+  }
+
+  .detail-foot {
+    margin-top: 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11.3px;
+    line-height: 1.45;
+  }
+
+  .panel .out {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .pill {
+    border: 1px solid var(--line-soft);
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--body);
+    font-family: var(--mono);
+    font-size: 12.8px;
+    line-height: 1.38;
+    padding: 8px 10px;
+  }
+
+  .flowcard {
+    left: 18px;
+    bottom: 18px;
+    width: min(580px, calc(100vw - 36px));
+    max-height: min(360px, calc(100vh - 180px));
+    overflow: auto;
+    display: none;
+    padding: 14px 16px;
+    z-index: 8;
+    transition: left .2s ease, right .2s ease, opacity .16s ease, transform .16s ease;
+  }
+
+  .flowcard.show { display: block; }
+  .flowcard.alt {
+    left: auto;
+    right: 18px;
+  }
+  .flowcard h3 {
+    margin: 0 0 8px;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 11.8px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .flowcard ol {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .flowcard li {
+    margin: 5px 0;
+    font-size: 13.6px;
+    line-height: 1.42;
+  }
+
+  .flowcard.catalog {
+    width: min(760px, calc(100vw - 620px));
+    max-height: min(620px, calc(100vh - 128px));
+  }
+
+  .flow-extra {
+    margin-top: 12px;
+  }
+
+  .catalog-note {
+    margin: 10px 0 12px;
+    padding: 10px 11px;
+    border: 1px solid var(--line-soft);
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--active) 8%, var(--surface-2));
+    color: var(--body);
+    font-size: 13.5px;
+    line-height: 1.46;
+  }
+
+  .catalog-warning {
+    margin: 10px 0 12px;
+    padding: 10px 11px;
+    border: 1px solid color-mix(in srgb, var(--warn) 62%, var(--line));
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--warn) 12%, var(--surface-2));
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.42;
+  }
+
+  .catalog-group {
+    margin-top: 13px;
+    padding-top: 11px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .catalog-heading {
+    margin-bottom: 8px;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 11.2px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .catalog-item {
+    min-width: 0;
+    border: 1px solid var(--line-soft);
+    border-radius: 7px;
+    background: var(--surface-2);
+    padding: 9px 10px;
+  }
+
+  .catalog-id {
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 11.6px;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .catalog-text {
+    margin-top: 4px;
+    color: var(--body);
+    font-size: 13px;
+    line-height: 1.42;
+  }
+
+  .risk-card .catalog-id {
+    font-size: 12.6px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (min-width: 1600px) {
+    .chips {
+      justify-content: flex-end;
+    }
+
+    svg#map {
+      width: calc(100% - 500px);
+    }
+  }
+
+  @media (min-width: 961px) and (max-width: 1180px) {
+    .catalog-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .map.guided .edge.active,
+    .map.guided .node.focused rect {
+      animation: none;
+    }
+    .topbar::after,
+    .node,
+    .edge,
+    .panel,
+    .flowcard {
+      transition: none;
+    }
+  }
+
+  code {
+    font-family: var(--mono);
+    color: var(--ink);
+  }
+
+  .map-scroll::-webkit-scrollbar,
+  .flowcard::-webkit-scrollbar,
+  .panel::-webkit-scrollbar,
+  .detail-copy::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .map-scroll::-webkit-scrollbar-track,
+  .flowcard::-webkit-scrollbar-track,
+  .panel::-webkit-scrollbar-track,
+  .detail-copy::-webkit-scrollbar-track {
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+  }
+
+  .map-scroll::-webkit-scrollbar-thumb,
+  .flowcard::-webkit-scrollbar-thumb,
+  .panel::-webkit-scrollbar-thumb,
+  .detail-copy::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--muted) 58%, transparent);
+    border: 2px solid var(--surface);
+    border-radius: 999px;
+  }
+
+  @media (max-width: 960px) {
+    body {
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .shell {
+      min-height: 100%;
+      height: auto;
+      min-width: 0;
+      overflow-x: hidden;
+    }
+    .topbar {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 14px 10px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      width: 100%;
+      max-width: 100vw;
+      min-width: 0;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .brand {
+      min-width: 0;
+      max-width: 100%;
+      flex-wrap: wrap;
+    }
+    .version-badge,
+    .step-control {
+      min-height: 28px;
+      font-size: 10.8px;
+    }
+    .step-control {
+      gap: 4px;
+      padding: 0 5px;
+    }
+    .step-btn {
+      width: 24px;
+      height: 22px;
+      min-width: 0;
+      padding: 3px 4px;
+      font-size: 11px;
+    }
+    .stage-state {
+      max-width: 148px;
+    }
+    h1 { font-size: 22px; }
+    .chips {
+      align-self: stretch;
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      gap: 7px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto;
+      min-height: 34px;
+      padding: 7px 12px;
+      font-size: 12px;
+    }
+    .stage {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      padding-bottom: 18px;
+      width: 100%;
+      max-width: 100vw;
+    }
+    .map-scroll {
+      position: relative;
+      inset: auto;
+      order: 1;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      height: 700px;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    svg#map {
+      position: relative;
+      inset: auto;
+      width: 1120px;
+      max-width: none;
+      height: 718px;
+      margin-top: -12px;
+    }
+    .flowcard, .panel {
+      position: relative;
+      left: auto;
+      right: auto;
+      top: auto;
+      bottom: auto;
+      width: auto;
+      max-height: none;
+      overflow: visible;
+      margin: 12px 14px;
+    }
+    .flowcard { order: 2; }
+    .flowcard.catalog {
+      width: auto;
+      max-height: none;
+    }
+    .catalog-grid {
+      grid-template-columns: 1fr;
+    }
+    .panel {
+      order: 3;
+      max-width: calc(100vw - 28px);
+    }
+    .panel.alt { left: auto; right: auto; top: auto; }
+    .flowcard.alt { left: auto; right: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Overkill Factory</h1>
+      <span class="version-badge">v0.1.0</span>
+      <span class="step-control" aria-label="Navegação por etapas">
+        <button class="step-btn" id="prevStage" type="button" title="Etapa anterior" aria-label="Etapa anterior" aria-keyshortcuts="ArrowLeft ArrowUp">←</button>
+        <button class="step-btn" id="nextStage" type="button" title="Próxima etapa" aria-label="Próxima etapa" aria-keyshortcuts="ArrowRight ArrowDown">→</button>
+        <span class="stage-state" id="stageState" aria-live="polite">01/33 · Entrada</span>
+      </span>
+    </div>
+    <nav class="chips" id="chips" aria-label="Visões do mapa">
+      <button class="chip on" data-flow="all" aria-pressed="true">Mapa</button>
+      <button class="chip" data-flow="truth" aria-pressed="false">Fontes</button>
+      <button class="chip" data-flow="method" aria-pressed="false">Método</button>
+      <button class="chip" data-flow="risk" aria-pressed="false">Risco</button>
+      <button class="chip" data-flow="execution" aria-pressed="false">Execução</button>
+      <button class="chip" data-flow="ops" aria-pressed="false">Operação</button>
+      <button class="chip" data-flow="gates" aria-pressed="false">Gates</button>
+      <button class="chip" data-flow="risklevels" aria-pressed="false">R0-R4</button>
+      <button class="chip" data-flow="agents" aria-pressed="false">Agentes</button>
+      <button class="chip" data-flow="journeys" aria-pressed="false">Jornadas</button>
+      <button class="chip" data-flow="done" aria-pressed="false">Pronto</button>
+    </nav>
+  </header>
+
+  <main class="stage" id="stage">
+    <p class="sr-only" id="mapHint">Use Tab para entrar nos controles, Enter ou Espaço para escolher uma visão, e as setas do teclado para navegar pelas etapas do mapa.</p>
+    <div class="map-scroll">
+    <svg id="map" class="map" viewBox="0 65 1640 1035" preserveAspectRatio="xMinYMin meet" role="img" aria-labelledby="mapTitle" aria-describedby="mapHint">
+      <title id="mapTitle">Mapa visual da Overkill Factory</title>
+      <defs>
+        <marker id="arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path class="marker-muted" d="M0,0 L10,5 L0,10 z"></path>
+        </marker>
+        <marker id="arrow-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path class="marker-ink" d="M0,0 L10,5 L0,10 z"></path>
+        </marker>
+        <marker id="arrow-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path class="marker-warn" d="M0,0 L10,5 L0,10 z"></path>
+        </marker>
+      </defs>
+      <style>
+        .marker-muted { fill: var(--muted); }
+        .marker-ink { fill: var(--active); }
+        .marker-warn { fill: var(--warn); }
+      </style>
+      <g id="zones"></g>
+      <g id="edges"></g>
+      <g id="nodes"></g>
+    </svg>
+    </div>
+
+    <section class="flowcard" id="flowcard" aria-live="polite" role="region" aria-labelledby="flowTitle">
+      <h3 id="flowTitle">Fluxo</h3>
+      <ol id="flowSteps"></ol>
+      <div id="flowExtra"></div>
+    </section>
+
+    <section class="panel" id="detail" aria-live="polite" role="region" aria-labelledby="dTitle">
+      <h2 id="dTitle">Entrada do Pedido</h2>
+      <div class="meta" id="dMeta">mapa de entendimento</div>
+      <div class="detail-copy" id="dBody">A primeira etapa classifica o pedido antes de qualquer execução.</div>
+      <div class="out" id="dOut">
+        <div class="pill">Fonte nomeada</div>
+        <div class="pill">Escopo inicial</div>
+        <div class="pill">Continuar ou bloquear</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const NODE_H = 84;
+const NODE_Y_NUDGE = 12;
+
+const ZONES = [
+  { key: "truth", label: "1. Verdade", sub: "fonte -> outcome -> Product SOT", y: 86, h: 176, fill: "var(--truth-soft)" },
+  { key: "method", label: "2. Método e planos", sub: "router -> contratos -> planos", y: 294, h: 176, fill: "var(--method-soft)" },
+  { key: "risk", label: "3. Risco e autoridade", sub: "risk tier -> readiness -> humano", y: 502, h: 176, fill: "var(--risk-soft)" },
+  { key: "exec", label: "4. Execução e prova", sub: "Hermes -> agentes -> evidência", y: 710, h: 176, fill: "var(--exec-soft)" },
+  { key: "ops", label: "5. Operação e maturidade", sub: "release -> monitoramento -> learnback", y: 918, h: 176, fill: "var(--ops-soft)" }
+];
+
+const STAGES = [
+  { id: "intake", n: "01", layer: "truth", x: 96, y: 158, w: 138, title: "Entrada do Pedido", mini: "entrada classificada", body: "Recebe paper, bug, repo, incidente, release, doc ou auditoria e decide se existe fonte mínima para avançar.", output: ["Tipo de entrada", "Escopo inicial", "Continuar, pedir fonte ou bloquear"] },
+  { id: "ledger", n: "02", layer: "truth", x: 252, y: 158, w: 150, title: "Registro de Fontes", mini: "origem rastreável", body: "Transforma documento, repo, conversa, log, print, board, teste e runtime em fontes nomeadas, com força e limite claros.", output: ["Fontes fortes e fracas", "Conflitos", "Lacunas"] },
+  { id: "resolution", n: "03", layer: "truth", x: 420, y: 158, w: 160, title: "Resolução das Fontes", mini: "fato vs inferência", body: "Resolve conflito entre fontes e impede que desejo, resumo ou inferência virem fato. O que não fecha vira pergunta humana.", output: ["Notas de resolução", "Lacunas abertas", "Perguntas humanas"] },
+  { id: "outcome", n: "04", layer: "truth", x: 598, y: 158, w: 176, title: "Resultado e Descoberta", mini: "valor antes do plano", body: "Define usuário, problema real, comportamento esperado, métrica de sucesso e profundidade de discovery proporcional ao risco.", output: ["Outcome Contract", "Assumption Ledger", "Discovery Brief"] },
+  { id: "sot", n: "05", layer: "truth", x: 792, y: 158, w: 144, title: "SOT do Produto", mini: "verdade oficial", body: "Consolida escopo, limites, riscos, autoridade, dados, dependências, operação e critérios de sucesso antes dos packs e gates.", output: ["Product SOT", "Limites do produto", "Critérios de sucesso"] },
+
+  { id: "router", n: "06", layer: "method", x: 96, y: 366, w: 162, title: "Roteador de Método", mini: "rigor proporcional", body: "Escolhe a rota certa: discovery, PRD, TRD, DDD, BDD, TDD, diagnóstico, protótipo, evals, segurança, prova remota, humano ou bloqueio.", output: ["Método escolhido", "Rotas especiais", "O que foi dispensado"] },
+  { id: "contract", n: "07", layer: "method", x: 276, y: 366, w: 152, title: "Contrato de Método", mini: "contrato de trabalho", body: "Registra artefatos exigidos, gates, agentes, revisores, autoridade, provas e critério de pronto. Sem contrato, execução vira palpite.", output: ["Artefatos obrigatórios", "Gates bloqueantes", "Agentes e revisores"] },
+  { id: "packs", n: "08", layer: "method", x: 446, y: 366, w: 172, title: "Packs de Produto", mini: "domínio e superfície", body: "Seleciona Product Pack e Surface Pack para web, mobile, CLI, docs, onboarding, dashboard ou interface agentica.", output: ["Packs selecionados", "Agentes específicos", "Evidências por superfície"] },
+  { id: "securityplan", n: "10", layer: "method", x: 636, y: 366, w: 168, title: "Arquitetura de Segurança", mini: "risco antes de código", body: "Quando há login, permissão, fundos, produção, cloud, usuário real ou superfície pública, define fronteiras, segredos, abuso esperado e mitigação.", output: ["Security Architecture Plan", "Modelo de permissões", "Casos de abuso"] },
+  { id: "devplan", n: "11", layer: "method", x: 822, y: 366, w: 174, title: "Plano de Desenvolvimento", mini: "execução legível", body: "Converte método em PRD/TRD, mapa de domínio, exemplos de aceitação, story, plano de teste, migração, release e comandos de verificação.", output: ["Plano de desenvolvimento", "Testes esperados", "Critérios técnicos"] },
+  { id: "experience", n: "12", layer: "method", x: 1014, y: 366, w: 174, title: "Plano de Experiência", mini: "produto visível", body: "Para superfícies de produto, exige fluxos, estados vazios, loading, erros, acessibilidade, onboarding, pacote Product Face e prova visual.", output: ["SOT de experiência", "Pacote Product Face", "Prova por superfície"] },
+  { id: "dataeval", n: "13-14", layer: "method", x: 1206, y: 366, w: 190, title: "Dados e Evals", mini: "valor e agente medidos", body: "Define métricas, eventos, dashboards, logs e alertas. Quando agente, skill, prompt ou modelo entram, cria evals e regressões.", output: ["Contrato de métricas", "Suite de evals", "Scorecard de comportamento"] },
+  { id: "specgraph", n: "15", layer: "method", x: 1414, y: 366, w: 138, title: "Grafo de Especificação", mini: "requisito vira prova", body: "Liga outcome, requisitos, exemplos, decisões, riscos, dependências, acessos, gates, agentes e provas.", output: ["Mapa requisito -> prova", "Gates por requisito", "Trilha de decisão"] },
+
+  { id: "riskgates", n: "09", layer: "risk", x: 96, y: 574, w: 190, title: "Gates de Risco", mini: "autoridade e limites", body: "Confirma tier, dono, autoridade, dependências, acesso, compliance, budget e se revisão, segurança ou humano são obrigatórios.", output: ["Tier de risco", "Donos", "Limites e bloqueios"], gate: true },
+  { id: "loop", n: "16", layer: "risk", x: 304, y: 574, w: 148, title: "Plano de Loops", mini: "lanes controladas", body: "Define lanes, ordem, agentes, timeouts, budget, evidências, parada, bloqueio e isolamento quando houver paralelismo.", output: ["Lanes de agentes", "Dependências entre trabalhos", "Critérios de bloqueio"] },
+  { id: "autonomy", n: "17", layer: "risk", x: 470, y: 574, w: 188, title: "Prontidão de Autonomia", mini: "acesso antes da ação", body: "Checa GitHub, cloud, billing, banco, storage, domínios, APIs, secrets, runtime, observabilidade, donos e canal humano.", output: ["Acessos concedidos", "Acessos pendentes", "Bloqueios de execução"], gate: true },
+  { id: "ready", n: "18", layer: "risk", x: 676, y: 574, w: 128, title: "Gate de Prontidão", mini: "pode executar?", body: "Confere fontes, outcome, SOT, contrato, packs, risco, dependências, budget, agentes, critério de pronto e plano de evidência.", output: ["Execução liberada", "Bloqueado com motivo", "Lista de correção"], gate: true },
+  { id: "controltower", n: "19", layer: "risk", x: 822, y: 574, w: 198, title: "Projeção da Control Tower", mini: "estado visível", body: "Mostra fase atual, bloqueios, acessos, aprovações, confiança da previsão, riscos e evidências. Discord pode ser cockpit; Hermes segue como fonte da verdade.", output: ["Projeção do trabalho", "Caixa de aprovações", "Registro no Hermes"], bridge: true, gate: true },
+  { id: "humangate", n: "24", layer: "risk", x: 1038, y: 574, w: 150, title: "Gate Humano", mini: "decisão material", body: "Obrigatório para produção, signing, fundos, custody, mainnet, release R4, waiver bloqueante, custo material, risco legal ou acesso material ausente.", output: ["Aprovado", "Rejeitado", "Pedir ajuste", "Bloqueado"], gate: true },
+
+  { id: "runtime", n: "20", layer: "exec", x: 96, y: 782, w: 142, title: "Runtime Hermes", mini: "chão de fábrica", body: "Hermes é o adaptador de referência: quadros, tasks, dependências, lanes, worktrees, comentários, eventos, bloqueios, conclusões e referências de evidência.", output: ["Trabalho instanciado", "Agentes em execução", "Eventos registrados"] },
+  { id: "workerresult", n: "21", layer: "exec", x: 250, y: 782, w: 142, title: "Resultado do Agente", mini: "feito com prova", body: "Cada agente devolve status, escopo recebido, mudança feita, evidência, risco restante e se precisa de outro agente ou humano.", output: ["Resultado estruturado", "Refs de evidência", "Achados e bloqueios"] },
+  { id: "verification", n: "22", layer: "exec", x: 404, y: 782, w: 126, title: "Verificação", mini: "prova técnica", body: "Roda testes, lint, build, browser, capturas, scans, auditoria, evals, logs, smoke de release e evidência de monitoramento.", output: ["Resultado de verificação", "Logs e capturas", "Prova remota quando usada"], gate: true },
+  { id: "review", n: "23", layer: "exec", x: 542, y: 782, w: 142, title: "Revisão Independente", mini: "executor não aprova", body: "Código relevante, R2+, R3/R4, superfície sensível, release material e mudança em agente/skill exigem revisão separada.", output: ["Resultado de revisão", "Achados", "Waiver se permitido"], gate: true },
+  { id: "closure", n: "25", layer: "exec", x: 696, y: 782, w: 132, title: "Resumo de Fechamento", mini: "fechamento legível", body: "Resume pedido, entrega, provas, riscos restantes, waivers, escopo aprovado, escopo proibido e próximo passo, sem inventar prova ausente.", output: ["Resumo", "Ponteiros de evidência", "Risco residual"] },
+  { id: "receipt", n: "26", layer: "exec", x: 840, y: 782, w: 118, title: "Receipt Five", mini: "pronto em 5 respostas", body: "Fecha o trabalho respondendo o que mudou, onde está, como foi verificado, quem revisou e qual é o próximo passo.", output: ["O que mudou", "Onde está", "Como foi verificado", "Quem revisou", "Próximo passo"], gate: true },
+  { id: "completion", n: "27", layer: "exec", x: 970, y: 782, w: 142, title: "Auditoria de Conclusão", mini: "exigido vs entregue", body: "Compara contrato, gates, agentes, provas, revisões, gates humanos, pacote de prontidão, segurança, release e Receipt Five.", output: ["Passou ou falhou", "Lacunas", "Liberar, corrigir ou bloquear"], gate: true },
+
+  { id: "prodops", n: "28", layer: "ops", x: 96, y: 990, w: 142, title: "Operação de Produção", mini: "código pronto não basta", body: "Define ambiente, dono operacional, checagem de saúde, logs, métricas, rollback, canal de release, suporte, incidente e prova de runtime.", output: ["Resultado de prontidão", "Runbooks", "Evidência de monitoramento"] },
+  { id: "release", n: "29", layer: "ops", x: 250, y: 990, w: 126, title: "Release ou Bloqueio", mini: "decisão operacional", body: "Release exige canal, versão, evidência de build/publicação ou simulação válida, rollback, monitoramento, dono e restrições atendidas.", output: ["Release aprovado", "Candidato de release", "Registro de bloqueio"], gate: true },
+  { id: "monitoring", n: "30", layer: "ops", x: 388, y: 990, w: 150, title: "Monitoramento e Suporte", mini: "pós-release real", body: "Acompanha saúde, alertas, métricas, erros, incidentes, suporte, custo, dependências, sinais de UX e risco.", output: ["Evidência de monitoramento", "Registro de incidente", "Rota de suporte"] },
+  { id: "learnback", n: "31", layer: "ops", x: 550, y: 990, w: 120, title: "Learnback", mini: "falha vira melhoria", body: "Bug repetido vira teste. Falha de agente vira eval. Falha de UX vira atualização de pack. Incidente vira runbook.", output: ["Registro de aprendizado", "Atualização de pack/skill/gate/doc/teste"] },
+  { id: "maturity", n: "32", layer: "ops", x: 682, y: 990, w: 152, title: "Auditoria de Maturidade", mini: "a fábrica se audita", body: "Verifica resultado, discovery, SOT, método, packs, dados, evals, dependências, compliance, orçamento, operação, prova, revisão, humano e limite público/privado.", output: ["Scorecard de maturidade", "Matriz de pontos cegos", "Registro de lacunas"], gate: true },
+  { id: "readiness", n: "R", layer: "ops", x: 846, y: 990, w: 140, title: "Plano != Execução", mini: "tese não é prova", body: "Arquitetura e regra orientam o trabalho, mas não provam entrega. Prontidão, roadmap e status dizem o que ainda falta implementar, provar ou operar.", output: ["Plano declarado", "Prontidão separada", "Sem overclaim"], warn: true },
+  { id: "r4", n: "R4", layer: "ops", x: 998, y: 990, w: 132, title: "Rigor R4", mini: "limite material", body: "Produção, ação irreversível, signing, fundos, release crítico, alto custo ou risco regulatório exigem gate humano, dono, rollback, monitoramento e prova forte.", output: ["Gate humano", "Rollback/mitigação", "Dono de risco", "Dono de budget"], warn: true, gate: true }
+];
+
+const JOURNEY = [
+  "intake", "ledger", "resolution", "outcome", "sot",
+  "router", "contract", "packs", "riskgates", "securityplan",
+  "devplan", "experience", "dataeval", "specgraph", "loop",
+  "autonomy", "ready", "controltower", "runtime", "workerresult",
+  "verification", "review", "humangate", "closure", "receipt",
+  "completion", "prodops", "release", "monitoring", "learnback",
+  "maturity", "readiness", "r4"
+];
+
+const RISK_TIERS = [
+  { id: "R0", title: "Inspeção leve", text: "Texto, documentação ou leitura local sem ação sensível. Pede fonte mínima, rota leve e receipt simples." },
+  { id: "R1", title: "Mudança reversível", text: "Validação local ou ajuste pequeno, com baixo impacto. Pede contrato curto, verificação focada e revisão quando útil." },
+  { id: "R2", title: "Produto ou código", text: "UI, API, dados, integração, docs de produto ou código relevante. Pede critério de aceitação, QA, revisão e evidência." },
+  { id: "R3", title: "Risco material", text: "Segurança, privacidade, infra, agente importante, dependência crítica ou comportamento de alto impacto. Pede especialistas e revisão independente." },
+  { id: "R4", title: "Autoridade forte", text: "Produção, signing, fundos, release, ação irreversível, trabalho regulado ou custo alto. Pede humano, rollback, monitoramento, dono e auditoria de conclusão." }
+];
+
+const WORKER_GROUPS = [
+  {
+    title: "Planejamento, fonte e arquitetura",
+    workers: [
+      ["factory-orchestrator", "Mantém fase, risco, roteamento, contrato de método, prontidão, blockers e estado Kanban."],
+      ["source-ledger-worker", "Separa fonte, inferência, decisão, conflito, material antigo e lacuna antes de qualquer SOT."],
+      ["product-sot-planner", "Transforma fonte, outcome, discovery e respostas humanas em Product SOT candidato."],
+      ["product-architect", "Cria arquitetura candidata, fronteiras, tradeoffs, mapa de risco e rota de segurança."],
+      ["product-face", "Define e valida superfícies visíveis: telas, estados, mobile, acessibilidade, performance e prova visual."],
+      ["docs-os-worker", "Converte arquitetura aprovada em specs, ADRs, diagramas, contratos e caminhos de evidência."],
+      ["decomposition-planner", "Produz Spec Graph, Loop Plan, pacotes de trabalho e cards Hermes com gates e revisão."]
+    ]
+  },
+  {
+    title: "Builders de execução",
+    workers: [
+      ["frontend-builder", "Constrói telas, componentes, estados responsivos e superfícies testáveis no browser."],
+      ["backend-api-builder", "Constrói API, serviço, validação, auth/session e comportamento server-side com testes de contrato."],
+      ["data-persistence-builder", "Constrói schema, migração, storage e acesso a dados com rollback e nota de risco."],
+      ["solana-quasar-builder", "Constrói trabalho Solana com Quasar; não usa Anchor por suposição, não faz deploy e não toca fundos."],
+      ["solana-quasar-qa-engineer", "Prova comportamento Quasar/devnet/local, testes negativos, compute units e handoff para auditoria."],
+      ["wallet-transaction-builder", "Constrói conexão wallet, prompts de assinatura e estados de transação sem tocar chaves reais."],
+      ["integration-builder", "Conecta frontend, backend, dados, wallet e onchain em fluxo end-to-end aprovado."],
+      ["test-automation-builder", "Transforma critérios de aceitação em testes unitários, integração, E2E, visual ou eval."],
+      ["infra-devops-builder", "Constrói CI/CD, runtime, ambiente e deploy wiring com smoke e rollback."],
+      ["agent-runtime-builder", "Constrói adapter Hermes/fábrica, perfis, skills, MCP e roteamento de agentes."],
+      ["implementation-worker", "Fallback genérico para implementação legada quando nenhum builder especialista encaixa."]
+    ]
+  },
+  {
+    title: "Prova, revisão e handoff",
+    workers: [
+      ["qa-verification-worker", "Roda testes, capturas, logs, regressões e checagens de evidência antes de pronto."],
+      ["independent-reviewer", "Revisa saída de outro agente; executor e revisor precisam ser identidades diferentes."],
+      ["evidence-reconciler", "Reconcilia worker results, Closure Summary, Completion Audit e Receipt Five contra evidência atual."],
+      ["autoreview-gate", "Executa revisão estruturada pré-landing; encontra issues, mas não substitui revisão independente."],
+      ["remote-proof-runner", "Roda prova pesada ou limpa em Crabbox/Testbox/container com TTL, custo e cleanup."],
+      ["handoff-packer", "Cria pacote de estado replayable para troca de worker, pausa, compactação ou mudança de fase."]
+    ]
+  },
+  {
+    title: "Segurança, onchain e release safety",
+    workers: [
+      ["security-orchestrator", "Escolhe rota de arquitetura de segurança e especialistas; bloqueia comentário genérico como prova."],
+      ["codex-security", "Roda scans de segurança escopados quando o card exige esse worker."],
+      ["appsec-owasp-specialist", "Cobre OWASP Web/API/AppSec, auth, sessão, validação e erros seguros."],
+      ["agentic-ai-security-specialist", "Cobre prompt injection, tool misuse, browser risk, memory poisoning e agência excessiva."],
+      ["cloud-infra-security-specialist", "Cobre IAM, KMS, CI/CD, deploy, DNS, IaC, logs e rollback."],
+      ["crypto-key-management-specialist", "Cobre secrets, signing, custody, criptografia e ciclo de chaves; não toca chaves reais."],
+      ["solana-quasar-auditor", "Roda ou prepara evidência Auditor para Solana/Quasar; não faz deploy, assinatura ou fundos."],
+      ["supply-chain-gate", "Checa dependências, CI, varredura de segredos, SBOM/proveniência e risco de workflow."],
+      ["detection-monitoring-worker", "Dono de dados/métricas, logs, alertas, responsável por incidente, sinal de rollback e saúde de produto."],
+      ["public-safety-gate", "Bloqueia artefatos públicos com caminhos privados, nomes internos, extração bruta ou links privados."]
+    ]
+  },
+  {
+    title: "Humano, release, memória e aprendizado",
+    workers: [
+      ["human-gate-clerk", "Prepara e registra decisões humanas reais de autoridade, acesso, budget, waiver e release."],
+      ["release-ops-worker", "Prepara canal de release, operação de produção, pacote de promoção, smoke, canary e rollback."],
+      ["memory-steward", "Trata memória como superfície de risco: fonte, trust tier, frescor e controles de poisoning."],
+      ["skill-eval-distiller", "Cuida de evals, Learnback, maturidade, Factory Radar e melhoria segura do repositório público."]
+    ]
+  },
+  {
+    title: "Control Tower",
+    workers: [
+      ["control-tower-projection-worker", "Projeta estado Hermes para o cockpit do operador sem decidir gates ou mutar cards."],
+      ["discord-control-tower-bridge", "Mapeia eventos Hermes/Discord, health da bridge e respostas do operador via runtime."]
+    ]
+  }
+];
+
+const WORKER_CATALOG_SOURCE = {
+  expectedCount: 40,
+  registryVersion: "factory-11",
+  profileVersion: "factory-12-agent-profiles",
+  bindingVersion: "factory-12-hermes-bindings",
+  refs: [
+    "agents/worker-registry.public.json",
+    "agents/worker-profiles.public.json",
+    "agents/hermes-profile-bindings.public.json",
+    "agents/worker-roster.md",
+    "docs/agents/factory-stage-agent-map.md"
+  ]
+};
+
+const CANONICAL_WORKER_IDS = [
+  "agent-runtime-builder",
+  "agentic-ai-security-specialist",
+  "appsec-owasp-specialist",
+  "autoreview-gate",
+  "backend-api-builder",
+  "cloud-infra-security-specialist",
+  "codex-security",
+  "control-tower-projection-worker",
+  "crypto-key-management-specialist",
+  "data-persistence-builder",
+  "decomposition-planner",
+  "detection-monitoring-worker",
+  "discord-control-tower-bridge",
+  "docs-os-worker",
+  "evidence-reconciler",
+  "factory-orchestrator",
+  "frontend-builder",
+  "handoff-packer",
+  "human-gate-clerk",
+  "implementation-worker",
+  "independent-reviewer",
+  "infra-devops-builder",
+  "integration-builder",
+  "memory-steward",
+  "product-architect",
+  "product-face",
+  "product-sot-planner",
+  "public-safety-gate",
+  "qa-verification-worker",
+  "release-ops-worker",
+  "remote-proof-runner",
+  "security-orchestrator",
+  "skill-eval-distiller",
+  "solana-quasar-auditor",
+  "solana-quasar-builder",
+  "solana-quasar-qa-engineer",
+  "source-ledger-worker",
+  "supply-chain-gate",
+  "test-automation-builder",
+  "wallet-transaction-builder"
+].sort();
+
+const STAGE_DETAILS = {
+  intake: {
+    plain: ["A fábrica começa recusando a pressa: antes de agir, ela entende que tipo de pedido chegou e qual risco pode existir.", "Essa etapa evita que um pedido vago vire execução confiante demais."],
+    decision: ["Continuar com a fonte disponível, pedir material melhor ou bloquear antes de gastar trabalho."],
+    inside: ["Classifica tipo de entrada, dono, contexto, urgência, risco e se é planejamento ou execução.", "Separa privado de público seguro e identifica se toca produto, código, usuário, dado, release, agente, dependência ou produção."],
+    blocks: ["Executar antes de entender o pedido.", "Avançar sem fonte básica."],
+    proof: ["Entrada nomeada, escopo inicial e decisão explícita de continuar, pedir fonte ou bloquear."],
+    worker: "factory-orchestrator"
+  },
+  ledger: {
+    plain: ["Aqui a fábrica monta o inventário do que pode ser usado como base: arquivos, issues, conversa, logs, runtime, prints ou testes.", "Fonte forte, fonte fraca, memória e opinião não entram no mesmo saco."],
+    decision: ["Quais materiais contam como fonte para este trabalho e quais ainda precisam de confirmação."],
+    inside: ["Registra documentos, repos, issues, design, conversa, logs, prints, board, runtime e testes como fontes separadas.", "Marca força, data, conflito, privacidade e limite de uso de cada fonte."],
+    blocks: ["Fato crítico sem origem.", "Misturar fonte primária, memória antiga e inferência no mesmo nível."],
+    proof: ["Ledger de fontes, conflitos e lacunas."],
+    worker: "source-ledger-worker"
+  },
+  resolution: {
+    plain: ["A fábrica separa o que é fato, o que é interpretação e o que ainda está aberto.", "Quando duas fontes brigam, a etapa não escolhe a resposta mais conveniente; ela registra o conflito."],
+    decision: ["O que está decidido, o que é inferência aceitável e o que precisa voltar para o humano."],
+    inside: ["Compara versões, resolve contradições e decide o que é fato, inferência, decisão pendente ou pergunta humana.", "Quando não há como resolver, a lacuna fica aberta em vez de ser escondida."],
+    blocks: ["Resumo bonito virar verdade oficial.", "Contradição documental entrar na execução."],
+    proof: ["Notas de resolução e perguntas humanas rastreáveis."],
+    worker: "factory-orchestrator + source-ledger-worker"
+  },
+  outcome: {
+    plain: ["Antes de planejar, a fábrica define o resultado esperado em linguagem de produto: para quem, resolvendo qual problema e com qual sinal de sucesso.", "Isso impede construir uma solução elegante para uma necessidade mal entendida."],
+    decision: ["Qual resultado vale perseguir e qual descoberta ainda falta para reduzir incerteza."],
+    inside: ["Define usuário, problema, comportamento esperado, métrica, não objetivo e risco de descoberta.", "A profundidade do discovery cresce com impacto, incerteza e risco."],
+    blocks: ["Plano tecnicamente correto para o problema errado.", "Produto material sem resultado verificável."],
+    proof: ["Contrato de resultado, premissas e brief de discovery."],
+    worker: "product-sot-planner"
+  },
+  sot: {
+    plain: ["O Product SOT vira a versão operável da verdade: escopo, limites, critérios de sucesso, riscos e fora de escopo em um lugar só.", "Ele não é marketing nem resumo bonito; é o contrato que impede cada agente de imaginar um produto diferente."],
+    decision: ["O que entra no produto ou fatia, o que fica fora e qual critério permite dizer que a entrega resolveu o problema."],
+    inside: ["Consolida escopo, limites, riscos, autoridade, dados, dependências, operação, sucesso e fora de escopo.", "Vira a fonte de verdade usada por packs, método, gates e agentes."],
+    blocks: ["Cada agente trabalhar com uma interpretação diferente.", "Escopo crescer sem decisão."],
+    proof: ["Product SOT com limites e critérios de sucesso."],
+    worker: "product-sot-planner"
+  },
+  router: {
+    plain: ["Nem todo pedido merece a mesma máquina. O roteador escolhe o peso certo para não burocratizar coisa simples nem simplificar coisa perigosa.", "Ele transforma a pergunta 'faz aí' em uma rota responsável."],
+    decision: ["Qual método é suficiente, qual rigor é obrigatório e quais caminhos foram dispensados com motivo."],
+    inside: ["Escolhe a rota de método com rigor proporcional: leve, completo, segurança, evals, prova remota, protótipo, release ou bloqueio.", "Explica o que foi exigido e o que foi dispensado."],
+    blocks: ["Aplicar processo pesado em pedido simples.", "Tratar R3/R4 como tarefa comum."],
+    proof: ["Rota escolhida, justificativa e rotas especiais."],
+    worker: "factory-orchestrator"
+  },
+  contract: {
+    plain: ["O contrato de método é o combinado operacional antes da execução: quem faz, o que entrega, que gate bloqueia e que prova fecha.", "Sem isso, o agente pode trabalhar bastante e ainda assim entregar algo impossível de revisar."],
+    decision: ["Quais artefatos, agentes, revisões, gates e evidências são obrigatórios para este pedido."],
+    inside: ["Amarra método, artefatos, gates, agentes, revisores, autoridade, provas e critério de pronto.", "Define o que precisa existir antes, durante e depois da execução."],
+    blocks: ["Execução sem contrato de prova.", "Agente executar fora da autoridade."],
+    proof: ["Contrato de método aprovado ou bloqueado."],
+    worker: "factory-orchestrator"
+  },
+  packs: {
+    plain: ["Packs trazem o contexto específico sem sujar o núcleo da fábrica: domínio, superfície, termos, riscos e agentes esperados.", "Um app, uma CLI, um onboarding e uma integração crítica não provam qualidade do mesmo jeito."],
+    decision: ["Que Product Pack ou Surface Pack precisa entrar, e qual capacidade ainda está faltando."],
+    inside: ["Seleciona Product Pack e Surface Pack para domínio, interface, docs, onboarding, dashboard, CLI, mobile ou agente.", "Checa templates, versão, agentes e limite público/privado."],
+    blocks: ["Produto específico sem pack ou justificativa.", "Superfície visível sem evidência adequada."],
+    proof: ["Packs selecionados e pacote de evidência por superfície."],
+    worker: "product-architect + product-face"
+  },
+  riskgates: {
+    plain: ["A fábrica mede o risco antes de liberar movimento material. Risco não é clima: ele muda autoridade, prova, custo, acesso e quem precisa revisar.", "Qualquer gate pode elevar o nível quando aparece dado sensível, produção, custo alto ou dependência crítica."],
+    decision: ["Qual tier vale para o trabalho e quais gates precisam bloquear até existir dono, acesso, limite ou aprovação."],
+    inside: ["Classifica R0-R4 e cruza autoridade, dependência, compliance, acesso, custo e necessidade de humano.", "Qualquer gate pode elevar tier ou bloquear materialmente."],
+    blocks: ["Acesso material sem dono.", "Custo, dado pessoal, dependência crítica ou produção tratados tarde demais."],
+    proof: ["Tier de risco, donos, limites, gates ativados e bloqueios."],
+    worker: "factory-orchestrator + human-gate-clerk"
+  },
+  securityplan: {
+    plain: ["Segurança entra antes da construção quando o risco é material. A fábrica desenha fronteiras, abuso esperado e mitigação antes de deixar código virar confiança.", "Review de segurança no fim não substitui arquitetura de segurança no começo."],
+    decision: ["Que riscos precisam de plano, especialista, mitigação, dono ou gate antes de executar."],
+    inside: ["Define fronteiras de confiança, permissões, secrets, abuso esperado, logs, mitigação, dono e revisão especializada.", "Ativa matriz AppSec, agentic AI, cloud/IaC, supply chain, privacidade, chaves ou onchain quando necessário."],
+    blocks: ["Produto material nascer sem arquitetura de segurança proporcional.", "Revisão de segurança substituir arquitetura."],
+    proof: ["Plano de arquitetura de segurança, casos de ameaça/abuso e rotas de revisão."],
+    worker: "security-orchestrator + especialistas"
+  },
+  devplan: {
+    plain: ["O plano de desenvolvimento transforma intenção em trabalho que um builder consegue executar e outro agente consegue verificar.", "Ele precisa dizer o que mudar, como testar, como migrar e como voltar atrás quando o risco pede rollback."],
+    decision: ["Qual fatia será construída, em que ordem, com quais critérios técnicos e comandos de prova."],
+    inside: ["Transforma o contrato em unidades executáveis, exemplos, plano de teste, migração, release, rollback e comandos de verificação.", "Mantém o plano pequeno quando o risco permite e completo quando o risco exige."],
+    blocks: ["Execução sem critérios técnicos.", "Plano sem comando de prova."],
+    proof: ["Plano de desenvolvimento, exemplos de aceitação e plano de teste."],
+    worker: "product-architect + builders"
+  },
+  experience: {
+    plain: ["Quando existe interface, a fábrica trata experiência como parte da prova, não como acabamento.", "Fluxos, estados, viewports, acessibilidade e evidência visual precisam aparecer antes de chamar a superfície de pronta."],
+    decision: ["Que jornadas e estados precisam ser desenhados, testados e demonstrados para o usuário real."],
+    inside: ["Cobre fluxo, estados vazios, loading, erro, acessibilidade, viewports, onboarding e Product Face Result.", "Exige captura e prova de uso quando há superfície de produto."],
+    blocks: ["Interface promovida com sobreposição, vazamento ou estado quebrado.", "UX tratada como enfeite."],
+    proof: ["Pacote Product Face, resultado Product Face e evidências por viewport."],
+    worker: "product-face"
+  },
+  dataeval: {
+    plain: ["Dados mostram se o produto está funcionando; evals mostram se um agente, skill ou prompt merece confiança.", "Sem métrica ou eval, sucesso vira impressão."],
+    decision: ["Que sinal mede valor, saúde, regressão ou comportamento agentico importante."],
+    inside: ["Define métrica, evento, dashboard, log, alerta e comportamento esperado.", "Quando há agente, skill, prompt ou modelo importante, cria evals, regressões e critérios de confiança."],
+    blocks: ["Declarar sucesso sem métrica.", "Confiar em agente importante sem eval ou justificativa."],
+    proof: ["Contrato de métricas, suite de evals e scorecard de comportamento."],
+    worker: "detection-monitoring-worker + skill-eval-distiller"
+  },
+  specgraph: {
+    plain: ["O grafo conecta cada requisito à decisão, risco, worker e evidência correspondente.", "Ele reduz o buraco clássico entre especificação bonita e prova real."],
+    decision: ["Qual prova fecha cada requisito material e qual gate protege cada dependência."],
+    inside: ["Liga requisito, decisão, risco, dependência, gate, worker e prova.", "A pergunta de fechamento é simples: qual evidência prova cada requisito material?"],
+    blocks: ["Requisito sem teste ou dono.", "Gate desconectado da entrega."],
+    proof: ["Mapa requisito -> prova e trilha de decisão."],
+    worker: "product-architect"
+  },
+  loop: {
+    plain: ["O Loop Plan transforma o plano em uma ordem executável para agentes: quem faz primeiro, quem depende de quem, quando parar e quando bloquear.", "Paralelismo só ajuda quando as dependências estão explícitas."],
+    decision: ["Quais lanes existem, qual sequência é segura e quais limites impedem gasto invisível de tempo ou custo."],
+    inside: ["Define lanes, ordem, paralelismo, timeout, budget, evidência, parada, bloqueio e isolamento.", "Evita que agentes concorram sem dependência explícita."],
+    blocks: ["Paralelismo virar bagunça invisível.", "Agente gastar tempo/custo sem critério de parada."],
+    proof: ["Plano de loops com lanes, dependências e bloqueios."],
+    worker: "decomposition-planner"
+  },
+  autonomy: {
+    plain: ["Antes de executar materialmente, a fábrica confere se o agente realmente tem ambiente, permissão, segredo, conta, observabilidade e dono.", "Falta de acesso não vira improviso; vira bloqueio claro."],
+    decision: ["O que está concedido, o que está pendente e o que impede autonomia segura."],
+    inside: ["Checa conta, permissão, secret, ambiente, billing, runtime, observabilidade, dono, canal humano e ferramenta indispensável.", "Execução material só começa quando capacidade crítica existe ou há bloqueio explícito."],
+    blocks: ["Agente tentar ação sem acesso real.", "Falta de dono, billing ou secret aparecer no meio da execução."],
+    proof: ["Pacote de prontidão de autonomia com concedido, pendente e bloqueado."],
+    worker: "factory-orchestrator + human-gate-clerk"
+  },
+  ready: {
+    plain: ["Ready não significa pronto. Significa que a execução pode começar sem pular fonte, método, autoridade, acesso ou prova.", "É o último semáforo antes de deixar agentes mexerem no trabalho."],
+    decision: ["Começar execução, revisar o pacote ou bloquear com motivo acionável."],
+    inside: ["Confere fonte, outcome, SOT, contrato, packs, riscos, agentes, acesso, critério de pronto e plano de evidência.", "É o último filtro antes de spawn/execução material."],
+    blocks: ["Agente sem escopo, autoridade ou prova esperada.", "Começar materialmente com lacuna essencial."],
+    proof: ["Liberado ou bloqueado com motivo acionável."],
+    worker: "factory-orchestrator"
+  },
+  controltower: {
+    plain: ["A Control Tower é a visão humana da fábrica: fase, bloqueio, risco, aprovação, previsão e evidência em um lugar legível.", "Ela mostra o estado; não substitui o runtime que guarda a verdade operacional."],
+    decision: ["O que o operador precisa ver agora para aprovar, desbloquear, esperar ou corrigir rota."],
+    inside: ["Projeta fase, bloqueios, risco, acesso, aprovação, previsão e evidências para o dono.", "Quando Discord é cockpit, precisa mostrar a fábrica sem substituir Hermes como fonte de verdade."],
+    blocks: ["Execução material invisível para o dono.", "Aprovação perdida em mensagem solta."],
+    proof: ["Projeção do trabalho, caixa de aprovações e registro no Hermes."],
+    worker: "control-tower-projection-worker + discord-control-tower-bridge"
+  },
+  runtime: {
+    plain: ["O runtime é onde o trabalho deixa de ser conversa e vira estado durável: card, task, evento, bloqueio, worker e evidência.", "Hermes é o runtime de referência, mas a ideia central é que o estado precisa sobreviver ao chat."],
+    decision: ["Qual card/tarefa representa o trabalho e onde os eventos de execução serão registrados."],
+    inside: ["Instancia cards, lanes, dependências, worktrees, comentários, eventos, bloqueios, completion e evidence refs.", "A interface humana acompanha, mas o runtime mantém o estado durável."],
+    blocks: ["Trabalho executado sem estado rastreável.", "Board, worker e evidência se desencontrarem."],
+    proof: ["Task, eventos no Hermes e referências de evidência."],
+    worker: "agent-runtime-builder + factory-orchestrator"
+  },
+  workerresult: {
+    plain: ["Resultado do agente é o relato estruturado de quem executou: recebeu isso, fez aquilo, mudou aqui, provou assim e ainda resta esse risco.", "Sem esse formato, a fábrica não sabe se houve entrega ou só narrativa."],
+    decision: ["Aceitar o resultado, pedir outro worker, revisar risco restante ou bloquear por falta de evidência."],
+    inside: ["Agente declara entrada, ação, mudança, status, evidência, risco restante, bloqueio e próxima necessidade.", "Status possíveis: passou, falhou, dispensado, pendente ou bloqueado."],
+    blocks: ["Resultado sem prova.", "Agente parecer pronto sem dizer onde mudou."],
+    proof: ["Resultado do worker com referências de evidência e bloqueios."],
+    worker: "agentes especializados"
+  },
+  verification: {
+    plain: ["Verificação é a parte em que a entrega precisa encarar testes, build, browser, captura, scan, logs ou smoke.", "A prova deve combinar com o tipo de trabalho: UI pede viewport; release pede evidência de release; agente importante pede eval."],
+    decision: ["Qual prova é suficiente para este risco e qual falha ainda impede confiança."],
+    inside: ["Roda build, teste, lint, browser, captura, scan, eval, log, smoke de release e prova remota quando local não basta.", "Verificação é proporcional ao risco e à superfície."],
+    blocks: ["Pronto baseado em relato.", "Produto visual sem captura/viewport."],
+    proof: ["Resultado de verificação com logs, capturas e comandos."],
+    worker: "qa-verification-worker + test-automation-builder"
+  },
+  review: {
+    plain: ["Revisão independente existe porque quem executa fica cego para o próprio caminho.", "O revisor procura regressão, risco, lacuna de teste e quebra de contrato antes da fábrica aceitar confiança."],
+    decision: ["A entrega passa, volta com findings, precisa waiver ou deve ser bloqueada."],
+    inside: ["Revisor independente procura bug, regressão, lacuna de teste, risco e quebra de contrato.", "Executor não aprova o próprio trabalho quando a fábrica exige revisão."],
+    blocks: ["Autoaprovação.", "Waiver sem registro."],
+    proof: ["Resultado de revisão, achados e waiver permitido quando houver."],
+    worker: "independent-reviewer + autoreview-gate"
+  },
+  humangate: {
+    plain: ["Gate Humano preserva autoridade onde agente não deve decidir sozinho: produção, risco material, custo alto, waiver importante ou ação irreversível.", "O agente pode preparar contexto e evidência; a decisão real continua humana."],
+    decision: ["Aprovar, rejeitar, pedir ajuste ou manter bloqueado com registro."],
+    inside: ["Humano decide aprovar, rejeitar, pedir mudança ou bloquear quando há materialidade.", "A decisão precisa entrar no runtime ou receipt, não ficar como conversa solta."],
+    blocks: ["Agente fingir aprovação humana.", "R4 seguir sem dono, rollback, monitoramento ou dono de segurança."],
+    proof: ["Pacote de decisão humana e evento de aprovação/bloqueio."],
+    worker: "human-gate-clerk"
+  },
+  closure: {
+    plain: ["O fechamento traduz o que aconteceu sem vender mais do que a prova sustenta.", "Ele ajuda o operador a entender entrega, risco residual, limite do escopo e próximo passo."],
+    decision: ["O que foi entregue, o que ficou fora, qual risco sobrou e qual é o próximo movimento."],
+    inside: ["Fecha pedido, entrega, prova, riscos, waivers, escopo aprovado, escopo proibido e próximo passo.", "O resumo não vende prova que não existe."],
+    blocks: ["Encerrar com narrativa e sem ponteiro.", "Risco residual sumir."],
+    proof: ["Resumo de fechamento legível e rastreável."],
+    worker: "handoff-packer"
+  },
+  receipt: {
+    plain: ["Receipt Five é o recibo mínimo de pronto: cinco respostas que impedem fechamento nebuloso.", "Ele força localização, prova, revisão e próximo passo em vez de deixar o trabalho morrer em 'feito'."],
+    decision: ["Aceitar o pronto, pedir evidência faltante ou reabrir porque uma das cinco respostas não existe."],
+    inside: ["Responde cinco perguntas: o que mudou, onde está, como foi verificado, quem revisou e próximo passo.", "É o recibo mínimo de pronto."],
+    blocks: ["Done sem prova ou sem local da mudança.", "Review omitido."],
+    proof: ["Receipt Five completo."],
+    worker: "evidence-reconciler + handoff-packer"
+  },
+  completion: {
+    plain: ["A auditoria de conclusão compara o que a fábrica exigiu com o que foi realmente entregue.", "Ela é a defesa contra checklist parcial, gate esquecido e prova bonita porém incompleta."],
+    decision: ["Liberar, corrigir lacuna, pedir waiver registrado ou bloquear conclusão."],
+    inside: ["Compara exigido vs entregue: contrato, gates, agentes, provas, revisão, humano, readiness, segurança, release e receipt.", "Se algo obrigatório faltou, a conclusão falha."],
+    blocks: ["Checklist parcial virar conclusão.", "Gates esquecidos depois da entrega."],
+    proof: ["Auditoria de conclusão com passou/falhou e lacunas."],
+    worker: "evidence-reconciler + independent-reviewer"
+  },
+  prodops: {
+    plain: ["Produção exige operação: dono, saúde, logs, métricas, rollback, suporte, incidentes e canal de release.", "Código funcionando localmente ainda não é produto operável."],
+    decision: ["Existe operação mínima para sustentar o que será publicado ou usado por alguém?"],
+    inside: ["Define ambiente, dono, checagem de saúde, logs, métricas, rollback, canal de release, suporte, incidente e evidência de operação.", "Código pronto só vira produto quando existe operação mínima."],
+    blocks: ["Deploy sem dono ou rollback.", "Produção sem observabilidade."],
+    proof: ["Resultado de prontidão de produção e runbooks."],
+    worker: "release-ops-worker"
+  },
+  release: {
+    plain: ["Release ou bloqueio é a decisão operacional: promover, manter como candidato, encerrar sem release ou bloquear.", "A fábrica não deixa 'terminou código' virar publicação sem canal, versão, dono, rollback e evidência."],
+    decision: ["Publicar, manter candidato, marcar pronto sem release ou bloquear com motivo."],
+    inside: ["Decide release aprovado, candidato, pronto ou bloqueado conforme canal, versão, evidência, rollback, monitoramento, dono e restrições.", "Release Gate pode bloquear mesmo quando o código terminou."],
+    blocks: ["Publicar sem canal, versão ou rollback.", "Chamar candidato de release real."],
+    proof: ["Registro de release ou registro de bloqueio."],
+    worker: "release-ops-worker"
+  },
+  monitoring: {
+    plain: ["Depois do release, a fábrica observa saúde, erro, custo, dependência, UX e incidente.", "Monitoramento não é decoração: ele confirma se a entrega continua viva fora do momento de publicação."],
+    decision: ["Quais sinais serão acompanhados e qual rota existe quando algo quebra."],
+    inside: ["Acompanha saúde, alerta, métrica, erro, incidente, suporte, custo, dependência, sinal de UX e risco.", "Incidente precisa de severidade, dono, mitigação e evidência."],
+    blocks: ["Pós-release invisível.", "Incidente sem aprendizado ou dono."],
+    proof: ["Evidência de monitoramento, registro de incidente e rota de suporte."],
+    worker: "detection-monitoring-worker"
+  },
+  learnback: {
+    plain: ["Learnback transforma falha em melhoria da própria fábrica.", "Se o mesmo problema pode acontecer de novo, ele precisa virar teste, gate, pack, skill, runbook, doc ou política."],
+    decision: ["Que aprendizado entra no sistema para reduzir repetição da falha."],
+    inside: ["Converte bug repetido em teste, falha de agente em eval, falha de UX em pack, dependência perigosa em gate e incidente em runbook.", "O aprendizado volta para a fábrica, não fica só no projeto."],
+    blocks: ["Repetir a mesma falha.", "Maturidade não evoluir depois de incidente."],
+    proof: ["Registro de aprendizado e atualização de pack, skill, gate, doc ou teste."],
+    worker: "skill-eval-distiller"
+  },
+  maturity: {
+    plain: ["A maturidade olha para a fábrica em si, não só para o produto entregue.", "Ela pergunta se o método pulou uma área essencial que deveria virar core, pack, gate, worker ou checklist."],
+    decision: ["A falha foi do trabalho, do worker ou da própria fábrica que não enxergou o risco cedo o bastante?"],
+    inside: ["Audita outcome, discovery, SOT, método, packs, dados, evals, dependências, compliance, budget, operação, evidência, revisão, humano e limite público/privado.", "Procura área essencial que a própria fábrica deixou descoberta."],
+    blocks: ["Projeto complexo avançar com buraco estrutural.", "A metodologia não aprender com a execução."],
+    proof: ["Scorecard de maturidade, matriz de pontos cegos e registro de lacunas."],
+    worker: "skill-eval-distiller + independent-reviewer"
+  },
+  readiness: {
+    plain: ["Readiness mantém honestidade entre tese, implementação e prova real.", "Um mapa pode estar conceitualmente certo sem significar que tudo já roda, está integrado ou está pronto para produção."],
+    decision: ["O que é arquitetura, o que está implementado, o que foi provado e o que ainda é roadmap."],
+    inside: ["Separa arquitetura canônica, status de implementação, roadmap, prova de runtime e produção real.", "O documento pode estar correto mesmo quando parte do sistema ainda não está pronta."],
+    blocks: ["Overclaim.", "Confundir mapa conceitual com prova de operação."],
+    proof: ["Readiness separado, status explícito e sem promessa falsa."],
+    worker: "factory-orchestrator"
+  },
+  r4: {
+    plain: ["R4 é o freio forte da fábrica para ações com consequência material.", "Quanto mais irreversível, caro, sensível ou produtivo o trabalho, menos espaço existe para improviso agentico."],
+    decision: ["A prova e os donos são fortes o bastante para uma decisão humana de release, ou o correto é bloquear?"],
+    inside: ["R4 é o nível de rigor para produção, ação irreversível, signing, fundos, release crítico, custo alto, trabalho regulado ou fronteira forte de autoridade.", "O operador pode preparar pacote, evidência, mitigação e rota de release; aprovação material continua humana quando o risco exige."],
+    blocks: ["R4 tratado como feature comum.", "Release sem dono, rollback, monitoramento, orçamento ou decisão registrada."],
+    proof: ["Gate humano, dono de risco, rollback/mitigação, monitoramento, dono de budget e registro de release ou bloqueio."],
+    worker: "security-orchestrator + release-ops-worker + human-gate-clerk"
+  }
+};
+
+const FLOWS = {
+  all: { title: "Jornada completa", nodes: JOURNEY, start: "intake", steps: ["A fábrica transforma um pedido cru em uma linha controlada: fonte, decisão, método, execução, prova, revisão e operação.", "A seta percorre a ordem real do trabalho, mesmo quando o desenho distribui as camadas em linhas diferentes.", "Readiness e R4 ficam no fim como freios de honestidade: tese não é prova e release material não é tarefa comum."], detail: ["A fábrica não é um agente único: é um sistema que decide o que deve acontecer, escolhe agentes, exige evidência e preserva autoridade humana quando o risco pede.", "Use as setas do teclado para sentir a linha inteira; use os chips para isolar um tipo de pergunta."] },
+  truth: { title: "Verdade do produto", nodes: ["intake","ledger","resolution","outcome","sot"], start: "intake", steps: ["Entrada vira fonte rastreável.", "Fonte vira fato, conflito, lacuna ou pergunta.", "Outcome e Product SOT impedem plano bonito para problema errado."], detail: ["A primeira camada separa fonte, inferência, decisão e lacuna antes de qualquer execução.", "O produto só ganha forma depois que resultado, usuário, limites e critério de sucesso estão claros.", "Quando a fonte não sustenta uma decisão, o mapa força pergunta humana ou bloqueio."] },
+  method: { title: "Método e planos", nodes: ["router","contract","packs","securityplan","devplan","experience","dataeval","specgraph"], start: "router", steps: ["O roteador escolhe rigor proporcional ao risco.", "O contrato transforma escolha em artefatos, gates e prova.", "Produto, segurança, experiência, dados e evals ficam conectados pelo grafo."], detail: ["Packs guardam contexto de domínio e superfície sem contaminar o kernel público.", "BDD, TDD, DDD, PRD, TRD, protótipo, diagnóstico, segurança e prova remota entram só quando o pedido pede esse rigor.", "O grafo conecta requisito, decisão, risco, worker e evidência para evitar planejamento solto."] },
+  risk: { title: "Risco, autoridade e acesso", nodes: ["riskgates","loop","autonomy","ready","controltower","humangate"], start: "riskgates", steps: ["R0: texto ou inspeção local sem impacto material.", "R1/R2: baixo risco ou produto visível exigem critério, QA, revisão e evidência.", "R3/R4: segurança, privacidade, infra, produção, custo alto ou release crítico exigem arquitetura, humano, dono, rollback e prova forte."], detail: ["Gates de dependência, acesso, compliance, privacidade e budget podem elevar o tier.", "Falta de acesso material não vira improviso: vira bloqueio.", "Control Tower deixa risco, aprovação e bloqueio visíveis sem trocar a fonte de verdade do runtime."] },
+  execution: { title: "Execução e prova", nodes: ["runtime","workerresult","verification","review","closure","receipt","completion"], start: "runtime", steps: ["Hermes instancia trabalho durável.", "Agentes entregam resultado estruturado com evidência.", "Verificação, revisão, Receipt Five e auditoria impedem pronto sem prova."], detail: ["Execução não é só mudar arquivo: precisa evento, referência de evidência, status e revisão quando exigido.", "Prova remota entra quando prova local não basta e precisa TTL, custo, limpeza e evidência.", "A auditoria de conclusão compara o contratado com o entregue."] },
+  ops: { title: "Operação e maturidade", nodes: ["prodops","release","monitoring","learnback","maturity"], start: "prodops", steps: ["Código pronto não é produto pronto.", "Release exige dono, rollback, monitoramento e canal.", "Incidente e falha alimentam Learnback e auditoria da própria fábrica."], detail: ["Operação define se aquilo consegue rodar, ser observado, revertido e suportado.", "Release pode virar aprovado, candidato, pronto ou bloqueado.", "Falha repetida deve virar teste, eval, gate, pack, skill, runbook ou doc."] },
+  gates: { title: "Gates que bloqueiam", nodes: STAGES.filter(s => s.gate).map(s => s.id), start: "riskgates", steps: ["Gate existe para impedir avanço quando falta fonte, método, acesso, revisão, prova ou autoridade.", "Ele não é burocracia: é a peça que transforma confiança em condição verificável.", "Gate bom bloqueia cedo e com motivo acionável."], detail: ["Fonte, resultado, discovery, método, pack, experiência, dados/métricas e eval de agente protegem verdade e plano.", "Dependência, acesso e capacidade, compliance/privacidade, budget, prontidão e Control Tower protegem execução material.", "Revisão, segurança, prontidão de produção, canal de release, humano, pronto, conclusão, maturidade e release protegem fechamento e operação."] },
+  risklevels: { title: "R0-R4", nodes: ["riskgates","securityplan","autonomy","ready","controltower","humangate","verification","review","completion","prodops","release","monitoring","r4"], start: "riskgates", catalog: "risklevels", steps: ["Risco decide quanta prova, autoridade e revisão entram no trabalho.", "Qualquer gate pode elevar o tier quando aparece dado sensível, produção, custo alto, dependência crítica ou ação irreversível.", "R3/R4 não são tarefas comuns: exigem especialistas, revisão independente e gate humano quando o risco pede."] },
+  agents: { title: "Agentes da fábrica", nodes: ["router","contract","runtime","workerresult","verification","review","humangate","controltower","prodops","learnback","maturity"], start: "router", catalog: "workers", steps: ["A fábrica tem 40 agentes operacionais registrados no catálogo público.", "Agente não é personalidade paralela: é papel com contrato, permissão, entrada, saída e evidência esperada.", "Um agente só é operável quando tem registro, perfil, vínculo de runtime, rota de pacote e validação."] },
+  journeys: { title: "Jornadas por tipo de pedido", nodes: ["intake","ledger","router","contract","packs","riskgates","runtime","verification","review","receipt","learnback","maturity"], start: "intake", steps: ["Pedido simples: fonte, rota leve, execução, verificação e Receipt Five.", "Bug: reprodução, diagnose loop, fix, regressão, revisão e Learnback se repetido.", "Produto complexo: fonte, outcome, SOT, packs, gates, segurança, planos, runtime, prova, operação, release e maturidade."], detail: ["Feature comum, interface, integração crítica, legado, migração, agente, skill, prompt, modelo, release R4 e incidente usam caminhos diferentes.", "Cada tipo corta o que não precisa, mas não corta fonte, critério de sucesso, prova e fechamento.", "Interface pronta precisa provar fluxos, estados, viewports, acessibilidade e ausência de sobreposição relevante."] },
+  done: { title: "Pronto de verdade", nodes: ["outcome","ledger","sot","contract","packs","riskgates","securityplan","autonomy","ready","verification","review","humangate","completion","prodops","receipt","learnback","maturity"], start: "outcome", steps: ["Pronto não é o agente dizer que acabou.", "Pronto exige fonte, SOT, método, packs, gates, segurança quando necessária, acesso, agentes, evidência, verificação, revisão e Receipt Five.", "Quando há release, operação, monitoramento, suporte, incidente e rollback também entram."], detail: ["Dados/métricas entram quando sucesso precisa ser medido.", "Agentes, skills, prompts e modelos importantes precisam eval ou justificativa.", "Auditoria de maturidade procura lacunas estruturais antes que virem confiança falsa."] }
+};
+
+const zonesGroup = document.getElementById("zones");
+const nodesGroup = document.getElementById("nodes");
+const edgesGroup = document.getElementById("edges");
+const map = document.getElementById("map");
+const detailPanel = document.getElementById("detail");
+const detailTitle = document.getElementById("dTitle");
+const detailMeta = document.getElementById("dMeta");
+const detailBody = document.getElementById("dBody");
+const detailOut = document.getElementById("dOut");
+const flowcard = document.getElementById("flowcard");
+const flowTitle = document.getElementById("flowTitle");
+const flowSteps = document.getElementById("flowSteps");
+const flowExtra = document.getElementById("flowExtra");
+const stageState = document.getElementById("stageState");
+const prevStageButton = document.getElementById("prevStage");
+const nextStageButton = document.getElementById("nextStage");
+const chips = document.querySelectorAll(".chip");
+
+const LAYER_COLORS = {
+  truth: "var(--truth)",
+  method: "var(--method)",
+  risk: "var(--risk)",
+  exec: "var(--exec)",
+  ops: "var(--ops)"
+};
+
+function el(name, attrs = {}, text) {
+  const node = document.createElementNS(NS, name);
+  Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function ellipsize(value, max) {
+  const clean = String(value).trim();
+  if (clean.length <= max) return clean;
+  return clean.slice(0, Math.max(1, max - 1)).trimEnd() + "…";
+}
+
+function addText(g, cls, x, y, text, max = 20, maxLines = 2) {
+  const parts = String(text).split(" ");
+  const lines = [];
+  let line = "";
+  for (const part of parts) {
+    const test = line ? line + " " + part : part;
+    if (test.length > max && line) {
+      lines.push(line);
+      line = part;
+      if (lines.length === maxLines) break;
+    } else {
+      line = test;
+    }
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+  lines.slice(0, maxLines).forEach((value, index) => {
+    const last = index === maxLines - 1 && parts.join(" ").length > lines.join(" ").length;
+    g.appendChild(el("text", { class: cls, x, y: y + index * (cls === "t" ? 14 : 12) }, last ? ellipsize(value, max) : value));
+  });
+}
+
+function buildZones() {
+  ZONES.forEach(z => {
+    const g = el("g", { class: "zone", "data-zone": z.key });
+    g.style.setProperty("--zone-fill", z.fill);
+    g.appendChild(el("rect", { x: 58, y: z.y, width: 1504, height: z.h }));
+    g.appendChild(el("text", { class: "ztitle", x: 78, y: z.y + 30 }, z.label));
+    g.appendChild(el("text", { class: "zsub", x: 78, y: z.y + 49 }, z.sub));
+    zonesGroup.appendChild(g);
+  });
+}
+
+function buildEdges() {
+  const pairs = new Map();
+  const addPair = (from, to, kind) => {
+    const key = `${from}->${to}`;
+    const current = pairs.get(key);
+    if (!current || kind === "journey") pairs.set(key, { from, to, kind });
+  };
+  const addSequence = (list, kind) => {
+    for (let i = 0; i < list.length - 1; i += 1) addPair(list[i], list[i + 1], kind);
+  };
+
+  addSequence(JOURNEY, "journey");
+  Object.entries(FLOWS).forEach(([key, flow]) => {
+    if (key === "all") return;
+    addSequence(orderedNodes(flow.nodes), "flow");
+  });
+
+  pairs.forEach(({ from, to, kind }) => {
+    const a = STAGES.find(s => s.id === from);
+    const b = STAGES.find(s => s.id === to);
+    if (!a || !b) return;
+    const sy = a.y + NODE_Y_NUDGE + NODE_H / 2;
+    const ty = b.y + NODE_Y_NUDGE + NODE_H / 2;
+    const sx = a.x + a.w;
+    const tx = b.x;
+    const sameRowForward = a.layer === b.layer && sx < tx;
+    const jump = !sameRowForward;
+    let d;
+    if (jump) {
+      if (a.x <= b.x) {
+        d = `M ${sx} ${sy} C ${sx + 70} ${sy}, ${tx - 70} ${ty}, ${tx} ${ty}`;
+      } else {
+        const lane = 1588;
+        const bend = Math.max(34, Math.min(68, Math.abs(ty - sy) / 2));
+        d = `M ${sx} ${sy} C ${sx + 36} ${sy}, ${lane} ${sy}, ${lane} ${sy + bend} L ${lane} ${ty - bend} C ${lane} ${ty}, ${tx - 36} ${ty}, ${tx} ${ty}`;
+      }
+    } else {
+      d = `M ${sx} ${sy} C ${sx + 22} ${sy}, ${tx - 22} ${ty}, ${tx} ${ty}`;
+    }
+    const cls = ["edge", kind === "flow" ? "flow-edge" : "", jump ? "jump-edge" : ""].filter(Boolean).join(" ");
+    edgesGroup.appendChild(el("path", { class: cls, "data-a": from, "data-b": to, "data-kind": kind, d }));
+  });
+}
+
+function buildNodes() {
+  STAGES.forEach(s => {
+    const cls = ["node", s.layer, s.gate ? "gate" : "", s.bridge ? "bridge" : "", s.warn ? "warn" : ""].filter(Boolean).join(" ");
+    const g = el("g", { class: cls, "data-k": s.id, tabindex: "0", role: "button", "aria-label": s.title });
+    const y = s.y + NODE_Y_NUDGE;
+    g.appendChild(el("title", {}, `${s.n} · ${s.title} · ${s.mini}`));
+    g.appendChild(el("rect", { x: s.x, y, width: s.w, height: NODE_H }));
+    g.appendChild(el("text", { class: "n", x: s.x + 12, y: y + 18 }, s.n));
+    addText(g, "t", s.x + 12, y + 41, s.title, Math.max(12, Math.floor(s.w / 8.7)), 2);
+    addText(g, "m", s.x + 12, y + 70, s.mini, Math.max(12, Math.floor(s.w / 7.8)), 1);
+    nodesGroup.appendChild(g);
+    g.addEventListener("click", () => focusStage(s.id));
+    g.addEventListener("keydown", ev => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        focusStage(s.id);
+      }
+    });
+  });
+}
+
+let activeFlowKey = "all";
+let activeSequence = [...JOURNEY];
+let activeStageId = "intake";
+
+function selectNode(id) {
+  focusStage(id);
+}
+
+function setActiveVisualState(stage, index, total) {
+  document.documentElement.style.setProperty("--active", LAYER_COLORS[stage.layer] || "var(--ink)");
+  document.documentElement.style.setProperty("--stage-progress", `${Math.max(3, ((index + 1) / total) * 100)}%`);
+  if (stageState) {
+    stageState.textContent = `${String(index + 1).padStart(2, "0")}/${total} · ${stage.title}`;
+    stageState.title = stage.title;
+  }
+}
+
+function centerStageInMobile(id) {
+  if (!window.matchMedia("(max-width: 960px)").matches) return;
+  const wrapper = map.closest(".map-scroll");
+  const node = document.querySelector(`.node[data-k="${id}"]`);
+  if (!wrapper || !node) return;
+
+  const wrapperRect = wrapper.getBoundingClientRect();
+  const nodeRect = node.getBoundingClientRect();
+  const targetLeft = wrapper.scrollLeft + nodeRect.left - wrapperRect.left - (wrapperRect.width / 2) + (nodeRect.width / 2);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  wrapper.scrollTo({ left: Math.max(0, targetLeft), behavior: reduceMotion ? "auto" : "smooth" });
+}
+
+function overlapArea(a, b) {
+  const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+  const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+  return width * height;
+}
+
+function panelCollisionScore(candidate, stageId, context) {
+  let score = 0;
+  document.querySelectorAll(".node").forEach(node => {
+    const nodeRect = node.getBoundingClientRect();
+    const area = Math.max(1, nodeRect.width * nodeRect.height);
+    const overlap = overlapArea(candidate, nodeRect);
+    if (!overlap) return;
+
+    const nodeId = node.dataset.k;
+    let weight = 0.25;
+    if (nodeId === stageId) weight = 9;
+    else if (context.has(nodeId)) weight = 3;
+    else if (node.classList.contains("lit")) weight = 0.45;
+    score += (overlap / area) * weight;
+  });
+  return score;
+}
+
+function positionDetailPanel(stageId, context) {
+  if (window.matchMedia("(max-width: 960px)").matches) {
+    detailPanel.classList.remove("alt");
+    detailPanel.style.maxHeight = "";
+    detailPanel.dataset.side = "stack";
+    return;
+  }
+
+  detailPanel.classList.remove("alt");
+  detailPanel.style.maxHeight = "";
+  const initialRect = detailPanel.getBoundingClientRect();
+  detailPanel.style.maxHeight = `${Math.max(280, window.innerHeight - initialRect.top - 18)}px`;
+  const rect = detailPanel.getBoundingClientRect();
+  const gap = 18;
+  const rightCandidate = {
+    top: rect.top,
+    bottom: rect.bottom,
+    left: window.innerWidth - gap - rect.width,
+    right: window.innerWidth - gap
+  };
+  const leftCandidate = {
+    top: rect.top,
+    bottom: rect.bottom,
+    left: gap,
+    right: gap + rect.width
+  };
+
+  const rightScore = panelCollisionScore(rightCandidate, stageId, context);
+  const leftScore = panelCollisionScore(leftCandidate, stageId, context);
+  const useLeft = rightScore > 0.08 && leftScore + 0.12 < rightScore;
+  detailPanel.classList.toggle("alt", useLeft);
+  flowcard.classList.toggle("alt", useLeft);
+  detailPanel.dataset.side = useLeft ? "left" : "right";
+  detailPanel.dataset.collision = `${rightScore.toFixed(2)}:${leftScore.toFixed(2)}`;
+}
+
+function focusStage(id) {
+  const s = STAGES.find(item => item.id === id);
+  if (!s) return;
+
+  activeStageId = id;
+  if (!activeSequence.includes(id)) {
+    activeSequence = orderedNodes(FLOWS.all.nodes);
+    activeFlowKey = "all";
+    chips.forEach(chip => {
+      const isActive = chip.dataset.flow === "all";
+      chip.classList.toggle("on", isActive);
+      chip.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
+  const index = activeSequence.indexOf(id);
+  const prev = activeSequence[index - 1] || null;
+  const next = activeSequence[index + 1] || null;
+  const context = new Set([id, prev, next].filter(Boolean));
+  const activePairs = new Set();
+  for (let i = 0; i < activeSequence.length - 1; i += 1) {
+    activePairs.add(`${activeSequence[i]}->${activeSequence[i + 1]}`);
+  }
+
+  map.classList.add("guided");
+  setActiveVisualState(s, index, activeSequence.length);
+  document.querySelectorAll(".zone").forEach(zone => {
+    zone.classList.toggle("active-zone", zone.dataset.zone === s.layer);
+  });
+  document.querySelectorAll(".node").forEach(node => {
+    const nodeId = node.dataset.k;
+    node.classList.toggle("sel", nodeId === id);
+    node.classList.toggle("focused", nodeId === id);
+    node.classList.toggle("context", context.has(nodeId) && nodeId !== id);
+    node.classList.toggle("lit", activeSequence.includes(nodeId));
+  });
+
+  document.querySelectorAll(".edge").forEach(edge => {
+    const pair = `${edge.dataset.a}->${edge.dataset.b}`;
+    const inFlow = activePairs.has(pair);
+    const touchesFocus = pair === `${id}->${next}` || pair === `${prev}->${id}`;
+    edge.classList.toggle("lit", inFlow);
+    edge.classList.toggle("active", touchesFocus);
+  });
+
+  renderDetail(s);
+  positionDetailPanel(id, context);
+  centerStageInMobile(id);
+}
+
+function layerName(layer) {
+  return {
+    truth: "verdade",
+    method: "método e planos",
+    risk: "risco e autoridade",
+    exec: "execução e prova",
+    ops: "operação e maturidade"
+  }[layer] || layer;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function detailBlock(label, items) {
+  if (!items || !items.length) return "";
+  const tone = label === "Leitura rápida" ? " quick" : label === "Decisão" ? " decision" : "";
+  return `
+    <section class="detail-section${tone}">
+      <div class="detail-label">${escapeHtml(label)}</div>
+      <ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </section>
+  `;
+}
+
+function renderDetail(stage) {
+  const detail = STAGE_DETAILS[stage.id] || {};
+  const flow = FLOWS[activeFlowKey] || FLOWS.all;
+  const index = activeSequence.indexOf(stage.id);
+  const flowItems = activeFlowKey !== "all" && flow.nodes.includes(stage.id)
+    ? [...(flow.steps || []), ...(flow.detail || [])]
+    : [];
+  const flowDetail = flowItems.length
+    ? detailBlock("Visão ativa", flowItems)
+    : "";
+
+  detailTitle.textContent = stage.title;
+  detailMeta.textContent = `${index + 1} de ${activeSequence.length} | ${stage.n} | ${layerName(stage.layer)}${stage.gate ? " | gate" : ""}`;
+  detailBody.innerHTML = `
+    <p>${escapeHtml(stage.body)}</p>
+    ${detailBlock("Leitura rápida", detail.plain)}
+    ${detailBlock("Decisão", detail.decision)}
+    ${detailBlock("Trabalho", detail.inside)}
+    ${detailBlock("Bloqueio", detail.blocks)}
+    ${detailBlock("Evidência", detail.proof)}
+    ${flowDetail}
+    ${detail.worker ? `<div class="detail-foot">Agente sugerido · ${escapeHtml(detail.worker)}</div>` : ""}
+  `;
+  detailOut.innerHTML = stage.output.map(item => `<div class="pill">${escapeHtml(item)}</div>`).join("");
+}
+
+function orderedNodes(nodes) {
+  const set = new Set(nodes);
+  const ordered = JOURNEY.filter(id => set.has(id));
+  nodes.forEach(id => {
+    if (!ordered.includes(id)) ordered.push(id);
+  });
+  return ordered;
+}
+
+function moveFocus(delta) {
+  const index = Math.max(0, activeSequence.indexOf(activeStageId));
+  const nextIndex = (index + delta + activeSequence.length) % activeSequence.length;
+  focusStage(activeSequence[nextIndex]);
+}
+
+function renderRiskCatalog() {
+  return `
+    <div class="flow-extra">
+      <div class="catalog-note">R0-R4 mede autoridade operacional, não drama. Quanto maior o tier, mais forte precisa ser a fonte, a revisão, a evidência, o rollback e a presença humana.</div>
+      <div class="catalog-grid">
+        ${RISK_TIERS.map(tier => `
+          <article class="catalog-item risk-card">
+            <div class="catalog-id">${escapeHtml(tier.id)} · ${escapeHtml(tier.title)}</div>
+            <div class="catalog-text">${escapeHtml(tier.text)}</div>
+          </article>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function workerCatalogStatus() {
+  const ids = WORKER_GROUPS.flatMap(group => group.workers.map(([id]) => id)).sort();
+  const seen = new Set();
+  const duplicates = ids.filter(id => {
+    if (seen.has(id)) return true;
+    seen.add(id);
+    return false;
+  });
+  const missing = CANONICAL_WORKER_IDS.filter(id => !seen.has(id));
+  const extra = ids.filter(id => !CANONICAL_WORKER_IDS.includes(id));
+  return {
+    ids,
+    missing,
+    extra,
+    duplicates,
+    ok: ids.length === WORKER_CATALOG_SOURCE.expectedCount && !missing.length && !extra.length && !duplicates.length
+  };
+}
+
+function renderWorkerCatalog() {
+  const status = workerCatalogStatus();
+  const total = status.ids.length;
+  const warning = status.ok ? "" : `
+    <div class="catalog-warning">
+      Catálogo desalinhado: faltando ${escapeHtml(status.missing.join(", ") || "nada")}; extra ${escapeHtml(status.extra.join(", ") || "nada")}; duplicado ${escapeHtml(status.duplicates.join(", ") || "nada")}.
+    </div>
+  `;
+  return `
+    <div class="flow-extra">
+      <div class="catalog-note">${total} agentes oficiais aparecem aqui como capacidades operáveis da fábrica. O catálogo segue registro, perfil e vínculo públicos; agente sem essas camadas não conta como operável.</div>
+      ${warning}
+      ${WORKER_GROUPS.map(group => `
+        <section class="catalog-group">
+          <div class="catalog-heading">${escapeHtml(group.title)} · ${group.workers.length}</div>
+          <div class="catalog-grid">
+            ${group.workers.map(([id, text]) => `
+              <article class="catalog-item">
+                <div class="catalog-id">${escapeHtml(id)}</div>
+                <div class="catalog-text">${escapeHtml(text)}</div>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderFlowExtra(flow) {
+  if (flow.catalog === "risklevels") return renderRiskCatalog();
+  if (flow.catalog === "workers") return renderWorkerCatalog();
+  return "";
+}
+
+function setFlow(key) {
+  const flow = FLOWS[key] || FLOWS.all;
+  activeFlowKey = FLOWS[key] ? key : "all";
+  activeSequence = orderedNodes(flow.nodes);
+  chips.forEach(chip => {
+    const isActive = chip.dataset.flow === activeFlowKey;
+    chip.classList.toggle("on", isActive);
+    chip.setAttribute("aria-pressed", String(isActive));
+  });
+  const activeChip = [...chips].find(chip => chip.dataset.flow === key);
+  if (activeChip) {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    activeChip.scrollIntoView({ block: "nearest", inline: "center", behavior: reduceMotion ? "auto" : "smooth" });
+  }
+
+  map.classList.add("guided");
+  map.classList.toggle("flowing", activeFlowKey !== "all");
+
+  flowcard.classList.toggle("show", activeFlowKey !== "all");
+  flowcard.classList.toggle("catalog", Boolean(flow.catalog));
+  flowTitle.textContent = flow.title;
+  flowSteps.innerHTML = (flow.steps || []).map(step => `<li>${escapeHtml(step)}</li>`).join("");
+  flowExtra.innerHTML = renderFlowExtra(flow);
+  flowcard.scrollTop = 0;
+
+  focusStage(flow.start || activeSequence[0] || "intake");
+}
+
+chips.forEach(chip => chip.addEventListener("click", () => setFlow(chip.dataset.flow)));
+prevStageButton?.addEventListener("click", () => moveFocus(-1));
+nextStageButton?.addEventListener("click", () => moveFocus(1));
+
+document.addEventListener("keydown", ev => {
+  const tag = document.activeElement?.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+  if (ev.key === "ArrowRight" || ev.key === "ArrowDown") {
+    ev.preventDefault();
+    moveFocus(1);
+  }
+
+  if (ev.key === "ArrowLeft" || ev.key === "ArrowUp") {
+    ev.preventDefault();
+    moveFocus(-1);
+  }
+
+  if (ev.key === "Home") {
+    ev.preventDefault();
+    focusStage(activeSequence[0]);
+  }
+
+  if (ev.key === "End") {
+    ev.preventDefault();
+    focusStage(activeSequence[activeSequence.length - 1]);
+  }
+});
+
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => focusStage(activeStageId), 80);
+});
+
+window.overkillFactoryDiagnostics = () => ({
+  workerCatalogSource: WORKER_CATALOG_SOURCE,
+  workerCatalogStatus: workerCatalogStatus(),
+  activeFlowKey,
+  activeStageId
+});
+
+buildZones();
+buildEdges();
+buildNodes();
+setFlow("all");
+</script>
+</body>
+</html>
