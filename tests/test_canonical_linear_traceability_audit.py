@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import importlib.util
 import json
 import sys
@@ -18,6 +19,24 @@ SPEC.loader.exec_module(canonical_linear_traceability_audit)
 
 
 class CanonicalLinearTraceabilityAuditTest(unittest.TestCase):
+    def test_default_audit_uses_public_checkpoint_manifest(self) -> None:
+        signature = inspect.signature(canonical_linear_traceability_audit.build_audit)
+        self.assertIsNone(signature.parameters["canonical_path"].default)
+
+        audit = canonical_linear_traceability_audit.build_audit()
+        manifest = json.loads(
+            (
+                ROOT
+                / "validation"
+                / "canonical-linear-traceability"
+                / "canonical-checkpoints.public.json"
+            ).read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(audit["canonical_doc_ref"], manifest["canonical_doc_ref"])
+        self.assertEqual(audit["canonical_sha256"], manifest["canonical_sha256"])
+        self.assertEqual(audit["summary"]["checkpoints_checked"], manifest["checkpoint_count"])
+
     def test_audit_maps_every_canonical_heading_and_principle_in_order(self) -> None:
         audit = canonical_linear_traceability_audit.build_audit()
         errors = canonical_linear_traceability_audit.validate_audit(audit)

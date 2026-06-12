@@ -204,6 +204,10 @@ def write_markdown(path: Path, audit: dict[str, Any], errors: list[str]) -> None
     lines = [
         "# Canonical Real Infra Audit",
         "",
+        "> Document status: CURRENT RUNTIME EVIDENCE.",
+        "> Current authority: `scripts/factoryctl.py` and `validation/canonical-real-infra/canonical-real-infra-audit.json`.",
+        "> Runtime boundary: This proves actionable canonical process enforcement in the factory; it does not approve a product-specific release.",
+        "",
         f"Question: {audit['question_answered']}",
         f"Answer: `{audit['answer']}`",
         f"Result: `{audit['result']}`",

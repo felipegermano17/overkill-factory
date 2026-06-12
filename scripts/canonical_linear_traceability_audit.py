@@ -20,10 +20,15 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CANONICAL = ROOT.parent / "OVERKILL_FACTORY_VFINAL_DOCUMENTO_FINAL_CANONICO_2026-06-09.md"
+DEFAULT_CANONICAL_NAME = "OVERKILL_FACTORY_VFINAL_DOCUMENTO_FINAL_CANONICO_2026-06-09.md"
+DEFAULT_CANONICAL = ROOT.parent / DEFAULT_CANONICAL_NAME
+DEFAULT_CHECKPOINT_MANIFEST = (
+    ROOT / "validation" / "canonical-linear-traceability" / "canonical-checkpoints.public.json"
+)
 DEFAULT_OUT_JSON = ROOT / "validation" / "canonical-linear-traceability" / "canonical-linear-traceability.json"
 DEFAULT_OUT_MD = ROOT / "docs" / "validation" / "canonical-linear-traceability.md"
 SCHEMA = "https://overkill-factory.dev/schemas/canonical-linear-traceability.schema.json"
+CHECKPOINT_MANIFEST_SCHEMA = "https://overkill-factory.dev/schemas/canonical-checkpoint-manifest.schema.json"
 
 ALLOWED_STATUS = {
     "implemented_by_runtime",
@@ -130,6 +135,74 @@ def extract_checkpoints(canonical_path: Path) -> list[Checkpoint]:
                     )
                 )
     return checkpoints
+
+
+def count_checkpoint_types(checkpoints: list[Checkpoint]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for checkpoint in checkpoints:
+        counts[checkpoint.checkpoint_type] = counts.get(checkpoint.checkpoint_type, 0) + 1
+    return counts
+
+
+def checkpoint_manifest(canonical_path: Path) -> dict[str, Any]:
+    checkpoints = extract_checkpoints(canonical_path)
+    type_counts = count_checkpoint_types(checkpoints)
+    return {
+        "$schema": CHECKPOINT_MANIFEST_SCHEMA,
+        "record_type": "canonical_checkpoint_manifest",
+        "canonical_doc_ref": f"external:{canonical_path.name}",
+        "canonical_sha256": sha256(canonical_path),
+        "extraction_rule": "Markdown headings and numbered principles under section 3, in source order.",
+        "redaction_rule": "Private owner and private product names are replaced with public-safe labels.",
+        "checkpoint_count": len(checkpoints),
+        "headings_count": type_counts.get("heading", 0),
+        "principles_count": type_counts.get("principle", 0),
+        "checkpoints": [
+            {
+                "sequence": checkpoint.sequence,
+                "checkpoint_type": checkpoint.checkpoint_type,
+                "canonical_line": checkpoint.canonical_line,
+                "canonical_level": checkpoint.canonical_level,
+                "title": redact_public_text(checkpoint.title),
+                "parent_heading": redact_public_text(checkpoint.parent_heading) if checkpoint.parent_heading else None,
+            }
+            for checkpoint in checkpoints
+        ],
+    }
+
+
+def load_checkpoint_manifest(path: Path = DEFAULT_CHECKPOINT_MANIFEST) -> tuple[str, str, list[Checkpoint]]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if data.get("record_type") != "canonical_checkpoint_manifest":
+        raise ValueError(f"{path}: record_type must be canonical_checkpoint_manifest")
+    checkpoints = [
+        Checkpoint(
+            sequence=int(item["sequence"]),
+            checkpoint_type=str(item["checkpoint_type"]),
+            canonical_line=int(item["canonical_line"]),
+            canonical_level=int(item["canonical_level"]),
+            title=str(item["title"]),
+            parent_heading=item.get("parent_heading"),
+        )
+        for item in data.get("checkpoints", [])
+    ]
+    if len(checkpoints) != data.get("checkpoint_count"):
+        raise ValueError(f"{path}: checkpoint_count does not match checkpoints")
+    type_counts = count_checkpoint_types(checkpoints)
+    if type_counts.get("heading", 0) != data.get("headings_count"):
+        raise ValueError(f"{path}: headings_count does not match checkpoints")
+    if type_counts.get("principle", 0) != data.get("principles_count"):
+        raise ValueError(f"{path}: principles_count does not match checkpoints")
+    return str(data["canonical_doc_ref"]), str(data["canonical_sha256"]), checkpoints
+
+
+def load_checkpoint_source(
+    canonical_path: Path | None = None,
+    checkpoint_manifest_path: Path = DEFAULT_CHECKPOINT_MANIFEST,
+) -> tuple[str, str, list[Checkpoint]]:
+    if canonical_path is not None:
+        return f"external:{canonical_path.name}", sha256(canonical_path), extract_checkpoints(canonical_path)
+    return load_checkpoint_manifest(checkpoint_manifest_path)
 
 
 def base_boundary(status: str) -> str | None:
@@ -538,7 +611,7 @@ def title_record(checkpoint: Checkpoint) -> dict[str, Any]:
     if "product sot" in norm:
         return checkpoint_record(checkpoint, status="implemented_by_contract", obligation="Product SOT must be a structured source of truth before execution.", refs=refs_product_sot())
 
-    if normalize(PRIVATE_PRODUCT_TOKEN) in norm and "product pack" in norm:
+    if (normalize(PRIVATE_PRODUCT_TOKEN) in norm or "private product pack" in norm) and "product pack" in norm:
         return checkpoint_record(
             checkpoint,
             status="bounded_public_proof",
@@ -729,8 +802,11 @@ def title_record(checkpoint: Checkpoint) -> dict[str, Any]:
     )
 
 
-def build_audit(canonical_path: Path = DEFAULT_CANONICAL) -> dict[str, Any]:
-    checkpoints = extract_checkpoints(canonical_path)
+def build_audit(
+    canonical_path: Path | None = None,
+    checkpoint_manifest_path: Path = DEFAULT_CHECKPOINT_MANIFEST,
+) -> dict[str, Any]:
+    canonical_doc_ref, canonical_hash, checkpoints = load_checkpoint_source(canonical_path, checkpoint_manifest_path)
     records = [principle_record(cp) if cp.checkpoint_type == "principle" else title_record(cp) for cp in checkpoints]
     status_counts: dict[str, int] = {}
     type_counts: dict[str, int] = {}
@@ -745,8 +821,8 @@ def build_audit(canonical_path: Path = DEFAULT_CANONICAL) -> dict[str, Any]:
     return {
         "$schema": SCHEMA,
         "record_type": "canonical_linear_traceability_audit",
-        "canonical_doc_ref": f"external:{canonical_path.name}",
-        "canonical_sha256": sha256(canonical_path),
+        "canonical_doc_ref": canonical_doc_ref,
+        "canonical_sha256": canonical_hash,
         "coverage_rule": (
             "Every Markdown heading and every numbered principle in the canonical document must appear "
             "in order with repo artifacts or an explicit boundary. This proves traceability, not full live "
@@ -774,14 +850,20 @@ def repo_path(path_value: str) -> Path | None:
     return ROOT / path_value.split("#", 1)[0]
 
 
-def validate_audit(audit: dict[str, Any], canonical_path: Path = DEFAULT_CANONICAL) -> list[str]:
+def validate_audit(
+    audit: dict[str, Any],
+    canonical_path: Path | None = None,
+    checkpoint_manifest_path: Path = DEFAULT_CHECKPOINT_MANIFEST,
+) -> list[str]:
     errors: list[str] = []
     if audit.get("record_type") != "canonical_linear_traceability_audit":
         errors.append("record_type must be canonical_linear_traceability_audit")
-    if audit.get("canonical_sha256") != sha256(canonical_path):
+    canonical_doc_ref, canonical_hash, expected = load_checkpoint_source(canonical_path, checkpoint_manifest_path)
+    if audit.get("canonical_doc_ref") != canonical_doc_ref:
+        errors.append("canonical_doc_ref does not match the canonical checkpoint source")
+    if audit.get("canonical_sha256") != canonical_hash:
         errors.append("canonical_sha256 does not match the canonical document")
 
-    expected = extract_checkpoints(canonical_path)
     records = audit.get("checkpoints")
     if not isinstance(records, list):
         return [*errors, "checkpoints must be an array"]
@@ -871,6 +953,10 @@ def write_markdown(path: Path, audit: dict[str, Any], errors: list[str]) -> None
     lines = [
         "# Canonical Linear Traceability Audit",
         "",
+        "> Document status: CURRENT RUNTIME EVIDENCE.",
+        "> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.",
+        "> Runtime boundary: This maps the canonical document linearly; runtime implementation is answered by the real-infra audit and enforced gates.",
+        "",
         f"Result: `{summary['result']}`",
         f"Canonical doc: `{audit['canonical_doc_ref']}`",
         f"Canonical SHA-256: `{audit['canonical_sha256']}`",
@@ -931,14 +1017,34 @@ def write_json(path: Path, audit: dict[str, Any], errors: list[str]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Audit canonical doc traceability in source order.")
-    parser.add_argument("--canonical", type=Path, default=DEFAULT_CANONICAL)
+    parser.add_argument(
+        "--canonical",
+        type=Path,
+        default=None,
+        help="Optional private canonical document. Default uses the public checkpoint manifest.",
+    )
+    parser.add_argument("--checkpoint-manifest", type=Path, default=DEFAULT_CHECKPOINT_MANIFEST)
+    parser.add_argument(
+        "--write-checkpoint-manifest",
+        type=Path,
+        help="Write a public-safe checkpoint manifest extracted from --canonical, then exit.",
+    )
     parser.add_argument("--out-json", type=Path, default=DEFAULT_OUT_JSON)
     parser.add_argument("--out-md", type=Path, default=DEFAULT_OUT_MD)
     parser.add_argument("--require-full-runtime", action="store_true", help="Fail if any checkpoint is bounded/partial/foundational.")
     args = parser.parse_args(argv)
 
-    audit = build_audit(args.canonical)
-    errors = validate_audit(audit, args.canonical)
+    if args.write_checkpoint_manifest:
+        if args.canonical is None:
+            parser.error("--write-checkpoint-manifest requires --canonical")
+        manifest = checkpoint_manifest(args.canonical)
+        args.write_checkpoint_manifest.parent.mkdir(parents=True, exist_ok=True)
+        args.write_checkpoint_manifest.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({"result": "WROTE", "checkpoint_count": manifest["checkpoint_count"]}, indent=2))
+        return 0
+
+    audit = build_audit(args.canonical, args.checkpoint_manifest)
+    errors = validate_audit(audit, args.canonical, args.checkpoint_manifest)
     if args.require_full_runtime:
         limited = [
             record["checkpoint_id"]

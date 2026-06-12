@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/canonical-checkpoint-manifest.schema.json",
+  "title": "Overkill Factory Canonical Checkpoint Manifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "canonical_doc_ref",
+    "canonical_sha256",
+    "extraction_rule",
+    "redaction_rule",
+    "checkpoint_count",
+    "headings_count",
+    "principles_count",
+    "checkpoints"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/canonical-checkpoint-manifest.schema.json"
+    },
+    "record_type": {
+      "const": "canonical_checkpoint_manifest"
+    },
+    "canonical_doc_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "canonical_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "extraction_rule": {
+      "type": "string",
+      "minLength": 20
+    },
+    "redaction_rule": {
+      "type": "string",
+      "minLength": 20
+    },
+    "checkpoint_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "headings_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "principles_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "sequence",
+          "checkpoint_type",
+          "canonical_line",
+          "canonical_level",
+          "title",
+          "parent_heading"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "checkpoint_type": {
+            "enum": ["heading", "principle"]
+          },
+          "canonical_line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "canonical_level": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parent_heading": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
