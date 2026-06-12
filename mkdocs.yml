@@ -21,4 +21,6 @@ nav:
   - Release:
       - Validation And Release: operations/validation-and-release.md
       - Release Policy: operations/release-policy.md
-  - Maintainer Internals: maintenance/repo-surface.md
+  - Maintainer Internals:
+      - Repository Surface: maintenance/repo-surface.md
+      - Factory Mechanic Loop: maintenance/factory-mechanic-loop.md

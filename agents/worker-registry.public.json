@@ -1585,7 +1585,12 @@
         "blind spot",
         "methodology audit",
         "agent eval plan",
-        "agent coverage"
+        "agent coverage",
+        "factory mechanic loop",
+        "factory improvement issue",
+        "Hermes update",
+        "worker feedback",
+        "execution history"
       ],
       "inputs": [
         "evidence_expected",
@@ -1593,18 +1598,25 @@
         "source_refs",
         "agent_eval_plan",
         "factory_maturity_scorecard",
-        "worker_coverage_map"
+        "worker_coverage_map",
+        "improvement_signal",
+        "issue_boundary"
       ],
       "tools": [
         "skill distillation",
-        "held-out evals"
+        "held-out evals",
+        "factory improvement issue creation",
+        "Hermes update review",
+        "execution history review"
       ],
       "output_contract": "skill_eval_result",
-      "authority_max": "propose skill changes; cannot fake eval success",
+      "authority_max": "propose skill changes and create public-safe factory improvement issues; cannot fake eval success or mutate critical factory contracts",
       "veto_conditions": [
         "one-off workflow",
         "no regression",
-        "no held-out case"
+        "no held-out case",
+        "requires critical mutation without human approval",
+        "raw evidence issue"
       ],
       "evidence_required": [
         "repetition evidence",
@@ -1614,13 +1626,16 @@
         "permission class",
         "agent quality plan",
         "factory maturity scorecard",
-        "missing coverage register"
+        "missing coverage register",
+        "factory improvement issue or rejection rationale",
+        "human approval boundary"
       ],
       "kanban_transition_rules": [
-        "closed specialists need eval-backed promotion"
+        "closed specialists need eval-backed promotion",
+        "critical factory changes need human gate before implementation"
       ],
       "promotion_rule": "closed only after repeated predictable success",
-      "public_safety_notes": "Skill examples must be public-safe."
+      "public_safety_notes": "Skill examples and improvement issues must be public-safe and must not contain raw historical evidence."
     },
     {
       "worker_id": "public-safety-gate",

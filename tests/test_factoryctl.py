@@ -216,6 +216,23 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(report["workers"]["public-safety-gate"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["release-ops-worker"]["status"], "blocked_missing_inputs")
 
+    def test_factory_mechanic_loop_triggers_skill_eval_distiller(self) -> None:
+        card = dict(load_card("v35_valid_product_face.md"))
+        card["phase"] = "F18"
+        card["surfaces"] = ["factory-mechanic-loop", "factory-improvement"]
+        card["evidence_expected"] = "factory improvement proposal"
+        card["agent_eval_plan"] = {"record_type": "agent_eval_plan"}
+        card["factory_maturity_scorecard"] = {"record_type": "factory_maturity_scorecard"}
+        card["worker_coverage_map"] = {"skill-eval-distiller": "owns factory improvement loop"}
+        card["improvement_signal"] = "repeated worker feedback"
+        card["issue_boundary"] = "public-safe proposal only; no critical mutation without human approval"
+
+        report = factoryctl.build_gate_report(card)
+
+        self.assertTrue(report["workers"]["skill-eval-distiller"]["required"])
+        self.assertEqual(report["workers"]["skill-eval-distiller"]["status"], "requires_execution")
+        self.assertIn("skill-eval-distiller", report["required_workers"])
+
     def test_security_scan_packet_can_require_codex_security_on_r2_product_face(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
 

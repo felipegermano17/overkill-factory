@@ -1,6 +1,6 @@
 ---
 name: overkill-factory
-description: Operate the Overkill Factory product-production line. Use when turning raw product papers into Product SOT, Product Experience OS/Product Face, security architecture, access readiness, Hermes Kanban cards, agent execution, Receipt Five evidence, human gates, pilots, Factory VNext methodology updates, or professional open-source GitHub stewardship for the public factory repository.
+description: Operate the Overkill Factory product-production line. Use when turning raw product papers into Product SOT, Product Experience OS/Product Face, security architecture, access readiness, Hermes Kanban cards, agent execution, Receipt Five evidence, human gates, pilots, Factory VNext methodology updates, Factory Mechanic Loop improvement issues, or professional open-source GitHub stewardship for the public factory repository.
 ---
 
 # Overkill Factory
@@ -13,7 +13,7 @@ different runtime.
 
 1. Identify the current factory phase: source, SOT, architecture, Product
    Experience OS/Product Face, review, decomposition, execution, verification,
-   promotion, pilot, VNext or public GitHub stewardship.
+   promotion, pilot, VNext, Factory Mechanic Loop or public GitHub stewardship.
 2. Separate source facts from inference and decisions.
 3. If Hermes runtime state matters, use the `hermes-kanban` skill and inspect
    the real Hermes runtime/board before mutating anything.
@@ -95,6 +95,9 @@ Block or revise cards when:
 - The public repository contains partial manual mirrors of generated contracts,
   historical evidence dumps, or folders that cannot justify their public
   purpose, first-use path, source of truth, and validation coverage.
+- Factory Mechanic findings are committed as raw evidence or executed as
+  critical contract changes without a public-safe issue/proposal and explicit
+  human gate.
 - Hermes updates have not passed compatibility manifest, update runbook,
   disposable smoke and rollback planning.
 - Hermes `dispatch --dry-run` and `--initial-status blocked` are not enough to
@@ -114,6 +117,9 @@ Load only what is needed:
 - `references/open-source-github.md` when assessing or changing the public
   GitHub repository, README, folder architecture, onboarding, examples, CI,
   release hygiene, public safety, or comparisons with other open-source repos.
+- `docs/maintenance/factory-mechanic-loop.md` when turning learnback, maturity
+  findings, Hermes updates, worker feedback or execution history into
+  public-safe factory improvement issues.
 - `agents/worker-registry.public.json`, `agents/worker-profiles.public.json`
   and `agents/hermes-profile-bindings.public.json` before changing worker
   profiles or dispatch behavior.
@@ -169,6 +175,14 @@ running on the Hermes adapter.
   Solana/Quasar all need the right worker.
 - Use open specialists for exploration and closed specialists only after
   repetition, predictable input and verifiable output.
+- Treat Factory Mechanic as a factory-wide protocol owned by
+  `skill-eval-distiller`, not as a loose worker profile. It may create
+  public-safe improvement issues, but critical registry, binding, adapter,
+  security, release, methodology or authority changes require explicit human
+  approval before mutation.
+- Do not create project-specific recurring maintenance loops from Factory
+  Mechanic findings unless a human grants separate scope, cadence, budget and
+  stop condition.
 - AutoReview is pre-landing evidence, not approval.
 - Handoff is a replayable state packet, not a pretty summary.
 - Remote proof uses Crabbox/Testbox/container only when local proof is

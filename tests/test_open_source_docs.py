@@ -54,6 +54,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/examples/gallery.md",
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
+            "docs/maintenance/factory-mechanic-loop.md",
             "examples/minimal-hermes-project/README.md",
             ".env.example",
             "CHANGELOG.md",
@@ -106,6 +107,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             ".github/workflows/security.yml",
             ".github/ISSUE_TEMPLATE/bug_report.yml",
             ".github/ISSUE_TEMPLATE/feature_request.yml",
+            ".github/ISSUE_TEMPLATE/factory_improvement.yml",
             ".github/ISSUE_TEMPLATE/config.yml",
             ".github/pull_request_template.md",
         ]
@@ -230,6 +232,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Security",
             "Release",
             "Maintainer Internals",
+            "Factory Mechanic Loop",
         ]:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, docs_index)
@@ -242,6 +245,29 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Operator surface", repo_surface)
         self.assertIn("Maintainer internals", repo_surface)
         self.assertIn("Generated output", repo_surface)
+
+    def test_factory_mechanic_loop_uses_issues_without_evidence_dumping(self) -> None:
+        loop_doc = read_text("docs/maintenance/factory-mechanic-loop.md")
+        issue_template = read_text(".github/ISSUE_TEMPLATE/factory_improvement.yml")
+        combined = f"{loop_doc}\n{issue_template}"
+
+        for phrase in [
+            "public-safe factory improvement issue",
+            "not a separate executable worker",
+            "must not mutate critical factory state",
+            "This issue is factory-wide",
+            "This issue does not grant approval to mutate critical factory contracts",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, combined)
+
+        for forbidden in [
+            "private logs, raw historical evidence",
+            "local paths, secrets or chat transcripts",
+            "project-specific recurring maintenance loop",
+        ]:
+            with self.subTest(forbidden=forbidden):
+                self.assertIn(forbidden, combined)
 
     def test_release_security_and_example_gallery_are_professional_surfaces(self) -> None:
         changelog = read_text("CHANGELOG.md")

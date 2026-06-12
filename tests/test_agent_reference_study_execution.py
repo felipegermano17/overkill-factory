@@ -46,6 +46,11 @@ class AgentReferenceStudyExecutionTest(unittest.TestCase):
         skill_eval = profiles["skill-eval-distiller"]
         self.assertIn("agent_eval_plan", skill_eval["input_contract"]["required"])
         self.assertIn("permission class", skill_eval["output_contract"]["required_sections"])
+        self.assertIn("create public-safe factory improvement issues", skill_eval["authority"]["may"])
+        self.assertIn("mutate critical factory contracts without explicit human gate", skill_eval["authority"]["must_not"])
+        self.assertIn("factory improvement issue or rejection rationale", skill_eval["output_contract"]["required_sections"])
+        self.assertIn("critical factory contract change", skill_eval["authority"]["human_gate_required_when"])
+        self.assertIn("project-specific maintenance loops", " ".join(skill_eval["authority"]["must_not"]))
 
     def test_reference_study_execution_is_preserved_as_contracts_not_research_doc(self) -> None:
         self.assertFalse((ROOT / "docs" / "research").exists())

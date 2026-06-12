@@ -44,3 +44,6 @@ release.
 
 Use `maintenance/repo-surface.md` to decide whether a file belongs in the
 operator surface, maintainer internals or generated output.
+Use `maintenance/factory-mechanic-loop.md` for the Factory Mechanic Loop: the
+factory-wide improvement loop that turns learnback and maturity findings into
+issues or bounded proposals.

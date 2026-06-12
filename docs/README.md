@@ -38,4 +38,6 @@ python -m unittest tests.test_open_source_docs -q
 Start with `docs/index.md`, then read
 `docs/getting-started/install-in-hermes.md`,
 `docs/reference/cli.md`, `docs/concepts/factory-flow.md` and
-`docs/operations/validation-and-release.md`.
+`docs/operations/validation-and-release.md`. Maintainers use
+`docs/maintenance/factory-mechanic-loop.md` when converting factory learnback
+into public-safe improvement issues.

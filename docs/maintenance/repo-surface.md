@@ -25,6 +25,7 @@ Files maintainers change when contracts evolve:
 - `scripts/`
 - `adapters/`
 - `tests/`
+- `docs/maintenance/factory-mechanic-loop.md`
 
 These are allowed to be dense. They should not be the first path a new user
 must understand.
@@ -39,4 +40,6 @@ screenshots, raw logs or historical proof.
 
 If a workflow becomes common for users, expose it through `factoryctl`. If a
 workflow is only for maintainers, document it in the relevant README and keep it
-covered by tests.
+covered by tests. Factory improvement findings should become public-safe GitHub
+issues or explicit rejection rationale, not historical evidence committed to
+the repo.

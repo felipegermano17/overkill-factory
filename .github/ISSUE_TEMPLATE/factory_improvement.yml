@@ -1,0 +1,81 @@
+name: Factory Improvement
+description: Propose an improvement found by the Factory Mechanic Loop.
+title: "[Factory Improvement]: "
+labels: ["factory-improvement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for factory-wide process, worker, Hermes, gate, repo, docs or validation improvements.
+        Do not paste private logs, raw historical evidence, screenshots, local paths, secrets or chat transcripts.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is weak, broken, repeated or missing in the factory?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence-origin
+    attributes:
+      label: Evidence / Origin
+      description: Public-safe source, file, issue, run class or sanitized observation that led to this.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Why this matters for installation, operation, maintenance, safety, trust or open-source quality.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The smallest concrete change that should be considered.
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out Of Scope
+      description: What this issue must not change.
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk
+      description: What could go wrong if this is implemented or ignored?
+    validations:
+      required: true
+  - type: textarea
+    id: validation-expected
+    attributes:
+      label: Validation Expected
+      description: Command, test, smoke, review or proof that should pass before closing.
+    validations:
+      required: true
+  - type: dropdown
+    id: human-approval-required
+    attributes:
+      label: Human Approval Required?
+      description: Critical factory contracts, gates, runtime behavior and release/security authority require explicit human approval.
+      options:
+        - "Yes - critical factory change"
+        - "No - non-critical proposal"
+        - "Unknown - needs triage"
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Boundary
+      options:
+        - label: This issue is factory-wide, not a project-specific recurring maintenance loop.
+          required: true
+        - label: This issue does not include raw historical evidence, private logs, screenshots, local paths, secrets or chat transcripts.
+          required: true
+        - label: This issue does not grant approval to mutate critical factory contracts.
+          required: true

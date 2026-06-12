@@ -52,8 +52,8 @@ the operator cockpit.
 | 28. Production Operations | `release-ops-worker` | `infra-devops-builder`, `detection-monitoring-worker`, `cloud-infra-security-specialist`, `supply-chain-gate` | Prepare live ownership, health checks, rollback, support and deploy evidence. | Production operations packet and smoke. | Product is treated as live without owner or rollback path. |
 | 29. Release or Block | `release-ops-worker` | `human-gate-clerk`, `public-safety-gate`, `detection-monitoring-worker`, `factory-orchestrator` | Decide released, release candidate, done, blocked, superseded or archived. | Release decision with evidence and rollback refs. | Release decision lacks authority or monitoring evidence. |
 | 30. Monitoring, Incident & Support | `detection-monitoring-worker` | `release-ops-worker`, `infra-devops-builder`, `memory-steward`, `skill-eval-distiller` | Track health, alerts, incidents, rollback, postmortem and support path. | Monitoring evidence, incident runbook, owner path. | Failure has no signal, owner or response path. |
-| 31. Learnback | `skill-eval-distiller` | `memory-steward`, `docs-os-worker`, `test-automation-builder`, `agent-runtime-builder` | Turn repeated learning into test, eval, skill, policy, template, doc, gate, worker or pack update. | Learnback record and before/after evidence. | Learning remains only in chat memory. |
-| 32. Factory Maturity Audit | `skill-eval-distiller` | `independent-reviewer`, `factory-orchestrator`, `security-orchestrator`, `product-face` | Attack the factory for blind spots, weak agents, weak packs and missing proof. | Factory maturity scorecard and missing coverage register. | Factory is strong in one area and blind in another. |
+| 31. Learnback | `skill-eval-distiller` | `memory-steward`, `docs-os-worker`, `test-automation-builder`, `agent-runtime-builder` | Turn repeated learning into test, eval, skill, policy, template, doc, gate, worker, pack update or public-safe factory improvement issue. | Learnback record, before/after evidence and issue or rejection rationale. | Learning remains only in chat memory. |
+| 32. Factory Maturity Audit | `skill-eval-distiller` | `independent-reviewer`, `factory-orchestrator`, `security-orchestrator`, `product-face` | Attack the factory for blind spots, weak agents, weak packs and missing proof, then route actionable findings through the Factory Mechanic Loop. | Factory maturity scorecard, missing coverage register and human approval boundary. | Factory is strong in one area and blind in another. |
 
 ## Conceptual Roles To Real Workers
 
@@ -68,6 +68,7 @@ roles are implemented by these registered workers:
 | Security Architect Worker | `security-orchestrator` plus the routed security specialist |
 | Data/Metrics Worker | `detection-monitoring-worker` with `data-persistence-builder` or `backend-api-builder` when implementation is needed |
 | Agent Eval Worker | `skill-eval-distiller` |
+| Factory Mechanic | `skill-eval-distiller` operating the Factory Mechanic Loop; not a separate worker unless promoted through registry, profile, binding, permission class and smoke proof |
 | Dependency/Integration Worker | `integration-builder` plus `supply-chain-gate` when dependency risk exists |
 | Access/Capability Worker | `factory-orchestrator` plus `human-gate-clerk` for real authority |
 | Privacy/Compliance Worker | `security-orchestrator` routes the right specialist or blocks until a pack exists |

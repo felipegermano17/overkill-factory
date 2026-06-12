@@ -237,6 +237,8 @@ adapter rule or receipt contract.
 - `docs/security/oss-security.md`: repository security controls.
 - `docs/maintenance/repo-surface.md`: operator surface versus maintainer
   internals and generated output.
+- `docs/maintenance/factory-mechanic-loop.md`: factory-wide improvement loop
+  for public-safe issues and bounded proposals.
 - `examples/minimal-hermes-project/README.md`: small public-safe example.
 - `.env.example`: safe environment variable template.
 - `CHANGELOG.md`: public release history.

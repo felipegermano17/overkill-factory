@@ -115,7 +115,7 @@ the card.
 | `release-ops-worker` | closed/hybrid | F16-F17 | Handles release channel, production operations, promotion packet, smoke, canary, rollback readiness and monitoring. |
 | `public-safety-gate` | closed | F16-F17 | Blocks public artifacts containing private paths, internal names, raw source extraction or private links. |
 | `memory-steward` | hybrid | F0/F1/F18 | Treats memory as a risk surface with source, trust tier, freshness and poisoning controls. |
-| `skill-eval-distiller` | hybrid | F8/F18 | Owns Agent Quality, Learnback and Factory Maturity audits, then turns repeated success/failure into compact skills, evals, templates, checklists or pack/worker changes. |
+| `skill-eval-distiller` | hybrid | F8/F18 | Owns Agent Quality, Learnback, Factory Maturity audits and the Factory Mechanic Loop, then turns repeated success/failure, worker feedback or execution-history findings into compact skills, evals, templates, checklists, pack/worker changes or public-safe factory improvement issues. |
 
 ## Control Tower
 
@@ -132,6 +132,7 @@ they get a machine-readable contract in `agents/worker-registry.public.json`.
 | Role | Mode | Enters | What it does |
 |---|---|---|---|
 | `factory-critic` | open stance | F18 | Review stance used by `skill-eval-distiller` and `independent-reviewer` to attack ambiguity, over-complexity, under-specification and agent misinterpretation. It is not a separate executable worker until it has registry, profile, binding and eval proof. |
+| `factory-mechanic-loop` | improvement protocol | F18 | Factory-wide maintenance loop operated by `skill-eval-distiller`. It may create public-safe improvement issues, but it is not a separate executable worker and cannot mutate critical contracts without human approval. |
 
 ## Anti-Theater Rules
 

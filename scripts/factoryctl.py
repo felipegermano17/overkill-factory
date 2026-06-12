@@ -598,12 +598,21 @@ WORKERS: dict[str, WorkerDefinition] = {
     "skill-eval-distiller": WorkerDefinition(
         worker_id="skill-eval-distiller",
         worker_name="Skill Eval Distiller",
-        factory_phase="F18",
+        factory_phase="F8/F18",
         output_field="skill_eval_result",
-        tool_required="skill compactness, eval and held-out regression workflow",
-        timing="after repeated workflow failures or successful repetition",
-        blocking_policy="A closed specialist or skill update needs repetition, predictable input and verifiable output.",
-        required_inputs=("evidence_expected", "done_definition", "source_refs", "agent_eval_plan"),
+        tool_required="skill compactness, eval, held-out regression and factory improvement issue workflow",
+        timing="after repeated workflow failures, successful repetition, Hermes updates, worker feedback, execution history review or factory maturity audit",
+        blocking_policy="Factory improvement issues are proposals; critical contract, adapter, gate, security, release or methodology changes need explicit human approval before mutation.",
+        required_inputs=(
+            "evidence_expected",
+            "done_definition",
+            "source_refs",
+            "agent_eval_plan",
+            "factory_maturity_scorecard",
+            "worker_coverage_map",
+            "improvement_signal",
+            "issue_boundary",
+        ),
     ),
     "public-safety-gate": WorkerDefinition(
         worker_id="public-safety-gate",
@@ -1749,8 +1758,21 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "memory/source/learning-loop surface detected" if required else "no memory stewardship trigger"
         return required, reason
     if worker_id == "skill-eval-distiller":
-        required = phase == "F18" or "skill" in surfaces or "eval" in surfaces
-        reason = "skill/eval/learning loop detected" if required else "no skill evolution trigger"
+        learning_surfaces = {
+            "skill",
+            "eval",
+            "learning-loop",
+            "factory-mechanic-loop",
+            "factory-improvement",
+            "factory-maturity",
+            "agent-quality",
+            "worker-feedback",
+            "execution-history",
+            "hermes-update",
+            "github-issue",
+        }
+        required = phase == "F18" or bool(surfaces & learning_surfaces)
+        reason = "skill/eval/factory improvement loop detected" if required else "no skill evolution trigger"
         return required, reason
     if worker_id == "public-safety-gate":
         public_surfaces = {"public", "opensource", "open-source", "repo-public", "release", "docs"}

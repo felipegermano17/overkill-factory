@@ -10,6 +10,8 @@
 This folder contains the GitHub project surface: issue templates, pull request
 templates, Dependabot configuration and CI/security workflows that keep the
 public repository installable, reviewable and safe for external operators.
+The Factory Mechanic Loop may create public-safe factory improvement issues
+here; those issues are proposals, not approval records or historical evidence.
 
 ## What Does Not Belong Here
 
