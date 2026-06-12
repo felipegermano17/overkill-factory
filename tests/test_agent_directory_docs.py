@@ -17,9 +17,10 @@ class AgentDirectoryDocsTest(unittest.TestCase):
         readme = read_text("agents/README.md")
         required_refs = [
             "agents/worker-roster.md",
-            "agents/critical-workers/README.md",
             "docs/agents/worker-profiles.md",
             "docs/agents/factory-stage-agent-map.md",
+            "docs/agents/capability-packs.md",
+            "docs/agents/permission-model.md",
             "agents/worker-registry.public.json",
             "agents/worker-profiles.public.json",
             "agents/hermes-profile-bindings.public.json",
@@ -32,6 +33,9 @@ class AgentDirectoryDocsTest(unittest.TestCase):
             with self.subTest(ref=ref):
                 self.assertIn(ref, readme)
 
+        self.assertNotIn("agents/critical-workers", readme)
+        self.assertNotIn("critical-workers/README.md", readme)
+
         for phrase in [
             "Worker Operability Rule",
             "Quality Bar",
@@ -41,64 +45,19 @@ class AgentDirectoryDocsTest(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, readme)
 
-    def test_critical_worker_cards_have_operational_shape(self) -> None:
-        critical_dir = ROOT / "agents" / "critical-workers"
-        cards = sorted(path for path in critical_dir.glob("*.md") if path.name != "README.md")
-        expected_cards = {
-            "codex-security-runner.md",
-            "evidence-reconciler.md",
-            "factory-orchestrator.md",
-            "human-gate-clerk.md",
-            "independent-reviewer.md",
-            "product-face-validator.md",
-            "product-sot-planner.md",
-            "public-safety-gate.md",
-            "release-ops-worker.md",
-            "security-orchestrator.md",
-            "solana-quasar-auditor-runner.md",
-            "source-ledger-worker.md",
-        }
+    def test_agent_directory_does_not_keep_partial_worker_mirrors(self) -> None:
+        self.assertFalse((ROOT / "agents" / "critical-workers").exists())
+        readme = read_text("agents/README.md")
+        self.assertIn("Do not add hand-written per-worker mirrors", readme)
 
-        self.assertEqual({path.name for path in cards}, expected_cards)
-
-        required_headings = [
-            "Runtime Identity",
-            "When It Enters",
-            "Required Inputs",
-            "Required Result",
-            "Blocking Rule",
-            "Refusal Rule",
-            "Evidence Quality",
-            "Handoff",
-        ]
-        for path in cards:
-            text = path.read_text(encoding="utf-8")
-            with self.subTest(card=path.name):
-                for heading in required_headings:
-                    self.assertIn(f"## {heading}", text)
-
-    def test_critical_cards_reference_registered_workers(self) -> None:
+    def test_worker_roster_references_every_registered_worker(self) -> None:
         registry = json.loads(read_text("agents/worker-registry.public.json"))
         registered = {worker["worker_id"] for worker in registry["workers"]}
-        critical_readme = read_text("agents/critical-workers/README.md")
+        roster = read_text("agents/worker-roster.md")
 
-        for worker_id in [
-            "factory-orchestrator",
-            "source-ledger-worker",
-            "product-sot-planner",
-            "product-face",
-            "security-orchestrator",
-            "codex-security",
-            "solana-quasar-auditor",
-            "independent-reviewer",
-            "human-gate-clerk",
-            "evidence-reconciler",
-            "release-ops-worker",
-            "public-safety-gate",
-        ]:
+        for worker_id in sorted(registered):
             with self.subTest(worker_id=worker_id):
-                self.assertIn(worker_id, registered)
-                self.assertIn(f"`{worker_id}`", critical_readme)
+                self.assertIn(f"`{worker_id}`", roster)
 
 
 if __name__ == "__main__":

@@ -25,11 +25,10 @@ and packet route all exist.
 | Read | File | Purpose |
 | --- | --- | --- |
 | 1 | `agents/worker-roster.md` | Human overview of the 40 public workers by ownership group. |
-| 2 | `agents/critical-workers/README.md` | Detailed cards for workers that block the line or protect authority. |
-| 3 | `docs/agents/worker-profiles.md` | Operator-facing guide for every worker role. |
-| 4 | `docs/agents/factory-stage-agent-map.md` | Stage-by-stage map from the factory journey to real workers. |
-| 5 | `docs/agents/capability-packs.md` | Product-type coverage and pack activation rules. |
-| 6 | `docs/agents/permission-model.md` | Human explanation of worker authority classes. |
+| 2 | `docs/agents/worker-profiles.md` | Operator-facing guide for every worker role. |
+| 3 | `docs/agents/factory-stage-agent-map.md` | Stage-by-stage map from the factory journey to real workers. |
+| 4 | `docs/agents/capability-packs.md` | Product-type coverage and pack activation rules. |
+| 5 | `docs/agents/permission-model.md` | Human explanation of worker authority classes. |
 
 Open the JSON files after that, when you need exact contracts.
 
@@ -52,7 +51,6 @@ used by scripts, tests and generated worker packets.
 | File | What It Explains |
 | --- | --- |
 | `agents/worker-roster.md` | The worker set in plain language. |
-| `agents/critical-workers/` | Deep cards for high-leverage workers and gates. |
 | `docs/agents/live-agent-configuration.md` | How public worker contracts map to live Hermes profile materialization. |
 | `docs/agents/hermes-profile-manifest.md` | Expected Hermes profile shape. |
 | `docs/architecture/hermes-integration.md` | How Hermes, adapter hooks and worker packets fit together. |
@@ -60,6 +58,10 @@ used by scripts, tests and generated worker packets.
 The human guides must never become the runtime source of truth. When a guide
 and a machine contract disagree, fix the mismatch and let the executable gate
 decide the card state.
+
+Do not add hand-written per-worker mirrors under this directory unless they are
+generated from the registry and cover the full worker set. A partial manual
+mirror makes GitHub easier to browse for a moment and harder to trust forever.
 
 ## Worker Operability Rule
 
