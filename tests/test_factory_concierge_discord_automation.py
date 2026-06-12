@@ -283,6 +283,75 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
         self.assertEqual(registered["status"], "needs_changes")
         self.assertEqual(event["event_type"], "approval_recorded")
 
+    def test_approval_button_interaction_registers_owner_decision(self) -> None:
+        approval = approval_request()
+        interaction = {
+            "type": 3,
+            "id": "interaction-private",
+            "member": {"user": {"id": "owner"}},
+            "data": {"custom_id": f"of.approval.approved:{approval['approval_id']}"},
+        }
+
+        with patch.dict(automation.os.environ, {"DISCORD_ALLOWED_USERS": "owner"}):
+            result = automation.handle_approval_button_interaction(
+                approval,
+                interaction,
+                now="2026-06-11T09:00:00Z",
+            )
+
+        self.assertTrue(result["accepted"])
+        self.assertEqual(result["record_type"], "discord_approval_interaction_result")
+        self.assertEqual(result["registered_approval"]["status"], "approved")
+        self.assertEqual(result["approval_event"]["event_type"], "approval_recorded")
+        self.assertEqual(result["interaction_response"]["type"], 4)
+        self.assertEqual(result["interaction_response"]["data"]["flags"], 64)
+
+    def test_approval_button_interaction_rejects_untrusted_user(self) -> None:
+        approval = approval_request()
+        interaction = {
+            "type": 3,
+            "member": {"user": {"id": "intruder"}},
+            "data": {"custom_id": f"of.approval.approved:{approval['approval_id']}"},
+        }
+
+        with patch.dict(automation.os.environ, {"DISCORD_ALLOWED_USERS": "owner"}):
+            result = automation.handle_approval_button_interaction(
+                approval,
+                interaction,
+                now="2026-06-11T09:00:00Z",
+            )
+
+        self.assertFalse(result["accepted"])
+        self.assertIn("discord user is not allowed", result["reasons"])
+
+    def test_approval_button_interaction_rejects_wrong_custom_id_scope(self) -> None:
+        approval = approval_request()
+        interaction = {
+            "type": 3,
+            "member": {"user": {"id": "owner"}},
+            "data": {"custom_id": "of.approval.approved:other-approval"},
+        }
+
+        with patch.dict(automation.os.environ, {"DISCORD_ALLOWED_USERS": "owner"}):
+            result = automation.handle_approval_button_interaction(
+                approval,
+                interaction,
+                now="2026-06-11T09:00:00Z",
+            )
+
+        self.assertFalse(result["accepted"])
+        self.assertIn("approval_id mismatch", result["reasons"])
+
+    def test_discord_signature_verifier_rejects_missing_signature_material(self) -> None:
+        self.assertFalse(
+            automation.verify_discord_interaction_signature(
+                public_key_hex="",
+                signature_hex="",
+                timestamp="",
+                body=b"{}",
+            )
+        )
+
     def test_approval_text_fallback_registers_owner_decision(self) -> None:
         client = FakeDiscordClient()
         state: dict[str, Any] = {"version": 1, "dashboard": {}, "projects": {}}
@@ -298,19 +367,48 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
             }
         )
 
-        result = automation.sync_approval_text_decision(
-            approval,
-            client,
-            config,
-            state,
-            apply=True,
-            now="2026-06-11T09:00:00Z",
-        )
+        with patch.dict(automation.os.environ, {"DISCORD_ALLOWED_USERS": "owner"}):
+            result = automation.sync_approval_text_decision(
+                approval,
+                client,
+                config,
+                state,
+                apply=True,
+                now="2026-06-11T09:00:00Z",
+            )
 
         self.assertTrue(result["accepted"])
         self.assertEqual(result["decision"], "approved")
         self.assertEqual(state["approval_events"][approval["approval_id"]]["status"], "approved")
         self.assertEqual(client.messages["chan-approvals"][0]["embeds"][0]["fields"][2]["value"], "approved")
+
+    def test_approval_text_fallback_requires_allowed_users(self) -> None:
+        client = FakeDiscordClient()
+        state: dict[str, Any] = {"version": 1, "dashboard": {}, "projects": {}}
+        config = bridge.BridgeConfig(apply=True, guild_id=None, state_path=Path("private.json"))
+        approval = approval_request()
+        automation.post_approval_request(approval, client, config, state, apply=True)
+        thread_id = state["approvals"][approval["approval_id"]]["thread_id"]
+        client.messages[thread_id].append(
+            {
+                "id": "owner-decision",
+                "content": "aprovado",
+                "author": {"id": "owner", "bot": False},
+            }
+        )
+
+        with patch.dict(automation.os.environ, {}, clear=True):
+            result = automation.sync_approval_text_decision(
+                approval,
+                client,
+                config,
+                state,
+                apply=True,
+                now="2026-06-11T09:00:00Z",
+            )
+
+        self.assertFalse(result["accepted"])
+        self.assertIn("DISCORD_ALLOWED_USERS is required", result["reasons"])
 
     def test_health_and_public_receipt_cover_remaining_discord_fronts(self) -> None:
         client = FakeDiscordClient()
@@ -360,6 +458,7 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
                 event_dir=root / "events",
                 approval=None,
                 approval_dir=root / "approvals",
+                interaction=None,
                 decision=None,
                 decision_time=None,
                 scan_intake=True,
@@ -385,6 +484,143 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
         self.assertTrue(receipt["checks"]["live_runtime_projection_automated"])
         self.assertTrue(receipt["checks"]["operational_channels_projected"])
         self.assertTrue(receipt["checks"]["health_anti_stale_posted"])
+
+    def test_run_automation_button_interaction_registers_event(self) -> None:
+        client = FakeDiscordClient()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("projections", "events", "approvals"):
+                (root / name).mkdir()
+            approval_path = root / "approval.json"
+            interaction_path = root / "interaction.json"
+            approval = approval_request()
+            approval_path.write_text(json.dumps(approval), encoding="utf-8")
+            interaction_path.write_text(
+                json.dumps(
+                    {
+                        "type": 3,
+                        "member": {"user": {"id": "owner"}},
+                        "data": {"custom_id": f"of.approval.approved:{approval['approval_id']}"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            args = argparse.Namespace(
+                projection=None,
+                projection_dir=root / "projections",
+                event=None,
+                event_dir=root / "events",
+                approval=approval_path,
+                approval_dir=root / "approvals",
+                interaction=interaction_path,
+                decision=None,
+                decision_time="2026-06-11T09:00:00Z",
+                scan_approval_text=False,
+                scan_intake=True,
+                post_health=True,
+                max_messages=20,
+                state=root / "state.json",
+                out=root / "receipt.json",
+                env=None,
+                guild_id=None,
+                api_base="https://discord.test/api",
+                timeout=1.0,
+                apply=True,
+            )
+            with patch.dict(
+                automation.os.environ,
+                {"DISCORD_BOT_TOKEN": "test-token", "DISCORD_ALLOWED_USERS": "owner"},
+            ), patch.object(automation.bridge, "DiscordApi", return_value=client):
+                receipt = automation.run_automation(args)
+
+            state = json.loads((root / "state.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(receipt["result"], "PASS")
+        self.assertTrue(receipt["checks"]["approval_button_handler_ready"])
+        self.assertTrue(receipt["checks"]["approval_requires_allowed_user"])
+        self.assertEqual(state["approval_events"][approval["approval_id"]]["source"], "discord_button")
+        self.assertEqual(
+            state["approvals"][approval["approval_id"]]["approval"]["approval_id"],
+            approval["approval_id"],
+        )
+
+    def test_run_automation_button_interaction_can_resolve_from_state(self) -> None:
+        client = FakeDiscordClient()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("projections", "events", "approvals"):
+                (root / name).mkdir()
+            approval_path = root / "approval.json"
+            interaction_path = root / "interaction.json"
+            state_path = root / "state.json"
+            approval = approval_request()
+            approval_path.write_text(json.dumps(approval), encoding="utf-8")
+            interaction_path.write_text(
+                json.dumps(
+                    {
+                        "type": 3,
+                        "member": {"user": {"id": "owner"}},
+                        "data": {"custom_id": f"of.approval.approved:{approval['approval_id']}"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            publish_args = argparse.Namespace(
+                projection=None,
+                projection_dir=root / "projections",
+                event=None,
+                event_dir=root / "events",
+                approval=approval_path,
+                approval_dir=root / "approvals",
+                interaction=None,
+                decision=None,
+                decision_time="2026-06-11T09:00:00Z",
+                scan_approval_text=False,
+                scan_intake=False,
+                post_health=False,
+                max_messages=20,
+                state=state_path,
+                out=root / "publish-receipt.json",
+                env=None,
+                guild_id=None,
+                api_base="https://discord.test/api",
+                timeout=1.0,
+                apply=True,
+            )
+            click_args = argparse.Namespace(
+                projection=None,
+                projection_dir=root / "projections",
+                event=None,
+                event_dir=root / "events",
+                approval=None,
+                approval_dir=root / "approvals",
+                interaction=interaction_path,
+                decision=None,
+                decision_time="2026-06-11T09:00:00Z",
+                scan_approval_text=False,
+                scan_intake=False,
+                post_health=False,
+                max_messages=20,
+                state=state_path,
+                out=root / "click-receipt.json",
+                env=None,
+                guild_id=None,
+                api_base="https://discord.test/api",
+                timeout=1.0,
+                apply=True,
+            )
+            with patch.dict(
+                automation.os.environ,
+                {"DISCORD_BOT_TOKEN": "test-token", "DISCORD_ALLOWED_USERS": "owner"},
+            ), patch.object(automation.bridge, "DiscordApi", return_value=client):
+                automation.run_automation(publish_args)
+                receipt = automation.run_automation(click_args)
+
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertTrue(receipt["checks"]["approval_registration_path_reachable"])
+        self.assertEqual(state["approvals"][approval["approval_id"]]["status"], "approved")
+        self.assertEqual(state["approval_events"][approval["approval_id"]]["source"], "discord_button")
 
 
 if __name__ == "__main__":

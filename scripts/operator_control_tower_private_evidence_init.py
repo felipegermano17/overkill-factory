@@ -72,6 +72,8 @@ def owner_setup_template(created_at: str) -> dict[str, Any]:
                 "message_content_intent_enabled": False,
                 "server_members_intent_enabled": False,
                 "owner_user_allowlisted": False,
+                "approval_button_interaction_path_configured": False,
+                "approval_button_interaction_auth_validated": False,
                 "required_channels_exist": False,
                 "owner_approval_channel_restricted": False,
                 "bot_health_channel_available": False,

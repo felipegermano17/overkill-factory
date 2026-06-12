@@ -45,6 +45,9 @@ APPROVAL_DECISION_LABELS = {
     "rejected": "Rejeitar",
     "needs_changes": "Pedir ajuste",
 }
+APPROVAL_BUTTON_RE = re.compile(r"^of\.approval\.(approved|rejected|needs_changes):(.+)$")
+DISCORD_EPHEMERAL_FLAG = 64
+DISCORD_CHANNEL_MESSAGE_WITH_SOURCE = 4
 APPROVAL_TEXT_DECISIONS = {
     "aprovado": "approved",
     "aprovar": "approved",
@@ -667,6 +670,7 @@ def post_approval_request(
     if apply:
         approval_state["last_synced_at"] = utc_now()
         approval_state["status"] = approval["status"]
+        approval_state["approval"] = dict(approval)
     return {
         "approval_id": str(approval["approval_id"]),
         "message_resolved": bool(message_result.get("message_id")) or not apply,
@@ -681,6 +685,171 @@ def allowed_discord_user_ids() -> set[str]:
     return {part.strip() for part in raw.split(",") if part.strip()}
 
 
+def discord_interaction_user_id(interaction: dict[str, Any]) -> str:
+    member = interaction.get("member") or {}
+    member_user = member.get("user") if isinstance(member, dict) else None
+    if isinstance(member_user, dict) and member_user.get("id"):
+        return str(member_user["id"])
+    user = interaction.get("user") or {}
+    if isinstance(user, dict) and user.get("id"):
+        return str(user["id"])
+    return ""
+
+
+def parse_approval_button_custom_id(custom_id: str) -> tuple[str | None, str | None]:
+    match = APPROVAL_BUTTON_RE.match(custom_id)
+    if not match:
+        return None, None
+    return match.group(1), match.group(2)
+
+
+def interaction_response(content: str) -> dict[str, Any]:
+    return {
+        "type": DISCORD_CHANNEL_MESSAGE_WITH_SOURCE,
+        "data": {
+            "content": bridge.truncate(content, 180),
+            "flags": DISCORD_EPHEMERAL_FLAG,
+        },
+    }
+
+
+def verify_discord_interaction_signature(
+    *,
+    public_key_hex: str,
+    signature_hex: str,
+    timestamp: str,
+    body: bytes,
+) -> bool:
+    if not public_key_hex or not signature_hex or not timestamp or not body:
+        return False
+    try:
+        public_key = bytes.fromhex(public_key_hex)
+        signature = bytes.fromhex(signature_hex)
+    except ValueError:
+        return False
+    try:
+        from nacl.exceptions import BadSignatureError  # type: ignore
+        from nacl.signing import VerifyKey  # type: ignore
+    except ImportError as exc:
+        raise RuntimeError("PyNaCl is required to verify Discord interaction signatures") from exc
+    try:
+        VerifyKey(public_key).verify(timestamp.encode("utf-8") + body, signature)
+    except BadSignatureError:
+        return False
+    return True
+
+
+def handle_approval_button_interaction(
+    approval: dict[str, Any],
+    interaction: dict[str, Any],
+    *,
+    now: str | None = None,
+) -> dict[str, Any]:
+    validate_artifact(approval)
+    timestamp = now or utc_now()
+    custom_id = str((interaction.get("data") or {}).get("custom_id") or "")
+    decision_value, custom_approval_id = parse_approval_button_custom_id(custom_id)
+    user_id = discord_interaction_user_id(interaction)
+    allowed = allowed_discord_user_ids()
+    reasons: list[str] = []
+
+    if decision_value is None or custom_approval_id is None:
+        reasons.append("custom_id is not an approval decision")
+    if not allowed:
+        reasons.append("DISCORD_ALLOWED_USERS is required")
+    elif not user_id or user_id not in allowed:
+        reasons.append("discord user is not allowed")
+
+    decision = {
+        "approval_id": custom_approval_id or "",
+        "actor_role": "Factory Owner" if user_id and user_id in allowed else "unknown",
+        "decision": decision_value or "",
+        "scope": approval.get("scope"),
+    }
+    registered, event = register_approval_decision(approval, decision, now=timestamp)
+    if event.get("accepted") is False:
+        reasons.extend(str(reason) for reason in event.get("reasons", []))
+    reasons = sorted(set(reasons))
+    accepted = not reasons
+
+    response = interaction_response(
+        f"Decisao registrada: {registered.get('status')}."
+        if accepted
+        else "Nao registrei esta decisao. Verifique dono, escopo, prazo e pedido."
+    )
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/discord-approval-interaction-result.schema.json",
+        "record_type": "discord_approval_interaction_result",
+        "created_at": timestamp,
+        "approval_id": str(approval["approval_id"]),
+        "accepted": accepted,
+        "decision": str(decision_value or ""),
+        "reasons": reasons,
+        "checks": {
+            "custom_id_scoped": custom_approval_id == approval["approval_id"],
+            "discord_user_allowed": bool(user_id and user_id in allowed),
+            "approval_pending": approval.get("status") == "pending",
+            "interaction_response_ephemeral": response["data"]["flags"] == DISCORD_EPHEMERAL_FLAG,
+        },
+        "registered_approval": registered if accepted else None,
+        "approval_event": event if accepted else None,
+        "interaction_response": response,
+        "source": "discord_button",
+    }
+
+
+def rejected_approval_button_interaction(
+    interaction: dict[str, Any],
+    reasons: list[str],
+    *,
+    now: str | None = None,
+) -> dict[str, Any]:
+    timestamp = now or utc_now()
+    custom_id = str((interaction.get("data") or {}).get("custom_id") or "")
+    decision_value, custom_approval_id = parse_approval_button_custom_id(custom_id)
+    user_id = discord_interaction_user_id(interaction)
+    allowed = allowed_discord_user_ids()
+    response = interaction_response(
+        "Nao registrei esta decisao. Verifique dono, escopo, prazo e pedido."
+    )
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/discord-approval-interaction-result.schema.json",
+        "record_type": "discord_approval_interaction_result",
+        "created_at": timestamp,
+        "approval_id": str(custom_approval_id or "unknown"),
+        "accepted": False,
+        "decision": str(decision_value or ""),
+        "reasons": sorted(set(reasons)),
+        "checks": {
+            "custom_id_scoped": False,
+            "discord_user_allowed": bool(user_id and allowed and user_id in allowed),
+            "approval_pending": False,
+            "interaction_response_ephemeral": response["data"]["flags"] == DISCORD_EPHEMERAL_FLAG,
+        },
+        "registered_approval": None,
+        "approval_event": None,
+        "interaction_response": response,
+        "source": "discord_button",
+    }
+
+
+def approval_from_state_for_interaction(
+    state: dict[str, Any],
+    interaction: dict[str, Any],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    custom_id = str((interaction.get("data") or {}).get("custom_id") or "")
+    _decision, approval_id = parse_approval_button_custom_id(custom_id)
+    if not approval_id:
+        return None, ["custom_id is not an approval decision"]
+    approval_state = (state.get("approvals") or {}).get(approval_id)
+    if not isinstance(approval_state, dict):
+        return None, ["approval request is not in private state"]
+    approval = approval_state.get("approval")
+    if not isinstance(approval, dict):
+        return None, ["approval request payload is not in private state"]
+    return approval, []
+
+
 def text_decision_from_message(message: dict[str, Any]) -> str | None:
     content = normalize_intake_text(str(message.get("content") or ""))
     content = re.sub(r"\s+", " ", content).strip(" .!?,;:")
@@ -692,6 +861,8 @@ def text_decision_for_approval(
     thread_id: str,
 ) -> tuple[dict[str, Any] | None, list[str]]:
     allowed = allowed_discord_user_ids()
+    if not allowed:
+        return None, ["DISCORD_ALLOWED_USERS is required"]
     found: list[tuple[str, dict[str, Any]]] = []
     for message in client.list_messages(thread_id, limit=50):
         author = message.get("author") or {}
@@ -771,6 +942,8 @@ def register_approval_decision(
     validate_artifact(approval)
     timestamp = now or utc_now()
     reasons: list[str] = []
+    if approval.get("status") != "pending":
+        reasons.append("approval request is not pending")
     if decision.get("approval_id") != approval["approval_id"]:
         reasons.append("approval_id mismatch")
     if decision.get("actor_role") != "Factory Owner":
@@ -884,6 +1057,8 @@ def build_public_receipt(results: dict[str, Any], *, applied: bool) -> dict[str,
         "approval_registration_path_reachable": bool(results.get("approval_registration_path_reachable", True)),
         "no_discord_source_of_truth": True,
         "no_private_material_in_public_receipt": True,
+        "approval_button_handler_ready": True,
+        "approval_requires_allowed_user": True,
         "thread_first_project_intake_automated": bool(results.get("thread_first_project_intake_automated")),
         "active_bot_messages_threaded_or_linked": bool(results.get("active_bot_messages_threaded_or_linked")),
         "structured_approval_interactions_automated": bool(results.get("structured_approval_interactions_automated")),
@@ -1023,6 +1198,42 @@ def run_automation(args: argparse.Namespace) -> dict[str, Any]:
                 results["structured_approval_interactions_automated"] = True
         results["approval_text_fallback"] = text_results
 
+    interaction = load_json(args.interaction)
+    if interaction:
+        interaction_approval = approval
+        lookup_errors: list[str] = []
+        if not interaction_approval:
+            interaction_approval, lookup_errors = approval_from_state_for_interaction(state, interaction)
+        interaction_result = (
+            rejected_approval_button_interaction(
+                interaction,
+                lookup_errors,
+                now=args.decision_time,
+            )
+            if not interaction_approval
+            else handle_approval_button_interaction(
+                interaction_approval,
+                interaction,
+                now=args.decision_time,
+            )
+        )
+        results["approval_interaction"] = interaction_result
+        if interaction_result["accepted"]:
+            results["approval_registration_path_reachable"] = True
+            results["structured_approval_interactions_automated"] = True
+            if args.apply:
+                post_approval_request(interaction_result["registered_approval"], client, config, state, apply=bool(args.apply))
+                sync_event(interaction_result["approval_event"], client, config, state, apply=bool(args.apply))
+                state.setdefault("approval_events", {})[str(interaction_result["approval_id"])] = {
+                    "status": interaction_result["registered_approval"].get("status"),
+                    "event_id": interaction_result["approval_event"].get("event_id"),
+                    "synced_at": utc_now(),
+                    "source": "discord_button",
+                }
+        else:
+            results["approval_registration_path_reachable"] = False
+            results["structured_approval_interactions_automated"] = False
+
     decision = load_json(args.decision)
     if approval and decision:
         registered, approval_event = register_approval_decision(approval, decision, now=args.decision_time)
@@ -1075,6 +1286,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--event-dir", type=Path)
     parser.add_argument("--approval", type=Path)
     parser.add_argument("--approval-dir", type=Path)
+    parser.add_argument("--interaction", type=Path, help="Private Discord component interaction payload for an approval button.")
     parser.add_argument("--decision", type=Path)
     parser.add_argument("--decision-time")
     parser.add_argument("--scan-approval-text", action="store_true")

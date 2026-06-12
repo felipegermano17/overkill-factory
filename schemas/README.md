@@ -10,6 +10,9 @@ gates and worker outputs.
   scripts.
 - Contracts that scripts and adapters can enforce without relying on chat
   memory.
+- Discord interaction result contracts such as
+  `discord-approval-interaction-result.schema.json`, when the result is
+  public-safe and does not contain raw Discord ids or tokens.
 
 ## What Does Not Belong Here
 

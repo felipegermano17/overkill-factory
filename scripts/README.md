@@ -22,6 +22,11 @@ operator path. `factoryctl doctor`, `factoryctl init` and
 `factoryctl run minimal` are the first commands. Experimental helpers must
 either graduate into that path or stay clearly secondary.
 
+Discord Control Tower helpers live here because they are executable bridge
+contracts. `factory_concierge_discord_automation.py` renders approval buttons,
+handles approval interaction payloads after signature verification, and keeps
+Discord as cockpit rather than source of truth.
+
 ## How It Is Validated
 
 Run the script-facing bundle:

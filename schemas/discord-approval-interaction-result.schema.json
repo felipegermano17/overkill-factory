@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/discord-approval-interaction-result.schema.json",
+  "title": "Overkill Factory Discord Approval Interaction Result",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "approval_id",
+    "accepted",
+    "decision",
+    "reasons",
+    "checks",
+    "interaction_response",
+    "source"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/discord-approval-interaction-result.schema.json"
+    },
+    "record_type": {
+      "const": "discord_approval_interaction_result"
+    },
+    "created_at": { "type": "string", "minLength": 10 },
+    "approval_id": { "type": "string", "minLength": 3 },
+    "accepted": { "type": "boolean" },
+    "decision": {
+      "type": "string",
+      "enum": ["approved", "rejected", "needs_changes", ""]
+    },
+    "reasons": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "checks": {
+      "type": "object",
+      "required": [
+        "custom_id_scoped",
+        "discord_user_allowed",
+        "approval_pending",
+        "interaction_response_ephemeral"
+      ],
+      "properties": {
+        "custom_id_scoped": { "type": "boolean" },
+        "discord_user_allowed": { "type": "boolean" },
+        "approval_pending": { "type": "boolean" },
+        "interaction_response_ephemeral": { "type": "boolean" }
+      },
+      "additionalProperties": { "type": "boolean" }
+    },
+    "registered_approval": {
+      "type": ["object", "null"]
+    },
+    "approval_event": {
+      "type": ["object", "null"]
+    },
+    "interaction_response": {
+      "type": "object",
+      "required": ["type", "data"],
+      "properties": {
+        "type": { "type": "integer" },
+        "data": {
+          "type": "object",
+          "required": ["content", "flags"],
+          "properties": {
+            "content": { "type": "string", "minLength": 3 },
+            "flags": { "type": "integer" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "source": {
+      "const": "discord_button"
+    }
+  },
+  "additionalProperties": false
+}

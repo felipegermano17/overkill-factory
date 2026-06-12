@@ -11,6 +11,8 @@
     "message_content_intent_enabled": false,
     "server_members_intent_enabled": false,
     "owner_user_allowlisted": false,
+    "approval_button_interaction_path_configured": false,
+    "approval_button_interaction_auth_validated": false,
     "required_channels_exist": false,
     "owner_approval_channel_restricted": false,
     "bot_health_channel_available": false,

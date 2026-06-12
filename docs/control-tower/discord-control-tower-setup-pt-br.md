@@ -105,6 +105,7 @@ Depois que o servidor e o token existem, a fabrica executa esta sequencia:
 1. Configura o Hermes com:
    - `DISCORD_BOT_TOKEN`;
    - `DISCORD_ALLOWED_USERS`;
+   - `DISCORD_PUBLIC_KEY`, se a instalacao usar endpoint HTTP de Interactions;
    - `DISCORD_HOME_CHANNEL`;
    - canais permitidos ou canais livres, se necessario.
 2. Reinicia ou recarrega o gateway do Hermes.
@@ -123,6 +124,7 @@ Depois que o servidor e o token existem, a fabrica executa esta sequencia:
 O kit privado fica fora do repo publico e contem:
 
 ```text
+discord-owner-setup.json
 discord-control-tower-mapping.json
 runtime-approval-event.json
 bridge-health.json
@@ -130,10 +132,18 @@ bridge-health.json
 
 O kit ja pode existir com placeholders, mas isso nao e prova de producao.
 Ele so vira prova quando todos os campos vierem do Discord e do Hermes reais.
+O `discord-owner-setup.json` precisa provar
+`approval_button_interaction_path_configured=true` e
+`approval_button_interaction_auth_validated=true`; sem isso, aprovacao por
+botao nao esta pronta. Esse caminho pode ser o handler de componentes do Hermes
+Gateway ou um endpoint HTTP de Interactions assinado.
 
 Comandos:
 
 ```bash
+python scripts/operator_control_tower_owner_setup_doctor.py \
+  --owner-setup /private/path/discord-owner-setup.json
+
 python scripts/operator_control_tower_private_evidence_doctor.py \
   --mapping /private/path/discord-control-tower-mapping.json \
   --runtime-registration-event /private/path/runtime-approval-event.json \
@@ -343,6 +353,27 @@ Para atalhos operacionais e formularios, a fabrica precisa da
 `aprovado`, `rejeitado` ou `pedir ajuste` na thread daquele pedido. A ponte
 valida usuario, escopo, prazo e registra o evento no Hermes antes de valer.
 
+Botao de aprovacao em producao precisa de um caminho real de component
+interaction. No Hermes, o caminho preferido e o Gateway do proprio bot. Em uma
+instalacao por endpoint HTTP, o endpoint deve verificar a assinatura Ed25519 do
+Discord com `DISCORD_PUBLIC_KEY` antes de chamar o handler da fabrica. Depois
+disso, o handler interpreta `of.approval.<decisao>:<approval_id>`, exige que o
+usuario esteja em `DISCORD_ALLOWED_USERS`, rejeita pedido errado/expirado/fora
+de escopo e devolve uma resposta efemera para o Discord. O resultado segue
+`schemas/discord-approval-interaction-result.schema.json`.
+
+Quando a aprovacao e publicada com `--apply`, a ponte guarda o payload pendente
+no state privado. O clique posterior pode ser resolvido apenas com `--state` e
+`--interaction`; nao deve depender de copiar manualmente o JSON original da
+aprovacao.
+
+O doctor de setup do dono tambem bloqueia producao ate a evidencia privada
+marcar `approval_button_interaction_path_configured=true` e
+`approval_button_interaction_auth_validated=true`.
+
+Sem `DISCORD_ALLOWED_USERS`, nenhuma aprovacao formal deve ser aceita, nem por
+botao nem por fallback textual.
+
 Especialistas nao devem ficar interrompendo o dono diretamente. Eles falam com
 o runtime; o Concierge consolida o que importa.
 
@@ -400,7 +431,8 @@ Ela cobre:
 - eventos de acesso, bloqueio, prova, release e health vao para os canais
   certos;
 - mensagem ativa cria thread ou aponta para thread existente;
-- aprovacao formal aparece com reacoes simples em portugues;
+- aprovacao formal aparece com botoes simples em portugues;
+- clique em botao de aprovacao passa por interaction handler assinado;
 - aprovacao formal nasce em `#aprovacoes-formais`, nao como texto solto na
   thread do projeto;
 - decisao de aprovacao so vira evento depois de validar id, papel, escopo e

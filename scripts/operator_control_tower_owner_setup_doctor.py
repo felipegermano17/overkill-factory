@@ -29,6 +29,8 @@ REQUIRED_OWNER_CHECKS = [
     "message_content_intent_enabled",
     "server_members_intent_enabled",
     "owner_user_allowlisted",
+    "approval_button_interaction_path_configured",
+    "approval_button_interaction_auth_validated",
     "required_channels_exist",
     "owner_approval_channel_restricted",
     "bot_health_channel_available",

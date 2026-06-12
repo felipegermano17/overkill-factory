@@ -169,6 +169,52 @@ pending approval and passes the same owner, scope and deadline validation. A
 free-form approval message in a project thread is only context; it is not a
 valid factory approval.
 
+### Button Interaction Contract
+
+Approval buttons are not proof by themselves. A production Discord endpoint must:
+
+1. receive the component interaction through the Hermes Gateway handler, or
+   verify the Discord `X-Signature-Ed25519` and `X-Signature-Timestamp` headers
+   with the application public key when using an HTTP Interactions endpoint;
+2. parse the component `custom_id` as `of.approval.<decision>:<approval_id>`;
+3. reject the click when `DISCORD_ALLOWED_USERS` is missing or the Discord user
+   is not on that allowlist;
+4. reject wrong approval ids, non-pending approvals, expired approvals and scope
+   drift;
+5. respond to Discord with an ephemeral interaction response;
+6. write the resulting `approval_recorded` event into the private runtime path
+   before any gate treats the approval as real.
+
+The private owner setup evidence must also prove
+`approval_button_interaction_path_configured=true` and
+`approval_button_interaction_auth_validated=true`; otherwise the Discord
+cockpit remains blocked for production approvals. The preferred Hermes install
+uses the bot Gateway component handler. A signed HTTP Interactions endpoint is
+an alternative when the deployment needs that architecture.
+
+The public helper for this contract is:
+
+```text
+scripts/factory_concierge_discord_automation.py
+```
+
+When an approval is rendered with `--apply`, the private bridge state stores the
+pending approval payload. A later button interaction can therefore be resolved
+from `--state` and `--interaction` alone; it must not depend on a human copying
+the original approval JSON back into the command.
+
+The interaction result contract is:
+
+```text
+schemas/discord-approval-interaction-result.schema.json
+```
+
+The text fallback remains only a fallback for expired or failed interactions.
+It must obey the same allowlist, scope, approval id and deadline checks.
+The public package does not add a runtime dependency for an HTTP endpoint; that
+private endpoint environment must provide PyNaCl or an equivalent Ed25519
+verifier before accepting real Discord interaction payloads.
+
 ## Multi-Project Kanban Rule
 
 The Discord Kanban can support multiple projects if the bridge treats the forum
@@ -342,6 +388,7 @@ It composes the projector with the remaining Control Tower behavior:
 - create threads for active events such as access, blockers and approvals;
 - render Portuguese approval buttons with scoped `custom_id` values and a short
   text fallback for expired interactions;
+- process signed button interactions into `approval_recorded` events;
 - validate a decision payload before producing an `approval_recorded` event;
 - update bridge health in `#saude-do-bot`;
 - read projections, events and approvals from private inbox directories for

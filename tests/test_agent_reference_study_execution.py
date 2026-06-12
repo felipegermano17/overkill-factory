@@ -18,6 +18,7 @@ class AgentReferenceStudyExecutionTest(unittest.TestCase):
             "templates/reviewer-selection-plan.json": "schemas/reviewer-selection-plan.schema.json",
             "templates/qa-verification-plan.json": "schemas/qa-verification-plan.schema.json",
             "templates/agent-eval-result.json": "schemas/agent-eval-result.schema.json",
+            "templates/discord-approval-interaction-result.json": "schemas/discord-approval-interaction-result.schema.json",
         }
 
         for template_path, schema_path in pairs.items():
