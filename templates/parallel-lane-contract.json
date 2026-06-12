@@ -8,13 +8,13 @@
   "base_ref": "main",
   "worktree_ref": "main",
   "input_refs": [
-    "docs/methodology/overkill-factory-vfinal.md"
+    "docs/concepts/factory-flow.md"
   ],
   "intended_write_scope": [
     "none"
   ],
   "forbidden_paths": [
-    "validation/private/",
+    ".tmp/factory-runs/private/",
     ".env",
     "local-runtime-artifacts/"
   ],

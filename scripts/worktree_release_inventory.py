@@ -19,7 +19,7 @@ from typing import Iterable
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "release" / "worktree-release-inventory.json"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "release" / "worktree-release-inventory.json"
 
 
 PRODUCT_TOP_LEVELS = {
@@ -39,12 +39,12 @@ PRODUCT_TOP_LEVELS = {
 SAFE_CLEANUP_SUFFIXES = {".pyc", ".pyo", ".tmp", ".temp", ".log"}
 SAFE_CLEANUP_PARTS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".coverage"}
 GENERATED_RECEIPT_PATHS = {
-    "validation/factory-production-readiness/current-readiness.json",
-    "validation/public-safety/head-summary.json",
-    "validation/public-safety/origin-main-summary.json",
-    "validation/public-safety/worktree-summary.json",
-    "validation/release/release-integration-preflight.json",
-    "validation/release/worktree-release-inventory.json",
+    ".tmp/factory-runs/factory-production-readiness/current-readiness.json",
+    ".tmp/factory-runs/public-safety/head-summary.json",
+    ".tmp/factory-runs/public-safety/origin-main-summary.json",
+    ".tmp/factory-runs/public-safety/worktree-summary.json",
+    ".tmp/factory-runs/release/release-integration-preflight.json",
+    ".tmp/factory-runs/release/worktree-release-inventory.json",
 }
 
 

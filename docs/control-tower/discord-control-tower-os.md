@@ -1,7 +1,7 @@
 # Discord Control Tower OS
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: This guide describes the optional cockpit; Discord does not replace Hermes state, receipts or runtime gates.
 
 Discord Control Tower OS is the owner-facing control layer for Overkill
@@ -16,11 +16,8 @@ For the practical Portuguese production setup guide, see:
 docs/control-tower/discord-control-tower-setup-pt-br.md
 ```
 
-For the study on making Discord dynamic instead of a plain chat feed, see:
-
-```text
-docs/control-tower/discord-dynamic-control-tower-study-pt-br.md
-```
+Dynamic behavior belongs in the bridge scripts, schemas and current setup guide,
+not in a separate historical study.
 
 ## Decision
 
@@ -407,7 +404,7 @@ expired, sent by the wrong role, or outside the requested scope".
 The public contract smoke for this rule is:
 
 ```text
-validation/control-tower/control-tower-approval-registration-smoke.json
+.tmp/factory-runs/control-tower/control-tower-approval-registration-smoke.json
 ```
 
 ## Production Proof Harness
@@ -442,22 +439,16 @@ the same project, that the mapping contains a real board reference, that the
 approval event has a real event id, and that bridge health carries non-empty
 external evidence refs.
 
-Use this public-safe helper when preparing the private evidence:
-
-```text
-docs/control-tower/operator-control-tower-private-evidence-kit.md
-```
-
 The script writes:
 
 ```text
-validation/control-tower/operator-control-tower-production-readiness.json
+.tmp/factory-runs/control-tower/operator-control-tower-production-readiness.json
 ```
 
 If all checks pass, it also writes:
 
 ```text
-validation/hermes-production-proof/operator-control-tower.json
+.tmp/factory-runs/hermes-production-proof/operator-control-tower.json
 ```
 
 The public output must stay redacted. Real Discord ids, private runtime ids,

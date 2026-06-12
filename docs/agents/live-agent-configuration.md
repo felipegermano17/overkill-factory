@@ -1,7 +1,7 @@
 # Live Agent Configuration
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: This guide explains live profile setup; executable gates and current validation still decide whether work can move.
 
 The factory has runtime layers plus a capability-pack gate. Keeping them
@@ -222,5 +222,5 @@ Any score below `10/10` creates a fix packet and another review round.
 
 For card-specific packet evidence, see:
 
-- `validation/hermes-live/factory12-devnet-receipt-pass-packet-smoke.md`
-- `validation/hermes-live/factory13-devnet-receipt-pass-builder-pilot-smoke.md`
+- `.tmp/factory-runs/hermes-live/factory12-devnet-receipt-pass-packet-smoke.md`
+- `.tmp/factory-runs/hermes-live/factory13-devnet-receipt-pass-builder-pilot-smoke.md`

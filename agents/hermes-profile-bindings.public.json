@@ -34,7 +34,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "source-ledger-worker": {
       "worker_id": "source-ledger-worker",
@@ -62,7 +62,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "product-sot-planner": {
       "worker_id": "product-sot-planner",
@@ -90,7 +90,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "product-architect": {
       "worker_id": "product-architect",
@@ -118,7 +118,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "product-face": {
       "worker_id": "product-face",
@@ -148,7 +148,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "solana-quasar-auditor": {
       "worker_id": "solana-quasar-auditor",
@@ -179,7 +179,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "codex-security": {
       "worker_id": "codex-security",
@@ -210,7 +210,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "appsec-owasp-specialist": {
       "worker_id": "appsec-owasp-specialist",
@@ -240,7 +240,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "agentic-ai-security-specialist": {
       "worker_id": "agentic-ai-security-specialist",
@@ -271,7 +271,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "autoreview-gate": {
       "worker_id": "autoreview-gate",
@@ -300,7 +300,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "remote-proof-runner": {
       "worker_id": "remote-proof-runner",
@@ -329,7 +329,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "handoff-packer": {
       "worker_id": "handoff-packer",
@@ -360,7 +360,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "independent-reviewer": {
       "worker_id": "independent-reviewer",
@@ -389,7 +389,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "evidence-reconciler": {
       "worker_id": "evidence-reconciler",
@@ -420,7 +420,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "human-gate-clerk": {
       "worker_id": "human-gate-clerk",
@@ -452,7 +452,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "docs-os-worker": {
       "worker_id": "docs-os-worker",
@@ -481,7 +481,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "decomposition-planner": {
       "worker_id": "decomposition-planner",
@@ -510,7 +510,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "implementation-worker": {
       "worker_id": "implementation-worker",
@@ -539,7 +539,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "qa-verification-worker": {
       "worker_id": "qa-verification-worker",
@@ -568,7 +568,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "security-orchestrator": {
       "worker_id": "security-orchestrator",
@@ -600,7 +600,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "cloud-infra-security-specialist": {
       "worker_id": "cloud-infra-security-specialist",
@@ -630,7 +630,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "crypto-key-management-specialist": {
       "worker_id": "crypto-key-management-specialist",
@@ -660,7 +660,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "release-ops-worker": {
       "worker_id": "release-ops-worker",
@@ -689,7 +689,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "memory-steward": {
       "worker_id": "memory-steward",
@@ -720,7 +720,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "skill-eval-distiller": {
       "worker_id": "skill-eval-distiller",
@@ -749,7 +749,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "public-safety-gate": {
       "worker_id": "public-safety-gate",
@@ -778,7 +778,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "supply-chain-gate": {
       "worker_id": "supply-chain-gate",
@@ -810,7 +810,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "detection-monitoring-worker": {
       "worker_id": "detection-monitoring-worker",
@@ -840,7 +840,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "frontend-builder": {
       "worker_id": "frontend-builder",
@@ -871,7 +871,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "backend-api-builder": {
       "worker_id": "backend-api-builder",
@@ -901,7 +901,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "data-persistence-builder": {
       "worker_id": "data-persistence-builder",
@@ -931,7 +931,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "solana-quasar-builder": {
       "worker_id": "solana-quasar-builder",
@@ -962,7 +962,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "solana-quasar-qa-engineer": {
       "worker_id": "solana-quasar-qa-engineer",
@@ -993,7 +993,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "wallet-transaction-builder": {
       "worker_id": "wallet-transaction-builder",
@@ -1024,7 +1024,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "integration-builder": {
       "worker_id": "integration-builder",
@@ -1055,7 +1055,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "test-automation-builder": {
       "worker_id": "test-automation-builder",
@@ -1085,7 +1085,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "infra-devops-builder": {
       "worker_id": "infra-devops-builder",
@@ -1115,7 +1115,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "agent-runtime-builder": {
       "worker_id": "agent-runtime-builder",
@@ -1145,7 +1145,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "control-tower-projection-worker": {
       "worker_id": "control-tower-projection-worker",
@@ -1176,7 +1176,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     },
     "discord-control-tower-bridge": {
       "worker_id": "discord-control-tower-bridge",
@@ -1208,7 +1208,7 @@
       "profile_description_ref": "agents/worker-profiles.public.json",
       "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
       "skill_install_ref": "docs/agents/live-agent-configuration.md",
-      "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+      "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
     }
   }
 }

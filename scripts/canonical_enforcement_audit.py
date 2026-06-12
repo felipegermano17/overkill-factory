@@ -11,7 +11,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MATRIX = ROOT / "validation" / "canonical-enforcement" / "canonical-enforcement-matrix.json"
+DEFAULT_MATRIX = ROOT / ".tmp" / "factory-runs" / "canonical-enforcement" / "canonical-enforcement-matrix.json"
 ALLOWED_STATUS = {"enforced", "bounded_public_proof"}
 ALLOWED_KINDS = {
     "schema",
@@ -107,7 +107,7 @@ def build_summary(matrix: dict[str, Any], errors: list[str]) -> dict[str, Any]:
     return {
         "$schema": "https://overkill-factory.dev/schemas/canonical-enforcement-audit-result.schema.json",
         "record_type": "canonical_enforcement_audit_result",
-        "matrix_ref": "validation/canonical-enforcement/canonical-enforcement-matrix.json",
+        "matrix_ref": ".tmp/factory-runs/canonical-enforcement/canonical-enforcement-matrix.json",
         "result": "PASS" if not errors else "FAIL",
         "requirements_checked": len(requirements),
         "status_counts": by_status,

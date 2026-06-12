@@ -12,7 +12,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "completion"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "completion"
 
 
 def now_iso() -> str:
@@ -346,15 +346,15 @@ def bounded_requirement(
 def build_requirements() -> list[dict[str, Any]]:
     requirements: list[dict[str, Any]] = []
 
-    if exists("validation/hermes-live/multi-profile-dispatch-summary.md") and exists("validation/hermes-live/real-profile-dispatch-smoke.md"):
+    if exists(".tmp/factory-runs/hermes-live/multi-profile-dispatch-summary.md") and exists(".tmp/factory-runs/hermes-live/real-profile-dispatch-smoke.md"):
         requirements.append(
             achieved_requirement(
                 "hermes_real_worker_orchestration",
                 "Hermes real worker orchestration",
                 [
-                    "validation/hermes-live/real-profile-dispatch-smoke.md",
-                    "validation/hermes-live/multi-profile-dispatch-summary.md",
-                    "validation/hermes-live/worker-dispatched-done-gate-smoke.md",
+                    ".tmp/factory-runs/hermes-live/real-profile-dispatch-smoke.md",
+                    ".tmp/factory-runs/hermes-live/multi-profile-dispatch-summary.md",
+                    ".tmp/factory-runs/hermes-live/worker-dispatched-done-gate-smoke.md",
                 ],
                 "The factory floor must be Hermes, not only local scripts or chat plans.",
             )
@@ -364,7 +364,7 @@ def build_requirements() -> list[dict[str, Any]]:
             blocked_requirement(
                 "hermes_real_worker_orchestration",
                 "Hermes real worker orchestration",
-                ["validation/hermes-live/multi-profile-dispatch-summary.md"],
+                [".tmp/factory-runs/hermes-live/multi-profile-dispatch-summary.md"],
                 "The factory floor must be Hermes, not only local scripts or chat plans.",
                 "Run a real Hermes disposable board with required workers and import public-safe evidence.",
             )
@@ -375,7 +375,7 @@ def build_requirements() -> list[dict[str, Any]]:
         and exists("agents/hermes-profile-bindings.public.json")
         and exists("docs/agents/live-agent-configuration.md")
         and exists("docs/agents/security-specialist-matrix.md")
-        and exists("validation/agents/worker-profile-validation.md")
+        and exists(".tmp/factory-runs/agents/worker-profile-validation.md")
     ):
         requirements.append(
             achieved_requirement(
@@ -386,7 +386,7 @@ def build_requirements() -> list[dict[str, Any]]:
                     "agents/hermes-profile-bindings.public.json",
                     "docs/agents/live-agent-configuration.md",
                     "docs/agents/security-specialist-matrix.md",
-                    "validation/agents/worker-profile-validation.md",
+                    ".tmp/factory-runs/agents/worker-profile-validation.md",
                 ],
                 "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
             )
@@ -399,7 +399,7 @@ def build_requirements() -> list[dict[str, Any]]:
                 [
                     "agents/worker-profiles.public.json",
                     "agents/hermes-profile-bindings.public.json",
-                    "validation/agents/worker-profile-validation.md",
+                    ".tmp/factory-runs/agents/worker-profile-validation.md",
                 ],
                 "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
                 "Create worker profiles, Hermes bindings, security matrix and validation evidence.",
@@ -407,23 +407,23 @@ def build_requirements() -> list[dict[str, Any]]:
         )
 
     if production_worker_result(
-        "validation/production/product-face/product-face-result.json",
+        ".tmp/factory-runs/production/product-face/product-face-result.json",
         record_type="product_face_result",
     ):
         requirements.append(
             achieved_requirement(
                 "production_product_face",
                 "Production-like Product Face proof",
-                ["validation/production/product-face/product-face-result.json"],
+                [".tmp/factory-runs/production/product-face/product-face-result.json"],
                 "A product is not complete until its real face works across states, mobile, a11y and performance boundaries.",
             )
         )
-    elif public_proof("validation/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json"):
+    elif public_proof(".tmp/factory-runs/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json"):
         requirements.append(
             bounded_requirement(
                 "production_product_face",
                 "Production-like Product Face proof",
-                ["validation/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json"],
+                [".tmp/factory-runs/quasar-product-like-proof/product-face/qvg-product-like-product-face-result.json"],
                 "A product is not complete until its real face works across states, mobile, a11y and performance boundaries.",
                 "Run Product Face against a deployed or production-like target and mark it reusable_for_product=true only if it is product-specific.",
             )
@@ -433,20 +433,20 @@ def build_requirements() -> list[dict[str, Any]]:
             blocked_requirement(
                 "production_product_face",
                 "Production-like Product Face proof",
-                ["validation/production/product-face/product-face-result.json"],
+                [".tmp/factory-runs/production/product-face/product-face-result.json"],
                 "A product is not complete until its real face works across states, mobile, a11y and performance boundaries.",
                 "Run browser-backed Product Face proof against the production-like UI.",
             )
         )
 
-    if exists("validation/security/codex-security-full-scan-2026-06-06.md") and exists("validation/security/bandit-scripts-adapters.json"):
+    if exists(".tmp/factory-runs/security/codex-security-full-scan-2026-06-06.md") and exists(".tmp/factory-runs/security/bandit-scripts-adapters.json"):
         requirements.append(
             achieved_requirement(
                 "factory_security_scan",
                 "Factory code security scan",
                 [
-                    "validation/security/codex-security-full-scan-2026-06-06.md",
-                    "validation/security/bandit-scripts-adapters.json",
+                    ".tmp/factory-runs/security/codex-security-full-scan-2026-06-06.md",
+                    ".tmp/factory-runs/security/bandit-scripts-adapters.json",
                 ],
                 "The factory code that gates autonomous work must itself pass security review.",
             )
@@ -456,30 +456,30 @@ def build_requirements() -> list[dict[str, Any]]:
             blocked_requirement(
                 "factory_security_scan",
                 "Factory code security scan",
-                ["validation/security/codex-security-full-scan-2026-06-06.md"],
+                [".tmp/factory-runs/security/codex-security-full-scan-2026-06-06.md"],
                 "The factory code that gates autonomous work must itself pass security review.",
                 "Run Codex Security and repo safety scanners over the factory code.",
             )
         )
 
     if production_worker_result(
-        "validation/production/quasar/auditor-result.json",
+        ".tmp/factory-runs/production/quasar/auditor-result.json",
         record_type="auditor_result",
     ):
         requirements.append(
             achieved_requirement(
                 "production_quasar_auditor",
                 "Production Quasar Auditor code audit",
-                ["validation/production/quasar/auditor-result.json"],
+                [".tmp/factory-runs/production/quasar/auditor-result.json"],
                 "The public product-like audit is useful, but production approval needs the actual product program.",
             )
         )
-    elif public_proof("validation/quasar-product-like-proof/qvg-product-like-auditor-result.json"):
+    elif public_proof(".tmp/factory-runs/quasar-product-like-proof/qvg-product-like-auditor-result.json"):
         requirements.append(
             bounded_requirement(
                 "production_quasar_auditor",
                 "Production Quasar Auditor code audit",
-                ["validation/quasar-product-like-proof/qvg-product-like-auditor-result.json"],
+                [".tmp/factory-runs/quasar-product-like-proof/qvg-product-like-auditor-result.json"],
                 "The public product-like audit is useful, but production approval needs the actual product program.",
                 "Run solana-quasar-auditor plus Auditor corpus/checklists against production Quasar source.",
             )
@@ -489,27 +489,27 @@ def build_requirements() -> list[dict[str, Any]]:
             blocked_requirement(
                 "production_quasar_auditor",
                 "Production Quasar Auditor code audit",
-                ["validation/production/quasar/auditor-result.json"],
+                [".tmp/factory-runs/production/quasar/auditor-result.json"],
                 "The public product-like audit is useful, but production approval needs the actual product program.",
                 "Add production Quasar source and run the full Auditor code-audit path.",
             )
         )
 
-    if production_cu_svm_economic_result("validation/production/quasar/cu-svm-economic-proof.json"):
+    if production_cu_svm_economic_result(".tmp/factory-runs/production/quasar/cu-svm-economic-proof.json"):
         requirements.append(
             achieved_requirement(
                 "production_cu_svm_economic",
                 "Production CU, SVM/client flow and economic safety",
-                ["validation/production/quasar/cu-svm-economic-proof.json"],
+                [".tmp/factory-runs/production/quasar/cu-svm-economic-proof.json"],
                 "Onchain code can pass unit tests and still fail through compute, transaction flow or economic edge cases.",
             )
         )
-    elif public_proof("validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"):
+    elif public_proof(".tmp/factory-runs/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"):
         requirements.append(
             bounded_requirement(
                 "production_cu_svm_economic",
                 "Production CU, SVM/client flow and economic safety",
-                ["validation/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"],
+                [".tmp/factory-runs/quasar-product-like-proof/qvg-quasar-cu-fuzz-property-proof.json"],
                 "Onchain code can pass unit tests and still fail through compute, transaction flow or economic edge cases.",
                 "Run real CU profiling, SVM/client transactions and economic fuzz/property tests on production source.",
             )
@@ -519,29 +519,29 @@ def build_requirements() -> list[dict[str, Any]]:
             blocked_requirement(
                 "production_cu_svm_economic",
                 "Production CU, SVM/client flow and economic safety",
-                ["validation/production/quasar/cu-svm-economic-proof.json"],
+                [".tmp/factory-runs/production/quasar/cu-svm-economic-proof.json"],
                 "Onchain code can pass unit tests and still fail through compute, transaction flow or economic edge cases.",
                 "Create product-specific CU/SVM/economic proof artifacts.",
             )
         )
 
-    if production_remote_proof_result("validation/production/remote-proof/managed-testbox-result.json"):
+    if production_remote_proof_result(".tmp/factory-runs/production/remote-proof/managed-testbox-result.json"):
         requirements.append(
             achieved_requirement(
                 "managed_remote_proof",
                 "Crabbox/Testbox remote proof",
-                ["validation/production/remote-proof/managed-testbox-result.json"],
+                [".tmp/factory-runs/production/remote-proof/managed-testbox-result.json"],
                 "Remote proof validates the intended heavy gate in an isolated Crabbox/Testbox/container environment.",
             )
         )
-    elif public_proof("validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json"):
+    elif public_proof(".tmp/factory-runs/remote-proof/crabbox-static-ssh-proof-2026-06-06.json"):
         requirements.append(
             bounded_requirement(
                 "managed_remote_proof",
                 "Crabbox/Testbox remote proof",
                 [
-                    "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
-                    "validation/remote-proof/managed-remote-proof-probe.json",
+                    ".tmp/factory-runs/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
+                    ".tmp/factory-runs/remote-proof/managed-remote-proof-probe.json",
                 ],
                 "Static SSH proof is useful, but the completion lane needs Crabbox-managed cleanup and product-scoped evidence.",
                 "Run Crabbox broker, Blacksmith Testbox or Crabbox local-container with cleanup receipt and product-scoped reusable evidence.",
@@ -552,14 +552,14 @@ def build_requirements() -> list[dict[str, Any]]:
             blocked_requirement(
                 "managed_remote_proof",
                 "Managed Crabbox/Testbox remote proof",
-                ["validation/production/remote-proof/managed-testbox-result.json"],
+                [".tmp/factory-runs/production/remote-proof/managed-testbox-result.json"],
                 "Static SSH proof is useful, but managed remote proof validates the intended provider-backed heavy gate.",
                 "Run provider-backed remote proof or record a human waiver with risk owner and expiry.",
             )
         )
 
-    if production_worker_result("validation/production/release/release-ops-result.json", record_type="release_ops_result") and production_worker_result(
-        "validation/production/release/human-gate-record.json",
+    if production_worker_result(".tmp/factory-runs/production/release/release-ops-result.json", record_type="release_ops_result") and production_worker_result(
+        ".tmp/factory-runs/production/release/human-gate-record.json",
         record_type="human_gate_record",
     ):
         requirements.append(
@@ -567,20 +567,20 @@ def build_requirements() -> list[dict[str, Any]]:
                 "production_release_human_gate",
                 "Production release and human R4 gate",
                 [
-                    "validation/production/release/release-ops-result.json",
-                    "validation/production/release/human-gate-record.json",
+                    ".tmp/factory-runs/production/release/release-ops-result.json",
+                    ".tmp/factory-runs/production/release/human-gate-record.json",
                 ],
                 "Production release authority must be explicit, reviewed and reversible.",
             )
         )
-    elif exists("validation/release-human-gate/qvg-release-ops-result.json"):
+    elif exists(".tmp/factory-runs/release-human-gate/qvg-release-ops-result.json"):
         requirements.append(
             bounded_requirement(
                 "production_release_human_gate",
                 "Production release and human R4 gate",
                 [
-                    "validation/release-human-gate/qvg-release-ops-result.json",
-                    "validation/release-human-gate/qvg-human-gate-record.json",
+                    ".tmp/factory-runs/release-human-gate/qvg-release-ops-result.json",
+                    ".tmp/factory-runs/release-human-gate/qvg-human-gate-record.json",
                 ],
                 "Production release authority must be explicit, reviewed and reversible.",
                 "Run product-specific R4 human gate, rollback proof, release smoke and monitoring evidence before any production claim.",
@@ -592,16 +592,16 @@ def build_requirements() -> list[dict[str, Any]]:
                 "production_release_human_gate",
                 "Production release and human R4 gate",
                 [
-                    "validation/production/release/release-ops-result.json",
-                    "validation/production/release/human-gate-record.json",
+                    ".tmp/factory-runs/production/release/release-ops-result.json",
+                    ".tmp/factory-runs/production/release/human-gate-record.json",
                 ],
                 "Production release authority must be explicit, reviewed and reversible.",
                 "Produce real release and human gate records for the product target.",
             )
         )
 
-    if exists("validation/supply-chain/supply-chain-proof.json") and json_field(
-        "validation/supply-chain/supply-chain-proof.json",
+    if exists(".tmp/factory-runs/supply-chain/supply-chain-proof.json") and json_field(
+        ".tmp/factory-runs/supply-chain/supply-chain-proof.json",
         "result",
     ) == "PASS":
         requirements.append(
@@ -609,9 +609,9 @@ def build_requirements() -> list[dict[str, Any]]:
                 "public_supply_chain_ci_sbom",
                 "Public repository supply-chain CI/SBOM",
                 [
-                    "validation/supply-chain/supply-chain-proof.json",
-                    "validation/supply-chain/source-sbom.spdx.json",
-                    "validation/supply-chain/hermes-supply-chain-summary.md",
+                    ".tmp/factory-runs/supply-chain/supply-chain-proof.json",
+                    ".tmp/factory-runs/supply-chain/source-sbom.spdx.json",
+                    ".tmp/factory-runs/supply-chain/hermes-supply-chain-summary.md",
                 ],
                 "An open factory must be reproducible and safe to accept contributions.",
             )
@@ -621,27 +621,27 @@ def build_requirements() -> list[dict[str, Any]]:
             blocked_requirement(
                 "public_supply_chain_ci_sbom",
                 "Public repository supply-chain CI/SBOM",
-                ["validation/supply-chain/supply-chain-proof.json"],
+                [".tmp/factory-runs/supply-chain/supply-chain-proof.json"],
                 "An open factory must be reproducible and safe to accept contributions.",
                 "Run the supply-chain CI/SBOM proof.",
             )
         )
 
-    if production_worker_result("validation/production/full-product-worker-graph.json"):
+    if production_worker_result(".tmp/factory-runs/production/full-product-worker-graph.json"):
         requirements.append(
             achieved_requirement(
                 "full_product_specific_worker_graph",
                 "Full product-specific multi-specialist execution",
-                ["validation/production/full-product-worker-graph.json"],
+                [".tmp/factory-runs/production/full-product-worker-graph.json"],
                 "The goal is a factory that carries a real product through all required workers, not isolated prooflets.",
             )
         )
-    elif public_proof("validation/product-specific/qvg-full-product-worker-graph.json"):
+    elif public_proof(".tmp/factory-runs/product-specific/qvg-full-product-worker-graph.json"):
         requirements.append(
             bounded_requirement(
                 "full_product_specific_worker_graph",
                 "Full product-specific multi-specialist execution",
-                ["validation/product-specific/qvg-full-product-worker-graph.json"],
+                [".tmp/factory-runs/product-specific/qvg-full-product-worker-graph.json"],
                 "The goal is a factory that carries a real product through all required workers, not isolated prooflets.",
                 "Rerun the same graph on a production product target and require every critical lane to be reusable_for_product=true before practical 10/10 completion.",
             )
@@ -651,7 +651,7 @@ def build_requirements() -> list[dict[str, Any]]:
             blocked_requirement(
                 "full_product_specific_worker_graph",
                 "Full product-specific multi-specialist execution",
-                ["validation/production/full-product-worker-graph.json"],
+                [".tmp/factory-runs/production/full-product-worker-graph.json"],
                 "The goal is a factory that carries a real product through all required workers, not isolated prooflets.",
                 "Run one real product through Product Face, Security, Auditor, Remote Proof, QA, review, release and human gates with reconciled worker results.",
             )

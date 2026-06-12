@@ -17,7 +17,7 @@ class FactoryCompletionAuditTests(unittest.TestCase):
         else:
             self.assertEqual(result["status"], "NOT_COMPLETE")
             self.assertFalse(result["completion_claim_allowed"])
-            self.assertEqual(result["score_estimate"], "9.996/10")
+            self.assertEqual(result["score_estimate"], "9.992/10")
             self.assertGreater(result["requirements_blocking"], 0)
 
     def test_blocks_only_real_remaining_gaps_when_incomplete(self):
@@ -25,30 +25,32 @@ class FactoryCompletionAuditTests(unittest.TestCase):
         blockers = set(result["blocking_summary"])
 
         self.assertIn("production_product_face", blockers)
-        self.assertNotIn("production_quasar_auditor", blockers)
+        self.assertIn("production_quasar_auditor", blockers)
         if result["status"] == "COMPLETE":
             self.assertEqual(blockers, set())
         else:
             self.assertIn("full_product_specific_worker_graph", blockers)
-            self.assertNotIn("managed_remote_proof", blockers)
-            self.assertNotIn("production_release_human_gate", blockers)
-            self.assertEqual(len(blockers), 2)
+            self.assertIn("managed_remote_proof", blockers)
+            self.assertIn("production_release_human_gate", blockers)
+            self.assertGreaterEqual(len(blockers), 8)
 
     def test_product_face_and_quasar_auditor_can_be_achieved_while_other_public_proofs_remain_bounded(self):
         result = audit.build_audit()
         by_id = {item["id"]: item for item in result["requirements"]}
 
-        self.assertEqual(by_id["production_product_face"]["status"], "BOUNDED_PUBLIC_PROOF")
-        self.assertEqual(by_id["production_quasar_auditor"]["status"], "ACHIEVED")
-        self.assertEqual(by_id["production_cu_svm_economic"]["status"], "ACHIEVED")
-        self.assertIn(by_id["managed_remote_proof"]["status"], {"ACHIEVED", "BOUNDED_PUBLIC_PROOF"})
-        self.assertIn(by_id["full_product_specific_worker_graph"]["status"], {"ACHIEVED", "BOUNDED_PUBLIC_PROOF"})
+        self.assertEqual(by_id["production_product_face"]["status"], "BLOCKED_MISSING_EVIDENCE")
+        self.assertEqual(by_id["production_quasar_auditor"]["status"], "BLOCKED_MISSING_EVIDENCE")
+        self.assertEqual(by_id["production_cu_svm_economic"]["status"], "BLOCKED_MISSING_EVIDENCE")
+        self.assertEqual(by_id["managed_remote_proof"]["status"], "BLOCKED_MISSING_EVIDENCE")
+        self.assertEqual(by_id["full_product_specific_worker_graph"]["status"], "BLOCKED_MISSING_EVIDENCE")
 
     def test_symbolic_cu_svm_result_cannot_clear_production_scope(self):
-        proof_path = audit.ROOT / "validation" / "production" / "quasar" / "qvg-quasar-cu-fuzz-property-proof.json"
-        symbolic = json.loads(proof_path.read_text(encoding="utf-8"))
-        symbolic["record_type"] = "cu_svm_economic_proof"
-        symbolic["proof_kind"] = "production_quasar_cu_svm_economic"
+        symbolic = {
+            "record_type": "cu_svm_economic_proof",
+            "proof_kind": "production_quasar_cu_svm_economic",
+            "source_target": "examples/minimal-hermes-project",
+            "source_sha256": "a" * 64,
+        }
         symbolic["product_target"] = {
             "product_id": "qvg-public-validation-product",
             "environment_class": "production-validation-quasar-svm",
@@ -93,9 +95,19 @@ class FactoryCompletionAuditTests(unittest.TestCase):
         self.assertFalse(audit.remote_proof_scope_is_valid(proof))
 
     def test_shallow_auditor_result_cannot_clear_production_scope(self):
-        proof_path = audit.ROOT / "validation" / "production" / "quasar" / "auditor-result.json"
-        shallow = json.loads(proof_path.read_text(encoding="utf-8"))
-        shallow["product_target"]["source_ref"] = "pilots/quasar-vault-guard-test/onchain/qvg-product-like/src"
+        shallow = {
+            "record_type": "auditor_result",
+            "result": "PASS",
+            "evidence_kind": "real",
+            "reusable_for_product": True,
+            "product_target": {
+                "product_id": "qvg-public-validation-product",
+                "source_ref": "examples/minimal-hermes-project",
+                "source_sha256": "a" * 64,
+                "approval_scope": "shallow fixture",
+            },
+            "code_audit": {"coverage": "shallow"},
+        }
 
         self.assertFalse(audit.reusable_product_scope_is_valid(shallow, record_type="auditor_result"))
 

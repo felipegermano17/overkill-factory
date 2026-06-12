@@ -11,8 +11,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "product-specific" / "qvg-full-product-worker-graph.json"
-DEFAULT_MD_OUT = ROOT / "validation" / "product-specific" / "qvg-full-product-worker-graph.md"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "product-specific" / "qvg-full-product-worker-graph.json"
+DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "product-specific" / "qvg-full-product-worker-graph.md"
 
 
 LANES: tuple[dict[str, Any], ...] = (
@@ -20,69 +20,69 @@ LANES: tuple[dict[str, Any], ...] = (
         "lane_id": "product_face",
         "worker_id": "product-face",
         "record_type": "product_face_result",
-        "path": "validation/production/product-face/product-face-result.json",
+        "path": ".tmp/factory-runs/production/product-face/product-face-result.json",
         "scope": "product",
     },
     {
         "lane_id": "security",
         "worker_id": "codex-security",
         "record_type": "security_scan_result",
-        "path": "pilots/quasar-vault-guard-test/worker-results/security-scan-result.json",
+        "path": ".tmp/factory-runs/production/security/security-scan-result.json",
         "scope": "product",
     },
     {
         "lane_id": "auditor",
         "worker_id": "solana-quasar-auditor",
         "record_type": "auditor_result",
-        "path": "validation/production/quasar/auditor-result.json",
+        "path": ".tmp/factory-runs/production/quasar/auditor-result.json",
         "scope": "product",
     },
     {
         "lane_id": "cu_svm_economic",
         "record_type": "cu_svm_economic_proof",
         "proof_kind": "production_quasar_cu_svm_economic",
-        "path": "validation/production/quasar/cu-svm-economic-proof.json",
+        "path": ".tmp/factory-runs/production/quasar/cu-svm-economic-proof.json",
         "scope": "product",
     },
     {
         "lane_id": "remote_proof",
         "worker_id": "remote-proof-runner",
         "record_type": "remote_proof_result",
-        "path": "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
+        "path": ".tmp/factory-runs/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
         "scope": "supporting",
     },
     {
         "lane_id": "independent_review",
         "worker_id": "independent-reviewer",
         "record_type": "independent_review_result",
-        "path": "pilots/quasar-vault-guard-test/worker-results/independent-review-result.json",
+        "path": ".tmp/factory-runs/production/review/independent-review-result.json",
         "scope": "product",
     },
     {
         "lane_id": "human_gate",
         "worker_id": "human-gate-clerk",
         "record_type": "human_gate_record",
-        "path": "validation/release-human-gate/qvg-human-gate-record.json",
+        "path": ".tmp/factory-runs/production/release/human-gate-record.json",
         "scope": "supporting",
     },
     {
         "lane_id": "release_ops",
         "worker_id": "release-ops-worker",
         "record_type": "release_ops_result",
-        "path": "validation/release-human-gate/qvg-release-ops-result.json",
+        "path": ".tmp/factory-runs/production/release/release-ops-result.json",
         "scope": "supporting",
     },
     {
         "lane_id": "supply_chain",
         "worker_id": "supply-chain-gate",
         "record_type": "supply_chain_result",
-        "path": "validation/supply-chain/supply-chain-proof.json",
+        "path": ".tmp/factory-runs/supply-chain/supply-chain-proof.json",
         "scope": "supporting",
     },
     {
         "lane_id": "receipt_five",
         "receipt_type": "receipt_five",
-        "path": "pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json",
+        "path": "examples/minimal-hermes-project/expected-receipt-five.json",
         "scope": "product",
     },
 )

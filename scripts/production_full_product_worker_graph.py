@@ -11,8 +11,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "production" / "full-product-worker-graph.json"
-DEFAULT_MD_OUT = ROOT / "validation" / "production" / "full-product-worker-graph.md"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "full-product-worker-graph.json"
+DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "full-product-worker-graph.md"
 PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
 
 
@@ -20,7 +20,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "hermes_orchestration",
         "worker_id": "factory-orchestrator",
-        "path": "validation/hermes-live/multi-profile-dispatch-summary.md",
+        "path": ".tmp/factory-runs/hermes-live/multi-profile-dispatch-summary.md",
         "kind": "file",
         "scope": "supporting",
         "reusable_policy": "supporting",
@@ -28,7 +28,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "product_face",
         "worker_id": "product-face",
-        "path": "validation/production/product-face/product-face-result.json",
+        "path": ".tmp/factory-runs/production/product-face/product-face-result.json",
         "record_type": "product_face_result",
         "scope": "product",
         "reusable_policy": "strict",
@@ -36,7 +36,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "security",
         "worker_id": "codex-security",
-        "path": "validation/security/codex-security-full-scan-2026-06-06.md",
+        "path": ".tmp/factory-runs/security/codex-security-full-scan-2026-06-06.md",
         "kind": "file",
         "scope": "supporting",
         "reusable_policy": "supporting",
@@ -44,7 +44,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "quasar_auditor",
         "worker_id": "solana-quasar-auditor",
-        "path": "validation/production/quasar/auditor-result.json",
+        "path": ".tmp/factory-runs/production/quasar/auditor-result.json",
         "record_type": "auditor_result",
         "scope": "product",
         "reusable_policy": "strict",
@@ -52,7 +52,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "cu_svm_economic",
         "worker_id": "solana-quasar-auditor",
-        "path": "validation/production/quasar/cu-svm-economic-proof.json",
+        "path": ".tmp/factory-runs/production/quasar/cu-svm-economic-proof.json",
         "record_type": "cu_svm_economic_proof",
         "proof_kind": "production_quasar_cu_svm_economic",
         "scope": "product",
@@ -61,7 +61,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "remote_proof",
         "worker_id": "remote-proof-runner",
-        "path": "validation/production/remote-proof/managed-testbox-result.json",
+        "path": ".tmp/factory-runs/production/remote-proof/managed-testbox-result.json",
         "record_type": "remote_proof_result",
         "scope": "supporting",
         "reusable_policy": "strict",
@@ -69,7 +69,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "human_gate",
         "worker_id": "human-gate-clerk",
-        "path": "validation/production/release/human-gate-record.json",
+        "path": ".tmp/factory-runs/production/release/human-gate-record.json",
         "record_type": "human_gate_record",
         "scope": "supporting",
         "reusable_policy": "strict",
@@ -77,7 +77,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "release_ops",
         "worker_id": "release-ops-worker",
-        "path": "validation/production/release/release-ops-result.json",
+        "path": ".tmp/factory-runs/production/release/release-ops-result.json",
         "record_type": "release_ops_result",
         "scope": "supporting",
         "reusable_policy": "strict",
@@ -85,7 +85,7 @@ LANES: tuple[dict[str, Any], ...] = (
     {
         "lane_id": "supply_chain",
         "worker_id": "supply-chain-gate",
-        "path": "validation/supply-chain/supply-chain-proof.json",
+        "path": ".tmp/factory-runs/supply-chain/supply-chain-proof.json",
         "record_type": "supply_chain_result",
         "scope": "supporting",
         "reusable_policy": "supporting",

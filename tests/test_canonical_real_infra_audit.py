@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -17,40 +18,65 @@ sys.modules["canonical_real_infra_audit"] = canonical_real_infra_audit
 SPEC.loader.exec_module(canonical_real_infra_audit)
 
 
+def write_trace(tmpdir: str) -> Path:
+    trace = {
+        "canonical_doc_ref": "external:canonical.md",
+        "canonical_sha256": "0" * 64,
+        "checkpoints": [
+            {
+                "checkpoint_id": "runtime-001",
+                "sequence": 1,
+                "canonical_line": 10,
+                "checkpoint_type": "heading",
+                "canonical_heading": "Runtime gate",
+                "implementation_status": "implemented_by_runtime",
+                "implementation_refs": [{"kind": "script", "path": "scripts/factoryctl.py"}],
+                "next_action": "none",
+            },
+            {
+                "checkpoint_id": "framing-001",
+                "sequence": 2,
+                "canonical_line": 20,
+                "checkpoint_type": "heading",
+                "canonical_heading": "Definition",
+                "implementation_status": "foundational_text_tracked",
+                "implementation_refs": [{"kind": "documentation", "path": "README.md"}],
+                "next_action": "none",
+            },
+        ],
+    }
+    path = Path(tmpdir) / "trace.json"
+    path.write_text(json.dumps(trace), encoding="utf-8")
+    return path
+
+
 class CanonicalRealInfraAuditTest(unittest.TestCase):
-    def test_answer_is_yes_for_all_actionable_runtime_processes(self) -> None:
-        audit = canonical_real_infra_audit.build_audit()
+    def test_build_audit_from_generated_trace(self) -> None:
+        (ROOT / ".tmp").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ROOT / ".tmp") as tmpdir:
+            audit = canonical_real_infra_audit.build_audit(write_trace(tmpdir))
+
         errors = canonical_real_infra_audit.validate_audit(audit)
 
         self.assertEqual(errors, [])
         self.assertEqual(audit["answer"], "yes")
         self.assertEqual(audit["result"], "PASS")
-        self.assertTrue(audit["all_actionable_canonical_processes_runtime_implemented"])
-        self.assertEqual(audit["summary"]["checkpoints_checked"], 118)
-        self.assertEqual(audit["summary"]["runtime_enforced"], 113)
-        self.assertEqual(audit["summary"]["non_runtime_processes"], 5)
-        self.assertEqual(audit["summary"]["not_runtime_enforced"], 0)
-
-    def test_contract_only_requires_runtime_rule_to_count_as_enforced(self) -> None:
-        audit = canonical_real_infra_audit.build_audit()
-        promoted = [
-            checkpoint
-            for checkpoint in audit["checkpoints"]
-            if checkpoint["linear_status"] == "implemented_by_contract"
-            and checkpoint["real_infra_status"] == "runtime_enforced"
-        ]
-
-        self.assertGreater(len(promoted), 0)
-        self.assertTrue(all(checkpoint["runtime_rule_ref"] for checkpoint in promoted))
+        self.assertEqual(audit["summary"]["checkpoints_checked"], 2)
+        self.assertEqual(audit["summary"]["runtime_enforced"], 1)
+        self.assertEqual(audit["summary"]["non_runtime_processes"], 1)
 
     def test_schema_ref_matches_output_schema_id(self) -> None:
-        audit = canonical_real_infra_audit.build_audit()
+        (ROOT / ".tmp").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ROOT / ".tmp") as tmpdir:
+            audit = canonical_real_infra_audit.build_audit(write_trace(tmpdir))
         schema = json.loads((ROOT / "schemas" / "canonical-real-infra-audit.schema.json").read_text(encoding="utf-8"))
 
         self.assertEqual(audit["$schema"], schema["$id"])
 
     def test_validator_rejects_inconsistent_no_answer(self) -> None:
-        audit = canonical_real_infra_audit.build_audit()
+        (ROOT / ".tmp").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ROOT / ".tmp") as tmpdir:
+            audit = canonical_real_infra_audit.build_audit(write_trace(tmpdir))
         audit["answer"] = "no"
 
         errors = canonical_real_infra_audit.validate_audit(audit)

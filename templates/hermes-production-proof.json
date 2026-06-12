@@ -8,7 +8,7 @@
   "scope": "disposable Hermes runtime with explicit bounded access",
   "environment_ref": "redacted-disposable-runtime",
   "evidence_refs": [
-    "validation/path/to/evidence.json"
+    ".tmp/factory-runs/path/to/evidence.json"
   ],
   "limits": [
     "This proof is bounded to the named scope.",

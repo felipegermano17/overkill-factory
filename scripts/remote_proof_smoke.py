@@ -111,7 +111,7 @@ def copy_repo_subset(destination: Path) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run local clean-environment remote proof fallback.")
-    parser.add_argument("--out", type=Path, default=ROOT / "validation" / "remote-proof" / "local-clean-smoke.json")
+    parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-runs" / "remote-proof" / "local-clean-smoke.json")
     parser.add_argument("--ttl-minutes", type=int, default=30)
     parser.add_argument("--timeout-seconds", type=int, default=120)
     parser.add_argument(

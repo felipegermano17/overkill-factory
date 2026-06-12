@@ -126,12 +126,13 @@ The done transition is therefore a reconciliation gate. A worker packet is not
 evidence. A PASS result without artifact refs is not enough. A human gate
 without a real decision record is not approval.
 
-## Public Validation Fixtures
+## Generated Transition Examples
 
-The public fixtures under `validation/hermes-transition-plans/` show the shape:
+Run the transition hook against `examples/minimal-hermes-project/card.md` to
+generate local examples under `.tmp` or your CI temp directory:
 
-- `*-ready.json` demonstrates `allow_and_create_worker_tasks`;
-- `*-done-blocked.json` demonstrates done reconciliation blocking when required
+- a ready-transition output demonstrates `allow_and_create_worker_tasks`;
+- a done-transition output demonstrates reconciliation blocking when required
   worker results are still missing.
 
 ## Apply

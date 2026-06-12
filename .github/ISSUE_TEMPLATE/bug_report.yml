@@ -1,0 +1,37 @@
+name: Bug Report
+description: Report behavior that blocks using or validating the factory.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Commands, card snippet or minimal steps.
+      value: |
+        ```bash
+        python scripts/quickstart_smoke.py
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Relevant Output
+      description: Paste only public-safe output. Do not include secrets or private paths.
+    validations:
+      required: false
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Public Safety
+      options:
+        - label: I removed secrets, private paths, private board links and raw private logs.
+          required: true

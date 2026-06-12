@@ -24,7 +24,8 @@ class QvgQuasarCuFuzzPropertyProofTests(unittest.TestCase):
 
     def test_source_contract_fails_when_required_property_tests_are_missing(self):
         with TemporaryDirectory() as tmpdir:
-            source_dir = Path(tmpdir)
+            source_dir = Path(tmpdir) / "src"
+            source_dir.mkdir()
             (source_dir / "tests.rs").write_text("#[test]\nfn tiny() {}\n", encoding="utf-8")
 
             result = proof.assert_source_contains_required_tests(source_dir)
@@ -33,10 +34,34 @@ class QvgQuasarCuFuzzPropertyProofTests(unittest.TestCase):
             self.assertIn("property_nonzero_hashes_are_accepted_for_deterministic_cases", result["missing"])
 
     def test_build_result_passes_with_current_public_source_and_runtime_proof(self):
-        result = proof.build_result(
-            proof.ROOT / "pilots" / "quasar-vault-guard-test" / "onchain" / "qvg-product-like" / "src",
-            proof.ROOT / "validation" / "quasar-product-like-proof" / "qvg-quasar-runtime-proof.json",
-        )
+        with TemporaryDirectory() as tmpdir:
+            source_dir = Path(tmpdir) / "src"
+            source_dir.mkdir()
+            (source_dir / "tests.rs").write_text(
+                "\n".join(
+                    [
+                        "fn property_nonzero_hashes_are_accepted_for_deterministic_cases() {}",
+                        "fn property_zero_hash_is_the_rejected_hash_case() {}",
+                        "fn property_all_nonzero_reason_codes_are_accepted() {}",
+                        "fn client_flow_sequence_keeps_all_public_invariants_local() {}",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (source_dir / "lib.rs").write_text("pub fn fixture() {}\n", encoding="utf-8")
+            runtime_proof = Path(tmpdir) / "runtime-proof.json"
+            runtime_proof.write_text(
+                json.dumps(
+                    {
+                        "result": "PASS",
+                        "test_status": "PASS",
+                        "source_sha256": proof.sha256_sources(source_dir),
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = proof.build_result(source_dir, runtime_proof)
 
         self.assertEqual(result["result"], "PASS")
         self.assertEqual(result["property_fuzz_coverage"]["total_cases"], 513)

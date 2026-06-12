@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import inspect
 import importlib.util
-import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -19,66 +18,73 @@ SPEC.loader.exec_module(canonical_linear_traceability_audit)
 
 
 class CanonicalLinearTraceabilityAuditTest(unittest.TestCase):
-    def test_default_audit_uses_public_checkpoint_manifest(self) -> None:
-        signature = inspect.signature(canonical_linear_traceability_audit.build_audit)
-        self.assertIsNone(signature.parameters["canonical_path"].default)
+    def test_default_outputs_are_generated_tmp_files(self) -> None:
+        self.assertIn(".tmp", canonical_linear_traceability_audit.DEFAULT_OUT_JSON.parts)
+        self.assertIn(".tmp", canonical_linear_traceability_audit.DEFAULT_CHECKPOINT_MANIFEST.parts)
 
-        audit = canonical_linear_traceability_audit.build_audit()
-        manifest = json.loads(
-            (
-                ROOT
-                / "validation"
-                / "canonical-linear-traceability"
-                / "canonical-checkpoints.public.json"
-            ).read_text(encoding="utf-8")
-        )
+    def test_checkpoint_manifest_extracts_headings_and_principles_without_committed_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            canonical = Path(tmpdir) / "canonical.md"
+            canonical.write_text(
+                "# Title\n\n"
+                "## Source Resolution\n\n"
+                "### Runtime Gate\n\n"
+                "3.1 first principle\n"
+                "3.2 second principle\n",
+                encoding="utf-8",
+            )
 
-        self.assertEqual(audit["canonical_doc_ref"], manifest["canonical_doc_ref"])
-        self.assertEqual(audit["canonical_sha256"], manifest["canonical_sha256"])
-        self.assertEqual(audit["summary"]["checkpoints_checked"], manifest["checkpoint_count"])
+            manifest = canonical_linear_traceability_audit.checkpoint_manifest(canonical)
 
-    def test_audit_maps_every_canonical_heading_and_principle_in_order(self) -> None:
-        audit = canonical_linear_traceability_audit.build_audit()
-        errors = canonical_linear_traceability_audit.validate_audit(audit)
-
-        self.assertEqual(errors, [])
-        self.assertEqual(audit["summary"]["headings_checked"], 94)
-        self.assertEqual(audit["summary"]["principles_checked"], 24)
-        self.assertEqual(audit["summary"]["checkpoints_checked"], 118)
-        self.assertFalse(audit["completion_claim_allowed"])
-
-    def test_audit_result_schema_exists_and_matches_output_schema_ref(self) -> None:
-        audit = canonical_linear_traceability_audit.build_audit()
-        schema = json.loads((ROOT / "schemas" / "canonical-linear-traceability.schema.json").read_text(encoding="utf-8"))
-
-        self.assertEqual(audit["$schema"], schema["$id"])
-
-    def test_validator_rejects_a_missing_linear_checkpoint(self) -> None:
-        audit = canonical_linear_traceability_audit.build_audit()
-        audit["checkpoints"] = audit["checkpoints"][:-1]
-
-        errors = canonical_linear_traceability_audit.validate_audit(audit)
-
-        self.assertTrue(any("checkpoint count mismatch" in error for error in errors))
+        self.assertEqual(manifest["record_type"], "canonical_checkpoint_manifest")
+        self.assertEqual(manifest["checkpoint_count"], 3)
+        self.assertEqual(manifest["headings_count"], 3)
+        self.assertEqual(manifest["principles_count"], 0)
+        self.assertEqual([item["sequence"] for item in manifest["checkpoints"]], [1, 2, 3])
 
     def test_validator_rejects_missing_repo_reference(self) -> None:
-        audit = canonical_linear_traceability_audit.build_audit()
-        audit["checkpoints"][0]["implementation_refs"][0]["path"] = "docs/no-such-file.md"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            canonical = Path(tmpdir) / "canonical.md"
+            canonical.write_text("## Runtime\n", encoding="utf-8")
+            manifest = canonical_linear_traceability_audit.checkpoint_manifest(canonical)
+            manifest_path = Path(tmpdir) / "manifest.json"
+            import json
 
-        errors = canonical_linear_traceability_audit.validate_audit(audit)
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            audit = {
+                "record_type": "canonical_linear_traceability_audit",
+                "canonical_doc_ref": manifest["canonical_doc_ref"],
+                "canonical_sha256": manifest["canonical_sha256"],
+                "summary": {
+                    "checkpoints_checked": 1,
+                    "headings_checked": 1,
+                    "principles_checked": 0,
+                    "status_counts": {"implemented_by_runtime": 1},
+                },
+                "checkpoints": [
+                    {
+                        "sequence": 1,
+                        "checkpoint_id": "checkpoint-001",
+                        "checkpoint_type": "heading",
+                        "canonical_line": 1,
+                        "canonical_level": 2,
+                        "canonical_heading": "Runtime",
+                        "implementation_status": "implemented_by_runtime",
+                        "implementation_refs": [{"kind": "script", "path": "docs/no-such-file.md"}],
+                        "canonical_obligation": "Runtime check",
+                        "boundary": None,
+                        "next_action": "none",
+                    }
+                ],
+                "completion_claim_allowed": False,
+            }
+
+            errors = canonical_linear_traceability_audit.validate_audit(
+                audit,
+                checkpoint_manifest_path=manifest_path,
+            )
 
         self.assertTrue(any("ref does not exist: docs/no-such-file.md" in error for error in errors))
-
-    def test_validator_rejects_full_runtime_claim_when_limited_sections_exist(self) -> None:
-        audit = canonical_linear_traceability_audit.build_audit()
-        limited = [
-            record
-            for record in audit["checkpoints"]
-            if record["implementation_status"]
-            in {"bounded_public_proof", "partial_requires_live_pilot", "foundational_text_tracked"}
-        ]
-
-        self.assertGreater(len(limited), 0)
 
 
 if __name__ == "__main__":

@@ -80,6 +80,6 @@
     "profile_description_ref": "agents/worker-profiles.public.json",
     "toolset_policy": "least-privilege; no direct card-state mutation; mutations go through adapter gates",
     "skill_install_ref": "docs/agents/live-agent-configuration.md",
-    "last_hermes_smoke_ref": "validation/hermes-live/factory12-agent-profile-smoke.md"
+    "last_hermes_smoke_ref": ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md"
   }
 }

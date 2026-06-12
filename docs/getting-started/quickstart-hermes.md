@@ -1,106 +1,60 @@
 # Quickstart: Use Overkill Factory With Your Own Hermes
 
 This guide gets an external operator from a fresh checkout to a local factory
-smoke. It assumes no private Discord server, no private runtime and no prior
-knowledge of this repository.
+smoke. It does not require a private runtime, Discord server or historical test
+bundle.
 
-## 1. Prerequisites
+## Prerequisites
 
-Install:
+- Git
+- Python 3.11 or newer
+- Hermes only when you are ready to route real cards
 
-- Git;
-- Python 3.11 or newer;
-- Hermes, if you want to run real Kanban cards instead of local contract checks;
-- optional worker tools, such as Codex Security, Auditor, browser tooling or a
-  remote proof runner, only when a card requires them.
+Discord is optional cockpit UI. It is not the source of truth.
 
-You do not need Discord for the first run. Discord is optional cockpit UI, not
-the source of truth.
-
-## 2. Clone And Validate The Repository
+## Three Commands
 
 ```bash
 git clone https://github.com/<owner>/overkill-factory.git
 cd overkill-factory
-python -m unittest discover -s tests -p "test_*.py" -q
-python scripts/validate_public_json_artifacts.py
-python scripts/secret_safety_scan.py
-python scripts/public_safety_scan.py
+python scripts/quickstart_smoke.py
 ```
 
-On Windows PowerShell, the same commands work with backslashes:
+The command writes:
 
-```powershell
-python -m unittest discover -s tests -p "test_*.py" -q
-python scripts\validate_public_json_artifacts.py
-python scripts\secret_safety_scan.py
-python scripts\public_safety_scan.py
-```
+- `.tmp/quickstart-result.json`
+- `.tmp/minimal-worker-packets/*.json`
 
-If these fail, fix that first. A failing public validation means the checkout is
-not a clean base for agent execution.
+The JSON result tells you whether the minimal card validates, whether the gate
+report is ready for worker execution and how many required worker packets were
+created.
 
-## 3. Configure Local Environment Values
+## Optional Local CLI
 
-Use `.env.example` as a safe template. Keep real values in your shell, password
-manager or local-only dotenv file.
-
-Minimum local-only settings:
+Install the editable package when you want shell commands instead of script
+paths:
 
 ```bash
-HERMES_BIN=hermes
-HERMES_PROFILES_DIR=./.hermes-profiles
-OVERKILL_FACTORY_REPO=.
-DISCORD_CONTROL_TOWER_ENABLED=false
+python -m pip install -e .
+overkill-quickstart
+factoryctl gate-report --card examples/minimal-hermes-project/card.md
 ```
 
-Do not commit real bot tokens, API keys, private runtime paths or account ids.
+## What To Inspect
 
-## 4. Create Hermes Profiles For Public Workers
+After the smoke passes, inspect:
 
-The public worker registry describes roles. Hermes profiles make those roles
-operable in a runtime.
+- `examples/minimal-hermes-project/card.md`
+- `.tmp/quickstart-result.json`
+- `.tmp/minimal-worker-packets/`
+- `docs/agents/worker-profiles.md`
+- `docs/agents/factory-stage-agent-map.md`
+- `docs/agents/capability-packs.md`
 
-Preview profile materialization:
+Worker packets are assignments, not proof. A card is complete only when current
+worker results, required reviews and Receipt Five agree.
 
-```bash
-python scripts/materialize_hermes_profiles.py --profiles-dir ./.hermes-profiles
-```
-
-Apply it when the preview is acceptable:
-
-```bash
-python scripts/materialize_hermes_profiles.py --profiles-dir ./.hermes-profiles --apply
-```
-
-If you already have a trusted source profile and intentionally want to copy its
-non-secret runtime shape, inspect the script help first:
-
-```bash
-python scripts/materialize_hermes_profiles.py --help
-```
-
-Only copy authentication after you understand the risk and can keep secrets
-outside this public repository.
-
-## 5. Run The Minimal Example
-
-The smallest public-safe example lives in
-`examples/minimal-hermes-project/`.
-
-```bash
-python scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
-python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
-python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
-```
-
-The commands prove three things:
-
-- the card has the required factory contract;
-- the gate report can classify what must happen before the card moves;
-- worker packets can be generated for Hermes profiles.
-
-## 6. Connect The Adapter To Hermes
+## Connect Hermes
 
 Read `adapters/hermes/README.md` before patching your Hermes checkout. The
 adapter provides:
@@ -117,16 +71,15 @@ git apply <path-to-overkill-factory>/adapters/hermes/patches/0001-overkill-facto
 python -m pytest -q -o addopts='' tests/hermes_cli/test_overkill_factory_v35_gate.py
 ```
 
-Then wire Hermes transition events to:
+Wire Hermes transition events to:
 
 ```bash
 python <path-to-overkill-factory>/adapters/hermes/transition_hook.py --help
 ```
 
-The adapter should be introduced in a test runtime before any real product or
-release work.
+Introduce the adapter in a test runtime before any real product or release work.
 
-## 7. Create A Real Project Entry
+## Create A Real Project Entry
 
 For your own project:
 
@@ -134,38 +87,14 @@ For your own project:
 2. Create a factory card from the relevant example in `examples/cards/`.
 3. Fill source refs, scope, risk, runtime, security, forbidden actions and done
    definition.
-4. Run `factoryctl.py validate-card`.
-5. Run `factoryctl.py gate-report`.
+4. Run `factoryctl validate-card`.
+5. Run `factoryctl gate-report`.
 6. Generate required worker packets.
 7. Let Hermes create or route worker cards.
 8. Attach worker results and Receipt Five before any `done` transition.
 
-## 8. Observe Evidence And Receipts
+## Before Release
 
-Worker packets are assignments, not proof. A card is not complete until current
-worker results, required reviews, human gates when needed and Receipt Five agree.
-
-Look for:
-
-- worker result artifacts;
-- `receipt_five` metadata;
-- `kanban_transition_event`;
-- independent review records;
-- human gate records for high-risk work;
-- public safety and secret scan results before public release.
-
-## 9. Full Validation Checklist
-
-Before release or contribution, run:
-
-```bash
-python -m unittest discover -s tests
-python scripts/validate_public_json_artifacts.py
-python scripts/secret_safety_scan.py
-python scripts/public_safety_scan.py
-python scripts/release_integration_preflight.py --out .tmp/release-check.json
-python scripts/factory_production_readiness.py --out .tmp/readiness-check.json
-python scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
-```
-
-Use `docs/operations/validation-and-release.md` for what each command proves.
+Run the release checks in `docs/operations/validation-and-release.md`. Keep raw
+outputs in `.tmp`, a private evidence store or a release artifact. Do not commit
+old screenshots, old pilot receipts or narrative validation history.

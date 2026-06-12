@@ -6,7 +6,7 @@ import { dirname, resolve } from "node:path";
 const RPC_URL = process.env.SOLANA_DEVNET_RPC_URL || "https://api.devnet.solana.com";
 const OUT =
   process.argv[2] ||
-  "pilots/devnet-receipt-pass-test/devnet/devnet-read-proof.json";
+  ".tmp/devnet-read-proof.json";
 
 const sampleEvent = {
   product_id: "devnet-receipt-pass",

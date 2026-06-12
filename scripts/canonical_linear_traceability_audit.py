@@ -23,10 +23,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CANONICAL_NAME = "OVERKILL_FACTORY_VFINAL_DOCUMENTO_FINAL_CANONICO_2026-06-09.md"
 DEFAULT_CANONICAL = ROOT.parent / DEFAULT_CANONICAL_NAME
 DEFAULT_CHECKPOINT_MANIFEST = (
-    ROOT / "validation" / "canonical-linear-traceability" / "canonical-checkpoints.public.json"
+    ROOT / ".tmp" / "factory-runs" / "canonical-linear-traceability" / "canonical-checkpoints.public.json"
 )
-DEFAULT_OUT_JSON = ROOT / "validation" / "canonical-linear-traceability" / "canonical-linear-traceability.json"
-DEFAULT_OUT_MD = ROOT / "docs" / "validation" / "canonical-linear-traceability.md"
+DEFAULT_OUT_JSON = ROOT / ".tmp" / "canonical-linear-traceability.json"
+DEFAULT_OUT_MD = ROOT / ".tmp" / "canonical-linear-traceability.md"
 SCHEMA = "https://overkill-factory.dev/schemas/canonical-linear-traceability.schema.json"
 CHECKPOINT_MANIFEST_SCHEMA = "https://overkill-factory.dev/schemas/canonical-checkpoint-manifest.schema.json"
 
@@ -401,7 +401,7 @@ def refs_control_tower() -> list[dict[str, str]]:
         ref("script", "scripts/factory_concierge_discord_bridge.py", "Discord bridge"),
         ref("script", "scripts/factory_concierge_discord_automation.py", "Discord automation"),
         ref("test", "tests/test_factory_concierge_discord_bridge.py", "Discord bridge regressions"),
-        ref("validation_artifact", "validation/control-tower/operator-control-tower-production-readiness.json", "bounded Control Tower proof"),
+        ref("validation_artifact", ".tmp/factory-runs/control-tower/operator-control-tower-production-readiness.json", "bounded Control Tower proof"),
     ]
 
 
@@ -421,8 +421,8 @@ def refs_closure_summary() -> list[dict[str, str]]:
         ref("schema", "schemas/worker-closure-summary.schema.json", "closure summary contract"),
         ref("documentation", "docs/automation/worker-automation-v0.md", "closure summary operating rule"),
         ref("documentation", "docs/agents/worker-profiles.md", "evidence-reconciler closure duties"),
-        ref("validation_artifact", "pilots/quasar-vault-guard-test/evidence/worker-closure-summary.json", "schema-backed closure summary example"),
-        ref("validation_artifact", "validation/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "stage 25 closure summary coverage"),
+        ref("schema", "schemas/worker-closure-summary.schema.json", "closure summary schema"),
+        ref("validation_artifact", ".tmp/factory-runs/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "stage 25 closure summary coverage"),
     ]
 
 
@@ -430,9 +430,9 @@ def refs_learning() -> list[dict[str, str]]:
     return [
         ref("schema", "schemas/factory-maturity-scorecard.schema.json", "factory maturity scorecard"),
         ref("template", "templates/factory-maturity-scorecard.json", "maturity scorecard template"),
-        ref("documentation", "docs/planning/factory-v3-6-learning-loop.md", "learning loop plan"),
+        ref("template", "templates/factory-maturity-scorecard.json", "learning loop contract fixture"),
         ref("test", "tests/test_agent_reference_study_execution.py", "study-to-artifact regressions"),
-        ref("validation_artifact", "validation/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "stage coverage evidence"),
+        ref("validation_artifact", ".tmp/factory-runs/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "stage coverage evidence"),
     ]
 
 
@@ -454,7 +454,7 @@ def refs_production() -> list[dict[str, str]]:
         ref("script", "scripts/factory_production_readiness.py", "production readiness checker"),
         ref("script", "scripts/production_release_gate.py", "release gate proof"),
         ref("test", "tests/test_production_release_gate.py", "release gate regressions"),
-        ref("validation_artifact", "validation/production/release/release-ops-result.json", "bounded release ops proof"),
+        ref("validation_artifact", ".tmp/factory-runs/production/release/release-ops-result.json", "bounded release ops proof"),
     ]
 
 
@@ -477,7 +477,7 @@ def refs_repo_public() -> list[dict[str, str]]:
         ref("script", "scripts/validate_public_json_artifacts.py", "public JSON validation"),
         ref("test", "tests/test_open_source_docs.py", "open source docs regression"),
         ref("test", "tests/test_secret_safety_scan.py", "secret scan regression"),
-        ref("validation_artifact", "validation/public-safety/worktree-summary.json", "current public safety summary"),
+        ref("validation_artifact", ".tmp/factory-runs/public-safety/worktree-summary.json", "current public safety summary"),
     ]
 
 
@@ -489,16 +489,16 @@ def refs_release() -> list[dict[str, str]]:
         ref("script", "scripts/worktree_release_inventory.py", "worktree release inventory"),
         ref("script", "scripts/production_release_gate.py", "release gate"),
         ref("test", "tests/test_release_integration_preflight.py", "release preflight regressions"),
-        ref("validation_artifact", "validation/release/release-integration-preflight.json", "release preflight proof"),
+        ref("validation_artifact", ".tmp/factory-runs/release/release-integration-preflight.json", "release preflight proof"),
     ]
 
 
 def refs_factory_flow() -> list[dict[str, str]]:
     return [
         ref("documentation", "docs/concepts/factory-flow.md", "factory flow explanation"),
-        ref("documentation", "docs/planning/execution-plan.md", "execution planning"),
+        ref("documentation", "docs/concepts/factory-flow.md", "execution flow guide"),
         ref("agent_manual", "skills/codex/overkill-factory/SKILL.md", "operator skill spine"),
-        ref("validation_artifact", "validation/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "32-stage coverage record"),
+        ref("validation_artifact", ".tmp/factory-runs/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "32-stage coverage record"),
     ]
 
 
@@ -506,9 +506,9 @@ def refs_private_product_pack() -> list[dict[str, str]]:
     return [
         ref("product_artifact", "products/qvg-public-validation-product/README.md", "public validation product"),
         ref("product_artifact", "products/devnet-receipt-pass/README.md", "public product pilot artifact"),
-        ref("validation_artifact", "validation/product-specific/qvg-full-product-worker-graph.json", "product-specific worker graph"),
-        ref("validation_artifact", "validation/production/full-product-worker-graph.json", "production worker graph proof"),
-        ref("validation_artifact", "validation/production/product-face/product-face-result.json", "bounded product face proof"),
+        ref("validation_artifact", ".tmp/factory-runs/product-specific/qvg-full-product-worker-graph.json", "product-specific worker graph"),
+        ref("validation_artifact", ".tmp/factory-runs/production/full-product-worker-graph.json", "production worker graph proof"),
+        ref("validation_artifact", ".tmp/factory-runs/production/product-face/product-face-result.json", "bounded product face proof"),
     ]
 
 
@@ -575,7 +575,7 @@ def title_record(checkpoint: Checkpoint) -> dict[str, Any]:
             status="implemented_by_contract",
             obligation="Track every numbered principle as an explicit checkpoint below this section.",
             refs=[
-                ref("validation_artifact", "validation/canonical-enforcement/canonical-enforcement-matrix.json", "principle-to-enforcement map"),
+                ref("validation_artifact", ".tmp/factory-runs/canonical-enforcement/canonical-enforcement-matrix.json", "principle-to-enforcement map"),
                 ref("script", "scripts/canonical_linear_traceability_audit.py", "extracts every numbered principle"),
                 ref("test", "tests/test_canonical_linear_traceability_audit.py", "locks the principle count"),
             ],
@@ -785,10 +785,10 @@ def title_record(checkpoint: Checkpoint) -> dict[str, Any]:
             status="partial_requires_live_pilot",
             obligation="Architecture coverage must not be confused with end-to-end readiness.",
             refs=[
-                ref("documentation", "docs/roadmap/factory-vfinal-prepilot-roadmap.md", "prepilot roadmap"),
-                ref("validation_artifact", "validation/factory-production-readiness/current-readiness.json", "readiness status"),
                 ref("script", "scripts/factory_production_readiness.py", "readiness checker"),
-                ref("validation_artifact", "validation/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "contract coverage evidence"),
+                ref("validation_artifact", ".tmp/factory-runs/factory-production-readiness/current-readiness.json", "readiness status"),
+                ref("script", "scripts/factory_production_readiness.py", "readiness checker"),
+                ref("validation_artifact", ".tmp/factory-runs/canonical-stage-coverage/canonical-stage-implementation-coverage.json", "contract coverage evidence"),
             ],
             next_action="Run a full live pilot before claiming architecture is production-ready.",
         )
@@ -954,7 +954,7 @@ def write_markdown(path: Path, audit: dict[str, Any], errors: list[str]) -> None
         "# Canonical Linear Traceability Audit",
         "",
         "> Document status: CURRENT RUNTIME EVIDENCE.",
-        "> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.",
+        "> Current authority: `scripts/factoryctl.py`, schemas and tests.",
         "> Runtime boundary: This maps the canonical document linearly; runtime implementation is answered by the real-infra audit and enforced gates.",
         "",
         f"Result: `{summary['result']}`",

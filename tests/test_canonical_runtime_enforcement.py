@@ -18,19 +18,12 @@ SPEC.loader.exec_module(canonical_runtime_enforcement)
 
 
 class CanonicalRuntimeEnforcementTest(unittest.TestCase):
-    def test_builds_runtime_rules_for_every_actionable_canonical_checkpoint(self) -> None:
-        trace = json.loads(
-            (ROOT / "validation" / "canonical-linear-traceability" / "canonical-linear-traceability.json").read_text(
-                encoding="utf-8"
-            )
-        )
+    def test_default_rulebook_falls_back_without_committed_trace(self) -> None:
+        rulebook = canonical_runtime_enforcement.default_rulebook()
 
-        rulebook = canonical_runtime_enforcement.build_rulebook(trace)
-
-        self.assertEqual(rulebook["summary"]["checkpoints_checked"], 118)
-        self.assertEqual(rulebook["summary"]["runtime_rules"], 113)
-        self.assertEqual(rulebook["summary"]["non_runtime_processes"], 5)
-        self.assertEqual(rulebook["summary"]["unmapped_actionable_checkpoints"], 0)
+        self.assertEqual(rulebook["record_type"], "canonical_runtime_rulebook")
+        self.assertEqual(rulebook["summary"]["runtime_rules"], 1)
+        self.assertEqual(rulebook["source_trace_ref"], "generated:fallback-vfinal-runtime-rulebook")
 
     def test_strict_vfinal_runtime_gate_blocks_missing_canonical_contracts(self) -> None:
         card = json.loads((ROOT / "templates" / "vfinal-factory-card.json").read_text(encoding="utf-8"))

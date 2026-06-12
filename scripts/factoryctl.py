@@ -2284,7 +2284,7 @@ def build_worker_result(
                         "solana-quasar-auditor",
                         "supply-chain-gate",
                     ],
-                    "coverage_ledger_ref": "pilots/devnet-receipt-pass-test/evidence/security-coverage-ledger.md",
+                    "coverage_ledger_ref": ".tmp/security-coverage-ledger.md",
                 }
             )
         if record_type == "appsec_owasp_result":

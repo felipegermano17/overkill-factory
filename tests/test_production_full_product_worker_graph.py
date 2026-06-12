@@ -4,6 +4,7 @@ import importlib.util
 import sys
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,16 +32,24 @@ class ProductionFullProductWorkerGraphTest(unittest.TestCase):
             self.assertGreater(len(graph["blocking_summary"]), 0)
 
     def test_strict_lane_requires_reusable_product_target(self) -> None:
-        lane = {
-            "lane_id": "remote_proof",
-            "worker_id": "remote-proof-runner",
-            "path": "validation/remote-proof/crabbox-static-ssh-proof-2026-06-06.json",
-            "record_type": "remote_proof_result",
-            "scope": "supporting",
-            "reusable_policy": "strict",
-        }
+        tmp_root = ROOT / ".tmp"
+        tmp_root.mkdir(exist_ok=True)
+        with TemporaryDirectory(dir=tmp_root) as tmpdir:
+            proof = Path(tmpdir) / "remote-proof.json"
+            proof.write_text(
+                '{"record_type":"remote_proof_result","result":"PASS","evidence_kind":"real","reusable_for_product":false,"product_target":{"product_id":"qvg-public-validation-product"}}',
+                encoding="utf-8",
+            )
+            lane = {
+                "lane_id": "remote_proof",
+                "worker_id": "remote-proof-runner",
+                "path": proof.relative_to(ROOT).as_posix(),
+                "record_type": "remote_proof_result",
+                "scope": "supporting",
+                "reusable_policy": "strict",
+            }
 
-        result = module.validate_lane(lane)
+            result = module.validate_lane(lane)
 
         self.assertEqual(result["status"], "FAIL")
         self.assertIn("strict lane must be reusable", " ".join(result["validation_errors"]))

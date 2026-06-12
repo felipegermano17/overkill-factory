@@ -19,7 +19,7 @@ REGISTRY_PATH = ROOT / "agents" / "worker-registry.public.json"
 PROFILES_PATH = ROOT / "agents" / "worker-profiles.public.json"
 BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 SECURITY_MATRIX_PATH = ROOT / "docs" / "agents" / "security-specialist-matrix.md"
-PROFILE_SMOKE_PATH = ROOT / "validation" / "hermes-live" / "factory12-agent-profile-smoke.json"
+PROFILE_SMOKE_PATH = ROOT / ".tmp" / "factory-runs" / "hermes-live" / "factory12-agent-profile-smoke.json"
 
 
 SECURITY_DOMAINS = {
@@ -84,7 +84,8 @@ def validate() -> list[str]:
     registry = load_json(REGISTRY_PATH)
     profiles_doc = load_json(PROFILES_PATH)
     bindings_doc = load_json(BINDINGS_PATH)
-    smoke_doc = load_json(PROFILE_SMOKE_PATH) if PROFILE_SMOKE_PATH.exists() else {}
+    smoke_doc_present = PROFILE_SMOKE_PATH.exists()
+    smoke_doc = load_json(PROFILE_SMOKE_PATH) if smoke_doc_present else {}
 
     workers = {str(worker["worker_id"]): worker for worker in registry.get("workers", [])}
     profiles = profiles_doc.get("profiles", {})
@@ -117,10 +118,11 @@ def validate() -> list[str]:
     for extra in sorted(binding_ids - worker_ids):
         findings.append(f"{extra}: binding has no registered worker")
     smoke_ids = set(smoke_by_worker)
-    for missing in sorted(worker_ids - smoke_ids):
-        findings.append(f"{missing}: missing Hermes profile smoke row")
-    for extra in sorted(smoke_ids - worker_ids):
-        findings.append(f"{extra}: smoke row has no registered worker")
+    if smoke_doc_present:
+        for missing in sorted(worker_ids - smoke_ids):
+            findings.append(f"{missing}: missing Hermes profile smoke row")
+        for extra in sorted(smoke_ids - worker_ids):
+            findings.append(f"{extra}: smoke row has no registered worker")
 
     for worker_id in sorted(worker_ids & profile_ids):
         worker = workers[worker_id]
@@ -159,7 +161,6 @@ def validate() -> list[str]:
                 "profile_manifest_ref",
                 "profile_description_ref",
                 "skill_install_ref",
-                "last_hermes_smoke_ref",
             ):
                 ref = str(binding.get(field) or "").strip()
                 if not ref:
@@ -168,6 +169,11 @@ def validate() -> list[str]:
                     pass
                 elif not (ROOT / ref).exists():
                     findings.append(f"{worker_id}: binding {field} does not exist: {ref}")
+            smoke_ref = str(binding.get("last_hermes_smoke_ref") or "").strip()
+            if not smoke_ref:
+                findings.append(f"{worker_id}: binding missing last_hermes_smoke_ref")
+            elif not smoke_ref.startswith((".tmp/", "external:", "http://", "https://")):
+                findings.append(f"{worker_id}: last_hermes_smoke_ref must point to generated .tmp output or an external runtime ref")
             if not str(binding.get("toolset_policy") or "").strip():
                 findings.append(f"{worker_id}: binding missing toolset_policy")
             result_schema = str(binding.get("result_schema") or "").strip()

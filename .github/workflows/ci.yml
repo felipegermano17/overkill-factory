@@ -19,36 +19,33 @@ jobs:
           python-version: "3.12"
       - name: Unit tests
         run: python -m unittest discover -s tests -p "test_*.py" -q
+      - name: Quickstart smoke
+        run: python scripts/quickstart_smoke.py
       - name: Hermes transition plan smoke
-        run: python scripts/factoryctl.py transition-plan --card validation/cards/solana-quasar-r3.md --from-status draft --to-status ready
+        run: python scripts/factoryctl.py transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready --out "$RUNNER_TEMP/overkill-transition-plan.json"
       - name: Hermes transition hook smoke
         run: |
           mkdir -p "$RUNNER_TEMP/overkill-hook"
           python adapters/hermes/transition_hook.py \
-            --card validation/cards/solana-quasar-r3.md \
+            --card examples/minimal-hermes-project/card.md \
             --from-status draft \
             --to-status ready \
             --ledger "$RUNNER_TEMP/overkill-hook/worker-ledger.json" \
             --out "$RUNNER_TEMP/overkill-hook/ready-hook-result.json" \
             --report-only
           python adapters/hermes/transition_hook.py \
-            --card validation/cards/solana-quasar-r3.md \
+            --card examples/minimal-hermes-project/card.md \
             --from-status ready \
             --to-status done \
-            --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json \
-            --worker-results-dir pilots/quasar-vault-guard-test/worker-results \
             --ledger "$RUNNER_TEMP/overkill-hook/worker-ledger.json" \
             --out "$RUNNER_TEMP/overkill-hook/done-hook-blocked.json" \
             --report-only
           if python adapters/hermes/transition_hook.py \
-            --card validation/cards/solana-quasar-r3.md \
+            --card examples/minimal-hermes-project/card.md \
             --from-status ready \
             --to-status done \
-            --receipt pilots/quasar-vault-guard-test/evidence/receipt-five-first-slice.json \
-            --worker-results-dir pilots/quasar-vault-guard-test/worker-results \
             --ledger "$RUNNER_TEMP/overkill-hook/worker-ledger.json" \
-            --out "$RUNNER_TEMP/overkill-hook/done-hook-enforced-block.json" \
-            --enforce; then
+            --out "$RUNNER_TEMP/overkill-hook/done-hook-enforced-block.json"; then
             echo "Expected blocked done transition to fail under --enforce"
             exit 1
           fi

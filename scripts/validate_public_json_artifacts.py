@@ -17,13 +17,13 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "schemas"
-SCAN_DIRS = [ROOT / "examples", ROOT / "validation", ROOT / "pilots", ROOT / "agents", ROOT / "templates"]
+SCAN_DIRS = [ROOT / "examples", ROOT / ".tmp" / "factory-runs", ROOT / "agents", ROOT / "templates"]
 
 SCHEMA_OPTIONAL = {
-    "validation/product-face/console.json",
-    "validation/product-face/state.json",
-    "validation/product-face/static-summary.json",
-    "validation/security/bandit-scripts-adapters.json",
+    ".tmp/factory-runs/product-face/console.json",
+    ".tmp/factory-runs/product-face/state.json",
+    ".tmp/factory-runs/product-face/static-summary.json",
+    ".tmp/factory-runs/security/bandit-scripts-adapters.json",
 }
 
 PRODUCT_FACE_ALIGNMENT_FIELDS = (

@@ -15,8 +15,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "production" / "remote-proof" / "managed-testbox-result.json"
-DEFAULT_MD_OUT = ROOT / "validation" / "production" / "remote-proof" / "managed-testbox-result.md"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "remote-proof" / "managed-testbox-result.json"
+DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "remote-proof" / "managed-testbox-result.md"
 PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
 DEFAULT_COMMAND = (
     "python3 --version && "
@@ -188,11 +188,11 @@ def build_result(
             "python3 scripts/full_product_worker_graph.py --require-pass",
         ],
         "evidence_refs": [
-            "validation/production/remote-proof/managed-testbox-result.md",
-            "validation/product-specific/qvg-full-product-worker-graph.json",
-            "validation/production/product-face/product-face-result.json",
-            "validation/production/quasar/auditor-result.json",
-            "validation/production/quasar/cu-svm-economic-proof.json",
+            ".tmp/factory-runs/production/remote-proof/managed-testbox-result.md",
+            ".tmp/factory-runs/product-specific/qvg-full-product-worker-graph.json",
+            ".tmp/factory-runs/production/product-face/product-face-result.json",
+            ".tmp/factory-runs/production/quasar/auditor-result.json",
+            ".tmp/factory-runs/production/quasar/cu-svm-economic-proof.json",
         ],
         "production_boundary": (
             "This is a real Crabbox-managed ephemeral container proof. It is not a brokered cloud lease and not Blacksmith Testbox; "
