@@ -1,5 +1,9 @@
 # Heavy Validation Results
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records a historical validation result and does not override current gates.
+
 Date: 2026-06-06
 
 This validation battery now combines real Hermes Kanban execution,
@@ -206,13 +210,14 @@ Observed result:
   execution, no credential or private endpoint leakage, and reran public JSON,
   public-safety, secret-safety, 77 tests and `git diff --check` with `PASS`;
 - production-like Product Face dispatch: a real Hermes `product-face` worker
-  reran Product Face with `--reusable-for-product`, confirmed `PASS`,
-  `evidence_kind=real`, `reusable_for_product=true`,
+  reran Product Face, confirmed browser/render `PASS`,
+  `evidence_kind=real`, and current `reusable_for_product=false` until packet,
+  source-promise and design-fit alignment are recorded as `pass`,
   `product_id=qvg-public-validation-product`,
   `environment_class=production-like-static-artifact`, target artifact hash,
-  public JSON/scans, 80 tests and `git diff --check`; the completion audit now
-  marks only `production_product_face` as `ACHIEVED` and still blocks the full
-  completion claim until the remaining lanes are proven;
+  public JSON/scans, tests and `git diff --check`; the completion audit keeps
+  `production_product_face` bounded and blocks the full completion claim until
+  the reusable Product Face alignment and remaining lanes are proven;
 - production-validation Quasar Auditor dispatch: a real Hermes
   `solana-quasar-auditor` worker reran the QVG public validation product source
   under `products/`, built/tested it in Docker with Quasar, cloned and applied
@@ -362,7 +367,8 @@ checks.
   CLI worker set.
 - Product Face completion now requires a structured `product_face_result` with
   screenshots, viewports, checked states, journeys, accessibility, overlap,
-  performance note and evidence refs.
+  performance note, packet comparison, source-promise coverage, design-fit
+  review and evidence refs.
 - Auditor preflight can no longer be represented as a real code-audit PASS.
   Preflight must be marked as `WAIVED` or `PENDING` with explicit boundary.
 - Hermes transition-plan fixtures now show the intended runtime contract:

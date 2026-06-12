@@ -282,6 +282,13 @@ def default_projection_from_intake(message: dict[str, Any], now: str | None = No
         "forecast_risks": ["escopo ainda pode mudar durante a consolidacao do SOT"],
         "human_decisions_required": [],
         "truth_source_available": True,
+        "source_of_truth": {
+            "runtime": "hermes",
+            "ref": "factory-intake",
+            "owner": "factory-runtime",
+            "freshness": "runtime_fresh",
+            "discord_is_source_of_truth": False,
+        },
     }
 
 
@@ -712,6 +719,7 @@ def sync_approval_text_decision(
     state: dict[str, Any],
     *,
     apply: bool,
+    now: str | None = None,
 ) -> dict[str, Any]:
     validate_artifact(approval)
     approval_state = state.setdefault("approvals", {}).setdefault(str(approval["approval_id"]), {})
@@ -724,7 +732,7 @@ def sync_approval_text_decision(
     if not decision:
         return {"approval_id": str(approval["approval_id"]), "decision_found": False, "accepted": False}
     decision.update({"approval_id": approval["approval_id"], "scope": approval["scope"]})
-    registered, event = register_approval_decision(approval, decision)
+    registered, event = register_approval_decision(approval, decision, now=now)
     if not event.get("accepted", True):
         return {
             "approval_id": str(approval["approval_id"]),
@@ -1001,7 +1009,14 @@ def run_automation(args: argparse.Namespace) -> dict[str, Any]:
     if approvals and args.scan_approval_text:
         text_results = []
         for approval_item in approvals:
-            text_result = sync_approval_text_decision(approval_item, client, config, state, apply=bool(args.apply))
+            text_result = sync_approval_text_decision(
+                approval_item,
+                client,
+                config,
+                state,
+                apply=bool(args.apply),
+                now=args.decision_time,
+            )
             text_results.append(text_result)
             if text_result.get("accepted"):
                 results["approval_registration_path_reachable"] = True

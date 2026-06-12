@@ -34,6 +34,7 @@ class OpenSourceDocsTest(unittest.TestCase):
 
         for rel in [
             "docs/getting-started/quickstart-hermes.md",
+            "docs/governance/document-governance.md",
             "docs/concepts/factory-flow.md",
             "docs/agents/worker-profiles.md",
             "docs/agents/factory-stage-agent-map.md",
@@ -51,6 +52,7 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_public_docs_skeleton_exists(self) -> None:
         required_paths = [
             "docs/getting-started/quickstart-hermes.md",
+            "docs/governance/document-governance.md",
             "docs/concepts/factory-flow.md",
             "docs/agents/worker-profiles.md",
             "docs/agents/factory-stage-agent-map.md",
@@ -101,6 +103,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         combined = f"{quickstart}\n{operations}"
         required_commands = [
             "python -m unittest discover -s tests",
+            "python scripts/validate_document_governance.py",
             "python scripts/validate_public_json_artifacts.py",
             "python scripts/secret_safety_scan.py",
             "python scripts/public_safety_scan.py",
@@ -150,6 +153,17 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertEqual(report["blocked_workers"], [])
         self.assertIn("independent-reviewer", report["required_workers"])
         self.assertEqual(report["workers"]["independent-reviewer"]["status"], "requires_execution")
+
+    def test_document_governance_passes(self) -> None:
+        result = subprocess.run(
+            [sys.executable, "scripts/validate_document_governance.py"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertIn("OK", result.stdout)
 
 
 if __name__ == "__main__":

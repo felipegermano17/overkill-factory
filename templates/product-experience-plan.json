@@ -2,31 +2,60 @@
   "$schema": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json",
   "surface_type": "web app",
   "surface_pack": "web-app-surface-pack",
-  "states": [
+  "experience_sot": "What the user must be able to understand and accomplish.",
+  "user": "Primary user or operator who touches this surface.",
+  "job_to_be_done": "The concrete job this surface must help the user complete.",
+  "main_flows": [
+    "primary happy path",
+    "empty/loading/error path"
+  ],
+  "required_states": [
     "empty",
     "loading",
     "success",
     "error"
   ],
+  "design_direction": {
+    "visual_tone": "Clear, product-fit, non-generic direction.",
+    "product_fit": "Explain why the visual model matches the product promise and audience.",
+    "density": "State whether this should be dense/operational, editorial, playful, or another fit.",
+    "interaction_style": "Describe how the user should move through the surface."
+  },
   "proof_required": [
     "desktop screenshot",
     "mobile screenshot",
-    "keyboard/a11y check"
+    "keyboard/a11y check",
+    "Product Face Result comparing output to this plan"
   ],
-  "accessibility_checks": [
+  "reviewers_required": [
+    "product-face",
+    "qa-verification-worker",
+    "independent-reviewer"
+  ],
+  "done_definition": [
+    "Product Face Packet exists before implementation",
+    "Product Face Result compares screenshots/states/flows against the packet",
+    "review confirms evidence matches the original product promise"
+  ],
+  "human_gate": {
+    "required": false,
+    "approver": "",
+    "reason": "Set required=true when visual/product direction is not already approved or affects external user promise."
+  },
+  "prototype_decision": "prototype_not_required because flow is known; update when uncertainty exists",
+  "device_or_viewport_scope": [
+    "desktop 1440x900",
+    "mobile 390x844 when mobile is in scope"
+  ],
+  "accessibility_scope": [
     "labels",
     "contrast",
     "keyboard"
   ],
-  "evidence_refs": [
-    "product-experience-plan.md"
+  "performance_scope": [
+    "basic render/use responsiveness for the surface"
   ],
-  "experience_sot": "What the user must be able to understand and accomplish.",
-  "prototype_decision": "prototype_not_required because flow is known; update when uncertainty exists",
-  "flows": [
-    "primary happy path",
-    "empty/loading/error path"
-  ],
+  "data_context": "Describe real, long, empty, error and sensitive data states.",
   "docs_onboarding": [
     "first-use guidance if needed"
   ],
@@ -36,8 +65,7 @@
     "a11y basics"
   ],
   "product_face_result_required": true,
-  "reviewer_roles": [
-    "product-face",
-    "qa-verification-worker"
+  "evidence_refs": [
+    "product-experience-plan.md"
   ]
 }

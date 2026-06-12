@@ -1,5 +1,9 @@
 # Worker Profiles
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This guide describes worker behavior; machine contracts, generated packets and gate reports are the executable source.
+
 This page is the public operator guide for the agent layer. Exact machine
 contracts live in:
 

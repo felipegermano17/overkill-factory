@@ -1,5 +1,9 @@
 # Heavy Validation Adversarial Review
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; old "Still open" notes are snapshots unless promoted into current runtime gates or the active risk register.
+
 This file consolidates critical review feedback from parallel reviewers during
 the heavy validation battery.
 
@@ -94,4 +98,3 @@ Still open:
 - build/import real Quasar source;
 - run real Auditor;
 - add build, tests, compute profile and fuzz/property coverage.
-

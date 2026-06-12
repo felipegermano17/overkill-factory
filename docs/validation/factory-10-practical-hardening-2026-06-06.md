@@ -1,5 +1,9 @@
 # Factory 10 Practical Hardening - 2026-06-06
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records a historical Factory 10 hardening pass.
+
 This pass moved the public factory from strong preflight toward practical
 operation. A later final Hermes V2 run closed the remaining practical Factory 10
 blockers for the QVG public validation product and current public branch state.

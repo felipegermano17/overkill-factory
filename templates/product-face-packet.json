@@ -1,0 +1,58 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-face-packet.schema.json",
+  "surface": "web_app",
+  "mode": "greenfield",
+  "user": "Primary external or internal user.",
+  "job_to_be_done": "What this user must understand or accomplish on the surface.",
+  "main_flows": [
+    "primary user flow",
+    "blocked/error recovery flow"
+  ],
+  "required_states": [
+    "empty",
+    "loading",
+    "success",
+    "error"
+  ],
+  "design_direction": {
+    "visual_tone": "Name the intended visual tone.",
+    "product_fit": "Explain why the visual direction matches the product promise and audience.",
+    "density": "State the right density for this product surface.",
+    "interaction_style": "Describe the interaction model and motion/feedback expectations."
+  },
+  "data_context": "Describe the kind of real data, long data, empty data and sensitive data shown.",
+  "accessibility_scope": [
+    "keyboard",
+    "labels",
+    "contrast"
+  ],
+  "performance_scope": [
+    "basic local render responsiveness"
+  ],
+  "device_or_viewport_scope": [
+    "desktop 1440x900",
+    "mobile 390x844 when mobile is in scope"
+  ],
+  "prototype_needed": "no",
+  "proof_required": [
+    "desktop screenshot",
+    "mobile screenshot when mobile is in scope",
+    "states evidence",
+    "Product Face Result comparison to packet"
+  ],
+  "reviewers_required": [
+    "product-face",
+    "qa-verification-worker",
+    "independent-reviewer"
+  ],
+  "done_definition": [
+    "result covers required flows and states",
+    "result includes evidence for required viewports",
+    "review confirms result fits the product promise and visual direction"
+  ],
+  "human_gate": {
+    "required": false,
+    "approver": "",
+    "reason": "Required when the visual direction is being created, disputed, or changes the external product promise."
+  }
+}

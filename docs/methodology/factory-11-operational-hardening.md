@@ -1,5 +1,9 @@
 # Factory 11 Operational Hardening
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; hardening that survived is enforced by current schemas, scripts, tests and receipts.
+
 Factory 11 is not a new philosophy. It is the hardening layer that makes the
 factory safer for autonomous agents and public open-source operation.
 

@@ -1,5 +1,9 @@
 # Live Hermes Kanban Smoke
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records one live Hermes smoke and does not prove future runtime compatibility.
+
 Date: 2026-06-06
 
 This smoke ran the Overkill Factory adapter against a real Hermes Kanban board.

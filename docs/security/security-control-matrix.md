@@ -1,5 +1,9 @@
 # Security Control Matrix
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This guide explains security coverage; a product still needs current scan evidence, worker results and gates.
+
 Security in Overkill Factory is a matrix of specialists and controls. A generic
 security comment is not enough.
 

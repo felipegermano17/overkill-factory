@@ -38,6 +38,9 @@ Run for any card with surfaces:
 - accessibility result;
 - visual overlap result;
 - performance note;
+- packet comparison status;
+- source-promise coverage status;
+- design-fit review status;
 - evidence refs;
 - next action.
 
@@ -64,6 +67,11 @@ Useful options:
 - `--force-fallback` to register bounded static evidence without a browser.
 - `--card` to bind the result to the exact factory card/slice that will later
   be reconciled by the Hermes `done` gate.
+- `--packet-ref`, `--packet-comparison-basis`,
+  `--source-promise-coverage-basis` and `--design-fit-review-basis` to record
+  product approval alignment.
+- `--reusable-for-product` only after the three alignment fields above are
+  recorded as `pass`.
 
 With Python Playwright available, the runner captures screenshots, console
 messages, DOM state, accessibility basics, overlap scan and a browser-local
@@ -74,7 +82,30 @@ was captured.
 
 For product-facing completion, Receipt Five must include
 `product_face_result`. A Product Face Packet is planning; a Product Face Result
-is proof.
+is proof. Browser screenshots alone are not product approval. A reusable product
+approval also needs packet comparison, source-promise coverage and design-fit
+review recorded as `pass`.
+
+Reusable product example:
+
+```bash
+python scripts/product_face_proof.py \
+  --target pilots/quasar-vault-guard-test/product-face/prototype.html \
+  --out validation/production/product-face/product-face-result.json \
+  --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md \
+  --viewport desktop=1440x900 \
+  --viewport mobile=390x844 \
+  --state initial-render \
+  --journey "open target" \
+  --packet-ref pilots/quasar-vault-guard-test/cards/qvg-first-slice.md#product_face_packet \
+  --packet-comparison-basis "Screens, states and viewports match the Product Face Packet." \
+  --source-promise-coverage-basis "The checked journey covers the stated product promise." \
+  --design-fit-review-basis "The reviewer confirmed fit to the requested product direction." \
+  --reusable-for-product \
+  --product-id qvg-public-validation-product \
+  --environment-class production-like-static-artifact \
+  --approval-scope "Product Face lane for the QVG public validation product only"
+```
 
 ## Local Runner
 
@@ -117,6 +148,9 @@ Full Product Face PASS requires:
 - accessibility basics;
 - overlap/layout check;
 - performance note;
+- packet comparison;
+- source-promise coverage;
+- design-fit review;
 - evidence refs attached to Receipt Five.
 
 ## Why This Is Better

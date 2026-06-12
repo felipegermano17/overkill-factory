@@ -289,6 +289,33 @@ class FactoryCtlTest(unittest.TestCase):
             factoryctl.validate_card(card),
         )
 
+    def test_vfinal_product_surface_requires_product_experience_os_contract(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["surfaces"] = ["frontend", "product-face"]
+        card["capability_pack_contract"] = dict(card["capability_pack_contract"])
+        card["capability_pack_contract"]["covered_surfaces"] = ["frontend", "product-face"]
+        card.pop("product_experience_plan", None)
+        card["product_face_packet"] = {"screen_inventory": ["dashboard"]}
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("product_experience_plan required for vFinal product-facing surfaces", errors)
+        self.assertIn("product_face_packet.surface is required", errors)
+        self.assertIn("product_face_packet.design_direction is required", errors)
+
+    def test_vfinal_product_surface_accepts_product_experience_os_contract(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["surfaces"] = ["frontend", "product-face"]
+        card["capability_pack_contract"] = dict(card["capability_pack_contract"])
+        card["capability_pack_contract"]["covered_surfaces"] = ["frontend", "product-face"]
+        card["method_contract"] = dict(card["method_contract"])
+        card["method_contract"]["required_plans"] = ["software_development_plan", "product_experience_plan"]
+        card["product_experience_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-experience-plan.json")
+        card["product_face_packet"] = factoryctl.load_json_like(ROOT / "templates" / "product-face-packet.json")
+        card["product_face_result_ref"] = "validation/product-face/product-face-result.json"
+
+        self.assertEqual(factoryctl.validate_card(card), [])
+
     def test_product_face_completion_requires_visual_result(self) -> None:
         card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md")
         receipt = {
@@ -347,6 +374,19 @@ class FactoryCtlTest(unittest.TestCase):
                 "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
                 "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
                 "performance_note": "static validation scenario only",
+                "packet_ref": "validation/cards/product-face-saas-r2.md#product_face_packet",
+                "packet_comparison": {
+                    "status": "pass",
+                    "basis": "All planned screens, states and viewports are covered."
+                },
+                "source_promise_coverage": {
+                    "status": "pass",
+                    "basis": "The result covers the visible SaaS validation promise in the card."
+                },
+                "design_fit_review": {
+                    "status": "pass",
+                    "basis": "The validator confirmed this bounded SaaS surface matches the Product Face packet."
+                },
                 "blocking_findings": False,
                 "evidence_refs": ["reports/product-face.md"],
                 "next_action": "independent review",
@@ -354,6 +394,50 @@ class FactoryCtlTest(unittest.TestCase):
         }
 
         self.assertEqual(factoryctl.validate_completion(card, receipt), [])
+
+    def test_product_face_completion_rejects_screenshot_without_plan_alignment(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md")
+        receipt = {
+            "receipt_five": {
+                "changed": "validated visible SaaS scenario",
+                "artifact_paths": ["validation/cards/product-face-saas-r2.md"],
+                "verification_commands": ["python scripts/factoryctl.py validate-card validation/cards/product-face-saas-r2.md"],
+                "verification_result": "PASS",
+                "reviewer_required": True,
+                "reviewer_result": "PASS",
+                "next_action": "ready for independent review",
+            },
+            "kanban_transition_event": {
+                "from_status": "review",
+                "to_status": "done",
+                "actor": "qa-verification-worker",
+                "worker": "product-face",
+                "receipt_refs": ["receipt_five", "product_face_result"],
+                "artifact_refs": ["validation/cards/product-face-saas-r2.md", "reports/product-face.md"],
+            },
+            "product_face_result": {
+                "result": "PASS",
+                "tool_or_profile": "browser-proof-runner",
+                "executed_by": "product-face-validator",
+                "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
+                "viewports": ["desktop 1440x900", "mobile 390x844"],
+                "checked_states": ["empty", "loading", "success", "error"],
+                "user_journeys_checked": ["dashboard to detail", "settings save"],
+                "a11y": {"status": "pass"},
+                "overlap_check": {"status": "pass"},
+                "console": {"status": "pass"},
+                "performance_note": "static validation scenario only",
+                "blocking_findings": False,
+                "evidence_refs": ["reports/product-face.md"],
+                "next_action": "independent review",
+            },
+        }
+
+        errors = factoryctl.validate_completion(card, receipt)
+
+        self.assertIn("product_face_result.packet_comparison is required for product-facing completion", errors)
+        self.assertIn("product_face_result.source_promise_coverage is required for product-facing completion", errors)
+        self.assertIn("product_face_result.design_fit_review is required for product-facing completion", errors)
 
     def test_product_face_pass_rejects_blocking_or_warning_result(self) -> None:
         result = {

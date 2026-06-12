@@ -1,5 +1,9 @@
 # Overkill Factory V3.6
 
+> Document status: LEGACY METHOD.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; use it as dry-pilot evidence and legacy context only.
+
 V3.6 is the first version informed by a completed Hermes dry pilot.
 
 Pilot evidence:

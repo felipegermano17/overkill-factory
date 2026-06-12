@@ -1,5 +1,9 @@
 # Heavy Validation Battery
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records the historical heavy-validation battery shape.
+
 One pilot is not enough to validate the factory. The battery must stress
 different product shapes, risk levels, agent modes and review paths.
 

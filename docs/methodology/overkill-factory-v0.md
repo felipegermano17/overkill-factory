@@ -1,5 +1,9 @@
 # Overkill Factory V0
 
+> Document status: LEGACY METHOD.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; use it only to understand early factory decisions and legacy cards.
+
 Overkill Factory is a product-production line for autonomous agents.
 
 It is designed for hostile inputs: raw papers, ambiguity, conflicting sources,

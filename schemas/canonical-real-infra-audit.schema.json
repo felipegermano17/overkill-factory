@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/canonical-real-infra-audit.schema.json",
+  "title": "Overkill Factory Canonical Real Infra Audit",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "source_trace_ref",
+    "question_answered",
+    "result",
+    "all_canonical_steps_rules_processes_runtime_implemented",
+    "all_actionable_canonical_processes_runtime_implemented",
+    "answer",
+    "classification_rule",
+    "summary",
+    "blocking_summary",
+    "checkpoints"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/canonical-real-infra-audit.schema.json"
+    },
+    "record_type": {
+      "const": "canonical_real_infra_audit"
+    },
+    "source_trace_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "canonical_doc_ref": {
+      "type": ["string", "null"]
+    },
+    "canonical_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "question_answered": {
+      "type": "string",
+      "minLength": 10
+    },
+    "result": {
+      "enum": ["PASS", "FAIL"]
+    },
+    "all_canonical_steps_rules_processes_runtime_implemented": {
+      "type": "boolean"
+    },
+    "all_actionable_canonical_processes_runtime_implemented": {
+      "type": "boolean"
+    },
+    "answer": {
+      "enum": ["yes", "no"]
+    },
+    "classification_rule": {
+      "type": "string",
+      "minLength": 20
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "checkpoints_checked",
+        "runtime_enforced",
+        "non_runtime_processes",
+        "not_runtime_enforced",
+        "runtime_rules",
+        "unmapped_actionable_checkpoints",
+        "real_infra_status_counts"
+      ],
+      "properties": {
+        "checkpoints_checked": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "runtime_enforced": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "non_runtime_processes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_runtime_enforced": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runtime_rules": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unmapped_actionable_checkpoints": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "real_infra_status_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "blocking_summary": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validation_errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "sequence",
+          "canonical_line",
+          "checkpoint_type",
+          "canonical_heading",
+          "linear_status",
+          "real_infra_status",
+          "has_runtime_ref",
+          "has_test_ref",
+          "ref_kinds",
+          "runtime_rule_ref",
+          "reason"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "canonical_line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "checkpoint_type": {
+            "enum": ["heading", "principle"]
+          },
+          "canonical_heading": {
+            "type": "string",
+            "minLength": 1
+          },
+          "linear_status": {
+            "type": "string",
+            "minLength": 3
+          },
+          "real_infra_status": {
+            "enum": [
+              "runtime_enforced",
+              "contract_only",
+              "bounded_proof_only",
+              "not_runtime_process",
+              "not_runtime_implemented",
+              "unknown"
+            ]
+          },
+          "has_runtime_ref": {
+            "type": "boolean"
+          },
+          "has_test_ref": {
+            "type": "boolean"
+          },
+          "ref_kinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "runtime_rule_ref": {
+            "type": ["string", "null"]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3
+          },
+          "next_action": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

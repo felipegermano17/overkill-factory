@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/canonical-linear-traceability.schema.json",
+  "title": "Overkill Factory Canonical Linear Traceability Audit",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "canonical_doc_ref",
+    "canonical_sha256",
+    "coverage_rule",
+    "result",
+    "completion_claim_allowed",
+    "completion_claim_rule",
+    "summary",
+    "checkpoints"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/canonical-linear-traceability.schema.json"
+    },
+    "record_type": {
+      "const": "canonical_linear_traceability_audit"
+    },
+    "canonical_doc_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "canonical_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "coverage_rule": {
+      "type": "string",
+      "minLength": 20
+    },
+    "result": {
+      "enum": ["PASS", "PASS_WITH_LIMITS", "FAIL"]
+    },
+    "completion_claim_allowed": {
+      "const": false
+    },
+    "completion_claim_rule": {
+      "type": "string",
+      "minLength": 20
+    },
+    "summary": {
+      "type": "object",
+      "required": ["checkpoints_checked", "headings_checked", "principles_checked", "status_counts"],
+      "properties": {
+        "checkpoints_checked": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "headings_checked": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "principles_checked": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "validation_errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "sequence",
+          "checkpoint_id",
+          "checkpoint_type",
+          "canonical_line",
+          "canonical_level",
+          "canonical_heading",
+          "canonical_obligation",
+          "implementation_status",
+          "implementation_refs"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "checkpoint_id": {
+            "type": "string",
+            "minLength": 3
+          },
+          "checkpoint_type": {
+            "enum": ["heading", "principle"]
+          },
+          "canonical_line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "canonical_level": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "canonical_heading": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parent_heading": {
+            "type": ["string", "null"]
+          },
+          "canonical_obligation": {
+            "type": "string",
+            "minLength": 10
+          },
+          "implementation_status": {
+            "enum": [
+              "implemented_by_runtime",
+              "implemented_by_contract",
+              "bounded_public_proof",
+              "partial_requires_live_pilot",
+              "foundational_text_tracked"
+            ]
+          },
+          "implementation_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["kind", "path", "covers"],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "schema",
+                    "template",
+                    "script",
+                    "test",
+                    "worker_registry",
+                    "worker_profile",
+                    "profile_binding",
+                    "runtime_adapter",
+                    "validation_artifact",
+                    "product_artifact",
+                    "agent_manual",
+                    "documentation"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "covers": {
+                  "type": "string",
+                  "minLength": 3
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "boundary": {
+            "type": ["string", "null"]
+          },
+          "next_action": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

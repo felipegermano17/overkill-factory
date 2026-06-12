@@ -1,5 +1,9 @@
 # Execution Plan
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records completed planning history and must not be used as the live task list.
+
 This plan continues after item 1 from the original next-step list was completed.
 
 ## Done Already

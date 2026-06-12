@@ -1,5 +1,9 @@
 # Factory vFinal Prepilot Roadmap
 
+> Document status: ACTIVE BACKLOG.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not a runtime gate; backlog items become binding only after they are implemented as schema, script, test, worker, adapter rule or receipt.
+
 This roadmap is not the canonical factory document.
 
 It is the public operational backlog for the prepilot line: what is already

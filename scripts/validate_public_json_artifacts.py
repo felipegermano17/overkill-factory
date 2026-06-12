@@ -26,6 +26,12 @@ SCHEMA_OPTIONAL = {
     "validation/security/bandit-scripts-adapters.json",
 }
 
+PRODUCT_FACE_ALIGNMENT_FIELDS = (
+    "packet_comparison",
+    "source_promise_coverage",
+    "design_fit_review",
+)
+
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -124,6 +130,13 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                         errors.append(f"{at}.waiver.{field}: expected non-empty array")
         if data.get("evidence_kind") == "waiver" and data.get("result") != "WAIVED":
             errors.append(f"{at}: evidence_kind=waiver requires result=WAIVED")
+    if data.get("record_type") == "product_face_result" and data.get("reusable_for_product") is True:
+        if not str(data.get("packet_ref") or "").strip():
+            errors.append(f"{at}: reusable product_face_result requires packet_ref")
+        for field in PRODUCT_FACE_ALIGNMENT_FIELDS:
+            value = data.get(field)
+            if not isinstance(value, dict) or value.get("status") != "pass":
+                errors.append(f"{at}: reusable product_face_result requires {field}.status=pass")
     return errors
 
 

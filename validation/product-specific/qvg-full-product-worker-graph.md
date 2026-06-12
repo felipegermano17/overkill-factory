@@ -6,7 +6,7 @@ Completion claim allowed: `false`
 
 ## Lanes
 
-- `product_face`: `PASS` via `validation/production/product-face/product-face-result.json`; reusable_for_product=`true`
+- `product_face`: `PASS` via `validation/production/product-face/product-face-result.json`; reusable_for_product=`false`
 - `security`: `PASS` via `pilots/quasar-vault-guard-test/worker-results/security-scan-result.json`; reusable_for_product=`false`
 - `auditor`: `PASS` via `validation/production/quasar/auditor-result.json`; reusable_for_product=`true`
 - `cu_svm_economic`: `PASS` via `validation/production/quasar/cu-svm-economic-proof.json`; reusable_for_product=`true`
@@ -25,4 +25,4 @@ Completion claim allowed: `false`
 
 ## Policy Decision
 
-This proves product-specific worker-graph reconciliation for the public QVG validation product, including reusable Product Face, Quasar Auditor and CU/SVM/economic lanes. It is not reusable as production approval because the remaining critical lanes intentionally preserve production boundaries.
+This proves product-specific worker-graph reconciliation for the public QVG validation product, including reusable Quasar Auditor and CU/SVM/economic lanes. The Product Face lane is not reusable until packet comparison, source-promise coverage and design-fit review are recorded as pass.

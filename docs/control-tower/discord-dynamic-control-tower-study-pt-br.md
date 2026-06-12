@@ -1,5 +1,9 @@
 # Estudo: Discord Dinamico para Hermes
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; decisoes que sobreviveram estao nos contratos, workers e gates atuais.
+
 Este estudo responde a uma pergunta simples:
 
 ```text

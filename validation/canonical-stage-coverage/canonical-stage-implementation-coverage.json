@@ -3,6 +3,12 @@
   "record_type": "canonical_stage_implementation_coverage",
   "canonical_doc_ref": "external:OVERKILL_FACTORY_VFINAL_DOCUMENTO_FINAL_CANONICO_2026-06-09.md#8",
   "coverage_rule": "A canonical stage is covered only when it has at least one repo artifact stronger than documentation: schema, template, script, test, worker registry, worker profile, profile binding, runtime adapter or validation artifact.",
+  "limits": [
+    "This record proves implementation backing, not full autonomous production readiness.",
+    "implemented_by_contract means schemas, templates, tests or worker contracts exist; it does not mean the stage is fully enforced in Hermes for every product.",
+    "bounded_public_proof means a public-safe proof exists for a bounded surface; it is not proof of every private/runtime/live path.",
+    "A claim that the whole canonical document is implemented requires a separate end-to-end pilot receipt from raw input to production or explicit block."
+  ],
   "stages": [
     {
       "stage_number": 1,
@@ -139,6 +145,8 @@
       "implementation_refs": [
         {"kind": "schema", "path": "schemas/product-experience-plan.schema.json", "covers": "Product Experience OS plan"},
         {"kind": "template", "path": "templates/product-experience-plan.json", "covers": "Product Experience plan template"},
+        {"kind": "schema", "path": "schemas/product-face-packet.schema.json", "covers": "Product Face Packet 2.0 planning contract"},
+        {"kind": "template", "path": "templates/product-face-packet.json", "covers": "Product Face Packet 2.0 template"},
         {"kind": "schema", "path": "schemas/product-face-result.schema.json", "covers": "Product Face proof result"},
         {"kind": "test", "path": "tests/test_product_face_proof.py", "covers": "Product Face proof regression tests"}
       ],

@@ -1,5 +1,9 @@
 # Discord Control Tower OS
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This guide describes the optional cockpit; Discord does not replace Hermes state, receipts or runtime gates.
+
 Discord Control Tower OS is the owner-facing control layer for Overkill
 Factory.
 

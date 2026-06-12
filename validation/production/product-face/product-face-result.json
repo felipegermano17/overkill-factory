@@ -83,8 +83,8 @@
     "validation/production/product-face/product-face-result.json"
   ],
   "evidence_kind": "real",
-  "reusable_for_product": true,
-  "next_action": "Attach this product-specific Product Face result to the production Product Face lane.",
+  "reusable_for_product": false,
+  "next_action": "Rerun Product Face with explicit packet comparison, source-promise coverage and design-fit review before product approval.",
   "console": {
     "status": "pass",
     "messages_ref": "validation/production/product-face/console.json",
@@ -101,5 +101,18 @@
     "reusability_boundary": "Reusable only for the named product target and approval scope; other products, releases, deploys, onchain code or human gates must rerun their own evidence.",
     "target_artifact_ref": "pilots/quasar-vault-guard-test/product-face/prototype.html",
     "target_sha256": "b3d81d4d0fbba292ffc18ce62535b09e3d1f2617f4e46b7f4e28f86b76313926"
-  }
+  },
+  "packet_comparison": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates the stricter packet comparison field; rerun Product Face proof before reusing for product approval."
+  },
+  "source_promise_coverage": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates explicit source-promise coverage; rerun against current source promises before reuse."
+  },
+  "design_fit_review": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates explicit design-fit review; rerun review before treating this as current design approval."
+  },
+  "legacy_schema_backfill": "2026-06-11: added pending Product Face comparison fields to satisfy stricter schema without upgrading historical proof strength."
 }

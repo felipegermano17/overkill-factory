@@ -14,6 +14,9 @@
     "a11y",
     "overlap_check",
     "performance_note",
+    "packet_comparison",
+    "source_promise_coverage",
+    "design_fit_review",
     "blocking_findings",
     "evidence_refs",
     "evidence_kind",
@@ -78,6 +81,36 @@
     "performance_note": {
       "type": "string",
       "minLength": 3
+    },
+    "packet_ref": {
+      "type": "string"
+    },
+    "packet_comparison": {
+      "type": "object",
+      "required": ["status", "basis"],
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail", "pending"] },
+        "basis": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "source_promise_coverage": {
+      "type": "object",
+      "required": ["status", "basis"],
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail", "pending"] },
+        "basis": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "design_fit_review": {
+      "type": "object",
+      "required": ["status", "basis"],
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail", "pending"] },
+        "basis": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
     },
     "blocking_findings": {
       "type": "boolean"

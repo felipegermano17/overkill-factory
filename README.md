@@ -136,8 +136,32 @@ The project is still not a hosted service and not a production launch. A user
 must connect it to their own Hermes runtime, configure any real tools they want
 workers to use, and provide real approval records for high-risk work.
 
+## Documentation Authority
+
+The current external-user path is this README, the quickstart, the concept flow,
+the operations checklist and the executable gates. Methodology, review, planning
+and roadmap documents are supporting evidence unless their banner says they are
+a current supporting guide.
+
+When documents disagree, use this order:
+
+1. `scripts/factoryctl.py`, schemas, adapter hooks and tests.
+2. `validation/canonical-runtime-enforcement/` and
+   `validation/canonical-real-infra/`.
+3. `README.md`, `docs/getting-started/quickstart-hermes.md`,
+   `docs/concepts/factory-flow.md` and
+   `docs/operations/validation-and-release.md`.
+4. Agent, worker, capability, security and Product Face support docs.
+5. Historical methodology, reviews, roadmaps, risk registers and pilot notes.
+
+See `docs/governance/document-governance.md` for the document status rules. A
+roadmap or risk-register item is not a runtime gate until it has a schema,
+script, test, worker, adapter rule or validation receipt.
+
 ## Documentation Map
 
+- `docs/governance/document-governance.md`: how to read current, backlog,
+  historical and evidence documents.
 - `docs/getting-started/quickstart-hermes.md`: first run with your own Hermes.
 - `docs/concepts/factory-flow.md`: core concepts and phase flow.
 - `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
@@ -151,6 +175,8 @@ workers to use, and provide real approval records for high-risk work.
 - `docs/operations/validation-and-release.md`: validation and release checklist.
 - `docs/operations/troubleshooting.md`: common failures and how to continue.
 - `docs/architecture/hermes-integration.md`: adapter and runtime integration.
+- `docs/validation/canonical-real-infra-audit.md`: current answer for whether
+  the actionable canonical process is enforced by runtime gates.
 - `docs/roadmap/factory-vfinal-prepilot-roadmap.md`: prepilot backlog and
   follow-up rules that must stay outside the canonical narrative.
 - `examples/minimal-hermes-project/README.md`: small public-safe example.
@@ -168,6 +194,7 @@ paths, private board links, raw logs or private operational history.
 Run these before publishing:
 
 ```bash
+python scripts/validate_document_governance.py
 python scripts/secret_safety_scan.py
 python scripts/public_safety_scan.py
 python scripts/validate_public_json_artifacts.py

@@ -250,7 +250,15 @@ def reusable_product_scope_is_valid(data: dict[str, Any], *, record_type: str | 
         return False
 
     if record_type == "product_face_result":
-        return bool(target.get("target_sha256") or target.get("deployed_production"))
+        if not bool(target.get("target_sha256") or target.get("deployed_production")):
+            return False
+        if not str(data.get("packet_ref") or "").strip():
+            return False
+        for field in ("packet_comparison", "source_promise_coverage", "design_fit_review"):
+            value = data.get(field)
+            if not isinstance(value, dict) or value.get("status") != "pass":
+                return False
+        return True
 
     if record_type == "auditor_result":
         if data.get("audit_mode") != "code_audit" or data.get("preflight_only") is True:

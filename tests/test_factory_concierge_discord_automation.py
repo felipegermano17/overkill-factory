@@ -298,7 +298,14 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
             }
         )
 
-        result = automation.sync_approval_text_decision(approval, client, config, state, apply=True)
+        result = automation.sync_approval_text_decision(
+            approval,
+            client,
+            config,
+            state,
+            apply=True,
+            now="2026-06-11T09:00:00Z",
+        )
 
         self.assertTrue(result["accepted"])
         self.assertEqual(result["decision"], "approved")

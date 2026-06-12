@@ -1,5 +1,9 @@
 # Overkill Factory 10 Runtime Closure
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records Factory 10 closure evidence and legacy gate rationale.
+
 Date: 2026-06-05
 
 Scope: close Factory 10 as an operational method with Hermes Kanban gates,

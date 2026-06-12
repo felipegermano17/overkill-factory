@@ -1,5 +1,9 @@
 # Factory 11 Security Review
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records a dated Factory 11 security review snapshot.
+
 Scope: Factory 11 public-methodology hardening, worker expansion, public-safety
 scan, Hermes update safety, and documentation changes.
 

@@ -132,6 +132,13 @@ def sample_projection() -> dict[str, Any]:
         "forecast_risks": ["escopo visual ainda aberto"],
         "human_decisions_required": [],
         "truth_source_available": True,
+        "source_of_truth": {
+            "runtime": "hermes",
+            "ref": "factory-pilot",
+            "owner": "factory-runtime",
+            "freshness": "runtime_fresh",
+            "discord_is_source_of_truth": False,
+        },
     }
 
 

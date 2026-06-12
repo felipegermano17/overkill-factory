@@ -10,6 +10,7 @@ specialist worker still has to run and attach real evidence.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import sys
 from dataclasses import dataclass
@@ -21,6 +22,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
+CANONICAL_RUNTIME_ENFORCEMENT_PATH = ROOT / "scripts" / "canonical_runtime_enforcement.py"
 
 CARD_REQUIRED = {
     "factory_method_version",
@@ -174,6 +176,38 @@ QUASAR_TOOLCHAIN_PROOF_REQUIRED = (
 )
 CAPABILITY_READY_STATES = {"core_ready", "pack_ready"}
 CAPABILITY_ACTIVATED_STATES = {"ready", "activated"}
+PRODUCT_EXPERIENCE_REQUIRED_FIELDS = (
+    "surface_type",
+    "surface_pack",
+    "experience_sot",
+    "user",
+    "job_to_be_done",
+    "main_flows",
+    "required_states",
+    "design_direction",
+    "proof_required",
+    "reviewers_required",
+    "done_definition",
+    "human_gate",
+)
+PRODUCT_FACE_PACKET_REQUIRED_FIELDS = (
+    "surface",
+    "mode",
+    "user",
+    "job_to_be_done",
+    "main_flows",
+    "required_states",
+    "design_direction",
+    "proof_required",
+    "reviewers_required",
+    "done_definition",
+    "human_gate",
+)
+PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS = (
+    "packet_comparison",
+    "source_promise_coverage",
+    "design_fit_review",
+)
 
 
 @dataclass(frozen=True)
@@ -765,6 +799,22 @@ def _non_empty_dict(value: Any) -> bool:
     return isinstance(value, dict) and bool(value)
 
 
+def _non_empty_text(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _list_items(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]
+
+
+def _status_value(value: Any) -> str:
+    if isinstance(value, dict):
+        return str(value.get("status") or "").strip().lower()
+    return str(value or "").strip().lower()
+
+
 def normalized_surfaces(card: dict[str, Any]) -> set[str]:
     raw = card.get("surfaces", [])
     if not isinstance(raw, list):
@@ -774,6 +824,71 @@ def normalized_surfaces(card: dict[str, Any]) -> set[str]:
 
 def risk(card: dict[str, Any]) -> str:
     return str(card.get("risk_effective", "")).strip().upper()
+
+
+def strict_product_experience_required(card: dict[str, Any]) -> bool:
+    return card.get("factory_method_version") == "OVERKILL_VFINAL" or isinstance(card.get("product_experience_plan"), dict)
+
+
+def validate_product_face_packet(packet: dict[str, Any], *, strict: bool) -> list[str]:
+    errors: list[str] = []
+    if not strict:
+        return errors
+
+    for field in PRODUCT_FACE_PACKET_REQUIRED_FIELDS:
+        value = packet.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"product_face_packet.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"product_face_packet.{field} must be a non-empty object")
+        elif not _non_empty_text(value):
+            errors.append(f"product_face_packet.{field} is required")
+
+    design = packet.get("design_direction") if isinstance(packet.get("design_direction"), dict) else {}
+    if strict and design:
+        for field in ("visual_tone", "product_fit", "density", "interaction_style"):
+            if not _non_empty_text(design.get(field)):
+                errors.append(f"product_face_packet.design_direction.{field} is required")
+
+    human_gate = packet.get("human_gate") if isinstance(packet.get("human_gate"), dict) else {}
+    if strict and human_gate:
+        if "required" not in human_gate:
+            errors.append("product_face_packet.human_gate.required is required")
+        if human_gate.get("required") is True and not _non_empty_text(human_gate.get("approver")):
+            errors.append("product_face_packet.human_gate.approver is required when human gate is required")
+
+    return errors
+
+
+def validate_product_experience_plan(plan: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for field in PRODUCT_EXPERIENCE_REQUIRED_FIELDS:
+        value = plan.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"product_experience_plan.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"product_experience_plan.{field} must be a non-empty object")
+        elif not _non_empty_text(value):
+            errors.append(f"product_experience_plan.{field} is required")
+
+    design = plan.get("design_direction") if isinstance(plan.get("design_direction"), dict) else {}
+    if design:
+        for field in ("visual_tone", "product_fit", "density", "interaction_style"):
+            if not _non_empty_text(design.get(field)):
+                errors.append(f"product_experience_plan.design_direction.{field} is required")
+
+    human_gate = plan.get("human_gate") if isinstance(plan.get("human_gate"), dict) else {}
+    if human_gate:
+        if "required" not in human_gate:
+            errors.append("product_experience_plan.human_gate.required is required")
+        if human_gate.get("required") is True and not _non_empty_text(human_gate.get("approver")):
+            errors.append("product_experience_plan.human_gate.approver is required when human gate is required")
+
+    return errors
 
 
 def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
@@ -804,6 +919,28 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+def load_canonical_runtime_enforcement() -> Any:
+    spec = importlib.util.spec_from_file_location("canonical_runtime_enforcement", CANONICAL_RUNTIME_ENFORCEMENT_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load canonical runtime enforcement from {CANONICAL_RUNTIME_ENFORCEMENT_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["canonical_runtime_enforcement"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def validate_canonical_runtime_gate(data: dict[str, Any]) -> list[str]:
+    if data.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    module = load_canonical_runtime_enforcement()
+    errors: list[str] = []
+    for blocker in module.validate_card_runtime_rules(data):
+        checkpoint = blocker.get("checkpoint_id")
+        missing = ", ".join(blocker.get("missing_fields") or [])
+        errors.append(f"canonical_runtime_gate {checkpoint} missing {missing}")
+    return errors
+
+
 def validate_card(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     missing = sorted(CARD_REQUIRED - set(data))
@@ -819,11 +956,26 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     if source_state and source_state not in ALLOWED_SOURCE_STATES:
         errors.append("source_state must be one of " + ", ".join(sorted(ALLOWED_SOURCE_STATES)))
     errors.extend(validate_vfinal_card_contract(data))
+    errors.extend(validate_canonical_runtime_gate(data))
     errors.extend(validate_capability_coverage(data))
     if data.get("executor_identity") == data.get("reviewer_identity"):
         errors.append("executor_identity and reviewer_identity must differ")
-    if surfaces & PRODUCT_FACE_SURFACES and not isinstance(data.get("product_face_packet"), dict):
+    product_facing = bool(surfaces & PRODUCT_FACE_SURFACES)
+    strict_experience = product_facing and strict_product_experience_required(data)
+    if product_facing and not isinstance(data.get("product_face_packet"), dict):
         errors.append("product_face_packet required for product-facing surfaces")
+    elif product_facing:
+        errors.extend(validate_product_face_packet(data["product_face_packet"], strict=strict_experience))
+    if strict_experience:
+        if not isinstance(data.get("product_experience_plan"), dict):
+            errors.append("product_experience_plan required for vFinal product-facing surfaces")
+        else:
+            errors.extend(validate_product_experience_plan(data["product_experience_plan"]))
+            human_gate = data["product_experience_plan"].get("human_gate")
+            if isinstance(human_gate, dict) and human_gate.get("required") is True:
+                review_human_gate = review.get("human_gate_required") is True
+                if not review_human_gate and not isinstance(data.get("human_gate_packet"), dict):
+                    errors.append("product_experience_plan.human_gate.required=true requires review.human_gate_required=true or human_gate_packet")
     phase = str(data.get("phase", "")).upper()
     if surfaces & PRODUCT_FACE_SURFACES and phase in {"F11", "F16", "F17"}:
         if not isinstance(data.get("product_face_result"), dict) and not str(data.get("product_face_result_ref") or "").strip():
@@ -888,6 +1040,58 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
         errors.append("product_face_result PASS requires console.status=pass")
     if result.get("blocking_findings") is True and not str(result.get("next_action") or "").strip():
         errors.append("product_face_result blocking findings require next_action")
+    return errors
+
+
+def _required_product_states(card: dict[str, Any]) -> list[str]:
+    plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
+    packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
+    states = _list_items(plan.get("required_states"))
+    states.extend(_list_items(packet.get("required_states")))
+    state_matrix = packet.get("state_matrix")
+    if isinstance(state_matrix, dict):
+        states.extend(str(key).strip() for key in state_matrix if str(key).strip())
+    return sorted({state.lower() for state in states})
+
+
+def _required_product_proofs(card: dict[str, Any]) -> list[str]:
+    plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
+    packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
+    proofs = _list_items(plan.get("proof_required"))
+    proofs.extend(_list_items(packet.get("proof_required")))
+    proofs.extend(_list_items(packet.get("visual_evidence_plan")))
+    return [proof.lower() for proof in proofs]
+
+
+def validate_product_face_result_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
+    errors = validate_product_face_result(result)
+    if str(result.get("result") or "").upper() != "PASS":
+        return errors
+
+    for field in PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS:
+        value = result.get(field)
+        if not isinstance(value, dict) or not value:
+            errors.append(f"product_face_result.{field} is required for product-facing completion")
+        elif _status_value(value) != "pass":
+            errors.append(f"product_face_result.{field}.status must be pass")
+
+    checked_states = {state.lower() for state in _list_items(result.get("checked_states"))}
+    missing_states = [state for state in _required_product_states(card) if state not in checked_states]
+    if missing_states:
+        errors.append("product_face_result missing states promised by Product Face Packet/Experience Plan: " + ", ".join(missing_states))
+
+    proofs = _required_product_proofs(card)
+    viewports = " ".join(_list_items(result.get("viewports"))).lower()
+    screenshots = " ".join(_list_items(result.get("screenshots"))).lower()
+    if any("mobile" in proof for proof in proofs) and "mobile" not in viewports + " " + screenshots:
+        errors.append("product_face_result missing mobile proof promised by Product Face Packet/Experience Plan")
+    if any("desktop" in proof for proof in proofs) and "desktop" not in viewports + " " + screenshots:
+        errors.append("product_face_result missing desktop proof promised by Product Face Packet/Experience Plan")
+
+    packet_ref = str(result.get("packet_ref") or "").strip()
+    if strict_product_experience_required(card) and not packet_ref:
+        errors.append("product_face_result.packet_ref is required for vFinal product-facing completion")
+
     return errors
 
 
@@ -1098,7 +1302,7 @@ def validate_completion(card: dict[str, Any], metadata: dict[str, Any]) -> list[
         if not isinstance(product_face, dict):
             errors.append("product_face_result metadata is required for product-facing completion")
         else:
-            errors.extend(validate_product_face_result(product_face))
+            errors.extend(validate_product_face_result_against_card(product_face, card))
     return errors
 
 
@@ -1743,6 +1947,8 @@ def validate_worker_result_record(
             errors.append("synthetic evidence can only satisfy synthetic/validation cards")
     errors.extend(_waiver_errors(data))
     errors.extend(_record_specific_errors(data, evidence_kind))
+    if record_type == "product_face_result" and card is not None:
+        errors.extend(validate_product_face_result_against_card(data, card))
     return errors
 
 
@@ -2036,6 +2242,19 @@ def build_worker_result(
                 "overlap_check": {"status": "pass" if not blocking_findings else "fail", "mode": evidence_kind},
                 "console": {"status": "pass" if not blocking_findings else "warn"},
                 "performance_note": "Synthetic smoke only." if evidence_kind == "synthetic" else "See Product Face report.",
+                "packet_ref": "card.product_face_packet",
+                "packet_comparison": {
+                    "status": "pass" if not blocking_findings else "fail",
+                    "basis": "Product Face evidence is explicitly tied to the card packet.",
+                },
+                "source_promise_coverage": {
+                    "status": "pass" if not blocking_findings else "fail",
+                    "basis": "Visible proof is scoped to the card acceptance criteria.",
+                },
+                "design_fit_review": {
+                    "status": "pass" if not blocking_findings else "fail",
+                    "basis": "Design fit reviewed by Product Face validator for this bounded card.",
+                },
             }
         )
     if worker_id == "remote-proof-runner":

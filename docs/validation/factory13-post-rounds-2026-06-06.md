@@ -1,5 +1,9 @@
 # Factory 13 Post-Rounds Validation
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records a Factory 13 validation snapshot.
+
 Date: 2026-06-06
 
 This note records the immediate post-Factory 13 validation rerun after the

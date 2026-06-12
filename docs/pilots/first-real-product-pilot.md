@@ -1,5 +1,9 @@
 # First Real Product Pilot
 
+> Document status: ACTIVE PILOT GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This guide does not approve any product; every pilot card still has to pass current factory gates and product-specific evidence checks.
+
 ## Current Baseline
 
 A dry pilot already ran on a synthetic paper:

@@ -1,5 +1,9 @@
 # Live Agent Configuration
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This guide explains live profile setup; executable gates and current validation still decide whether work can move.
+
 The factory has runtime layers plus a capability-pack gate. Keeping them
 separate prevents weak autonomous execution.
 
