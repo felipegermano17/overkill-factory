@@ -19,7 +19,6 @@ class OpenSourceDocsTest(unittest.TestCase):
         readme = read_text("README.md")
         required_headings = [
             "What It Is",
-            "Factory Map",
             "Who It Is For",
             "What It Does",
             "What It Does Not Do",
@@ -42,9 +41,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/concepts/factory-flow.md",
             "docs/concepts/overkill-factory-method.md",
             "docs/concepts/operator-journey.md",
-            "docs/visuals/README.md",
-            "docs/visuals/overkill-factory-map-v0.1.0.svg",
-            "docs/visuals/overkill-factory-map-v0.1.0.html",
             "docs/agents/worker-profiles.md",
             "agents/README.md",
             "docs/agents/factory-stage-agent-map.md",
@@ -58,9 +54,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/examples/gallery.md",
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
-            "docs/visuals/README.md",
-            "docs/visuals/overkill-factory-map-v0.1.0.svg",
-            "docs/visuals/overkill-factory-map-v0.1.0.html",
             "examples/minimal-hermes-project/README.md",
             ".env.example",
             "CHANGELOG.md",
@@ -234,7 +227,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Install In Your Hermes",
             "CLI Reference",
             "Examples",
-            "Visuals",
             "Security",
             "Release",
             "Maintainer Internals",
@@ -250,23 +242,6 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Operator surface", repo_surface)
         self.assertIn("Maintainer internals", repo_surface)
         self.assertIn("Generated output", repo_surface)
-
-    def test_visual_map_is_visible_without_becoming_source_authority(self) -> None:
-        readme = read_text("README.md")
-        visuals = read_text("docs/visuals/README.md")
-        svg = read_text("docs/visuals/overkill-factory-map-v0.1.0.svg")
-        html = read_text("docs/visuals/overkill-factory-map-v0.1.0.html")
-
-        self.assertIn("![Overkill Factory visual map]", readme)
-        self.assertIn("docs/visuals/overkill-factory-map-v0.1.0.svg", readme)
-        self.assertIn("docs/visuals/overkill-factory-map-v0.1.0.html", readme)
-        self.assertIn("onboarding aid, not runtime evidence or source authority", readme)
-        self.assertIn("Static README preview", visuals)
-        self.assertIn("Interactive map", visuals)
-        self.assertIn("Readable GitHub README preview", svg)
-        self.assertIn("Preview only", svg)
-        self.assertIn("Open the interactive map", svg)
-        self.assertIn("Overkill Factory", html)
 
     def test_release_security_and_example_gallery_are_professional_surfaces(self) -> None:
         changelog = read_text("CHANGELOG.md")
