@@ -133,19 +133,23 @@ outputs locally.
 
 ## Repository Shape
 
+Every public directory below has a local README with its purpose, boundary,
+source of truth and validation path. Open that README before treating a folder
+as a place to add files.
+
 | Path | Public Purpose |
 | --- | --- |
 | `.github/` | CI, issue templates and pull request hygiene. |
-| `adapters/` | Runtime integrations, currently Hermes transition hooks and patches. |
-| `agents/` | Public worker registry, profiles, permissions and Hermes bindings. |
-| `docs/` | Human guides for getting started, concepts, operations, agents and integrations. |
-| `examples/` | Small source examples and fixtures that teach or test the factory path. |
-| `products/` | Public validation products used by product-like and production-lane checks. |
-| `schemas/` | Machine contracts for cards, receipts, worker outputs and gates. |
-| `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. |
-| `skills/` | Installable Codex skill material for operating the factory. |
-| `templates/` | Contract templates paired with schemas and tests. |
-| `tests/` | Regression coverage for the public contracts and quickstart path. |
+| `adapters/` | Runtime integrations, currently Hermes transition hooks and patches. See `adapters/README.md`. |
+| `agents/` | Public worker registry, profiles, permissions and Hermes bindings. See `agents/README.md`. |
+| `docs/` | Human guides for getting started, concepts, operations, agents and integrations. See `docs/README.md`. |
+| `examples/` | Small source examples and fixtures that teach or test the factory path. See `examples/README.md`. |
+| `products/` | Public validation products used by product-like and production-lane checks. See `products/README.md`. |
+| `schemas/` | Machine contracts for cards, receipts, worker outputs and gates. See `schemas/README.md`. |
+| `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. See `scripts/README.md`. |
+| `skills/` | Installable Codex skill material for operating the factory. See `skills/README.md`. |
+| `templates/` | Contract templates paired with schemas and tests. See `templates/README.md`. |
+| `tests/` | Regression coverage for the public contracts and quickstart path. See `tests/README.md`. |
 
 ## Current Status
 

@@ -20,6 +20,39 @@ The factory does not treat agents as loose personalities. A worker becomes
 operable only when its process role, profile, permission class, Hermes binding
 and packet route all exist.
 
+## What Belongs Here
+
+- Public worker registry files, public worker profiles, permission classes and
+  Hermes bindings.
+- Human entrypoint docs that explain how to read the full worker contract.
+- Schemas required to validate public worker contracts.
+
+## What Does Not Belong Here
+
+- Generated worker packets, run logs, Receipt Five evidence or old execution
+  output.
+- Private agent prompts, private Hermes profile material, local paths or board
+  links.
+- Hand-written partial mirrors of the worker registry.
+
+## Source Of Truth
+
+The machine-readable JSON files define worker operability. Human docs explain
+the contract, but the worker registry, profiles, permission classes and Hermes
+bindings are the source of truth.
+
+## How It Is Validated
+
+Run these checks after changing agent contracts or guides:
+
+```bash
+python scripts/validate_worker_profiles.py
+python scripts/validate_public_json_artifacts.py
+python scripts/public_safety_scan.py
+python scripts/secret_safety_scan.py
+python -m unittest tests.test_worker_profiles tests.test_worker_permission_classes tests.test_agent_directory_docs -q
+```
+
 ## Read Order
 
 | Read | File | Purpose |
@@ -104,7 +137,7 @@ as an executable factory role.
 - A Control Tower view cannot become the source of truth.
 - A generated evidence archive does not belong in this public directory.
 
-## Validation
+## Validation Bundle
 
 Run these checks after changing agent contracts or guides:
 
