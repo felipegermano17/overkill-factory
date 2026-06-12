@@ -263,9 +263,8 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("onboarding aid, not runtime evidence or source authority", readme)
         self.assertIn("Static README preview", visuals)
         self.assertIn("Interactive map", visuals)
-        self.assertIn("Readable GitHub README preview", svg)
-        self.assertIn("Preview only", svg)
-        self.assertIn("Open the interactive map", svg)
+        self.assertIn("Static preview for GitHub README", svg)
+        self.assertIn("interactive HTML guide", svg)
         self.assertIn("Overkill Factory", html)
 
     def test_release_security_and_example_gallery_are_professional_surfaces(self) -> None:
