@@ -1,7 +1,6 @@
 site_name: Overkill Factory
 site_description: Gated production line for Hermes-powered agentic product work.
-site_url: https://overkill-factory.dev
-repo_url: https://overkill-factory.dev/source
+repo_url: https://github.com/felipegermano17/overkill-factory
 docs_dir: docs
 nav:
   - Operator Path: index.md

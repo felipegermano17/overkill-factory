@@ -53,6 +53,21 @@ class PublicSafetyScanTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
+    def test_allows_canonical_public_repo_url_only_in_metadata(self) -> None:
+        owner = "feli" + "pegermano17"
+        repo_url = f"https://github.com/{owner}/overkill-factory"
+
+        self.assertEqual(public_safety_scan.scan_text("pyproject.toml", f'Repository = "{repo_url}"'), [])
+        self.assertEqual(public_safety_scan.scan_text("mkdocs.yml", f"repo_url: {repo_url}"), [])
+
+        findings = public_safety_scan.scan_text("docs/example.md", f"See {repo_url}")
+        self.assertTrue(findings)
+        self.assertIn("private_owner_marker", findings[0])
+
+    def test_generated_local_build_metadata_is_not_scanned(self) -> None:
+        self.assertFalse(public_safety_scan.is_text_rel("overkill_factory.egg-info/PKG-INFO"))
+        self.assertFalse(public_safety_scan.is_text_rel(".tmp/quickstart-result.json"))
+
     def test_git_ref_scan_checks_committed_tree(self) -> None:
         original_root = public_safety_scan.ROOT
         with tempfile.TemporaryDirectory() as tmp:

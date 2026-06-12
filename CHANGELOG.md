@@ -12,6 +12,9 @@ public releases.
 - Added public docs site navigation, CLI reference, Hermes install guide,
   example gallery, release policy and OSS security guide.
 - Added Dependabot, CodeQL, Dependency Review and security workflow surfaces.
+- Replaced dead public metadata URLs with canonical GitHub metadata, added a
+  `.github/` entrypoint README and tightened public-safety scanning around
+  metadata-only repository URLs and generated local build output.
 
 ## 0.1.0
 

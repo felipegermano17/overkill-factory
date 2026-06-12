@@ -100,6 +100,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "CONTRIBUTING.md",
             "SECURITY.md",
             ".github/dependabot.yml",
+            ".github/README.md",
             ".github/workflows/codeql.yml",
             ".github/workflows/dependency-review.yml",
             ".github/workflows/security.yml",
@@ -152,6 +153,7 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_high_noise_public_directories_have_entrypoint_readmes(self) -> None:
         required_readmes = {
             "adapters/README.md": ["runtime integrations", "Hermes"],
+            ".github/README.md": ["GitHub project surface", "Dependabot"],
             "agents/README.md": ["worker registry", "Hermes bindings"],
             "docs/README.md": ["human guides", "public onboarding"],
             "examples/README.md": ["source examples", ".tmp/"],
@@ -264,7 +266,32 @@ class OpenSourceDocsTest(unittest.TestCase):
                 self.assertIn(example, gallery)
 
         self.assertNotIn("OWNER", pyproject)
-        self.assertIn("overkill-factory.dev", pyproject)
+
+    def test_public_metadata_uses_live_repository_urls_and_explicit_license(self) -> None:
+        pyproject = read_text("pyproject.toml")
+        mkdocs = read_text("mkdocs.yml")
+        license_text = read_text("LICENSE")
+        owner = "feli" + "pegermano17"
+        repo_url = f"https://github.com/{owner}/overkill-factory"
+
+        dead_placeholder_domain = "overkill-factory.dev"
+        self.assertNotIn(dead_placeholder_domain, pyproject)
+        self.assertNotIn(dead_placeholder_domain, mkdocs)
+
+        for expected in [
+            f'Homepage = "{repo_url}"',
+            f'Documentation = "{repo_url}/tree/main/docs"',
+            f'Repository = "{repo_url}"',
+            f'Issues = "{repo_url}/issues"',
+            'license = "MIT"',
+            'license-files = ["LICENSE"]',
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, pyproject)
+
+        self.assertIn(f"repo_url: {repo_url}", mkdocs)
+        self.assertIn("MIT License", license_text)
+        self.assertIn("SPDX-License-Identifier: MIT", license_text)
 
     def test_agent_public_doc_covers_every_registered_worker(self) -> None:
         registry = json.loads(read_text("agents/worker-registry.public.json"))
