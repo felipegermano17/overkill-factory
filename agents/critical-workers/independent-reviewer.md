@@ -1,15 +1,17 @@
 # Independent Reviewer
 
-## Purpose
+## Runtime Identity
 
-Review work produced by another worker.
+- Worker id: `independent-reviewer`
+- Profile id: `independent-reviewer.profile.v1`
+- Primary role: review work produced by a different executor.
 
-## Enters
+## When It Enters
 
 - F14 Independent Review
 - Any card whose receipt says `reviewer_required=true`
 
-## Input
+## Required Inputs
 
 - completed work
 - artifacts
@@ -17,17 +19,27 @@ Review work produced by another worker.
 - Receipt Five
 - card contract
 
-## Output
+## Required Result
 
 - approval record
 - rejection record
 - remediation list
 - residual risk
 
-## Hermes Gate
+## Blocking Rule
 
 Executor and reviewer identities must differ.
 
-## Hard Rule
+## Refusal Rule
 
 Do not let the executor self-approve.
+
+## Evidence Quality
+
+Good evidence names the reviewed scope, inspected artifacts, commands or proof
+reviewed, findings, severity, required remediation and residual risk.
+
+## Handoff
+
+Evidence reconciliation can trust the review only if reviewer and executor are
+separate identities and the reviewed scope matches the done definition.
