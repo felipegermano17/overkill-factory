@@ -1,5 +1,9 @@
 # Future Risk Register
 
+> Document status: ACTIVE RISK REGISTER.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not a runtime gate; "Still Needed" entries are candidate mitigations until promoted into schemas, scripts, tests, workers or receipts.
+
 This register captures risks the factory can already see but has not fully
 proven in real product pilots.
 

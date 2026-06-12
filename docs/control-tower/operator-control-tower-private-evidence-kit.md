@@ -1,5 +1,9 @@
 # Operator Control Tower Private Evidence Kit
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This kit lists private evidence requirements; it must not be copied into public proof and does not itself approve runtime readiness.
+
 This kit describes the private evidence needed to pass the Operator Control
 Tower production gate without leaking Discord, runtime, URL, path, token or raw
 log material into the public repository.

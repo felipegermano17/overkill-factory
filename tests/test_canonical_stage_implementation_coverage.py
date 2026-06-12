@@ -43,6 +43,8 @@ class CanonicalStageImplementationCoverageTest(unittest.TestCase):
         stages = self.coverage["stages"]
 
         self.assertEqual([stage["stage_number"] for stage in stages], list(range(1, 33)))
+        self.assertTrue(any("not full autonomous production readiness" in item for item in self.coverage["limits"]))
+        self.assertTrue(any("does not mean the stage is fully enforced" in item for item in self.coverage["limits"]))
         for stage in stages:
             with self.subTest(stage=stage["stage_number"]):
                 self.assertTrue(stage["canonical_promises"])
@@ -74,6 +76,11 @@ class CanonicalStageImplementationCoverageTest(unittest.TestCase):
         stage15_paths = {ref["path"] for ref in by_stage[15]["implementation_refs"]}
         self.assertIn("schemas/spec-graph.schema.json", stage15_paths)
         self.assertIn("scripts/factoryctl.py", stage15_paths)
+
+        stage12_paths = {ref["path"] for ref in by_stage[12]["implementation_refs"]}
+        self.assertIn("schemas/product-experience-plan.schema.json", stage12_paths)
+        self.assertIn("schemas/product-face-packet.schema.json", stage12_paths)
+        self.assertIn("schemas/product-face-result.schema.json", stage12_paths)
 
         stage21_paths = {ref["path"] for ref in by_stage[21]["implementation_refs"]}
         self.assertIn("schemas/worker-result.schema.json", stage21_paths)

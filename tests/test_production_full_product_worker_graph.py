@@ -22,9 +22,9 @@ class ProductionFullProductWorkerGraphTest(unittest.TestCase):
         all_lane_files_exist = all((ROOT / lane["path"]).exists() for lane in module.LANES)
 
         if all_lane_files_exist:
-            self.assertEqual(graph["result"], "PASS")
-            self.assertTrue(graph["reusable_for_product"])
-            self.assertEqual(graph["blocking_summary"], [])
+            self.assertEqual(graph["result"], "FAIL")
+            self.assertFalse(graph["reusable_for_product"])
+            self.assertTrue(any(item.startswith("product_face:") for item in graph["blocking_summary"]))
         else:
             self.assertEqual(graph["result"], "FAIL")
             self.assertFalse(graph["reusable_for_product"])

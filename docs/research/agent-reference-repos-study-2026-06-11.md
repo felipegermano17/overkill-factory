@@ -1,5 +1,9 @@
 # Agent Reference Repositories Study
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; implemented decisions must appear in current registries, schemas, tests or gates.
+
 Date: 2026-06-11
 
 Purpose: study external agent/skill repositories, compare their agent and skill

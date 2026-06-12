@@ -12,6 +12,8 @@
     "evidence"
   ],
   "missing_areas": [],
+  "missing_coverage": [],
+  "blind_spots": [],
   "risk_residuals": ["residual risk and owner"],
   "decision": "pass_with_owner",
   "evidence_refs": ["factory-maturity.md"]

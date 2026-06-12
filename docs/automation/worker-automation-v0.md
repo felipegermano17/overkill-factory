@@ -1,5 +1,9 @@
 # Critical Worker Automation V0
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This guide explains worker automation; it cannot approve completion without worker results, receipts and current gates.
+
 This layer turns a Factory card into explicit worker execution requests.
 
 It is not a fake approval system. It prepares the work for Hermes agents and
@@ -56,7 +60,7 @@ python scripts/factoryctl.py human-gate-record --card examples/cards/v35_valid_o
 | --- | --- | --- | --- |
 | Codex Security Runner | R3/R4 or sensitive surface | `security_scan_result` | no done/promotion without real scan evidence or human waiver |
 | Solana/Quasar Auditor Runner | onchain/Solana/Quasar surface | `auditor_result` | no complete onchain work without Auditor evidence or waiver |
-| Product Face Validator | UX/frontend/mobile/wallet UI surface | `product_face_result` | no product completion without visible screen/state/mobile/a11y evidence |
+| Product Face Validator | UX/frontend/mobile/wallet UI surface | `product_face_result` | no product completion without visible proof plus packet/source/design alignment |
 | Independent Reviewer | R2+ or explicit review | `independent_review_result` | no self-review; executor and reviewer must differ |
 | Human Gate Clerk | architecture, R3/R4, CTO/product-owner gate | `human_gate_record` | no fake approval; missing human decision keeps card blocked |
 

@@ -1,5 +1,9 @@
 # Auditor + Quasar Source Resolution - 2026-06-06
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records a source-resolution decision about Quasar/Auditor scope.
+
 Purpose: decide what the factory can honestly claim about Solana/Quasar
 Auditor evidence.
 

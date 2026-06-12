@@ -9,6 +9,7 @@ Use this before editing cards, docs or examples:
 
 ```bash
 python -m unittest discover -s tests
+python scripts/validate_document_governance.py
 python scripts/validate_public_json_artifacts.py
 python scripts/secret_safety_scan.py
 python scripts/public_safety_scan.py
@@ -49,6 +50,7 @@ For a stronger local pass:
 
 ```bash
 python scripts/factory_battery.py
+python scripts/validate_document_governance.py
 python scripts/validate_worker_profiles.py
 python scripts/validate_public_json_artifacts.py
 python scripts/public_safety_scan.py

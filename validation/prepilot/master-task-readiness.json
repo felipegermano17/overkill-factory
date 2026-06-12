@@ -356,6 +356,7 @@
   "limits": [
     "This is a public-safe readiness receipt; it intentionally omits raw private Discord ids, runtime ids, private paths, tokens and logs.",
     "PASS means the agreed prepilot setup has contract and evidence coverage; it does not mean every future product can skip its own planning, access, security, review or release gates.",
+    "PASS does not mean the entire canonical vFinal document is fully implemented end-to-end. Contract-backed stages still need product-specific runtime proof.",
     "Hermes remains the source of truth. Discord is an operator cockpit and approval surface, not the durable state store."
   ]
 }

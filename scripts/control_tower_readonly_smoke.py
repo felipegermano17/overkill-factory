@@ -147,6 +147,13 @@ def build_projection(snapshot: dict[str, Any]) -> dict[str, Any]:
         ],
         "human_decisions_required": list(snapshot["pending_approvals"]),
         "truth_source_available": True,
+        "source_of_truth": {
+            "runtime": snapshot["runtime"],
+            "ref": snapshot["board_ref"],
+            "owner": "factory-runtime",
+            "freshness": "runtime_fresh",
+            "discord_is_source_of_truth": False,
+        },
     }
 
 
@@ -292,10 +299,11 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    out_path = args.out if args.out.is_absolute() else ROOT / args.out
     receipt = build_receipt()
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {args.out.relative_to(ROOT).as_posix()}")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote {out_path.relative_to(ROOT).as_posix()}")
     return 0
 
 

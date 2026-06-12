@@ -72,7 +72,7 @@
     ],
     "source_runtime": "hermes",
     "source_board": "redacted-board",
-    "last_synced_at": "2026-06-11T07:11:00Z",
+    "last_synced_at": "2026-06-11T21:22:55Z",
     "planned_summary": [
       "access gate",
       "ready gate",
@@ -91,7 +91,14 @@
     "human_decisions_required": [
       "access.appr-example-access"
     ],
-    "truth_source_available": true
+    "truth_source_available": true,
+    "source_of_truth": {
+      "runtime": "hermes",
+      "ref": "redacted-board",
+      "owner": "factory-runtime",
+      "freshness": "runtime_fresh",
+      "discord_is_source_of_truth": false
+    }
   },
   "event": {
     "$schema": "https://overkill-factory.dev/schemas/control-tower-event.schema.json",
@@ -108,7 +115,7 @@
       "docs/control-tower/discord-control-tower-os.md"
     ],
     "discord_target": "owner-approvals",
-    "created_at": "2026-06-11T07:11:00Z"
+    "created_at": "2026-06-11T21:22:55Z"
   },
   "approval_request": {
     "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
@@ -129,7 +136,7 @@
       "docs/control-tower/discord-control-tower-os.md"
     ],
     "expires_at": "2026-06-11T00:00:00Z",
-    "created_at": "2026-06-11T07:11:00Z"
+    "created_at": "2026-06-11T21:22:55Z"
   },
   "mapping": {
     "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-mapping.schema.json",
@@ -143,7 +150,7 @@
     "project_thread_ref": "redacted-project-thread",
     "evidence_channel_ref": "redacted-evidence-channel",
     "bot_health_channel_ref": "redacted-bot-health-channel",
-    "last_synced_at": "2026-06-11T07:11:00Z"
+    "last_synced_at": "2026-06-11T21:22:55Z"
   },
   "readonly_checks": {
     "runtime_snapshot_unchanged": true,
@@ -156,5 +163,5 @@
     "docs/control-tower/discord-control-tower-os.md",
     "docs/methodology/overkill-factory-vfinal.md"
   ],
-  "created_at": "2026-06-11T07:11:00Z"
+  "created_at": "2026-06-11T21:22:55Z"
 }

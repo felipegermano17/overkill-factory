@@ -1,5 +1,9 @@
 # Security Specialist Matrix
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This guide explains security routing; product-specific security approval still requires current worker evidence and gates.
+
 The factory does not use one generic security worker for every risk. Security
 is routed by domain, timing and evidence type. This prevents an agent from
 writing "security reviewed" while the real risk belongs to a different

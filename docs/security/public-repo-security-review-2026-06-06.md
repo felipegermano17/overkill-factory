@@ -1,5 +1,9 @@
 # Public Repository Security Review - 2026-06-06
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it is a dated bounded review and does not replace current scans.
+
 Scope: public open-source repository review for methodology docs, factory
 contracts, worker packet generation, public safety controls, adapter packaging,
 and CI. This is a bounded single-agent review. It is not a full Codex Security

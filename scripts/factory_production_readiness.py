@@ -118,7 +118,10 @@ def build_readiness(
         summary = "Factory vFinal has no blocking production gate, but release attention items remain."
     else:
         result = "PASS"
-        summary = "Factory vFinal production readiness evidence is complete."
+        summary = (
+            "Factory vFinal prepilot readiness evidence is complete for the current public-safe setup. "
+            "This is not a claim that every canonical promise is fully implemented end-to-end for every product."
+        )
 
     component_status = {item["id"]: item["status"] for item in components}
     next_required_actions: list[str] = []
@@ -160,6 +163,7 @@ def build_readiness(
         "limits": [
             "This aggregate receipt is public-safe and intentionally omits raw private evidence.",
             "It summarizes existing receipts; it does not replace the underlying gate receipts.",
+            "PASS here means the current prepilot setup has required receipts; it does not convert contract-backed canonical stages into universal live production proof.",
             "A PASS result still requires explicit operator approval before any real runtime update.",
         ],
     }

@@ -193,5 +193,202 @@
     "expected_evidence": ["test output", "review result", "Receipt Five readiness"],
     "stop_criteria": ["done definition satisfied"],
     "block_criteria": ["missing access", "failing tests", "missing review", "missing evidence"]
+  },
+  "product_experience_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json",
+    "surface_type": "software product",
+    "surface_pack": "generic-product-surface-pack",
+    "experience_sot": "The operator can understand the work, states, evidence and next action without private context.",
+    "user": "target user or operator",
+    "job_to_be_done": "Use the produced surface or workflow with clear status, states and evidence.",
+    "main_flows": ["primary product flow"],
+    "required_states": ["ready", "blocked", "done"],
+    "design_direction": {
+      "visual_tone": "clear and product-specific",
+      "product_fit": "Interface and docs must fit the product job, not a generic demo.",
+      "density": "appropriate to repeated operational use",
+      "interaction_style": "direct, observable and reversible when risk exists"
+    },
+    "proof_required": ["state evidence", "review evidence"],
+    "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
+    "done_definition": ["experience evidence exists", "states are checked"],
+    "human_gate": {"required": false, "approver": "", "reason": "No material human product decision in this template."},
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "product_face_packet": {
+    "$schema": "https://overkill-factory.dev/schemas/product-face-packet.schema.json",
+    "surface": "software_product",
+    "mode": "planning",
+    "user": "target user or operator",
+    "job_to_be_done": "Use the produced surface or workflow with clear status, states and evidence.",
+    "main_flows": ["primary product flow"],
+    "required_states": ["ready", "blocked", "done"],
+    "design_direction": {
+      "visual_tone": "clear and product-specific",
+      "product_fit": "Interface and docs must fit the product job, not a generic demo.",
+      "density": "appropriate to repeated operational use",
+      "interaction_style": "direct, observable and reversible when risk exists"
+    },
+    "proof_required": ["state evidence", "review evidence"],
+    "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
+    "done_definition": ["experience evidence exists", "states are checked"],
+    "human_gate": {"required": false, "approver": "", "reason": "No material human product decision in this template."}
+  },
+  "data_metrics_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/data-metrics-plan.schema.json",
+    "success_metrics": ["observable success signal"],
+    "risk_metrics": ["observable risk signal"],
+    "events": ["factory.card.transition"],
+    "dashboards": ["Project Projection"],
+    "logs": ["runtime gate output"],
+    "alerts": ["blocked material transition"],
+    "privacy_notes": ["no private source material in public receipts"],
+    "instrumentation_proof": ["gate report artifact"]
+  },
+  "agent_eval_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/agent-eval-plan.schema.json",
+    "agents_or_skills": ["factory-orchestrator", "qa-verification-worker"],
+    "eval_cases": ["missing evidence blocks done"],
+    "authority_tests": ["worker cannot self-approve"],
+    "evidence_tests": ["PASS requires evidence refs"],
+    "regression_policy": "Add tests for repeated failures.",
+    "versioning": ["worker profile version", "skill version"]
+  },
+  "dependency_map": {
+    "$schema": "https://overkill-factory.dev/schemas/dependency-map.schema.json",
+    "dependencies": ["repo", "runtime", "worker profiles"],
+    "integration_points": ["factoryctl", "Hermes adapter"],
+    "owners": ["factory-orchestrator"],
+    "blocked_when_missing": ["runtime", "required worker profile"],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "access_capability": {
+    "$schema": "https://overkill-factory.dev/schemas/access-capability.schema.json",
+    "execution_mode": "bounded_execution",
+    "capabilities": ["repo read/write within scope", "local test execution"],
+    "missing_capabilities": [],
+    "forbidden_actions": ["deploy", "secret_access", "billing_change"],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "autonomy_readiness_packet": {
+    "$schema": "https://overkill-factory.dev/schemas/autonomy-readiness-packet.schema.json",
+    "execution_mode": "bounded_execution",
+    "accounts_ready": true,
+    "tools_ready": true,
+    "environment_ready": true,
+    "cost_limit": "no material spend",
+    "forbidden_actions": ["deploy", "secret_access", "billing_change"],
+    "rollback_path": "revert bounded slice",
+    "human_gates": [],
+    "required_resources": {"runtime": ["Hermes or local factoryctl"], "profiles": ["factory-orchestrator"]},
+    "resource_statuses": [{"resource": "local repo", "status": "granted"}],
+    "approval_channel": "Hermes event or explicit human gate when required",
+    "owners": ["factory-orchestrator"],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "security_architecture_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/security-architecture-plan.schema.json",
+    "trust_boundaries": ["repo", "runtime", "worker evidence"],
+    "sensitive_data": ["none in template"],
+    "auth_and_permissions": ["least privilege by worker"],
+    "threats": ["false done", "self approval", "private leak"],
+    "controls": ["gate report", "independent review", "public safety scan"],
+    "security_reviewers": ["security-orchestrator"],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "privacy_compliance_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/privacy-compliance-plan.schema.json",
+    "privacy_scope": ["public-safe artifacts"],
+    "compliance_scope": ["license and private data checks"],
+    "data_classes": ["public template data"],
+    "forbidden_disclosures": ["private paths", "secrets", "raw private source material"],
+    "reviewers": ["public-safety-gate"],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "budget_contract": {
+    "$schema": "https://overkill-factory.dev/schemas/budget-contract.schema.json",
+    "budget_owner": "factory-orchestrator",
+    "spend_limit": "no material spend",
+    "remote_cost_allowed": false,
+    "stop_when": ["cost owner missing", "remote proof lacks TTL"],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "production_readiness_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/production-readiness-plan.schema.json",
+    "owner": "release-ops-worker",
+    "release_boundary": "no release from template",
+    "rollback": "revert bounded slice",
+    "health_checks": ["gate report", "verification output"],
+    "monitoring": ["incident/support plan"],
+    "human_approval": "required when release risk is material"
+  },
+  "incident_support_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/incident-support-plan.schema.json",
+    "support_owner": "release-ops-worker",
+    "incident_triggers": ["release failure", "gate bypass", "private leak"],
+    "triage_steps": ["block release", "capture evidence", "create learnback"],
+    "escalation": ["human gate when material risk exists"],
+    "learnback_target": "factory_maturity_scorecard"
+  },
+  "user_docs_onboarding_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
+    "audience": ["operator", "external contributor"],
+    "docs_required": ["quickstart", "validation and release", "troubleshooting"],
+    "acceptance": ["another agent can continue from docs"],
+    "public_safety": ["no private paths or raw private source"]
+  },
+  "project_projection": {
+    "$schema": "https://overkill-factory.dev/schemas/project-projection.schema.json",
+    "source_of_truth": "Hermes or factoryctl gate report",
+    "phase": "F11",
+    "blockers": [],
+    "next_steps": ["run gate report"],
+    "confidence": "bounded template projection",
+    "pending_approvals": [],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "verification_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/qa-verification-plan.schema.json",
+    "checks": ["run tests named in card", "run gate report"],
+    "evidence_required": ["command output", "gate report"],
+    "blocked_when": ["missing evidence", "failing check"]
+  },
+  "receipt_five": {
+    "$schema": "https://overkill-factory.dev/schemas/receipt-five.schema.json",
+    "changed": ["bounded slice"],
+    "artifact_paths": ["to be filled by execution"],
+    "verification_commands": ["to be filled by execution"],
+    "verification_result": "PENDING",
+    "reviewer_required": true,
+    "next_action": "execute, verify, review or block"
+  },
+  "completion_audit": {
+    "$schema": "https://overkill-factory.dev/schemas/completion-audit.schema.json",
+    "result": "PENDING",
+    "blocking_findings": ["execution has not run in template"],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
+  },
+  "closure_summary": {
+    "$schema": "https://overkill-factory.dev/schemas/worker-closure-summary.schema.json",
+    "record_type": "worker_closure_summary",
+    "scope": "template",
+    "workers": {},
+    "result": "PENDING",
+    "request_summary": "Template only.",
+    "delivery_summary": "Execution has not run.",
+    "proof_refs": ["templates/vfinal-factory-card.json"],
+    "remaining_risks": ["worker execution still required"],
+    "waivers": [],
+    "approved_scope": [],
+    "forbidden_scope": ["deploy", "secret_access", "billing_change"],
+    "next_step": "run through factory gates"
+  },
+  "factory_maturity_scorecard": {
+    "$schema": "https://overkill-factory.dev/schemas/factory-maturity-scorecard.schema.json",
+    "result": "PENDING",
+    "blind_spots": [],
+    "missing_coverage": [],
+    "learnback_actions": ["convert repeated failure into test, gate, worker or doc"],
+    "evidence_refs": ["templates/vfinal-factory-card.json"]
   }
 }

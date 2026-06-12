@@ -7,6 +7,8 @@
     "project_type",
     "areas_checked",
     "missing_areas",
+    "missing_coverage",
+    "blind_spots",
     "risk_residuals",
     "decision",
     "evidence_refs"
@@ -15,6 +17,8 @@
     "project_type": { "type": "string", "minLength": 3 },
     "areas_checked": { "type": "array", "items": { "type": "string" } },
     "missing_areas": { "type": "array", "items": { "type": "string" } },
+    "missing_coverage": { "type": "array", "items": { "type": "string" } },
+    "blind_spots": { "type": "array", "items": { "type": "string" } },
     "risk_residuals": { "type": "array", "items": { "type": "string" } },
     "decision": { "enum": ["pass", "block", "pass_with_owner"] },
     "evidence_refs": { "type": "array", "items": { "type": "string" } }

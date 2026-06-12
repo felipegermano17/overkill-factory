@@ -74,7 +74,7 @@
     "security_contract": { "type": "object" },
     "security_role_separation": { "type": "boolean" },
     "security_role_separation_exception": { "type": "string" },
-    "product_face_packet": { "type": "object" },
+    "product_face_packet": { "$ref": "product-face-packet.schema.json" },
     "onchain_work_package": { "type": "object" },
     "security_scan_packet": { "type": "object" },
     "human_gate_packet": { "type": "object" },

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/canonical-enforcement-audit-result.schema.json",
+  "title": "Overkill Factory Canonical Enforcement Audit Result",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "matrix_ref",
+    "result",
+    "requirements_checked",
+    "status_counts",
+    "errors"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/canonical-enforcement-audit-result.schema.json"
+    },
+    "record_type": {
+      "const": "canonical_enforcement_audit_result"
+    },
+    "matrix_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "result": {
+      "enum": ["PASS", "FAIL"]
+    },
+    "requirements_checked": {
+      "type": "integer"
+    },
+    "status_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

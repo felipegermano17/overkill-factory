@@ -1,17 +1,18 @@
 # Factory 10 Completion Audit
 
-Status: `COMPLETE`
-Completion claim allowed: `true`
-Score estimate: `10/10`
+Status: `NOT_COMPLETE`
+Completion claim allowed: `false`
+Score estimate: `9.996/10`
 
 ## Blocking Requirements
 
-- None.
+- `production_product_face`: Run Product Face against a deployed or production-like target and mark it reusable_for_product=true only if it is product-specific.
+- `full_product_specific_worker_graph`: Rerun the same graph on a production product target and require every critical lane to be reusable_for_product=true before practical 10/10 completion.
 
 ## Policy Decision
 
-Factory 10 practical completion can be claimed from current evidence.
+Do not mark Overkill Factory as practical 10/10 until every blocking requirement has product-specific or provider-backed evidence.
 
 ## Boundary
 
-This audit is a completion guard. It does not create production evidence; it confirms that the current evidence set is sufficient for a practical Factory 10 completion claim in this validation context.
+This audit is a completion guard. It does not create production evidence; it prevents the factory from claiming practical 10/10 before product-specific and provider-backed evidence exists.

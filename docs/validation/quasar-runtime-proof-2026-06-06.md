@@ -1,5 +1,9 @@
 # Quasar Runtime Proof - 2026-06-06
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records Quasar runtime proof evidence for that dated pass.
+
 Purpose: turn Quasar from a documentation assumption into a verified factory
 runtime path.
 

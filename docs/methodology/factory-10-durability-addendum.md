@@ -1,5 +1,9 @@
 # Overkill Factory 10 Durability Addendum
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records a historical Hermes patch packaging decision.
+
 Date: 2026-06-05
 
 Goal: turn the Factory 10 Hermes gate proof into portable, versioned,

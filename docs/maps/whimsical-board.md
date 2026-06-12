@@ -1,5 +1,9 @@
 # Whimsical Board
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This map helps humans navigate the factory; it is not a source of runtime truth or gate approval.
+
 Primary editable map:
 
 The editable Whimsical board lives in the maintainer's private visual

@@ -1,5 +1,9 @@
 # Discord da Fabrica: Guia de Subida para Producao
 
+> Document status: CURRENT SUPPORTING GUIDE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: Este guia configura cockpit; placeholders de setup nao sao prova de runtime nem aprovacao de release.
+
 Este guia explica como transformar o Discord no painel de controle da Overkill
 Factory sem deixar o Discord virar a fonte da verdade.
 

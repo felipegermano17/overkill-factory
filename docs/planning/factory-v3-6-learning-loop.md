@@ -1,5 +1,9 @@
 # Factory V3.6 Learning Loop
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records V3.6 learning-loop inputs that were later superseded by runtime enforcement.
+
 V3.6 must be generated only after pilot evidence, not opinion.
 
 The first completed pilot is a dry pilot, not a production product:

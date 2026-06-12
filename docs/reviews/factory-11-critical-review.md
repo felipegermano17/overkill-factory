@@ -1,5 +1,9 @@
 # Factory 11 Critical Review
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records Factory 11 review risk before later vFinal runtime enforcement.
+
 ## What Is Still Weak
 
 1. Worker routing is broader, and one real public-safety profile dispatch is

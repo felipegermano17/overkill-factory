@@ -10,6 +10,7 @@
     "target",
     "result",
     "finding_count",
+    "forbidden_hits",
     "categories",
     "limits"
   ],
@@ -32,6 +33,18 @@
     },
     "result": { "enum": ["PASS", "FAIL"] },
     "finding_count": { "type": "integer" },
+    "forbidden_hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "count"],
+        "properties": {
+          "category": { "type": "string", "minLength": 1 },
+          "count": { "type": "integer" }
+        },
+        "additionalProperties": false
+      }
+    },
     "categories": {
       "type": "array",
       "items": {

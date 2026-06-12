@@ -129,6 +129,10 @@ def build_summary(findings: list[str], *, git_ref: str | None = None, created_at
         "target": target,
         "result": "PASS" if not findings else "FAIL",
         "finding_count": len(findings),
+        "forbidden_hits": [
+            {"category": category, "count": count}
+            for category, count in sorted(categories.items())
+        ],
         "categories": [
             {"id": category, "count": count}
             for category, count in sorted(categories.items())

@@ -1,5 +1,9 @@
 # Hermes Transition Plan Validation
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it records transition-plan fixture evidence.
+
 This note defines what the public validation fixtures prove and what they do not
 prove yet.
 

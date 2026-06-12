@@ -22,6 +22,11 @@ ALLOWED_PRODUCT_ENV_CLASSES = {
     "production-like-deployed",
     "deployed-production",
 }
+PRODUCT_ALIGNMENT_FIELDS = (
+    "packet_comparison",
+    "source_promise_coverage",
+    "design_fit_review",
+)
 
 
 class PlaywrightUnavailable(RuntimeError):
@@ -331,6 +336,19 @@ def base_result(
         "overlap_check": {},
         "overlap": {},
         "performance_note": "",
+        "packet_ref": "",
+        "packet_comparison": {
+            "status": "pending",
+            "basis": "Browser proof captured render evidence only; compare against Product Face Packet before completion.",
+        },
+        "source_promise_coverage": {
+            "status": "pending",
+            "basis": "Browser proof does not by itself prove fit to the original product promise.",
+        },
+        "design_fit_review": {
+            "status": "pending",
+            "basis": "Visual/product-fit review must be recorded by Product Face reviewer before promotion.",
+        },
         "evidence_refs": [],
         "evidence_kind": "real",
         "reusable_for_product": False,
@@ -360,6 +378,58 @@ def validate_reusable_product_scope(
         raise ValueError("production-like-static-artifact requires a repo file target so the artifact hash can be recorded")
     if environment_class == "deployed-production" and target_ref.startswith("file://"):
         raise ValueError("deployed-production requires an http(s) target, not a local file target")
+    if not product_alignment_passes(result):
+        raise ValueError(
+            "--reusable-for-product requires Product Face alignment: packet_ref, "
+            "packet_comparison=pass, source_promise_coverage=pass and design_fit_review=pass"
+        )
+
+
+def product_alignment_passes(result: dict[str, Any]) -> bool:
+    if not str(result.get("packet_ref") or "").strip():
+        return False
+    for field in PRODUCT_ALIGNMENT_FIELDS:
+        value = result.get(field)
+        if not isinstance(value, dict) or value.get("status") != "pass":
+            return False
+        if not str(value.get("basis") or "").strip():
+            return False
+    return True
+
+
+def apply_product_alignment(
+    *,
+    result: dict[str, Any],
+    packet_ref: str | None,
+    packet_comparison_basis: str | None,
+    source_promise_coverage_basis: str | None,
+    design_fit_review_basis: str | None,
+) -> None:
+    values = {
+        "packet_ref": packet_ref,
+        "packet_comparison": packet_comparison_basis,
+        "source_promise_coverage": source_promise_coverage_basis,
+        "design_fit_review": design_fit_review_basis,
+    }
+    supplied = {field for field, value in values.items() if str(value or "").strip()}
+    if not supplied:
+        return
+    missing = [field for field, value in values.items() if not str(value or "").strip()]
+    if missing:
+        raise ValueError("Product Face alignment is incomplete: missing " + ", ".join(missing))
+    result["packet_ref"] = str(packet_ref).strip()
+    result["packet_comparison"] = {
+        "status": "pass",
+        "basis": str(packet_comparison_basis).strip(),
+    }
+    result["source_promise_coverage"] = {
+        "status": "pass",
+        "basis": str(source_promise_coverage_basis).strip(),
+    }
+    result["design_fit_review"] = {
+        "status": "pass",
+        "basis": str(design_fit_review_basis).strip(),
+    }
 
 
 def apply_product_reuse_scope(
@@ -672,6 +742,10 @@ def build_product_face_proof(
     product_id: str | None = None,
     environment_class: str | None = None,
     approval_scope: str | None = None,
+    packet_ref: str | None = None,
+    packet_comparison_basis: str | None = None,
+    source_promise_coverage_basis: str | None = None,
+    design_fit_review_basis: str | None = None,
 ) -> dict[str, Any]:
     output_dir = out if out.suffix == "" else out.parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -724,6 +798,13 @@ def build_product_face_proof(
     result["journeys"] = result.get("user_journeys_checked", [])
     result["accessibility"] = result.get("a11y", {})
     result["overlap"] = result.get("overlap_check", {})
+    apply_product_alignment(
+        result=result,
+        packet_ref=packet_ref,
+        packet_comparison_basis=packet_comparison_basis,
+        source_promise_coverage_basis=source_promise_coverage_basis,
+        design_fit_review_basis=design_fit_review_basis,
+    )
     if reusable_for_product:
         apply_product_reuse_scope(
             result=result,
@@ -760,6 +841,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Target environment class required with --reusable-for-product.",
     )
     parser.add_argument("--approval-scope", help="Specific approval scope required with --reusable-for-product.")
+    parser.add_argument("--packet-ref", help="Product Face Packet reference used for product approval alignment.")
+    parser.add_argument("--packet-comparison-basis", help="Why this proof matches the Product Face Packet.")
+    parser.add_argument("--source-promise-coverage-basis", help="Why this proof covers the source/product promise.")
+    parser.add_argument("--design-fit-review-basis", help="Why this proof fits the intended product/design direction.")
     return parser.parse_args(argv)
 
 
@@ -781,6 +866,10 @@ def main(argv: list[str] | None = None) -> int:
             product_id=args.product_id,
             environment_class=args.environment_class,
             approval_scope=args.approval_scope,
+            packet_ref=args.packet_ref,
+            packet_comparison_basis=args.packet_comparison_basis,
+            source_promise_coverage_basis=args.source_promise_coverage_basis,
+            design_fit_review_basis=args.design_fit_review_basis,
         )
     except Exception as exc:
         print(f"product_face_proof failed: {exc}", file=sys.stderr)

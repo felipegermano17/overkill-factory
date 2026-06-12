@@ -134,8 +134,8 @@
     "pilots/devnet-receipt-pass-test/worker-results/product-face-result.json"
   ],
   "evidence_kind": "real",
-  "reusable_for_product": true,
-  "next_action": "Attach this product-specific Product Face result to the production Product Face lane.",
+  "reusable_for_product": false,
+  "next_action": "Rerun Product Face with explicit packet comparison, source-promise coverage and design-fit review before product approval.",
   "console": {
     "status": "pass",
     "messages_ref": "pilots/devnet-receipt-pass-test/worker-results/console.json",
@@ -152,5 +152,18 @@
     "reusability_boundary": "Reusable only for the named product target and approval scope; other products, releases, deploys, onchain code or human gates must rerun their own evidence.",
     "target_artifact_ref": "products/devnet-receipt-pass/offchain/dashboard.html",
     "target_sha256": "2ce0cc5586e93dc2a23424df8d86f92b103db1442e5536018b28ca011469c1ea"
-  }
+  },
+  "packet_comparison": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates the stricter packet comparison field; rerun Product Face proof before reusing for product approval."
+  },
+  "source_promise_coverage": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates explicit source-promise coverage; rerun against current source promises before reuse."
+  },
+  "design_fit_review": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates explicit design-fit review; rerun review before treating this as current design approval."
+  },
+  "legacy_schema_backfill": "2026-06-11: added pending Product Face comparison fields to satisfy stricter schema without upgrading historical proof strength."
 }

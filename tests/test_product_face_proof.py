@@ -96,6 +96,9 @@ class ProductFaceProofTest(unittest.TestCase):
             "a11y",
             "overlap_check",
             "performance_note",
+            "packet_comparison",
+            "source_promise_coverage",
+            "design_fit_review",
             "blocking_findings",
             "evidence_refs",
             "next_action",
@@ -173,6 +176,13 @@ class ProductFaceProofTest(unittest.TestCase):
                 journeys=["open target"],
                 tool_or_profile="unit-test",
             )
+            product_face_proof.apply_product_alignment(
+                result=result,
+                packet_ref="templates/product-face-packet.json",
+                packet_comparison_basis="Unit proof is explicitly matched to the packet.",
+                source_promise_coverage_basis="Unit proof covers the named product promise.",
+                design_fit_review_basis="Unit proof includes an explicit design-fit review.",
+            )
 
             product_face_proof.apply_product_reuse_scope(
                 result=result,
@@ -188,6 +198,25 @@ class ProductFaceProofTest(unittest.TestCase):
         self.assertEqual(result["product_target"]["environment_class"], "production-like-static-artifact")
         self.assertEqual(result["product_target"]["target_sha256"], expected_sha256)
         self.assertIn("Product Face lane", result["product_target"]["approval_scope"])
+
+    def test_reusable_for_product_requires_packet_alignment(self) -> None:
+        result = product_face_proof.base_result(
+            target_ref="pilots/quasar-vault-guard-test/product-face/prototype.html",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=["initial-render"],
+            journeys=["open target"],
+            tool_or_profile="unit-test",
+        )
+
+        with self.assertRaisesRegex(ValueError, "requires Product Face alignment"):
+            product_face_proof.apply_product_reuse_scope(
+                result=result,
+                target_ref=result["target"],
+                target_path=ROOT / "pilots" / "quasar-vault-guard-test" / "product-face" / "prototype.html",
+                product_id="qvg-public-validation-product",
+                environment_class="production-like-static-artifact",
+                approval_scope="Product Face lane for the QVG public validation product",
+            )
 
     def test_reusable_for_product_requires_scope_metadata(self) -> None:
         result = product_face_proof.base_result(

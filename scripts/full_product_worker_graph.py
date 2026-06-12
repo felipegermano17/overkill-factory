@@ -233,8 +233,8 @@ def build_graph() -> dict[str, Any]:
         "evidence_refs": [str(lane["path"]) for lane in LANES],
         "policy_decision": (
             "This proves product-specific worker-graph reconciliation for the public QVG validation product, "
-            "including reusable Product Face, Quasar Auditor and CU/SVM/economic lanes. It is not reusable as production approval because "
-            "the remaining critical lanes intentionally preserve production boundaries."
+            "including reusable Quasar Auditor and CU/SVM/economic lanes. The Product Face lane is not reusable until "
+            "packet comparison, source-promise coverage and design-fit review are recorded as pass."
         ),
         "next_action": "Add managed remote proof, product-specific release/human evidence and a fully reusable graph before practical 10/10 completion.",
     }

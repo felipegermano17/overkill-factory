@@ -95,5 +95,18 @@
     "messages_ref": "pilots/quasar-vault-guard-test/worker-results/console.json",
     "error_count": 0,
     "page_error_count": 0
-  }
+  },
+  "packet_comparison": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates the stricter packet comparison field; rerun Product Face proof before reusing for product approval."
+  },
+  "source_promise_coverage": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates explicit source-promise coverage; rerun against current source promises before reuse."
+  },
+  "design_fit_review": {
+    "status": "pending",
+    "basis": "Historical Product Face proof predates explicit design-fit review; rerun review before treating this as current design approval."
+  },
+  "legacy_schema_backfill": "2026-06-11: added pending Product Face comparison fields to satisfy stricter schema without upgrading historical proof strength."
 }

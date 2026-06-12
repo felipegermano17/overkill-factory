@@ -1,0 +1,12 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/canonical-enforcement-audit-result.schema.json",
+  "record_type": "canonical_enforcement_audit_result",
+  "matrix_ref": "validation/canonical-enforcement/canonical-enforcement-matrix.json",
+  "result": "PASS",
+  "requirements_checked": 18,
+  "status_counts": {
+    "enforced": 16,
+    "bounded_public_proof": 2
+  },
+  "errors": []
+}

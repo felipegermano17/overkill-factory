@@ -1,5 +1,9 @@
 # Factory 11 Action Plan
 
+> Document status: HISTORICAL EVIDENCE.
+> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Runtime boundary: This is not the current factory rule; it is a completed historical action plan, not an active source of authority.
+
 Factory 11 is the next Overkill Factory version bump.
 
 The goal is to turn the current methodology, contracts and pilot evidence into
