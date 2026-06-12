@@ -20,7 +20,7 @@ SPEC.loader.exec_module(transition_hook)
 
 class HermesTransitionHookTest(unittest.TestCase):
     def test_ready_hook_persists_worker_tasks_idempotently(self) -> None:
-        card = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             ledger = Path(tmp) / "worker-ledger.json"
             first = transition_hook.build_hook_result(
@@ -49,15 +49,15 @@ class HermesTransitionHookTest(unittest.TestCase):
         self.assertEqual(len(ledger_data["tasks"]), first["ledger"]["task_count"])
 
     def test_done_hook_blocks_missing_worker_results(self) -> None:
-        card = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
-        receipt = ROOT / "pilots" / "quasar-vault-guard-test" / "evidence" / "receipt-five-first-slice.json"
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        receipt = ROOT / "examples" / "minimal-hermes-project" / "expected-receipt-five.json"
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             result = transition_hook.build_hook_result(
                 card_path=card,
                 from_status="ready",
                 to_status="done",
                 receipt_path=receipt,
-                worker_results_dir=ROOT / "pilots" / "quasar-vault-guard-test" / "worker-results",
+                worker_results_dir=None,
                 ledger_path=Path(tmp) / "worker-ledger.json",
             )
 
@@ -65,7 +65,7 @@ class HermesTransitionHookTest(unittest.TestCase):
         self.assertTrue(any("result is required before done" in reason for reason in result["blocked_reasons"]))
 
     def test_cli_is_fail_closed_for_before_ready_blocks(self) -> None:
-        card = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             argv = [
                 "transition_hook.py",
@@ -90,7 +90,7 @@ class HermesTransitionHookTest(unittest.TestCase):
         self.assertEqual(exit_code, 1)
 
     def test_cli_report_only_allows_blocked_result_for_ci_observation(self) -> None:
-        card = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             argv = [
                 "transition_hook.py",

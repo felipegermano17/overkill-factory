@@ -8,6 +8,7 @@ run before claiming that a checkout is ready.
 Use this before editing cards, docs or examples:
 
 ```bash
+python scripts/quickstart_smoke.py
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/validate_public_json_artifacts.py
@@ -41,8 +42,8 @@ python scripts/factory_production_readiness.py --out .tmp/readiness-check.json
 python scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
 ```
 
-These commands produce public-safe summaries. They intentionally avoid dumping
-raw file lists or private detail into release artifacts.
+These commands write local summaries under `.tmp` when an output path is
+provided. Generated summaries must not be committed as release proof.
 
 ## Full Validation Battery
 
@@ -74,8 +75,7 @@ python scripts\factory_production_readiness.py --out .tmp\readiness-check.json
 python scripts\worktree_release_inventory.py --out .tmp\inventory-check.json
 ```
 
-Keep generated `.tmp` outputs out of commits unless a specific fixture or public
-validation artifact is intentionally being added.
+Keep generated `.tmp` outputs out of commits.
 
 ## Release Claim Rule
 

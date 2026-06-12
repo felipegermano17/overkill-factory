@@ -1,7 +1,7 @@
 # Discord da Fabrica: Guia de Subida para Producao
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: Este guia configura cockpit; placeholders de setup nao sao prova de runtime nem aprovacao de release.
 
 Este guia explica como transformar o Discord no painel de controle da Overkill
@@ -372,7 +372,7 @@ Antes de usar `--apply`, rode `--dry-run`. A bridge deve:
 O recibo live atual esta em:
 
 ```text
-validation/control-tower/discord-bridge-projector-live-2026-06-11.json
+.tmp/factory-runs/control-tower/discord-bridge-projector-live-2026-06-11.json
 ```
 
 ## Automacao viva da Control Tower
@@ -411,7 +411,7 @@ Ela cobre:
 O recibo live da automacao completa esta em:
 
 ```text
-validation/control-tower/discord-control-tower-automation-live-2026-06-11.json
+.tmp/factory-runs/control-tower/discord-control-tower-automation-live-2026-06-11.json
 ```
 
 Observacao importante: botao ou texto curto nao significa aprovacao magica. Em

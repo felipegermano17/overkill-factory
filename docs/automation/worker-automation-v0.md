@@ -1,7 +1,7 @@
 # Critical Worker Automation V0
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: This guide explains worker automation; it cannot approve completion without worker results, receipts and current gates.
 
 This layer turns a Factory card into explicit worker execution requests.

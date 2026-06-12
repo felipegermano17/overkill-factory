@@ -17,9 +17,9 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_TRACE = ROOT / "validation" / "canonical-linear-traceability" / "canonical-linear-traceability.json"
-DEFAULT_OUT_JSON = ROOT / "validation" / "canonical-real-infra" / "canonical-real-infra-audit.json"
-DEFAULT_OUT_MD = ROOT / "docs" / "validation" / "canonical-real-infra-audit.md"
+DEFAULT_TRACE = ROOT / ".tmp" / "factory-runs" / "canonical-linear-traceability" / "canonical-linear-traceability.json"
+DEFAULT_OUT_JSON = ROOT / ".tmp" / "canonical-real-infra-audit.json"
+DEFAULT_OUT_MD = ROOT / ".tmp" / "canonical-real-infra-audit.md"
 SCHEMA = "https://overkill-factory.dev/schemas/canonical-real-infra-audit.schema.json"
 RUNTIME_ENFORCEMENT_PATH = ROOT / "scripts" / "canonical_runtime_enforcement.py"
 
@@ -205,7 +205,7 @@ def write_markdown(path: Path, audit: dict[str, Any], errors: list[str]) -> None
         "# Canonical Real Infra Audit",
         "",
         "> Document status: CURRENT RUNTIME EVIDENCE.",
-        "> Current authority: `scripts/factoryctl.py` and `validation/canonical-real-infra/canonical-real-infra-audit.json`.",
+        "> Current authority: `scripts/factoryctl.py` and `.tmp/factory-runs/canonical-real-infra/canonical-real-infra-audit.json`.",
         "> Runtime boundary: This proves actionable canonical process enforcement in the factory; it does not approve a product-specific release.",
         "",
         f"Question: {audit['question_answered']}",

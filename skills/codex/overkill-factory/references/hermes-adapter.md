@@ -34,7 +34,9 @@ venv/bin/python -m pytest -q -o addopts='' \
   tests/hermes_cli/test_kanban_cli.py
 ```
 
-Expected result: see `docs/validation/heavy-validation-results.md`.
+Expected result: the adapter blocks weak transitions and creates worker tasks;
+use `docs/architecture/hermes-integration.md` and the CI transition-hook smoke
+as the current reference.
 
 When operating Overkill/Hermes, also use the `hermes-kanban` skill.
 

@@ -26,7 +26,7 @@ import operator_control_tower_proof as proof  # noqa: E402
 import validate_public_json_artifacts as validator  # noqa: E402
 
 
-DEFAULT_OUT = ROOT / "validation" / "control-tower" / "operator-control-tower-private-evidence-doctor.json"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-private-evidence-doctor.json"
 
 
 def utc_now() -> str:

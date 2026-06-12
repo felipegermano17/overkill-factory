@@ -84,10 +84,10 @@ class WorkerProfilesTest(unittest.TestCase):
         self.assertIn("overkill-factory", packet["profile_binding"]["skill_refs"])
         self.assertIn("hermes-kanban", packet["profile_binding"]["skill_refs"])
         self.assertFalse(packet["profile_binding"]["can_mutate_card_state"])
-        self.assertEqual(packet["profile_binding"]["last_hermes_smoke_ref"], "validation/hermes-live/factory12-agent-profile-smoke.md")
+        self.assertEqual(packet["profile_binding"]["last_hermes_smoke_ref"], ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md")
 
     def test_transition_plan_exposes_profile_binding_on_worker_tasks(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
 
         plan = factoryctl.build_transition_plan(
@@ -104,7 +104,7 @@ class WorkerProfilesTest(unittest.TestCase):
         self.assertEqual(tasks["supply-chain-gate"]["profile_binding"]["queue_class_source"], "worker_task.queue_class")
 
     def test_profile_binding_queue_is_policy_not_second_runtime_source(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
 
         task = factoryctl.build_worker_task("security-orchestrator", card, card_path)

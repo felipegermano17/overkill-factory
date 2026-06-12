@@ -46,7 +46,7 @@ class FakeHermes:
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
     def test_materialize_creates_workers_as_parents_of_main_card(self) -> None:
         fake = FakeHermes()
-        card = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         with tempfile.TemporaryDirectory() as tmp:
             args = adapter.build_parser().parse_args(
                 [
@@ -73,7 +73,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
     def test_materialize_dry_run_does_not_call_hermes_create(self) -> None:
         fake = FakeHermes()
-        card = ROOT / "validation" / "cards" / "product-face-saas-r2.md"
+        card = ROOT / "examples" / "cards" / "v35_valid_product_face.md"
         with tempfile.TemporaryDirectory() as tmp:
             args = adapter.build_parser().parse_args(
                 [

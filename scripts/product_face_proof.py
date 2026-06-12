@@ -825,7 +825,7 @@ def build_product_face_proof(
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a minimal Product Face proof against a local HTML file or URL.")
     parser.add_argument("--target", required=True, help="Repo-relative HTML path or http(s) URL.")
-    parser.add_argument("--out", default="validation/product-face/product-face-result.json", help="Output JSON path or directory.")
+    parser.add_argument("--out", default=".tmp/factory-runs/product-face/product-face-result.json", help="Output JSON path or directory.")
     parser.add_argument("--viewport", action="append", default=[], help="Viewport as NAME=WIDTHxHEIGHT. Can be repeated.")
     parser.add_argument("--state", action="append", default=[], help="Checked state label. Can be repeated.")
     parser.add_argument("--journey", action="append", default=[], help="Checked user journey label. Can be repeated.")

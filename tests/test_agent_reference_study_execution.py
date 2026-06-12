@@ -47,15 +47,11 @@ class AgentReferenceStudyExecutionTest(unittest.TestCase):
         self.assertIn("agent_eval_plan", skill_eval["input_contract"]["required"])
         self.assertIn("permission class", skill_eval["output_contract"]["required_sections"])
 
-    def test_reference_study_document_records_execution_not_only_research(self) -> None:
-        study = (ROOT / "docs" / "research" / "agent-reference-repos-study-2026-06-11.md").read_text(
-            encoding="utf-8"
-        )
-
-        self.assertIn("Executed Changes", study)
-        self.assertIn("Agent/Skill Comparison Matrix", study)
-        self.assertIn("work-unit", study)
-        self.assertIn("reviewer selection", study)
+    def test_reference_study_execution_is_preserved_as_contracts_not_research_doc(self) -> None:
+        self.assertFalse((ROOT / "docs" / "research").exists())
+        self.assertTrue((ROOT / "templates" / "work-unit-contract.json").is_file())
+        self.assertTrue((ROOT / "templates" / "reviewer-selection-plan.json").is_file())
+        self.assertTrue((ROOT / "tests" / "test_agent_reference_study_execution.py").is_file())
 
 
 if __name__ == "__main__":

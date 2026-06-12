@@ -9,13 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GOVERNED_DIRS = [
-    ROOT / "docs" / "methodology",
-    ROOT / "docs" / "roadmap",
-    ROOT / "docs" / "reviews",
     ROOT / "docs" / "risks",
-    ROOT / "docs" / "planning",
-    ROOT / "docs" / "pilots",
-    ROOT / "docs" / "validation",
 ]
 REQUIRED_MARKERS = (
     "Document status:",
@@ -35,9 +29,20 @@ CURRENT_AUTHORITY_REFS = (
     "README.md",
     "docs/concepts/factory-flow.md",
     "docs/operations/validation-and-release.md",
-    "docs/validation/canonical-real-infra-audit.md",
-    "validation/canonical-real-infra/canonical-real-infra-audit.json",
     "scripts/factoryctl.py",
+    "schemas/",
+    "tests/",
+)
+PUBLIC_DOC_FORBIDDEN_DIRS = (
+    ROOT / "docs" / "methodology",
+    ROOT / "docs" / "roadmap",
+    ROOT / "docs" / "reviews",
+    ROOT / "docs" / "planning",
+    ROOT / "docs" / "pilots",
+    ROOT / "docs" / "validation",
+    ROOT / "docs" / "research",
+    ROOT / "docs" / "maps",
+    ROOT / "docs" / "illustrations",
 )
 AMBIGUITY_TERMS = (
     "still open",
@@ -100,8 +105,18 @@ def validate_ambiguous_docs_have_status() -> list[str]:
     return errors
 
 
+def validate_forbidden_public_doc_dirs_absent() -> list[str]:
+    errors: list[str] = []
+    for directory in PUBLIC_DOC_FORBIDDEN_DIRS:
+        if directory.exists() and any(directory.rglob("*")):
+            rel = directory.relative_to(ROOT).as_posix()
+            errors.append(f"{rel}: historical/narrative public doc directory must not be committed")
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
+    errors.extend(validate_forbidden_public_doc_dirs_absent())
     for path in governed_markdown_files():
         errors.extend(validate(path))
     errors.extend(validate_ambiguous_docs_have_status())

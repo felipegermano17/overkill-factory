@@ -12,18 +12,18 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "release" / "release-integration-preflight.json"
-DEFAULT_INVENTORY = ROOT / "validation" / "release" / "worktree-release-inventory.json"
-DEFAULT_PUBLIC_WORKTREE = ROOT / "validation" / "public-safety" / "worktree-summary.json"
-DEFAULT_PUBLIC_HEAD = ROOT / "validation" / "public-safety" / "head-summary.json"
-DEFAULT_PUBLIC_ORIGIN = ROOT / "validation" / "public-safety" / "origin-main-summary.json"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "release" / "release-integration-preflight.json"
+DEFAULT_INVENTORY = ROOT / ".tmp" / "factory-runs" / "release" / "worktree-release-inventory.json"
+DEFAULT_PUBLIC_WORKTREE = ROOT / ".tmp" / "factory-runs" / "public-safety" / "worktree-summary.json"
+DEFAULT_PUBLIC_HEAD = ROOT / ".tmp" / "factory-runs" / "public-safety" / "head-summary.json"
+DEFAULT_PUBLIC_ORIGIN = ROOT / ".tmp" / "factory-runs" / "public-safety" / "origin-main-summary.json"
 GENERATED_RECEIPT_PATHS = {
-    "validation/factory-production-readiness/current-readiness.json",
-    "validation/public-safety/head-summary.json",
-    "validation/public-safety/origin-main-summary.json",
-    "validation/public-safety/worktree-summary.json",
-    "validation/release/release-integration-preflight.json",
-    "validation/release/worktree-release-inventory.json",
+    ".tmp/factory-runs/factory-production-readiness/current-readiness.json",
+    ".tmp/factory-runs/public-safety/head-summary.json",
+    ".tmp/factory-runs/public-safety/origin-main-summary.json",
+    ".tmp/factory-runs/public-safety/worktree-summary.json",
+    ".tmp/factory-runs/release/release-integration-preflight.json",
+    ".tmp/factory-runs/release/worktree-release-inventory.json",
 }
 
 

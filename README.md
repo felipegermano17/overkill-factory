@@ -26,8 +26,8 @@ paper or project brief
 ```
 
 The repository contains the public method, card and receipt schemas, worker
-registry, Hermes profile bindings, adapter scripts, validation fixtures and a
-small runnable example.
+registry, Hermes profile bindings, adapter scripts, tests and a small runnable
+example.
 
 ## Who It Is For
 
@@ -35,7 +35,7 @@ Use it when you already run, or want to run, product work with Hermes and need:
 
 - repeatable gates instead of informal agent handoffs;
 - explicit worker roles for planning, building, security, proof and release;
-- evidence that survives beyond a chat transcript;
+- receipts that make completion inspectable beyond a chat transcript;
 - a way to let agents work while still preserving human authority for high-risk
   decisions.
 
@@ -57,7 +57,7 @@ Overkill Factory provides:
   generating worker packets;
 - a Hermes adapter and transition hook that can block weak `ready` and `done`
   transitions;
-- public-safe examples, worker packets, receipts and validation artifacts;
+- public-safe examples, worker packets and receipt contracts;
 - safety scans for secrets and private/public boundary mistakes.
 
 ## What It Does Not Do
@@ -98,39 +98,28 @@ after the local card, worker packet and receipt path is clear.
 
 ## Quickstart
 
-Start here:
-
-1. Read `docs/getting-started/quickstart-hermes.md`.
-2. Run the validation commands in `docs/operations/validation-and-release.md`.
-3. Generate a gate report from `examples/minimal-hermes-project/card.md`.
-4. Review worker responsibilities in `docs/agents/worker-profiles.md`.
-5. Review stage ownership in `docs/agents/factory-stage-agent-map.md`.
-6. Review product-type coverage in `docs/agents/capability-packs.md`.
-7. Add Hermes and optional Control Tower configuration with `.env.example`.
-
-Minimal local smoke:
+Three-command local smoke:
 
 ```bash
-python scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md
-python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
-python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
-python -m unittest discover -s tests -p "test_*.py" -q
+git clone https://github.com/<owner>/overkill-factory.git
+cd overkill-factory
+python scripts/quickstart_smoke.py
 ```
 
-On Windows PowerShell, create the output directory first if your shell does not
-create it through the helper:
+The smoke writes `.tmp/quickstart-result.json` and required worker packets under
+`.tmp/minimal-worker-packets/`. Read
+`docs/getting-started/quickstart-hermes.md` for the same path with Hermes
+configuration notes.
 
-```powershell
-New-Item -ItemType Directory -Force .tmp\minimal-worker-packets
-python scripts\factoryctl.py worker-packet --worker all --required-only --card examples\minimal-hermes-project\card.md --out .tmp\minimal-worker-packets
-```
+For packaging, install the local CLI with `python -m pip install -e .`, then use
+`factoryctl` or `overkill-quickstart`.
 
 ## Current Status
 
 The public repository has validated schemas, worker profiles, Hermes profile
-bindings, adapter fixtures, safety scans and a public validation product. The
-adapter patch and transition hook are public, and the local validation suite is
-the required first check before publication or release work.
+bindings, adapter hooks, safety scans, a packaged CLI and a runnable public
+example. The adapter patch and transition hook are public, and the local
+validation suite is the required first check before publication or release work.
 
 The project is still not a hosted service and not a production launch. A user
 must connect it to their own Hermes runtime, configure any real tools they want
@@ -139,29 +128,28 @@ workers to use, and provide real approval records for high-risk work.
 ## Documentation Authority
 
 The current external-user path is this README, the quickstart, the concept flow,
-the operations checklist and the executable gates. Methodology, review, planning
-and roadmap documents are supporting evidence unless their banner says they are
-a current supporting guide.
+the operations checklist and the executable gates. Narrative validation history,
+old roadmaps, pilot writeups and research notes do not belong in the public
+onboarding path.
 
 When documents disagree, use this order:
 
 1. `scripts/factoryctl.py`, schemas, adapter hooks and tests.
-2. `validation/canonical-runtime-enforcement/` and
-   `validation/canonical-real-infra/`.
-3. `README.md`, `docs/getting-started/quickstart-hermes.md`,
+2. `README.md`, `docs/getting-started/quickstart-hermes.md`,
    `docs/concepts/factory-flow.md` and
    `docs/operations/validation-and-release.md`.
-4. Agent, worker, capability, security and Product Face support docs.
-5. Historical methodology, reviews, roadmaps, risk registers and pilot notes.
+3. Agent, worker, capability, security and Product Face support docs.
+4. Generated local outputs under `.tmp/factory-runs/` only for the run that
+   produced them. They are not source authority and must not be committed.
 
 See `docs/governance/document-governance.md` for the document status rules. A
-roadmap or risk-register item is not a runtime gate until it has a schema,
-script, test, worker, adapter rule or validation receipt.
+task idea is not a runtime gate until it has a schema, script, test, worker,
+adapter rule or receipt contract.
 
 ## Documentation Map
 
-- `docs/governance/document-governance.md`: how to read current, backlog,
-  historical and evidence documents.
+- `docs/governance/document-governance.md`: what belongs in public docs versus
+  local/private evidence.
 - `docs/getting-started/quickstart-hermes.md`: first run with your own Hermes.
 - `docs/concepts/factory-flow.md`: core concepts and phase flow.
 - `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
@@ -175,16 +163,10 @@ script, test, worker, adapter rule or validation receipt.
 - `docs/operations/validation-and-release.md`: validation and release checklist.
 - `docs/operations/troubleshooting.md`: common failures and how to continue.
 - `docs/architecture/hermes-integration.md`: adapter and runtime integration.
-- `docs/validation/canonical-real-infra-audit.md`: current answer for whether
-  the actionable canonical process is enforced by runtime gates.
-- `docs/roadmap/factory-vfinal-prepilot-roadmap.md`: prepilot backlog and
-  follow-up rules that must stay outside the canonical narrative.
 - `examples/minimal-hermes-project/README.md`: small public-safe example.
 - `.env.example`: safe environment variable template.
-
-Longer method, validation and historical artifacts remain in `docs/methodology/`,
-`docs/validation/`, `validation/` and `pilots/`. Treat those as supporting
-evidence, not as the first user path.
+- `CONTRIBUTING.md`: contribution rules and required checks.
+- `SECURITY.md`: security reporting and public-boundary policy.
 
 ## Public Safety
 

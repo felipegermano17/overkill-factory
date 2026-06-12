@@ -52,10 +52,10 @@ Use the repo runner for static HTML or a local/public URL:
 
 ```bash
 python scripts/product_face_proof.py \
-  --target pilots/quasar-vault-guard-test/product-face/prototype.html \
-  --out validation/product-face/qvg-product-face-result.json \
-  --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md \
-  --strict
+  --target examples/minimal-hermes-project \
+  --out .tmp/product-face-result.json \
+  --card examples/minimal-hermes-project/card.md \
+  --force-fallback
 ```
 
 Useful options:
@@ -90,14 +90,14 @@ Reusable product example:
 
 ```bash
 python scripts/product_face_proof.py \
-  --target pilots/quasar-vault-guard-test/product-face/prototype.html \
-  --out validation/production/product-face/product-face-result.json \
-  --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md \
+  --target http://127.0.0.1:3000 \
+  --out .tmp/product-face-result.json \
+  --card examples/minimal-hermes-project/card.md \
   --viewport desktop=1440x900 \
   --viewport mobile=390x844 \
   --state initial-render \
   --journey "open target" \
-  --packet-ref pilots/quasar-vault-guard-test/cards/qvg-first-slice.md#product_face_packet \
+  --packet-ref examples/minimal-hermes-project/card.md#product_face_packet \
   --packet-comparison-basis "Screens, states and viewports match the Product Face Packet." \
   --source-promise-coverage-basis "The checked journey covers the stated product promise." \
   --design-fit-review-basis "The reviewer confirmed fit to the requested product direction." \
@@ -113,9 +113,9 @@ Use:
 
 ```bash
 python scripts/product_face_proof.py \
-  --target pilots/quasar-vault-guard-test/product-face/prototype.html \
-  --out pilots/quasar-vault-guard-test/worker-results/product-face-result.json \
-  --card pilots/quasar-vault-guard-test/cards/qvg-first-slice.md \
+  --target http://127.0.0.1:3000 \
+  --out .tmp/product-face-result.json \
+  --card examples/minimal-hermes-project/card.md \
   --strict
 ```
 
@@ -129,15 +129,10 @@ blocked until real browser evidence exists.
 
 ## Current Boundary
 
-The current public validation includes browser-backed Product Face evidence for
-the static Quasar Vault Guard prototype:
-
-- `validation/product-face/qvg-product-face-result.json`
-- `pilots/quasar-vault-guard-test/worker-results/product-face-result.json`
-
-This is a real Product Face proof for the static prototype. It is not a
-production UI approval, a full WCAG audit, or a production performance
-benchmark.
+The repository documents the runner contract. Actual screenshots, state
+matrices and proof outputs should be generated for the current product and kept
+under `.tmp`, a private evidence store or a release artifact, not committed as
+old proof.
 
 Full Product Face PASS requires:
 

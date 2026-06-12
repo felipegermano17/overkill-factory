@@ -14,7 +14,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
-DEFAULT_OUT = ROOT / "validation" / "production" / "release"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "release"
 VALIDATION_COMMANDS = [
     [sys.executable, "scripts/validate_public_json_artifacts.py"],
     [sys.executable, "scripts/secret_safety_scan.py"],
@@ -138,9 +138,9 @@ def build_human_gate(*, approval_ref: str, approved_by: str, created_at: str) ->
         "rollback_owner": "release-ops-worker",
         "expiry": "Valid only for this public validation product and this release-control evidence round.",
         "evidence_refs": [
-            "validation/production/release/human-gate-record.md",
-            "validation/production/release/release-ops-result.json",
-            "validation/production/remote-proof/managed-testbox-result.json",
+            ".tmp/factory-runs/production/release/human-gate-record.md",
+            ".tmp/factory-runs/production/release/release-ops-result.json",
+            ".tmp/factory-runs/production/remote-proof/managed-testbox-result.json",
         ],
         "next_action": "Keep future R4 gates product-specific and time-bounded.",
     }
@@ -220,10 +220,10 @@ def build_release_ops(*, created_at: str, validation: list[dict[str, Any]]) -> d
             {"action": "history_rewrite", "performed": False},
         ],
         "evidence_refs": [
-            "validation/production/release/release-ops-result.md",
-            "validation/production/release/human-gate-record.json",
-            "validation/production/remote-proof/managed-testbox-result.json",
-            "validation/product-specific/qvg-full-product-worker-graph.json",
+            ".tmp/factory-runs/production/release/release-ops-result.md",
+            ".tmp/factory-runs/production/release/human-gate-record.json",
+            ".tmp/factory-runs/production/remote-proof/managed-testbox-result.json",
+            ".tmp/factory-runs/product-specific/qvg-full-product-worker-graph.json",
         ],
         "next_action": "Repeat this gate whenever the release target, product source, branch or authority boundary changes.",
     }

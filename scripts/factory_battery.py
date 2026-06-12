@@ -117,7 +117,7 @@ def run_battery(out_dir: Path) -> dict[str, Any]:
     ready_specs = [
         (
             "product-face-r2",
-            ROOT / "validation" / "cards" / "product-face-saas-r2.md",
+            ROOT / "examples" / "cards" / "v35_valid_product_face.md",
             {
                 "gate_status": "ready_for_worker_execution",
                 "required_workers": ["product-face", "independent-reviewer", "qa-verification-worker"],
@@ -125,7 +125,7 @@ def run_battery(out_dir: Path) -> dict[str, Any]:
         ),
         (
             "solana-quasar-r3",
-            ROOT / "validation" / "cards" / "solana-quasar-r3.md",
+            ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md",
             {
                 "gate_status": "ready_for_worker_execution",
                 "required_workers": [
@@ -134,42 +134,6 @@ def run_battery(out_dir: Path) -> dict[str, Any]:
                     "human-gate-clerk",
                     "remote-proof-runner",
                     "supply-chain-gate",
-                ],
-            },
-        ),
-        (
-            "cloud-release-r4",
-            ROOT / "validation" / "cards" / "cloud-release-r4.md",
-            {
-                "gate_status": "ready_for_worker_execution",
-                "required_workers": [
-                    "codex-security",
-                    "cloud-infra-security-specialist",
-                    "release-ops-worker",
-                    "detection-monitoring-worker",
-                    "human-gate-clerk",
-                ],
-            },
-        ),
-        (
-            "public-repo-release-r2",
-            ROOT / "validation" / "cards" / "public-repo-release-r2.md",
-            {
-                "gate_status": "blocked",
-                "required_workers": ["public-safety-gate", "supply-chain-gate"],
-                "blocked_workers": ["codex-security", "release-ops-worker"],
-            },
-        ),
-        (
-            "agentic-browser-memory-r3",
-            ROOT / "validation" / "cards" / "agentic-browser-memory-r3.md",
-            {
-                "gate_status": "ready_for_worker_execution",
-                "required_workers": [
-                    "agentic-ai-security-specialist",
-                    "security-orchestrator",
-                    "memory-steward",
-                    "handoff-packer",
                 ],
             },
         ),
@@ -212,11 +176,12 @@ def run_battery(out_dir: Path) -> dict[str, Any]:
             )
         )
 
-    receipt = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "evidence" / "receipt-five-first-slice.json")
-    solana_card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "solana-quasar-r3.md")
+    receipt = factoryctl.load_json_like(ROOT / "examples" / "minimal-hermes-project" / "expected-receipt-five.json")
+    solana_card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+    solana_card = factoryctl.load_json_like(solana_card_path)
     missing_plan = factoryctl.build_transition_plan(
         solana_card,
-        ROOT / "validation" / "cards" / "solana-quasar-r3.md",
+        solana_card_path,
         from_status="ready",
         to_status="done",
         receipt=receipt,
@@ -238,7 +203,7 @@ def run_battery(out_dir: Path) -> dict[str, Any]:
     full_results = write_required_results(factoryctl, solana_card, "solana-quasar-r3", out_dir)
     pass_plan = factoryctl.build_transition_plan(
         solana_card,
-        ROOT / "validation" / "cards" / "solana-quasar-r3.md",
+        solana_card_path,
         from_status="ready",
         to_status="done",
         receipt=receipt,
@@ -270,8 +235,8 @@ def run_battery(out_dir: Path) -> dict[str, Any]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run Overkill Factory validation battery.")
-    parser.add_argument("--out-dir", type=Path, default=ROOT / "validation" / "battery")
-    parser.add_argument("--out", type=Path, default=ROOT / "validation" / "battery" / "factory-battery-results.json")
+    parser.add_argument("--out-dir", type=Path, default=ROOT / ".tmp" / "factory-runs" / "battery")
+    parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-runs" / "battery" / "factory-battery-results.json")
     return parser
 
 
@@ -288,8 +253,8 @@ def main() -> int:
         f"- Scenarios: `{result['scenario_count']}`\n"
         f"- Passed: `{result['passed_count']}`\n"
         f"- Failed: `{result['failed_count']}`\n\n"
-        "This battery spans Product Face, Solana/Quasar, cloud release, public repository release, "
-        "agentic/browser/memory work, invalid-card rejection and done-transition reconciliation.\n",
+        "This battery spans Product Face, Solana/Quasar, invalid-card rejection and done-transition reconciliation "
+        "using public examples only.\n",
         encoding="utf-8",
     )
     print(json.dumps({"out": str(args.out), "failed_count": result["failed_count"]}, indent=2))

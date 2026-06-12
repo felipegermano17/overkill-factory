@@ -1,7 +1,7 @@
 # Open Source Control Tower Setup
 
 > Document status: CURRENT SUPPORTING GUIDE.
-> Current authority: `scripts/factoryctl.py` and `docs/validation/canonical-real-infra-audit.md`.
+> Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
 > Runtime boundary: This guide configures the optional Control Tower; it does not create durable evidence or close factory gates.
 
 The Control Tower is optional. It can make factory work easier to watch, but it

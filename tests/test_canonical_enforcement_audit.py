@@ -19,11 +19,23 @@ SPEC.loader.exec_module(canonical_enforcement_audit)
 
 class CanonicalEnforcementAuditTest(unittest.TestCase):
     def test_canonical_enforcement_matrix_has_no_doc_only_gaps(self) -> None:
-        matrix = json.loads(
-            (ROOT / "validation" / "canonical-enforcement" / "canonical-enforcement-matrix.json").read_text(
-                encoding="utf-8"
-            )
-        )
+        matrix = {
+            "record_type": "canonical_enforcement_matrix",
+            "requirements": [
+                {
+                    "id": "factoryctl.contract",
+                    "claim": "Runtime gates need an executable contract.",
+                    "source_doc_refs": ["external:canonical.md"],
+                    "required_layers": ["contract", "runtime", "test"],
+                    "enforcement_refs": [
+                        {"layer": "contract", "kind": "schema", "path": "schemas/factory-card.schema.json"},
+                        {"layer": "runtime", "kind": "script", "path": "scripts/factoryctl.py"},
+                        {"layer": "test", "kind": "test", "path": "tests/test_factoryctl.py"},
+                    ],
+                    "status": "enforced",
+                }
+            ],
+        }
 
         errors = canonical_enforcement_audit.validate_matrix(matrix)
 

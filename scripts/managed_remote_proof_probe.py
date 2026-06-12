@@ -15,8 +15,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "remote-proof" / "managed-remote-proof-probe.json"
-DEFAULT_MD_OUT = ROOT / "validation" / "remote-proof" / "managed-remote-proof-probe.md"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "remote-proof" / "managed-remote-proof-probe.json"
+DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "remote-proof" / "managed-remote-proof-probe.md"
 
 SOURCE_REFS = [
     "https://github.com/openclaw/crabbox",

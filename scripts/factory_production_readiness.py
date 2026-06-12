@@ -11,18 +11,18 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "factory-production-readiness" / "current-readiness.json"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "factory-production-readiness" / "current-readiness.json"
 
-DEFAULT_PREPILOT_MASTER = ROOT / "validation" / "prepilot" / "master-task-readiness.json"
-DEFAULT_RUNTIME_STATUS = ROOT / "validation" / "hermes-live" / "factory-vfinal-runtime-status-check.json"
-DEFAULT_PREFLIGHT = ROOT / "validation" / "hermes-production-update-preflight" / "real-runtime-update-blocked.json"
-DEFAULT_CONTROL_TOWER = ROOT / "validation" / "control-tower" / "operator-control-tower-production-readiness.json"
-DEFAULT_CONTROL_TOWER_DOCTOR = ROOT / "validation" / "control-tower" / "operator-control-tower-private-evidence-doctor.json"
-DEFAULT_WORKTREE_INVENTORY = ROOT / "validation" / "release" / "worktree-release-inventory.json"
-DEFAULT_RELEASE_INTEGRATION = ROOT / "validation" / "release" / "release-integration-preflight.json"
-DEFAULT_PUBLIC_WORKTREE = ROOT / "validation" / "public-safety" / "worktree-summary.json"
-DEFAULT_PUBLIC_HEAD = ROOT / "validation" / "public-safety" / "head-summary.json"
-DEFAULT_PUBLIC_ORIGIN = ROOT / "validation" / "public-safety" / "origin-main-summary.json"
+DEFAULT_PREPILOT_MASTER = ROOT / ".tmp" / "factory-runs" / "prepilot" / "master-task-readiness.json"
+DEFAULT_RUNTIME_STATUS = ROOT / ".tmp" / "factory-runs" / "hermes-live" / "factory-vfinal-runtime-status-check.json"
+DEFAULT_PREFLIGHT = ROOT / ".tmp" / "factory-runs" / "hermes-production-update-preflight" / "real-runtime-update-blocked.json"
+DEFAULT_CONTROL_TOWER = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-production-readiness.json"
+DEFAULT_CONTROL_TOWER_DOCTOR = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-private-evidence-doctor.json"
+DEFAULT_WORKTREE_INVENTORY = ROOT / ".tmp" / "factory-runs" / "release" / "worktree-release-inventory.json"
+DEFAULT_RELEASE_INTEGRATION = ROOT / ".tmp" / "factory-runs" / "release" / "release-integration-preflight.json"
+DEFAULT_PUBLIC_WORKTREE = ROOT / ".tmp" / "factory-runs" / "public-safety" / "worktree-summary.json"
+DEFAULT_PUBLIC_HEAD = ROOT / ".tmp" / "factory-runs" / "public-safety" / "head-summary.json"
+DEFAULT_PUBLIC_ORIGIN = ROOT / ".tmp" / "factory-runs" / "public-safety" / "origin-main-summary.json"
 
 
 def utc_now() -> str:

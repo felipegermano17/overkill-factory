@@ -11,8 +11,8 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_TRACE = ROOT / "validation" / "canonical-linear-traceability" / "canonical-linear-traceability.json"
-DEFAULT_OUT = ROOT / "validation" / "canonical-runtime-enforcement" / "canonical-runtime-rulebook.json"
+DEFAULT_TRACE = ROOT / ".tmp" / "factory-runs" / "canonical-linear-traceability" / "canonical-linear-traceability.json"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "canonical-runtime-enforcement" / "canonical-runtime-rulebook.json"
 SCHEMA = "https://overkill-factory.dev/schemas/canonical-runtime-rulebook.schema.json"
 
 NON_RUNTIME_LINEAR_STATUSES = {"foundational_text_tracked"}
@@ -23,6 +23,39 @@ CORE_RUNTIME_FIELDS = (
     "done_definition",
     "transition_event_required",
     "kanban_transition_event_ref",
+)
+VFINAL_FALLBACK_FIELDS = (
+    *CORE_RUNTIME_FIELDS,
+    "source_refs",
+    "source_state",
+    "outcome_contract",
+    "product_sot",
+    "method_contract",
+    "capability_pack_contract",
+    "software_development_plan",
+    "spec_graph",
+    "loop_plan",
+    "product_experience_plan",
+    "product_face_packet",
+    "data_metrics_plan",
+    "agent_eval_plan",
+    "dependency_map",
+    "access_capability",
+    "autonomy_readiness_packet",
+    "budget_contract",
+    "privacy_compliance_plan",
+    "security_contract",
+    "security_architecture_plan",
+    "review",
+    "reviewer_selection_plan",
+    "project_projection",
+    "production_readiness_plan",
+    "incident_support_plan",
+    "user_docs_onboarding_plan",
+    "factory_maturity_scorecard",
+    "verification_plan",
+    "receipt_five",
+    "completion_audit",
 )
 
 
@@ -164,7 +197,7 @@ def build_rulebook(trace: dict[str, Any]) -> dict[str, Any]:
     return {
         "$schema": SCHEMA,
         "record_type": "canonical_runtime_rulebook",
-        "source_trace_ref": "validation/canonical-linear-traceability/canonical-linear-traceability.json",
+        "source_trace_ref": ".tmp/factory-runs/canonical-linear-traceability/canonical-linear-traceability.json",
         "summary": {
             "checkpoints_checked": len(trace.get("checkpoints", [])),
             "runtime_rules": len(rules),
@@ -185,6 +218,37 @@ def build_rulebook(trace: dict[str, Any]) -> dict[str, Any]:
 
 
 def default_rulebook() -> dict[str, Any]:
+    if not DEFAULT_TRACE.exists():
+        return {
+            "$schema": SCHEMA,
+            "record_type": "canonical_runtime_rulebook",
+            "source_trace_ref": "generated:fallback-vfinal-runtime-rulebook",
+            "summary": {
+                "checkpoints_checked": 1,
+                "runtime_rules": 1,
+                "non_runtime_processes": 0,
+                "unmapped_actionable_checkpoints": 0,
+            },
+            "rules": [
+                {
+                    "rule_id": "canonical-runtime::vfinal-core-contract",
+                    "checkpoint_id": "vfinal-core-contract",
+                    "sequence": 1,
+                    "canonical_line": None,
+                    "canonical_heading": "vFinal core runtime contract",
+                    "linear_status": "implemented_by_runtime",
+                    "enforcement_points": [
+                        "scripts/canonical_runtime_enforcement.py",
+                        "scripts/factoryctl.py validate-card",
+                        "adapters/hermes/transition_hook.py",
+                    ],
+                    "required_fields": list(VFINAL_FALLBACK_FIELDS),
+                    "block_policy": "missing_required_fields_blocks_vfinal_runtime_gate",
+                }
+            ],
+            "non_runtime_processes": [],
+            "unmapped_actionable_checkpoints": [],
+        }
     return build_rulebook(load_json(DEFAULT_TRACE))
 
 

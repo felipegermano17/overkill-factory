@@ -20,7 +20,7 @@ import operator_control_tower_proof as proof  # noqa: E402
 import validate_public_json_artifacts as validator  # noqa: E402
 
 
-DEFAULT_OUT = ROOT / "validation" / "control-tower" / "operator-control-tower-owner-setup-doctor.json"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-owner-setup-doctor.json"
 
 REQUIRED_OWNER_CHECKS = [
     "server_exists",

@@ -25,10 +25,10 @@ if str(SCRIPTS) not in sys.path:
 import validate_public_json_artifacts as validator  # noqa: E402
 
 
-DEFAULT_READONLY = ROOT / "validation" / "control-tower" / "control-tower-readonly-smoke.json"
-DEFAULT_APPROVAL = ROOT / "validation" / "control-tower" / "control-tower-approval-registration-smoke.json"
-DEFAULT_OUT = ROOT / "validation" / "control-tower" / "operator-control-tower-production-readiness.json"
-DEFAULT_PROOF_OUT = ROOT / "validation" / "hermes-production-proof" / "operator-control-tower.json"
+DEFAULT_READONLY = ROOT / ".tmp" / "factory-runs" / "control-tower" / "control-tower-readonly-smoke.json"
+DEFAULT_APPROVAL = ROOT / ".tmp" / "factory-runs" / "control-tower" / "control-tower-approval-registration-smoke.json"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-production-readiness.json"
+DEFAULT_PROOF_OUT = ROOT / ".tmp" / "factory-runs" / "hermes-production-proof" / "operator-control-tower.json"
 BRIDGE_HEALTH_SCHEMA = "https://overkill-factory.dev/schemas/operator-control-tower-bridge-health.schema.json"
 BRIDGE_HEALTH_REQUIRED_CHECKS = [
     "bot_reachable",

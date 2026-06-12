@@ -416,7 +416,7 @@ index 0000000..3a9e0ce
 +    metadata = {
 +        "receipt_five": {
 +            "changed_files": ["app.py"],
-+            "evidence_refs": ["validation/report.md"],
++            "evidence_refs": [".tmp/factory-runs/report.md"],
 +            "verification": {"passed": True},
 +            "independent_review": {"passed": True},
 +            "next_action": "promote",

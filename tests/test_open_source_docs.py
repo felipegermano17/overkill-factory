@@ -42,9 +42,10 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/control-tower/open-source-setup.md",
             "docs/operations/validation-and-release.md",
             "docs/architecture/hermes-integration.md",
-            "docs/roadmap/factory-vfinal-prepilot-roadmap.md",
             "examples/minimal-hermes-project/README.md",
             ".env.example",
+            "CONTRIBUTING.md",
+            "SECURITY.md",
         ]:
             with self.subTest(link=rel):
                 self.assertIn(rel.replace("\\", "/"), readme)
@@ -61,12 +62,18 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/operations/validation-and-release.md",
             "docs/operations/troubleshooting.md",
             "docs/architecture/hermes-integration.md",
-            "docs/roadmap/factory-vfinal-prepilot-roadmap.md",
             "examples/minimal-hermes-project/README.md",
             "examples/minimal-hermes-project/input-paper.md",
             "examples/minimal-hermes-project/expected-flow.md",
             "examples/minimal-hermes-project/expected-receipt-five.json",
             ".env.example",
+            "pyproject.toml",
+            "CONTRIBUTING.md",
+            "SECURITY.md",
+            ".github/ISSUE_TEMPLATE/bug_report.yml",
+            ".github/ISSUE_TEMPLATE/feature_request.yml",
+            ".github/ISSUE_TEMPLATE/config.yml",
+            ".github/pull_request_template.md",
         ]
 
         for rel in required_paths:
@@ -102,6 +109,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         operations = read_text("docs/operations/validation-and-release.md")
         combined = f"{quickstart}\n{operations}"
         required_commands = [
+            "python scripts/quickstart_smoke.py",
             "python -m unittest discover -s tests",
             "python scripts/validate_document_governance.py",
             "python scripts/validate_public_json_artifacts.py",
@@ -153,6 +161,37 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertEqual(report["blocked_workers"], [])
         self.assertIn("independent-reviewer", report["required_workers"])
         self.assertEqual(report["workers"]["independent-reviewer"]["status"], "requires_execution")
+
+    def test_quickstart_smoke_writes_small_json_result(self) -> None:
+        out = ROOT / ".tmp" / "test-quickstart-result.json"
+        packets = ROOT / ".tmp" / "test-minimal-worker-packets"
+        result = subprocess.run(
+            [
+                sys.executable,
+                "scripts/quickstart_smoke.py",
+                "--out",
+                str(out),
+                "--packets-out",
+                str(packets),
+            ],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        payload = json.loads(out.read_text(encoding="utf-8"))
+
+        self.assertIn("PASS", result.stdout)
+        self.assertEqual(payload["result"], "PASS")
+        self.assertEqual(payload["card"], "examples/minimal-hermes-project/card.md")
+        self.assertGreater(payload["worker_packet_count"], 0)
+
+    def test_ci_uses_public_example_not_historical_pilot_evidence(self) -> None:
+        workflow = read_text(".github/workflows/ci.yml")
+
+        self.assertIn("examples/minimal-hermes-project/card.md", workflow)
+        self.assertNotIn("pilots/quasar-vault-guard-test", workflow)
+        self.assertNotIn(".tmp/factory-runs/cards/solana-quasar-r3.md", workflow)
 
     def test_document_governance_passes(self) -> None:
         result = subprocess.run(

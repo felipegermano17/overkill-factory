@@ -201,7 +201,7 @@ class ProductFaceProofTest(unittest.TestCase):
 
     def test_reusable_for_product_requires_packet_alignment(self) -> None:
         result = product_face_proof.base_result(
-            target_ref="pilots/quasar-vault-guard-test/product-face/prototype.html",
+            target_ref="examples/minimal-hermes-project",
             viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
             states=["initial-render"],
             journeys=["open target"],
@@ -220,7 +220,7 @@ class ProductFaceProofTest(unittest.TestCase):
 
     def test_reusable_for_product_requires_scope_metadata(self) -> None:
         result = product_face_proof.base_result(
-            target_ref="pilots/quasar-vault-guard-test/product-face/prototype.html",
+            target_ref="examples/minimal-hermes-project",
             viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
             states=["initial-render"],
             journeys=["open target"],

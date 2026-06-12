@@ -8,20 +8,21 @@ import hashlib
 import json
 import re
 import sys
+import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "validation" / "supply-chain"
+DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "supply-chain"
 
 WORKFLOW_DIR = ROOT / ".github" / "workflows"
 PINNED_ACTION_RE = re.compile(r"^-?\s*uses:\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@([A-Fa-f0-9]{40})\s*(?:#.*)?$")
 USES_RE = re.compile(r"uses:\s*(\S+)")
 
 SKIP_PARTS = {".git", "__pycache__", ".mypy_cache", ".pytest_cache"}
-SKIP_OUTPUT_PARTS = {"validation/supply-chain"}
+SKIP_OUTPUT_PARTS = {".tmp/factory-runs/supply-chain"}
 
 
 def now_iso() -> str:
@@ -163,6 +164,13 @@ def dependency_posture() -> dict[str, Any]:
         "Cargo.lock",
     ]
     present = [name for name in manifests if (ROOT / name).exists()]
+    runtime_dependency_manifests = list(present)
+    if "pyproject.toml" in runtime_dependency_manifests:
+        pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+        project = pyproject.get("project", {}) if isinstance(pyproject, dict) else {}
+        has_runtime_dependencies = bool(project.get("dependencies") or project.get("optional-dependencies"))
+        if not has_runtime_dependencies:
+            runtime_dependency_manifests.remove("pyproject.toml")
     return {
         "result": "PASS",
         "detected_manifests": present,
@@ -171,9 +179,13 @@ def dependency_posture() -> dict[str, Any]:
             "Python standard library plus pinned GitHub Actions. Future runtime dependencies "
             "must add lockfile/audit evidence before release."
             if not present
-            else "Dependency manifests are present and require the repository-specific audit path."
+            else (
+                "Only packaging metadata without runtime dependencies is present; no dependency audit follow-up is required."
+                if not runtime_dependency_manifests
+                else "Dependency manifests with runtime dependencies are present and require the repository-specific audit path."
+            )
         ),
-        "requires_followup": bool(present),
+        "requires_followup": bool(runtime_dependency_manifests),
     }
 
 
@@ -259,7 +271,7 @@ def build_worker_result(
         "evidence_refs": [
             ".github/workflows/ci.yml",
             repo_ref(sbom_path),
-            "validation/supply-chain/supply-chain-proof.md",
+            ".tmp/factory-runs/supply-chain/supply-chain-proof.md",
         ],
         "evidence_kind": "real",
         "reusable_for_product": False,
@@ -276,7 +288,7 @@ def build_worker_result(
                 "path": repo_ref(sbom_path),
                 "sha256": sbom_sha256,
                 "format": "SPDX-2.3 JSON",
-                "scope": "source file inventory excluding generated validation/supply-chain outputs",
+                "scope": "source file inventory excluding generated .tmp/factory-runs/supply-chain outputs",
             },
         },
     }

@@ -252,7 +252,7 @@ def build_receipt(created_at: str | None = None) -> dict[str, Any]:
         "registration_checks": registration_checks,
         "evidence_refs": [
             "docs/control-tower/discord-control-tower-os.md",
-            "docs/methodology/overkill-factory-vfinal.md",
+            "docs/concepts/factory-flow.md",
         ],
         "created_at": timestamp,
     }
@@ -271,7 +271,7 @@ def main() -> int:
     parser.add_argument(
         "--out",
         type=Path,
-        default=ROOT / "validation" / "control-tower" / "control-tower-approval-registration-smoke.json",
+        default=ROOT / ".tmp" / "factory-runs" / "control-tower" / "control-tower-approval-registration-smoke.json",
     )
     args = parser.parse_args()
 

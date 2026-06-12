@@ -1,0 +1,33 @@
+name: Feature Request
+description: Propose a product, runtime, worker or documentation improvement.
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: operator-need
+    attributes:
+      label: Operator Need
+      description: What should an external Hermes operator be able to do?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-shape
+    attributes:
+      label: Proposed Shape
+      description: CLI, schema, adapter, worker, docs or example change.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      description: What command or test should prove this works?
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Boundary
+      options:
+        - label: This request does not require committing raw historical evidence or private runtime data.
+          required: true

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "overkill-factory"
+version = "0.1.0"
+description = "Gated production line for Hermes-powered agentic product work."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Overkill Factory contributors" }]
+keywords = ["agents", "hermes", "governance", "kanban", "product-engineering"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Repository = "https://github.com/OWNER/overkill-factory"
+Issues = "https://github.com/OWNER/overkill-factory/issues"
+
+[project.scripts]
+factoryctl = "scripts.factoryctl:main"
+overkill-quickstart = "scripts.quickstart_smoke:main"
+
+[tool.setuptools]
+py-modules = []
+
+[tool.setuptools.packages.find]
+include = ["scripts*"]

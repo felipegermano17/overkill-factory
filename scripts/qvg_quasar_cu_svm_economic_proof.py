@@ -582,8 +582,8 @@ def build_result(
         "evidence_refs": [
             repo_ref(source_dir),
             repo_ref(runtime_proof_path),
-            "validation/production/quasar/cu-svm-economic-harness.rs",
-            "validation/production/quasar/cu-svm-economic-report.md",
+            ".tmp/factory-runs/production/quasar/cu-svm-economic-harness.rs",
+            ".tmp/factory-runs/production/quasar/cu-svm-economic-report.md",
         ],
         "stdout_tail": redact_text(completed.stdout[-6000:], source_dir, work_dir),
         "stderr_tail": redact_text(completed.stderr[-6000:], source_dir, work_dir),
@@ -650,22 +650,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--runtime-proof",
         type=Path,
-        default=ROOT / "validation" / "production" / "quasar" / "qvg-quasar-runtime-proof.json",
+        default=ROOT / ".tmp" / "factory-runs" / "production" / "quasar" / "qvg-quasar-runtime-proof.json",
     )
     parser.add_argument(
         "--out",
         type=Path,
-        default=ROOT / "validation" / "production" / "quasar" / "cu-svm-economic-proof.json",
+        default=ROOT / ".tmp" / "factory-runs" / "production" / "quasar" / "cu-svm-economic-proof.json",
     )
     parser.add_argument(
         "--harness-out",
         type=Path,
-        default=ROOT / "validation" / "production" / "quasar" / "cu-svm-economic-harness.rs",
+        default=ROOT / ".tmp" / "factory-runs" / "production" / "quasar" / "cu-svm-economic-harness.rs",
     )
     parser.add_argument(
         "--report-out",
         type=Path,
-        default=ROOT / "validation" / "production" / "quasar" / "cu-svm-economic-report.md",
+        default=ROOT / ".tmp" / "factory-runs" / "production" / "quasar" / "cu-svm-economic-report.md",
     )
     parser.add_argument("--timeout-seconds", type=int, default=1200)
     parser.add_argument("--project-name", default="qvg-public-validation-product")

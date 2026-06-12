@@ -24,7 +24,7 @@ def load_card(name: str) -> dict:
     return factoryctl.load_json_like(ROOT / "examples" / "cards" / name)
 
 
-def worker_result(record_type: str, *, result: str = "PASS") -> dict:
+def worker_result(record_type: str, *, result: str = "PASS", source_card: dict | None = None) -> dict:
     worker_id = {
         "security_scan_result": "codex-security",
         "auditor_result": "solana-quasar-auditor",
@@ -32,24 +32,32 @@ def worker_result(record_type: str, *, result: str = "PASS") -> dict:
         "receipt_five_reconciliation_result": "evidence-reconciler",
         "qa_verification_result": "qa-verification-worker",
         "autoreview_result": "autoreview-gate",
+        "orchestration_result": "factory-orchestrator",
+        "source_ledger_result": "source-ledger-worker",
         "security_orchestration_result": "security-orchestrator",
         "crypto_key_management_result": "crypto-key-management-specialist",
         "remote_proof_result": "remote-proof-runner",
         "handoff_packet_result": "handoff-packer",
         "solana_quasar_build_result": "solana-quasar-builder",
         "solana_quasar_qa_result": "solana-quasar-qa-engineer",
+        "supply_chain_result": "supply-chain-gate",
     }.get(record_type, "fixture-worker")
+    card_id = str((source_card or {}).get("card_id") or "VAL-SOLANA-QUASAR-R3")
+    slice_id = str((source_card or {}).get("slice_id") or "VAL_FACTORY_HEAVY_03")
+    phase = str((source_card or {}).get("phase") or "F13")
+    risk_effective = str((source_card or {}).get("risk_effective") or "R3")
+    surfaces = (source_card or {}).get("surfaces") or ["solana-quasar"]
     payload = {
         "$schema": factoryctl.worker_result_schema_url(worker_id) if worker_id in factoryctl.WORKERS else "https://overkill-factory.dev/schemas/worker-result.schema.json",
         "record_type": record_type,
         "created_at": "2026-06-06T00:00:00+00:00",
         "worker": {"id": worker_id, "name": "Fixture Worker", "factory_phase": "F13"},
         "card_ref": {
-            "card_id": "VAL-SOLANA-QUASAR-R3",
-            "slice_id": "VAL_FACTORY_HEAVY_03",
-            "phase": "F13",
-            "risk_effective": "R3",
-            "surfaces": ["solana-quasar"],
+            "card_id": card_id,
+            "slice_id": slice_id,
+            "phase": phase,
+            "risk_effective": risk_effective,
+            "surfaces": surfaces,
         },
         "result": result,
         "blocking_findings": False,
@@ -90,14 +98,16 @@ def worker_result(record_type: str, *, result: str = "PASS") -> dict:
     return payload
 
 
-def human_gate_record() -> dict:
+def human_gate_record(source_card: dict | None = None) -> dict:
+    card_id = str((source_card or {}).get("card_id") or "VAL-SOLANA-QUASAR-R3")
+    slice_id = str((source_card or {}).get("slice_id") or "VAL_FACTORY_HEAVY_03")
     return {
         "record_type": "human_gate_record",
         "gate_type": "R3",
-        "card_id": "VAL-SOLANA-QUASAR-R3",
+        "card_id": card_id,
         "card_ref": {
-            "card_id": "VAL-SOLANA-QUASAR-R3",
-            "slice_id": "VAL_FACTORY_HEAVY_03",
+            "card_id": card_id,
+            "slice_id": slice_id,
         },
         "decision": "approved",
         "human_actor": "product-owner",
@@ -152,7 +162,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(report["workers"]["supply-chain-gate"]["status"], "requires_execution")
 
     def test_required_only_worker_packets_generate_only_triggered_workers(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
         required_ids = factoryctl.required_worker_ids(card)
 
@@ -174,7 +184,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertLess(len(generated), len(factoryctl.WORKERS))
 
     def test_worker_packet_fails_closed_without_profile_binding_manifest(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
         original_path = factoryctl.PROFILE_BINDINGS_PATH
         try:
@@ -207,7 +217,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(report["workers"]["release-ops-worker"]["status"], "blocked_missing_inputs")
 
     def test_security_scan_packet_can_require_codex_security_on_r2_product_face(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md")
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
 
         report = factoryctl.build_gate_report(card)
 
@@ -216,16 +226,16 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("codex-security", report["required_workers"])
 
     def test_worker_packet_source_card_ref_is_public_safe(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "minimal-hermes-project" / "card.md"
         card = factoryctl.load_json_like(card_path)
 
         packet = factoryctl.build_worker_packet("handoff-packer", card, card_path)
 
-        self.assertEqual(packet["source_card_path"], "validation/cards/solana-quasar-r3.md")
+        self.assertEqual(packet["source_card_path"], "examples/minimal-hermes-project/card.md")
         self.assertIsNone(PRIVATE_PATH_RE.search(packet["source_card_path"]))
 
     def test_external_worker_packet_source_card_ref_is_redacted(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "solana-quasar-r3.md")
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md")
         external_path = Path("C:/Users/private/secret-product-card.md")
 
         packet = factoryctl.build_worker_packet("handoff-packer", card, external_path)
@@ -251,8 +261,8 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(allowed, outputs | {"human_gate_record"})
 
-    def test_pilot_card_matches_hermes_ready_gate_constraints(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md")
+    def test_minimal_example_card_matches_hermes_ready_gate_constraints(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "minimal-hermes-project" / "card.md")
         self.assertEqual(factoryctl.validate_card(card), [])
 
     def test_vfinal_card_requires_core_canonical_contracts(self) -> None:
@@ -279,7 +289,7 @@ class FactoryCtlTest(unittest.TestCase):
         )
 
     def test_product_face_decomposition_requires_result_ref(self) -> None:
-        card = dict(factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md"))
+        card = dict(factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md"))
         card["phase"] = "F11"
         card.pop("product_face_result_ref", None)
         card.pop("product_face_result", None)
@@ -312,17 +322,18 @@ class FactoryCtlTest(unittest.TestCase):
         card["method_contract"]["required_plans"] = ["software_development_plan", "product_experience_plan"]
         card["product_experience_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-experience-plan.json")
         card["product_face_packet"] = factoryctl.load_json_like(ROOT / "templates" / "product-face-packet.json")
-        card["product_face_result_ref"] = "validation/product-face/product-face-result.json"
+        card["product_face_result_ref"] = ".tmp/factory-runs/product-face/product-face-result.json"
 
         self.assertEqual(factoryctl.validate_card(card), [])
 
     def test_product_face_completion_requires_visual_result(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md")
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_face_result_required"] = True
         receipt = {
             "receipt_five": {
                 "changed": "validated visible SaaS scenario",
-                "artifact_paths": ["validation/cards/product-face-saas-r2.md"],
-                "verification_commands": ["python scripts/factoryctl.py validate-card validation/cards/product-face-saas-r2.md"],
+                "artifact_paths": ["examples/cards/v35_valid_product_face.md"],
+                "verification_commands": ["python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md"],
                 "verification_result": "PASS",
                 "reviewer_required": True,
                 "reviewer_result": "pending",
@@ -334,7 +345,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "actor": "qa-verification-worker",
                 "worker": "product-face",
                 "receipt_refs": ["receipt_five"],
-                "artifact_refs": ["validation/cards/product-face-saas-r2.md"],
+                "artifact_refs": ["examples/cards/v35_valid_product_face.md"],
             },
         }
 
@@ -344,12 +355,13 @@ class FactoryCtlTest(unittest.TestCase):
         )
 
     def test_product_face_completion_accepts_visual_result(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md")
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_face_result_required"] = True
         receipt = {
             "receipt_five": {
                 "changed": "validated visible SaaS scenario",
-                "artifact_paths": ["validation/cards/product-face-saas-r2.md"],
-                "verification_commands": ["python scripts/factoryctl.py validate-card validation/cards/product-face-saas-r2.md"],
+                "artifact_paths": ["examples/cards/v35_valid_product_face.md"],
+                "verification_commands": ["python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md"],
                 "verification_result": "PASS",
                 "reviewer_required": True,
                 "reviewer_result": "PASS",
@@ -361,7 +373,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "actor": "qa-verification-worker",
                 "worker": "product-face",
                 "receipt_refs": ["receipt_five", "product_face_result"],
-                "artifact_refs": ["validation/cards/product-face-saas-r2.md", "reports/product-face.md"],
+                "artifact_refs": ["examples/cards/v35_valid_product_face.md", "reports/product-face.md"],
             },
             "product_face_result": {
                 "result": "PASS",
@@ -369,12 +381,12 @@ class FactoryCtlTest(unittest.TestCase):
                 "executed_by": "product-face-validator",
                 "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
                 "viewports": ["1440x900", "390x844"],
-                "checked_states": ["empty", "loading", "success", "error"],
+                "checked_states": ["empty", "loading", "pending", "success", "error"],
                 "user_journeys_checked": ["dashboard to detail", "settings save"],
                 "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
                 "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
                 "performance_note": "static validation scenario only",
-                "packet_ref": "validation/cards/product-face-saas-r2.md#product_face_packet",
+                "packet_ref": "examples/cards/v35_valid_product_face.md#product_face_packet",
                 "packet_comparison": {
                     "status": "pass",
                     "basis": "All planned screens, states and viewports are covered."
@@ -396,12 +408,13 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(factoryctl.validate_completion(card, receipt), [])
 
     def test_product_face_completion_rejects_screenshot_without_plan_alignment(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "product-face-saas-r2.md")
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_face_result_required"] = True
         receipt = {
             "receipt_five": {
                 "changed": "validated visible SaaS scenario",
-                "artifact_paths": ["validation/cards/product-face-saas-r2.md"],
-                "verification_commands": ["python scripts/factoryctl.py validate-card validation/cards/product-face-saas-r2.md"],
+                "artifact_paths": ["examples/cards/v35_valid_product_face.md"],
+                "verification_commands": ["python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md"],
                 "verification_result": "PASS",
                 "reviewer_required": True,
                 "reviewer_result": "PASS",
@@ -413,7 +426,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "actor": "qa-verification-worker",
                 "worker": "product-face",
                 "receipt_refs": ["receipt_five", "product_face_result"],
-                "artifact_refs": ["validation/cards/product-face-saas-r2.md", "reports/product-face.md"],
+                "artifact_refs": ["examples/cards/v35_valid_product_face.md", "reports/product-face.md"],
             },
             "product_face_result": {
                 "result": "PASS",
@@ -513,7 +526,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "test_command": "quasar test",
                 "build_status": "PASS",
                 "test_status": "PASS",
-                "evidence_refs": ["validation/quasar-real-proof/quasar-source-proof-result.json"],
+                "evidence_refs": [".tmp/factory-runs/quasar-real-proof/quasar-source-proof-result.json"],
             },
             "findings": [],
             "waivers": [],
@@ -557,7 +570,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "test_command": "quasar test",
                 "build_status": "PASS",
                 "test_status": "PASS",
-                "evidence_refs": ["validation/quasar-real-proof/quasar-source-proof-result.json"],
+                "evidence_refs": [".tmp/factory-runs/quasar-real-proof/quasar-source-proof-result.json"],
             },
             "findings": [],
             "waivers": [],
@@ -578,7 +591,7 @@ class FactoryCtlTest(unittest.TestCase):
             "test_command": "quasar test",
             "build_status": "PASS",
             "test_status": "PASS",
-            "evidence_refs": ["validation/quasar-real-proof/quasar-crates-proof-result.json"],
+            "evidence_refs": [".tmp/factory-runs/quasar-real-proof/quasar-crates-proof-result.json"],
         }
 
         errors = factoryctl.validate_quasar_toolchain_proof(proof)
@@ -651,7 +664,7 @@ class FactoryCtlTest(unittest.TestCase):
             )
 
     def test_real_specialist_result_requires_domain_contract_fields(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "validation" / "cards" / "solana-quasar-r3.md")
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md")
         result = worker_result("appsec_owasp_result")
         result["evidence_kind"] = "real"
         result["reusable_for_product"] = True
@@ -668,25 +681,25 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("control_coverage is required for real appsec_owasp_result", errors)
 
     def test_codex_security_result_matches_hermes_completion_gate_fields(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md")
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md")
         result = factoryctl.build_worker_result(
             "codex-security",
             card,
             result="PASS",
             tool_or_profile="codex-security:scoped-security-scan",
             executed_by="codex-security-runner",
-            evidence_refs=["pilots/quasar-vault-guard-test/evidence/security-scan-report.md"],
+            evidence_refs=[".tmp/security-scan-report.md"],
             blocking_findings=False,
             findings_summary="No blocking dry-pilot finding.",
             next_action="Run full scan before production.",
         )
 
-        self.assertEqual(result["scanner_agent"], "codex-security-runner")
+        self.assertEqual(result["scanner_agent"], "security-runner")
         self.assertEqual(result["tool"], "codex-security:scoped-security-scan")
-        self.assertIn("Product SOT", result["scope"])
+        self.assertIn("PDA", " ".join(result["scope"]))
 
     def test_duplicate_worker_result_records_do_not_satisfy_gate(self) -> None:
-        card = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md")
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md")
         result = factoryctl.build_worker_result(
             "codex-security",
             card,
@@ -716,8 +729,8 @@ class FactoryCtlTest(unittest.TestCase):
         receipt = {
             "receipt_five": {
                 "changed": "validated onchain gate",
-                "artifact_paths": ["validation/cards/solana-quasar-r3.md"],
-                "verification_commands": ["python scripts/factoryctl.py gate-report --card validation/cards/solana-quasar-r3.md"],
+                "artifact_paths": ["examples/minimal-hermes-project/card.md"],
+                "verification_commands": ["python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md"],
                 "verification_result": "PASS",
                 "reviewer_required": False,
                 "next_action": "continue",
@@ -728,7 +741,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "actor": "factory-orchestrator",
                 "worker": "factory-orchestrator",
                 "receipt_refs": ["receipt_five", "security_scan_result"],
-                "artifact_refs": ["validation/cards/solana-quasar-r3.md"],
+                "artifact_refs": ["examples/minimal-hermes-project/card.md"],
             },
             "security_scan_result": worker_result("security_scan_result"),
             "auditor_result": worker_result("auditor_result", result="WAIVED"),
@@ -744,7 +757,7 @@ class FactoryCtlTest(unittest.TestCase):
 
         plan = factoryctl.build_transition_plan(
             card,
-            ROOT / "validation" / "cards" / "solana-quasar-r3.md",
+            ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md",
             from_status="ready",
             to_status="done",
             receipt=receipt,
@@ -775,10 +788,10 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("security_scan_result missing scanner_agent, tool, findings_summary", errors)
         self.assertIn("security_scan_result scope must be a non-empty string array", errors)
 
-    def test_pilot_receipt_matches_hermes_completion_gates(self) -> None:
-        receipt = factoryctl.load_json_like(ROOT / "pilots" / "quasar-vault-guard-test" / "evidence" / "receipt-five-first-slice.json")
+    def test_minimal_example_receipt_matches_hermes_completion_gates(self) -> None:
+        receipt = factoryctl.load_json_like(ROOT / "examples" / "minimal-hermes-project" / "expected-receipt-five.json")
         self.assertEqual(factoryctl.validate_receipt(receipt), [])
-        self.assertTrue(receipt["hermes_legacy_completion_required"])
+        self.assertTrue(receipt["public_safe"])
         self.assertIn("cto_gate", receipt["approvals"])
 
     def test_worker_result_builder_uses_specialized_bound_schema(self) -> None:
@@ -838,7 +851,7 @@ class FactoryCtlTest(unittest.TestCase):
             )
 
     def test_transition_plan_ready_creates_queued_worker_tasks(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
 
         plan = factoryctl.build_transition_plan(
@@ -870,7 +883,7 @@ class FactoryCtlTest(unittest.TestCase):
 
     def test_transition_plan_enforce_blocks_before_ready_action(self) -> None:
         args = Namespace(
-            card=ROOT / "validation" / "cards" / "solana-quasar-r3.md",
+            card=ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md",
             receipt=None,
             from_status="draft",
             to_status="ready",
@@ -882,7 +895,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(factoryctl.command_transition_plan(args), 1)
 
     def test_transition_plan_ready_blocks_missing_worker_inputs(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "product-face-saas-r2.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_product_face.md"
         card = factoryctl.load_json_like(card_path)
         card.pop("security_scan_packet", None)
 
@@ -899,7 +912,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("factory-orchestrator result is required before ready", plan["blocked_reasons"])
 
     def test_transition_plan_done_blocks_missing_required_worker_results(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
         receipt = {
             "receipt_five": {
@@ -934,8 +947,9 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("solana-quasar-auditor result is required before done", plan["blocked_reasons"])
 
     def test_transition_plan_done_allows_when_blocking_worker_results_exist(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
         receipt = {
             "receipt_five": {
                 "changed": "x",
@@ -954,19 +968,22 @@ class FactoryCtlTest(unittest.TestCase):
                 "receipt_refs": ["receipt_five"],
                 "artifact_refs": ["artifact"],
             },
-            "security_scan_result": worker_result("security_scan_result"),
-            "auditor_result": worker_result("auditor_result", result="WAIVED"),
-            "independent_review_result": worker_result("independent_review_result"),
-            "human_gate_record": human_gate_record(),
-            "qa_verification_result": worker_result("qa_verification_result"),
-            "autoreview_result": worker_result("autoreview_result"),
-            "security_orchestration_result": worker_result("security_orchestration_result"),
-            "crypto_key_management_result": worker_result("crypto_key_management_result"),
-            "remote_proof_result": worker_result("remote_proof_result"),
-            "handoff_packet_result": worker_result("handoff_packet_result"),
-            "solana_quasar_build_result": worker_result("solana_quasar_build_result"),
-            "solana_quasar_qa_result": worker_result("solana_quasar_qa_result"),
-            "receipt_five_reconciliation_result": worker_result("receipt_five_reconciliation_result"),
+            "security_scan_result": worker_result("security_scan_result", source_card=card),
+            "auditor_result": worker_result("auditor_result", result="WAIVED", source_card=card),
+            "independent_review_result": worker_result("independent_review_result", source_card=card),
+            "human_gate_record": human_gate_record(source_card=card),
+            "qa_verification_result": worker_result("qa_verification_result", source_card=card),
+            "autoreview_result": worker_result("autoreview_result", source_card=card),
+            "security_orchestration_result": worker_result("security_orchestration_result", source_card=card),
+            "crypto_key_management_result": worker_result("crypto_key_management_result", source_card=card),
+            "remote_proof_result": worker_result("remote_proof_result", source_card=card),
+            "handoff_packet_result": worker_result("handoff_packet_result", source_card=card),
+            "solana_quasar_build_result": worker_result("solana_quasar_build_result", source_card=card),
+            "solana_quasar_qa_result": worker_result("solana_quasar_qa_result", source_card=card),
+            "receipt_five_reconciliation_result": worker_result("receipt_five_reconciliation_result", source_card=card),
+            "orchestration_result": worker_result("orchestration_result", source_card=card),
+            "source_ledger_result": worker_result("source_ledger_result", source_card=card),
+            "supply_chain_result": worker_result("supply_chain_result", source_card=card),
         }
 
         plan = factoryctl.build_transition_plan(
@@ -981,7 +998,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(plan["blocked_reasons"], [])
 
     def test_transition_plan_done_blocks_weak_worker_result_shape(self) -> None:
-        card_path = ROOT / "validation" / "cards" / "solana-quasar-r3.md"
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
         receipt = {
             "receipt_five": {

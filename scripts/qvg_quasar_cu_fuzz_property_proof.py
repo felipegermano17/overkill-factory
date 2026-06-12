@@ -230,12 +230,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--runtime-proof",
         type=Path,
-        default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-quasar-runtime-proof.json",
+        default=ROOT / ".tmp" / "factory-runs" / "quasar-product-like-proof" / "qvg-quasar-runtime-proof.json",
     )
     parser.add_argument(
         "--out",
         type=Path,
-        default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-quasar-cu-fuzz-property-proof.json",
+        default=ROOT / ".tmp" / "factory-runs" / "quasar-product-like-proof" / "qvg-quasar-cu-fuzz-property-proof.json",
     )
     return parser.parse_args()
 

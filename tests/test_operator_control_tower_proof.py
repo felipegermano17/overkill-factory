@@ -31,7 +31,7 @@ class OperatorControlTowerProofTest(unittest.TestCase):
             mapping=None,
             runtime_event=None,
             bridge_health=None,
-            evidence_refs=["validation/control-tower/control-tower-readonly-smoke.json"],
+            evidence_refs=[".tmp/factory-runs/control-tower/control-tower-readonly-smoke.json"],
             created_at="2026-06-10T00:00:00Z",
         )
 
@@ -57,7 +57,7 @@ class OperatorControlTowerProofTest(unittest.TestCase):
             created_at="2026-06-10T00:00:00Z",
         )
         proof = operator_control_tower_proof.build_production_proof(
-            "validation/control-tower/operator-control-tower-production-readiness.json",
+            ".tmp/factory-runs/control-tower/operator-control-tower-production-readiness.json",
             ["external:discord-control-tower-mapping"],
             created_at="2026-06-10T00:00:00Z",
         )
@@ -189,7 +189,7 @@ class OperatorControlTowerProofTest(unittest.TestCase):
                 "result": "PASS",
                 "checks": {"control_tower_readonly_contract_passed": True},
                 "blocking_items": [],
-                "evidence_refs": ["validation/control-tower/readiness.json"],
+                "evidence_refs": [".tmp/factory-runs/control-tower/readiness.json"],
                 "limits": ["bounded"],
             },
         )

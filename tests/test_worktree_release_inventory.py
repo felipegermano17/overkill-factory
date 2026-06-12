@@ -62,8 +62,8 @@ class WorktreeReleaseInventoryTest(unittest.TestCase):
     def test_generated_validation_receipts_are_not_release_material(self) -> None:
         report = inventory.build_inventory(
             [
-                (" M", "validation/release/worktree-release-inventory.json"),
-                (" M", "validation/public-safety/head-summary.json"),
+                (" M", ".tmp/factory-runs/release/worktree-release-inventory.json"),
+                (" M", ".tmp/factory-runs/public-safety/head-summary.json"),
             ],
             created_at="2026-06-10T00:00:00Z",
         )

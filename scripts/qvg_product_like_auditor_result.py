@@ -359,12 +359,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--runtime-proof",
         type=Path,
-        default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-quasar-runtime-proof.json",
+        default=ROOT / ".tmp" / "factory-runs" / "quasar-product-like-proof" / "qvg-quasar-runtime-proof.json",
     )
     parser.add_argument(
         "--cu-property-proof",
         type=Path,
-        default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-quasar-cu-fuzz-property-proof.json",
+        default=ROOT / ".tmp" / "factory-runs" / "quasar-product-like-proof" / "qvg-quasar-cu-fuzz-property-proof.json",
     )
     parser.add_argument(
         "--card",
@@ -374,12 +374,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--report-out",
         type=Path,
-        default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-product-like-auditor-report.md",
+        default=ROOT / ".tmp" / "factory-runs" / "quasar-product-like-proof" / "qvg-product-like-auditor-report.md",
     )
     parser.add_argument(
         "--out",
         type=Path,
-        default=ROOT / "validation" / "quasar-product-like-proof" / "qvg-product-like-auditor-result.json",
+        default=ROOT / ".tmp" / "factory-runs" / "quasar-product-like-proof" / "qvg-product-like-auditor-result.json",
     )
     parser.add_argument("--reusable-for-product", action="store_true")
     parser.add_argument("--product-id")
