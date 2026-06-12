@@ -57,7 +57,7 @@ Overkill Factory provides:
   generating worker packets;
 - a Hermes adapter and transition hook that can block weak `ready` and `done`
   transitions;
-- public-safe examples, worker packets and receipt contracts;
+- public-safe examples and receipt contracts;
 - safety scans for secrets and private/public boundary mistakes.
 
 ## What It Does Not Do
@@ -114,6 +114,39 @@ configuration notes.
 For packaging, install the local CLI with `python -m pip install -e .`, then use
 `factoryctl` or `overkill-quickstart`.
 
+## First Value In 10 Minutes
+
+First value is binary: the quickstart prints `PASS`, writes
+`.tmp/quickstart-result.json` and generates worker packets in
+`.tmp/minimal-worker-packets/`.
+
+After that run, you should know:
+
+- whether the minimal card contract is valid;
+- which workers are required before execution;
+- whether the gate is ready for worker execution;
+- which packet files Hermes would receive next.
+
+Generated worker packets and gate reports belong in `.tmp/`, not in the public
+repository. Commit source examples, schemas, scripts and tests; regenerate run
+outputs locally.
+
+## Repository Shape
+
+| Path | Public Purpose |
+| --- | --- |
+| `.github/` | CI, issue templates and pull request hygiene. |
+| `adapters/` | Runtime integrations, currently Hermes transition hooks and patches. |
+| `agents/` | Public worker registry, profiles, permissions and Hermes bindings. |
+| `docs/` | Human guides for getting started, concepts, operations, agents and integrations. |
+| `examples/` | Small source examples and fixtures that teach or test the factory path. |
+| `products/` | Public validation products used by product-like and production-lane checks. |
+| `schemas/` | Machine contracts for cards, receipts, worker outputs and gates. |
+| `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. |
+| `skills/` | Installable Codex skill material for operating the factory. |
+| `templates/` | Contract templates paired with schemas and tests. |
+| `tests/` | Regression coverage for the public contracts and quickstart path. |
+
 ## Current Status
 
 The public repository has validated schemas, worker profiles, Hermes profile
@@ -143,6 +176,7 @@ When documents disagree, use this order:
 3. Agent, worker, capability, security and Product Face support docs.
 4. Generated local outputs under `.tmp/factory-runs/` only for the run that
    produced them. They are not source authority and must not be committed.
+   Generated worker packets and gate reports belong in `.tmp/`.
 
 See `docs/governance/document-governance.md` for the document status rules. A
 task idea is not a runtime gate until it has a schema, script, test, worker,

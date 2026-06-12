@@ -24,6 +24,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             "What It Does Not Do",
             "How Hermes Fits",
             "Quickstart",
+            "First Value In 10 Minutes",
+            "Repository Shape",
             "Current Status",
             "Documentation Map",
         ]
@@ -85,6 +87,50 @@ class OpenSourceDocsTest(unittest.TestCase):
         for rel in required_paths:
             with self.subTest(path=rel):
                 self.assertTrue((ROOT / rel).is_file())
+
+    def test_public_repo_does_not_commit_generated_example_outputs(self) -> None:
+        generated_paths = [
+            ROOT / "examples" / "worker-packets",
+            ROOT / "examples" / "gate-reports",
+        ]
+
+        for path in generated_paths:
+            with self.subTest(path=path.relative_to(ROOT).as_posix()):
+                self.assertFalse(path.exists())
+
+        automation_doc = read_text("docs/automation/worker-automation-v0.md")
+        self.assertIn("--out .tmp/worker-packets/onchain-card", automation_doc)
+        self.assertNotIn("--out examples/worker-packets", automation_doc)
+
+    def test_repository_shape_explains_every_public_top_level_folder(self) -> None:
+        readme = read_text("README.md")
+        expected_public_dirs = [
+            ".github/",
+            "adapters/",
+            "agents/",
+            "docs/",
+            "examples/",
+            "products/",
+            "schemas/",
+            "scripts/",
+            "skills/",
+            "templates/",
+            "tests/",
+        ]
+
+        for rel in expected_public_dirs:
+            with self.subTest(rel=rel):
+                self.assertIn(f"`{rel}`", readme)
+
+        self.assertIn("Generated worker packets and gate reports belong in `.tmp/`", readme)
+
+    def test_public_codex_skill_covers_open_source_stewardship(self) -> None:
+        skill = read_text("skills/codex/overkill-factory/SKILL.md")
+        open_source_ref = ROOT / "skills" / "codex" / "overkill-factory" / "references" / "open-source-github.md"
+
+        self.assertTrue(open_source_ref.is_file())
+        self.assertIn("professional open-source GitHub stewardship", skill)
+        self.assertIn("references/open-source-github.md", skill)
 
     def test_agent_public_doc_covers_every_registered_worker(self) -> None:
         registry = json.loads(read_text("agents/worker-registry.public.json"))

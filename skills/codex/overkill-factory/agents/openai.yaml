@@ -1,4 +1,4 @@
 interface:
   display_name: "Overkill Factory"
-  short_description: "Agent product factory with Hermes gates"
-  default_prompt: "Use Overkill Factory to turn raw product material into gated Hermes execution with Product SOT, architecture, Product Face, security, onchain, Receipt Five, and review gates."
+  short_description: "Agent product factory with Hermes gates and public repo stewardship"
+  default_prompt: "Use Overkill Factory to turn raw product material into gated Hermes execution, Receipt Five evidence, review gates, and professional public GitHub stewardship for the factory repository."

@@ -20,6 +20,9 @@ cd overkill-factory
 python scripts/quickstart_smoke.py
 ```
 
+Expected first value: a `PASS` line within a few minutes on a normal Python
+checkout.
+
 The command writes:
 
 - `.tmp/quickstart-result.json`
@@ -28,6 +31,9 @@ The command writes:
 The JSON result tells you whether the minimal card validates, whether the gate
 report is ready for worker execution and how many required worker packets were
 created.
+
+Those files are local outputs. Keep generated worker packets and gate reports in
+`.tmp/`; do not copy them into `examples/`.
 
 ## Optional Local CLI
 
