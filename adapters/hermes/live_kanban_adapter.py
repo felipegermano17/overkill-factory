@@ -68,6 +68,74 @@ def hermes_kanban(hermes_bin: str, board: str, *args: str) -> list[str]:
     return [hermes_bin, "kanban", "--board", board, *args]
 
 
+def route_readiness_blockers(path: Path | None, required_worker_ids: list[str]) -> list[str]:
+    if path is None:
+        return ["route readiness manifest is required before live Hermes dispatch"]
+    data = load_json(path)
+    raw_routes = data.get("routes") or data.get("workers") or {}
+    if isinstance(raw_routes, list):
+        routes = {
+            str(route.get("worker_id") or route.get("worker") or ""): route
+            for route in raw_routes
+            if isinstance(route, dict)
+        }
+    elif isinstance(raw_routes, dict):
+        routes = {str(worker_id): route for worker_id, route in raw_routes.items() if isinstance(route, dict)}
+    else:
+        routes = {}
+    blockers: list[str] = []
+    for worker_id in sorted(set(required_worker_ids)):
+        route = routes.get(worker_id)
+        if not route:
+            blockers.append(f"{worker_id}: missing route readiness record")
+            continue
+        checks = {
+            "profile_exists": route.get("profile_exists") is True,
+            "provider_configured": route.get("provider_configured", route.get("provider_status")) in {True, "pass", "PASS"},
+            "model_configured": route.get("model_configured", route.get("model_status")) in {True, "pass", "PASS"},
+            "credential_status": str(route.get("credential_status") or "").strip().lower() == "pass",
+            "capability_manifest": route.get("capability_manifest_ok", route.get("capability_status")) in {True, "pass", "PASS"},
+        }
+        failed = [name for name, ok in checks.items() if not ok]
+        if failed:
+            blockers.append(f"{worker_id}: route readiness failed ({', '.join(failed)})")
+    return blockers
+
+
+def ensure_non_empty_body(body: str) -> None:
+    if not str(body or "").strip():
+        raise RuntimeError("Hermes task body must be non-empty before dispatch")
+
+
+def task_has_blocked_event(payload: dict[str, Any]) -> bool:
+    if str(payload.get("status") or "").strip().lower() == "blocked":
+        events = payload.get("events") or payload.get("history") or payload.get("timeline") or []
+        if isinstance(events, list):
+            return any("block" in str(event).lower() for event in events)
+    return False
+
+
+def ensure_blocked_event(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    reason: str,
+    runner: Runner = default_runner,
+) -> None:
+    run_checked(
+        hermes_kanban(hermes_bin, board, "block", task_id, "--reason", reason, "--json"),
+        runner,
+    )
+    shown = run_checked(hermes_kanban(hermes_bin, board, "show", task_id, "--json"), runner)
+    try:
+        payload = json.loads(shown.stdout or "{}")
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Hermes show --json did not return JSON while verifying blocked event") from exc
+    if not isinstance(payload, dict) or not task_has_blocked_event(payload):
+        raise RuntimeError(f"Hermes task {task_id} is not durably blocked after block command")
+
+
 def record_live_binding(
     *,
     ledger_path: Path,
@@ -140,6 +208,7 @@ def create_task(
     blocked: bool,
     runner: Runner = default_runner,
 ) -> str:
+    ensure_non_empty_body(body)
     args = hermes_kanban(
         hermes_bin,
         board,
@@ -159,7 +228,16 @@ def create_task(
     )
     if blocked:
         args.extend(["--initial-status", "blocked"])
-    return parse_task_id(run_checked(args, runner).stdout)
+    task_id = parse_task_id(run_checked(args, runner).stdout)
+    if blocked:
+        ensure_blocked_event(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=task_id,
+            reason="Overkill Factory gate starts blocked until required authority evidence passes.",
+            runner=runner,
+        )
+    return task_id
 
 
 def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
@@ -198,6 +276,17 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         if args.out:
             write_json(args.out, envelope)
         return envelope
+
+    readiness_blockers = route_readiness_blockers(
+        args.route_readiness,
+        [
+            str(task.get("worker_id"))
+            for task in plan.get("worker_tasks", [])
+            if str(task.get("worker_id") or "").strip() and task.get("status") != "not_required_by_current_card"
+        ],
+    )
+    if readiness_blockers:
+        raise RuntimeError("pre-dispatch route readiness blocked live materialization: " + "; ".join(readiness_blockers))
 
     main_task_id = create_task(
         hermes_bin=args.hermes_bin,
@@ -277,6 +366,9 @@ def enforce_done(args: argparse.Namespace, runner: Runner = default_runner) -> d
         write_json(args.out, envelope)
     if blocked:
         return envelope
+    readiness_blockers = route_readiness_blockers(args.route_readiness, ["evidence-reconciler"])
+    if readiness_blockers:
+        raise RuntimeError("pre-completion route readiness blocked live completion: " + "; ".join(readiness_blockers))
     if args.complete_main:
         card_id = str(result.get("plan", {}).get("event", {}).get("card_id") or args.card.stem)
         validate_live_binding(
@@ -320,6 +412,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_mat.add_argument("--worker-ready", action="store_true")
     p_mat.add_argument("--ensure-board", action="store_true")
     p_mat.add_argument("--dry-run", action="store_true")
+    p_mat.add_argument("--route-readiness", type=Path)
     p_mat.add_argument("--out", type=Path)
 
     p_done = sub.add_parser("enforce-done", help="Validate worker results before completing the main card.")
@@ -333,6 +426,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_done.add_argument("--to-status", default="done")
     p_done.add_argument("--hermes-bin", default="hermes")
     p_done.add_argument("--complete-main", action="store_true")
+    p_done.add_argument("--route-readiness", type=Path)
     p_done.add_argument("--result", default="Overkill Factory gate satisfied.")
     p_done.add_argument("--summary", default="Worker evidence reconciled by Overkill Factory.")
     p_done.add_argument("--out", type=Path)

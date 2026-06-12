@@ -22,6 +22,7 @@
         "allow",
         "allow_and_create_worker_tasks",
         "allow_done",
+        "allow_review_ready",
         "block_and_create_before_ready_tasks",
         "block_transition"
       ]

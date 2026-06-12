@@ -27,7 +27,7 @@
           "minItems": 1,
           "items": { "type": "string" }
         },
-        "verification_result": { "type": "string" },
+        "verification_result": { "enum": ["PASS", "BLOCKED", "WAIVED"] },
         "reviewer_required": { "type": "boolean" },
         "reviewer_result": { "type": "string" },
         "next_action": { "type": "string" }

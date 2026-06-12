@@ -40,9 +40,18 @@ factoryctl init --out ../my-product-factory --project-name my-product
 ```bash
 factoryctl validate-card examples/minimal-hermes-project/card.md
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
+factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 factoryctl transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready
 ```
+
+### Test Runner Fallback
+
+Worker packets should run commands as argv lists, not shell strings. Use
+`scripts/safe_shell.py` as the local pattern when a packet needs a fallback for
+runner failures, timeouts, or Windows sandbox launch errors. A fallback result
+is `BLOCKED` until the same argv is rerun successfully or replaced by a
+traceable worker result.
 
 ## Maintainer Scripts
 

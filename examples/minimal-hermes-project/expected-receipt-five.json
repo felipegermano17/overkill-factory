@@ -15,14 +15,14 @@
       "python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md",
       "python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets"
     ],
-    "verification_result": "PASS for local contract generation when commands complete without errors.",
+    "verification_result": "BLOCKED",
     "reviewer_required": true,
     "reviewer_result": "Required before real done transition.",
     "next_action": "Connect to a local Hermes test runtime and attach current worker results."
   },
   "kanban_transition_event": {
     "from_status": "ready",
-    "to_status": "done",
+    "to_status": "blocked",
     "actor": "example-operator",
     "worker": "evidence-reconciler",
     "receipt_refs": [

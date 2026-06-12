@@ -10,6 +10,8 @@
     "target",
     "result",
     "finding_count",
+    "artifact_classes_checked",
+    "publication_policy",
     "forbidden_hits",
     "categories",
     "limits"
@@ -33,6 +35,27 @@
     },
     "result": { "enum": ["PASS", "FAIL"] },
     "finding_count": { "type": "integer" },
+    "artifact_classes_checked": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "public_repository_tree",
+          "private_run_evidence",
+          "sanitized_report",
+          "publication_candidate"
+        ]
+      }
+    },
+    "publication_policy": {
+      "type": "object",
+      "required": [
+        "private_run_evidence",
+        "sanitized_report",
+        "publication_candidate"
+      ],
+      "additionalProperties": { "type": "string" }
+    },
     "forbidden_hits": {
       "type": "array",
       "items": {

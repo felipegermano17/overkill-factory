@@ -38,9 +38,52 @@ class FakeHermes:
             self.counter += 1
             task_id = "t_" + f"{self.counter:08x}"
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
+        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
+            return subprocess.CompletedProcess(argv, 0, stdout='{"status":"blocked"}', stderr="")
+        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
+            return subprocess.CompletedProcess(
+                argv,
+                0,
+                stdout='{"status":"blocked","events":[{"type":"blocked","reason":"gate"}]}',
+                stderr="",
+            )
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
             return subprocess.CompletedProcess(argv, 0, stdout="linked", stderr="")
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
+
+
+def write_route_readiness(path: Path) -> None:
+    workers = [
+        "codex-security",
+        "solana-quasar-auditor",
+        "independent-reviewer",
+        "evidence-reconciler",
+        "human-gate-clerk",
+        "factory-orchestrator",
+        "source-ledger-worker",
+        "qa-verification-worker",
+        "autoreview-gate",
+        "security-orchestrator",
+        "handoff-packer",
+        "supply-chain-gate",
+    ]
+    path.write_text(
+        json.dumps(
+            {
+                "routes": {
+                    worker: {
+                        "profile_exists": True,
+                        "provider_configured": True,
+                        "model_configured": True,
+                        "credential_status": "pass",
+                        "capability_manifest_ok": True,
+                    }
+                    for worker in workers
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
@@ -48,6 +91,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         fake = FakeHermes()
         card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         with tempfile.TemporaryDirectory() as tmp:
+            readiness = Path(tmp) / "route-readiness.json"
+            write_route_readiness(readiness)
             args = adapter.build_parser().parse_args(
                 [
                     "materialize",
@@ -57,6 +102,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     TEST_BOARD,
                     "--ledger",
                     str(Path(tmp) / "ledger.json"),
+                    "--route-readiness",
+                    str(readiness),
                     "--ensure-board",
                     "--worker-ready",
                 ]

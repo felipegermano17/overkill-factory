@@ -137,6 +137,9 @@ def safe_ref(value: str | None) -> str | None:
 def build_summary(findings: list[str], *, git_ref: str | None = None, created_at: str | None = None) -> dict[str, object]:
     categories = Counter(finding_category(finding) for finding in findings)
     target = {"kind": "git_ref", "ref": safe_ref(git_ref)} if git_ref else {"kind": "worktree"}
+    artifact_classes = ["public_repository_tree"]
+    if git_ref:
+        artifact_classes.append("publication_candidate")
     return {
         "$schema": "https://overkill-factory.dev/schemas/public-safety-scan-summary.schema.json",
         "record_type": "public_safety_scan_summary",
@@ -144,6 +147,12 @@ def build_summary(findings: list[str], *, git_ref: str | None = None, created_at
         "target": target,
         "result": "PASS" if not findings else "FAIL",
         "finding_count": len(findings),
+        "artifact_classes_checked": sorted(set(artifact_classes)),
+        "publication_policy": {
+            "private_run_evidence": "not_scanned_for_publication",
+            "sanitized_report": "allowed_when_raw_private_markers_are_absent",
+            "publication_candidate": "fail_closed_on_any_private_marker",
+        },
         "forbidden_hits": [
             {"category": category, "count": count}
             for category, count in sorted(categories.items())

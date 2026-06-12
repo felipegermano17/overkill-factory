@@ -26,10 +26,26 @@ class OperatorExperienceTest(unittest.TestCase):
         help_text = run_factoryctl("--help").stdout
         run_help = run_factoryctl("run", "--help").stdout
 
-        for command in ["doctor", "init", "run"]:
+        for command in ["doctor", "init", "run", "unblock-plan"]:
             with self.subTest(command=command):
                 self.assertIn(command, help_text)
         self.assertIn("minimal", run_help)
+
+    def test_unblock_plan_is_read_only_operator_guidance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "unblock-plan.json"
+            run_factoryctl(
+                "unblock-plan",
+                "--card",
+                "examples/cards/v35_valid_onchain_auditor_scan.md",
+                "--out",
+                str(out),
+            )
+            payload = json.loads(out.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["record_type"], "operator_unblock_plan")
+        self.assertIn("next_safe_actions", payload)
+        self.assertTrue(any("does not execute workers" in item for item in payload["limits"]))
 
     def test_doctor_reports_public_install_health_without_real_hermes_e2e(self) -> None:
         result = run_factoryctl("doctor", "--json")
