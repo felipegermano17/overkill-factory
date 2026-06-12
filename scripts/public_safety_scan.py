@@ -16,6 +16,10 @@ from pathlib import Path, PurePosixPath
 ROOT = Path(__file__).resolve().parents[1]
 
 SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".pdf", ".tgz", ".zip"}
+SKIP_PARTS = {".git", ".tmp", ".pytest_cache", ".venv", "__pycache__", "build", "dist", "node_modules", "venv"}
+SKIP_PART_SUFFIXES = (".egg-info",)
+PUBLIC_REPO_URL = "https://github.com/felipegermano17/overkill-factory"
+PUBLIC_REPO_METADATA_RELS = {"pyproject.toml", "mkdocs.yml"}
 
 PATTERN_SPECS = [
     ("private_product_marker", re.compile(r"KAXIS|Kaxis|kaxis")),
@@ -58,15 +62,22 @@ def is_negative_test_guard(path_parts: tuple[str, ...], line: str) -> bool:
     return any(marker in line for marker in guard_markers)
 
 
+def is_allowed_public_repo_metadata_line(rel: str, line: str) -> bool:
+    """Allow the canonical public GitHub URL only where package/site metadata needs it."""
+    return rel in PUBLIC_REPO_METADATA_RELS and PUBLIC_REPO_URL in line
+
+
 def rel_parts(rel: str) -> tuple[str, ...]:
     return PurePosixPath(rel).parts
 
 
 def is_text_rel(rel: str) -> bool:
     path = PurePosixPath(rel)
-    if path.suffix.lower() in SKIP_SUFFIXES:
+    if any(part in SKIP_PARTS for part in path.parts):
         return False
-    if ".git" in path.parts or "__pycache__" in path.parts:
+    if any(part.endswith(SKIP_PART_SUFFIXES) for part in path.parts):
+        return False
+    if path.suffix.lower() in SKIP_SUFFIXES:
         return False
     if rel == "scripts/public_safety_scan.py":
         return False
@@ -75,7 +86,9 @@ def is_text_rel(rel: str) -> bool:
 
 def is_binary_asset_rel(rel: str) -> bool:
     path = PurePosixPath(rel)
-    if ".git" in path.parts or "__pycache__" in path.parts:
+    if any(part in SKIP_PARTS for part in path.parts):
+        return False
+    if any(part.endswith(SKIP_PART_SUFFIXES) for part in path.parts):
         return False
     return path.suffix.lower() in SKIP_SUFFIXES
 
@@ -87,6 +100,8 @@ def scan_text(rel: str, text: str) -> list[str]:
         if is_negative_test_guard(parts, line):
             continue
         for category, pattern in PATTERN_SPECS:
+            if category == "private_owner_marker" and is_allowed_public_repo_metadata_line(rel, line):
+                continue
             if pattern.search(line):
                 findings.append(f"{rel}:{lineno}: {category}")
                 break
