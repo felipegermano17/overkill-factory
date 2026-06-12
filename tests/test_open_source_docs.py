@@ -290,8 +290,8 @@ class OpenSourceDocsTest(unittest.TestCase):
                 self.assertIn(expected, pyproject)
 
         self.assertIn(f"repo_url: {repo_url}", mkdocs)
-        self.assertIn("MIT License", license_text)
-        self.assertIn("SPDX-License-Identifier: MIT", license_text)
+        self.assertTrue(license_text.startswith("MIT License"))
+        self.assertIn("Permission is hereby granted", license_text)
 
     def test_agent_public_doc_covers_every_registered_worker(self) -> None:
         registry = json.loads(read_text("agents/worker-registry.public.json"))
