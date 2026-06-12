@@ -758,6 +758,128 @@ class FactoryCtlTest(unittest.TestCase):
             any("duplicate worker result records for security_scan_result" in error for error in records["security_scan_result"]["validation_errors"])
         )
 
+    def test_collect_worker_results_normalizes_runtime_receipt_field_envelope(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        card["phase"] = "F0"
+        card["surfaces"] = ["source-intake"]
+        envelope = {
+            "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+            "receipt_field": "source_ledger_result",
+            "created_at": "2026-06-12T00:00:00Z",
+            "status": "completed_with_visible_conflicts_and_gaps",
+            "worker": "source-ledger-worker",
+            "tool_or_profile": {"profile": "source-ledger-worker"},
+            "source_ledger_result": {
+                "source_map": [],
+                "claim_table": [],
+                "blocking_findings": ["downstream Product SOT still pending"],
+            },
+            "receipt_five": {
+                "artifact_paths": ["README.md"],
+                "next_action": "Product SOT planner may draft a sourced candidate.",
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            results_dir = Path(tmp)
+            (results_dir / "source-ledger-result.json").write_text(json.dumps(envelope), encoding="utf-8")
+            records = factoryctl.collect_worker_result_fields(card, results_dir)
+
+        self.assertTrue(records["source_ledger_result"]["valid"])
+        self.assertTrue(records["source_ledger_result"]["normalized_from_worker_envelope"])
+        self.assertEqual(records["source_ledger_result"]["result"], "PASS")
+
+    def test_collect_worker_results_validates_workspace_relative_evidence_refs(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        card["phase"] = "F0"
+        card["surfaces"] = ["source-intake"]
+        envelope = {
+            "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+            "receipt_field": "orchestration_result",
+            "orchestration_result": {
+                "created_at": "2026-06-12T00:00:00Z",
+                "worker": {"id": "factory-orchestrator"},
+                "card_ref": {"card_id": card["card_id"], "slice_id": card["slice_id"]},
+                "evidence_refs": ["reports/orchestration-result.json"],
+            },
+            "receipt_five": {
+                "artifact_paths": ["reports/orchestration-result.json"],
+                "verification_result": "PASS",
+                "next_action": "continue",
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            reports = workspace / "reports"
+            (workspace / "cards").mkdir(parents=True)
+            reports.mkdir()
+            (reports / "orchestration-result.json").write_text(json.dumps(envelope), encoding="utf-8")
+            records = factoryctl.collect_worker_result_fields(card, reports)
+
+        self.assertTrue(records["orchestration_result"]["valid"])
+        self.assertEqual(records["orchestration_result"]["result"], "PASS")
+
+    def test_collect_worker_results_ignores_receipt_draft_envelope(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        receipt_draft = {
+            "receipt_five": {"artifact_paths": ["README.md"]},
+            "receipt_five_reconciliation_result": {
+                "evidence_ref": "reports/evidence-result.json",
+                "result": "PASS",
+                "valid": True,
+            },
+            "kanban_transition_event": {
+                "from_status": "blocked",
+                "to_status": "done",
+                "actor": "evidence-reconciler",
+                "worker": "evidence-reconciler",
+                "receipt_refs": ["receipt_five"],
+                "artifact_refs": ["README.md"],
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            results_dir = Path(tmp)
+            (results_dir / "receipt-draft.json").write_text(json.dumps(receipt_draft), encoding="utf-8")
+            records = factoryctl.collect_worker_result_fields(card, results_dir)
+
+        self.assertNotIn("receipt_five_reconciliation_result", records)
+
+    def test_agentic_ai_runtime_envelope_keeps_required_domain_fields(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        card["phase"] = "F0"
+        card["surfaces"] = ["source-intake"]
+        envelope = {
+            "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+            "receipt_field": "agentic_ai_security_result",
+            "agentic_ai_security_result": {
+                "created_at": "2026-06-12T00:00:00Z",
+                "status": "pass_with_required_controls",
+                "tool_boundary": {"allowlist": ["read_workspace_artifacts"]},
+                "prompt_injection_controls": {"source_policy": "paper is data"},
+                "verification_result": "No F0 blocking finding.",
+            },
+            "receipt_five": {
+                "artifact_paths": ["README.md"],
+                "next_action": "Continue with controls enforced.",
+            },
+        }
+
+        normalized = factoryctl.normalize_worker_result_record(envelope, card=card)
+        errors = factoryctl.validate_worker_result_record(
+            normalized,
+            expected_field="agentic_ai_security_result",
+            expected_worker_id="agentic-ai-security-specialist",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertEqual([], errors)
+        self.assertEqual(normalized["result"], "PASS")
+        self.assertIn("tool_boundary_controls", normalized)
+        self.assertIn("untrusted_input_policy", normalized)
+
     def test_inline_worker_result_requires_existing_evidence_ref_for_done(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         receipt = {

@@ -11,7 +11,7 @@ Use this order from a fresh checkout:
 
 1. `factoryctl doctor`
 2. `factoryctl run minimal`
-3. `factoryctl init --out ../my-product-factory --project-name my-product`
+3. `factoryctl init --out ../my-product-factory --project-name my-product --paper ./product-paper.md`
 4. Read `getting-started/install-in-hermes.md`
 5. Connect generated worker packets to your Hermes only after local checks pass.
 

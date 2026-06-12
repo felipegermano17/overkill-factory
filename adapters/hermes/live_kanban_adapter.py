@@ -127,6 +127,23 @@ def ensure_board(
     return True
 
 
+def board_exists(*, hermes_bin: str, board: str, runner: Runner = default_runner) -> bool:
+    listed = run_checked([hermes_bin, "kanban", "boards", "list", "--json"], runner)
+    boards = json.loads(listed.stdout or "[]")
+    return any(isinstance(item, dict) and item.get("slug") == board for item in boards)
+
+
+def block_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    reason: str,
+    runner: Runner = default_runner,
+) -> None:
+    run_checked(hermes_kanban(hermes_bin, board, "block", task_id, reason), runner)
+
+
 def create_task(
     *,
     hermes_bin: str,
@@ -138,6 +155,7 @@ def create_task(
     created_by: str,
     workspace: str,
     blocked: bool,
+    parents: list[str] | None = None,
     runner: Runner = default_runner,
 ) -> str:
     args = hermes_kanban(
@@ -157,9 +175,27 @@ def create_task(
         workspace,
         "--json",
     )
+    for parent in parents or []:
+        args.extend(["--parent", parent])
     if blocked:
         args.extend(["--initial-status", "blocked"])
-    return parse_task_id(run_checked(args, runner).stdout)
+    task_id = parse_task_id(run_checked(args, runner).stdout)
+    if blocked:
+        block_task(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=task_id,
+            reason="Blocked by Overkill Factory adapter until required worker evidence exists.",
+            runner=runner,
+        )
+    return task_id
+
+
+def default_workspace_for_card(card_path: Path) -> Path:
+    parent = card_path.parent
+    if parent.name == "cards":
+        return parent.parent
+    return parent
 
 
 def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
@@ -175,12 +211,15 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
     )
     plan = result["plan"]
     card_id = str(plan.get("event", {}).get("card_id") or card_path.stem)
+    workspace = args.workspace.resolve() if args.workspace else default_workspace_for_card(card_path)
     board_created = False
-    if args.ensure_board:
+    if args.dry_run and args.ensure_board:
+        board_created = not board_exists(hermes_bin=args.hermes_bin, board=args.board, runner=runner)
+    elif args.ensure_board:
         board_created = ensure_board(
             hermes_bin=args.hermes_bin,
             board=args.board,
-            default_workdir=str(ROOT),
+            default_workdir=str(workspace),
             runner=runner,
         )
 
@@ -191,6 +230,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
             "dry_run": True,
             "board": args.board,
             "board_created": board_created,
+            "workspace": str(workspace),
             "main_task_id": None,
             "worker_task_ids": {},
             "hook": result,
@@ -207,16 +247,29 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         assignee=args.main_assignee,
         idempotency_key=f"overkill:{card_id}:main",
         created_by="overkill-factory",
-        workspace=f"dir:{ROOT}",
+        workspace=f"dir:{workspace}",
         blocked=True,
         runner=runner,
     )
     worker_task_ids: dict[str, str] = {}
+    before_ready_task_ids: list[str] = []
+    pending_before_done: list[dict[str, Any]] = []
+    ordered_worker_tasks: list[dict[str, Any]] = []
     for task in plan.get("worker_tasks", []):
+        if task.get("status") == "not_required_by_current_card":
+            continue
+        if task.get("queue_class") == "blocking-before-done":
+            pending_before_done.append(task)
+        else:
+            ordered_worker_tasks.append(task)
+    ordered_worker_tasks.extend(pending_before_done)
+
+    for task in ordered_worker_tasks:
         worker_id = str(task.get("worker_id") or "").strip()
-        if not worker_id or task.get("status") == "not_required_by_current_card":
+        if not worker_id:
             continue
         packet = task.get("packet") or {}
+        depends_on_before_ready = task.get("queue_class") == "blocking-before-done"
         task_id = create_task(
             hermes_bin=args.hermes_bin,
             board=args.board,
@@ -225,11 +278,14 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
             assignee=args.worker_assignee_prefix + worker_id,
             idempotency_key=f"overkill:{card_id}:{worker_id}",
             created_by="overkill-factory",
-            workspace=f"dir:{ROOT}",
+            workspace=f"dir:{workspace}",
             blocked=not args.worker_ready,
+            parents=before_ready_task_ids if depends_on_before_ready else None,
             runner=runner,
         )
         worker_task_ids[worker_id] = task_id
+        if task.get("queue_class") == "blocking-before-ready":
+            before_ready_task_ids.append(task_id)
         run_checked(hermes_kanban(args.hermes_bin, args.board, "link", task_id, main_task_id), runner)
 
     record_live_binding(
@@ -246,6 +302,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         "dry_run": False,
         "board": args.board,
         "board_created": board_created,
+        "workspace": str(workspace),
         "main_task_id": main_task_id,
         "worker_task_ids": worker_task_ids,
         "hook": result,
@@ -317,6 +374,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_mat.add_argument("--hermes-bin", default="hermes")
     p_mat.add_argument("--main-assignee", default="factory-orchestrator")
     p_mat.add_argument("--worker-assignee-prefix", default="")
+    p_mat.add_argument("--workspace", type=Path, help="Hermes workspace for the main and worker cards. Defaults to the card workspace.")
     p_mat.add_argument("--worker-ready", action="store_true")
     p_mat.add_argument("--ensure-board", action="store_true")
     p_mat.add_argument("--dry-run", action="store_true")

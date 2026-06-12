@@ -46,6 +46,7 @@ python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
 factoryctl init --out ../my-product-factory --project-name my-product
+factoryctl init --out ../my-product-factory --project-name my-product --paper ./product-paper.md
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 ```
 
@@ -95,16 +96,14 @@ Introduce the adapter in a test runtime before any real product or release work.
 
 For your own project:
 
-1. Run `factoryctl init --out ../my-product-factory --project-name my-product`.
-2. Start with a short paper or product brief.
-3. Create or edit a factory card from the relevant example in `examples/cards/`.
-4. Fill source refs, scope, risk, runtime, security, forbidden actions and done
-   definition.
-5. Run `factoryctl validate-card`.
-6. Run `factoryctl gate-report`.
-7. Generate required worker packets.
-8. Let Hermes create or route worker cards.
-9. Attach worker results and Receipt Five before any `done` transition.
+1. Start with a short paper or product brief.
+2. Run `factoryctl init --out ../my-product-factory --project-name my-product --paper ./product-paper.md`.
+3. Run `factoryctl validate-card ../my-product-factory/cards/intake-card.md`.
+4. Run `factoryctl gate-report --card ../my-product-factory/cards/intake-card.md --out ../my-product-factory/reports/intake-gate-report.json`.
+5. Generate required worker packets with `factoryctl worker-packet --worker all --required-only --card ../my-product-factory/cards/intake-card.md --out ../my-product-factory/worker-packets`.
+6. Let Hermes create or route worker cards.
+7. Attach real Source Ledger and Product SOT worker results before planning or execution advances.
+8. Attach Receipt Five before any `done` transition.
 
 ## Before Release
 

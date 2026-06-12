@@ -106,6 +106,7 @@ python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
 factoryctl init --out ../my-product-factory --project-name my-product
+factoryctl init --out ../my-product-factory --project-name my-product --paper ./product-paper.md
 ```
 
 Then read `docs/getting-started/install-in-hermes.md` and connect generated
@@ -146,6 +147,19 @@ After that run, you should know:
 - which workers are required before execution;
 - whether the gate is ready for worker execution;
 - which packet files Hermes would receive next.
+
+To start a real product without a Control Tower, pass a paper during workspace
+creation:
+
+```bash
+factoryctl init --out ../my-product-factory --project-name my-product --paper ./product-paper.md
+factoryctl validate-card ../my-product-factory/cards/intake-card.md
+factoryctl gate-report --card ../my-product-factory/cards/intake-card.md --out ../my-product-factory/reports/intake-gate-report.json
+factoryctl worker-packet --worker all --required-only --card ../my-product-factory/cards/intake-card.md --out ../my-product-factory/worker-packets
+```
+
+The generated intake card records the paper and routes Source Ledger/Product
+SOT work to workers. It does not claim the Product SOT exists yet.
 
 Generated worker packets and gate reports belong in `.tmp/`, not in the public
 repository. Commit source examples, schemas, scripts and tests; regenerate run

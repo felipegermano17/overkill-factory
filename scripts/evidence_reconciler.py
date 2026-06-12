@@ -31,26 +31,35 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def evidence_root_for(path: Path) -> Path:
+    parent = path.parent
+    if parent.name == "reports" and ((parent.parent / "cards").exists() or (parent.parent / "sources").exists()):
+        return parent.parent
+    return ROOT
+
+
 def result_entry(card: dict[str, Any], path: Path, data: dict[str, Any]) -> dict[str, Any]:
-    record_type = str(data.get("record_type") or "").strip()
-    worker_ref = data.get("worker") if isinstance(data.get("worker"), dict) else {}
+    normalized = factoryctl.normalize_worker_result_record(data, card=card)
+    record_type = str(normalized.get("record_type") or "").strip()
+    worker_ref = normalized.get("worker") if isinstance(normalized.get("worker"), dict) else {}
     expected_worker_id = factoryctl._worker_id_for_output_field(record_type)
     validation_errors = factoryctl.validate_worker_result_record(
-        data,
+        normalized,
         expected_field=record_type or None,
         expected_worker_id=expected_worker_id,
         card=card,
-        evidence_root=ROOT,
+        evidence_root=evidence_root_for(path),
     )
     return {
         "record_type": record_type,
         "worker_id": worker_ref.get("id"),
-        "result": data.get("result") or data.get("decision"),
-        "blocking_findings": data.get("blocking_findings"),
-        "created_at": data.get("created_at") or data.get("decision_at"),
+        "result": normalized.get("result") or normalized.get("decision"),
+        "blocking_findings": normalized.get("blocking_findings"),
+        "created_at": normalized.get("created_at") or normalized.get("decision_at"),
         "evidence_ref": factoryctl.source_card_ref(path),
         "valid_for_closure": not validation_errors,
         "validation_errors": validation_errors,
+        "normalized_from_worker_envelope": bool(normalized.get("normalized_from_worker_envelope")),
     }
 
 
@@ -65,10 +74,11 @@ def add_result_path(
         return
     if not isinstance(data, dict):
         return
-    record_type = str(data.get("record_type") or "").strip()
+    normalized = factoryctl.normalize_worker_result_record(data, card=card)
+    record_type = str(normalized.get("record_type") or "").strip()
     if not record_type:
         return
-    grouped.setdefault(record_type, []).append(result_entry(card, path, data))
+    grouped.setdefault(record_type, []).append(result_entry(card, path, normalized))
 
 
 def load_worker_results(
@@ -207,7 +217,15 @@ def build_reconciler_result(card: dict[str, Any], index_ref: str, index: dict[st
     return payload
 
 
-def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, index: dict[str, Any]) -> dict[str, Any]:
+def build_receipt_draft(
+    card: dict[str, Any],
+    index_ref: str,
+    result_ref: str,
+    index: dict[str, Any],
+    *,
+    from_status: str,
+    to_status: str,
+) -> dict[str, Any]:
     verification_result = "PASS" if index["receipt_five_ready"] else "BLOCKED"
     artifact_paths = sorted(
         {
@@ -245,8 +263,8 @@ def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, i
         },
         "worker_result_index": index_ref,
         "kanban_transition_event": {
-            "from_status": card.get("status") or "receipt-five",
-            "to_status": "done" if index["receipt_five_ready"] else "blocked",
+            "from_status": from_status,
+            "to_status": to_status if index["receipt_five_ready"] else "blocked",
             "actor": "evidence-reconciler",
             "worker": "evidence-reconciler",
             "receipt_refs": [
@@ -278,6 +296,8 @@ def command_reconcile(args: argparse.Namespace) -> int:
             index_ref,
             factoryctl.source_card_ref(args.out_result),
             index,
+            from_status=args.from_status,
+            to_status=args.to_status,
         )
         write_json(args.out_receipt_draft, receipt)
 
@@ -308,6 +328,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out-index", type=Path, required=True)
     parser.add_argument("--out-result", type=Path, required=True)
     parser.add_argument("--out-receipt-draft", type=Path)
+    parser.add_argument("--from-status", default="ready")
+    parser.add_argument("--to-status", default="done")
     return parser
 
 

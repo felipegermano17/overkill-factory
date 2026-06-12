@@ -33,7 +33,12 @@ Creates a Hermes-friendly operator workspace for a product.
 
 ```bash
 factoryctl init --out ../my-product-factory --project-name my-product
+factoryctl init --out ../my-product-factory --project-name my-product --paper ./product-paper.md
 ```
+
+`--paper` copies the paper into `sources/input-paper.md` and creates
+`cards/intake-card.md`. That card records source metadata and routes Source
+Ledger/Product SOT work to workers. It is not a completed Product SOT.
 
 ## Card And Worker Commands
 

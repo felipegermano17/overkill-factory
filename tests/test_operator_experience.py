@@ -86,6 +86,43 @@ class OperatorExperienceTest(unittest.TestCase):
             self.assertIn("factoryctl run minimal", readme)
             self.assertIn("Connect this workspace to your Hermes", readme)
 
+    def test_init_with_paper_creates_source_intake_card_without_fake_sot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            paper = tmp / "paper.md"
+            paper.write_text("# Paper\n\nBuild a tiny game product.\n", encoding="utf-8")
+            target = tmp / "sample-product"
+
+            result = run_factoryctl(
+                "init",
+                "--out",
+                str(target),
+                "--project-name",
+                "sample-product",
+                "--paper",
+                str(paper),
+            )
+
+            self.assertIn("initialized", result.stdout.lower())
+            self.assertTrue((target / "sources" / "input-paper.md").is_file())
+            intake_card_path = target / "cards" / "intake-card.md"
+            self.assertTrue(intake_card_path.is_file())
+
+            validate = run_factoryctl("validate-card", str(intake_card_path))
+            self.assertIn("OK", validate.stdout)
+
+            gate_path = target / "reports" / "intake-gate-report.json"
+            run_factoryctl("gate-report", "--card", str(intake_card_path), "--out", str(gate_path))
+            gate = json.loads(gate_path.read_text(encoding="utf-8"))
+            self.assertEqual(gate["gate_status"], "ready_for_worker_execution")
+            self.assertIn("source-ledger-worker", gate["required_workers"])
+            self.assertIn("factory-orchestrator", gate["required_workers"])
+            self.assertNotIn("product-face", gate["required_workers"])
+
+            card_text = intake_card_path.read_text(encoding="utf-8")
+            self.assertIn('"status": "pending_source_ledger"', card_text)
+            self.assertIn('"manual_product_sot_completion"', card_text)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -40,6 +40,8 @@ class FakeHermes:
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
             return subprocess.CompletedProcess(argv, 0, stdout="linked", stderr="")
+        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
+            return subprocess.CompletedProcess(argv, 0, stdout="blocked", stderr="")
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
 
 
@@ -65,6 +67,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         self.assertEqual(result["main_task_id"], MAIN_TASK_ID)
         self.assertIn("codex-security", result["worker_task_ids"])
+        block_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "block"]
+        self.assertTrue(block_calls)
         link_calls = [call for call in fake.calls if len(call) >= 7 and call[4] == "link"]
         self.assertTrue(link_calls)
         for call in link_calls:
@@ -84,13 +88,74 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     TEST_BOARD,
                     "--ledger",
                     str(Path(tmp) / "ledger.json"),
+                    "--ensure-board",
                     "--dry-run",
                 ]
             )
             result = adapter.materialize(args, runner=fake)
 
         self.assertTrue(result["dry_run"])
+        self.assertTrue(result["board_created"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+
+    def test_materialize_uses_card_workspace_by_default(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "product-workspace"
+            cards = workspace / "cards"
+            cards.mkdir(parents=True)
+            source_card = ROOT / "examples" / "minimal-hermes-project" / "card.md"
+            card = cards / "card.md"
+            card.write_text(source_card.read_text(encoding="utf-8"), encoding="utf-8")
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--ledger",
+                    str(Path(tmp) / "ledger.json"),
+                    "--worker-ready",
+                ]
+            )
+            result = adapter.materialize(args, runner=fake)
+
+        self.assertEqual(result["workspace"], str(workspace))
+        create_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "create"]
+        self.assertTrue(create_calls)
+        self.assertTrue(any(f"dir:{workspace}" in call for call in create_calls))
+
+    def test_materialize_links_before_done_workers_to_before_ready_parents(self) -> None:
+        fake = FakeHermes()
+        card = ROOT / "examples" / "minimal-hermes-project" / "card.md"
+        with tempfile.TemporaryDirectory() as tmp:
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--ledger",
+                    str(Path(tmp) / "ledger.json"),
+                    "--worker-ready",
+                ]
+            )
+            result = adapter.materialize(args, runner=fake)
+
+        self.assertIn("evidence-reconciler", result["worker_task_ids"])
+        evidence_id = result["worker_task_ids"]["evidence-reconciler"]
+        create_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "create"]
+        evidence_create = next(call for call in create_calls if f'"id": "evidence-reconciler"' in " ".join(call))
+        parent_args = [
+            evidence_create[index + 1]
+            for index, value in enumerate(evidence_create)
+            if value == "--parent" and index + 1 < len(evidence_create)
+        ]
+        self.assertTrue(parent_args)
+        self.assertNotIn(MAIN_TASK_ID, parent_args)
+        self.assertNotIn(evidence_id, parent_args)
 
     def test_complete_main_requires_materialized_live_binding(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

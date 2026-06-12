@@ -190,6 +190,8 @@ class EvidenceReconcilerTest(unittest.TestCase):
             "reports/index.json",
             "reports/evidence-reconciler-result.json",
             index,
+            from_status="review",
+            to_status="done",
         )
 
         self.assertIn("next_action", draft["receipt_five"])
@@ -208,8 +210,10 @@ class EvidenceReconcilerTest(unittest.TestCase):
             "reports/index.json",
             "reports/evidence-reconciler-result.json",
             index,
+            from_status="blocked",
+            to_status="done",
         )
-        self.assertEqual(no_status_draft["kanban_transition_event"]["from_status"], "receipt-five")
+        self.assertEqual(no_status_draft["kanban_transition_event"]["from_status"], "blocked")
 
 
 if __name__ == "__main__":
