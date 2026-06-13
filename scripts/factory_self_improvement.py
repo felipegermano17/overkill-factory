@@ -46,6 +46,21 @@ CRITICAL_TERMS = {
     "billing",
 }
 SENSITIVE_TERMS = CRITICAL_TERMS | {"funds", "custody", "signing", "mainnet", "legal", "regulated", "privacy", "hardware"}
+LEARNING_CLASSIFICATIONS = {
+    "rule",
+    "skill",
+    "worker",
+    "gate",
+    "schema",
+    "test",
+    "doc",
+    "reference",
+    "issue",
+    "hook",
+    "mcp_or_tool",
+    "install_profile",
+    "reject",
+}
 
 
 def utc_now() -> str:
@@ -212,6 +227,105 @@ def build_issue_candidates(learnback: dict[str, Any]) -> dict[str, Any]:
         "source_project_ref": clean_public_text(learnback.get("project_ref")),
         "candidates": candidates,
         "issue_count": len(candidates),
+    }
+
+
+def learning_classification_for(finding: dict[str, Any]) -> str:
+    explicit = str(finding.get("learning_classification") or "").strip()
+    if explicit in LEARNING_CLASSIFICATIONS:
+        return explicit
+    route = str(finding.get("recommended_route") or "").strip()
+    if route == "eval_or_test":
+        return "test"
+    if route == "docs_update":
+        return "doc"
+    if route == "public_issue":
+        return "issue"
+    if route == "critical_change_proposal":
+        return "gate"
+    return "reject" if route in {"no_issue", "private_followup"} else "issue"
+
+
+def build_learning_proposal(finding: dict[str, Any], source_ref: str) -> dict[str, Any]:
+    summary = clean_public_text(finding.get("summary"))
+    area = clean_public_text(finding.get("area") or "factory")
+    classification = learning_classification_for(finding)
+    evidence_ref = clean_public_text(finding.get("evidence_ref") or source_ref)
+    combined = " ".join([summary, area, clean_public_text(finding.get("reproduction_condition"))])
+    human_gate_required = classification in {"worker", "gate", "hook", "mcp_or_tool", "install_profile"} or contains_any(combined, CRITICAL_TERMS)
+    sensitive = human_gate_required or contains_any(combined, SENSITIVE_TERMS)
+    rejected = classification == "reject"
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-learning-proposal.schema.json",
+        "record_type": "factory_learning_proposal",
+        "source_evidence_refs": [evidence_ref],
+        "source_trust": "internal_structured",
+        "classification": classification,
+        "proposed_artifact_type": classification,
+        "risk": "R3" if human_gate_required else "R2" if classification in {"skill", "schema", "test"} else "R1",
+        "owner": "skill-eval-distiller",
+        "proposal_summary": summary,
+        "validation_plan": {
+            "tests_or_evals": [clean_public_text(finding.get("acceptance_hint") or "focused validation fixture")],
+            "verification_commands": [
+                "python scripts/validate_public_json_artifacts.py",
+                "python -m unittest tests.test_factory_self_improvement -q",
+            ],
+            "independent_review_required": not rejected,
+            "plan_review_ref": "external:independent-plan-review-required" if not rejected else "not_applicable",
+            "success_criteria": [
+                "proposal remains inactive until validation passes",
+                "public-safe evidence refs replace raw run evidence",
+            ],
+        },
+        "activation_policy": {
+            "default_state": "rejected" if rejected else "inactive_candidate",
+            "auto_activation_allowed": False if sensitive or not rejected else False,
+            "human_gate_required": human_gate_required,
+            "scope": f"{area} learning proposal",
+            "active_tool_surfaces": [],
+            "budget": {
+                "max_agents": 2,
+                "timeout_minutes": 60,
+                "token_or_cost_budget": "operator-defined",
+                "stop_condition": "validation fails, review blocks, or scope expands",
+            },
+        },
+        "untrusted_input_handling": {
+            "reader_actor_split": True,
+            "raw_external_content_quarantined": True,
+            "privileged_actors_consume_structured_summary_only": True,
+        },
+        "tool_governance": {
+            "required": [],
+            "optional": [],
+            "disabled": [],
+            "forbidden": ["auto-permission for sensitive work"],
+            "third_party_trust_status": "first_party",
+            "supply_chain_review": "required before activating skills, hooks, MCPs or install profiles",
+        },
+        "parallel_workflow_guidance": [
+            "use fan-out, adversarial review or tournament patterns only when evidence value justifies isolation",
+            "use issue #79 lane/worktree governance for detailed parallel execution controls",
+        ],
+        "rejection_rationale": clean_public_text(finding.get("rejection_rationale") or ("finding rejected or private" if rejected else "not_rejected")),
+    }
+
+
+def build_learning_proposals(learnback: dict[str, Any]) -> dict[str, Any]:
+    source_ref = clean_public_text(learnback.get("project_ref") or "external:learnback-record")
+    proposals = [
+        build_learning_proposal(finding, source_ref)
+        for finding in learnback.get("findings", [])
+        if isinstance(finding, dict)
+    ]
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-learning-proposal.schema.json",
+        "record_type": "factory_learning_proposal_list",
+        "created_at": utc_now(),
+        "source_project_ref": source_ref,
+        "proposals": proposals,
+        "proposal_count": len(proposals),
     }
 
 
@@ -407,6 +521,11 @@ def command_learnback_issues(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_learning_proposals(args: argparse.Namespace) -> int:
+    write_json(args.out, build_learning_proposals(load_json(args.record)))
+    return 0
+
+
 def command_issue_intake(args: argparse.Namespace) -> int:
     issues = load_json(args.issues)
     if not isinstance(issues, list):
@@ -437,6 +556,11 @@ def build_parser() -> argparse.ArgumentParser:
     learnback.add_argument("--record", type=Path, required=True)
     learnback.add_argument("--out", type=Path)
     learnback.set_defaults(func=command_learnback_issues)
+
+    learning = sub.add_parser("learning-proposals", help="Turn a learnback record into typed learning proposals")
+    learning.add_argument("--record", type=Path, required=True)
+    learning.add_argument("--out", type=Path)
+    learning.set_defaults(func=command_learning_proposals)
 
     intake = sub.add_parser("issue-intake", help="Dry-run owner-instance issue intake")
     intake.add_argument("--config", type=Path, required=True)

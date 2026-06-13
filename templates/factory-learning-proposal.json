@@ -1,0 +1,63 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-learning-proposal.schema.json",
+  "record_type": "factory_learning_proposal",
+  "source_evidence_refs": [
+    "external:execution-learnback-record"
+  ],
+  "source_trust": "internal_structured",
+  "classification": "skill",
+  "proposed_artifact_type": "skill",
+  "risk": "R2",
+  "owner": "skill-eval-distiller",
+  "proposal_summary": "Promote a repeated, validated workflow into an inactive candidate skill.",
+  "validation_plan": {
+    "tests_or_evals": [
+      "focused eval fixture proving the skill improves the repeated workflow",
+      "regression test that fails before the skill or contract exists"
+    ],
+    "verification_commands": [
+      "python scripts/validate_public_json_artifacts.py",
+      "python -m unittest tests.test_factory_self_improvement -q"
+    ],
+    "independent_review_required": true,
+    "plan_review_ref": "external:independent-plan-review",
+    "success_criteria": [
+      "proposal stays inactive until tests and review pass",
+      "activation policy names scope, budget and stop condition",
+      "raw private evidence is not published"
+    ]
+  },
+  "activation_policy": {
+    "default_state": "inactive_candidate",
+    "auto_activation_allowed": false,
+    "human_gate_required": false,
+    "scope": "bounded factory skill candidate",
+    "active_tool_surfaces": [],
+    "budget": {
+      "max_agents": 2,
+      "timeout_minutes": 60,
+      "token_or_cost_budget": "operator-defined",
+      "stop_condition": "validation fails, independent review blocks, or scope expands"
+    }
+  },
+  "untrusted_input_handling": {
+    "reader_actor_split": true,
+    "raw_external_content_quarantined": true,
+    "privileged_actors_consume_structured_summary_only": true
+  },
+  "tool_governance": {
+    "required": [],
+    "optional": [],
+    "disabled": [],
+    "forbidden": [
+      "auto-permission for sensitive work"
+    ],
+    "third_party_trust_status": "first_party",
+    "supply_chain_review": "public safety, secret safety and supply-chain proof before activation"
+  },
+  "parallel_workflow_guidance": [
+    "use fan-out only when independent evidence, adversarial review or scale justifies it",
+    "use issue #79 lane/worktree governance for detailed isolation and reconciliation"
+  ],
+  "rejection_rationale": "not_rejected"
+}

@@ -2248,6 +2248,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "parallel_lane_contracts": lane_contracts,
             "reasoning_policy": card.get("reasoning_policy"),
             "reference_quality_packet": card.get("reference_quality_packet"),
+            "learning_proposal_refs": card.get("learning_proposal_refs", []),
         },
         "runtime_decision": runtime_decision,
         "output_contract": {

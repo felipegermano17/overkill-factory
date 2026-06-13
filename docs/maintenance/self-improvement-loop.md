@@ -17,6 +17,7 @@ intake and governance checks into structured artifacts.
 
 - `schemas/missing-capability-completion-plan.schema.json`
 - `schemas/execution-learnback-record.schema.json`
+- `schemas/factory-learning-proposal.schema.json`
 - `schemas/factory-improvement-issue-candidate.schema.json`
 - `schemas/owner-issue-intake-config.schema.json`
 - `schemas/owner-issue-intake-report.schema.json`
@@ -57,6 +58,26 @@ python scripts/factory_self_improvement.py learnback-issues \
 Public issue candidates must be generalized and redacted. Raw private logs,
 local paths, private board ids, Discord ids and screenshots do not belong in
 public issue bodies.
+
+## Learning Proposals
+
+Use `factory_learning_proposal` when a finding should become a durable rule,
+skill, worker, gate, schema, test, doc, reference, issue, hook, MCP/tool,
+install profile or recorded rejection:
+
+```bash
+python scripts/factory_self_improvement.py learning-proposals \
+  --record .tmp/execution-learnback-record.json \
+  --out .tmp/factory-learning-proposals.json
+```
+
+Learning proposals land as inactive candidates. They need validation,
+independent review and explicit activation policy before they can change factory
+behavior. Sensitive artifacts such as workers, gates, hooks, MCPs and install
+profiles must not auto-activate.
+
+See `maintenance/factory-learning-skill-evolution-os.md` for the operating
+rules.
 
 ## Owner Issue Intake
 

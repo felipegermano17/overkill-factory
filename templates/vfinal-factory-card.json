@@ -167,6 +167,9 @@
     "acceptance_criteria": ["Product Face design-fit review passes"],
     "product_experience_fields_informed": ["experience_sot", "design_direction", "proof_required"]
   },
+  "learning_proposal_refs": [
+    "templates/factory-learning-proposal.json"
+  ],
   "software_development_plan": {
     "$schema": "https://overkill-factory.dev/schemas/software-development-plan.schema.json",
     "work_units": ["one bounded implementation slice"],

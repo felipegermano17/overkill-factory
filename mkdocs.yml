@@ -23,3 +23,4 @@ nav:
       - Parallel Execution And Status: operations/parallel-execution-and-status.md
       - Release Policy: operations/release-policy.md
   - Maintainer Internals: maintenance/repo-surface.md
+  - Factory Learning OS: maintenance/factory-learning-skill-evolution-os.md

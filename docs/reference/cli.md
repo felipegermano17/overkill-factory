@@ -72,6 +72,7 @@ Creates dry-run self-improvement artifacts for maintainers:
 python scripts/factory_self_improvement.py reference-registry --out .tmp/reference-source-registry.json
 python scripts/factory_self_improvement.py missing-capability-plan --gate-report .tmp/gate-report.json --out .tmp/missing-capability-plan.json
 python scripts/factory_self_improvement.py learnback-issues --record .tmp/execution-learnback-record.json --out .tmp/issue-candidates.json
+python scripts/factory_self_improvement.py learning-proposals --record .tmp/execution-learnback-record.json --out .tmp/learning-proposals.json
 python scripts/factory_self_improvement.py issue-intake --config templates/owner-issue-intake-config.json --issues .tmp/issues.json --out .tmp/issue-intake-report.json
 python scripts/factory_self_improvement.py governance-audit --out .tmp/ai-codebase-governance-report.json
 ```

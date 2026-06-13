@@ -10,6 +10,7 @@ additionalProperties and arrays.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,13 @@ PRODUCT_FACE_ALIGNMENT_FIELDS = (
     "source_promise_coverage",
     "design_fit_review",
 )
+PRIVATE_USERS_PATH = "C:" + r"[\\/]+" + "Users"
+PRIVATE_SYNC_ROOT = "One" + "Drive"
+PRIVATE_MARKERS = re.compile(
+    PRIVATE_USERS_PATH + r"|" + PRIVATE_SYNC_ROOT + r"|guild_ref|channel_ref|thread_id|message_id",
+    re.IGNORECASE,
+)
+SENSITIVE_LEARNING_ARTIFACTS = {"worker", "gate", "hook", "mcp_or_tool", "install_profile"}
 
 
 def load_json(path: Path) -> Any:
@@ -137,6 +145,33 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             value = data.get(field)
             if not isinstance(value, dict) or value.get("status") != "pass":
                 errors.append(f"{at}: reusable product_face_result requires {field}.status=pass")
+    if data.get("record_type") == "factory_learning_proposal":
+        serialized_refs = "\n".join(str(ref) for ref in data.get("source_evidence_refs", []))
+        if PRIVATE_MARKERS.search(serialized_refs):
+            errors.append(f"{at}: factory_learning_proposal source_evidence_refs must be public-safe")
+        validation = data.get("validation_plan") if isinstance(data.get("validation_plan"), dict) else {}
+        if data.get("classification") != "reject" and validation.get("independent_review_required") is not True:
+            errors.append(f"{at}: factory_learning_proposal requires independent review before activation")
+        if data.get("classification") != "reject" and not str(validation.get("plan_review_ref") or "").strip():
+            errors.append(f"{at}: factory_learning_proposal requires plan_review_ref")
+        activation = data.get("activation_policy") if isinstance(data.get("activation_policy"), dict) else {}
+        if data.get("proposed_artifact_type") in SENSITIVE_LEARNING_ARTIFACTS and activation.get("auto_activation_allowed") is True:
+            errors.append(f"{at}: sensitive factory learning artifacts must not auto-activate")
+        if activation.get("default_state") == "active" and activation.get("auto_activation_allowed") is True:
+            errors.append(f"{at}: factory_learning_proposal must land inactive before activation")
+        untrusted = data.get("untrusted_input_handling") if isinstance(data.get("untrusted_input_handling"), dict) else {}
+        if data.get("source_trust") in {"external_untrusted", "mixed"}:
+            if untrusted.get("reader_actor_split") is not True:
+                errors.append(f"{at}: untrusted learning input requires reader_actor_split")
+            if untrusted.get("privileged_actors_consume_structured_summary_only") is not True:
+                errors.append(f"{at}: privileged actors must consume structured summaries only")
+        tools = data.get("tool_governance") if isinstance(data.get("tool_governance"), dict) else {}
+        active_tools = list(activation.get("active_tool_surfaces") or [])
+        required_tools = list(tools.get("required") or [])
+        if active_tools and tools.get("third_party_trust_status") in {"untrusted", "unknown"}:
+            errors.append(f"{at}: active tool surfaces require reviewed trust status")
+        if required_tools and not str(tools.get("supply_chain_review") or "").strip():
+            errors.append(f"{at}: required tools require supply_chain_review")
     return errors
 
 

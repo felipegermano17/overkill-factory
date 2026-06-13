@@ -72,6 +72,7 @@ class FactorySelfImprovementTest(unittest.TestCase):
 
         self.assertEqual(packet["input_contract"]["reasoning_policy"]["record_type"], "reasoning_policy")
         self.assertEqual(packet["input_contract"]["reference_quality_packet"]["record_type"], "reference_quality_packet")
+        self.assertEqual(packet["input_contract"]["learning_proposal_refs"], ["templates/factory-learning-proposal.json"])
 
     def test_default_reference_registry_contains_post_sources_as_catalog_entries(self) -> None:
         registry = self_improvement.default_reference_source_registry()
@@ -133,6 +134,68 @@ class FactorySelfImprovementTest(unittest.TestCase):
         self.assertNotIn(private_users_path, candidate["title"])
         self.assertNotIn(private_users_path, candidate["body"])
         self.assertTrue(candidate["public_safe"])
+
+    def test_learning_proposals_classify_findings_and_stay_inactive(self) -> None:
+        learnback = {
+            "record_type": "execution_learnback_record",
+            "project_ref": "external:factory-run",
+            "method_version": "OVERKILL_VFINAL",
+            "findings": [
+                {
+                    "summary": "Repeated review correction should become a reusable skill.",
+                    "severity": "medium",
+                    "area": "skill-evolution",
+                    "recommended_route": "eval_or_test",
+                    "learning_classification": "skill",
+                    "evidence_ref": "external:review-summary",
+                    "acceptance_hint": "eval fixture proves the skill improves the workflow",
+                }
+            ],
+            "public_safety_boundary": {
+                "raw_private_evidence_forbidden": True,
+                "public_issue_requires_redaction": True,
+            },
+        }
+
+        result = self_improvement.build_learning_proposals(learnback)
+
+        proposal = result["proposals"][0]
+        self.assertEqual(proposal["classification"], "skill")
+        self.assertEqual(proposal["proposed_artifact_type"], "skill")
+        self.assertEqual(proposal["activation_policy"]["default_state"], "inactive_candidate")
+        self.assertFalse(proposal["activation_policy"]["auto_activation_allowed"])
+        self.assertTrue(proposal["validation_plan"]["independent_review_required"])
+        self.assertIn("max_agents", proposal["activation_policy"]["budget"])
+
+    def test_learning_proposal_domain_rules_fail_closed(self) -> None:
+        validator_spec = importlib.util.spec_from_file_location(
+            "validate_public_json_artifacts",
+            ROOT / "scripts" / "validate_public_json_artifacts.py",
+        )
+        assert validator_spec is not None
+        validator = importlib.util.module_from_spec(validator_spec)
+        assert validator_spec.loader is not None
+        sys.modules["validate_public_json_artifacts"] = validator
+        validator_spec.loader.exec_module(validator)
+
+        proposal = json.loads((ROOT / "templates" / "factory-learning-proposal.json").read_text(encoding="utf-8"))
+        private_windows_path = "C:" + "\\" + "Users" + "\\owner\\private-run.json"
+        proposal["source_evidence_refs"] = [private_windows_path]
+        proposal["proposed_artifact_type"] = "mcp_or_tool"
+        proposal["activation_policy"]["auto_activation_allowed"] = True
+        proposal["activation_policy"]["active_tool_surfaces"] = ["third-party-mcp"]
+        proposal["activation_policy"]["default_state"] = "active"
+        proposal["tool_governance"]["third_party_trust_status"] = "unknown"
+        proposal["source_trust"] = "external_untrusted"
+        proposal["untrusted_input_handling"]["reader_actor_split"] = False
+
+        errors = validator.validate_domain_rules(proposal, "$")
+
+        self.assertIn("$: factory_learning_proposal source_evidence_refs must be public-safe", errors)
+        self.assertIn("$: sensitive factory learning artifacts must not auto-activate", errors)
+        self.assertIn("$: factory_learning_proposal must land inactive before activation", errors)
+        self.assertIn("$: untrusted learning input requires reader_actor_split", errors)
+        self.assertIn("$: active tool surfaces require reviewed trust status", errors)
 
     def test_owner_issue_intake_routes_critical_factory_change_to_human_gate_path(self) -> None:
         config = json.loads((ROOT / "templates" / "owner-issue-intake-config.json").read_text(encoding="utf-8"))
