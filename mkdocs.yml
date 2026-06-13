@@ -7,6 +7,7 @@ nav:
   - Install In Your Hermes: getting-started/install-in-hermes.md
   - CLI Reference: reference/cli.md
   - Examples: examples/gallery.md
+  - Visuals: visuals/README.md
   - Concepts:
       - Factory Flow: concepts/factory-flow.md
       - Operator Journey: concepts/operator-journey.md
