@@ -10,6 +10,20 @@ Factory.
 It makes the factory understandable and operable without turning Discord into
 the source of truth.
 
+Discord is not accepted as a cockpit because it can post messages. Before any
+Discord cockpit implementation is treated as product-ready, it must pass the
+mandatory UX study gate in:
+
+```text
+docs/control-tower/discord-cockpit-ux-study-gate.md
+```
+
+The gate requires a study of Discord primitives, limits, permissions,
+notifications, threads, commands, components, modals, webhooks, mobile/desktop
+behavior, rate limits, failure modes and operator comprehension. If the proof
+does not show near-zero avoidable friction, Discord remains a secondary layer
+and dense control moves to the local web cockpit.
+
 For the practical Portuguese production setup guide, see:
 
 ```text
@@ -17,7 +31,9 @@ docs/control-tower/discord-control-tower-setup-pt-br.md
 ```
 
 Dynamic behavior belongs in the bridge scripts, schemas and current setup guide,
-not in a separate historical study.
+not in a separate historical study. UX acceptance belongs in the Discord
+Cockpit UX Study Gate and its proof pack, not in setup screenshots or manual
+channel layout alone.
 
 ## Decision
 
