@@ -37,6 +37,7 @@ class OpenSourceDocsTest(unittest.TestCase):
                 self.assertIn(f"## {heading}", readme)
 
         for rel in [
+            "README.pt-BR.md",
             "docs/getting-started/quickstart-hermes.md",
             "docs/governance/document-governance.md",
             "docs/concepts/factory-flow.md",
@@ -72,8 +73,47 @@ class OpenSourceDocsTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn(command, readme)
 
+    def test_readme_has_portuguese_entrypoint(self) -> None:
+        readme = read_text("README.md")
+        readme_pt = read_text("README.pt-BR.md")
+
+        self.assertIn("Language: **English** | [Português](README.pt-BR.md)", readme)
+        self.assertIn("Idioma: [English](README.md) | **Português**", readme_pt)
+
+        for heading in [
+            "O Que É",
+            "Mapa Da Fábrica",
+            "Para Quem É",
+            "O Que Faz",
+            "O Que Não Faz",
+            "Como O Hermes Entra",
+            "Caminho Do Operador",
+            "Quickstart",
+            "Primeiro Valor Em 10 Minutos",
+            "Formato Do Repositório",
+            "Status Atual",
+            "Mapa Da Documentação",
+            "Segurança Pública",
+        ]:
+            with self.subTest(heading=heading):
+                self.assertIn(f"## {heading}", readme_pt)
+
+        for required in [
+            "docs/visuals/overkill-factory-map-v0.1.0.png",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html",
+            "factoryctl doctor",
+            "factoryctl init",
+            "factoryctl run minimal",
+            "python scripts/public_safety_scan.py",
+            "Hermes e Receipt Five continuam sendo a fonte da verdade",
+            "Artefatos públicos não devem conter segredos",
+        ]:
+            with self.subTest(required=required):
+                self.assertIn(required, readme_pt)
+
     def test_public_docs_skeleton_exists(self) -> None:
         required_paths = [
+            "README.pt-BR.md",
             "docs/getting-started/quickstart-hermes.md",
             "docs/governance/document-governance.md",
             "docs/concepts/factory-flow.md",

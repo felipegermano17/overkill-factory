@@ -1,5 +1,7 @@
 # Overkill Factory
 
+Language: **English** | [Português](README.pt-BR.md)
+
 Overkill Factory is an open source production line for agentic product work.
 It helps a Hermes operator turn a raw product or project paper into a controlled
 sequence of source resolution, planning, architecture, specialist work,
