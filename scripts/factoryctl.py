@@ -212,6 +212,29 @@ PRODUCT_FACE_PACKET_REQUIRED_FIELDS = (
     "done_definition",
     "human_gate",
 )
+REFERENCE_QUALITY_REQUIRED_FIELDS = (
+    "record_type",
+    "experience_category",
+    "quality_bar",
+    "anti_generic_criteria",
+    "references",
+    "design_rationale",
+    "reuse_policy",
+    "accessibility_constraints",
+    "performance_constraints",
+    "acceptance_criteria",
+)
+REASONING_POLICY_REQUIRED_FIELDS = (
+    "record_type",
+    "reasoning_class",
+    "allowed_profile_classes",
+    "review_intensity",
+    "evidence_policy",
+    "private_reasoning_policy",
+    "block_when",
+)
+REASONING_CLASSES = {"light", "standard", "deep", "adversarial", "human_decision"}
+REASONING_REVIEW_INTENSITIES = {"none", "self_check", "independent_review", "specialist_matrix", "human_gate"}
 PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS = (
     "packet_comparison",
     "source_promise_coverage",
@@ -1184,6 +1207,81 @@ def validate_product_experience_plan(plan: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_reference_quality_packet(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for field in REFERENCE_QUALITY_REQUIRED_FIELDS:
+        value = packet.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"reference_quality_packet.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"reference_quality_packet.{field} must be a non-empty object")
+        elif not _non_empty_text(value):
+            errors.append(f"reference_quality_packet.{field} is required")
+
+    if packet.get("record_type") not in (None, "reference_quality_packet"):
+        errors.append("reference_quality_packet.record_type must be reference_quality_packet")
+
+    for idx, ref in enumerate(packet.get("references", []) if isinstance(packet.get("references"), list) else []):
+        if not isinstance(ref, dict):
+            errors.append(f"reference_quality_packet.references[{idx}] must be an object")
+            continue
+        for field in ("source_id", "source_url_or_ref", "use_type", "what_to_learn", "copy_policy"):
+            value = ref.get(field)
+            if isinstance(value, list):
+                if not _list_items(value):
+                    errors.append(f"reference_quality_packet.references[{idx}].{field} must be a non-empty array")
+            elif not _non_empty_text(value):
+                errors.append(f"reference_quality_packet.references[{idx}].{field} is required")
+        if ref.get("copy_policy") == "copy_only_with_license_recorded" and not _non_empty_text(ref.get("license_or_terms_ref")):
+            errors.append(f"reference_quality_packet.references[{idx}].license_or_terms_ref is required for copied code/assets")
+        if str(ref.get("copy_policy") or "").strip().lower() in {"copy", "blind_copy"}:
+            errors.append(f"reference_quality_packet.references[{idx}].copy_policy must not allow blind copying")
+
+    reuse = packet.get("reuse_policy") if isinstance(packet.get("reuse_policy"), dict) else {}
+    forbidden = " ".join(_list_items(reuse.get("forbidden"))).lower()
+    if "blind copy" not in forbidden and "unlicensed" not in forbidden:
+        errors.append("reference_quality_packet.reuse_policy.forbidden must ban blind copy or unlicensed reuse")
+    if reuse and reuse.get("license_required_for_code_or_assets") is not True:
+        errors.append("reference_quality_packet.reuse_policy.license_required_for_code_or_assets must be true")
+    return errors
+
+
+def validate_reasoning_policy(policy: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for field in REASONING_POLICY_REQUIRED_FIELDS:
+        value = policy.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"reasoning_policy.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"reasoning_policy.{field} must be a non-empty object")
+        elif not _non_empty_text(value):
+            errors.append(f"reasoning_policy.{field} is required")
+
+    if policy.get("record_type") not in (None, "reasoning_policy"):
+        errors.append("reasoning_policy.record_type must be reasoning_policy")
+    reasoning_class = str(policy.get("reasoning_class") or "").strip()
+    if reasoning_class and reasoning_class not in REASONING_CLASSES:
+        errors.append("reasoning_policy.reasoning_class must be one of " + ", ".join(sorted(REASONING_CLASSES)))
+    review_intensity = str(policy.get("review_intensity") or "").strip()
+    if review_intensity and review_intensity not in REASONING_REVIEW_INTENSITIES:
+        errors.append("reasoning_policy.review_intensity must be one of " + ", ".join(sorted(REASONING_REVIEW_INTENSITIES)))
+    evidence = policy.get("evidence_policy") if isinstance(policy.get("evidence_policy"), dict) else {}
+    if evidence:
+        if evidence.get("raw_chain_of_thought_forbidden") is not True:
+            errors.append("reasoning_policy.evidence_policy.raw_chain_of_thought_forbidden must be true")
+        if reasoning_class in {"deep", "adversarial", "human_decision"} and evidence.get("durable_summary_required") is not True:
+            errors.append("reasoning_policy.evidence_policy.durable_summary_required must be true for high reasoning classes")
+        if reasoning_class in {"deep", "adversarial", "human_decision"} and evidence.get("evidence_refs_required") is not True:
+            errors.append("reasoning_policy.evidence_policy.evidence_refs_required must be true for high reasoning classes")
+    if policy.get("private_reasoning_policy") not in (None, "never_store_raw", "summarize_only", "tool_internal_only"):
+        errors.append("reasoning_policy.private_reasoning_policy must be never_store_raw, summarize_only or tool_internal_only")
+    return errors
+
+
 def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     if data.get("factory_method_version") != "OVERKILL_VFINAL":
         return []
@@ -1251,6 +1349,11 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_vfinal_card_contract(data))
     errors.extend(validate_canonical_runtime_gate(data))
     errors.extend(validate_capability_coverage(data))
+    if data.get("factory_method_version") == "OVERKILL_VFINAL":
+        if not isinstance(data.get("reasoning_policy"), dict):
+            errors.append("reasoning_policy required for OVERKILL_VFINAL cards")
+        else:
+            errors.extend(validate_reasoning_policy(data["reasoning_policy"]))
     if data.get("executor_identity") == data.get("reviewer_identity"):
         errors.append("executor_identity and reviewer_identity must differ")
     product_facing = bool(surfaces & PRODUCT_FACE_SURFACES)
@@ -1269,6 +1372,14 @@ def validate_card(data: dict[str, Any]) -> list[str]:
                 review_human_gate = review.get("human_gate_required") is True
                 if not review_human_gate and not isinstance(data.get("human_gate_packet"), dict):
                     errors.append("product_experience_plan.human_gate.required=true requires review.human_gate_required=true or human_gate_packet")
+            reference_waiver = data["product_experience_plan"].get("reference_quality_waiver")
+            if not isinstance(data.get("reference_quality_packet"), dict):
+                if not isinstance(reference_waiver, dict):
+                    errors.append("reference_quality_packet required for vFinal product-facing surfaces")
+                elif not _non_empty_text(reference_waiver.get("owner")) or not _non_empty_text(reference_waiver.get("reason")):
+                    errors.append("product_experience_plan.reference_quality_waiver requires owner and reason")
+            else:
+                errors.extend(validate_reference_quality_packet(data["reference_quality_packet"]))
     phase = str(data.get("phase", "")).upper()
     if surfaces & PRODUCT_FACE_SURFACES and phase in {"F11", "F16", "F17"}:
         if not isinstance(data.get("product_face_result"), dict) and not str(data.get("product_face_result_ref") or "").strip():
@@ -1997,6 +2108,8 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "target_repo_paths": card.get("target_repo_paths", []),
             "authority_max": card.get("authority_max"),
             "forbidden_actions": card.get("forbidden_actions", []),
+            "reasoning_policy": card.get("reasoning_policy"),
+            "reference_quality_packet": card.get("reference_quality_packet"),
         },
         "runtime_decision": runtime_decision,
         "output_contract": {

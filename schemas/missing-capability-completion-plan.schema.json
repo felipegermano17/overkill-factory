@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/missing-capability-completion-plan.schema.json",
+  "title": "Overkill Factory Missing Capability Completion Plan",
+  "type": "object",
+  "required": [
+    "record_type",
+    "status",
+    "detected_gaps",
+    "candidate_artifacts",
+    "quality_gates",
+    "activation_policy",
+    "human_gate_required"
+  ],
+  "properties": {
+    "record_type": { "const": "missing_capability_completion_plan" },
+    "status": { "enum": ["candidate", "blocked_needs_human_gate", "validated_ready_for_activation", "rejected"] },
+    "detected_gaps": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "candidate_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["artifact_type", "status", "purpose", "validation_gate"],
+        "properties": {
+          "artifact_type": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["sandbox_only", "inactive_candidate", "active"] },
+          "purpose": { "type": "string", "minLength": 10 },
+          "validation_gate": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "quality_gates": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "activation_policy": {
+      "type": "object",
+      "required": ["default_state", "auto_activation_allowed", "sensitive_domains_require_human_gate"],
+      "properties": {
+        "default_state": { "enum": ["sandbox_only", "inactive_candidate", "active"] },
+        "auto_activation_allowed": { "type": "boolean" },
+        "sensitive_domains_require_human_gate": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "human_gate_required": { "type": "boolean" },
+    "next_actions": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

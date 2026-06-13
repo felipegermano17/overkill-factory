@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/reference-source-registry.schema.json",
+  "title": "Overkill Factory Reference Source Registry",
+  "type": "object",
+  "required": ["record_type", "sources"],
+  "properties": {
+    "record_type": { "const": "reference_source_registry" },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source_id", "name", "url", "allowed_use", "forbidden_use", "license_terms_status", "public_safety_notes"],
+        "properties": {
+          "source_id": { "type": "string", "minLength": 2 },
+          "name": { "type": "string", "minLength": 2 },
+          "url": { "type": "string", "minLength": 3 },
+          "allowed_use": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "forbidden_use": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "license_terms_status": { "type": "string", "minLength": 3 },
+          "public_safety_notes": { "type": "string", "minLength": 3 },
+          "informs_product_experience_fields": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

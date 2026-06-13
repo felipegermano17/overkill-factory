@@ -58,3 +58,18 @@ traceable worker result.
 Scripts outside `factoryctl` are maintainer tools or compatibility entrypoints.
 Promote repeated operator flows into `factoryctl` instead of adding another
 script name to the public path.
+
+### `scripts/factory_self_improvement.py`
+
+Creates dry-run self-improvement artifacts for maintainers:
+
+```bash
+python scripts/factory_self_improvement.py reference-registry --out .tmp/reference-source-registry.json
+python scripts/factory_self_improvement.py missing-capability-plan --gate-report .tmp/gate-report.json --out .tmp/missing-capability-plan.json
+python scripts/factory_self_improvement.py learnback-issues --record .tmp/execution-learnback-record.json --out .tmp/issue-candidates.json
+python scripts/factory_self_improvement.py issue-intake --config templates/owner-issue-intake-config.json --issues .tmp/issues.json --out .tmp/issue-intake-report.json
+python scripts/factory_self_improvement.py governance-audit --out .tmp/ai-codebase-governance-report.json
+```
+
+These commands do not dispatch Hermes, activate workers, post GitHub comments or
+approve gates. They prepare public-safe plans and candidates for review.

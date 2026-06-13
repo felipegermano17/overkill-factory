@@ -1,0 +1,26 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/execution-learnback-record.schema.json",
+  "record_type": "execution_learnback_record",
+  "project_ref": "external:current-product",
+  "method_version": "OVERKILL_VFINAL",
+  "attempted_transitions": ["ready", "done"],
+  "workers_required": ["factory-orchestrator", "qa-verification-worker"],
+  "workers_executed": ["factory-orchestrator"],
+  "blockers": ["qa evidence missing before done"],
+  "operator_friction": ["operator had to manually convert run finding into issue"],
+  "test_scan_results": ["unit tests pass"],
+  "findings": [
+    {
+      "summary": "Done gate needs clearer missing-evidence guidance.",
+      "severity": "medium",
+      "area": "runtime",
+      "recommended_route": "public_issue",
+      "reproduction_condition": "done transition attempted before QA result exists",
+      "acceptance_hint": "unblock plan names the missing worker result"
+    }
+  ],
+  "public_safety_boundary": {
+    "raw_private_evidence_forbidden": true,
+    "public_issue_requires_redaction": true
+  }
+}

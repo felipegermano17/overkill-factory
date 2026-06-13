@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/reasoning-policy.schema.json",
+  "title": "Overkill Factory Task Reasoning Policy",
+  "type": "object",
+  "required": [
+    "record_type",
+    "reasoning_class",
+    "allowed_profile_classes",
+    "review_intensity",
+    "evidence_policy",
+    "private_reasoning_policy",
+    "block_when"
+  ],
+  "properties": {
+    "record_type": { "const": "reasoning_policy" },
+    "reasoning_class": { "enum": ["light", "standard", "deep", "adversarial", "human_decision"] },
+    "allowed_profile_classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 }
+    },
+    "review_intensity": { "enum": ["none", "self_check", "independent_review", "specialist_matrix", "human_gate"] },
+    "evidence_policy": {
+      "type": "object",
+      "required": ["durable_summary_required", "raw_chain_of_thought_forbidden", "evidence_refs_required"],
+      "properties": {
+        "durable_summary_required": { "type": "boolean" },
+        "raw_chain_of_thought_forbidden": { "type": "boolean" },
+        "evidence_refs_required": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "private_reasoning_policy": {
+      "enum": ["never_store_raw", "summarize_only", "tool_internal_only"]
+    },
+    "block_when": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "derived_from": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

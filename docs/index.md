@@ -44,3 +44,7 @@ release.
 
 Use `maintenance/repo-surface.md` to decide whether a file belongs in the
 operator surface, maintainer internals or generated output.
+
+Use `maintenance/self-improvement-loop.md` for learnback issue candidates,
+missing-capability completion plans, owner issue intake, reasoning policy,
+reference quality packets and governance audit artifacts.
