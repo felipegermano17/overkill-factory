@@ -85,6 +85,19 @@
     "wallet_flow_matrix": {"sign": "not_applicable_docs_only", "reject": "not_applicable_docs_only"},
     "a11y_acceptance": ["keyboard", "focus", "contrast", "labels"],
     "performance_budget": {"bundle": "not_applicable_docs_only", "render": "not_applicable_docs_only"},
+    "visual_quality_bar": {
+      "reference_quality_bar": "A focused operator validation surface with clear status, evidence and review hierarchy.",
+      "anti_generic_criteria": [
+        "no generic AI dashboard composition",
+        "no excessive explanatory copy",
+        "no weak hierarchy between status, evidence and next action"
+      ],
+      "professional_review_required": true,
+      "block_when": [
+        "screenshots pass mechanically but the surface looks templated or product-agnostic",
+        "visual hierarchy does not match the Product Face job"
+      ]
+    },
     "visual_evidence_plan": ["desktop screenshot", "mobile screenshot"]
   }
 }

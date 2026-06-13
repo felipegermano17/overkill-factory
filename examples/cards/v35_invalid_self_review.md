@@ -52,6 +52,12 @@
     "mobile_breakpoints": ["375", "768", "1440"],
     "a11y_acceptance": ["keyboard", "focus", "contrast"],
     "performance_budget": {"render": "not_applicable_docs_only"},
+    "visual_quality_bar": {
+      "reference_quality_bar": "A focused operator validation surface with clear status, evidence and review hierarchy.",
+      "anti_generic_criteria": ["no generic AI dashboard composition"],
+      "professional_review_required": true,
+      "block_when": ["surface looks templated or product-agnostic"]
+    },
     "visual_evidence_plan": ["desktop screenshot", "mobile screenshot"]
   }
 }

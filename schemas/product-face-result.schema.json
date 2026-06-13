@@ -17,6 +17,7 @@
     "packet_comparison",
     "source_promise_coverage",
     "design_fit_review",
+    "visual_quality_result",
     "blocking_findings",
     "evidence_refs",
     "evidence_kind",
@@ -109,6 +110,25 @@
       "properties": {
         "status": { "enum": ["pass", "warn", "fail", "pending"] },
         "basis": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "visual_quality_result": {
+      "type": "object",
+      "required": ["status", "reviewer", "basis", "reference_quality_bar_checked", "ai_generic_symptoms"],
+      "properties": {
+        "status": { "enum": ["PASS", "BLOCK", "PASS_WITH_RESIDUALS"] },
+        "reviewer": { "type": "string", "minLength": 3 },
+        "basis": { "type": "string", "minLength": 3 },
+        "reference_quality_bar_checked": { "type": "boolean" },
+        "ai_generic_symptoms": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "residuals": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
       },
       "additionalProperties": true
     },

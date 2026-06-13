@@ -412,6 +412,13 @@ class FactoryCtlTest(unittest.TestCase):
                     "status": "pass",
                     "basis": "The validator confirmed this bounded SaaS surface matches the Product Face packet."
                 },
+                "visual_quality_result": {
+                    "status": "PASS",
+                    "reviewer": "product-face-reviewer",
+                    "basis": "The surface meets the Product Face packet quality bar and does not show AI-generic UI symptoms.",
+                    "reference_quality_bar_checked": True,
+                    "ai_generic_symptoms": [],
+                },
                 "blocking_findings": False,
                 "evidence_refs": ["reports/product-face.md"],
                 "next_action": "independent review",
@@ -464,6 +471,71 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_result.packet_comparison is required for product-facing completion", errors)
         self.assertIn("product_face_result.source_promise_coverage is required for product-facing completion", errors)
         self.assertIn("product_face_result.design_fit_review is required for product-facing completion", errors)
+        self.assertIn("product_face_result.visual_quality_result is required", errors)
+
+    def test_product_face_completion_blocks_mechanically_ok_but_ai_generic_ui(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_face_result_required"] = True
+        receipt = {
+            "receipt_five": {
+                "changed": "validated visible SaaS scenario",
+                "artifact_paths": ["examples/cards/v35_valid_product_face.md"],
+                "verification_commands": ["python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md"],
+                "verification_result": "PASS",
+                "reviewer_required": True,
+                "reviewer_result": "PASS",
+                "next_action": "ready for independent review",
+            },
+            "kanban_transition_event": {
+                "from_status": "review",
+                "to_status": "done",
+                "actor": "qa-verification-worker",
+                "worker": "product-face",
+                "receipt_refs": ["receipt_five", "product_face_result"],
+                "artifact_refs": ["examples/cards/v35_valid_product_face.md", "reports/product-face.md"],
+            },
+            "product_face_result": {
+                "result": "PASS",
+                "tool_or_profile": "browser-proof-runner",
+                "executed_by": "product-face-validator",
+                "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
+                "viewports": ["desktop 1440x900", "mobile 390x844"],
+                "checked_states": ["empty", "loading", "success", "error"],
+                "user_journeys_checked": ["dashboard to detail", "settings save"],
+                "a11y": {"status": "pass"},
+                "overlap_check": {"status": "pass"},
+                "console": {"status": "pass"},
+                "performance_note": "static validation scenario only",
+                "packet_ref": "examples/cards/v35_valid_product_face.md#product_face_packet",
+                "packet_comparison": {
+                    "status": "pass",
+                    "basis": "All planned screens, states and viewports are covered."
+                },
+                "source_promise_coverage": {
+                    "status": "pass",
+                    "basis": "The checked journey covers the product promise."
+                },
+                "design_fit_review": {
+                    "status": "pass",
+                    "basis": "Mechanical layout and state checks passed."
+                },
+                "visual_quality_result": {
+                    "status": "BLOCK",
+                    "reviewer": "product-face-reviewer",
+                    "basis": "The UI uses a generic dashboard composition with excessive explanatory copy and no product-specific visual direction.",
+                    "reference_quality_bar_checked": True,
+                    "ai_generic_symptoms": ["generic dashboard composition", "excessive explanatory copy"],
+                },
+                "blocking_findings": False,
+                "evidence_refs": ["reports/product-face.md"],
+                "next_action": "redesign visual system",
+            },
+        }
+
+        errors = factoryctl.validate_completion(card, receipt)
+
+        self.assertIn("product_face_result visual_quality_result BLOCK prevents Product Face PASS", errors)
+        self.assertIn("product_face_result PASS requires visual_quality_result.status PASS or PASS_WITH_RESIDUALS", errors)
 
     def test_product_face_pass_rejects_blocking_or_warning_result(self) -> None:
         result = {
@@ -488,6 +560,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_result screenshots must reference captured artifacts", errors)
         self.assertIn("product_face_result PASS requires a11y.status=pass", errors)
         self.assertIn("product_face_result PASS requires overlap_check.status=pass", errors)
+        self.assertIn("product_face_result.visual_quality_result is required", errors)
 
     def test_auditor_preflight_cannot_claim_pass(self) -> None:
         bad = {
