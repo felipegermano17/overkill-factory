@@ -8,12 +8,17 @@ Tests are the regression suite for the public path and contract behavior.
   quickstart.
 - Tests that make public onboarding, worker routing and safety rules durable.
 - Small fixtures required to reproduce contract behavior.
+- Domain-neutral fixtures that prove one behavior without depending on private
+  products, boards, paths, screenshots or runtime history.
 
 ## What Does Not Belong Here
 
 - Manual evidence archives, screenshots or generated proof outputs.
 - Tests that rely on private local paths, private boards or operator secrets.
 - Narrative validation history.
+- Generated worker packets, gate reports, scan summaries or Receipt Five output
+  committed as reusable proof instead of being created under `.tmp/` during the
+  test.
 
 ## Source Of Truth
 

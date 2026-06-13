@@ -8,6 +8,8 @@ factory path.
 - Source examples that can be read, validated and rerun by a new operator.
 - Minimal cards, papers, expected flows and public-safe receipt examples.
 - Fixtures that support tests without storing generated proof archives.
+- Expected receipt files only when they are hand-authored public fixtures, not
+  copied output from a previous run.
 
 ## What Does Not Belong Here
 
@@ -16,6 +18,8 @@ factory path.
   directory.
 - Do not store old pilot evidence, private product material, screenshots,
   raw logs or local workspace paths here.
+- Do not add fixture archives when a small domain-neutral fixture can prove the
+  same behavior.
 
 ## Source Of Truth
 

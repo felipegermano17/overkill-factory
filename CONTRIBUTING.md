@@ -30,6 +30,32 @@ python scripts/supply_chain_proof.py --check --no-write
   runtime identifiers.
 - Prefer small pull requests with one clear outcome.
 
+## Fixture And Generated Evidence Policy
+
+Public fixtures are source material for tests, examples and contract checks.
+They must be minimal, domain-neutral, public-safe and stable enough for another
+operator to rerun without private context.
+
+Generated evidence is different. Worker packets, gate reports, validation
+summaries, scan summaries, screenshots, runtime logs and Receipt Five output
+from an execution belong in `.tmp/`, `$RUNNER_TEMP`, release artifacts or a
+private evidence store. They must not be committed as public examples or docs.
+
+Allowed public fixtures:
+
+- small source cards, input papers, expected flows and expected receipt examples;
+- schema fixtures that prove one contract behavior at a time;
+- test fixtures with placeholder identifiers and no private product, board,
+  runtime, local path or operator-specific data.
+
+Disallowed public fixtures:
+
+- old pilot output or narrative execution history;
+- generated worker packets, gate reports or scan output copied from a run;
+- screenshots, raw logs, private runtime payloads or local workspace paths;
+- broad fixture archives when one small domain-neutral fixture would prove the
+  behavior.
+
 ## Pull Request Shape
 
 Include:

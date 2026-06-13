@@ -186,7 +186,51 @@ class OpenSourceDocsTest(unittest.TestCase):
 
         self.assertIn("Generated worker packets and gate reports belong in `.tmp/`", examples)
         self.assertIn("Do not commit generated run output", examples)
+        self.assertIn("hand-authored public fixtures", examples)
+        self.assertIn("domain-neutral fixture", examples)
         self.assertIn("examples/minimal-hermes-project/", examples)
+
+    def test_fixture_policy_separates_fixtures_from_generated_evidence(self) -> None:
+        contributing = read_text("CONTRIBUTING.md")
+        tests_readme = read_text("tests/README.md")
+        combined = f"{contributing}\n{tests_readme}"
+
+        for phrase in [
+            "Fixture And Generated Evidence Policy",
+            "minimal, domain-neutral, public-safe",
+            "Generated evidence is different",
+            "belong in `.tmp/`, `$RUNNER_TEMP`, release artifacts or a",
+            "private evidence store",
+            "old pilot output or narrative execution history",
+            "Generated worker packets, gate reports, scan summaries or Receipt Five output",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, combined)
+
+    def test_documented_generated_evidence_commands_use_temp_outputs(self) -> None:
+        docs_to_check = [
+            "README.md",
+            "CONTRIBUTING.md",
+            "examples/README.md",
+            "tests/README.md",
+            "docs/automation/worker-automation-v0.md",
+            "docs/getting-started/quickstart-hermes.md",
+            "docs/operations/validation-and-release.md",
+            "docs/reference/cli.md",
+            ".github/workflows/ci.yml",
+        ]
+        allowed_output_markers = (".tmp/", ".tmp\\", "$RUNNER_TEMP", "path/to/", "../my-product-factory")
+
+        for rel in docs_to_check:
+            text = read_text(rel)
+            for line in text.splitlines():
+                if "--out " not in line and "--summary-json " not in line and "--packets-out " not in line:
+                    continue
+                with self.subTest(path=rel, line=line.strip()):
+                    self.assertTrue(
+                        any(marker in line for marker in allowed_output_markers),
+                        f"generated evidence command should write to a temp or external path: {line}",
+                    )
 
     def test_products_readme_sets_public_validation_boundary(self) -> None:
         products = read_text("products/README.md")
