@@ -273,6 +273,36 @@
       "evidence_required": ["permission review", "browser smoke", "packaging proof"],
       "reference_sources": ["gstack browser/sidebar designs", "ring prompt/security reviewers"]
     },
+    "operator-onboarding-pack": {
+      "pack_id": "operator-onboarding-pack",
+      "status": "core_ready",
+      "plain_purpose": "Covers external operator install, first local smoke, Hermes adapter handoff and first walkthrough.",
+      "covers_surfaces": ["onboarding", "operator", "fresh-install", "walkthrough", "hermes-install", "adapter-install"],
+      "existing_workers": ["docs-os-worker", "qa-verification-worker", "factory-orchestrator", "public-safety-gate"],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available by default for public onboarding and operator walkthrough work that does not mutate a real Hermes runtime.",
+      "evidence_required": ["fresh install commands", "quickstart smoke", "worker packet output under .tmp", "public safety scan"],
+      "input_contract": ["fresh checkout", "operator-owned Hermes target or deferred adapter boundary", "minimal public example card"],
+      "output_contract": ["validated install path", "worker packets under .tmp", "operator next-step checklist"],
+      "local_smoke_path": "python scripts/quickstart_smoke.py",
+      "reference_sources": ["README.md", "docs/getting-started/install-in-hermes.md", "examples/minimal-hermes-project/card.md"]
+    },
+    "public-docs-knowledge-pack": {
+      "pack_id": "public-docs-knowledge-pack",
+      "status": "core_ready",
+      "plain_purpose": "Covers public-safe docs, examples, knowledge artifacts, guides and repository navigation for external users.",
+      "covers_surfaces": ["public-docs", "docs", "documentation", "guide", "manual", "knowledge", "example-gallery"],
+      "existing_workers": ["docs-os-worker", "public-safety-gate", "qa-verification-worker", "skill-eval-distiller"],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available by default for documentation and knowledge artifacts when generated evidence stays out of the public repo.",
+      "evidence_required": ["document governance validation", "public safety scan", "secret safety scan", "focused doc tests"],
+      "input_contract": ["public-safe source refs", "target reader", "validation commands"],
+      "output_contract": ["current guide or template", "clear source-of-truth boundary", "no historical private evidence"],
+      "local_smoke_path": "python scripts/validate_document_governance.py",
+      "reference_sources": ["docs/maintenance/repo-surface.md", "CONTRIBUTING.md", "examples/README.md"]
+    },
     "hardware-iot-pack": {
       "pack_id": "hardware-iot-pack",
       "status": "blocked_until_installed",
