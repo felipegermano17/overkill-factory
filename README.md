@@ -77,24 +77,27 @@ Overkill Factory provides:
 - public-safe examples and receipt contracts;
 - safety scans for secrets and private/public boundary mistakes.
 
-## What It Does Not Do
+## Operating Boundaries
 
-Overkill Factory does not automatically:
+Overkill Factory is designed to keep material decisions explicit:
 
-- understand your business without source material;
-- approve architecture, security, release or human gates;
-- deploy to production;
-- move funds, sign transactions or handle real keys;
-- replace Codex Security, Auditor, Product Face proof, QA or human review;
-- require Discord as a source of truth;
-- make every registered worker run on every card;
-- pretend every product type already has executable specialists. If a paper
-  asks for mobile, desktop, game, AI/ML, fintech, regulated, analytics,
-  browser-extension or hardware work, capability-pack validation can block until
-  the matching pack is activated.
+- source material is required before product claims become scope;
+- architecture, security, release and human gates need recorded approval or a
+  recorded block;
+- production deploys, funds, signing and real keys stay under the operator's
+  runtime, credentials and authority;
+- Codex Security, Auditor, Product Face proof, QA and human review remain
+  specialist evidence paths, not prose summaries;
+- Discord or another Control Tower can be an operator cockpit, while Hermes,
+  evidence refs and Receipt Five remain the durable state;
+- each card runs only the workers required by its phase, surfaces, risk and done
+  definition;
+- capability packs define which product surfaces are executable today. If a
+  product type is not covered yet, the factory records the gap instead of
+  pretending the specialist path exists.
 
-Hermes and Receipt Five remain the source of truth. Discord or another Control
-Tower can be a cockpit, but it is not the evidence store.
+This boundary is intentional: the factory helps agents move faster without
+hiding source gaps, missing authority or unproven release claims.
 
 ## How Hermes Fits
 

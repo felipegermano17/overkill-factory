@@ -22,7 +22,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Factory Map",
             "Who It Is For",
             "What It Does",
-            "What It Does Not Do",
+            "Operating Boundaries",
             "How Hermes Fits",
             "Operator Path",
             "Quickstart",
@@ -85,7 +85,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Mapa Da Fábrica",
             "Para Quem É",
             "O Que Faz",
-            "O Que Não Faz",
+            "Limites De Operação",
             "Como O Hermes Entra",
             "Caminho Do Operador",
             "Quickstart",
@@ -105,7 +105,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             "factoryctl init",
             "factoryctl run minimal",
             "python scripts/public_safety_scan.py",
-            "Hermes e Receipt Five continuam sendo a fonte da verdade",
+            "Receipt Five continuam sendo o estado durável",
+            "a fábrica registra a lacuna",
             "Artefatos públicos não devem conter segredos",
         ]:
             with self.subTest(required=required):

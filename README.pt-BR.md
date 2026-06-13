@@ -80,24 +80,29 @@ Overkill Factory fornece:
 - exemplos públicos seguros e contratos de receipt;
 - scans de segurança para segredos e erros de fronteira público/privado.
 
-## O Que Não Faz
+## Limites De Operação
 
-Overkill Factory não faz automaticamente:
+Overkill Factory foi desenhada para manter decisões materiais explícitas:
 
-- entender seu negócio sem material de fonte;
-- aprovar arquitetura, segurança, release ou gates humanos;
-- deploy para produção;
-- mover fundos, assinar transações ou lidar com chaves reais;
-- substituir Codex Security, Auditor, Product Face proof, QA ou revisão humana;
-- exigir Discord como fonte da verdade;
-- rodar todos os workers registrados em todo card;
-- fingir que todo tipo de produto já tem especialistas executáveis. Se um paper
-  pede mobile, desktop, jogo, AI/ML, fintech, trabalho regulado, analytics,
-  extensão de navegador ou hardware, a validação de capability pack pode
-  bloquear até o pack correspondente ser ativado.
+- material de fonte é obrigatório antes de uma afirmação de produto virar
+  escopo;
+- arquitetura, segurança, release e gates humanos precisam de aprovação
+  registrada ou bloqueio registrado;
+- deploys de produção, fundos, signing e chaves reais ficam sob runtime,
+  credenciais e autoridade do operador;
+- Codex Security, Auditor, Product Face proof, QA e revisão humana continuam
+  sendo caminhos de evidência especialista, não resumos em prosa;
+- Discord ou outra Control Tower pode ser cockpit do operador, enquanto Hermes,
+  referências de evidência e Receipt Five continuam sendo o estado durável;
+- cada card roda apenas os workers exigidos por fase, superfícies, risco e
+  definição de pronto;
+- capability packs definem quais superfícies de produto são executáveis hoje.
+  Se um tipo de produto ainda não tem cobertura, a fábrica registra a lacuna em
+  vez de fingir que o caminho especialista existe.
 
-Hermes e Receipt Five continuam sendo a fonte da verdade. Discord ou outra
-Control Tower pode ser cockpit, mas não é o armazenamento de evidência.
+Esse limite é intencional: a fábrica ajuda agentes a avançarem mais rápido sem
+esconder lacunas de fonte, autoridade ausente ou afirmações de release sem
+prova.
 
 ## Como O Hermes Entra
 
