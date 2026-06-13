@@ -33,8 +33,9 @@ The HTML visualizations explain those contracts; they do not replace them.
 
 | File | Purpose |
 | --- | --- |
-| `overkill-factory-map-v0.1.0.svg` | Static README preview of the factory line and public boundary. |
+| `overkill-factory-map-v0.1.0.png` | Real screenshot preview of the hosted interactive map for the GitHub README. |
 | `overkill-factory-map-v0.1.0.html` | Interactive map of the production line, R0-R4 risk tiers and the 40 public factory agents. |
+| `overkill-factory-map-v0.1.0.svg` | Legacy static diagram kept only as a secondary source asset. |
 
 Hosted version:
 https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html
@@ -51,5 +52,5 @@ python scripts/secret_safety_scan.py
 
 Then open the HTML in a browser and verify desktop, mobile, keyboard
 navigation, no console errors and no private or project-specific text.
-Verify that the SVG preview renders in the GitHub README and does not present
+Verify that the PNG preview renders in the GitHub README and does not present
 the visual as runtime evidence or source authority.

@@ -42,6 +42,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/concepts/factory-flow.md",
             "docs/concepts/overkill-factory-method.md",
             "docs/concepts/operator-journey.md",
+            "docs/visuals/overkill-factory-map-v0.1.0.png",
             "docs/visuals/overkill-factory-map-v0.1.0.svg",
             "docs/visuals/overkill-factory-map-v0.1.0.html",
             "docs/agents/worker-profiles.md",
@@ -94,6 +95,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
             "docs/visuals/README.md",
+            "docs/visuals/overkill-factory-map-v0.1.0.png",
             "docs/visuals/overkill-factory-map-v0.1.0.svg",
             "docs/visuals/overkill-factory-map-v0.1.0.html",
             "examples/minimal-hermes-project/README.md",
@@ -256,14 +258,16 @@ class OpenSourceDocsTest(unittest.TestCase):
         visuals = read_text("docs/visuals/README.md")
         svg = read_text("docs/visuals/overkill-factory-map-v0.1.0.svg")
         html = read_text("docs/visuals/overkill-factory-map-v0.1.0.html")
+        png = ROOT / "docs/visuals/overkill-factory-map-v0.1.0.png"
 
         self.assertIn("![Overkill Factory visual map]", readme)
-        self.assertIn("docs/visuals/overkill-factory-map-v0.1.0.svg", readme)
+        self.assertIn("docs/visuals/overkill-factory-map-v0.1.0.png", readme)
         self.assertIn("docs/visuals/overkill-factory-map-v0.1.0.html", readme)
         self.assertIn("https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html", readme)
         self.assertIn("onboarding aid, not runtime evidence or source authority", readme)
-        self.assertIn("Static README preview", visuals)
+        self.assertIn("Real screenshot preview", visuals)
         self.assertIn("Interactive map", visuals)
+        self.assertGreater(png.stat().st_size, 100_000)
         self.assertIn("Static preview for GitHub README", svg)
         self.assertIn("interactive HTML guide", svg)
         self.assertIn("Overkill Factory", html)

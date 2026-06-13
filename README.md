@@ -31,7 +31,7 @@ example.
 
 ## Factory Map
 
-[![Overkill Factory visual map](docs/visuals/overkill-factory-map-v0.1.0.svg)](https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html)
+[![Overkill Factory visual map](docs/visuals/overkill-factory-map-v0.1.0.png)](https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html)
 
 The visual map shows the factory path from source intake to Product SOT, risk
 gates, Hermes execution, Receipt Five, review, release and learnback. It is an
@@ -234,10 +234,12 @@ adapter rule or receipt contract.
 - `docs/concepts/overkill-factory-method.md`: human-readable method guide.
 - `docs/concepts/operator-journey.md`: step-by-step operator journey.
 - `docs/visuals/README.md`: visual guide boundaries and validation rules.
-- `docs/visuals/overkill-factory-map-v0.1.0.svg`: static README preview of the
-  factory map.
+- `docs/visuals/overkill-factory-map-v0.1.0.png`: real screenshot preview of
+  the hosted interactive map.
 - `docs/visuals/overkill-factory-map-v0.1.0.html`: interactive map of the
   factory line, risk tiers and public agent catalog.
+- `docs/visuals/overkill-factory-map-v0.1.0.svg`: legacy static diagram kept as
+  a secondary source asset.
 - `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
   evidence.
 - `agents/README.md`: human entrypoint for the agent contract directory.
