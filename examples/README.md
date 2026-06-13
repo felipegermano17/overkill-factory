@@ -26,6 +26,11 @@ factory path.
 `examples/minimal-hermes-project/` is the first public example. It is source
 material for quickstart validation, not a record of a past run.
 
+`examples/local-web-cockpit-factory-slice/` is the public planning slice for
+the local-first Factory Web Cockpit. It proves the cockpit request enters the
+factory through Product SOT, Method Contract, Product Face, security and worker
+packet gates before implementation.
+
 ## How It Is Validated
 
 Run the quickstart and public example checks:
@@ -34,5 +39,6 @@ Run the quickstart and public example checks:
 python scripts/quickstart_smoke.py
 python scripts/factoryctl.py gate-report --card examples/minimal-hermes-project/card.md
 python scripts/factoryctl.py worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+python scripts/factoryctl.py validate-card examples/local-web-cockpit-factory-slice/card.md
 python -m unittest tests.test_open_source_docs -q
 ```

@@ -303,6 +303,21 @@
       "local_smoke_path": "python scripts/validate_document_governance.py",
       "reference_sources": ["docs/maintenance/repo-surface.md", "CONTRIBUTING.md", "examples/README.md"]
     },
+    "local-web-cockpit-pack": {
+      "pack_id": "local-web-cockpit-pack",
+      "status": "core_ready",
+      "plain_purpose": "Covers local-first web cockpit work that projects factory status snapshots without becoming source of truth or requiring Discord.",
+      "covers_surfaces": ["local-web-cockpit", "web-cockpit", "control-tower", "operator-cockpit", "status-projection", "evidence-graph", "timeline", "security"],
+      "existing_workers": ["factory-orchestrator", "control-tower-projection-worker", "product-face", "frontend-builder", "qa-verification-worker", "security-orchestrator", "public-safety-gate"],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available by default for local cockpit planning and implementation only when status snapshots remain canonical and Discord is not required unless explicitly requested.",
+      "evidence_required": ["status snapshot fixture", "Product Face result", "public safety scan", "secret safety scan", "supply chain proof", "independent review"],
+      "input_contract": ["factory status snapshot", "Product Face packet", "security architecture plan"],
+      "output_contract": ["local cockpit UI or proof artifact", "safe evidence refs", "Receipt Five"],
+      "local_smoke_path": "python scripts/factoryctl.py status-snapshot --card examples/local-web-cockpit-factory-slice/card.md --out .tmp/local-web-cockpit-status-snapshot.json",
+      "reference_sources": ["docs/operations/parallel-execution-and-status.md", "docs/control-tower/discord-cockpit-ux-study-gate.md", "examples/local-web-cockpit-factory-slice/card.md"]
+    },
     "hardware-iot-pack": {
       "pack_id": "hardware-iot-pack",
       "status": "blocked_until_installed",

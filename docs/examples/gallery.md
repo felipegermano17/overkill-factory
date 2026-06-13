@@ -18,6 +18,13 @@
   proof before completion.
 - Command: `factoryctl gate-report --card examples/cards/v35_valid_product_face.md`
 
+## Local Web Cockpit Factory Slice
+
+- Path: `examples/local-web-cockpit-factory-slice/`
+- Use when: starting the local-first web cockpit through factory gates without
+  hand-building the UI outside the factory.
+- Command: `factoryctl worker-packet --worker all --required-only --card examples/local-web-cockpit-factory-slice/card.md --out .tmp/local-web-cockpit-worker-packets`
+
 ## Security Example
 
 - Path: `examples/cards/v35_valid_security_with_scan.md`

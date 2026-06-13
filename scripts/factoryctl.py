@@ -2140,13 +2140,13 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
     if worker_id == "discord-control-tower-bridge":
         control_tower_contract = card.get("control_tower_contract")
         bridge_surfaces = {
-            "control-tower",
             "discord",
-            "operator-cockpit",
-            "approval",
-            "access",
-            "blocker",
-            "health",
+            "discord-control-tower",
+            "discord-bridge",
+            "discord-approval",
+            "discord-access",
+            "discord-blocker",
+            "discord-health",
             "runtime-registration",
         }
         required = (
