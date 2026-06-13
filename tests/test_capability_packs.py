@@ -27,6 +27,8 @@ class CapabilityPacksTest(unittest.TestCase):
 
         for pack_id in [
             "web-saas-core",
+            "operator-onboarding-pack",
+            "public-docs-knowledge-pack",
             "mobile-app-pack",
             "desktop-app-pack",
             "game-product-pack",
@@ -41,6 +43,18 @@ class CapabilityPacksTest(unittest.TestCase):
                 self.assertIn(pack_id, packs)
                 self.assertTrue(packs[pack_id]["covers_surfaces"])
                 self.assertTrue(packs[pack_id]["evidence_required"])
+
+    def test_new_operator_packs_have_executable_contracts(self) -> None:
+        packs = json.loads((ROOT / "agents" / "capability-packs.public.json").read_text(encoding="utf-8"))["packs"]
+
+        for pack_id in ["operator-onboarding-pack", "public-docs-knowledge-pack"]:
+            with self.subTest(pack_id=pack_id):
+                pack = packs[pack_id]
+                self.assertTrue(pack["plain_purpose"])
+                self.assertTrue(pack["input_contract"])
+                self.assertTrue(pack["output_contract"])
+                self.assertTrue(pack["local_smoke_path"].startswith("python scripts/"))
+                self.assertNotIn(".tmp/", json.dumps(pack))
 
     def test_template_pack_surfaces_pass_capability_coverage(self) -> None:
         card = base_card()

@@ -19,10 +19,22 @@ from pathlib import Path, PureWindowsPath
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parents[1]
+CODE_ROOT = Path(__file__).resolve().parents[1]
+
+
+def default_work_root() -> Path:
+    cwd = Path.cwd()
+    if (cwd / "agents" / "hermes-profile-bindings.public.json").exists() and (
+        cwd / "examples" / "minimal-hermes-project" / "card.md"
+    ).exists():
+        return cwd
+    return CODE_ROOT
+
+
+ROOT = default_work_root()
 PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
-CANONICAL_RUNTIME_ENFORCEMENT_PATH = ROOT / "scripts" / "canonical_runtime_enforcement.py"
+CANONICAL_RUNTIME_ENFORCEMENT_PATH = CODE_ROOT / "scripts" / "canonical_runtime_enforcement.py"
 DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
 DEFAULT_QUICKSTART_OUT = ROOT / ".tmp" / "quickstart-result.json"
 DEFAULT_PACKETS_OUT = ROOT / ".tmp" / "minimal-worker-packets"

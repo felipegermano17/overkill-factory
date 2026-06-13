@@ -15,6 +15,9 @@ Use this order from a fresh checkout:
 4. Read `getting-started/install-in-hermes.md`
 5. Connect generated worker packets to your Hermes only after local checks pass.
 
+For the first full public run, use
+`getting-started/first-external-operator-walkthrough.md`.
+
 ## Install In Your Hermes
 
 Start with `getting-started/install-in-hermes.md`. Hermes is your runtime floor;

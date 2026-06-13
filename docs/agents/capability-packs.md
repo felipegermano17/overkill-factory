@@ -19,6 +19,14 @@ Every Factory card names its surfaces, such as `frontend`, `api`, `solana`,
 `scripts/factoryctl.py validate-card` checks those surfaces against
 `agents/capability-packs.public.json`.
 
+Reusable packs should also state their practical operator contract:
+
+- input contract;
+- output contract;
+- local smoke path.
+
+This keeps packs executable for external users instead of becoming broad labels.
+
 The result is simple:
 
 | Pack state | Meaning | Execution rule |
@@ -38,6 +46,8 @@ These packs are ready in the public Factory:
 | `cloud-native-core` | CI/CD, runtime, deploy wiring, cloud security, observability and rollback planning. |
 | `agent-runtime-core` | Hermes, Factory adapter, profiles, skills, tools, memory, MCP and agentic workflow changes. |
 | `solana-quasar-core` | Quasar-first Solana/onchain program work, wallet transactions, signer boundaries and onchain QA. |
+| `operator-onboarding-pack` | Fresh install, first local smoke, Hermes adapter handoff and first walkthrough. |
+| `public-docs-knowledge-pack` | Public-safe docs, examples, guides and repository navigation for external users. |
 
 ## Template Packs
 

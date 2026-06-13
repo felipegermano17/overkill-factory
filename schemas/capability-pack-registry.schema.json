@@ -65,6 +65,17 @@
             "minItems": 1,
             "items": { "type": "string", "minLength": 3 }
           },
+          "input_contract": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "output_contract": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "local_smoke_path": { "type": "string", "minLength": 3 },
           "reference_sources": {
             "type": "array",
             "minItems": 1,

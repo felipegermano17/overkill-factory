@@ -11,11 +11,21 @@ from pathlib import Path
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parents[1]
-FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
-DEFAULT_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
-DEFAULT_OUT = ROOT / ".tmp" / "quickstart-result.json"
-DEFAULT_PACKETS_OUT = ROOT / ".tmp" / "minimal-worker-packets"
+CODE_ROOT = Path(__file__).resolve().parents[1]
+FACTORYCTL_PATH = CODE_ROOT / "scripts" / "factoryctl.py"
+
+
+def default_work_root() -> Path:
+    cwd = Path.cwd()
+    if (cwd / "examples" / "minimal-hermes-project" / "card.md").exists():
+        return cwd
+    return CODE_ROOT
+
+
+WORK_ROOT = default_work_root()
+DEFAULT_CARD = WORK_ROOT / "examples" / "minimal-hermes-project" / "card.md"
+DEFAULT_OUT = WORK_ROOT / ".tmp" / "quickstart-result.json"
+DEFAULT_PACKETS_OUT = WORK_ROOT / ".tmp" / "minimal-worker-packets"
 
 
 def load_factoryctl() -> Any:
@@ -29,10 +39,12 @@ def load_factoryctl() -> Any:
 
 
 def repo_ref(path: Path) -> str:
-    try:
-        return path.resolve().relative_to(ROOT).as_posix()
-    except (OSError, ValueError):
-        return f"external:{path.name or 'artifact'}"
+    for root in (WORK_ROOT, CODE_ROOT):
+        try:
+            return path.resolve().relative_to(root).as_posix()
+        except (OSError, ValueError):
+            continue
+    return f"external:{path.name or 'artifact'}"
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:

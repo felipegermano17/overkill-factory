@@ -22,6 +22,29 @@ factoryctl run minimal
 factoryctl init --out ../my-product-factory --project-name my-product
 ```
 
+## Fresh Adapter Smoke
+
+Before touching a real Hermes board, prove the public adapter path locally:
+
+```bash
+factoryctl gate-report --card examples/minimal-hermes-project/card.md
+factoryctl worker-packet \
+  --worker all \
+  --required-only \
+  --card examples/minimal-hermes-project/card.md \
+  --out .tmp/external-hermes-worker-packets
+python adapters/hermes/transition_hook.py \
+  --card examples/minimal-hermes-project/card.md \
+  --from-status draft \
+  --to-status ready \
+  --ledger .tmp/external-hermes-worker-ledger.json \
+  --out .tmp/external-hermes-ready-hook-result.json \
+  --report-only
+```
+
+All generated output stays under `.tmp/`. Do not commit worker packets, ledgers,
+screenshots or runtime proof from your own Hermes instance.
+
 ## What Gets Installed
 
 - `factoryctl`: the supported CLI.

@@ -363,8 +363,9 @@ class OpenSourceDocsTest(unittest.TestCase):
 
     def test_quickstart_and_operations_docs_include_runnable_validation_commands(self) -> None:
         quickstart = read_text("docs/getting-started/quickstart-hermes.md")
+        walkthrough = read_text("docs/getting-started/first-external-operator-walkthrough.md")
         operations = read_text("docs/operations/validation-and-release.md")
-        combined = f"{quickstart}\n{operations}"
+        combined = f"{quickstart}\n{walkthrough}\n{operations}"
         required_commands = [
             "factoryctl doctor",
             "factoryctl run minimal",
@@ -385,6 +386,40 @@ class OpenSourceDocsTest(unittest.TestCase):
         for command in required_commands:
             with self.subTest(command=command):
                 self.assertIn(command, combined)
+
+    def test_external_operator_walkthrough_stays_public_and_tmp_scoped(self) -> None:
+        walkthrough = read_text("docs/getting-started/first-external-operator-walkthrough.md")
+        install = read_text("docs/getting-started/install-in-hermes.md")
+        combined = f"{walkthrough}\n{install}"
+
+        for expected in [
+            "git clone https://github.com/<owner>/overkill-factory.git",
+            "factoryctl gate-report --card examples/minimal-hermes-project/card.md",
+            "--out .tmp/external-operator-worker-packets",
+            "--out .tmp/external-hermes-worker-packets",
+            "does not mutate a real Hermes board",
+            "All generated output stays under `.tmp/`",
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, combined)
+
+        self.assertNotIn("C:" + "\\" + "Users", combined)
+        self.assertNotIn("historical pilot", combined.lower())
+
+    def test_release_cli_smoke_installs_package_and_runs_entrypoints(self) -> None:
+        workflow = read_text(".github/workflows/release-cli-smoke.yml")
+
+        for expected in [
+            "python -m pip install .",
+            "factoryctl --help",
+            "overkill-quickstart",
+            "python scripts/public_safety_scan.py",
+            "python scripts/secret_safety_scan.py",
+            "tags:",
+            '"v*"',
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, workflow)
 
     def test_minimal_example_is_public_safe_and_reproducible(self) -> None:
         example = read_text("examples/minimal-hermes-project/README.md")

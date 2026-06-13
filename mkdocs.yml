@@ -5,6 +5,7 @@ docs_dir: docs
 nav:
   - Operator Path: index.md
   - Install In Your Hermes: getting-started/install-in-hermes.md
+  - First Operator Walkthrough: getting-started/first-external-operator-walkthrough.md
   - CLI Reference: reference/cli.md
   - Examples: examples/gallery.md
   - Concepts:
