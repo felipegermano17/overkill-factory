@@ -1,66 +1,187 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/discord-control-tower-ux-audit.schema.json",
   "record_type": "discord_control_tower_ux_audit",
-  "created_at": "2026-06-11T00:00:00Z",
+  "created_at": "2026-06-13T00:00:00Z",
   "result": "ATTENTION",
-  "scope": "Public-safe UX audit of a Discord Control Tower setup.",
+  "scope": "Public-safe Discord Cockpit UX Study Gate. This template is not proof that Discord is production-ready.",
   "observed_model": {
-    "runtime": "Hermes",
+    "runtime": "Hermes or selected runtime",
     "owner_language": "pt-BR",
-    "source_of_truth": "Hermes/Kanban",
-    "discord_role": "owner cockpit and project conversation surface"
+    "source_of_truth": "runtime cards, status snapshots, gates, receipts and worker results",
+    "discord_role": "optional projection, request and approval inbox; not canonical state"
+  },
+  "study_gate": {
+    "ux_study_required_before_implementation": true,
+    "proof_pack_required_before_acceptance": true,
+    "discord_is_source_of_truth": false,
+    "recommended_role": "secondary_operator_cockpit",
+    "web_cockpit_boundary": "required_for_dense_state",
+    "status_snapshot_dependency": "#80 factory status snapshot is the canonical state input",
+    "product_face_dependency": "#82 Product Face visual quality gate is required before accepting cockpit UX"
+  },
+  "discord_mastery_matrix": {
+    "official_source_refs": [
+      "https://docs.discord.com/developers/interactions/overview",
+      "https://docs.discord.com/developers/interactions/receiving-and-responding",
+      "https://docs.discord.com/developers/interactions/application-commands",
+      "https://docs.discord.com/developers/components/reference",
+      "https://docs.discord.com/developers/topics/threads",
+      "https://docs.discord.com/developers/topics/permissions",
+      "https://docs.discord.com/developers/topics/rate-limits",
+      "https://docs.discord.com/developers/resources/webhook"
+    ],
+    "primitives_reviewed": [
+      "categories",
+      "text channels",
+      "forum channels",
+      "threads",
+      "pins",
+      "embeds",
+      "message components",
+      "buttons",
+      "select menus",
+      "modals",
+      "slash commands",
+      "message commands",
+      "roles and permission overwrites",
+      "webhooks"
+    ],
+    "limits_reviewed": [
+      "interaction initial response deadline",
+      "interaction followup token lifetime",
+      "component count and component message mode",
+      "thread archive and visibility behavior",
+      "per-route and global API rate limits",
+      "webhook token custody",
+      "message edit and duplicate event idempotency"
+    ],
+    "client_surfaces_reviewed": [
+      "desktop client scanning and thread navigation",
+      "mobile client scanning and notification load"
+    ],
+    "failure_modes_reviewed": [
+      "operator misses an approval message",
+      "operator sees stale runtime state",
+      "free-form chat is mistaken for formal approval",
+      "bridge retries duplicate project topics",
+      "Discord is offline while runtime progresses",
+      "rate limit delays dashboard updates"
+    ],
+    "maintenance_costs_reviewed": [
+      "server and channel drift",
+      "role and permission drift",
+      "thread archive cleanup",
+      "bot token and webhook rotation",
+      "operator notification tuning"
+    ]
+  },
+  "operator_comprehension_model": {
+    "first_5_seconds": "The operator sees whether anything needs attention, whether state is fresh, and where the next safe action lives.",
+    "first_30_seconds": "The operator can identify project phase, blockers, pending approvals, missing access and the canonical evidence link.",
+    "first_5_minutes": "The operator can inspect one project, understand risk and decide whether to approve, wait, grant access or ask for clarification.",
+    "near_zero_friction_rule": "Discord is acceptable only for jobs where the operator does not need to hunt across channels, infer freshness or translate casual chat into formal state."
+  },
+  "proof_pack_contract": {
+    "required_before_acceptance": true,
+    "must_measure": [
+      "operator comprehension in 5 seconds, 30 seconds and 5 minutes",
+      "findability of next safe action",
+      "dashboard update latency and edit behavior",
+      "approval/request boundary clarity",
+      "staleness and idempotency handling",
+      "notification burden during active multi-agent work",
+      "mobile and desktop readability"
+    ],
+    "must_include_negative_tests": [
+      "stale snapshot displayed",
+      "duplicate bridge event replayed",
+      "expired interaction fallback attempted",
+      "wrong role attempts approval",
+      "free-form project-thread message attempts approval",
+      "rate limit response delays projection"
+    ],
+    "public_safe_boundaries": [
+      "no private Discord ids",
+      "no private channel names",
+      "no webhook tokens",
+      "no private runtime URLs",
+      "no raw Discord logs",
+      "no local operator paths"
+    ]
   },
   "checks": {
-    "portuguese_first_structure": false,
-    "operator_journey_categories_ordered": false,
-    "channel_names_are_owner_readable": false,
-    "single_owner_intake_door": false,
-    "global_portfolio_view_defined": false,
-    "project_index_not_detail_dump": false,
-    "main_dashboard_pinned": false,
-    "per_channel_onboarding_pinned": false,
-    "gerente_channel_exists": false,
-    "project_registry_channel_exists": false,
-    "kanban_forum_exists": false,
-    "kanban_forum_has_phase_tags": false,
-    "kanban_forum_has_guidance_tags": false,
-    "multi_project_kanban_shape_ready": false,
+    "official_discord_primitives_studied": true,
+    "rate_limits_and_retry_behavior_studied": true,
+    "interaction_expiry_and_fallback_studied": true,
+    "mobile_desktop_differences_studied": true,
+    "operator_5s_30s_5m_model_defined": true,
+    "staleness_and_idempotency_checks_defined": true,
+    "approval_ambiguity_checks_defined": true,
+    "notification_load_checks_defined": true,
+    "web_cockpit_boundary_defined": true,
+    "status_snapshot_dependency_recorded": true,
+    "product_face_quality_dependency_recorded": true,
+    "portuguese_first_structure": true,
+    "operator_journey_categories_ordered": true,
+    "channel_names_are_owner_readable": true,
+    "single_owner_intake_door": true,
+    "global_portfolio_view_defined": true,
+    "project_index_not_detail_dump": true,
+    "main_dashboard_pinned": true,
+    "per_channel_onboarding_pinned": true,
+    "gerente_channel_exists": true,
+    "project_registry_channel_exists": true,
+    "kanban_forum_exists": true,
+    "kanban_forum_has_phase_tags": true,
+    "kanban_forum_has_guidance_tags": true,
+    "multi_project_kanban_shape_ready": true,
     "multi_project_kanban_idempotence_automated": false,
-    "project_cockpit_pipeline_panel_required": false,
+    "project_cockpit_pipeline_panel_required": true,
     "pilot_project_cockpit_pipeline_panel_created": false,
-    "project_pipeline_progress_visible": false,
+    "project_pipeline_progress_visible": true,
     "project_pipeline_projection_automated": false,
-    "approval_lane_guided": false,
-    "access_lane_guided": false,
-    "blocker_lane_guided": false,
-    "evidence_lane_guided": false,
-    "release_lane_guided": false,
-    "health_lane_guided": false,
+    "approval_lane_guided": true,
+    "access_lane_guided": true,
+    "blocker_lane_guided": true,
+    "evidence_lane_guided": true,
+    "release_lane_guided": true,
+    "health_lane_guided": true,
     "pilot_project_thread_created": false,
     "pilot_forum_card_created": false,
-    "kanban_guide_not_marked_as_blocked_project": false,
-    "active_bot_messages_threaded_or_linked": false,
-    "free_response_threading_conflict_documented": false,
-    "manager_reception_thread_launcher_only": false,
-    "project_conversation_stays_in_single_thread": false,
+    "kanban_guide_not_marked_as_blocked_project": true,
+    "active_bot_messages_threaded_or_linked": true,
+    "free_response_threading_conflict_documented": true,
+    "manager_reception_thread_launcher_only": true,
+    "project_conversation_stays_in_single_thread": true,
     "thread_first_project_intake_automated": false,
-    "formal_approvals_lane_bound": false,
+    "formal_approvals_lane_bound": true,
     "structured_approval_interactions_automated": false,
     "live_runtime_projection_automated": false
   },
   "findings": [
     {
       "severity": "P1",
-      "finding": "todo",
-      "impact": "todo",
-      "required_fix": "todo"
+      "finding": "Discord is not accepted as a primary cockpit from setup alone.",
+      "impact": "A familiar chat UI can hide stale state, duplicate events, noisy updates or ambiguous approvals.",
+      "required_fix": "Run the Discord Cockpit UX Study and proof pack before accepting any Discord cockpit implementation."
+    },
+    {
+      "severity": "P1",
+      "finding": "Dense state belongs in a local web cockpit unless Discord proof shows equal or better comprehension.",
+      "impact": "The operator may need to compare phases, blockers, evidence and approvals faster than Discord channels can support.",
+      "required_fix": "Use Discord for projection, notification and approvals first; route dense inspection to the local web cockpit."
     }
   ],
   "live_corrections": [],
   "next_required_actions": [
-    "todo"
+    "Generate a product-specific Discord Control Tower UX Proof Pack before treating Discord as accepted cockpit UX.",
+    "Keep #80 status snapshots as canonical state input for Discord projections.",
+    "Apply #82 Product Face visual quality review to any visible cockpit surface before acceptance.",
+    "Use #84 local web cockpit for dense state, comparison, inspection and long-running control."
   ],
   "evidence_refs": [
-    "external:private-discord-audit"
+    "docs/control-tower/discord-cockpit-ux-study-gate.md",
+    "templates/factory-status-snapshot.json",
+    "templates/discord-control-tower-ux-audit.json"
   ]
 }

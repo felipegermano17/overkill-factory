@@ -10,6 +10,10 @@
     "result",
     "scope",
     "observed_model",
+    "study_gate",
+    "discord_mastery_matrix",
+    "operator_comprehension_model",
+    "proof_pack_contract",
     "checks",
     "findings",
     "live_corrections",
@@ -50,9 +54,144 @@
       },
       "additionalProperties": false
     },
+    "study_gate": {
+      "type": "object",
+      "required": [
+        "ux_study_required_before_implementation",
+        "proof_pack_required_before_acceptance",
+        "discord_is_source_of_truth",
+        "recommended_role",
+        "web_cockpit_boundary",
+        "status_snapshot_dependency",
+        "product_face_dependency"
+      ],
+      "properties": {
+        "ux_study_required_before_implementation": { "const": true },
+        "proof_pack_required_before_acceptance": { "const": true },
+        "discord_is_source_of_truth": { "const": false },
+        "recommended_role": {
+          "enum": [
+            "reject",
+            "notification_surface_only",
+            "approval_inbox_only",
+            "secondary_operator_cockpit",
+            "primary_operator_cockpit_after_proof"
+          ]
+        },
+        "web_cockpit_boundary": {
+          "enum": [
+            "required_for_dense_state",
+            "required_for_all_operational_state",
+            "not_required_after_discord_proof"
+          ]
+        },
+        "status_snapshot_dependency": { "type": "string", "minLength": 3 },
+        "product_face_dependency": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "discord_mastery_matrix": {
+      "type": "object",
+      "required": [
+        "official_source_refs",
+        "primitives_reviewed",
+        "limits_reviewed",
+        "client_surfaces_reviewed",
+        "failure_modes_reviewed",
+        "maintenance_costs_reviewed"
+      ],
+      "properties": {
+        "official_source_refs": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "primitives_reviewed": {
+          "type": "array",
+          "minItems": 8,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "limits_reviewed": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "client_surfaces_reviewed": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "failure_modes_reviewed": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "maintenance_costs_reviewed": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "operator_comprehension_model": {
+      "type": "object",
+      "required": [
+        "first_5_seconds",
+        "first_30_seconds",
+        "first_5_minutes",
+        "near_zero_friction_rule"
+      ],
+      "properties": {
+        "first_5_seconds": { "type": "string", "minLength": 20 },
+        "first_30_seconds": { "type": "string", "minLength": 20 },
+        "first_5_minutes": { "type": "string", "minLength": 20 },
+        "near_zero_friction_rule": { "type": "string", "minLength": 20 }
+      },
+      "additionalProperties": false
+    },
+    "proof_pack_contract": {
+      "type": "object",
+      "required": [
+        "required_before_acceptance",
+        "must_measure",
+        "must_include_negative_tests",
+        "public_safe_boundaries"
+      ],
+      "properties": {
+        "required_before_acceptance": { "const": true },
+        "must_measure": {
+          "type": "array",
+          "minItems": 6,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "must_include_negative_tests": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "public_safe_boundaries": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
     "checks": {
       "type": "object",
       "required": [
+        "official_discord_primitives_studied",
+        "rate_limits_and_retry_behavior_studied",
+        "interaction_expiry_and_fallback_studied",
+        "mobile_desktop_differences_studied",
+        "operator_5s_30s_5m_model_defined",
+        "staleness_and_idempotency_checks_defined",
+        "approval_ambiguity_checks_defined",
+        "notification_load_checks_defined",
+        "web_cockpit_boundary_defined",
+        "status_snapshot_dependency_recorded",
+        "product_face_quality_dependency_recorded",
         "portuguese_first_structure",
         "operator_journey_categories_ordered",
         "channel_names_are_owner_readable",
@@ -91,6 +230,17 @@
         "live_runtime_projection_automated"
       ],
       "properties": {
+        "official_discord_primitives_studied": { "type": "boolean" },
+        "rate_limits_and_retry_behavior_studied": { "type": "boolean" },
+        "interaction_expiry_and_fallback_studied": { "type": "boolean" },
+        "mobile_desktop_differences_studied": { "type": "boolean" },
+        "operator_5s_30s_5m_model_defined": { "type": "boolean" },
+        "staleness_and_idempotency_checks_defined": { "type": "boolean" },
+        "approval_ambiguity_checks_defined": { "type": "boolean" },
+        "notification_load_checks_defined": { "type": "boolean" },
+        "web_cockpit_boundary_defined": { "type": "boolean" },
+        "status_snapshot_dependency_recorded": { "type": "boolean" },
+        "product_face_quality_dependency_recorded": { "type": "boolean" },
         "portuguese_first_structure": { "type": "boolean" },
         "operator_journey_categories_ordered": { "type": "boolean" },
         "channel_names_are_owner_readable": { "type": "boolean" },

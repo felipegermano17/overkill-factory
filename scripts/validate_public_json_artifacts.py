@@ -172,6 +172,33 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             errors.append(f"{at}: active tool surfaces require reviewed trust status")
         if required_tools and not str(tools.get("supply_chain_review") or "").strip():
             errors.append(f"{at}: required tools require supply_chain_review")
+    if data.get("record_type") == "discord_control_tower_ux_audit":
+        serialized = json.dumps(data, sort_keys=True)
+        if "todo" in serialized.lower():
+            errors.append(f"{at}: discord_control_tower_ux_audit must not contain placeholder todo text")
+        if PRIVATE_MARKERS.search(serialized):
+            errors.append(f"{at}: discord_control_tower_ux_audit must not publish private Discord or local refs")
+        study_gate = data.get("study_gate") if isinstance(data.get("study_gate"), dict) else {}
+        if study_gate.get("discord_is_source_of_truth") is not False:
+            errors.append(f"{at}: Discord UX audit must keep Discord out of source-of-truth role")
+        if study_gate.get("recommended_role") == "primary_operator_cockpit_after_proof":
+            proof = data.get("proof_pack_contract") if isinstance(data.get("proof_pack_contract"), dict) else {}
+            if proof.get("required_before_acceptance") is not True:
+                errors.append(f"{at}: primary Discord cockpit recommendation requires proof pack")
+        required_checks = [
+            "official_discord_primitives_studied",
+            "rate_limits_and_retry_behavior_studied",
+            "interaction_expiry_and_fallback_studied",
+            "operator_5s_30s_5m_model_defined",
+            "staleness_and_idempotency_checks_defined",
+            "approval_ambiguity_checks_defined",
+            "notification_load_checks_defined",
+            "web_cockpit_boundary_defined",
+        ]
+        checks = data.get("checks") if isinstance(data.get("checks"), dict) else {}
+        for field in required_checks:
+            if checks.get(field) is not True:
+                errors.append(f"{at}: discord_control_tower_ux_audit requires {field}=true")
     return errors
 
 
