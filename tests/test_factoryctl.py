@@ -145,6 +145,28 @@ PRIVATE_PATH_RE = re.compile(
 
 
 class FactoryCtlTest(unittest.TestCase):
+    def test_local_web_cockpit_card_routes_without_discord_bridge(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "local-web-cockpit-factory-slice" / "card.md")
+        report = factoryctl.build_gate_report(card)
+
+        self.assertEqual(report["card_validation_errors"], [])
+        self.assertEqual(report["gate_status"], "ready_for_worker_execution")
+        self.assertIn("control-tower-projection-worker", report["required_workers"])
+        self.assertNotIn("discord-control-tower-bridge", report["required_workers"])
+        self.assertEqual(report["workers"]["discord-control-tower-bridge"]["status"], "not_required_by_current_card")
+        self.assertIn("product-face", report["required_workers"])
+        self.assertIn("appsec-owasp-specialist", report["required_workers"])
+
+    def test_discord_bridge_requires_explicit_discord_surface_or_contract(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "local-web-cockpit-factory-slice" / "card.md")
+
+        required, reason = factoryctl.worker_required("discord-control-tower-bridge", card)
+        self.assertFalse(required, reason)
+
+        card["surfaces"] = list(card["surfaces"]) + ["discord"]
+        required, reason = factoryctl.worker_required("discord-control-tower-bridge", card)
+        self.assertTrue(required, reason)
+
     def test_product_face_card_requires_product_face_and_review_workers(self) -> None:
         card = load_card("v35_valid_product_face.md")
         report = factoryctl.build_gate_report(card)
