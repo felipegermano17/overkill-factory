@@ -41,6 +41,7 @@ Run for any card with surfaces:
 - packet comparison status;
 - source-promise coverage status;
 - design-fit review status;
+- visual-quality verdict;
 - evidence refs;
 - next action.
 
@@ -70,8 +71,11 @@ Useful options:
 - `--packet-ref`, `--packet-comparison-basis`,
   `--source-promise-coverage-basis` and `--design-fit-review-basis` to record
   product approval alignment.
+- `--visual-quality-status`, `--visual-quality-reviewer` and
+  `--visual-quality-basis` to record the professional visual quality verdict.
 - `--reusable-for-product` only after the three alignment fields above are
-  recorded as `pass`.
+  recorded as `pass` and `visual_quality_result` is `PASS` or
+  `PASS_WITH_RESIDUALS`.
 
 With Python Playwright available, the runner captures screenshots, console
 messages, DOM state, accessibility basics, overlap scan and a browser-local
@@ -80,11 +84,13 @@ performance note. Without Playwright, it writes a `WAIVED` result with
 rendered screenshot, console, layout, accessibility tree or performance claim
 was captured.
 
-For product-facing completion, Receipt Five must include
-`product_face_result`. A Product Face Packet is planning; a Product Face Result
-is proof. Browser screenshots alone are not product approval. A reusable product
-approval also needs packet comparison, source-promise coverage and design-fit
-review recorded as `pass`.
+For product-facing completion, Receipt Five must include `product_face_result`.
+A Product Face Packet is planning; a Product Face Result is proof. Browser
+screenshots, no console errors, no overflow, accessibility basics and state
+coverage are necessary but insufficient. A reusable product approval also needs
+packet comparison, source-promise coverage, design-fit review and
+`visual_quality_result` recorded as acceptable by a reviewer empowered to block
+visually unacceptable UI.
 
 Reusable product example:
 
@@ -101,6 +107,9 @@ python scripts/product_face_proof.py \
   --packet-comparison-basis "Screens, states and viewports match the Product Face Packet." \
   --source-promise-coverage-basis "The checked journey covers the stated product promise." \
   --design-fit-review-basis "The reviewer confirmed fit to the requested product direction." \
+  --visual-quality-status PASS \
+  --visual-quality-reviewer product-face-reviewer \
+  --visual-quality-basis "The UI meets the product-specific quality bar and does not show AI-generic symptoms." \
   --reusable-for-product \
   --product-id qvg-public-validation-product \
   --environment-class production-like-static-artifact \
@@ -146,7 +155,13 @@ Full Product Face PASS requires:
 - packet comparison;
 - source-promise coverage;
 - design-fit review;
+- visual-quality verdict distinct from mechanical proof;
 - evidence refs attached to Receipt Five.
+
+A mechanically passing UI must still block when it shows clear AI-generic
+symptoms: generic dashboard composition, excessive explanatory copy, weak
+hierarchy, synthetic visual language, audience mismatch, or controls/states that
+pass a checklist but fail a serious product/design review.
 
 ## Why This Is Better
 

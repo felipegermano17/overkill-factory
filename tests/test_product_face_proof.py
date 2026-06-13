@@ -99,6 +99,7 @@ class ProductFaceProofTest(unittest.TestCase):
             "packet_comparison",
             "source_promise_coverage",
             "design_fit_review",
+            "visual_quality_result",
             "blocking_findings",
             "evidence_refs",
             "next_action",
@@ -109,6 +110,7 @@ class ProductFaceProofTest(unittest.TestCase):
             self.assertTrue(result[field])
         self.assertTrue(result["a11y"])
         self.assertTrue(result["overlap_check"])
+        self.assertIn(result["visual_quality_result"]["status"], {"BLOCK", "PASS", "PASS_WITH_RESIDUALS"})
 
     def test_card_binding_and_factory_alias_fields_are_present(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
@@ -182,6 +184,12 @@ class ProductFaceProofTest(unittest.TestCase):
                 packet_comparison_basis="Unit proof is explicitly matched to the packet.",
                 source_promise_coverage_basis="Unit proof covers the named product promise.",
                 design_fit_review_basis="Unit proof includes an explicit design-fit review.",
+            )
+            product_face_proof.apply_visual_quality_review(
+                result=result,
+                status="PASS",
+                reviewer="product-face-reviewer",
+                basis="Unit proof meets the reference quality bar for this bounded fixture.",
             )
 
             product_face_proof.apply_product_reuse_scope(

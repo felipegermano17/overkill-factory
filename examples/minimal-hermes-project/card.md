@@ -178,6 +178,19 @@
       "bundle": "not_applicable",
       "render": "local_static_page"
     },
+    "visual_quality_bar": {
+      "reference_quality_bar": "A quiet, inspectable operator receipt/status surface; not a generic marketing dashboard.",
+      "anti_generic_criteria": [
+        "no generic AI dashboard composition",
+        "no excessive explanatory copy where status structure should carry meaning",
+        "no decorative visual treatment that hides receipt state or next action"
+      ],
+      "professional_review_required": true,
+      "block_when": [
+        "mechanical screenshots pass but hierarchy, density or product fit feels generic",
+        "the UI looks like a template rather than a purpose-built factory operator surface"
+      ]
+    },
     "visual_evidence_plan": [
       "desktop screenshot",
       "mobile screenshot",

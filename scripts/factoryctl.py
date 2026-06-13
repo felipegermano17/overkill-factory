@@ -195,6 +195,7 @@ PRODUCT_EXPERIENCE_REQUIRED_FIELDS = (
     "main_flows",
     "required_states",
     "design_direction",
+    "visual_quality_bar",
     "proof_required",
     "reviewers_required",
     "done_definition",
@@ -208,6 +209,7 @@ PRODUCT_FACE_PACKET_REQUIRED_FIELDS = (
     "main_flows",
     "required_states",
     "design_direction",
+    "visual_quality_bar",
     "proof_required",
     "reviewers_required",
     "done_definition",
@@ -241,6 +243,7 @@ PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS = (
     "source_promise_coverage",
     "design_fit_review",
 )
+VISUAL_QUALITY_ALLOWED_RESULTS = {"PASS", "PASS_WITH_RESIDUALS", "BLOCK"}
 
 
 @dataclass(frozen=True)
@@ -1558,6 +1561,25 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
         errors.append("product_face_result PASS requires console.status=pass")
     if result.get("blocking_findings") is True and not str(result.get("next_action") or "").strip():
         errors.append("product_face_result blocking findings require next_action")
+    visual_quality = result.get("visual_quality_result") if isinstance(result.get("visual_quality_result"), dict) else {}
+    if not visual_quality:
+        errors.append("product_face_result.visual_quality_result is required")
+    else:
+        visual_status = str(visual_quality.get("status") or "").strip().upper()
+        if visual_status not in VISUAL_QUALITY_ALLOWED_RESULTS:
+            errors.append("product_face_result.visual_quality_result.status must be PASS, PASS_WITH_RESIDUALS or BLOCK")
+        if not _non_empty_text(visual_quality.get("reviewer")):
+            errors.append("product_face_result.visual_quality_result.reviewer is required")
+        if not _non_empty_text(visual_quality.get("basis")):
+            errors.append("product_face_result.visual_quality_result.basis is required")
+        if visual_status in {"PASS", "PASS_WITH_RESIDUALS"} and visual_quality.get("reference_quality_bar_checked") is not True:
+            errors.append("product_face_result.visual_quality_result.reference_quality_bar_checked must be true")
+        if is_pass and visual_status == "BLOCK":
+            errors.append("product_face_result visual_quality_result BLOCK prevents Product Face PASS")
+        if is_pass and visual_status not in {"PASS", "PASS_WITH_RESIDUALS"}:
+            errors.append("product_face_result PASS requires visual_quality_result.status PASS or PASS_WITH_RESIDUALS")
+        if is_pass and visual_status == "PASS_WITH_RESIDUALS" and not _list_items(visual_quality.get("residuals")):
+            errors.append("product_face_result PASS_WITH_RESIDUALS requires residuals")
     return errors
 
 
@@ -2966,6 +2988,18 @@ def build_worker_result(
                 "design_fit_review": {
                     "status": "pass" if not blocking_findings else "fail",
                     "basis": "Design fit reviewed by Product Face validator for this bounded card.",
+                },
+                "visual_quality_result": {
+                    "status": "PASS" if not blocking_findings else "BLOCK",
+                    "reviewer": "product-face-validator",
+                    "basis": (
+                        "Professional visual quality bar reviewed for this bounded card."
+                        if not blocking_findings
+                        else "Product Face result is blocked; professional visual quality approval was not granted."
+                    ),
+                    "reference_quality_bar_checked": not blocking_findings,
+                    "ai_generic_symptoms": [] if not blocking_findings else ["visual quality approval blocked"],
+                    "residuals": [],
                 },
             }
         )

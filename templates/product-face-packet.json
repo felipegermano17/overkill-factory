@@ -20,6 +20,19 @@
     "density": "State the right density for this product surface.",
     "interaction_style": "Describe the interaction model and motion/feedback expectations."
   },
+  "visual_quality_bar": {
+    "reference_quality_bar": "Name the product-specific quality bar or reference class this surface must meet.",
+    "anti_generic_criteria": [
+      "no generic dashboard composition when the product needs a tailored cockpit",
+      "no excessive explanatory copy where structure and interaction should carry meaning",
+      "no templated visual language disconnected from the product audience"
+    ],
+    "professional_review_required": true,
+    "block_when": [
+      "mechanical screenshots pass but the surface looks obviously AI-generated",
+      "visual hierarchy, density or controls would fail a serious product/design review"
+    ]
+  },
   "data_context": "Describe the kind of real data, long data, empty data and sensitive data shown.",
   "accessibility_scope": [
     "keyboard",
@@ -38,7 +51,8 @@
     "desktop screenshot",
     "mobile screenshot when mobile is in scope",
     "states evidence",
-    "Product Face Result comparison to packet"
+    "Product Face Result comparison to packet",
+    "visual_quality_result verdict"
   ],
   "reviewers_required": [
     "product-face",
@@ -48,7 +62,8 @@
   "done_definition": [
     "result covers required flows and states",
     "result includes evidence for required viewports",
-    "review confirms result fits the product promise and visual direction"
+    "review confirms result fits the product promise and visual direction",
+    "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"
   ],
   "human_gate": {
     "required": false,

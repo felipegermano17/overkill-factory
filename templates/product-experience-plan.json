@@ -21,11 +21,25 @@
     "density": "State whether this should be dense/operational, editorial, playful, or another fit.",
     "interaction_style": "Describe how the user should move through the surface."
   },
+  "visual_quality_bar": {
+    "reference_quality_bar": "State the relevant quality bar: existing product conventions, best-in-class references, or professional cockpit/UI standard.",
+    "anti_generic_criteria": [
+      "avoid generic AI dashboard composition",
+      "avoid excessive explanatory copy",
+      "avoid weak hierarchy, synthetic polish or audience mismatch"
+    ],
+    "professional_review_required": true,
+    "block_when": [
+      "mechanical proof passes but the UI is not credible for a real operator/user",
+      "reviewer identifies AI-generic symptoms that make the surface unacceptable"
+    ]
+  },
   "proof_required": [
     "desktop screenshot",
     "mobile screenshot",
     "keyboard/a11y check",
-    "Product Face Result comparing output to this plan"
+    "Product Face Result comparing output to this plan",
+    "visual_quality_result verdict"
   ],
   "reviewers_required": [
     "product-face",
@@ -35,7 +49,8 @@
   "done_definition": [
     "Product Face Packet exists before implementation",
     "Product Face Result compares screenshots/states/flows against the packet",
-    "review confirms evidence matches the original product promise"
+    "review confirms evidence matches the original product promise",
+    "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"
   ],
   "human_gate": {
     "required": false,

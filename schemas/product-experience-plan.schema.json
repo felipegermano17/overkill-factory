@@ -12,6 +12,7 @@
     "main_flows",
     "required_states",
     "design_direction",
+    "visual_quality_bar",
     "proof_required",
     "reviewers_required",
     "done_definition",
@@ -72,6 +73,25 @@
         "product_fit": { "type": "string", "minLength": 3 },
         "density": { "type": "string", "minLength": 3 },
         "interaction_style": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "visual_quality_bar": {
+      "type": "object",
+      "required": ["reference_quality_bar", "anti_generic_criteria", "professional_review_required", "block_when"],
+      "properties": {
+        "reference_quality_bar": { "type": "string", "minLength": 3 },
+        "anti_generic_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "professional_review_required": { "type": "boolean" },
+        "block_when": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
       },
       "additionalProperties": true
     },

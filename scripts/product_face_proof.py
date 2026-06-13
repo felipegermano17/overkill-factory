@@ -27,6 +27,7 @@ PRODUCT_ALIGNMENT_FIELDS = (
     "source_promise_coverage",
     "design_fit_review",
 )
+VISUAL_QUALITY_PASS_RESULTS = {"PASS", "PASS_WITH_RESIDUALS"}
 
 
 class PlaywrightUnavailable(RuntimeError):
@@ -349,6 +350,14 @@ def base_result(
             "status": "pending",
             "basis": "Visual/product-fit review must be recorded by Product Face reviewer before promotion.",
         },
+        "visual_quality_result": {
+            "status": "BLOCK",
+            "reviewer": "product-face-proof-runner",
+            "basis": "Mechanical browser proof is necessary but not sufficient for professional visual approval.",
+            "reference_quality_bar_checked": False,
+            "ai_generic_symptoms": ["visual quality review not recorded"],
+            "residuals": [],
+        },
         "evidence_refs": [],
         "evidence_kind": "real",
         "reusable_for_product": False,
@@ -383,6 +392,9 @@ def validate_reusable_product_scope(
             "--reusable-for-product requires Product Face alignment: packet_ref, "
             "packet_comparison=pass, source_promise_coverage=pass and design_fit_review=pass"
         )
+    visual_quality = result.get("visual_quality_result") if isinstance(result.get("visual_quality_result"), dict) else {}
+    if visual_quality.get("status") not in VISUAL_QUALITY_PASS_RESULTS or visual_quality.get("reference_quality_bar_checked") is not True:
+        raise ValueError("reusable Product Face evidence requires visual_quality_result PASS or PASS_WITH_RESIDUALS")
 
 
 def product_alignment_passes(result: dict[str, Any]) -> bool:
@@ -394,6 +406,23 @@ def product_alignment_passes(result: dict[str, Any]) -> bool:
             return False
         if not str(value.get("basis") or "").strip():
             return False
+    return True
+
+
+def visual_quality_passes(result: dict[str, Any]) -> bool:
+    visual_quality = result.get("visual_quality_result")
+    if not isinstance(visual_quality, dict):
+        return False
+    if visual_quality.get("status") not in VISUAL_QUALITY_PASS_RESULTS:
+        return False
+    if visual_quality.get("reference_quality_bar_checked") is not True:
+        return False
+    if not str(visual_quality.get("reviewer") or "").strip():
+        return False
+    if not str(visual_quality.get("basis") or "").strip():
+        return False
+    if visual_quality.get("status") == "PASS_WITH_RESIDUALS" and not visual_quality.get("residuals"):
+        return False
     return True
 
 
@@ -430,6 +459,51 @@ def apply_product_alignment(
         "status": "pass",
         "basis": str(design_fit_review_basis).strip(),
     }
+
+
+def apply_visual_quality_review(
+    *,
+    result: dict[str, Any],
+    status: str | None,
+    reviewer: str | None,
+    basis: str | None,
+    residuals: list[str] | None = None,
+) -> None:
+    supplied = any(str(value or "").strip() for value in (status, reviewer, basis)) or bool(residuals)
+    if not supplied:
+        return
+    normalized_status = str(status or "").strip().upper()
+    if normalized_status not in {"PASS", "BLOCK", "PASS_WITH_RESIDUALS"}:
+        raise ValueError("--visual-quality-status must be PASS, BLOCK or PASS_WITH_RESIDUALS")
+    missing = []
+    if not str(reviewer or "").strip():
+        missing.append("visual-quality-reviewer")
+    if not str(basis or "").strip():
+        missing.append("visual-quality-basis")
+    if normalized_status == "PASS_WITH_RESIDUALS" and not residuals:
+        missing.append("visual-quality-residual")
+    if missing:
+        raise ValueError("Visual quality review is incomplete: missing " + ", ".join(missing))
+    result["visual_quality_result"] = {
+        "status": normalized_status,
+        "reviewer": str(reviewer).strip(),
+        "basis": str(basis).strip(),
+        "reference_quality_bar_checked": normalized_status in VISUAL_QUALITY_PASS_RESULTS,
+        "ai_generic_symptoms": [] if normalized_status in VISUAL_QUALITY_PASS_RESULTS else ["reviewer-blocked-visual-quality"],
+        "residuals": residuals or [],
+    }
+
+
+def enforce_visual_quality_gate(result: dict[str, Any]) -> None:
+    if result.get("result") == "PASS" and not visual_quality_passes(result):
+        result["result"] = "WAIVED"
+        result["blocking_findings"] = True
+        result["findings_summary"] = (
+            "Mechanical Product Face proof ran, but professional visual quality approval is missing or blocked."
+        )
+        result["next_action"] = (
+            "Record visual_quality_result PASS or PASS_WITH_RESIDUALS from an empowered Product Face reviewer before promotion."
+        )
 
 
 def apply_product_reuse_scope(
@@ -746,6 +820,10 @@ def build_product_face_proof(
     packet_comparison_basis: str | None = None,
     source_promise_coverage_basis: str | None = None,
     design_fit_review_basis: str | None = None,
+    visual_quality_status: str | None = None,
+    visual_quality_reviewer: str | None = None,
+    visual_quality_basis: str | None = None,
+    visual_quality_residuals: list[str] | None = None,
 ) -> dict[str, Any]:
     output_dir = out if out.suffix == "" else out.parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -805,6 +883,14 @@ def build_product_face_proof(
         source_promise_coverage_basis=source_promise_coverage_basis,
         design_fit_review_basis=design_fit_review_basis,
     )
+    apply_visual_quality_review(
+        result=result,
+        status=visual_quality_status,
+        reviewer=visual_quality_reviewer,
+        basis=visual_quality_basis,
+        residuals=visual_quality_residuals,
+    )
+    enforce_visual_quality_gate(result)
     if reusable_for_product:
         apply_product_reuse_scope(
             result=result,
@@ -845,6 +931,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--packet-comparison-basis", help="Why this proof matches the Product Face Packet.")
     parser.add_argument("--source-promise-coverage-basis", help="Why this proof covers the source/product promise.")
     parser.add_argument("--design-fit-review-basis", help="Why this proof fits the intended product/design direction.")
+    parser.add_argument("--visual-quality-status", choices=["PASS", "BLOCK", "PASS_WITH_RESIDUALS"], help="Professional visual quality verdict.")
+    parser.add_argument("--visual-quality-reviewer", help="Reviewer empowered to block visually unacceptable UI.")
+    parser.add_argument("--visual-quality-basis", help="Why the surface meets or fails the product-specific quality bar.")
+    parser.add_argument("--visual-quality-residual", action="append", help="Residual visual quality issue when status is PASS_WITH_RESIDUALS.")
     return parser.parse_args(argv)
 
 
@@ -870,6 +960,10 @@ def main(argv: list[str] | None = None) -> int:
             packet_comparison_basis=args.packet_comparison_basis,
             source_promise_coverage_basis=args.source_promise_coverage_basis,
             design_fit_review_basis=args.design_fit_review_basis,
+            visual_quality_status=args.visual_quality_status,
+            visual_quality_reviewer=args.visual_quality_reviewer,
+            visual_quality_basis=args.visual_quality_basis,
+            visual_quality_residuals=args.visual_quality_residual,
         )
     except Exception as exc:
         print(f"product_face_proof failed: {exc}", file=sys.stderr)

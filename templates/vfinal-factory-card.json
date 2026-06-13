@@ -262,9 +262,22 @@
       "density": "appropriate to repeated operational use",
       "interaction_style": "direct, observable and reversible when risk exists"
     },
-    "proof_required": ["state evidence", "review evidence"],
+    "visual_quality_bar": {
+      "reference_quality_bar": "A product-specific operator surface benchmark, existing product convention or best-in-class reference class named before execution.",
+      "anti_generic_criteria": [
+        "no generic AI dashboard composition",
+        "no excessive explanatory copy where structure and interaction should carry meaning",
+        "no templated visual hierarchy disconnected from the user job"
+      ],
+      "professional_review_required": true,
+      "block_when": [
+        "mechanical screenshots pass but the surface feels generic, synthetic or audience-mismatched",
+        "the implementation cannot name and meet a reference quality bar"
+      ]
+    },
+    "proof_required": ["state evidence", "review evidence", "visual_quality_result verdict"],
     "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
-    "done_definition": ["experience evidence exists", "states are checked"],
+    "done_definition": ["experience evidence exists", "states are checked", "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"],
     "human_gate": {"required": false, "approver": "", "reason": "No material human product decision in this template."},
     "evidence_refs": ["templates/vfinal-factory-card.json"]
   },
@@ -282,9 +295,22 @@
       "density": "appropriate to repeated operational use",
       "interaction_style": "direct, observable and reversible when risk exists"
     },
-    "proof_required": ["state evidence", "review evidence"],
+    "visual_quality_bar": {
+      "reference_quality_bar": "A product-specific operator surface benchmark, existing product convention or best-in-class reference class named before execution.",
+      "anti_generic_criteria": [
+        "no generic AI dashboard composition",
+        "no excessive explanatory copy where structure and interaction should carry meaning",
+        "no templated visual hierarchy disconnected from the user job"
+      ],
+      "professional_review_required": true,
+      "block_when": [
+        "mechanical screenshots pass but the surface feels generic, synthetic or audience-mismatched",
+        "the implementation cannot name and meet a reference quality bar"
+      ]
+    },
+    "proof_required": ["state evidence", "review evidence", "visual_quality_result verdict"],
     "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
-    "done_definition": ["experience evidence exists", "states are checked"],
+    "done_definition": ["experience evidence exists", "states are checked", "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"],
     "human_gate": {"required": false, "approver": "", "reason": "No material human product decision in this template."}
   },
   "data_metrics_plan": {
