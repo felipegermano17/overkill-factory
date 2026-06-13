@@ -8,7 +8,11 @@
     "record_type",
     "lane_id",
     "lane_kind",
+    "objective",
+    "read_scope",
+    "write_scope",
     "owner_agent",
+    "reviewer_or_synthesizer",
     "status",
     "base_ref",
     "worktree_ref",
@@ -17,6 +21,13 @@
     "forbidden_paths",
     "changed_paths",
     "expected_outputs",
+    "expected_artifact",
+    "timeout",
+    "budget",
+    "stop_condition",
+    "conflict_risk",
+    "merge_reconciliation_policy",
+    "cleanup_policy",
     "validation_commands",
     "validation_result",
     "evidence_refs",
@@ -31,8 +42,20 @@
     },
     "record_type": { "const": "parallel_lane_contract" },
     "lane_id": { "type": "string", "minLength": 3 },
-    "lane_kind": { "enum": ["read_only", "write"] },
+    "lane_kind": { "enum": ["read_only", "write", "research", "planning", "execution", "review"] },
+    "objective": { "type": "string", "minLength": 3 },
+    "read_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "write_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
     "owner_agent": { "type": "string", "minLength": 1 },
+    "reviewer_or_synthesizer": { "type": "string", "minLength": 1 },
     "status": {
       "enum": [
         "planned",
@@ -40,6 +63,7 @@
         "blocked",
         "ready_for_integration",
         "integrated",
+        "superseded",
         "abandoned"
       ]
     },
@@ -64,6 +88,48 @@
     "expected_outputs": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
+    },
+    "expected_artifact": { "type": "string", "minLength": 1 },
+    "timeout": {
+      "type": "object",
+      "required": ["limit", "unit"],
+      "properties": {
+        "limit": { "type": "integer", "minimum": 1 },
+        "unit": { "enum": ["minutes", "hours", "days"] }
+      },
+      "additionalProperties": false
+    },
+    "budget": {
+      "type": "object",
+      "required": ["token_budget", "cost_budget", "approval_required_above_budget"],
+      "properties": {
+        "token_budget": { "type": "integer", "minimum": 1 },
+        "cost_budget": { "type": "string", "minLength": 1 },
+        "approval_required_above_budget": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "stop_condition": { "type": "string", "minLength": 1 },
+    "conflict_risk": { "enum": ["low", "medium", "high"] },
+    "merge_reconciliation_policy": {
+      "type": "object",
+      "required": ["synthesizer", "decision_rule", "no_self_promotion"],
+      "properties": {
+        "synthesizer": { "type": "string", "minLength": 1 },
+        "decision_rule": { "type": "string", "minLength": 1 },
+        "no_self_promotion": { "const": true }
+      },
+      "additionalProperties": true
+    },
+    "cleanup_policy": {
+      "type": "object",
+      "required": ["owner", "when", "stale_or_failed_lane_action"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "when": { "type": "string", "minLength": 1 },
+        "stale_or_failed_lane_action": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
     },
     "validation_commands": {
       "type": "array",

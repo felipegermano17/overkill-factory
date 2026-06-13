@@ -86,6 +86,7 @@ PROMOTION_PASS_RESULTS = {"PASS", "WAIVED"}
 ARTIFACT_PUBLIC_CLASSES = {"public_safe", "sanitized_report", "publication_candidate"}
 ARTIFACT_PRIVATE_CLASSES = {"private_run_evidence", "transient_cache"}
 PUBLICATION_SCANNER_FIELDS = ("public_safety_scan", "secret_safety_scan")
+PARALLEL_EDIT_LANE_KINDS = {"write", "execution"}
 V2_APPROVAL_KEYS = [
     "qa",
     "independent_review",
@@ -1131,6 +1132,114 @@ def _status_value(value: Any) -> str:
     return str(value or "").strip().lower()
 
 
+def _card_parallel_execution_requested(card: dict[str, Any]) -> bool:
+    runtime_contract = card.get("runtime_contract") if isinstance(card.get("runtime_contract"), dict) else {}
+    loop_plan = card.get("loop_plan") if isinstance(card.get("loop_plan"), dict) else {}
+    return any(
+        value is True
+        for value in (
+            card.get("parallel_execution_requested"),
+            runtime_contract.get("parallel_execution_requested"),
+            runtime_contract.get("parallel_execution"),
+            loop_plan.get("parallel_execution_requested"),
+        )
+    )
+
+
+def _lane_write_scope(lane: dict[str, Any]) -> list[str]:
+    scope = _list_items(lane.get("write_scope"))
+    if scope:
+        return scope
+    return _list_items(lane.get("intended_write_scope"))
+
+
+def _lane_is_editing(lane: dict[str, Any]) -> bool:
+    lane_kind = str(lane.get("lane_kind") or "").strip().lower()
+    write_scope = [item.lower() for item in _lane_write_scope(lane)]
+    return lane_kind in PARALLEL_EDIT_LANE_KINDS or any(item not in {"none", "read-only", "readonly"} for item in write_scope)
+
+
+def validate_parallel_lane_contract(lane: dict[str, Any], *, at: str = "parallel_lane_contract") -> list[str]:
+    errors: list[str] = []
+    required_fields = [
+        "lane_id",
+        "objective",
+        "read_scope",
+        "write_scope",
+        "worktree_ref",
+        "owner_agent",
+        "reviewer_or_synthesizer",
+        "expected_artifact",
+        "timeout",
+        "budget",
+        "stop_condition",
+        "conflict_risk",
+        "merge_reconciliation_policy",
+        "cleanup_policy",
+    ]
+    for field in required_fields:
+        value = lane.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"{at}.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"{at}.{field} must be a non-empty object")
+        elif not _non_empty_text(value):
+            errors.append(f"{at}.{field} is required")
+
+    if _lane_is_editing(lane):
+        worktree_ref = str(lane.get("worktree_ref") or "").strip()
+        base_ref = str(lane.get("base_ref") or "").strip()
+        if not worktree_ref:
+            errors.append(f"{at}.worktree_ref is required for editing lanes")
+        if worktree_ref and base_ref and worktree_ref == base_ref:
+            errors.append(f"{at}.worktree_ref must differ from base_ref for editing lanes")
+        if not _lane_write_scope(lane):
+            errors.append(f"{at}.write_scope is required for editing lanes")
+
+    budget = lane.get("budget") if isinstance(lane.get("budget"), dict) else {}
+    if budget:
+        if not isinstance(budget.get("token_budget"), int) or budget.get("token_budget", 0) <= 0:
+            errors.append(f"{at}.budget.token_budget must be a positive integer")
+        if not _non_empty_text(budget.get("cost_budget")):
+            errors.append(f"{at}.budget.cost_budget is required")
+        if budget.get("approval_required_above_budget") is not True:
+            errors.append(f"{at}.budget.approval_required_above_budget must be true")
+
+    merge_policy = lane.get("merge_reconciliation_policy") if isinstance(lane.get("merge_reconciliation_policy"), dict) else {}
+    if merge_policy and merge_policy.get("no_self_promotion") is not True:
+        errors.append(f"{at}.merge_reconciliation_policy.no_self_promotion must be true")
+    if merge_policy and not _non_empty_text(merge_policy.get("synthesizer")):
+        errors.append(f"{at}.merge_reconciliation_policy.synthesizer is required")
+
+    return errors
+
+
+def parallel_lane_warnings(lanes: list[dict[str, Any]]) -> list[str]:
+    warnings: list[str] = []
+    write_owners: dict[str, str] = {}
+    for lane in lanes:
+        lane_id = str(lane.get("lane_id") or "unknown-lane")
+        for scope in _lane_write_scope(lane):
+            normalized = scope.strip().replace("\\", "/").rstrip("/")
+            if not normalized or normalized.lower() in {"none", "read-only", "readonly"}:
+                continue
+            previous = write_owners.get(normalized)
+            if previous and previous != lane_id:
+                warnings.append(f"parallel lane write scope overlap: {previous} and {lane_id} both write {normalized}")
+            else:
+                write_owners[normalized] = lane_id
+    return warnings
+
+
+def card_parallel_lane_contracts(card: dict[str, Any]) -> list[dict[str, Any]]:
+    raw = card.get("parallel_lane_contracts")
+    if not isinstance(raw, list):
+        return []
+    return [item for item in raw if isinstance(item, dict)]
+
+
 def normalized_surfaces(card: dict[str, Any]) -> set[str]:
     raw = card.get("surfaces", [])
     if not isinstance(raw, list):
@@ -1354,6 +1463,11 @@ def validate_card(data: dict[str, Any]) -> list[str]:
             errors.append("reasoning_policy required for OVERKILL_VFINAL cards")
         else:
             errors.extend(validate_reasoning_policy(data["reasoning_policy"]))
+    lane_contracts = card_parallel_lane_contracts(data)
+    if _card_parallel_execution_requested(data) and not lane_contracts:
+        errors.append("parallel execution requested but parallel_lane_contracts is missing")
+    for index, lane in enumerate(lane_contracts):
+        errors.extend(validate_parallel_lane_contract(lane, at=f"parallel_lane_contracts[{index}]"))
     if data.get("executor_identity") == data.get("reviewer_identity"):
         errors.append("executor_identity and reviewer_identity must differ")
     product_facing = bool(surfaces & PRODUCT_FACE_SURFACES)
@@ -2069,6 +2183,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
     missing_inputs = missing_required_inputs(worker, card)
     missing_profile_binding = profile_binding is None
     runtime_decision = runtime_decision_profile(card)
+    lane_contracts = card_parallel_lane_contracts(card)
     status = "requires_execution" if required else "not_required_by_current_card"
     if required and missing_inputs:
         status = "blocked_missing_inputs"
@@ -2108,6 +2223,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "target_repo_paths": card.get("target_repo_paths", []),
             "authority_max": card.get("authority_max"),
             "forbidden_actions": card.get("forbidden_actions", []),
+            "parallel_lane_contracts": lane_contracts,
             "reasoning_policy": card.get("reasoning_policy"),
             "reference_quality_packet": card.get("reference_quality_packet"),
         },
@@ -2153,6 +2269,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
 
 def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
     validation_errors = validate_card(card)
+    validation_warnings = parallel_lane_warnings(card_parallel_lane_contracts(card))
     worker_rows: dict[str, dict[str, Any]] = {}
     required_workers: list[str] = []
     blocked_workers: list[str] = []
@@ -2193,6 +2310,7 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         "required_workers": required_workers,
         "blocked_workers": blocked_workers,
         "card_validation_errors": validation_errors,
+        "card_validation_warnings": validation_warnings,
         "next_safe_actions": [
             guidance
             for row in worker_rows.values()
@@ -3026,6 +3144,180 @@ def build_human_gate_record(
     }
 
 
+def _snapshot_state_from_gate(card: dict[str, Any], gate_report: dict[str, Any]) -> str:
+    explicit_state = str(card.get("status") or "").strip().lower()
+    if explicit_state in {
+        "planning",
+        "blocked",
+        "ready",
+        "executing",
+        "reviewing",
+        "human_gate",
+        "release_candidate",
+        "released",
+        "archived",
+        "superseded",
+    }:
+        return explicit_state
+    if card.get("superseded_by"):
+        return "superseded"
+    gate_status = str(gate_report.get("gate_status") or "").strip()
+    if gate_status == "blocked":
+        return "blocked"
+    if gate_status == "ready_for_worker_execution":
+        return "ready"
+    return "planning"
+
+
+def _snapshot_blockers(gate_report: dict[str, Any]) -> list[dict[str, Any]]:
+    blockers: list[dict[str, Any]] = []
+    for error in _list_items(gate_report.get("card_validation_errors")):
+        blockers.append(
+            {
+                "kind": "card_validation",
+                "owner": "operator",
+                "summary": error,
+                "unblock_condition": "Fix the canonical card contract and rerun gate-report.",
+            }
+        )
+    for worker_id in _list_items(gate_report.get("blocked_workers")):
+        blockers.append(
+            {
+                "kind": "worker_input",
+                "owner": worker_id,
+                "summary": f"{worker_id} is blocked by missing inputs",
+                "unblock_condition": "Attach required source fields or worker evidence before dispatch.",
+            }
+        )
+    return blockers
+
+
+def build_status_snapshot(
+    card: dict[str, Any],
+    card_path: Path,
+    *,
+    gate_report: dict[str, Any] | None = None,
+    lane_contracts: list[dict[str, Any]] | None = None,
+    evidence_refs: list[str] | None = None,
+) -> dict[str, Any]:
+    effective_gate_report = gate_report or build_gate_report(card)
+    effective_lanes = lane_contracts if lane_contracts is not None else card_parallel_lane_contracts(card)
+    blockers = _snapshot_blockers(effective_gate_report)
+    current_state = _snapshot_state_from_gate(card, effective_gate_report)
+    evidence = sorted(set(evidence_refs or _list_items(card.get("evidence_refs"))))
+    source_refs = [
+        {"claim": "card", "ref": source_card_ref(card_path)},
+        {"claim": "gate_report", "ref": "factoryctl:gate-report"},
+    ]
+    if effective_lanes:
+        source_refs.append({"claim": "parallel_lanes", "ref": "card.parallel_lane_contracts"})
+    if evidence:
+        source_refs.append({"claim": "evidence", "ref": "operator-provided-evidence-refs"})
+
+    lane_rows = [
+        {
+            "lane_id": lane.get("lane_id"),
+            "status": lane.get("status"),
+            "owner_agent": lane.get("owner_agent"),
+            "worktree_ref": lane.get("worktree_ref"),
+            "write_scope": _lane_write_scope(lane),
+            "expected_artifact": lane.get("expected_artifact"),
+            "reviewer_or_synthesizer": lane.get("reviewer_or_synthesizer"),
+            "conflict_risk": lane.get("conflict_risk"),
+        }
+        for lane in effective_lanes
+    ]
+
+    gate_status = str(effective_gate_report.get("gate_status") or "not_run")
+    validation_passed = gate_status in {"ready_for_worker_execution", "pass_no_workers_required"} and not blockers
+    state_flags = {
+        "implemented": bool(card.get("implementation_result") or card.get("changed_paths")),
+        "validated": validation_passed,
+        "integrated": bool(card.get("integrated_ref")),
+        "released": current_state == "released" or bool(card.get("release_ref")),
+        "blocked": current_state == "blocked" or bool(blockers),
+        "superseded": current_state == "superseded",
+    }
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-status-snapshot.schema.json",
+        "record_type": "factory_status_snapshot",
+        "created_at": utc_now(),
+        "card": {
+            "id": str(card.get("card_id") or card.get("id") or "unknown-card"),
+            "title": str(card.get("title") or card.get("card_id") or "Untitled factory card"),
+            "ref": source_card_ref(card_path),
+        },
+        "current_state": current_state,
+        "phase": str(card.get("phase") or "unknown"),
+        "risk_effective": str(card.get("risk_effective") or "unknown"),
+        "source_refs": source_refs,
+        "staleness": {
+            "status": "manual_estimate" if gate_report is None else "fresh",
+            "last_updated_ref": source_card_ref(card_path),
+            "warning": (
+                "Snapshot was built from local card data and a generated gate report; Hermes remains source of truth."
+                if gate_report is None
+                else "Snapshot was built from caller-provided gate report; verify it is current."
+            ),
+        },
+        "workers": {
+            "required": effective_gate_report.get("required_workers", []),
+            "blocked": effective_gate_report.get("blocked_workers", []),
+            "rows": effective_gate_report.get("workers", {}),
+        },
+        "lanes": lane_rows,
+        "gates": {
+            "gate_status": gate_status,
+            "gate_predicate_result": effective_gate_report.get("gate_predicate_result"),
+            "warnings": effective_gate_report.get("card_validation_warnings", []),
+        },
+        "blockers": blockers,
+        "evidence": {
+            "receipt_five_status": "attached" if isinstance(card.get("receipt_five"), dict) else "not_attached",
+            "evidence_refs": evidence,
+        },
+        "state_flags": state_flags,
+        "next_safe_actions": [
+            str(item.get("action") if isinstance(item, dict) else item)
+            for item in effective_gate_report.get("next_safe_actions", [])
+            if str(item.get("action") if isinstance(item, dict) else item).strip()
+        ],
+        "forbidden_actions": _list_items(card.get("forbidden_actions")) + ["treat-snapshot-as-source-of-truth"],
+        "public_private_boundary": {
+            "projection_not_source_of_truth": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+            "note": "Link to canonical evidence; do not embed private runtime logs or screenshots.",
+        },
+        "continuation": "Continue from the canonical card, gate report, lane contracts and worker results; do not use this snapshot as authority.",
+    }
+
+
+def validate_status_snapshot(snapshot: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(snapshot.get("source_refs"), list) or not snapshot.get("source_refs"):
+        errors.append("factory_status_snapshot.source_refs is required")
+    staleness = snapshot.get("staleness") if isinstance(snapshot.get("staleness"), dict) else {}
+    if staleness.get("status") == "stale" and snapshot.get("current_state") in {"ready", "released"}:
+        errors.append("stale snapshot cannot claim ready or released")
+    gates = snapshot.get("gates") if isinstance(snapshot.get("gates"), dict) else {}
+    blockers = snapshot.get("blockers") if isinstance(snapshot.get("blockers"), list) else []
+    flags = snapshot.get("state_flags") if isinstance(snapshot.get("state_flags"), dict) else {}
+    if gates.get("gate_status") == "blocked" and not blockers:
+        errors.append("blocked gate state requires blockers")
+    if flags.get("blocked") is True and not blockers:
+        errors.append("state_flags.blocked=true requires blockers")
+    if not _list_items(snapshot.get("next_safe_actions")):
+        errors.append("factory_status_snapshot.next_safe_actions is required")
+    boundary = snapshot.get("public_private_boundary") if isinstance(snapshot.get("public_private_boundary"), dict) else {}
+    for field in ("projection_not_source_of_truth", "no_raw_logs", "no_private_paths", "no_private_ids"):
+        if boundary.get(field) is not True:
+            errors.append(f"factory_status_snapshot.public_private_boundary.{field} must be true")
+    return errors
+
+
 def command_validate_card(args: argparse.Namespace) -> int:
     errors = validate_card(load_json_like(args.path))
     if errors:
@@ -3165,6 +3457,28 @@ def command_transition_plan(args: argparse.Namespace) -> int:
     return 1 if action.startswith("block") and args.enforce else 0
 
 
+def command_status_snapshot(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    gate_report = load_json_like(args.gate_report) if args.gate_report else None
+    lane_contracts = [load_json_like(path) for path in args.lane_contract or []]
+    if not lane_contracts:
+        lane_contracts = card_parallel_lane_contracts(card)
+    snapshot = build_status_snapshot(
+        card,
+        args.card,
+        gate_report=gate_report,
+        lane_contracts=lane_contracts,
+        evidence_refs=args.evidence_ref or [],
+    )
+    errors = validate_status_snapshot(snapshot)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, snapshot)
+    return 0
+
+
 def command_doctor(args: argparse.Namespace) -> int:
     report = build_doctor_report(args.hermes_home)
     if args.json:
@@ -3299,12 +3613,26 @@ def build_parser() -> argparse.ArgumentParser:
     transition_plan_parser.add_argument("--out", type=Path)
     transition_plan_parser.set_defaults(func=command_transition_plan)
 
+    status_snapshot_parser = sub.add_parser("status-snapshot")
+    status_snapshot_parser.add_argument("--card", type=Path, required=True)
+    status_snapshot_parser.add_argument("--gate-report", type=Path)
+    status_snapshot_parser.add_argument("--lane-contract", type=Path, action="append")
+    status_snapshot_parser.add_argument("--evidence-ref", action="append")
+    status_snapshot_parser.add_argument("--out", type=Path)
+    status_snapshot_parser.set_defaults(func=command_status_snapshot)
+
     return parser
 
 
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
+    return int(args.func(args))
+
+
+def main_with_args_for_test(argv: list[str]) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
     return int(args.func(args))
 
 

@@ -3,7 +3,16 @@
   "record_type": "parallel_lane_contract",
   "lane_id": "example-readonly-audit",
   "lane_kind": "read_only",
+  "objective": "Audit the public factory flow without writing to the repository.",
+  "read_scope": [
+    "docs/concepts/factory-flow.md",
+    "scripts/factoryctl.py"
+  ],
+  "write_scope": [
+    "none"
+  ],
   "owner_agent": "external:subagent",
+  "reviewer_or_synthesizer": "main-agent",
   "status": "ready_for_integration",
   "base_ref": "main",
   "worktree_ref": "main",
@@ -22,6 +31,28 @@
   "expected_outputs": [
     "read-only audit summary"
   ],
+  "expected_artifact": "external:subagent-summary",
+  "timeout": {
+    "limit": 45,
+    "unit": "minutes"
+  },
+  "budget": {
+    "token_budget": 12000,
+    "cost_budget": "operator-approved local budget",
+    "approval_required_above_budget": true
+  },
+  "stop_condition": "Stop after producing the audit summary or after finding a blocking source conflict.",
+  "conflict_risk": "low",
+  "merge_reconciliation_policy": {
+    "synthesizer": "main-agent",
+    "decision_rule": "Read-only findings must be reconciled against canonical card/source refs before they affect Receipt Five.",
+    "no_self_promotion": true
+  },
+  "cleanup_policy": {
+    "owner": "main-agent",
+    "when": "after synthesis",
+    "stale_or_failed_lane_action": "mark superseded or blocked and keep only public-safe summary refs"
+  },
   "validation_commands": [
     "python scripts/public_safety_scan.py",
     "python scripts/secret_safety_scan.py"

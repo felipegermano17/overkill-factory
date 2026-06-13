@@ -27,6 +27,7 @@ Use a card-specific check before sending work to Hermes:
 factoryctl validate-card examples/minimal-hermes-project/card.md
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
 ```
 
 What this proves:
@@ -34,6 +35,7 @@ What this proves:
 - the card has the required fields;
 - the risk, surface and phase routing can be inspected;
 - worker packets can be produced without inventing completion evidence.
+- operator status can be projected without becoming the source of truth.
 
 ## Public Release Preflight
 
