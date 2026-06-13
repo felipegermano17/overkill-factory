@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-learning-proposal.schema.json",
+  "title": "Overkill Factory Learning Proposal",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "source_evidence_refs",
+    "source_trust",
+    "classification",
+    "proposed_artifact_type",
+    "risk",
+    "owner",
+    "validation_plan",
+    "activation_policy",
+    "untrusted_input_handling",
+    "tool_governance",
+    "rejection_rationale"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-learning-proposal.schema.json"
+    },
+    "record_type": {
+      "const": "factory_learning_proposal"
+    },
+    "source_evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "source_trust": {
+      "enum": ["internal_structured", "external_untrusted", "mixed"]
+    },
+    "classification": {
+      "enum": [
+        "rule",
+        "skill",
+        "worker",
+        "gate",
+        "schema",
+        "test",
+        "doc",
+        "reference",
+        "issue",
+        "hook",
+        "mcp_or_tool",
+        "install_profile",
+        "reject"
+      ]
+    },
+    "proposed_artifact_type": {
+      "enum": [
+        "rule",
+        "skill",
+        "worker",
+        "gate",
+        "schema",
+        "test",
+        "doc",
+        "reference",
+        "issue",
+        "hook",
+        "mcp_or_tool",
+        "install_profile",
+        "reject"
+      ]
+    },
+    "risk": {
+      "enum": ["R1", "R2", "R3", "R4"]
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 3
+    },
+    "proposal_summary": {
+      "type": "string"
+    },
+    "validation_plan": {
+      "type": "object",
+      "required": ["tests_or_evals", "verification_commands", "independent_review_required", "success_criteria"],
+      "properties": {
+        "tests_or_evals": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "verification_commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "independent_review_required": { "type": "boolean" },
+        "plan_review_ref": { "type": "string" },
+        "success_criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "activation_policy": {
+      "type": "object",
+      "required": ["default_state", "auto_activation_allowed", "human_gate_required", "scope", "budget"],
+      "properties": {
+        "default_state": { "enum": ["inactive_candidate", "active", "rejected"] },
+        "auto_activation_allowed": { "type": "boolean" },
+        "human_gate_required": { "type": "boolean" },
+        "scope": { "type": "string", "minLength": 3 },
+        "active_tool_surfaces": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "budget": {
+          "type": "object",
+          "required": ["max_agents", "timeout_minutes", "token_or_cost_budget", "stop_condition"],
+          "properties": {
+            "max_agents": { "type": "integer" },
+            "timeout_minutes": { "type": "integer" },
+            "token_or_cost_budget": { "type": "string", "minLength": 1 },
+            "stop_condition": { "type": "string", "minLength": 3 }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "untrusted_input_handling": {
+      "type": "object",
+      "required": [
+        "reader_actor_split",
+        "raw_external_content_quarantined",
+        "privileged_actors_consume_structured_summary_only"
+      ],
+      "properties": {
+        "reader_actor_split": { "type": "boolean" },
+        "raw_external_content_quarantined": { "type": "boolean" },
+        "privileged_actors_consume_structured_summary_only": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "tool_governance": {
+      "type": "object",
+      "required": ["required", "optional", "disabled", "forbidden", "third_party_trust_status", "supply_chain_review"],
+      "properties": {
+        "required": { "type": "array", "items": { "type": "string" } },
+        "optional": { "type": "array", "items": { "type": "string" } },
+        "disabled": { "type": "array", "items": { "type": "string" } },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "third_party_trust_status": { "enum": ["first_party", "reviewed_third_party", "untrusted", "unknown"] },
+        "supply_chain_review": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "parallel_workflow_guidance": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rejection_rationale": {
+      "type": "string",
+      "minLength": 3
+    }
+  },
+  "additionalProperties": true
+}
