@@ -40,6 +40,9 @@ state, public docs or adapter behavior.
 Use `operations/release-policy.md` before tagging, packaging or publishing a
 release.
 
+Use `operations/parallel-execution-and-status.md` before scaling agents,
+splitting work across branches/worktrees or presenting a cockpit/status view.
+
 ## Maintainer Internals
 
 Use `maintenance/repo-surface.md` to decide whether a file belongs in the

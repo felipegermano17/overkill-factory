@@ -43,7 +43,12 @@ factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 factoryctl transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready
+factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
 ```
+
+`status-snapshot` projects card, gate, lane and evidence state for operators. It
+does not replace Hermes, card contracts, gate reports or Receipt Five as the
+source of truth.
 
 ### Test Runner Fallback
 

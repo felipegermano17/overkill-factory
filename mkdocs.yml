@@ -20,5 +20,6 @@ nav:
       - Security Matrix: security/security-control-matrix.md
   - Release:
       - Validation And Release: operations/validation-and-release.md
+      - Parallel Execution And Status: operations/parallel-execution-and-status.md
       - Release Policy: operations/release-policy.md
   - Maintainer Internals: maintenance/repo-surface.md

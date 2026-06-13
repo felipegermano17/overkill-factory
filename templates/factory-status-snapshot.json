@@ -1,0 +1,55 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-status-snapshot.schema.json",
+  "record_type": "factory_status_snapshot",
+  "created_at": "2026-01-01T00:00:00+00:00",
+  "card": {
+    "id": "CARD-001",
+    "title": "Example factory card",
+    "ref": "cards/example-card.md"
+  },
+  "current_state": "planning",
+  "phase": "F11",
+  "risk_effective": "R1",
+  "source_refs": [
+    {
+      "claim": "card",
+      "ref": "cards/example-card.md"
+    }
+  ],
+  "staleness": {
+    "status": "manual_estimate",
+    "last_updated_ref": "cards/example-card.md",
+    "warning": "Template snapshot is not runtime evidence."
+  },
+  "workers": {},
+  "lanes": [],
+  "gates": {
+    "gate_status": "not_run"
+  },
+  "blockers": [],
+  "evidence": {
+    "receipt_five_status": "not_attached",
+    "evidence_refs": []
+  },
+  "state_flags": {
+    "implemented": false,
+    "validated": false,
+    "integrated": false,
+    "released": false,
+    "blocked": false,
+    "superseded": false
+  },
+  "next_safe_actions": [
+    "Run factoryctl gate-report before execution."
+  ],
+  "forbidden_actions": [
+    "treat-snapshot-as-source-of-truth"
+  ],
+  "public_private_boundary": {
+    "projection_not_source_of_truth": true,
+    "no_raw_logs": true,
+    "no_private_paths": true,
+    "no_private_ids": true
+  },
+  "continuation": "Use the canonical card, gate report and lane contracts before continuing."
+}
