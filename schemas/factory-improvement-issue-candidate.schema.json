@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-improvement-issue-candidate.schema.json",
+  "title": "Overkill Factory Improvement Issue Candidate",
+  "type": "object",
+  "required": ["record_type", "title", "body", "route", "severity", "area", "public_safe"],
+  "properties": {
+    "record_type": { "const": "factory_improvement_issue_candidate" },
+    "title": { "type": "string", "minLength": 3 },
+    "body": { "type": "string", "minLength": 3 },
+    "route": { "enum": ["public_issue", "private_followup", "critical_change_proposal", "docs_update", "eval_or_test"] },
+    "severity": { "enum": ["low", "medium", "high", "critical"] },
+    "area": { "type": "string", "minLength": 2 },
+    "public_safe": { "type": "boolean" },
+    "requires_human_gate": { "type": "boolean" },
+    "dedupe_key": { "type": "string" }
+  },
+  "additionalProperties": true
+}

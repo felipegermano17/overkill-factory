@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/owner-issue-intake-config.schema.json",
+  "title": "Overkill Factory Owner Issue Intake Config",
+  "type": "object",
+  "required": ["record_type", "mode", "sources", "filters", "default_card_status"],
+  "properties": {
+    "record_type": { "const": "owner_issue_intake_config" },
+    "mode": { "enum": ["dry_run", "blocked_card_creation"] },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["repo", "labels"],
+        "properties": {
+          "repo": { "type": "string", "minLength": 3 },
+          "labels": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "filters": {
+      "type": "object",
+      "properties": {
+        "include_labels": { "type": "array", "items": { "type": "string" } },
+        "exclude_labels": { "type": "array", "items": { "type": "string" } },
+        "critical_change_terms": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "default_card_status": { "enum": ["blocked", "planning"] },
+    "public_comment_policy": { "enum": ["never", "dry_run_only", "after_human_gate"] }
+  },
+  "additionalProperties": true
+}

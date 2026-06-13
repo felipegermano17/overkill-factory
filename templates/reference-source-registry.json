@@ -1,0 +1,56 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/reference-source-registry.schema.json",
+  "record_type": "reference_source_registry",
+  "sources": [
+    {
+      "source_id": "motionsites",
+      "name": "MotionSites",
+      "url": "https://motionsites.ai/",
+      "allowed_use": ["animated hero inspiration", "motion prompt benchmark"],
+      "forbidden_use": ["copying protected assets", "treating prompts as product proof"],
+      "license_terms_status": "operator must verify current terms before reuse",
+      "public_safety_notes": "Use as reference only unless license is recorded.",
+      "informs_product_experience_fields": ["design_direction", "interaction_style"]
+    },
+    {
+      "source_id": "uiverse",
+      "name": "Uiverse",
+      "url": "https://uiverse.io/",
+      "allowed_use": ["component inspiration", "licensed component reuse when license is recorded"],
+      "forbidden_use": ["blind copy without attribution/license check"],
+      "license_terms_status": "site advertises open-source UI elements; verify current item/license before reuse",
+      "public_safety_notes": "Record source and license when code/assets are reused.",
+      "informs_product_experience_fields": ["component expectations", "interaction_style"]
+    },
+    {
+      "source_id": "21st-dev",
+      "name": "21st.dev",
+      "url": "https://21st.dev/",
+      "allowed_use": ["React/Tailwind component benchmark", "Shadcn-style block reference"],
+      "forbidden_use": ["unlicensed code reuse", "copying premium/private components"],
+      "license_terms_status": "operator must verify component-level terms before reuse",
+      "public_safety_notes": "Use as benchmark unless license metadata is attached.",
+      "informs_product_experience_fields": ["design_direction", "component expectations"]
+    },
+    {
+      "source_id": "sceneai",
+      "name": "SceneAI",
+      "url": "https://sceneai.art/",
+      "allowed_use": ["visual direction reference", "prompt structure reference"],
+      "forbidden_use": ["treating prompt output as licensed product asset without review"],
+      "license_terms_status": "operator must verify current terms before reuse",
+      "public_safety_notes": "Keep generated/reference assets out of public artifacts unless cleared.",
+      "informs_product_experience_fields": ["visual_tone", "product_fit"]
+    },
+    {
+      "source_id": "refero-styles",
+      "name": "Refero Styles",
+      "url": "https://styles.refero.design/",
+      "allowed_use": ["DESIGN.md structure benchmark", "agent-readable style reference"],
+      "forbidden_use": ["copying private product-specific style text blindly"],
+      "license_terms_status": "operator must verify current terms before reuse",
+      "public_safety_notes": "Prefer as structure/reference for original style packets.",
+      "informs_product_experience_fields": ["experience_sot", "design_direction"]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/reference-quality-packet.schema.json",
+  "record_type": "reference_quality_packet",
+  "experience_category": "web product surface",
+  "quality_bar": "Specific, product-fit experience that avoids generic generated UI.",
+  "anti_generic_criteria": [
+    "The output must reflect the product job, not a generic landing-page template.",
+    "The design direction must name concrete density, tone and interaction expectations."
+  ],
+  "references": [
+    {
+      "source_id": "refero-styles",
+      "source_url_or_ref": "https://styles.refero.design/",
+      "use_type": "style_reference",
+      "what_to_learn": ["agent-readable style structure", "DESIGN.md pattern"],
+      "copy_policy": "do_not_copy",
+      "license_or_terms_ref": "operator must verify current terms before reuse",
+      "public_safety_notes": "Use as a benchmark reference, not as copied content."
+    }
+  ],
+  "design_rationale": "References establish the quality baseline before generation.",
+  "component_expectations": ["components must match the job-to-be-done"],
+  "interaction_expectations": ["states and transitions must be observable"],
+  "visual_constraints": ["avoid stock/generic composition"],
+  "reuse_policy": {
+    "allowed": ["benchmarking", "inspiration", "licensed component reuse with recorded license"],
+    "forbidden": ["blind copy", "unlicensed asset reuse", "private reference leakage"],
+    "license_required_for_code_or_assets": true
+  },
+  "accessibility_constraints": ["keyboard path", "labels", "contrast"],
+  "performance_constraints": ["no decorative motion that blocks the primary task"],
+  "acceptance_criteria": ["Product Face design-fit review passes"],
+  "product_experience_fields_informed": ["experience_sot", "design_direction", "proof_required"]
+}

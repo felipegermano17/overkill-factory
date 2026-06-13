@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/reference-quality-packet.schema.json",
+  "title": "Overkill Factory Reference Quality Packet",
+  "type": "object",
+  "required": [
+    "record_type",
+    "experience_category",
+    "quality_bar",
+    "anti_generic_criteria",
+    "references",
+    "design_rationale",
+    "reuse_policy",
+    "accessibility_constraints",
+    "performance_constraints",
+    "acceptance_criteria"
+  ],
+  "properties": {
+    "record_type": { "const": "reference_quality_packet" },
+    "experience_category": { "type": "string", "minLength": 3 },
+    "quality_bar": { "type": "string", "minLength": 3 },
+    "anti_generic_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source_id", "source_url_or_ref", "use_type", "what_to_learn", "copy_policy"],
+        "properties": {
+          "source_id": { "type": "string", "minLength": 2 },
+          "source_url_or_ref": { "type": "string", "minLength": 3 },
+          "use_type": {
+            "enum": ["inspiration", "benchmark", "licensed_component", "prompt_reference", "style_reference"]
+          },
+          "what_to_learn": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "copy_policy": {
+            "enum": ["do_not_copy", "copy_only_with_license_recorded", "internal_reference_only"]
+          },
+          "license_or_terms_ref": { "type": "string" },
+          "public_safety_notes": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "design_rationale": { "type": "string", "minLength": 3 },
+    "component_expectations": { "type": "array", "items": { "type": "string" } },
+    "interaction_expectations": { "type": "array", "items": { "type": "string" } },
+    "visual_constraints": { "type": "array", "items": { "type": "string" } },
+    "reuse_policy": {
+      "type": "object",
+      "required": ["allowed", "forbidden", "license_required_for_code_or_assets"],
+      "properties": {
+        "allowed": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "forbidden": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "license_required_for_code_or_assets": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "accessibility_constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "performance_constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "product_experience_fields_informed": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

@@ -114,6 +114,59 @@
       "review": ["independent-reviewer"]
     }
   },
+  "reasoning_policy": {
+    "$schema": "https://overkill-factory.dev/schemas/reasoning-policy.schema.json",
+    "record_type": "reasoning_policy",
+    "reasoning_class": "standard",
+    "allowed_profile_classes": ["bounded-worker", "review-capable-worker"],
+    "review_intensity": "independent_review",
+    "evidence_policy": {
+      "durable_summary_required": true,
+      "raw_chain_of_thought_forbidden": true,
+      "evidence_refs_required": true
+    },
+    "private_reasoning_policy": "summarize_only",
+    "block_when": [
+      "selected profile cannot satisfy reasoning class",
+      "required review intensity is unavailable",
+      "worker result lacks durable evidence"
+    ],
+    "derived_from": ["risk_effective", "phase", "surfaces", "authority_max"]
+  },
+  "reference_quality_packet": {
+    "$schema": "https://overkill-factory.dev/schemas/reference-quality-packet.schema.json",
+    "record_type": "reference_quality_packet",
+    "experience_category": "software product surface",
+    "quality_bar": "Specific, product-fit experience that avoids generic generated UI.",
+    "anti_generic_criteria": [
+      "The output must reflect the product job, not a generic demo.",
+      "Design direction must be concrete enough for Product Face review."
+    ],
+    "references": [
+      {
+        "source_id": "operator-approved-benchmark",
+        "source_url_or_ref": "external:operator-approved-reference",
+        "use_type": "benchmark",
+        "what_to_learn": ["quality bar", "interaction expectations"],
+        "copy_policy": "do_not_copy",
+        "license_or_terms_ref": "not_applicable_for_benchmark_only",
+        "public_safety_notes": "Benchmark only; no copied text, code or assets."
+      }
+    ],
+    "design_rationale": "The reference packet feeds Product Experience and Product Face before implementation.",
+    "component_expectations": ["components fit the job-to-be-done"],
+    "interaction_expectations": ["states and transitions are observable"],
+    "visual_constraints": ["avoid generic generated composition"],
+    "reuse_policy": {
+      "allowed": ["benchmarking", "inspiration"],
+      "forbidden": ["blind copy", "unlicensed code or asset reuse"],
+      "license_required_for_code_or_assets": true
+    },
+    "accessibility_constraints": ["keyboard path", "labels", "contrast"],
+    "performance_constraints": ["no decorative work that blocks the primary task"],
+    "acceptance_criteria": ["Product Face design-fit review passes"],
+    "product_experience_fields_informed": ["experience_sot", "design_direction", "proof_required"]
+  },
   "software_development_plan": {
     "$schema": "https://overkill-factory.dev/schemas/software-development-plan.schema.json",
     "work_units": ["one bounded implementation slice"],

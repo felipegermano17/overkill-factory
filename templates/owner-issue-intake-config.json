@@ -1,0 +1,18 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/owner-issue-intake-config.schema.json",
+  "record_type": "owner_issue_intake_config",
+  "mode": "dry_run",
+  "sources": [
+    {
+      "repo": "owner/overkill-factory",
+      "labels": ["factory-improvement"]
+    }
+  ],
+  "filters": {
+    "include_labels": ["factory-improvement"],
+    "exclude_labels": ["wontfix"],
+    "critical_change_terms": ["registry", "binding", "adapter", "authority", "release", "security", "methodology"]
+  },
+  "default_card_status": "blocked",
+  "public_comment_policy": "after_human_gate"
+}

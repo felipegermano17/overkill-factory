@@ -1,0 +1,19 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/reasoning-policy.schema.json",
+  "record_type": "reasoning_policy",
+  "reasoning_class": "standard",
+  "allowed_profile_classes": ["bounded-worker", "review-capable-worker"],
+  "review_intensity": "independent_review",
+  "evidence_policy": {
+    "durable_summary_required": true,
+    "raw_chain_of_thought_forbidden": true,
+    "evidence_refs_required": true
+  },
+  "private_reasoning_policy": "summarize_only",
+  "block_when": [
+    "selected profile cannot satisfy reasoning class",
+    "required review intensity is unavailable",
+    "worker result lacks durable evidence"
+  ],
+  "derived_from": ["risk_effective", "phase", "surfaces", "authority_max"]
+}

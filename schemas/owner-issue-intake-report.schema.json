@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/owner-issue-intake-report.schema.json",
+  "title": "Overkill Factory Owner Issue Intake Report",
+  "type": "object",
+  "required": ["record_type", "mode", "issues_reviewed", "decisions"],
+  "properties": {
+    "record_type": { "const": "owner_issue_intake_report" },
+    "mode": { "enum": ["dry_run", "blocked_card_creation"] },
+    "issues_reviewed": { "type": "integer", "minimum": 0 },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["issue_ref", "decision", "reason"],
+        "properties": {
+          "issue_ref": { "type": "string", "minLength": 1 },
+          "decision": {
+            "enum": ["ignore", "needs_human_triage", "documentation_only", "implementation_candidate", "critical_factory_change", "private_operator_only"]
+          },
+          "reason": { "type": "string", "minLength": 3 },
+          "card_status": { "enum": ["blocked", "planning", "not_created"] },
+          "dedupe_key": { "type": "string", "minLength": 1 },
+          "factory_card_candidate": {
+            "type": "object",
+            "required": [
+              "record_type",
+              "source_issue_ref",
+              "title",
+              "status",
+              "factory_method_version",
+              "risk_initial",
+              "risk_effective",
+              "required_gates",
+              "done_definition",
+              "activation_policy"
+            ],
+            "properties": {
+              "record_type": { "const": "owner_issue_factory_card_candidate" },
+              "source_issue_ref": { "type": "string", "minLength": 1 },
+              "title": { "type": "string", "minLength": 1 },
+              "status": { "enum": ["blocked", "planning"] },
+              "factory_method_version": { "const": "OVERKILL_VFINAL" },
+              "risk_initial": { "type": "string", "minLength": 2 },
+              "risk_effective": { "type": "string", "minLength": 2 },
+              "required_gates": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+              "done_definition": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+              "activation_policy": {
+                "type": "object",
+                "required": ["auto_dispatch_allowed", "human_gate_required", "public_comment_allowed"],
+                "properties": {
+                  "auto_dispatch_allowed": { "type": "boolean" },
+                  "human_gate_required": { "type": "boolean" },
+                  "public_comment_allowed": { "type": "boolean" }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
