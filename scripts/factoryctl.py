@@ -35,6 +35,8 @@ def default_work_root() -> Path:
 
 ROOT = default_work_root()
 PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
+PROFILE_READINESS_PATH = ROOT / "agents" / "worker-profile-readiness.public.json"
+PROFILE_READINESS_REF = "agents/worker-profile-readiness.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
 CANONICAL_RUNTIME_ENFORCEMENT_PATH = CODE_ROOT / "scripts" / "canonical_runtime_enforcement.py"
 DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
@@ -747,6 +749,50 @@ def load_profile_bindings() -> dict[str, dict[str, Any]]:
     if missing:
         raise ValueError("profile binding manifest missing workers: " + ", ".join(missing))
     return loaded
+
+
+def load_profile_readiness_rows() -> dict[str, dict[str, Any]]:
+    if not PROFILE_READINESS_PATH.exists():
+        return {}
+    data = json.loads(PROFILE_READINESS_PATH.read_text(encoding="utf-8"))
+    default_record = data.get("default_record", {})
+    worker_rows = data.get("worker_readiness", {})
+    if not isinstance(default_record, dict) or not isinstance(worker_rows, dict):
+        return {}
+    rows: dict[str, dict[str, Any]] = {}
+    for worker_id, row in worker_rows.items():
+        if isinstance(row, dict):
+            rows[str(worker_id)] = {**default_record, **row, "worker_id": str(worker_id)}
+    return rows
+
+
+def profile_readiness_summary(worker_id: str) -> dict[str, Any]:
+    row = load_profile_readiness_rows().get(worker_id)
+    if not row:
+        return {
+            "ledger_ref": PROFILE_READINESS_REF,
+            "readiness_state": "blocked_missing_readiness_ledger",
+            "current_runtime_claim": False,
+            "next_required_action": "publish a public-safe worker profile readiness ledger before claiming profile readiness",
+        }
+    freshness = row.get("freshness_policy") if isinstance(row.get("freshness_policy"), dict) else {}
+    current_claim = freshness.get("current_runtime_claim") is True
+    readiness_state = str(row.get("readiness_state") or "blocked")
+    if readiness_state == "current_profile_ready":
+        next_action = "dispatch may use current profile readiness evidence"
+    else:
+        next_action = "run a fresh smoke and eval ledger before treating this profile as current runtime readiness"
+    return {
+        "ledger_ref": PROFILE_READINESS_REF,
+        "readiness_state": readiness_state,
+        "current_runtime_claim": current_claim,
+        "smoke_result": row.get("smoke_result"),
+        "eval_result": row.get("eval_result"),
+        "checked_at": row.get("checked_at"),
+        "producer": row.get("producer"),
+        "packet_fixture_ref": row.get("packet_fixture_ref"),
+        "next_required_action": next_action,
+    }
 
 
 def load_capability_packs() -> dict[str, dict[str, Any]]:
@@ -2395,6 +2441,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "toolset_policy": profile_binding.get("toolset_policy"),
             "skill_install_ref": profile_binding.get("skill_install_ref"),
             "last_hermes_smoke_ref": profile_binding.get("last_hermes_smoke_ref"),
+            "profile_readiness": profile_readiness_summary(worker_id),
         }
     return packet
 

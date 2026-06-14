@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/worker-profile-readiness-ledger.schema.json",
+  "title": "Overkill Factory Worker Profile Readiness Ledger",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "ledger_version",
+    "created_at",
+    "scope",
+    "current_runtime_claim",
+    "default_record",
+    "worker_readiness",
+    "limits"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/worker-profile-readiness-ledger.schema.json" },
+    "record_type": { "const": "worker_profile_readiness_ledger" },
+    "ledger_version": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "scope": {
+      "enum": [
+        "public-contract-ledger",
+        "sanitized-live-runtime-ledger"
+      ]
+    },
+    "current_runtime_claim": { "type": "boolean" },
+    "default_record": {
+      "type": "object",
+      "required": [
+        "packet_fixture_ref",
+        "smoke_result",
+        "eval_result",
+        "readiness_state",
+        "checked_at",
+        "producer",
+        "freshness_policy",
+        "evidence_refs"
+      ],
+      "properties": {
+        "packet_fixture_ref": { "type": "string", "minLength": 3 },
+        "smoke_result": { "enum": ["PASS", "BLOCKED", "NOT_RUN"] },
+        "eval_result": { "enum": ["PASS", "BLOCKED", "NOT_RUN", "WAIVED"] },
+        "readiness_state": {
+          "enum": [
+            "contract_only",
+            "degraded_without_current_runtime_ledger",
+            "blocked",
+            "current_profile_ready"
+          ]
+        },
+        "checked_at": { "type": "string", "minLength": 10 },
+        "producer": { "type": "string", "minLength": 3 },
+        "freshness_policy": {
+          "type": "object",
+          "required": [
+            "current_runtime_claim",
+            "current_claim_requires",
+            "max_age_days_for_current_claim"
+          ],
+          "properties": {
+            "current_runtime_claim": { "type": "boolean" },
+            "current_claim_requires": { "type": "string", "minLength": 12 },
+            "max_age_days_for_current_claim": { "type": "integer" }
+          },
+          "additionalProperties": false
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "worker_readiness": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "profile_id",
+          "hermes_profile_name"
+        ],
+        "properties": {
+          "profile_id": { "type": "string", "minLength": 3 },
+          "hermes_profile_name": { "type": "string", "minLength": 3 },
+          "packet_fixture_ref": { "type": "string", "minLength": 3 },
+          "smoke_result": { "enum": ["PASS", "BLOCKED", "NOT_RUN"] },
+          "eval_result": { "enum": ["PASS", "BLOCKED", "NOT_RUN", "WAIVED"] },
+          "readiness_state": {
+            "enum": [
+              "contract_only",
+              "degraded_without_current_runtime_ledger",
+              "blocked",
+              "current_profile_ready"
+            ]
+          },
+          "checked_at": { "type": "string", "minLength": 10 },
+          "producer": { "type": "string", "minLength": 3 },
+          "freshness_policy": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": false
+}
