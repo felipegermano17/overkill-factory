@@ -14,7 +14,11 @@ controls and specialist executors.
 ## How It Works
 
 Every Factory card names its surfaces, such as `frontend`, `api`, `solana`,
-`game`, `ios`, `payment` or `hardware`.
+`game`, `ios`, `payment` or `hardware`. Use `responsive` or `mobile-web` for
+browser UI that adapts to mobile screens. Use `ios`, `android`,
+`react-native`, `expo` or `native-mobile` for native mobile work. The broad
+surface `mobile` is intentionally ambiguous and must be refined before
+execution.
 
 `scripts/factoryctl.py validate-card` checks those surfaces against
 `agents/capability-packs.public.json`.
@@ -72,13 +76,35 @@ A template pack becomes executable only when the card includes a
 
 - the pack id;
 - `ready` or `activated` status;
+- `activated` lifecycle state;
 - covered surfaces;
 - specialist workers;
+- profile binding refs for those workers;
+- permission class;
+- tool refs;
+- local smoke path;
+- eval path;
 - activation evidence refs;
+- smoke and eval evidence refs;
 - missing capabilities, if any;
 - an execution rule.
 
 The template lives at `templates/capability-pack-contract.json`.
+`templates/capability-pack-activation-example.json` shows a complete
+non-core pack activation shape, but it is deliberately blocked until real
+public-safe smoke and eval refs replace the placeholders.
+
+## Activation Flow
+
+1. Pick the exact surfaces. Do not use broad aliases when the product needs a
+   native, device, regulated, onchain or domain-specific pack.
+2. Copy the activation contract shape into the candidate card.
+3. Replace every placeholder with public-safe refs to workers, bindings, tools,
+   smoke and eval evidence.
+4. Keep `missing_capabilities` non-empty and `lifecycle_state` below
+   `activated` until smoke and eval evidence exist.
+5. Run `factoryctl validate-card`. Material execution may start only after the
+   contract is activated, complete and every requested surface is covered.
 
 ## Important Boundary
 

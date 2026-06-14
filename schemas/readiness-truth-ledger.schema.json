@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/readiness-truth-ledger.schema.json",
+  "title": "Overkill Factory Readiness Truth Ledger",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "target",
+    "overall_truth_level",
+    "production_ready",
+    "classification_order",
+    "components",
+    "blocker_economics",
+    "limits"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/readiness-truth-ledger.schema.json" },
+    "record_type": { "const": "readiness_truth_ledger" },
+    "created_at": { "type": "string", "minLength": 10 },
+    "overall_truth_level": {
+      "enum": [
+        "blocked_missing_evidence",
+        "contract_exists",
+        "runtime_enforced",
+        "bounded_public_proof",
+        "live_hermes_proof",
+        "product_specific_proof",
+        "production_ready"
+      ]
+    },
+    "production_ready": { "type": "boolean" },
+    "classification_order": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["capability_id", "truth_level", "result", "evidence_refs", "next_required_action"],
+        "additionalProperties": true
+      }
+    },
+    "blocker_economics": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/planning-bundle-manifest.schema.json",
+  "title": "Overkill Factory Planning Bundle Manifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "manifest_version",
+    "factory_method_version",
+    "bundles"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/planning-bundle-manifest.schema.json" },
+    "record_type": { "const": "planning_bundle_manifest" },
+    "manifest_version": { "type": "string", "minLength": 2 },
+    "factory_method_version": { "type": "string", "minLength": 3 },
+    "bundles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "bundle_id",
+          "bundle_kind",
+          "version",
+          "status",
+          "target_platforms",
+          "entrypoint",
+          "included_files",
+          "compatible_factory_method_versions",
+          "compatible_schema_refs",
+          "expected_outputs",
+          "import_validation",
+          "safety_rules",
+          "non_authority_rules"
+        ],
+        "properties": {
+          "bundle_id": { "type": "string", "minLength": 3 },
+          "bundle_kind": { "const": "planning_protocol" },
+          "version": { "type": "string", "minLength": 1 },
+          "status": {
+            "enum": [
+              "prototype_public_safe",
+              "active_public_safe",
+              "deprecated",
+              "blocked"
+            ]
+          },
+          "target_platforms": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "entrypoint": { "type": "string", "minLength": 3 },
+          "included_files": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "compatible_factory_method_versions": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "compatible_schema_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "expected_outputs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "output_id",
+                "output_type",
+                "candidate_schema_ref",
+                "authority"
+              ],
+              "properties": {
+                "output_id": { "type": "string", "minLength": 3 },
+                "output_type": { "type": "string", "minLength": 3 },
+                "candidate_schema_ref": { "type": "string", "minLength": 3 },
+                "authority": { "const": "candidate_only" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "import_validation": {
+            "type": "object",
+            "required": [
+              "handoff_rule",
+              "commands"
+            ],
+            "properties": {
+              "handoff_rule": { "type": "string", "minLength": 12 },
+              "commands": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 3 }
+              }
+            },
+            "additionalProperties": false
+          },
+          "safety_rules": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 8 }
+          },
+          "non_authority_rules": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 8 }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

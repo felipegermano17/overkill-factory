@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/specialist-research-plan.schema.json",
+  "title": "Overkill Factory Specialist Research Plan",
+  "type": "object",
+  "required": [
+    "record_type",
+    "research_id",
+    "trigger_source",
+    "research_question",
+    "decision_needed",
+    "specialist_owner",
+    "domain_surface",
+    "allowed_sources",
+    "forbidden_sources",
+    "source_quality_bar",
+    "expected_output_type",
+    "stop_rule",
+    "risk_if_skipped",
+    "public_safety_policy",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/specialist-research-plan.schema.json" },
+    "record_type": { "const": "specialist_research_plan" },
+    "research_id": { "type": "string", "minLength": 3 },
+    "trigger_source": { "type": "string", "minLength": 3 },
+    "research_question": { "type": "string", "minLength": 8 },
+    "decision_needed": { "type": "string", "minLength": 8 },
+    "specialist_owner": { "type": "string", "minLength": 3 },
+    "supporting_specialists": { "type": "array", "items": { "type": "string" } },
+    "domain_surface": { "type": "string", "minLength": 3 },
+    "allowed_sources": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "forbidden_sources": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "source_quality_bar": { "type": "string", "minLength": 8 },
+    "freshness_requirement": { "type": "string" },
+    "copy_license_policy": { "type": "string" },
+    "expected_output_type": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "stop_rule": { "type": "string", "minLength": 8 },
+    "risk_if_skipped": { "type": "string", "minLength": 8 },
+    "public_safety_policy": { "type": "string", "minLength": 8 },
+    "reference_quality_packet_refs": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": true
+}

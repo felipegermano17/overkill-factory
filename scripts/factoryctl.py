@@ -12,6 +12,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
+import subprocess
 import sys
 import sysconfig
 from dataclasses import dataclass
@@ -51,12 +53,24 @@ def default_work_root() -> Path:
 
 ROOT = default_work_root()
 PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
+PROFILE_READINESS_PATH = ROOT / "agents" / "worker-profile-readiness.public.json"
+PROFILE_READINESS_REF = "agents/worker-profile-readiness.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
+DEFAULT_WORKFLOW_CATALOG = ROOT / "docs" / "factory-workflow.catalog.json"
 CANONICAL_RUNTIME_ENFORCEMENT_PATH = CODE_ROOT / "scripts" / "canonical_runtime_enforcement.py"
 DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
 DEFAULT_QUICKSTART_OUT = Path.cwd() / ".tmp" / "quickstart-result.json"
 DEFAULT_PACKETS_OUT = Path.cwd() / ".tmp" / "minimal-worker-packets"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
+DEFAULT_TRUTH_OUT = ROOT / ".tmp" / "factory-runs" / "truth" / "truth-packet.json"
+DEFAULT_EVIDENCE_GRAPH_OUT = ROOT / ".tmp" / "factory-runs" / "evidence" / "evidence-graph.json"
+DEFAULT_READINESS_LEDGER_OUT = ROOT / ".tmp" / "factory-runs" / "readiness" / "readiness-truth-ledger.json"
+DEFAULT_HERMES_EVIDENCE_OUT = ROOT / ".tmp" / "factory-runs" / "hermes-evidence" / "sanitized-package.json"
+DEFAULT_PREPILOT_CHECKLIST_OUT = ROOT / ".tmp" / "factory-runs" / "prepilot" / "loose-end-checklist.json"
+PRIVATE_RUNTIME_REF_RE = re.compile(
+    r"([A-Za-z]:[\\/]|\\\\|/home/|/Users/|/srv/|/var/|discord(app)?\.com|webhook|token|secret|guild[_-]?id|channel[_-]?id|message[_-]?id)",
+    re.IGNORECASE,
+)
 
 CARD_REQUIRED = {
     "factory_method_version",
@@ -103,6 +117,39 @@ VFINAL_CORE_CONTRACTS = {
     "loop_plan",
 }
 
+PRODUCT_SCOPE_INTENTS = {"full_product", "child_slice"}
+PRODUCT_PLANNING_PHASES = {"F11", "F12", "F13", "F14", "F15", "F16", "F17"}
+PRODUCTION_SURFACES = {
+    "production",
+    "release",
+    "deploy",
+    "mainnet",
+    "staging",
+    "customers",
+    "customer-ready",
+    "monitoring",
+    "rollback",
+}
+COMPLETION_SOT_STATUSES = {"DONE", "BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"}
+COMPLETION_METHOD_STATUSES = {"EXECUTED", "WAIVED", "BLOCKED"}
+USER_QUESTION_CLASSES = {"discoverable", "preference", "authority_required", "access_required", "risk_acceptance", "blocked"}
+ALLOWED_USER_QUESTION_CLASSES = USER_QUESTION_CLASSES - {"discoverable"}
+INTERNAL_COORDINATION_TERMS = {
+    "worker packet",
+    "worker packets",
+    "internal worker",
+    "internal workers",
+    "schema",
+    "schemas",
+    "evidence graph",
+    "source ledger",
+    "method router",
+    "gate report",
+    "receipt five",
+    "hermes card",
+    "kanban card",
+}
+
 RECEIPT_REQUIRED = {
     "changed",
     "artifact_paths",
@@ -116,6 +163,44 @@ PROMOTION_PASS_RESULTS = {"PASS", "WAIVED"}
 ARTIFACT_PUBLIC_CLASSES = {"public_safe", "sanitized_report", "publication_candidate"}
 ARTIFACT_PRIVATE_CLASSES = {"private_run_evidence", "transient_cache"}
 PUBLICATION_SCANNER_FIELDS = ("public_safety_scan", "secret_safety_scan")
+SECRET_DELIVERY_SAFE_MODES = {
+    "none",
+    "placeholder",
+    "simulator",
+    "user-mediated",
+    "jit_broker",
+    "vault_jit",
+    "hardware_signer",
+    "external_service",
+}
+SECRET_DELIVERY_EXCEPTION_MODES = {"startup_env", "runtime_file"}
+SECRET_DELIVERY_FORBIDDEN_MODES = {"prompt_context"}
+SECRET_POLICY_FORBIDDEN_KEYS = {
+    "secret",
+    "secret_value",
+    "raw_secret",
+    "credential_value",
+    "private_key",
+    "env_dump",
+    "runtime_file_path",
+    "local_secret_path",
+}
+HARDENING_REQUIRED_EXECUTION_MODES = {"bounded_execution", "material_execution", "production_operation"}
+TOOL_USING_SURFACES = {
+    "shell",
+    "browser",
+    "filesystem",
+    "network",
+    "mcp",
+    "git",
+    "github",
+    "cloud",
+    "database",
+    "wallet",
+    "messaging",
+}
+WIDE_FILESYSTEM_SCOPES = {"workspace_wide", "external_mount"}
+WIDE_NETWORK_SCOPES = {"unrestricted"}
 PARALLEL_EDIT_LANE_KINDS = {"write", "execution"}
 V2_APPROVAL_KEYS = [
     "qa",
@@ -216,6 +301,18 @@ QUASAR_TOOLCHAIN_PROOF_REQUIRED = (
 )
 CAPABILITY_READY_STATES = {"core_ready", "pack_ready"}
 CAPABILITY_ACTIVATED_STATES = {"ready", "activated"}
+CAPABILITY_ACTIVE_LIFECYCLE_STATES = {"activated"}
+CAPABILITY_AMBIGUOUS_SURFACE_GUIDANCE = {
+    "mobile": "use responsive/mobile-web for browser UI or ios/android/react-native for native mobile work"
+}
+CAPABILITY_CONTRACT_TEXT_FIELDS = (
+    "lifecycle_state",
+    "permission_class",
+    "local_smoke_path",
+    "eval_path",
+    "smoke_evidence_ref",
+    "eval_evidence_ref",
+)
 PRODUCT_EXPERIENCE_REQUIRED_FIELDS = (
     "surface_type",
     "surface_pack",
@@ -756,6 +853,50 @@ def load_profile_bindings() -> dict[str, dict[str, Any]]:
     return loaded
 
 
+def load_profile_readiness_rows() -> dict[str, dict[str, Any]]:
+    if not PROFILE_READINESS_PATH.exists():
+        return {}
+    data = json.loads(PROFILE_READINESS_PATH.read_text(encoding="utf-8"))
+    default_record = data.get("default_record", {})
+    worker_rows = data.get("worker_readiness", {})
+    if not isinstance(default_record, dict) or not isinstance(worker_rows, dict):
+        return {}
+    rows: dict[str, dict[str, Any]] = {}
+    for worker_id, row in worker_rows.items():
+        if isinstance(row, dict):
+            rows[str(worker_id)] = {**default_record, **row, "worker_id": str(worker_id)}
+    return rows
+
+
+def profile_readiness_summary(worker_id: str) -> dict[str, Any]:
+    row = load_profile_readiness_rows().get(worker_id)
+    if not row:
+        return {
+            "ledger_ref": PROFILE_READINESS_REF,
+            "readiness_state": "blocked_missing_readiness_ledger",
+            "current_runtime_claim": False,
+            "next_required_action": "publish a public-safe worker profile readiness ledger before claiming profile readiness",
+        }
+    freshness = row.get("freshness_policy") if isinstance(row.get("freshness_policy"), dict) else {}
+    current_claim = freshness.get("current_runtime_claim") is True
+    readiness_state = str(row.get("readiness_state") or "blocked")
+    if readiness_state == "current_profile_ready":
+        next_action = "dispatch may use current profile readiness evidence"
+    else:
+        next_action = "run a fresh smoke and eval ledger before treating this profile as current runtime readiness"
+    return {
+        "ledger_ref": PROFILE_READINESS_REF,
+        "readiness_state": readiness_state,
+        "current_runtime_claim": current_claim,
+        "smoke_result": row.get("smoke_result"),
+        "eval_result": row.get("eval_result"),
+        "checked_at": row.get("checked_at"),
+        "producer": row.get("producer"),
+        "packet_fixture_ref": row.get("packet_fixture_ref"),
+        "next_required_action": next_action,
+    }
+
+
 def load_capability_packs() -> dict[str, dict[str, Any]]:
     if not CAPABILITY_PACKS_PATH.exists():
         return {}
@@ -780,6 +921,71 @@ def _activated_capability_pack_ids(contract: Any) -> set[str]:
     return ids
 
 
+def validate_activated_capability_contract(
+    contract: Any,
+    *,
+    candidate_pack_ids: set[str],
+    requested_surfaces: set[str],
+) -> list[str]:
+    if not isinstance(contract, dict):
+        return ["capability_pack_contract object is required to activate a template capability pack"]
+
+    errors: list[str] = []
+    status = str(contract.get("status") or "").strip().lower()
+    lifecycle_state = str(contract.get("lifecycle_state") or "").strip().lower()
+    contract_pack_ids = _activated_capability_pack_ids(contract)
+    covered_surfaces = {item.lower() for item in _list_items(contract.get("covered_surfaces"))}
+    specialist_workers = _list_items(contract.get("specialist_workers"))
+    activation_refs = _list_items(contract.get("activation_evidence_refs"))
+    tool_refs = _list_items(contract.get("tool_refs"))
+    missing_capabilities = _list_items(contract.get("missing_capabilities"))
+
+    if status not in CAPABILITY_ACTIVATED_STATES:
+        errors.append("capability_pack_contract.status must be ready or activated")
+    if lifecycle_state not in CAPABILITY_ACTIVE_LIFECYCLE_STATES:
+        errors.append("capability_pack_contract.lifecycle_state must be activated before material execution")
+    if not contract_pack_ids.intersection(candidate_pack_ids):
+        candidates = ", ".join(sorted(candidate_pack_ids))
+        errors.append(f"capability_pack_contract.pack_id must match one of the required packs: {candidates}")
+
+    missing_surfaces = sorted(requested_surfaces - covered_surfaces)
+    for surface in missing_surfaces:
+        errors.append(f"capability_pack_contract.covered_surfaces missing required surface {surface!r}")
+
+    for field in CAPABILITY_CONTRACT_TEXT_FIELDS:
+        if not _non_empty_text(contract.get(field)):
+            errors.append(f"capability_pack_contract.{field} is required for activated packs")
+    if not specialist_workers:
+        errors.append("capability_pack_contract.specialist_workers must name activated specialist workers")
+    if not activation_refs:
+        errors.append("capability_pack_contract.activation_evidence_refs must include public-safe activation evidence refs")
+    if not tool_refs:
+        errors.append("capability_pack_contract.tool_refs must name the activated tools or commands")
+    if missing_capabilities:
+        errors.append("capability_pack_contract.missing_capabilities must be empty before material execution")
+
+    profile_binding_refs = contract.get("profile_binding_refs")
+    if not isinstance(profile_binding_refs, dict) or not profile_binding_refs:
+        errors.append("capability_pack_contract.profile_binding_refs must map each specialist worker to a profile binding ref")
+    else:
+        for worker_id in specialist_workers:
+            if not _non_empty_text(profile_binding_refs.get(worker_id)):
+                errors.append(f"capability_pack_contract.profile_binding_refs missing {worker_id!r}")
+
+    worker_mapping = contract.get("worker_mapping")
+    if isinstance(worker_mapping, dict) and specialist_workers:
+        worker_set = set(specialist_workers)
+        for lane, workers in worker_mapping.items():
+            for worker_id in _list_items(workers):
+                if worker_id not in worker_set:
+                    errors.append(
+                        f"capability_pack_contract.worker_mapping.{lane} references worker {worker_id!r} "
+                        "outside specialist_workers"
+                    )
+
+    return errors
+
+
 def validate_capability_coverage(card: dict[str, Any]) -> list[str]:
     packs = load_capability_packs()
     if not packs:
@@ -792,8 +998,15 @@ def validate_capability_coverage(card: dict[str, Any]) -> list[str]:
     activated_pack_ids = _activated_capability_pack_ids(card.get("capability_pack_contract"))
     errors: list[str] = []
     covered_surfaces: set[str] = set()
+    activation_required_surfaces: set[str] = set()
+    activation_candidate_pack_ids: set[str] = set()
 
     for surface in sorted(surfaces):
+        if surface in CAPABILITY_AMBIGUOUS_SURFACE_GUIDANCE:
+            errors.append(
+                f"ambiguous capability surface {surface!r}; {CAPABILITY_AMBIGUOUS_SURFACE_GUIDANCE[surface]}"
+            )
+            continue
         matching = [
             (pack_id, pack)
             for pack_id, pack in packs.items()
@@ -806,11 +1019,25 @@ def validate_capability_coverage(card: dict[str, Any]) -> list[str]:
         covered_surfaces.add(surface)
         ready = any(str(pack.get("status") or "").strip() in CAPABILITY_READY_STATES for _, pack in matching)
         activated = any(pack_id in activated_pack_ids for pack_id, _ in matching)
-        if not ready and not activated:
+        if ready:
+            continue
+        if activated:
+            activation_required_surfaces.add(surface)
+            activation_candidate_pack_ids.update(pack_id for pack_id, _ in matching)
+        else:
             pack_ids = ", ".join(pack_id for pack_id, _ in matching)
             errors.append(
                 f"capability_pack_contract ready/activated is required for surface {surface!r}; candidate packs: {pack_ids}"
             )
+
+    if activation_required_surfaces:
+        errors.extend(
+            validate_activated_capability_contract(
+                card.get("capability_pack_contract"),
+                candidate_pack_ids=activation_candidate_pack_ids,
+                requested_surfaces=activation_required_surfaces,
+            )
+        )
 
     if strict and not covered_surfaces:
         errors.append("capability_coverage_required=true but no card surface is covered by the capability pack registry")
@@ -886,6 +1113,92 @@ def artifact_contract_for_refs(refs: list[str]) -> dict[str, Any]:
         ],
         "public_safe": all(bool(item.get("public_safe")) for item in classifications),
     }
+
+
+def public_safe_text(value: Any) -> bool:
+    return PRIVATE_RUNTIME_REF_RE.search(str(value or "")) is None
+
+
+def sanitize_slug(value: Any, *, fallback: str = "item") -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "-", str(value or "").strip()).strip("-._")
+    return cleaned[:80] or fallback
+
+
+def redact_private_text(value: Any) -> str:
+    text = str(value or "")
+    text = re.sub(r"[A-Za-z]:[\\/][^ \];,\"]+", "[redacted-private-ref]", text)
+    text = re.sub(r"/(?:home|Users|srv|var)/[^ \];,\"]+", "[redacted-private-ref]", text)
+    text = PRIVATE_RUNTIME_REF_RE.sub("[redacted-private-marker]", text)
+    return text
+
+
+def sanitize_public_ref(ref: Any) -> tuple[str, dict[str, Any] | None]:
+    value = str(ref or "").strip()
+    classification = classify_artifact_ref(value)
+    trusted_external_prefixes = (
+        "external:sanitized",
+        "external:operator",
+        "external:public",
+        "external:maintainer",
+        "external:source-card",
+        "external:memory",
+    )
+    if value.startswith("external:") and not value.startswith(trusted_external_prefixes):
+        classification = {**classification, "public_safe": False, "reason": "untrusted external ref requires explicit sanitized/operator/public prefix"}
+    if classification.get("public_safe") and public_safe_text(value):
+        return value, None
+    redacted = {
+        "ref": "redacted:private-runtime-ref",
+        "artifact_class": classification.get("artifact_class") or "private_run_evidence",
+        "reason": classification.get("reason") or "private runtime marker",
+    }
+    return redacted["ref"], {"raw_ref_redacted": True, **redacted}
+
+
+def blocker_economics_entry(
+    *,
+    blocker_id: str,
+    owner: str,
+    risk_controlled: str,
+    cost_time_class: str,
+    dependency: str,
+    smallest_safe_next_action: str,
+    mutation_risk: str,
+    route: str,
+    status: str = "blocked",
+    expiry: str = "until evidence changes",
+) -> dict[str, str]:
+    return {
+        "blocker_id": sanitize_slug(blocker_id, fallback="blocker"),
+        "owner": owner,
+        "risk_controlled": risk_controlled,
+        "cost_time_class": cost_time_class,
+        "dependency": dependency,
+        "smallest_safe_next_action": smallest_safe_next_action,
+        "mutation_risk": mutation_risk,
+        "route": route,
+        "expiry": expiry,
+        "status": status,
+    }
+
+
+def worker_blocker_economics(worker_id: str, status: str, reason: str) -> dict[str, str]:
+    worker = WORKERS[worker_id]
+    route = "human_approval" if worker_id == "human-gate-clerk" else "hermes"
+    action = f"run {worker_id} and attach {worker.output_field}"
+    if status.startswith("blocked_"):
+        action = f"provide missing inputs for {worker_id}, then rerun gate-report"
+    return blocker_economics_entry(
+        blocker_id=f"worker:{worker_id}:{status}",
+        owner=worker_id,
+        risk_controlled=reason or "required worker evidence",
+        cost_time_class="bounded_worker_run",
+        dependency=worker.output_field,
+        smallest_safe_next_action=action,
+        mutation_risk="none_without_explicit_worker_execution",
+        route=route,
+        status="blocked" if status.startswith("blocked_") else "actionable",
+    )
 
 
 def scan_result_passed(value: Any) -> bool:
@@ -1159,10 +1472,449 @@ def _list_items(value: Any) -> list[str]:
     return [str(item).strip() for item in value if str(item).strip()]
 
 
+def _has_contract(data: dict[str, Any], field: str) -> bool:
+    value = data.get(field)
+    if isinstance(value, dict) and value:
+        return True
+    return _non_empty_text(data.get(f"{field}_ref"))
+
+
+def _has_ref_or_object(data: dict[str, Any], field: str) -> bool:
+    return _has_contract(data, field)
+
+
+def _product_planning_required(card: dict[str, Any]) -> bool:
+    request_type = str(card.get("request_type") or "").strip()
+    scope_intent = str(card.get("scope_intent") or "").strip()
+    method = card.get("method_contract") if isinstance(card.get("method_contract"), dict) else {}
+    method_scope = str(method.get("scope_intent") or "").strip()
+    return (
+        card.get("complete_product_required") is True
+        or request_type == "product_new"
+        or scope_intent in PRODUCT_SCOPE_INTENTS
+        or method_scope in PRODUCT_SCOPE_INTENTS
+    )
+
+
+def _production_ladder_required(card: dict[str, Any]) -> bool:
+    phase = str(card.get("phase") or "").upper()
+    surfaces = normalized_surfaces(card)
+    method = card.get("method_contract") if isinstance(card.get("method_contract"), dict) else {}
+    route = " ".join(
+        str(value or "")
+        for value in (
+            method.get("factory_route"),
+            method.get("production_route_decision"),
+            card.get("authority_max"),
+        )
+    ).lower()
+    return (
+        bool(surfaces & PRODUCTION_SURFACES)
+        or phase in {"F16", "F17"}
+        or "production" in route
+        or "mainnet" in route
+        or card.get("complete_product_required") is True
+    )
+
+
+def _research_required(card: dict[str, Any]) -> bool:
+    outcome = card.get("outcome_contract") if isinstance(card.get("outcome_contract"), dict) else {}
+    if outcome.get("discovery_depth") == "research_required":
+        return True
+    for lane in card_parallel_lane_contracts(card):
+        if str(lane.get("lane_kind") or "").strip().lower() == "research":
+            return True
+    return False
+
+
+def _selected_engineering_methods(method_contract: dict[str, Any]) -> set[str]:
+    methods = set(_list_items(method_contract.get("selected_methods")))
+    matrix = method_contract.get("engineering_method_matrix")
+    if isinstance(matrix, list):
+        for row in matrix:
+            if isinstance(row, dict):
+                methods.update(_list_items(row.get("methods")))
+    selected = str(method_contract.get("selected_method") or "").strip()
+    if selected:
+        methods.add(selected)
+    return methods
+
+
+def validate_product_scope_planning_contract(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    if not _product_planning_required(card):
+        return []
+
+    errors: list[str] = []
+    product_sot = card.get("product_sot") if isinstance(card.get("product_sot"), dict) else {}
+    method = card.get("method_contract") if isinstance(card.get("method_contract"), dict) else {}
+    software_plan = card.get("software_development_plan") if isinstance(card.get("software_development_plan"), dict) else {}
+
+    if not _has_ref_or_object(card, "full_product_sot_scope_coverage"):
+        errors.append("full_product_sot_scope_coverage or full_product_sot_scope_coverage_ref is required for complete Product SOT planning")
+    if not _non_empty_text(product_sot.get("full_product_sot_scope_coverage_ref")):
+        errors.append("product_sot.full_product_sot_scope_coverage_ref is required")
+    if str(method.get("canonical_scope_source") or "").strip().lower() not in {"approved product sot", "product_sot", "product sot"}:
+        errors.append("method_contract.canonical_scope_source must be approved Product SOT")
+    if str(method.get("scope_intent") or "").strip() not in PRODUCT_SCOPE_INTENTS:
+        errors.append("method_contract.scope_intent must be full_product or child_slice")
+    if not _non_empty_text(method.get("factory_route")):
+        errors.append("method_contract.factory_route is required")
+    required_artifacts = set(_list_items(method.get("required_factory_artifacts")))
+    for artifact in ("full_product_sot_scope_coverage", "product_creation_plan", "product_implementation_readiness"):
+        if artifact not in required_artifacts:
+            errors.append(f"method_contract.required_factory_artifacts must include {artifact}")
+    matrix = method.get("engineering_method_matrix")
+    if not isinstance(matrix, list) or not matrix:
+        errors.append("method_contract.engineering_method_matrix is required")
+    else:
+        for index, row in enumerate(matrix):
+            row = row if isinstance(row, dict) else {}
+            for field in ("surface_or_component", "reason"):
+                if not _non_empty_text(row.get(field)):
+                    errors.append(f"method_contract.engineering_method_matrix[{index}].{field} is required")
+            for field in ("methods", "required_artifacts", "evidence_required"):
+                if not _non_empty_string_list(row.get(field)):
+                    errors.append(f"method_contract.engineering_method_matrix[{index}].{field} must be non-empty")
+    slice_policy = method.get("slice_execution_policy") if isinstance(method.get("slice_execution_policy"), dict) else {}
+    if slice_policy.get("slices_are_execution_units_only") is not True:
+        errors.append("method_contract.slice_execution_policy.slices_are_execution_units_only must be true")
+    if slice_policy.get("canonical_scope_must_not_shrink") is not True:
+        errors.append("method_contract.slice_execution_policy.canonical_scope_must_not_shrink must be true")
+    if not _non_empty_text(method.get("production_route_decision")):
+        errors.append("method_contract.production_route_decision is required")
+    if not _non_empty_string_list(software_plan.get("full_product_plan")):
+        errors.append("software_development_plan.full_product_plan is required before slice execution")
+    if not _non_empty_string_list(software_plan.get("slice_execution_plan")):
+        errors.append("software_development_plan.slice_execution_plan is required")
+    if _non_empty_string_list(software_plan.get("slice_plan")) and not _non_empty_string_list(software_plan.get("full_product_plan")):
+        errors.append("software_development_plan.slice_plan cannot stand in for full_product_plan")
+    return errors
+
+
+def validate_specialist_research_contract(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    errors: list[str] = []
+    if _research_required(card) and not _has_ref_or_object(card, "specialist_research_plan"):
+        errors.append("specialist_research_plan or specialist_research_plan_ref is required when research_required is active")
+    decision = card.get("specialist_decision_packet") if isinstance(card.get("specialist_decision_packet"), dict) else {}
+    if decision:
+        if not _non_empty_string_list(decision.get("resolutions")):
+            errors.append("specialist_decision_packet.resolutions must turn research into an operational factory decision")
+        impacts = decision.get("impacts") if isinstance(decision.get("impacts"), dict) else {}
+        for field in ("sot", "architecture", "method_router", "gates", "proof"):
+            if field not in impacts:
+                errors.append(f"specialist_decision_packet.impacts.{field} is required")
+    return errors
+
+
+def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    if not _product_planning_required(card):
+        return []
+    errors: list[str] = []
+    if not _has_ref_or_object(card, "product_creation_plan"):
+        errors.append("product_creation_plan or product_creation_plan_ref is required before material product implementation")
+    if not _has_ref_or_object(card, "product_context_packet"):
+        errors.append("product_context_packet or product_context_packet_ref is required for product-specific implementation workers")
+    if not _has_ref_or_object(card, "product_implementation_readiness"):
+        errors.append("product_implementation_readiness or product_implementation_readiness_ref is required before material product implementation")
+
+    plan = card.get("product_creation_plan") if isinstance(card.get("product_creation_plan"), dict) else {}
+    if plan:
+        if plan.get("complete_product_required") is not True:
+            errors.append("product_creation_plan.complete_product_required must be true for complete-product planning")
+        if not _non_empty_string_list(plan.get("complete_product_scope")):
+            errors.append("product_creation_plan.complete_product_scope is required")
+        if not _non_empty_string_list(plan.get("release_promotion_ladder_refs")):
+            errors.append("product_creation_plan.release_promotion_ladder_refs is required")
+        work_units = plan.get("work_units")
+        if not isinstance(work_units, list) or not work_units:
+            errors.append("product_creation_plan.work_units must be non-empty")
+        else:
+            for index, unit in enumerate(work_units):
+                unit = unit if isinstance(unit, dict) else {}
+                for field in ("product_sot_requirement_refs", "scope_in", "scope_out", "verification", "stop_conditions"):
+                    if not _non_empty_string_list(unit.get(field)):
+                        errors.append(f"product_creation_plan.work_units[{index}].{field} must be non-empty")
+                if not _non_empty_text(unit.get("expected_result")):
+                    errors.append(f"product_creation_plan.work_units[{index}].expected_result is required")
+    context = card.get("product_context_packet") if isinstance(card.get("product_context_packet"), dict) else {}
+    if context and context.get("stale") is True:
+        errors.append("product_context_packet is stale and must be refreshed before implementation")
+    readiness = card.get("product_implementation_readiness") if isinstance(card.get("product_implementation_readiness"), dict) else {}
+    if readiness:
+        result = str(readiness.get("artifact_alignment_result") or "").strip().upper()
+        if result in {"FAIL", "BLOCKED"}:
+            errors.append("product_implementation_readiness.artifact_alignment_result blocks material implementation")
+        if result == "PASS" and not _non_empty_string_list(readiness.get("ready_work_units")):
+            errors.append("product_implementation_readiness PASS requires ready_work_units")
+    return errors
+
+
+def validate_production_promotion_ladder_contract(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    if not _production_ladder_required(card):
+        return []
+    errors: list[str] = []
+    if not _has_ref_or_object(card, "production_promotion_ladder"):
+        errors.append("production_promotion_ladder or production_promotion_ladder_ref is required for production-intent products")
+    readiness = card.get("production_readiness_plan") if isinstance(card.get("production_readiness_plan"), dict) else {}
+    if readiness and not _non_empty_text(readiness.get("production_promotion_ladder_ref")):
+        errors.append("production_readiness_plan.production_promotion_ladder_ref is required")
+
+    ladder = card.get("production_promotion_ladder") if isinstance(card.get("production_promotion_ladder"), dict) else {}
+    if ladder:
+        environments = ladder.get("environments")
+        if not isinstance(environments, list) or not environments:
+            errors.append("production_promotion_ladder.environments must be non-empty")
+        else:
+            env_names = {str(item.get("environment") or "").strip().lower() for item in environments if isinstance(item, dict)}
+            if "production" in env_names and "local" not in env_names:
+                errors.append("production_promotion_ladder must include local proof before production")
+            if normalized_surfaces(card) & ONCHAIN_SURFACES:
+                for required_env in ("local", "devnet", "mainnet"):
+                    if required_env not in env_names:
+                        errors.append(f"onchain production ladder must include {required_env}")
+                policy = ladder.get("onchain_policy") if isinstance(ladder.get("onchain_policy"), dict) else {}
+                if policy.get("mainnet_authority_requires_human_gate") is not True:
+                    errors.append("onchain production ladder requires human mainnet authority policy")
+                if policy.get("post_mainnet_smoke_required") is not True:
+                    errors.append("onchain production ladder requires post-mainnet smoke policy")
+        promotion_policy = ladder.get("promotion_policy") if isinstance(ladder.get("promotion_policy"), dict) else {}
+        if promotion_policy.get("preproduction_proof_cannot_claim_production") is not True:
+            errors.append("production_promotion_ladder must forbid preproduction proof from claiming production readiness")
+        if promotion_policy.get("retest_after_promotion") is not True:
+            errors.append("production_promotion_ladder must require retest_after_promotion")
+    return errors
+
+
+def _contains_internal_coordination_request(text: Any) -> bool:
+    normalized = str(text or "").strip().lower()
+    return any(term in normalized for term in INTERNAL_COORDINATION_TERMS)
+
+
+def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
+    contract = card.get("user_facing_autonomy_contract")
+    if not isinstance(contract, dict):
+        return []
+
+    errors: list[str] = []
+    if contract.get("record_type") not in (None, "user_facing_autonomy_contract"):
+        errors.append("user_facing_autonomy_contract.record_type must be user_facing_autonomy_contract")
+
+    allowed_classes = set(_list_items(contract.get("allowed_user_question_classes")))
+    if "discoverable" in allowed_classes:
+        errors.append("user_facing_autonomy_contract.allowed_user_question_classes must not include discoverable")
+    unknown_classes = allowed_classes - ALLOWED_USER_QUESTION_CLASSES
+    if unknown_classes:
+        errors.append("user_facing_autonomy_contract.allowed_user_question_classes contains unknown classes: " + ", ".join(sorted(unknown_classes)))
+
+    factory_owns = " ".join(_list_items(contract.get("factory_owns"))).lower()
+    for required in ("source resolution", "method routing", "execution routing", "verification"):
+        if required not in factory_owns:
+            errors.append(f"user_facing_autonomy_contract.factory_owns must include {required}")
+
+    user_must_not_do = " ".join(_list_items(contract.get("user_must_not_do"))).lower()
+    if "worker" not in user_must_not_do or "schema" not in user_must_not_do:
+        errors.append("user_facing_autonomy_contract.user_must_not_do must keep worker/schema coordination inside the factory")
+
+    for index, question in enumerate(contract.get("user_questions", []) if isinstance(contract.get("user_questions"), list) else []):
+        if not isinstance(question, dict):
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}] must be an object")
+            continue
+        question_class = str(question.get("class") or "").strip()
+        if question_class not in USER_QUESTION_CLASSES:
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}].class is unknown")
+        if question_class == "discoverable":
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}] is discoverable and must be resolved by the factory before asking the user")
+        if _contains_internal_coordination_request(question.get("question")):
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}] asks the user to perform internal factory coordination")
+        if not _non_empty_text(question.get("factory_resolution_path")):
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}].factory_resolution_path is required")
+
+    return errors
+
+
 def _status_value(value: Any) -> str:
     if isinstance(value, dict):
         return str(value.get("status") or "").strip().lower()
     return str(value or "").strip().lower()
+
+
+def _execution_mode(card: dict[str, Any]) -> str:
+    autonomy = card.get("autonomy_readiness_packet") if isinstance(card.get("autonomy_readiness_packet"), dict) else {}
+    hardening = card.get("agent_runtime_hardening_profile") if isinstance(card.get("agent_runtime_hardening_profile"), dict) else {}
+    runtime = card.get("runtime_contract") if isinstance(card.get("runtime_contract"), dict) else {}
+    for source in (autonomy, hardening, runtime):
+        value = str(source.get("execution_mode") or source.get("mode") or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _tool_surfaces_from(card: dict[str, Any]) -> set[str]:
+    surfaces: set[str] = set()
+    for source_name in ("agent_runtime_hardening_profile", "runtime_contract"):
+        source = card.get(source_name) if isinstance(card.get(source_name), dict) else {}
+        for key in ("tool_surface", "tool_surfaces"):
+            value = source.get(key)
+            if isinstance(value, list):
+                surfaces.update(item.lower() for item in _list_items(value))
+            elif _non_empty_text(value):
+                surfaces.add(str(value).strip().lower())
+    return surfaces
+
+
+def _has_human_gate_ref(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(_non_empty_text(value.get(field)) for field in ("gate_ref", "reviewer_or_human_gate_ref"))
+    if isinstance(value, list):
+        return bool(_list_items(value))
+    return _non_empty_text(value)
+
+
+def _contains_forbidden_secret_key(value: Any) -> bool:
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            if str(key).strip().lower() in SECRET_POLICY_FORBIDDEN_KEYS:
+                return True
+            if _contains_forbidden_secret_key(nested):
+                return True
+    elif isinstance(value, list):
+        return any(_contains_forbidden_secret_key(item) for item in value)
+    return False
+
+
+def validate_secret_delivery_policy(policy: Any, *, material_execution: bool) -> list[str]:
+    if not isinstance(policy, dict):
+        if material_execution:
+            return ["secret_delivery_policy is required for material autonomous execution"]
+        return []
+
+    errors: list[str] = []
+    mode = str(policy.get("delivery_mode") or "").strip()
+    sensitivity = str(policy.get("sensitivity") or "").strip()
+    environment = str(policy.get("environment") or "").strip()
+
+    for field in (
+        "secret_type",
+        "sensitivity",
+        "environment",
+        "delivery_mode",
+        "scope",
+        "ttl_or_expiry",
+        "rotation_policy",
+        "audit_log_ref",
+        "redaction_policy",
+        "revocation_path",
+    ):
+        if not _non_empty_text(policy.get(field)):
+            errors.append(f"secret_delivery_policy.{field} is required")
+    if not isinstance(policy.get("allowed_worker_ids"), list) or not _list_items(policy.get("allowed_worker_ids")):
+        errors.append("secret_delivery_policy.allowed_worker_ids must name scoped workers")
+    if not isinstance(policy.get("forbidden_exposure"), list) or not _list_items(policy.get("forbidden_exposure")):
+        errors.append("secret_delivery_policy.forbidden_exposure must name forbidden exposure channels")
+    if not isinstance(policy.get("evidence_refs"), list) or not _list_items(policy.get("evidence_refs")):
+        errors.append("secret_delivery_policy.evidence_refs must include public-safe refs")
+    if _contains_forbidden_secret_key(policy):
+        errors.append("secret_delivery_policy must contain refs and policy only, never raw secret values or private secret paths")
+
+    if mode in SECRET_DELIVERY_FORBIDDEN_MODES:
+        errors.append("secret_delivery_policy.delivery_mode prompt_context is always forbidden")
+    elif mode in SECRET_DELIVERY_EXCEPTION_MODES:
+        waiver = policy.get("human_gated_waiver")
+        has_waiver = isinstance(waiver, dict) and _has_human_gate_ref(waiver) and bool(_list_items(waiver.get("compensating_controls")))
+        if not has_waiver:
+            errors.append(
+                f"secret_delivery_policy.delivery_mode {mode} requires explicit human-gated waiver with compensating controls"
+            )
+    elif mode not in SECRET_DELIVERY_SAFE_MODES:
+        errors.append("secret_delivery_policy.delivery_mode is not recognized")
+
+    if material_execution and sensitivity in {"high", "critical"} and environment in {"production", "mainnet"}:
+        if mode in {"none", "placeholder", "simulator"}:
+            errors.append("real production/mainnet secrets cannot use none, placeholder or simulator mode")
+        if policy.get("human_gate_required") is not True and mode not in {"jit_broker", "vault_jit", "hardware_signer", "external_service", "user-mediated"}:
+            errors.append("sensitive production/mainnet secret use requires a human gate or safe delegated delivery mode")
+    return errors
+
+
+def validate_agent_runtime_hardening_profile(card: dict[str, Any]) -> list[str]:
+    execution_mode = _execution_mode(card)
+    material_execution = execution_mode in HARDENING_REQUIRED_EXECUTION_MODES
+    tool_surfaces = _tool_surfaces_from(card)
+    profile = card.get("agent_runtime_hardening_profile")
+    autonomy = card.get("autonomy_readiness_packet") if isinstance(card.get("autonomy_readiness_packet"), dict) else {}
+    secret_policy = card.get("secret_delivery_policy")
+    errors: list[str] = []
+
+    if not material_execution and not tool_surfaces:
+        return validate_secret_delivery_policy(secret_policy, material_execution=False)
+
+    if not isinstance(profile, dict):
+        if material_execution or tool_surfaces & TOOL_USING_SURFACES:
+            errors.append("agent_runtime_hardening_profile required for tool-using material execution")
+        errors.extend(validate_secret_delivery_policy(secret_policy, material_execution=material_execution))
+        return errors
+
+    required_text_fields = (
+        "worker_id",
+        "runtime_kind",
+        "execution_mode",
+        "filesystem_scope",
+        "network_scope",
+        "credential_exposure",
+        "secret_delivery_policy_ref",
+        "side_effect_policy",
+        "sandbox_boundary",
+        "identity_boundary",
+        "log_policy",
+        "egress_policy",
+        "mutation_policy",
+        "rollback_or_kill_switch",
+    )
+    for field in required_text_fields:
+        if not _non_empty_text(profile.get(field)):
+            errors.append(f"agent_runtime_hardening_profile.{field} is required")
+    for field in ("tool_surface", "human_gate_triggers", "validation_commands", "evidence_refs"):
+        if not isinstance(profile.get(field), list) or not _list_items(profile.get(field)):
+            errors.append(f"agent_runtime_hardening_profile.{field} must be a non-empty array")
+    if not isinstance(profile.get("resource_limits"), dict) or not profile.get("resource_limits"):
+        errors.append("agent_runtime_hardening_profile.resource_limits must be a non-empty object")
+
+    profile_mode = str(profile.get("execution_mode") or "").strip()
+    if material_execution and profile_mode != execution_mode:
+        errors.append("agent_runtime_hardening_profile.execution_mode must match autonomy readiness execution_mode")
+
+    filesystem_scope = str(profile.get("filesystem_scope") or "").strip()
+    network_scope = str(profile.get("network_scope") or "").strip()
+    human_gate_triggers = _list_items(profile.get("human_gate_triggers"))
+    if filesystem_scope in WIDE_FILESYSTEM_SCOPES and not human_gate_triggers:
+        errors.append("agent_runtime_hardening_profile wide filesystem scope requires human_gate_triggers")
+    if network_scope in WIDE_NETWORK_SCOPES and not human_gate_triggers:
+        errors.append("agent_runtime_hardening_profile unrestricted network requires human_gate_triggers")
+
+    profile_tools = {item.lower() for item in _list_items(profile.get("tool_surface"))}
+    if profile_tools & TOOL_USING_SURFACES and not _list_items(profile.get("blocked_abuse_evidence_refs")):
+        errors.append("agent_runtime_hardening_profile.blocked_abuse_evidence_refs required for tool-using workers")
+
+    if material_execution:
+        if not _non_empty_text(autonomy.get("runtime_hardening_profile_ref")):
+            errors.append("autonomy_readiness_packet.runtime_hardening_profile_ref required for material execution")
+        if not _non_empty_text(autonomy.get("secret_delivery_policy_ref")):
+            errors.append("autonomy_readiness_packet.secret_delivery_policy_ref required for material execution")
+        if not _non_empty_text(autonomy.get("secret_delivery_mode")):
+            errors.append("autonomy_readiness_packet.secret_delivery_mode required for material execution")
+        if not isinstance(autonomy.get("runtime_hardening_evidence_refs"), list) or not _list_items(autonomy.get("runtime_hardening_evidence_refs")):
+            errors.append("autonomy_readiness_packet.runtime_hardening_evidence_refs required for material execution")
+
+    errors.extend(validate_secret_delivery_policy(secret_policy, material_execution=material_execution))
+    return errors
 
 
 def _card_parallel_execution_requested(card: dict[str, Any]) -> bool:
@@ -1449,6 +2201,11 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
             if field and field not in data:
                 errors.append(f"method_contract required plan {field} is missing from card")
 
+    errors.extend(validate_product_scope_planning_contract(data))
+    errors.extend(validate_specialist_research_contract(data))
+    errors.extend(validate_product_creation_readiness_contract(data))
+    errors.extend(validate_production_promotion_ladder_contract(data))
+    errors.extend(validate_user_facing_autonomy_contract(data))
     return errors
 
 
@@ -1491,6 +2248,7 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_vfinal_card_contract(data))
     errors.extend(validate_canonical_runtime_gate(data))
     errors.extend(validate_capability_coverage(data))
+    errors.extend(validate_agent_runtime_hardening_profile(data))
     if data.get("factory_method_version") == "OVERKILL_VFINAL":
         if not isinstance(data.get("reasoning_policy"), dict):
             errors.append("reasoning_policy required for OVERKILL_VFINAL cards")
@@ -1891,6 +2649,50 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_completion_audit_contract(card: dict[str, Any], audit: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    claim_results = audit.get("sot_claim_results")
+    if not isinstance(claim_results, list) or not claim_results:
+        errors.append("completion_audit.sot_claim_results is required")
+    else:
+        for index, item in enumerate(claim_results):
+            item = item if isinstance(item, dict) else {}
+            status = str(item.get("status") or "").strip().upper()
+            if not _non_empty_text(item.get("claim_ref")):
+                errors.append(f"completion_audit.sot_claim_results[{index}].claim_ref is required")
+            if status not in COMPLETION_SOT_STATUSES:
+                errors.append(
+                    f"completion_audit.sot_claim_results[{index}].status must be DONE, BLOCKED, DEFERRED_WITH_OWNER or OUT_OF_SCOPE"
+                )
+            if status in {"BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"} and not _non_empty_text(item.get("owner")):
+                errors.append(f"completion_audit.sot_claim_results[{index}].owner is required for non-DONE status")
+
+    method_results = audit.get("method_execution_results")
+    if not isinstance(method_results, list) or not method_results:
+        errors.append("completion_audit.method_execution_results is required")
+    else:
+        result_by_method = {
+            str(item.get("method") or "").strip(): str(item.get("status") or "").strip().upper()
+            for item in method_results
+            if isinstance(item, dict)
+        }
+        for index, item in enumerate(method_results):
+            item = item if isinstance(item, dict) else {}
+            status = str(item.get("status") or "").strip().upper()
+            if not _non_empty_text(item.get("method")):
+                errors.append(f"completion_audit.method_execution_results[{index}].method is required")
+            if status not in COMPLETION_METHOD_STATUSES:
+                errors.append(f"completion_audit.method_execution_results[{index}].status must be EXECUTED, WAIVED or BLOCKED")
+            if status == "BLOCKED":
+                errors.append(f"completion_audit method {item.get('method') or index} is still BLOCKED")
+
+        method_contract = card.get("method_contract") if isinstance(card.get("method_contract"), dict) else {}
+        for method in sorted(_selected_engineering_methods(method_contract)):
+            if method not in result_by_method:
+                errors.append(f"completion_audit missing method_execution_result for selected method {method}")
+    return errors
+
+
 def validate_completion(card: dict[str, Any], metadata: dict[str, Any]) -> list[str]:
     errors = validate_receipt(metadata)
     receipt = metadata.get("receipt_five") if isinstance(metadata.get("receipt_five"), dict) else {}
@@ -1904,6 +2706,11 @@ def validate_completion(card: dict[str, Any], metadata: dict[str, Any]) -> list[
             errors.append("product_face_result metadata is required for product-facing completion")
         else:
             errors.extend(validate_product_face_result_against_card(product_face, card))
+    audit = metadata.get("completion_audit")
+    if isinstance(audit, dict):
+        errors.extend(validate_completion_audit_contract(card, audit))
+    elif _product_planning_required(card):
+        errors.append("completion_audit is required for complete-product done promotion")
     return errors
 
 
@@ -2279,7 +3086,27 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "reasoning_policy": card.get("reasoning_policy"),
             "reference_quality_packet": card.get("reference_quality_packet"),
             "learning_proposal_refs": card.get("learning_proposal_refs", []),
+            "canonical_product_sot_ref": card.get("canonical_product_sot_ref") or "card.product_sot",
+            "product_creation_plan_ref": card.get("product_creation_plan_ref")
+            or ("card.product_creation_plan" if isinstance(card.get("product_creation_plan"), dict) else None),
+            "product_context_packet_ref": card.get("product_context_packet_ref")
+            or ("card.product_context_packet" if isinstance(card.get("product_context_packet"), dict) else None),
+            "product_implementation_readiness_ref": card.get("product_implementation_readiness_ref")
+            or (
+                "card.product_implementation_readiness"
+                if isinstance(card.get("product_implementation_readiness"), dict)
+                else None
+            ),
+            "specialist_research_plan_ref": card.get("specialist_research_plan_ref")
+            or ("card.specialist_research_plan" if isinstance(card.get("specialist_research_plan"), dict) else None),
+            "specialist_decision_packet_ref": card.get("specialist_decision_packet_ref")
+            or (
+                "card.specialist_decision_packet"
+                if isinstance(card.get("specialist_decision_packet"), dict)
+                else None
+            ),
         },
+        "agent_runtime_hardening_profile": card.get("agent_runtime_hardening_profile"),
         "runtime_decision": runtime_decision,
         "output_contract": {
             "receipt_field": worker.output_field,
@@ -2316,6 +3143,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "toolset_policy": profile_binding.get("toolset_policy"),
             "skill_install_ref": profile_binding.get("skill_install_ref"),
             "last_hermes_smoke_ref": profile_binding.get("last_hermes_smoke_ref"),
+            "profile_readiness": profile_readiness_summary(worker_id),
         }
     return packet
 
@@ -2326,6 +3154,7 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
     worker_rows: dict[str, dict[str, Any]] = {}
     required_workers: list[str] = []
     blocked_workers: list[str] = []
+    blocker_economics: list[dict[str, str]] = []
     for worker_id in WORKERS:
         required, reason = worker_required(worker_id, card)
         status = build_worker_packet(worker_id, card, Path("<memory>"))["status"]
@@ -2338,14 +3167,52 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         }
         if required:
             required_workers.append(worker_id)
+            if status == "requires_execution" or str(status).startswith("blocked_"):
+                blocker_economics.append(worker_blocker_economics(worker_id, str(status), reason))
         if str(status).startswith("blocked_"):
             blocked_workers.append(worker_id)
+    for index, error in enumerate(validation_errors, start=1):
+        blocker_economics.append(
+            blocker_economics_entry(
+                blocker_id=f"card-validation:{index}",
+                owner="operator",
+                risk_controlled="canonical card contract integrity",
+                cost_time_class="local_edit",
+                dependency="card_contract",
+                smallest_safe_next_action=error,
+                mutation_risk="local_repo_only",
+                route="local",
+            )
+        )
     if validation_errors or blocked_workers:
         gate_status = "blocked"
     elif required_workers:
         gate_status = "ready_for_worker_execution"
     else:
         gate_status = "pass_no_workers_required"
+    next_safe_actions: list[dict[str, str]] = []
+    seen_actions: set[tuple[str, str, str]] = set()
+    for worker_id, row in worker_rows.items():
+        if not row.get("required"):
+            continue
+        status = str(row.get("status") or "")
+        if status not in {"requires_execution"} and not status.startswith("blocked_"):
+            continue
+        guidance_items = list(row.get("unblock_guidance", []))
+        if status == "requires_execution" and not guidance_items:
+            guidance_items.append(
+                {
+                    "field": WORKERS[worker_id].output_field,
+                    "action": f"execute {worker_id} and attach a valid {WORKERS[worker_id].output_field}",
+                    "authority": "assigned worker must produce evidence; operator may only route or approve where explicitly required",
+                }
+            )
+        for guidance in guidance_items:
+            key = (worker_id, str(guidance.get("field") or ""), str(guidance.get("action") or ""))
+            if key in seen_actions:
+                continue
+            seen_actions.add(key)
+            next_safe_actions.append({"worker_id": worker_id, **guidance})
     return {
         "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
         "report_type": "factory_gate_preflight",
@@ -2364,11 +3231,8 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         "blocked_workers": blocked_workers,
         "card_validation_errors": validation_errors,
         "card_validation_warnings": validation_warnings,
-        "next_safe_actions": [
-            guidance
-            for row in worker_rows.values()
-            for guidance in row.get("unblock_guidance", [])
-        ],
+        "blocker_economics": blocker_economics,
+        "next_safe_actions": next_safe_actions,
         "workers": worker_rows,
     }
 
@@ -3338,6 +4202,7 @@ def build_status_snapshot(
             "warnings": effective_gate_report.get("card_validation_warnings", []),
         },
         "blockers": blockers,
+        "blocker_economics": effective_gate_report.get("blocker_economics", []),
         "evidence": {
             "receipt_five_status": "attached" if isinstance(card.get("receipt_five"), dict) else "not_attached",
             "evidence_refs": evidence,
@@ -3357,6 +4222,212 @@ def build_status_snapshot(
             "note": "Link to canonical evidence; do not embed private runtime logs or screenshots.",
         },
         "continuation": "Continue from the canonical card, gate report, lane contracts and worker results; do not use this snapshot as authority.",
+    }
+
+
+def load_workflow_catalog(path: Path | None = None) -> dict[str, Any]:
+    catalog_path = path or DEFAULT_WORKFLOW_CATALOG
+    if not catalog_path.exists():
+        return {
+            "record_type": "factory_workflow_catalog",
+            "factory_method_version": "OVERKILL_VFINAL",
+            "catalog_version": "missing",
+            "phases": [],
+        }
+    return load_json_like(catalog_path)
+
+
+def workflow_phase_for_card(card: dict[str, Any], catalog: dict[str, Any]) -> dict[str, Any]:
+    phase = str(card.get("phase") or "unknown").strip()
+    for row in catalog.get("phases", []) if isinstance(catalog.get("phases"), list) else []:
+        if isinstance(row, dict) and str(row.get("phase_id") or "").strip().upper() == phase.upper():
+            return row
+    return {
+        "phase_id": phase or "unknown",
+        "phase_name": "Unknown phase",
+        "operator_visible_summary": "Factory phase is not present in the workflow catalog.",
+        "blocked_actions": ["advance without a cataloged gate"],
+        "required_artifacts": [],
+        "required_gates": [],
+        "required_workers": [],
+        "related_command_refs": ["factoryctl gate-report"],
+    }
+
+
+def truth_scope_for_card(card: dict[str, Any]) -> str:
+    if card.get("release_ref") or card.get("production_release_ref"):
+        return "production_ready"
+    receipt = card.get("receipt_five") if isinstance(card.get("receipt_five"), dict) else {}
+    completion = card.get("completion_audit") if isinstance(card.get("completion_audit"), dict) else {}
+    if str(receipt.get("verification_result") or "").strip().upper() in {"PASS", "WAIVED"}:
+        return "bounded_proof"
+    if str(completion.get("result") or "").strip().upper() == "PASS":
+        return "bounded_proof"
+    runtime_contract = card.get("runtime_contract") if isinstance(card.get("runtime_contract"), dict) else {}
+    if runtime_contract.get("hermes_backed") is True or runtime_contract.get("runtime_state_ref"):
+        return "runtime_backed"
+    return "repo_only"
+
+
+def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], phase_row: dict[str, Any]) -> dict[str, Any]:
+    errors = _list_items(gate_report.get("card_validation_errors"))
+    blocked_workers = _list_items(gate_report.get("blocked_workers"))
+    command_refs = _list_items(phase_row.get("related_command_refs")) or ["factoryctl gate-report"]
+
+    if any("product_sot" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "create or attach the Product SOT and scope coverage before any implementation routing",
+            "why": "The product source of truth is the canonical scope; the input paper is source material, not execution authority.",
+            "command_refs": command_refs,
+        }
+    if any("product_creation_plan" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "create or attach the Product Creation Plan before implementation",
+            "why": "Execution slices cannot replace the complete production-ready product plan.",
+            "command_refs": command_refs,
+        }
+    if any("product_implementation_readiness" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "produce Product Implementation Readiness before dispatching material work",
+            "why": "The factory must prove the plan, context and work units are aligned before execution.",
+            "command_refs": command_refs,
+        }
+    if any("specialist_research_plan" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "run Specialist Research OS and resolve it into operational decisions",
+            "why": "Research only counts when it changes or confirms SOT, method, gates or proof.",
+            "command_refs": command_refs,
+        }
+    if any("method_contract" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "record the Method Contract before creating execution work",
+            "why": "The user should not choose internal method machinery; the factory records the route.",
+            "command_refs": command_refs,
+        }
+    if errors:
+        return {
+            "owner": "factory",
+            "action": "repair the canonical factory card contract before asking the user for decisions",
+            "why": errors[0],
+            "command_refs": ["factoryctl validate-card", "factoryctl gate-report"],
+        }
+    if blocked_workers:
+        return {
+            "owner": "factory",
+            "action": "prepare the missing worker inputs or evidence for the blocked workers",
+            "why": "Blocked worker inputs are factory coordination work, not open-ended user labor.",
+            "command_refs": ["factoryctl worker-packet", "factoryctl gate-report"],
+        }
+    if gate_report.get("gate_predicate_result") == "PASS" and _list_items(gate_report.get("required_workers")):
+        return {
+            "owner": "factory",
+            "action": "generate required worker packets and dispatch through the selected runtime gate",
+            "why": "The current card is ready for worker execution within its authority limits.",
+            "command_refs": ["factoryctl worker-packet", "factoryctl transition-plan"],
+        }
+    return {
+        "owner": "factory",
+        "action": "continue the cataloged workflow from the current phase",
+        "why": str(phase_row.get("operator_visible_summary") or "No blocking gate is present."),
+        "command_refs": command_refs,
+    }
+
+
+def user_decisions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -> list[dict[str, str]]:
+    decisions: list[dict[str, str]] = []
+    contract = card.get("user_facing_autonomy_contract") if isinstance(card.get("user_facing_autonomy_contract"), dict) else {}
+    for question in contract.get("user_questions", []) if isinstance(contract.get("user_questions"), list) else []:
+        if not isinstance(question, dict):
+            continue
+        question_class = str(question.get("class") or "").strip()
+        if question_class in ALLOWED_USER_QUESTION_CLASSES and not _contains_internal_coordination_request(question.get("question")):
+            decisions.append(
+                {
+                    "decision_type": question_class,
+                    "reason": str(question.get("question") or "User decision is required."),
+                    "user_action": "answer, approve, reject or defer this bounded question",
+                    "factory_prepares": str(question.get("factory_resolution_path") or "decision packet"),
+                }
+            )
+
+    review = card.get("review") if isinstance(card.get("review"), dict) else {}
+    if review.get("human_gate_required") is True or "human-gate-clerk" in _list_items(gate_report.get("required_workers")):
+        decisions.append(
+            {
+                "decision_type": "authority_required",
+                "reason": "Human gate is required by risk, authority or release policy.",
+                "user_action": "approve, reject or request changes on the bounded gate packet",
+                "factory_prepares": "human gate packet with scope, risk, evidence and forbidden actions",
+            }
+        )
+
+    access = card.get("access_capability") if isinstance(card.get("access_capability"), dict) else {}
+    if card.get("requires_access") is True or _list_items(access.get("missing_capabilities")):
+        decisions.append(
+            {
+                "decision_type": "access_required",
+                "reason": "Material execution needs access or capability that the factory cannot grant by itself.",
+                "user_action": "grant, deny or defer the named access",
+                "factory_prepares": "access request with scope, least privilege and stop conditions",
+            }
+        )
+
+    return decisions
+
+
+def build_factory_help(card: dict[str, Any], card_path: Path, *, catalog_path: Path | None = None) -> dict[str, Any]:
+    catalog = load_workflow_catalog(catalog_path)
+    phase_row = workflow_phase_for_card(card, catalog)
+    gate_report = build_gate_report(card)
+    factory_action = help_action_from_gate(card, gate_report, phase_row)
+    blocked_workers = _list_items(gate_report.get("blocked_workers"))
+    validation_errors = _list_items(gate_report.get("card_validation_errors"))
+    next_actions: list[str] = []
+    for item in gate_report.get("next_safe_actions", []):
+        next_action_text = str(item.get("action") if isinstance(item, dict) else item).strip()
+        if next_action_text and next_action_text not in next_actions:
+            next_actions.append(next_action_text)
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-help.schema.json",
+        "record_type": "factory_help_next_action",
+        "created_at": utc_now(),
+        "card_id": str(card.get("card_id") or "unknown-card"),
+        "phase": str(card.get("phase") or "unknown"),
+        "workflow_phase": {
+            "phase_id": str(phase_row.get("phase_id") or card.get("phase") or "unknown"),
+            "phase_name": str(phase_row.get("phase_name") or "Unknown phase"),
+            "operator_visible_summary": str(phase_row.get("operator_visible_summary") or ""),
+        },
+        "gate_status": str(gate_report.get("gate_status") or "not_run"),
+        "truth_scope": truth_scope_for_card(card),
+        "factory_next_action": factory_action,
+        "user_decision_required": user_decisions_for_card(card, gate_report),
+        "blocked_because": validation_errors + [f"{worker_id} is blocked by missing inputs" for worker_id in blocked_workers],
+        "blocked_actions": sorted(set(_list_items(phase_row.get("blocked_actions")) + _list_items(card.get("forbidden_actions")))),
+        "evidence_needed": next_actions or _list_items(phase_row.get("required_artifacts")) + _list_items(phase_row.get("required_gates")),
+        "required_workers": _list_items(gate_report.get("required_workers")),
+        "blocked_workers": blocked_workers,
+        "source_refs": [
+            {"claim": "card", "ref": source_card_ref(card_path)},
+            {"claim": "workflow_catalog", "ref": source_card_ref(catalog_path or DEFAULT_WORKFLOW_CATALOG)},
+            {"claim": "gate_report", "ref": "factoryctl:gate-report"},
+        ],
+        "public_private_boundary": {
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+            "projection_not_source_of_truth": True,
+        },
+        "limits": [
+            "This help output does not execute workers, approve gates, or replace Hermes/runtime truth.",
+            "The operator/user should see bounded decisions, blockers and proof, not internal worker coordination.",
+        ],
     }
 
 
@@ -3381,6 +4452,575 @@ def validate_status_snapshot(snapshot: dict[str, Any]) -> list[str]:
         if boundary.get(field) is not True:
             errors.append(f"factory_status_snapshot.public_private_boundary.{field} must be true")
     return errors
+
+
+def load_optional_json(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    try:
+        data = load_json_like(path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def collect_worker_result_records(worker_results_dir: Path | None) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    if worker_results_dir is None or not worker_results_dir.exists():
+        return records
+    for path in sorted(worker_results_dir.glob("*.json")):
+        data = load_optional_json(path)
+        if not data:
+            continue
+        record_type = str(data.get("record_type") or "").strip()
+        if not record_type:
+            continue
+        current = records.get(record_type)
+        if current is None or str(data.get("created_at") or "") >= str(current.get("created_at") or ""):
+            records[record_type] = {**data, "_public_ref": source_card_ref(path)}
+    return records
+
+
+def graph_add_node(nodes: dict[str, dict[str, Any]], node: dict[str, Any]) -> None:
+    nodes[str(node["id"])] = node
+
+
+def graph_add_edge(edges: list[dict[str, str]], source: str, target: str, relation: str) -> None:
+    edges.append({"source": source, "target": target, "relation": relation})
+
+
+def build_evidence_graph(
+    card: dict[str, Any],
+    card_path: Path,
+    *,
+    gate_report: dict[str, Any] | None = None,
+    worker_results_dir: Path | None = None,
+    receipt_path: Path | None = None,
+    hermes_evidence_path: Path | None = None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    effective_gate = gate_report or build_gate_report(card)
+    worker_results = collect_worker_result_records(worker_results_dir)
+    receipt = load_optional_json(receipt_path)
+    hermes_package = load_optional_json(hermes_evidence_path)
+    nodes: dict[str, dict[str, Any]] = {}
+    edges: list[dict[str, str]] = []
+    findings: list[dict[str, str]] = []
+
+    card_id = str(card.get("card_id") or card.get("id") or "unknown-card")
+    graph_add_node(
+        nodes,
+        {
+            "id": "card",
+            "node_type": "factory_card",
+            "ref": source_card_ref(card_path),
+            "status": "PASS" if not validate_card(card) else "BLOCKED",
+            "evidence_level": "contract_exists",
+        },
+    )
+    for index, source in enumerate(_list_items(card.get("source_refs")), start=1):
+        safe_ref, finding = sanitize_public_ref(source)
+        node_id = f"source:{index}"
+        graph_add_node(
+            nodes,
+            {
+                "id": node_id,
+                "node_type": "source_input",
+                "ref": safe_ref,
+                "status": "PASS" if finding is None else "BLOCKED",
+                "evidence_level": "source_ref",
+            },
+        )
+        graph_add_edge(edges, node_id, "card", "defines")
+        if finding:
+            findings.append({"severity": "BLOCKED", "node_id": node_id, "message": redact_private_text(finding["reason"])})
+
+    gate_status = str(effective_gate.get("gate_status") or "missing")
+    graph_add_node(
+        nodes,
+        {
+            "id": "gate-report",
+            "node_type": "gate_report",
+            "ref": "factoryctl:gate-report",
+            "status": "PASS" if gate_status != "blocked" else "BLOCKED",
+            "evidence_level": "runtime_enforced",
+        },
+    )
+    graph_add_edge(edges, "card", "gate-report", "validated_by")
+
+    for worker_id in _list_items(effective_gate.get("required_workers")):
+        worker = WORKERS[worker_id]
+        packet_id = f"worker-packet:{worker_id}"
+        result_id = f"worker-result:{worker.output_field}"
+        graph_add_node(
+            nodes,
+            {
+                "id": packet_id,
+                "node_type": "worker_packet",
+                "ref": f"factoryctl:worker-packet:{worker_id}",
+                "status": "PASS",
+                "worker_id": worker_id,
+                "evidence_level": "runtime_enforced",
+            },
+        )
+        graph_add_edge(edges, "gate-report", packet_id, "requires")
+        result = worker_results.get(worker.output_field)
+        if result is None:
+            graph_add_node(
+                nodes,
+                {
+                    "id": result_id,
+                    "node_type": "worker_result",
+                    "ref": f"missing:{worker.output_field}",
+                    "status": "MISSING",
+                    "worker_id": worker_id,
+                    "evidence_level": "blocked_missing_evidence",
+                    "staleness": "missing",
+                },
+            )
+            findings.append(
+                {
+                    "severity": "BLOCKED",
+                    "node_id": result_id,
+                    "message": f"{worker.output_field} is missing",
+                }
+            )
+        else:
+            validation_errors = validate_worker_result_record(
+                result,
+                expected_field=worker.output_field,
+                expected_worker_id=worker_id,
+                card=card,
+                evidence_root=ROOT,
+            )
+            safe_validation_errors = [redact_private_text(error) for error in validation_errors]
+            result_status = str(result.get("result") or result.get("decision") or "UNKNOWN")
+            stale = bool(result.get("superseded_by") or result.get("active") is False)
+            graph_add_node(
+                nodes,
+                {
+                    "id": result_id,
+                    "node_type": "worker_result",
+                    "ref": str(result.get("_public_ref") or f"external:{worker.output_field}"),
+                    "status": "BLOCKED" if validation_errors or stale or result_status not in PROMOTION_PASS_RESULTS else "PASS",
+                    "worker_id": worker_id,
+                    "evidence_level": "worker_result",
+                    "staleness": "stale" if stale else "current",
+                    "validation_errors": safe_validation_errors,
+                },
+            )
+            for ref_index, ref in enumerate(_list_items(result.get("evidence_refs")), start=1):
+                safe_ref, finding = sanitize_public_ref(ref)
+                artifact_id = f"artifact:{worker.output_field}:{ref_index}"
+                graph_add_node(
+                    nodes,
+                    {
+                        "id": artifact_id,
+                        "node_type": "artifact_ref",
+                        "ref": safe_ref,
+                        "status": "PASS" if finding is None else "BLOCKED",
+                        "evidence_level": "artifact_ref",
+                    },
+                )
+                graph_add_edge(edges, result_id, artifact_id, "cites")
+                if finding:
+                    findings.append({"severity": "BLOCKED", "node_id": artifact_id, "message": redact_private_text(finding["reason"])})
+            if validation_errors:
+                findings.append(
+                    {
+                        "severity": "BLOCKED",
+                        "node_id": result_id,
+                        "message": "; ".join(safe_validation_errors),
+                    }
+                )
+        graph_add_edge(edges, packet_id, result_id, "expects")
+
+    if receipt_path is not None:
+        receipt_errors = validate_completion(card, receipt or {})
+        graph_add_node(
+            nodes,
+            {
+                "id": "receipt-five",
+                "node_type": "receipt_five",
+                "ref": source_card_ref(receipt_path),
+                "status": "PASS" if receipt and not receipt_errors else "BLOCKED",
+                "evidence_level": "receipt_five",
+                "validation_errors": receipt_errors,
+            },
+        )
+        graph_add_edge(edges, "gate-report", "receipt-five", "closed_by")
+        if receipt_errors:
+            findings.append({"severity": "BLOCKED", "node_id": "receipt-five", "message": "; ".join(receipt_errors)})
+
+    if hermes_evidence_path is not None:
+        package_result = str((hermes_package or {}).get("result") or "MISSING")
+        graph_add_node(
+            nodes,
+            {
+                "id": "hermes-evidence",
+                "node_type": "hermes_evidence_package",
+                "ref": source_card_ref(hermes_evidence_path),
+                "status": "PASS" if package_result == "PASS" else "BLOCKED",
+                "evidence_level": "live_hermes_summary",
+            },
+        )
+        graph_add_edge(edges, "gate-report", "hermes-evidence", "summarized_by")
+        if package_result != "PASS":
+            findings.append({"severity": "BLOCKED", "node_id": "hermes-evidence", "message": "Hermes evidence package is missing or blocked"})
+
+    blocked = any(item["severity"] == "BLOCKED" for item in findings)
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/evidence-graph.schema.json",
+        "record_type": "evidence_graph",
+        "created_at": created_at or utc_now(),
+        "target": {"card_id": card_id, "card_ref": source_card_ref(card_path)},
+        "result": "BLOCKED" if blocked else "PASS",
+        "nodes": list(nodes.values()),
+        "edges": edges,
+        "findings": findings,
+        "public_private_boundary": {
+            "public_safe_summary_only": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+        },
+        "limits": [
+            "Graph existence is not completion proof.",
+            "Private Hermes evidence remains operator-owned and is represented only by sanitized summaries.",
+        ],
+    }
+
+
+TRUTH_LEVEL_ORDER = [
+    "contract_exists",
+    "runtime_enforced",
+    "bounded_public_proof",
+    "live_hermes_proof",
+    "product_specific_proof",
+    "production_ready",
+]
+
+
+def readiness_component(
+    capability_id: str,
+    truth_level: str,
+    result: str,
+    evidence_refs: list[str],
+    next_required_action: str,
+) -> dict[str, Any]:
+    return {
+        "capability_id": capability_id,
+        "truth_level": truth_level,
+        "result": result,
+        "evidence_refs": evidence_refs,
+        "next_required_action": next_required_action,
+        "blocker_economics": []
+        if result == "PASS"
+        else [
+            blocker_economics_entry(
+                blocker_id=f"truth:{capability_id}",
+                owner="operator",
+                risk_controlled=f"{capability_id} cannot be over-claimed as a stronger truth layer",
+                cost_time_class="bounded_followup",
+                dependency=capability_id,
+                smallest_safe_next_action=next_required_action,
+                mutation_risk="none_without_operator_action",
+                route="local",
+            )
+        ],
+    }
+
+
+def build_readiness_truth_ledger(
+    card: dict[str, Any],
+    card_path: Path,
+    *,
+    evidence_graph: dict[str, Any] | None = None,
+    production_readiness: dict[str, Any] | None = None,
+    hermes_evidence: dict[str, Any] | None = None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    gate = build_gate_report(card)
+    card_ok = not validate_card(card)
+    graph_ok = bool(evidence_graph and evidence_graph.get("result") == "PASS")
+    hermes_ok = bool(hermes_evidence and hermes_evidence.get("result") == "PASS")
+    receipt_ok = bool(evidence_graph and any(node.get("id") == "receipt-five" and node.get("status") == "PASS" for node in evidence_graph.get("nodes", [])))
+    production_ok = bool(production_readiness and production_readiness.get("result") == "PASS")
+    components = [
+        readiness_component(
+            "card_contract",
+            "contract_exists",
+            "PASS" if card_ok else "BLOCKED",
+            [source_card_ref(card_path)],
+            "fix card contract and rerun factoryctl validate-card",
+        ),
+        readiness_component(
+            "gate_report",
+            "runtime_enforced",
+            "PASS" if gate.get("gate_status") != "blocked" else "BLOCKED",
+            ["factoryctl:gate-report"],
+            "fix blocked gate inputs and rerun factoryctl gate-report",
+        ),
+        readiness_component(
+            "evidence_graph",
+            "bounded_public_proof",
+            "PASS" if graph_ok else "BLOCKED",
+            ["factoryctl:evidence-graph"],
+            "supply missing worker results, receipts or sanitized Hermes evidence and rebuild the graph",
+        ),
+        readiness_component(
+            "hermes_evidence_package",
+            "live_hermes_proof",
+            "PASS" if hermes_ok else "BLOCKED",
+            ["factoryctl:export-hermes-evidence"],
+            "export a sanitized local Hermes evidence package from the operator-owned runtime",
+        ),
+        readiness_component(
+            "receipt_five",
+            "product_specific_proof",
+            "PASS" if receipt_ok else "BLOCKED",
+            ["receipt-five"],
+            "reconcile worker results and attach a valid Receipt Five",
+        ),
+        readiness_component(
+            "production_readiness",
+            "production_ready",
+            "PASS" if production_ok else "BLOCKED",
+            ["scripts/factory_production_readiness.py"],
+            "pass production readiness only after product-specific and live proof receipts exist",
+        ),
+    ]
+    passed_levels = [item["truth_level"] for item in components if item["result"] == "PASS"]
+    overall = passed_levels[-1] if passed_levels else "blocked_missing_evidence"
+    blockers = [item for component in components for item in component["blocker_economics"]]
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/readiness-truth-ledger.schema.json",
+        "record_type": "readiness_truth_ledger",
+        "created_at": created_at or utc_now(),
+        "target": {"card_id": card.get("card_id"), "card_ref": source_card_ref(card_path)},
+        "overall_truth_level": overall,
+        "production_ready": overall == "production_ready",
+        "classification_order": TRUTH_LEVEL_ORDER,
+        "components": components,
+        "blocker_economics": blockers,
+        "limits": [
+            "A PASS in one truth layer never implies PASS in a stronger layer.",
+            "Public-safe summaries do not replace private runtime evidence or human approval.",
+        ],
+    }
+
+
+def build_hermes_evidence_package(
+    *,
+    board: str,
+    workspace: Path,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    records: list[dict[str, Any]] = []
+    redactions: list[dict[str, str]] = []
+    if workspace.exists():
+        for index, path in enumerate(sorted(workspace.rglob("*.json")), start=1):
+            data = load_optional_json(path)
+            if not data:
+                continue
+            evidence_refs: list[str] = []
+            for ref in _list_items(data.get("evidence_refs")):
+                safe_ref, finding = sanitize_public_ref(ref)
+                evidence_refs.append(safe_ref)
+                if finding:
+                    redactions.append({"record_ref": f"external:hermes-record-{index}", "reason": finding["reason"]})
+            worker = data.get("worker") if isinstance(data.get("worker"), dict) else {}
+            card_ref_value = data.get("card_ref") if isinstance(data.get("card_ref"), dict) else {}
+            records.append(
+                {
+                    "record_ref": f"external:hermes-record-{index}",
+                    "record_type": str(data.get("record_type") or "unknown"),
+                    "card_id": str(card_ref_value.get("card_id") or data.get("card_id") or ""),
+                    "worker_id": str(worker.get("id") or data.get("worker_id") or ""),
+                    "result": str(data.get("result") or data.get("decision") or "UNKNOWN"),
+                    "created_at": str(data.get("created_at") or data.get("decision_at") or ""),
+                    "evidence_refs": evidence_refs,
+                }
+            )
+    state = "blocked"
+    if records:
+        record_types = {record["record_type"] for record in records}
+        if "release_ops_result" in record_types:
+            state = "release-ready"
+        elif any("receipt" in item for item in record_types):
+            state = "done"
+        elif any(record["worker_id"] or record["record_type"] != "unknown" for record in records):
+            state = "partially_executed"
+        else:
+            state = "planning"
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/hermes-evidence-package.schema.json",
+        "record_type": "hermes_evidence_package",
+        "created_at": created_at or utc_now(),
+        "result": "PASS" if workspace.exists() and records and not redactions else "BLOCKED",
+        "board_ref": f"board:{sanitize_slug(board, fallback='operator-board')}",
+        "workspace_ref": "external:operator-owned-hermes-workspace",
+        "evidence_level": "live_hermes_summary" if records else "missing",
+        "state": state,
+        "records": records,
+        "redaction_findings": redactions,
+        "missing_or_stale": [] if records else ["no JSON evidence records found in workspace"],
+        "public_private_boundary": {
+            "sanitized_summary_only": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+        },
+    }
+
+
+def build_prepilot_loose_end_checklist(
+    *,
+    evidence_graph: dict[str, Any] | None,
+    readiness_ledger: dict[str, Any] | None,
+    hermes_evidence: dict[str, Any] | None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    graph_ok = bool(evidence_graph)
+    ledger_ok = bool(readiness_ledger)
+    hermes_path_ok = bool(hermes_evidence)
+    items = [
+        {
+            "id": "evidence_graph_path",
+            "status": "closed" if graph_ok else "blocking",
+            "evidence_ref": "factoryctl:evidence-graph",
+            "next_action": "build evidence graph before pilot execution",
+        },
+        {
+            "id": "readiness_truth_levels",
+            "status": "closed" if ledger_ok else "blocking",
+            "evidence_ref": "factoryctl:readiness-ledger",
+            "next_action": "build readiness truth ledger before pilot execution",
+        },
+        {
+            "id": "hermes_evidence_import_path",
+            "status": "closed" if hermes_path_ok else "deferred",
+            "evidence_ref": "factoryctl:export-hermes-evidence",
+            "next_action": "export sanitized Hermes package when operator runtime exists",
+        },
+        {
+            "id": "tests_hermetic_against_tmp",
+            "status": "deferred",
+            "evidence_ref": "PR-121",
+            "next_action": "land the foundation hermeticity PR before claiming pilot completion",
+        },
+        {
+            "id": "blockers_next_smallest_safe_action",
+            "status": "closed" if readiness_ledger and readiness_ledger.get("blocker_economics") is not None else "blocking",
+            "evidence_ref": "readiness_ledger.blocker_economics",
+            "next_action": "include blocker economics in gate, readiness and completion reports",
+        },
+        {
+            "id": "production_evidence_expectations_known",
+            "status": "closed",
+            "evidence_ref": "factoryctl:truth",
+            "next_action": "keep Product Face, security, remote proof, human gate and release evidence explicit in the truth packet",
+        },
+        {
+            "id": "pilot_success_definition",
+            "status": "closed",
+            "evidence_ref": "readiness_ledger.overall_truth_level",
+            "next_action": "state whether the pilot proves repo-only, Hermes-backed, bounded product proof or production readiness",
+        },
+    ]
+    blocking = [item["id"] for item in items if item["status"] == "blocking"]
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/prepilot-loose-end-checklist.schema.json",
+        "record_type": "prepilot_loose_end_checklist",
+        "created_at": created_at or utc_now(),
+        "result": "BLOCKED" if blocking else "PASS_WITH_DEFERRED_ITEMS",
+        "items": items,
+        "blocking_items": blocking,
+        "pilot_completion_claim_allowed": not blocking and bool(evidence_graph and evidence_graph.get("result") == "PASS"),
+        "public_private_boundary": {
+            "no_private_product_evidence": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+        },
+    }
+
+
+def run_json_command(command: list[str]) -> dict[str, Any]:
+    try:
+        result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=20)  # nosec B603
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"available": False, "error": exc.__class__.__name__}
+    if result.returncode != 0:
+        return {"available": False, "error": "command_failed"}
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {"available": False, "error": "invalid_json"}
+    return {"available": True, "data": data}
+
+
+def run_text_command(command: list[str]) -> dict[str, Any]:
+    try:
+        result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=20)  # nosec B603
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"available": False, "error": exc.__class__.__name__, "text": ""}
+    return {
+        "available": result.returncode == 0,
+        "error": None if result.returncode == 0 else "command_failed",
+        "text": result.stdout.strip(),
+    }
+
+
+def build_truth_packet(
+    *,
+    target: str,
+    card: dict[str, Any],
+    card_path: Path,
+    issue: str | None = None,
+    pr: str | None = None,
+    worker_results_dir: Path | None = None,
+    hermes_evidence_path: Path | None = None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    branch = run_text_command(["git", "branch", "--show-current"])
+    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, text=True, capture_output=True)  # nosec B603
+    issue_state = run_json_command(["gh", "issue", "view", issue, "--json", "number,title,state"]) if issue else {"available": False}
+    pr_state = run_json_command(["gh", "pr", "view", pr, "--json", "number,title,state,isDraft"]) if pr else {"available": False}
+    hermes_package = load_optional_json(hermes_evidence_path)
+    graph = build_evidence_graph(card, card_path, worker_results_dir=worker_results_dir, hermes_evidence_path=hermes_evidence_path)
+    ledger = build_readiness_truth_ledger(card, card_path, evidence_graph=graph, hermes_evidence=hermes_package)
+    blockers = ledger.get("blocker_economics", [])
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-truth-packet.schema.json",
+        "record_type": "factory_truth_packet",
+        "created_at": created_at or utc_now(),
+        "target": sanitize_slug(target, fallback="factory-target"),
+        "repo": {
+            "branch": branch.get("text") or "unknown",
+            "dirty": bool(dirty.stdout.strip()),
+            "dirty_file_count": len([line for line in dirty.stdout.splitlines() if line.strip()]),
+        },
+        "github": {
+            "issue": issue_state,
+            "pr": pr_state,
+        },
+        "hermes": {
+            "mode": "sanitized_package" if hermes_package else "repo_only_degraded",
+            "status": (hermes_package or {}).get("result") or "DEGRADED",
+        },
+        "evidence_graph": graph,
+        "readiness_ledger": ledger,
+        "current_blockers": blockers,
+        "next_smallest_safe_action": blockers[0]["smallest_safe_next_action"] if blockers else "review and approve only after stronger evidence remains current",
+        "truth_level": ledger["overall_truth_level"],
+        "production_ready": ledger["production_ready"],
+        "public_private_boundary": {
+            "json_first": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+        },
+    }
 
 
 def command_validate_card(args: argparse.Namespace) -> int:
@@ -3455,6 +5095,13 @@ def command_unblock_plan(args: argparse.Namespace) -> int:
     }
     write_json(args.out, plan)
     return 1 if report.get("gate_predicate_result") == "BLOCK" else 0
+
+
+def command_help_next(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    payload = build_factory_help(card, args.card, catalog_path=args.catalog)
+    write_json(args.out, payload)
+    return 0
 
 
 def command_evidence_record(args: argparse.Namespace) -> int:
@@ -3544,6 +5191,93 @@ def command_status_snapshot(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_evidence_graph(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    graph = build_evidence_graph(
+        card,
+        args.card,
+        gate_report=load_optional_json(args.gate_report),
+        worker_results_dir=args.worker_results_dir,
+        receipt_path=args.receipt,
+        hermes_evidence_path=args.hermes_evidence,
+    )
+    write_json(args.out, graph)
+    return 0 if graph["result"] == "PASS" else 1
+
+
+def command_readiness_ledger(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    graph = load_optional_json(args.evidence_graph)
+    readiness = load_optional_json(args.production_readiness)
+    hermes = load_optional_json(args.hermes_evidence)
+    ledger = build_readiness_truth_ledger(
+        card,
+        args.card,
+        evidence_graph=graph,
+        production_readiness=readiness,
+        hermes_evidence=hermes,
+    )
+    write_json(args.out, ledger)
+    return 0 if ledger["production_ready"] else 1
+
+
+def command_export_hermes_evidence(args: argparse.Namespace) -> int:
+    package = build_hermes_evidence_package(board=args.board, workspace=args.workspace)
+    write_json(args.out, package)
+    if args.md_out:
+        lines = [
+            "# Hermes Evidence Package",
+            "",
+            f"Result: `{package['result']}`",
+            f"State: `{package['state']}`",
+            f"Records: `{len(package['records'])}`",
+            "",
+            "This is a sanitized operator-owned summary. Raw Hermes evidence stays local.",
+            "",
+        ]
+        args.md_out.parent.mkdir(parents=True, exist_ok=True)
+        args.md_out.write_text("\n".join(lines), encoding="utf-8")
+    return 0 if package["result"] == "PASS" else 1
+
+
+def command_prepilot_checklist(args: argparse.Namespace) -> int:
+    checklist = build_prepilot_loose_end_checklist(
+        evidence_graph=load_optional_json(args.evidence_graph),
+        readiness_ledger=load_optional_json(args.readiness_ledger),
+        hermes_evidence=load_optional_json(args.hermes_evidence),
+    )
+    write_json(args.out, checklist)
+    return 0 if checklist["pilot_completion_claim_allowed"] else 1
+
+
+def command_truth(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    packet = build_truth_packet(
+        target=args.target,
+        card=card,
+        card_path=args.card,
+        issue=args.issue,
+        pr=args.pr,
+        worker_results_dir=args.worker_results_dir,
+        hermes_evidence_path=args.hermes_evidence,
+    )
+    write_json(args.out, packet)
+    if args.md_out:
+        lines = [
+            "# Factory Truth Packet",
+            "",
+            f"Target: `{packet['target']}`",
+            f"Truth level: `{packet['truth_level']}`",
+            f"Production ready: `{str(packet['production_ready']).lower()}`",
+            "",
+            f"Next action: {packet['next_smallest_safe_action']}",
+            "",
+        ]
+        args.md_out.parent.mkdir(parents=True, exist_ok=True)
+        args.md_out.write_text("\n".join(lines), encoding="utf-8")
+    return 0 if packet["production_ready"] else 1
+
+
 def command_doctor(args: argparse.Namespace) -> int:
     report = build_doctor_report(args.hermes_home)
     if args.json:
@@ -3631,6 +5365,12 @@ def build_parser() -> argparse.ArgumentParser:
     unblock_plan_parser.add_argument("--out", type=Path)
     unblock_plan_parser.set_defaults(func=command_unblock_plan)
 
+    help_next_parser = sub.add_parser("help-next", help="Show the next safe action without making the user operate internal factory machinery.")
+    help_next_parser.add_argument("--card", type=Path, required=True)
+    help_next_parser.add_argument("--catalog", type=Path)
+    help_next_parser.add_argument("--out", type=Path)
+    help_next_parser.set_defaults(func=command_help_next)
+
     evidence_record_parser = sub.add_parser("evidence-record")
     evidence_record_parser.add_argument(
         "--worker",
@@ -3685,6 +5425,48 @@ def build_parser() -> argparse.ArgumentParser:
     status_snapshot_parser.add_argument("--evidence-ref", action="append")
     status_snapshot_parser.add_argument("--out", type=Path)
     status_snapshot_parser.set_defaults(func=command_status_snapshot)
+
+    evidence_graph_parser = sub.add_parser("evidence-graph")
+    evidence_graph_parser.add_argument("--card", type=Path, required=True)
+    evidence_graph_parser.add_argument("--gate-report", type=Path)
+    evidence_graph_parser.add_argument("--worker-results-dir", type=Path)
+    evidence_graph_parser.add_argument("--receipt", type=Path)
+    evidence_graph_parser.add_argument("--hermes-evidence", type=Path)
+    evidence_graph_parser.add_argument("--out", type=Path, default=DEFAULT_EVIDENCE_GRAPH_OUT)
+    evidence_graph_parser.set_defaults(func=command_evidence_graph)
+
+    readiness_ledger_parser = sub.add_parser("readiness-ledger")
+    readiness_ledger_parser.add_argument("--card", type=Path, required=True)
+    readiness_ledger_parser.add_argument("--evidence-graph", type=Path)
+    readiness_ledger_parser.add_argument("--production-readiness", type=Path)
+    readiness_ledger_parser.add_argument("--hermes-evidence", type=Path)
+    readiness_ledger_parser.add_argument("--out", type=Path, default=DEFAULT_READINESS_LEDGER_OUT)
+    readiness_ledger_parser.set_defaults(func=command_readiness_ledger)
+
+    export_hermes_parser = sub.add_parser("export-hermes-evidence")
+    export_hermes_parser.add_argument("--board", required=True)
+    export_hermes_parser.add_argument("--workspace", type=Path, required=True)
+    export_hermes_parser.add_argument("--out", type=Path, default=DEFAULT_HERMES_EVIDENCE_OUT)
+    export_hermes_parser.add_argument("--md-out", type=Path)
+    export_hermes_parser.set_defaults(func=command_export_hermes_evidence)
+
+    prepilot_parser = sub.add_parser("prepilot-checklist")
+    prepilot_parser.add_argument("--evidence-graph", type=Path)
+    prepilot_parser.add_argument("--readiness-ledger", type=Path)
+    prepilot_parser.add_argument("--hermes-evidence", type=Path)
+    prepilot_parser.add_argument("--out", type=Path, default=DEFAULT_PREPILOT_CHECKLIST_OUT)
+    prepilot_parser.set_defaults(func=command_prepilot_checklist)
+
+    truth_parser = sub.add_parser("truth")
+    truth_parser.add_argument("--target", required=True)
+    truth_parser.add_argument("--card", type=Path, required=True)
+    truth_parser.add_argument("--issue")
+    truth_parser.add_argument("--pr")
+    truth_parser.add_argument("--worker-results-dir", type=Path)
+    truth_parser.add_argument("--hermes-evidence", type=Path)
+    truth_parser.add_argument("--out", type=Path, default=DEFAULT_TRUTH_OUT)
+    truth_parser.add_argument("--md-out", type=Path)
+    truth_parser.set_defaults(func=command_truth)
 
     return parser
 

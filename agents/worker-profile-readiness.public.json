@@ -1,0 +1,193 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/worker-profile-readiness-ledger.schema.json",
+  "record_type": "worker_profile_readiness_ledger",
+  "ledger_version": "factory-12-public-profile-readiness",
+  "created_at": "2026-06-14T00:00:00Z",
+  "scope": "public-contract-ledger",
+  "current_runtime_claim": false,
+  "default_record": {
+    "packet_fixture_ref": "factoryctl:worker-packet-smoke",
+    "smoke_result": "NOT_RUN",
+    "eval_result": "NOT_RUN",
+    "readiness_state": "degraded_without_current_runtime_ledger",
+    "checked_at": "2026-06-14T00:00:00Z",
+    "producer": "public-contract-ledger",
+    "freshness_policy": {
+      "current_runtime_claim": false,
+      "current_claim_requires": "fresh sanitized smoke and eval ledger",
+      "max_age_days_for_current_claim": 7
+    },
+    "evidence_refs": [
+      "agents/worker-registry.public.json",
+      "agents/worker-profiles.public.json",
+      "agents/hermes-profile-bindings.public.json"
+    ]
+  },
+  "worker_readiness": {
+    "factory-orchestrator": {
+      "profile_id": "factory-orchestrator.profile.v1",
+      "hermes_profile_name": "factory-orchestrator"
+    },
+    "source-ledger-worker": {
+      "profile_id": "source-ledger-worker.profile.v1",
+      "hermes_profile_name": "source-ledger-worker"
+    },
+    "product-sot-planner": {
+      "profile_id": "product-sot-planner.profile.v1",
+      "hermes_profile_name": "product-sot-planner"
+    },
+    "product-architect": {
+      "profile_id": "product-architect.profile.v1",
+      "hermes_profile_name": "product-architect"
+    },
+    "product-face": {
+      "profile_id": "product-face.profile.v1",
+      "hermes_profile_name": "product-face"
+    },
+    "solana-quasar-auditor": {
+      "profile_id": "solana-quasar-auditor.profile.v1",
+      "hermes_profile_name": "solana-quasar-auditor"
+    },
+    "codex-security": {
+      "profile_id": "codex-security.profile.v1",
+      "hermes_profile_name": "codex-security"
+    },
+    "appsec-owasp-specialist": {
+      "profile_id": "appsec-owasp-specialist.profile.v1",
+      "hermes_profile_name": "appsec-owasp-specialist"
+    },
+    "agentic-ai-security-specialist": {
+      "profile_id": "agentic-ai-security-specialist.profile.v1",
+      "hermes_profile_name": "agentic-ai-security-specialist"
+    },
+    "autoreview-gate": {
+      "profile_id": "autoreview-gate.profile.v1",
+      "hermes_profile_name": "autoreview-gate"
+    },
+    "remote-proof-runner": {
+      "profile_id": "remote-proof-runner.profile.v1",
+      "hermes_profile_name": "remote-proof-runner"
+    },
+    "handoff-packer": {
+      "profile_id": "handoff-packer.profile.v1",
+      "hermes_profile_name": "handoff-packer"
+    },
+    "independent-reviewer": {
+      "profile_id": "independent-reviewer.profile.v1",
+      "hermes_profile_name": "independent-reviewer"
+    },
+    "evidence-reconciler": {
+      "profile_id": "evidence-reconciler.profile.v1",
+      "hermes_profile_name": "evidence-reconciler"
+    },
+    "human-gate-clerk": {
+      "profile_id": "human-gate-clerk.profile.v1",
+      "hermes_profile_name": "human-gate-clerk"
+    },
+    "docs-os-worker": {
+      "profile_id": "docs-os-worker.profile.v1",
+      "hermes_profile_name": "docs-os-worker"
+    },
+    "decomposition-planner": {
+      "profile_id": "decomposition-planner.profile.v1",
+      "hermes_profile_name": "decomposition-planner"
+    },
+    "implementation-worker": {
+      "profile_id": "implementation-worker.profile.v1",
+      "hermes_profile_name": "implementation-worker"
+    },
+    "frontend-builder": {
+      "profile_id": "frontend-builder.profile.v1",
+      "hermes_profile_name": "frontend-builder"
+    },
+    "backend-api-builder": {
+      "profile_id": "backend-api-builder.profile.v1",
+      "hermes_profile_name": "backend-api-builder"
+    },
+    "data-persistence-builder": {
+      "profile_id": "data-persistence-builder.profile.v1",
+      "hermes_profile_name": "data-persistence-builder"
+    },
+    "solana-quasar-builder": {
+      "profile_id": "solana-quasar-builder.profile.v1",
+      "hermes_profile_name": "solana-quasar-builder"
+    },
+    "solana-quasar-qa-engineer": {
+      "profile_id": "solana-quasar-qa-engineer.profile.v1",
+      "hermes_profile_name": "solana-quasar-qa-engineer"
+    },
+    "wallet-transaction-builder": {
+      "profile_id": "wallet-transaction-builder.profile.v1",
+      "hermes_profile_name": "wallet-transaction-builder"
+    },
+    "integration-builder": {
+      "profile_id": "integration-builder.profile.v1",
+      "hermes_profile_name": "integration-builder"
+    },
+    "test-automation-builder": {
+      "profile_id": "test-automation-builder.profile.v1",
+      "hermes_profile_name": "test-automation-builder"
+    },
+    "infra-devops-builder": {
+      "profile_id": "infra-devops-builder.profile.v1",
+      "hermes_profile_name": "infra-devops-builder"
+    },
+    "agent-runtime-builder": {
+      "profile_id": "agent-runtime-builder.profile.v1",
+      "hermes_profile_name": "agent-runtime-builder"
+    },
+    "qa-verification-worker": {
+      "profile_id": "qa-verification-worker.profile.v1",
+      "hermes_profile_name": "qa-verification-worker"
+    },
+    "security-orchestrator": {
+      "profile_id": "security-orchestrator.profile.v1",
+      "hermes_profile_name": "security-orchestrator"
+    },
+    "cloud-infra-security-specialist": {
+      "profile_id": "cloud-infra-security-specialist.profile.v1",
+      "hermes_profile_name": "cloud-infra-security-specialist"
+    },
+    "crypto-key-management-specialist": {
+      "profile_id": "crypto-key-management-specialist.profile.v1",
+      "hermes_profile_name": "crypto-key-management-specialist"
+    },
+    "release-ops-worker": {
+      "profile_id": "release-ops-worker.profile.v1",
+      "hermes_profile_name": "release-ops-worker"
+    },
+    "memory-steward": {
+      "profile_id": "memory-steward.profile.v1",
+      "hermes_profile_name": "memory-steward"
+    },
+    "skill-eval-distiller": {
+      "profile_id": "skill-eval-distiller.profile.v1",
+      "hermes_profile_name": "skill-eval-distiller"
+    },
+    "public-safety-gate": {
+      "profile_id": "public-safety-gate.profile.v1",
+      "hermes_profile_name": "public-safety-gate"
+    },
+    "supply-chain-gate": {
+      "profile_id": "supply-chain-gate.profile.v1",
+      "hermes_profile_name": "supply-chain-gate"
+    },
+    "detection-monitoring-worker": {
+      "profile_id": "detection-monitoring-worker.profile.v1",
+      "hermes_profile_name": "detection-monitoring-worker"
+    },
+    "control-tower-projection-worker": {
+      "profile_id": "control-tower-projection-worker.profile.v1",
+      "hermes_profile_name": "control-tower-projection-worker"
+    },
+    "discord-control-tower-bridge": {
+      "profile_id": "discord-control-tower-bridge.profile.v1",
+      "hermes_profile_name": "discord-control-tower-bridge"
+    }
+  },
+  "limits": [
+    "This public ledger records profile contract coverage only.",
+    "It does not publish private runtime logs, raw chat records, screenshots or local paths.",
+    "A worker profile is not current runtime readiness until a fresh sanitized smoke and eval ledger marks it current_profile_ready."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/production-promotion-ladder.schema.json",
+  "record_type": "production_promotion_ladder",
+  "product_sot_ref": "templates/product-sot.json",
+  "target_environment": "production",
+  "environments": [
+    {
+      "environment": "local",
+      "entry_criteria": ["Product Creation Plan exists", "work unit is ready"],
+      "proof_required": ["unit or local smoke proof"],
+      "gates": ["Ready Gate"],
+      "rollback_or_mitigation": "Revert the bounded work unit.",
+      "owner": "implementation-worker",
+      "status": "planned",
+      "post_promotion_checks": ["not_applicable"]
+    },
+    {
+      "environment": "staging",
+      "entry_criteria": ["local proof passed", "release risk reviewed"],
+      "proof_required": ["integration smoke", "rollback proof"],
+      "gates": ["Review Gate", "Release Gate"],
+      "rollback_or_mitigation": "Rollback to previous staged version.",
+      "owner": "release-ops-worker",
+      "status": "planned",
+      "post_promotion_checks": ["monitoring smoke"]
+    },
+    {
+      "environment": "production",
+      "entry_criteria": ["staging proof passed", "human authority recorded when material"],
+      "proof_required": ["production smoke", "monitoring check", "support path check"],
+      "gates": ["Human Gate when material", "Production Gate"],
+      "rollback_or_mitigation": "Run the approved rollback or mitigation path.",
+      "owner": "release-ops-worker",
+      "status": "planned",
+      "post_promotion_checks": ["post-production verification"]
+    }
+  ],
+  "promotion_policy": {
+    "preproduction_proof_cannot_claim_production": true,
+    "human_authority_required_for_irreversible_release": true,
+    "retest_after_promotion": true
+  },
+  "onchain_policy": {
+    "local_quasar_devnet_mainnet_required_when_applicable": true,
+    "mainnet_authority_requires_human_gate": true,
+    "post_mainnet_smoke_required": true
+  },
+  "owner_by_boundary": {
+    "local": "implementation-worker",
+    "staging": "release-ops-worker",
+    "production": "release-ops-worker"
+  },
+  "evidence_refs": ["templates/production-readiness-plan.json"]
+}

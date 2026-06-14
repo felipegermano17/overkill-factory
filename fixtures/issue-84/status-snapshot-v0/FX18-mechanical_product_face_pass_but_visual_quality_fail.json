@@ -1,0 +1,165 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-status-snapshot.schema.json",
+  "schema_version": "status-snapshot-v0",
+  "record_type": "factory_status_snapshot",
+  "fixture_id": "FX18",
+  "fixture_name": "mechanical Product Face pass but visual quality fail",
+  "kind": "fixture",
+  "title": "Issue 84 StatusSnapshot v0 - mechanical Product Face pass but visual quality fail",
+  "phase": "F12/F13 first safe slice",
+  "risk_effective": "R2",
+  "observed_at": "2026-06-14T03:30:00Z",
+  "source_updated_at": "2026-06-14T02:59:12Z",
+  "freshness_state": "current",
+  "current_state": "blocked",
+  "source_refs": [
+    "ISSUE-84",
+    "PRODUCT-SOT",
+    "METHOD-CONTRACT",
+    "DOCS-OS",
+    "FIXTURE-PLAN"
+  ],
+  "canonical_refs": [
+    "https://github.com/overkill-factory/overkill-factory/issues/84",
+    "schemas/factory-status-snapshot.schema.json",
+    "schemas/worker-result.schema.json"
+  ],
+  "gate_states": [
+    {
+      "id": "product_face",
+      "label": "Product Face visual quality result",
+      "state": "failed",
+      "owner": "factory-operator",
+      "unblock_condition": "redesign to meet professional cockpit reference bar",
+      "source_refs": [
+        "PRODUCT-FACE"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B-VISUAL-QUALITY",
+      "state": "active",
+      "summary": "Professional visual quality verdict failed.",
+      "unblock_condition": "fix UI quality and rerun Product Face review",
+      "source_refs": [
+        "DOCS-OS",
+        "FIXTURE-PLAN"
+      ]
+    }
+  ],
+  "worker_state": [
+    {
+      "worker_id": "data-persistence-builder",
+      "state": "done",
+      "executor_identity": "data-persistence-builder",
+      "reviewer_identity": "independent-reviewer",
+      "source_refs": [
+        "FIXTURE-PLAN"
+      ]
+    }
+  ],
+  "review_state": {
+    "required": true,
+    "status": "failed",
+    "executor_identity": "data-persistence-builder",
+    "reviewer_identity": "independent-reviewer",
+    "source_refs": [
+      "REVIEW-GATE"
+    ]
+  },
+  "receipt_five_status": {
+    "status": "present",
+    "reviewer_required": true,
+    "reviewer_result": "review pending for future implementation",
+    "changed": "StatusSnapshot v0 projection fixture for Issue 84.",
+    "artifact_paths": [
+      "fixtures/issue-84/status-snapshot-v0/FX18-mechanical_product_face_pass_but_visual_quality_fail.json",
+      "schemas/factory-status-snapshot.schema.json"
+    ],
+    "verification_commands": [
+      "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+      "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+    ],
+    "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation",
+    "next_action": "Block generic dashboard quality despite mechanical checks passing."
+  },
+  "evidence_refs": [
+    {
+      "id": "EV-ISSUE-84",
+      "kind": "public_url",
+      "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+      "source_refs": [
+        "ISSUE-84"
+      ],
+      "freshness_state": "current",
+      "public_safety_state": "public_safe",
+      "verification_status": "verified_public_api",
+      "raw_payload_included": false
+    },
+    {
+      "id": "EV-SCHEMA",
+      "kind": "schema",
+      "ref": "schemas/factory-status-snapshot.schema.json",
+      "source_refs": [
+        "ISSUE-84"
+      ],
+      "freshness_state": "current",
+      "public_safety_state": "public_safe",
+      "verification_status": "verified_relative_artifact",
+      "raw_payload_included": false
+    }
+  ],
+  "public_private_boundary": {
+    "allowed_refs": [
+      "public HTTPS URLs",
+      "repo-relative artifact paths",
+      "redacted private-unavailable metadata"
+    ],
+    "blocked_refs": [
+      "local absolute paths",
+      "file URIs",
+      "private board links",
+      "chat ids",
+      "raw private evidence",
+      "secrets or credential-looking values"
+    ],
+    "raw_private_payload_included": false
+  },
+  "state_flags": {
+    "request": true,
+    "approval": false,
+    "blocked": true,
+    "done": false,
+    "released": false,
+    "superseded": false,
+    "implemented": false,
+    "validated": false,
+    "integrated": false
+  },
+  "forbidden_actions": [
+    "mutate factory cards or runtime state from a snapshot",
+    "approve gates from projection state",
+    "mark issue complete from worker done alone",
+    "render raw private evidence",
+    "release or publish without later human/security gates"
+  ],
+  "next_safe_action": {
+    "action_type": "block",
+    "label": "Block generic dashboard quality despite mechanical checks passing.",
+    "source_refs": [
+      "DOCS-OS",
+      "FIXTURE-PLAN"
+    ],
+    "forbidden_action_taken": false
+  },
+  "validation_expectations": {
+    "expected_fixture_validator": "pass",
+    "evidence_ref_public_safety_expected": "pass",
+    "fail_closed_required": true,
+    "required_assertions": [
+      "visual quality result controls pass/fail",
+      "mechanical screenshots alone cannot accept UI"
+    ]
+  }
+}

@@ -30,7 +30,7 @@ class FakeHermes:
 
     def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
         self.calls.append(argv)
-        if argv[:4] == ["hermes", "kanban", "boards", "list"]:
+        if argv == ["hermes", "kanban", "boards", "list", "--json"]:
             return subprocess.CompletedProcess(argv, 0, stdout="[]", stderr="")
         if argv[:4] == ["hermes", "kanban", "boards", "create"]:
             return subprocess.CompletedProcess(argv, 0, stdout="created", stderr="")
@@ -38,7 +38,7 @@ class FakeHermes:
             self.counter += 1
             task_id = "t_" + f"{self.counter:08x}"
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
-        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
+        if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"blocked"}', stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
             return subprocess.CompletedProcess(
@@ -138,6 +138,48 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         self.assertTrue(result["dry_run"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+
+    def test_materialize_dry_run_with_ensure_board_does_not_touch_hermes(self) -> None:
+        fake = FakeHermes()
+        card = ROOT / "examples" / "cards" / "v35_valid_product_face.md"
+        with tempfile.TemporaryDirectory() as tmp:
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--ledger",
+                    str(Path(tmp) / "ledger.json"),
+                    "--dry-run",
+                    "--ensure-board",
+                ]
+            )
+            result = adapter.materialize(args, runner=fake)
+
+        self.assertTrue(result["dry_run"])
+        self.assertTrue(result["board_create_requested"])
+        self.assertFalse(result["board_create_checked"])
+        self.assertEqual(fake.calls, [])
+
+    def test_block_command_matches_real_hermes_cli_shape(self) -> None:
+        fake = FakeHermes()
+
+        adapter.ensure_blocked_event(
+            hermes_bin="hermes",
+            board=TEST_BOARD,
+            task_id=MAIN_TASK_ID,
+            reason="gate",
+            runner=fake,
+        )
+
+        self.assertEqual(
+            fake.calls[0],
+            ["hermes", "kanban", "--board", TEST_BOARD, "block", MAIN_TASK_ID, "gate"],
+        )
+        self.assertNotIn("--reason", fake.calls[0])
+        self.assertNotIn("--json", fake.calls[0])
 
     def test_complete_main_requires_materialized_live_binding(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

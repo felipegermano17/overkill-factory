@@ -1,55 +1,183 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/factory-status-snapshot.schema.json",
+  "schema_version": "status-snapshot-v0",
   "record_type": "factory_status_snapshot",
-  "created_at": "2026-01-01T00:00:00+00:00",
-  "card": {
-    "id": "CARD-001",
-    "title": "Example factory card",
-    "ref": "cards/example-card.md"
-  },
-  "current_state": "planning",
-  "phase": "F11",
+  "fixture_id": "TEMPLATE-STATUS-SNAPSHOT",
+  "fixture_name": "manual estimate template blocks completion claim",
+  "kind": "fixture",
+  "title": "Factory StatusSnapshot v0 template - manual estimate blocks completion claim",
+  "phase": "F12/F13 bounded implementation",
   "risk_effective": "R1",
+  "observed_at": "2026-01-01T00:00:00Z",
+  "source_updated_at": "2026-01-01T00:00:00Z",
+  "freshness_state": "manual_estimate",
+  "current_state": "manual_estimate",
   "source_refs": [
+    "CARD-001",
+    "GATE-REPORT",
+    "FIXTURE-TEMPLATE"
+  ],
+  "canonical_refs": [
+    "schemas/factory-status-snapshot.schema.json",
+    "templates/factory-status-snapshot.json"
+  ],
+  "gate_states": [
     {
-      "claim": "card",
-      "ref": "cards/example-card.md"
+      "id": "architecture",
+      "label": "Human architecture planning gate",
+      "state": "passed",
+      "owner": "factory-operator",
+      "unblock_condition": "none",
+      "source_refs": [
+        "GATE-REPORT"
+      ]
+    },
+    {
+      "id": "documentation_os",
+      "label": "Documentation or source packet input",
+      "state": "passed",
+      "owner": "factory-operator",
+      "unblock_condition": "none",
+      "source_refs": [
+        "GATE-REPORT"
+      ]
+    },
+    {
+      "id": "independent_review",
+      "label": "Independent implementation review",
+      "state": "blocked",
+      "owner": "factory-operator",
+      "unblock_condition": "review actual implementation diff",
+      "source_refs": [
+        "GATE-REPORT"
+      ]
     }
   ],
-  "staleness": {
-    "status": "manual_estimate",
-    "last_updated_ref": "cards/example-card.md",
-    "warning": "Template snapshot is not runtime evidence."
-  },
-  "workers": {},
-  "lanes": [],
-  "gates": {
-    "gate_status": "not_run"
-  },
-  "blockers": [],
-  "evidence": {
-    "receipt_five_status": "not_attached",
-    "evidence_refs": []
-  },
-  "state_flags": {
-    "implemented": false,
-    "validated": false,
-    "integrated": false,
-    "released": false,
-    "blocked": false,
-    "superseded": false
-  },
-  "next_safe_actions": [
-    "Run factoryctl gate-report before execution."
+  "blocker_economics": [],
+  "blockers": [
+    {
+      "id": "B-MANUAL-ESTIMATE",
+      "state": "active",
+      "summary": "Manual estimate is not canonical state.",
+      "unblock_condition": "refresh from structured runtime export",
+      "source_refs": [
+        "FIXTURE-TEMPLATE"
+      ]
+    }
   ],
-  "forbidden_actions": [
-    "treat-snapshot-as-source-of-truth"
+  "worker_state": [
+    {
+      "worker_id": "example-worker",
+      "state": "done",
+      "executor_identity": "example-worker",
+      "reviewer_identity": "example-reviewer",
+      "source_refs": [
+        "FIXTURE-TEMPLATE"
+      ]
+    }
+  ],
+  "review_state": {
+    "required": true,
+    "status": "blocked",
+    "executor_identity": "example-worker",
+    "reviewer_identity": "example-reviewer",
+    "source_refs": [
+      "GATE-REPORT"
+    ]
+  },
+  "receipt_five_status": {
+    "status": "present",
+    "reviewer_required": true,
+    "reviewer_result": "review pending for future implementation",
+    "changed": "Template StatusSnapshot v0 projection; replace fields with current public-safe runtime evidence.",
+    "artifact_paths": [
+      "templates/factory-status-snapshot.json",
+      "schemas/factory-status-snapshot.schema.json"
+    ],
+    "verification_commands": [
+      "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed",
+      "python3 scripts/validate_public_json_artifacts.py"
+    ],
+    "verification_result": "Template structure is expected to validate against StatusSnapshot v0 schema.",
+    "next_action": "Replace manual estimate with current structured runtime export before done/release claims."
+  },
+  "evidence_refs": [
+    {
+      "id": "EV-SCHEMA",
+      "kind": "schema",
+      "ref": "schemas/factory-status-snapshot.schema.json",
+      "source_refs": [
+        "FIXTURE-TEMPLATE"
+      ],
+      "freshness_state": "current",
+      "public_safety_state": "public_safe",
+      "verification_status": "verified_relative_artifact",
+      "raw_payload_included": false
+    },
+    {
+      "id": "EV-TEMPLATE",
+      "kind": "template",
+      "ref": "templates/factory-status-snapshot.json",
+      "source_refs": [
+        "FIXTURE-TEMPLATE"
+      ],
+      "freshness_state": "manual_estimate",
+      "public_safety_state": "public_safe",
+      "verification_status": "verified_relative_artifact",
+      "raw_payload_included": false
+    }
   ],
   "public_private_boundary": {
-    "projection_not_source_of_truth": true,
-    "no_raw_logs": true,
-    "no_private_paths": true,
-    "no_private_ids": true
+    "allowed_refs": [
+      "public HTTPS URLs",
+      "repo-relative artifact paths",
+      "redacted private-unavailable metadata"
+    ],
+    "blocked_refs": [
+      "local absolute paths",
+      "file URIs",
+      "private board links",
+      "chat ids",
+      "raw private evidence",
+      "secrets or credential-looking values"
+    ],
+    "raw_private_payload_included": false
   },
-  "continuation": "Use the canonical card, gate report and lane contracts before continuing."
+  "state_flags": {
+    "request": true,
+    "approval": false,
+    "blocked": true,
+    "done": false,
+    "released": false,
+    "superseded": false,
+    "implemented": false,
+    "validated": false,
+    "integrated": false
+  },
+  "forbidden_actions": [
+    "mutate factory cards or runtime state from a snapshot",
+    "approve gates from projection state",
+    "mark issue complete from worker done alone",
+    "render raw private evidence",
+    "release or publish without later human/security gates"
+  ],
+  "next_safe_action": {
+    "action_type": "refresh",
+    "label": "Replace manual estimate with current structured runtime export before done/release claims.",
+    "source_refs": [
+      "GATE-REPORT",
+      "FIXTURE-TEMPLATE"
+    ],
+    "forbidden_action_taken": false
+  },
+  "validation_expectations": {
+    "expected_fixture_validator": "pass",
+    "evidence_ref_public_safety_expected": "pass",
+    "fail_closed_required": true,
+    "required_assertions": [
+      "schema fields present",
+      "template does not claim runtime completion",
+      "next action preserves gate boundaries"
+    ]
+  }
 }

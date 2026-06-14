@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-help.schema.json",
+  "title": "Factory Help Next Action",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "card_id",
+    "phase",
+    "workflow_phase",
+    "gate_status",
+    "truth_scope",
+    "factory_next_action",
+    "user_decision_required",
+    "blocked_because",
+    "blocked_actions",
+    "evidence_needed",
+    "required_workers",
+    "blocked_workers",
+    "source_refs",
+    "public_private_boundary",
+    "limits"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-help.schema.json" },
+    "record_type": { "const": "factory_help_next_action" },
+    "created_at": { "type": "string", "minLength": 1 },
+    "card_id": { "type": "string", "minLength": 1 },
+    "phase": { "type": "string", "minLength": 1 },
+    "workflow_phase": {
+      "type": "object",
+      "required": ["phase_id", "phase_name", "operator_visible_summary"],
+      "properties": {
+        "phase_id": { "type": "string", "minLength": 1 },
+        "phase_name": { "type": "string", "minLength": 1 },
+        "operator_visible_summary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "gate_status": { "type": "string", "minLength": 1 },
+    "truth_scope": { "enum": ["repo_only", "runtime_backed", "bounded_proof", "production_ready"] },
+    "factory_next_action": {
+      "type": "object",
+      "required": ["owner", "action", "why", "command_refs"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 },
+        "why": { "type": "string", "minLength": 1 },
+        "command_refs": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "user_decision_required": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["decision_type", "reason", "user_action", "factory_prepares"],
+        "properties": {
+          "decision_type": {
+            "enum": ["preference", "authority_required", "access_required", "risk_acceptance", "blocked"]
+          },
+          "reason": { "type": "string", "minLength": 1 },
+          "user_action": { "type": "string", "minLength": 1 },
+          "factory_prepares": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "blocked_because": { "type": "array", "items": { "type": "string" } },
+    "blocked_actions": { "type": "array", "items": { "type": "string" } },
+    "evidence_needed": { "type": "array", "items": { "type": "string" } },
+    "required_workers": { "type": "array", "items": { "type": "string" } },
+    "blocked_workers": { "type": "array", "items": { "type": "string" } },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["claim", "ref"],
+        "properties": {
+          "claim": { "type": "string", "minLength": 1 },
+          "ref": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["no_raw_logs", "no_private_paths", "no_private_ids", "projection_not_source_of_truth"],
+      "properties": {
+        "no_raw_logs": { "type": "boolean" },
+        "no_private_paths": { "type": "boolean" },
+        "no_private_ids": { "type": "boolean" },
+        "projection_not_source_of_truth": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "limits": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}
