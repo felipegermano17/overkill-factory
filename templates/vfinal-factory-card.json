@@ -3,7 +3,18 @@
   "card_id": "OF-VFINAL-001",
   "slice_id": "PRODUCT_SLICE_ID",
   "owner_profile": "factory-orchestrator",
-  "request_type": "feature",
+  "request_type": "product_new",
+  "canonical_product_sot_ref": "product_sot",
+  "scope_intent": "full_product",
+  "complete_product_required": true,
+  "current_execution_slice": "first safe execution slice only; not a Product SOT scope reduction",
+  "full_product_sot_scope_coverage_ref": "templates/full-product-sot-scope-coverage.json",
+  "specialist_research_plan_ref": "templates/specialist-research-plan.json",
+  "specialist_decision_packet_ref": "templates/specialist-decision-packet.json",
+  "production_promotion_ladder_ref": "templates/production-promotion-ladder.json",
+  "product_creation_plan_ref": "templates/product-creation-plan.json",
+  "product_context_packet_ref": "templates/product-context-packet.json",
+  "product_implementation_readiness_ref": "templates/product-implementation-readiness.json",
   "source_refs": ["source-ledger.md"],
   "source_state": "promoted",
   "outcome": "Describe the concrete result this card must produce.",
@@ -51,7 +62,7 @@
   },
   "product_sot": {
     "$schema": "https://overkill-factory.dev/schemas/product-sot.schema.json",
-    "what_it_is": "A short, concrete description of the product or slice.",
+    "what_it_is": "A short, concrete description of the complete product defined by the approved Product SOT.",
     "target_users": ["primary user or actor"],
     "why_it_matters": "Why this outcome is worth building now.",
     "outcome": "The result the product must create.",
@@ -66,6 +77,9 @@
     "cost_relevance": "No material spend, or named budget/cost boundary.",
     "operations_expected": ["how the product is expected to run or be supported"],
     "success_criteria": ["observable criterion for success"],
+    "full_product_sot_scope_coverage_ref": "templates/full-product-sot-scope-coverage.json",
+    "research_decision_refs": ["templates/specialist-decision-packet.json"],
+    "research_confirmations": ["research decisions that confirm or change Product SOT requirements"],
     "open_decisions": [],
     "evidence_refs": ["source-ledger.md"]
   },
@@ -77,6 +91,31 @@
     "required_plans": ["software_development_plan"],
     "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
     "waivers": [],
+    "canonical_scope_source": "approved Product SOT",
+    "scope_intent": "full_product",
+    "factory_route": "complete-product-production",
+    "required_factory_artifacts": [
+      "full_product_sot_scope_coverage",
+      "product_creation_plan",
+      "product_implementation_readiness"
+    ],
+    "engineering_method_matrix": [
+      {
+        "surface_or_component": "product core",
+        "methods": ["spec-first", "test-first"],
+        "reason": "Product SOT requirements need stable contracts and regression proof.",
+        "required_artifacts": ["spec_graph", "work_unit_contract"],
+        "evidence_required": ["tests pass", "worker result evidence"]
+      }
+    ],
+    "slice_execution_policy": {
+      "slices_are_execution_units_only": true,
+      "canonical_scope_must_not_shrink": true,
+      "first_slice_completion_is_not_product_completion": true
+    },
+    "production_route_decision": "Use the production promotion ladder when product intent reaches customers, production, mainnet or irreversible release.",
+    "research_decision_refs": ["templates/specialist-decision-packet.json"],
+    "research_route_impacts": ["research decisions may add gates, methods, workers or proof requirements"],
     "work_type": "feature",
     "selected_methods": ["spec-first"],
     "skipped_methods": [
@@ -172,7 +211,7 @@
   ],
   "software_development_plan": {
     "$schema": "https://overkill-factory.dev/schemas/software-development-plan.schema.json",
-    "work_units": ["one bounded implementation slice"],
+    "work_units": ["bounded implementation slice traced to Product SOT requirements"],
     "work_unit_contracts": ["templates/work-unit-contract.json"],
     "qa_plan": ["run the checks named in the card before done"],
     "review_plan": ["route review from changed surfaces and risk"],
@@ -187,7 +226,13 @@
     "acceptance_examples": ["Given/when/then or concrete acceptance scenario"],
     "stories": ["bounded user or system story"],
     "factory_cards": ["this card plus child cards when needed"],
-    "slice_plan": ["first executable slice"],
+    "full_product_plan": [
+      "map every meaningful Product SOT requirement to work, proof, blocker, deferred item, explicit non-goal or human decision"
+    ],
+    "slice_plan": ["first executable slice; this does not reduce Product SOT scope"],
+    "slice_execution_plan": [
+      "execute only ready slices whose work-unit contracts include verification, expected result, STOP conditions and evidence refs"
+    ],
     "test_plan": ["unit/integration/e2e checks that prove acceptance"],
     "security_architecture_ref": "security_contract or security_architecture_plan when required",
     "legacy_migration_decision": "not_needed",
@@ -397,12 +442,13 @@
   },
   "production_readiness_plan": {
     "$schema": "https://overkill-factory.dev/schemas/production-readiness-plan.schema.json",
-    "owner": "release-ops-worker",
-    "release_boundary": "no release from template",
-    "rollback": "revert bounded slice",
-    "health_checks": ["gate report", "verification output"],
+    "release_path": "staged release with explicit gate",
+    "rollback_path": "revert bounded slice or run the approved mitigation",
     "monitoring": ["incident/support plan"],
-    "human_approval": "required when release risk is material"
+    "incident_owner": "release-ops-worker",
+    "support_path": "documented support channel and escalation",
+    "production_promotion_ladder_ref": "templates/production-promotion-ladder.json",
+    "evidence_refs": ["templates/production-promotion-ladder.json"]
   },
   "incident_support_plan": {
     "$schema": "https://overkill-factory.dev/schemas/incident-support-plan.schema.json",
@@ -446,8 +492,27 @@
   },
   "completion_audit": {
     "$schema": "https://overkill-factory.dev/schemas/completion-audit.schema.json",
-    "result": "PENDING",
-    "blocking_findings": ["execution has not run in template"],
+    "promised": ["complete Product SOT scope remains authoritative"],
+    "delivered": ["template only; execution has not run"],
+    "verified": ["gate report must run before execution"],
+    "reviewed": ["independent review required before done"],
+    "residual_risk": ["worker execution still required"],
+    "decision": "block",
+    "sot_claim_results": [
+      {
+        "claim_ref": "product-sot#scope-in-001",
+        "status": "BLOCKED",
+        "owner": "product-owner",
+        "evidence_refs": ["templates/full-product-sot-scope-coverage.json"]
+      }
+    ],
+    "method_execution_results": [
+      {
+        "method": "spec-first",
+        "status": "BLOCKED",
+        "evidence_refs": ["templates/method-contract.json"]
+      }
+    ],
     "evidence_refs": ["templates/vfinal-factory-card.json"]
   },
   "closure_summary": {

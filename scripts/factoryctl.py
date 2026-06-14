@@ -85,6 +85,22 @@ VFINAL_CORE_CONTRACTS = {
     "loop_plan",
 }
 
+PRODUCT_SCOPE_INTENTS = {"full_product", "child_slice"}
+PRODUCT_PLANNING_PHASES = {"F11", "F12", "F13", "F14", "F15", "F16", "F17"}
+PRODUCTION_SURFACES = {
+    "production",
+    "release",
+    "deploy",
+    "mainnet",
+    "staging",
+    "customers",
+    "customer-ready",
+    "monitoring",
+    "rollback",
+}
+COMPLETION_SOT_STATUSES = {"DONE", "BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"}
+COMPLETION_METHOD_STATUSES = {"EXECUTED", "WAIVED", "BLOCKED"}
+
 RECEIPT_REQUIRED = {
     "changed",
     "artifact_paths",
@@ -1141,6 +1157,227 @@ def _list_items(value: Any) -> list[str]:
     return [str(item).strip() for item in value if str(item).strip()]
 
 
+def _has_contract(data: dict[str, Any], field: str) -> bool:
+    value = data.get(field)
+    if isinstance(value, dict) and value:
+        return True
+    return _non_empty_text(data.get(f"{field}_ref"))
+
+
+def _has_ref_or_object(data: dict[str, Any], field: str) -> bool:
+    return _has_contract(data, field)
+
+
+def _product_planning_required(card: dict[str, Any]) -> bool:
+    request_type = str(card.get("request_type") or "").strip()
+    scope_intent = str(card.get("scope_intent") or "").strip()
+    method = card.get("method_contract") if isinstance(card.get("method_contract"), dict) else {}
+    method_scope = str(method.get("scope_intent") or "").strip()
+    return (
+        card.get("complete_product_required") is True
+        or request_type == "product_new"
+        or scope_intent in PRODUCT_SCOPE_INTENTS
+        or method_scope in PRODUCT_SCOPE_INTENTS
+    )
+
+
+def _production_ladder_required(card: dict[str, Any]) -> bool:
+    phase = str(card.get("phase") or "").upper()
+    surfaces = normalized_surfaces(card)
+    method = card.get("method_contract") if isinstance(card.get("method_contract"), dict) else {}
+    route = " ".join(
+        str(value or "")
+        for value in (
+            method.get("factory_route"),
+            method.get("production_route_decision"),
+            card.get("authority_max"),
+        )
+    ).lower()
+    return (
+        bool(surfaces & PRODUCTION_SURFACES)
+        or phase in {"F16", "F17"}
+        or "production" in route
+        or "mainnet" in route
+        or card.get("complete_product_required") is True
+    )
+
+
+def _research_required(card: dict[str, Any]) -> bool:
+    outcome = card.get("outcome_contract") if isinstance(card.get("outcome_contract"), dict) else {}
+    if outcome.get("discovery_depth") == "research_required":
+        return True
+    for lane in card_parallel_lane_contracts(card):
+        if str(lane.get("lane_kind") or "").strip().lower() == "research":
+            return True
+    return False
+
+
+def _selected_engineering_methods(method_contract: dict[str, Any]) -> set[str]:
+    methods = set(_list_items(method_contract.get("selected_methods")))
+    matrix = method_contract.get("engineering_method_matrix")
+    if isinstance(matrix, list):
+        for row in matrix:
+            if isinstance(row, dict):
+                methods.update(_list_items(row.get("methods")))
+    selected = str(method_contract.get("selected_method") or "").strip()
+    if selected:
+        methods.add(selected)
+    return methods
+
+
+def validate_product_scope_planning_contract(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    if not _product_planning_required(card):
+        return []
+
+    errors: list[str] = []
+    product_sot = card.get("product_sot") if isinstance(card.get("product_sot"), dict) else {}
+    method = card.get("method_contract") if isinstance(card.get("method_contract"), dict) else {}
+    software_plan = card.get("software_development_plan") if isinstance(card.get("software_development_plan"), dict) else {}
+
+    if not _has_ref_or_object(card, "full_product_sot_scope_coverage"):
+        errors.append("full_product_sot_scope_coverage or full_product_sot_scope_coverage_ref is required for complete Product SOT planning")
+    if not _non_empty_text(product_sot.get("full_product_sot_scope_coverage_ref")):
+        errors.append("product_sot.full_product_sot_scope_coverage_ref is required")
+    if str(method.get("canonical_scope_source") or "").strip().lower() not in {"approved product sot", "product_sot", "product sot"}:
+        errors.append("method_contract.canonical_scope_source must be approved Product SOT")
+    if str(method.get("scope_intent") or "").strip() not in PRODUCT_SCOPE_INTENTS:
+        errors.append("method_contract.scope_intent must be full_product or child_slice")
+    if not _non_empty_text(method.get("factory_route")):
+        errors.append("method_contract.factory_route is required")
+    required_artifacts = set(_list_items(method.get("required_factory_artifacts")))
+    for artifact in ("full_product_sot_scope_coverage", "product_creation_plan", "product_implementation_readiness"):
+        if artifact not in required_artifacts:
+            errors.append(f"method_contract.required_factory_artifacts must include {artifact}")
+    matrix = method.get("engineering_method_matrix")
+    if not isinstance(matrix, list) or not matrix:
+        errors.append("method_contract.engineering_method_matrix is required")
+    else:
+        for index, row in enumerate(matrix):
+            row = row if isinstance(row, dict) else {}
+            for field in ("surface_or_component", "reason"):
+                if not _non_empty_text(row.get(field)):
+                    errors.append(f"method_contract.engineering_method_matrix[{index}].{field} is required")
+            for field in ("methods", "required_artifacts", "evidence_required"):
+                if not _non_empty_string_list(row.get(field)):
+                    errors.append(f"method_contract.engineering_method_matrix[{index}].{field} must be non-empty")
+    slice_policy = method.get("slice_execution_policy") if isinstance(method.get("slice_execution_policy"), dict) else {}
+    if slice_policy.get("slices_are_execution_units_only") is not True:
+        errors.append("method_contract.slice_execution_policy.slices_are_execution_units_only must be true")
+    if slice_policy.get("canonical_scope_must_not_shrink") is not True:
+        errors.append("method_contract.slice_execution_policy.canonical_scope_must_not_shrink must be true")
+    if not _non_empty_text(method.get("production_route_decision")):
+        errors.append("method_contract.production_route_decision is required")
+    if not _non_empty_string_list(software_plan.get("full_product_plan")):
+        errors.append("software_development_plan.full_product_plan is required before slice execution")
+    if not _non_empty_string_list(software_plan.get("slice_execution_plan")):
+        errors.append("software_development_plan.slice_execution_plan is required")
+    if _non_empty_string_list(software_plan.get("slice_plan")) and not _non_empty_string_list(software_plan.get("full_product_plan")):
+        errors.append("software_development_plan.slice_plan cannot stand in for full_product_plan")
+    return errors
+
+
+def validate_specialist_research_contract(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    errors: list[str] = []
+    if _research_required(card) and not _has_ref_or_object(card, "specialist_research_plan"):
+        errors.append("specialist_research_plan or specialist_research_plan_ref is required when research_required is active")
+    decision = card.get("specialist_decision_packet") if isinstance(card.get("specialist_decision_packet"), dict) else {}
+    if decision:
+        if not _non_empty_string_list(decision.get("resolutions")):
+            errors.append("specialist_decision_packet.resolutions must turn research into an operational factory decision")
+        impacts = decision.get("impacts") if isinstance(decision.get("impacts"), dict) else {}
+        for field in ("sot", "architecture", "method_router", "gates", "proof"):
+            if field not in impacts:
+                errors.append(f"specialist_decision_packet.impacts.{field} is required")
+    return errors
+
+
+def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    if not _product_planning_required(card):
+        return []
+    errors: list[str] = []
+    if not _has_ref_or_object(card, "product_creation_plan"):
+        errors.append("product_creation_plan or product_creation_plan_ref is required before material product implementation")
+    if not _has_ref_or_object(card, "product_context_packet"):
+        errors.append("product_context_packet or product_context_packet_ref is required for product-specific implementation workers")
+    if not _has_ref_or_object(card, "product_implementation_readiness"):
+        errors.append("product_implementation_readiness or product_implementation_readiness_ref is required before material product implementation")
+
+    plan = card.get("product_creation_plan") if isinstance(card.get("product_creation_plan"), dict) else {}
+    if plan:
+        if plan.get("complete_product_required") is not True:
+            errors.append("product_creation_plan.complete_product_required must be true for complete-product planning")
+        if not _non_empty_string_list(plan.get("complete_product_scope")):
+            errors.append("product_creation_plan.complete_product_scope is required")
+        if not _non_empty_string_list(plan.get("release_promotion_ladder_refs")):
+            errors.append("product_creation_plan.release_promotion_ladder_refs is required")
+        work_units = plan.get("work_units")
+        if not isinstance(work_units, list) or not work_units:
+            errors.append("product_creation_plan.work_units must be non-empty")
+        else:
+            for index, unit in enumerate(work_units):
+                unit = unit if isinstance(unit, dict) else {}
+                for field in ("product_sot_requirement_refs", "scope_in", "scope_out", "verification", "stop_conditions"):
+                    if not _non_empty_string_list(unit.get(field)):
+                        errors.append(f"product_creation_plan.work_units[{index}].{field} must be non-empty")
+                if not _non_empty_text(unit.get("expected_result")):
+                    errors.append(f"product_creation_plan.work_units[{index}].expected_result is required")
+    context = card.get("product_context_packet") if isinstance(card.get("product_context_packet"), dict) else {}
+    if context and context.get("stale") is True:
+        errors.append("product_context_packet is stale and must be refreshed before implementation")
+    readiness = card.get("product_implementation_readiness") if isinstance(card.get("product_implementation_readiness"), dict) else {}
+    if readiness:
+        result = str(readiness.get("artifact_alignment_result") or "").strip().upper()
+        if result in {"FAIL", "BLOCKED"}:
+            errors.append("product_implementation_readiness.artifact_alignment_result blocks material implementation")
+        if result == "PASS" and not _non_empty_string_list(readiness.get("ready_work_units")):
+            errors.append("product_implementation_readiness PASS requires ready_work_units")
+    return errors
+
+
+def validate_production_promotion_ladder_contract(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+    if not _production_ladder_required(card):
+        return []
+    errors: list[str] = []
+    if not _has_ref_or_object(card, "production_promotion_ladder"):
+        errors.append("production_promotion_ladder or production_promotion_ladder_ref is required for production-intent products")
+    readiness = card.get("production_readiness_plan") if isinstance(card.get("production_readiness_plan"), dict) else {}
+    if readiness and not _non_empty_text(readiness.get("production_promotion_ladder_ref")):
+        errors.append("production_readiness_plan.production_promotion_ladder_ref is required")
+
+    ladder = card.get("production_promotion_ladder") if isinstance(card.get("production_promotion_ladder"), dict) else {}
+    if ladder:
+        environments = ladder.get("environments")
+        if not isinstance(environments, list) or not environments:
+            errors.append("production_promotion_ladder.environments must be non-empty")
+        else:
+            env_names = {str(item.get("environment") or "").strip().lower() for item in environments if isinstance(item, dict)}
+            if "production" in env_names and "local" not in env_names:
+                errors.append("production_promotion_ladder must include local proof before production")
+            if normalized_surfaces(card) & ONCHAIN_SURFACES:
+                for required_env in ("local", "devnet", "mainnet"):
+                    if required_env not in env_names:
+                        errors.append(f"onchain production ladder must include {required_env}")
+                policy = ladder.get("onchain_policy") if isinstance(ladder.get("onchain_policy"), dict) else {}
+                if policy.get("mainnet_authority_requires_human_gate") is not True:
+                    errors.append("onchain production ladder requires human mainnet authority policy")
+                if policy.get("post_mainnet_smoke_required") is not True:
+                    errors.append("onchain production ladder requires post-mainnet smoke policy")
+        promotion_policy = ladder.get("promotion_policy") if isinstance(ladder.get("promotion_policy"), dict) else {}
+        if promotion_policy.get("preproduction_proof_cannot_claim_production") is not True:
+            errors.append("production_promotion_ladder must forbid preproduction proof from claiming production readiness")
+        if promotion_policy.get("retest_after_promotion") is not True:
+            errors.append("production_promotion_ladder must require retest_after_promotion")
+    return errors
+
+
 def _status_value(value: Any) -> str:
     if isinstance(value, dict):
         return str(value.get("status") or "").strip().lower()
@@ -1431,6 +1668,10 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
             if field and field not in data:
                 errors.append(f"method_contract required plan {field} is missing from card")
 
+    errors.extend(validate_product_scope_planning_contract(data))
+    errors.extend(validate_specialist_research_contract(data))
+    errors.extend(validate_product_creation_readiness_contract(data))
+    errors.extend(validate_production_promotion_ladder_contract(data))
     return errors
 
 
@@ -1873,6 +2114,50 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_completion_audit_contract(card: dict[str, Any], audit: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    claim_results = audit.get("sot_claim_results")
+    if not isinstance(claim_results, list) or not claim_results:
+        errors.append("completion_audit.sot_claim_results is required")
+    else:
+        for index, item in enumerate(claim_results):
+            item = item if isinstance(item, dict) else {}
+            status = str(item.get("status") or "").strip().upper()
+            if not _non_empty_text(item.get("claim_ref")):
+                errors.append(f"completion_audit.sot_claim_results[{index}].claim_ref is required")
+            if status not in COMPLETION_SOT_STATUSES:
+                errors.append(
+                    f"completion_audit.sot_claim_results[{index}].status must be DONE, BLOCKED, DEFERRED_WITH_OWNER or OUT_OF_SCOPE"
+                )
+            if status in {"BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"} and not _non_empty_text(item.get("owner")):
+                errors.append(f"completion_audit.sot_claim_results[{index}].owner is required for non-DONE status")
+
+    method_results = audit.get("method_execution_results")
+    if not isinstance(method_results, list) or not method_results:
+        errors.append("completion_audit.method_execution_results is required")
+    else:
+        result_by_method = {
+            str(item.get("method") or "").strip(): str(item.get("status") or "").strip().upper()
+            for item in method_results
+            if isinstance(item, dict)
+        }
+        for index, item in enumerate(method_results):
+            item = item if isinstance(item, dict) else {}
+            status = str(item.get("status") or "").strip().upper()
+            if not _non_empty_text(item.get("method")):
+                errors.append(f"completion_audit.method_execution_results[{index}].method is required")
+            if status not in COMPLETION_METHOD_STATUSES:
+                errors.append(f"completion_audit.method_execution_results[{index}].status must be EXECUTED, WAIVED or BLOCKED")
+            if status == "BLOCKED":
+                errors.append(f"completion_audit method {item.get('method') or index} is still BLOCKED")
+
+        method_contract = card.get("method_contract") if isinstance(card.get("method_contract"), dict) else {}
+        for method in sorted(_selected_engineering_methods(method_contract)):
+            if method not in result_by_method:
+                errors.append(f"completion_audit missing method_execution_result for selected method {method}")
+    return errors
+
+
 def validate_completion(card: dict[str, Any], metadata: dict[str, Any]) -> list[str]:
     errors = validate_receipt(metadata)
     receipt = metadata.get("receipt_five") if isinstance(metadata.get("receipt_five"), dict) else {}
@@ -1886,6 +2171,11 @@ def validate_completion(card: dict[str, Any], metadata: dict[str, Any]) -> list[
             errors.append("product_face_result metadata is required for product-facing completion")
         else:
             errors.extend(validate_product_face_result_against_card(product_face, card))
+    audit = metadata.get("completion_audit")
+    if isinstance(audit, dict):
+        errors.extend(validate_completion_audit_contract(card, audit))
+    elif _product_planning_required(card):
+        errors.append("completion_audit is required for complete-product done promotion")
     return errors
 
 
@@ -2261,6 +2551,25 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "reasoning_policy": card.get("reasoning_policy"),
             "reference_quality_packet": card.get("reference_quality_packet"),
             "learning_proposal_refs": card.get("learning_proposal_refs", []),
+            "canonical_product_sot_ref": card.get("canonical_product_sot_ref") or "card.product_sot",
+            "product_creation_plan_ref": card.get("product_creation_plan_ref")
+            or ("card.product_creation_plan" if isinstance(card.get("product_creation_plan"), dict) else None),
+            "product_context_packet_ref": card.get("product_context_packet_ref")
+            or ("card.product_context_packet" if isinstance(card.get("product_context_packet"), dict) else None),
+            "product_implementation_readiness_ref": card.get("product_implementation_readiness_ref")
+            or (
+                "card.product_implementation_readiness"
+                if isinstance(card.get("product_implementation_readiness"), dict)
+                else None
+            ),
+            "specialist_research_plan_ref": card.get("specialist_research_plan_ref")
+            or ("card.specialist_research_plan" if isinstance(card.get("specialist_research_plan"), dict) else None),
+            "specialist_decision_packet_ref": card.get("specialist_decision_packet_ref")
+            or (
+                "card.specialist_decision_packet"
+                if isinstance(card.get("specialist_decision_packet"), dict)
+                else None
+            ),
         },
         "runtime_decision": runtime_decision,
         "output_contract": {

@@ -39,6 +39,22 @@ PRIVATE_MARKERS = re.compile(
     re.IGNORECASE,
 )
 SENSITIVE_LEARNING_ARTIFACTS = {"worker", "gate", "hook", "mcp_or_tool", "install_profile"}
+RESEARCH_RECORD_TYPES = {
+    "specialist_research_plan",
+    "specialist_decision_packet",
+    "product_context_packet",
+    "product_creation_plan",
+    "product_implementation_readiness",
+}
+RAW_RESEARCH_FIELDS = {
+    "raw_notes",
+    "paper_dump",
+    "source_dump",
+    "screenshot_path",
+    "conversation_history",
+    "local_capture_path",
+    "private_capture_path",
+}
 
 
 def load_json(path: Path) -> Any:
@@ -124,6 +140,24 @@ def validate_node(schema: dict[str, Any], value: Any, at: str) -> list[str]:
 
 def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
     errors: list[str] = []
+    if data.get("record_type") in RESEARCH_RECORD_TYPES:
+        serialized = json.dumps(data, sort_keys=True)
+        if PRIVATE_MARKERS.search(serialized):
+            errors.append(f"{at}: research/product planning artifacts must not publish private local or runtime refs")
+        present_raw_fields = sorted(field for field in RAW_RESEARCH_FIELDS if field in data)
+        if present_raw_fields:
+            errors.append(f"{at}: research/product planning artifacts must not contain raw dump fields: {', '.join(present_raw_fields)}")
+        if data.get("record_type") == "specialist_decision_packet":
+            if not data.get("resolutions"):
+                errors.append(f"{at}: specialist_decision_packet must resolve research into operational factory decisions")
+            impacts = data.get("impacts") if isinstance(data.get("impacts"), dict) else {}
+            for field in ("sot", "architecture", "method_router", "gates", "proof"):
+                if field not in impacts:
+                    errors.append(f"{at}: specialist_decision_packet impacts must include {field}")
+        if data.get("record_type") == "product_context_packet" and data.get("stale") is True:
+            errors.append(f"{at}: public product_context_packet template must not be stale")
+        if data.get("record_type") == "product_creation_plan" and data.get("complete_product_required") is not True:
+            errors.append(f"{at}: product_creation_plan must preserve complete product scope")
     if data.get("record_type") in {"security_scan_result", "auditor_result", "product_face_result"}:
         if data.get("result") == "WAIVED":
             waiver = data.get("waiver")

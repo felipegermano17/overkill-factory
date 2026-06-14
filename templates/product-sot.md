@@ -8,11 +8,18 @@
 
 ## Product Definition
 
-- Product:
+- Complete product:
 - User:
 - Core job:
 - Success criteria:
 - Non-goals:
+
+## Full Product Scope Coverage
+
+Link the `full_product_sot_scope_coverage` artifact here. Every meaningful SOT
+requirement must be mapped to planned work, blocker, deferred item with owner,
+explicit non-goal, human decision, or done proof before execution slices are
+treated as ready.
 
 ## Constraints
 

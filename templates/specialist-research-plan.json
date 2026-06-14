@@ -1,0 +1,22 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/specialist-research-plan.schema.json",
+  "record_type": "specialist_research_plan",
+  "research_id": "research-001",
+  "trigger_source": "outcome_contract.discovery_depth=research_required",
+  "research_question": "Which specialist decision must be made before architecture or decomposition?",
+  "decision_needed": "Decide which SOT, architecture, gate, method or proof requirements change because of this domain uncertainty.",
+  "specialist_owner": "source-ledger-worker",
+  "supporting_specialists": ["product-architect"],
+  "domain_surface": "product",
+  "allowed_sources": ["primary sources", "official docs", "standards", "operator-approved benchmark refs"],
+  "forbidden_sources": ["raw private notes", "private links", "screenshots with private data", "copyrighted source dumps"],
+  "source_quality_bar": "Use traceable primary or official sources before relying on summaries or generic search output.",
+  "freshness_requirement": "Refresh whenever the source, dependency, standard or product SOT materially changes.",
+  "copy_license_policy": "Do not copy source material unless license and allowed use are recorded in a reference packet.",
+  "expected_output_type": ["specialist_decision_packet", "SOT impact", "gate impact", "proof requirement"],
+  "stop_rule": "Stop when the decision can be made, explicitly blocked, deferred with owner, or escalated for human decision.",
+  "risk_if_skipped": "The factory may build a persuasive but unsupported plan that cannot prove the Product SOT.",
+  "public_safety_policy": "Publish only structured decisions and public-safe refs; keep raw notes and private captures outside the repo.",
+  "reference_quality_packet_refs": ["templates/reference-quality-packet.json"],
+  "evidence_refs": ["source-ledger.md"]
+}
