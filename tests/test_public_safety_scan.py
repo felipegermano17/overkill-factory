@@ -35,6 +35,18 @@ class PublicSafetyScanTest(unittest.TestCase):
 
         self.assertEqual(public_safety_scan.scan_text("tests/example.py", line), [])
 
+    def test_negative_fixture_guard_allows_declared_issue84_sample_only(self) -> None:
+        blocked_ref = '  "ref": "' + "C:" + "\\\\Users\\\\operator\\\\raw-evidence.json" + '"'
+
+        self.assertEqual(
+            public_safety_scan.scan_text(
+                "fixtures/issue-84/status-snapshot-v0/FX10-forbidden_evidence_ref_negative.json",
+                blocked_ref,
+            ),
+            [],
+        )
+        self.assertTrue(public_safety_scan.scan_text("fixtures/issue-84/status-snapshot-v0/FX01-current_success_projection.json", blocked_ref))
+
     def test_blocks_literal_whimsical_board_id_in_public_command(self) -> None:
         board_id = "XV" + "vfzk"
         findings = public_safety_scan.scan_text(
@@ -53,6 +65,7 @@ class PublicSafetyScanTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
+
     def test_allows_canonical_public_repo_url_only_in_metadata(self) -> None:
         owner = "feli" + "pegermano17"
         repo_url = f"https://github.com/{owner}/overkill-factory"
@@ -63,6 +76,11 @@ class PublicSafetyScanTest(unittest.TestCase):
         findings = public_safety_scan.scan_text("docs/example.md", f"See {repo_url}")
         self.assertTrue(findings)
         self.assertIn("private_owner_marker", findings[0])
+
+        mixed_line = f"repo_url: {repo_url} C:" + "\\Users\\operator"
+        findings = public_safety_scan.scan_text("mkdocs.yml", mixed_line)
+        self.assertTrue(findings)
+        self.assertIn("private_windows_path", findings[0])
 
     def test_generated_local_build_metadata_is_not_scanned(self) -> None:
         self.assertFalse(public_safety_scan.is_text_rel("overkill_factory.egg-info/PKG-INFO"))

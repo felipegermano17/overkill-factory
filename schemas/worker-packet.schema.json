@@ -221,6 +221,56 @@
         "last_hermes_smoke_ref": {
           "type": "string",
           "minLength": 3
+        },
+        "profile_readiness": {
+          "type": "object",
+          "required": [
+            "ledger_ref",
+            "readiness_state",
+            "current_runtime_claim",
+            "next_required_action"
+          ],
+          "properties": {
+            "ledger_ref": {
+              "type": "string",
+              "minLength": 3
+            },
+            "readiness_state": {
+              "enum": [
+                "contract_only",
+                "degraded_without_current_runtime_ledger",
+                "blocked",
+                "blocked_missing_readiness_ledger",
+                "current_profile_ready"
+              ]
+            },
+            "current_runtime_claim": {
+              "type": "boolean"
+            },
+            "smoke_result": {
+              "enum": ["PASS", "BLOCKED", "NOT_RUN"]
+            },
+            "eval_result": {
+              "enum": ["PASS", "BLOCKED", "NOT_RUN", "WAIVED"]
+            },
+            "checked_at": {
+              "type": "string",
+              "minLength": 10
+            },
+            "producer": {
+              "type": "string",
+              "minLength": 3
+            },
+            "packet_fixture_ref": {
+              "type": "string",
+              "minLength": 3
+            },
+            "next_required_action": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

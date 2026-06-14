@@ -12,6 +12,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -33,12 +35,23 @@ def default_work_root() -> Path:
 
 ROOT = default_work_root()
 PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
+PROFILE_READINESS_PATH = ROOT / "agents" / "worker-profile-readiness.public.json"
+PROFILE_READINESS_REF = "agents/worker-profile-readiness.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
 CANONICAL_RUNTIME_ENFORCEMENT_PATH = CODE_ROOT / "scripts" / "canonical_runtime_enforcement.py"
 DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
 DEFAULT_QUICKSTART_OUT = ROOT / ".tmp" / "quickstart-result.json"
 DEFAULT_PACKETS_OUT = ROOT / ".tmp" / "minimal-worker-packets"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
+DEFAULT_TRUTH_OUT = ROOT / ".tmp" / "factory-runs" / "truth" / "truth-packet.json"
+DEFAULT_EVIDENCE_GRAPH_OUT = ROOT / ".tmp" / "factory-runs" / "evidence" / "evidence-graph.json"
+DEFAULT_READINESS_LEDGER_OUT = ROOT / ".tmp" / "factory-runs" / "readiness" / "readiness-truth-ledger.json"
+DEFAULT_HERMES_EVIDENCE_OUT = ROOT / ".tmp" / "factory-runs" / "hermes-evidence" / "sanitized-package.json"
+DEFAULT_PREPILOT_CHECKLIST_OUT = ROOT / ".tmp" / "factory-runs" / "prepilot" / "loose-end-checklist.json"
+PRIVATE_RUNTIME_REF_RE = re.compile(
+    r"([A-Za-z]:[\\/]|\\\\|/home/|/Users/|/srv/|/var/|discord(app)?\.com|webhook|token|secret|guild[_-]?id|channel[_-]?id|message[_-]?id)",
+    re.IGNORECASE,
+)
 
 CARD_REQUIRED = {
     "factory_method_version",
@@ -754,6 +767,50 @@ def load_profile_bindings() -> dict[str, dict[str, Any]]:
     return loaded
 
 
+def load_profile_readiness_rows() -> dict[str, dict[str, Any]]:
+    if not PROFILE_READINESS_PATH.exists():
+        return {}
+    data = json.loads(PROFILE_READINESS_PATH.read_text(encoding="utf-8"))
+    default_record = data.get("default_record", {})
+    worker_rows = data.get("worker_readiness", {})
+    if not isinstance(default_record, dict) or not isinstance(worker_rows, dict):
+        return {}
+    rows: dict[str, dict[str, Any]] = {}
+    for worker_id, row in worker_rows.items():
+        if isinstance(row, dict):
+            rows[str(worker_id)] = {**default_record, **row, "worker_id": str(worker_id)}
+    return rows
+
+
+def profile_readiness_summary(worker_id: str) -> dict[str, Any]:
+    row = load_profile_readiness_rows().get(worker_id)
+    if not row:
+        return {
+            "ledger_ref": PROFILE_READINESS_REF,
+            "readiness_state": "blocked_missing_readiness_ledger",
+            "current_runtime_claim": False,
+            "next_required_action": "publish a public-safe worker profile readiness ledger before claiming profile readiness",
+        }
+    freshness = row.get("freshness_policy") if isinstance(row.get("freshness_policy"), dict) else {}
+    current_claim = freshness.get("current_runtime_claim") is True
+    readiness_state = str(row.get("readiness_state") or "blocked")
+    if readiness_state == "current_profile_ready":
+        next_action = "dispatch may use current profile readiness evidence"
+    else:
+        next_action = "run a fresh smoke and eval ledger before treating this profile as current runtime readiness"
+    return {
+        "ledger_ref": PROFILE_READINESS_REF,
+        "readiness_state": readiness_state,
+        "current_runtime_claim": current_claim,
+        "smoke_result": row.get("smoke_result"),
+        "eval_result": row.get("eval_result"),
+        "checked_at": row.get("checked_at"),
+        "producer": row.get("producer"),
+        "packet_fixture_ref": row.get("packet_fixture_ref"),
+        "next_required_action": next_action,
+    }
+
+
 def load_capability_packs() -> dict[str, dict[str, Any]]:
     if not CAPABILITY_PACKS_PATH.exists():
         return {}
@@ -884,6 +941,92 @@ def artifact_contract_for_refs(refs: list[str]) -> dict[str, Any]:
         ],
         "public_safe": all(bool(item.get("public_safe")) for item in classifications),
     }
+
+
+def public_safe_text(value: Any) -> bool:
+    return PRIVATE_RUNTIME_REF_RE.search(str(value or "")) is None
+
+
+def sanitize_slug(value: Any, *, fallback: str = "item") -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "-", str(value or "").strip()).strip("-._")
+    return cleaned[:80] or fallback
+
+
+def redact_private_text(value: Any) -> str:
+    text = str(value or "")
+    text = re.sub(r"[A-Za-z]:[\\/][^ \];,\"]+", "[redacted-private-ref]", text)
+    text = re.sub(r"/(?:home|Users|srv|var)/[^ \];,\"]+", "[redacted-private-ref]", text)
+    text = PRIVATE_RUNTIME_REF_RE.sub("[redacted-private-marker]", text)
+    return text
+
+
+def sanitize_public_ref(ref: Any) -> tuple[str, dict[str, Any] | None]:
+    value = str(ref or "").strip()
+    classification = classify_artifact_ref(value)
+    trusted_external_prefixes = (
+        "external:sanitized",
+        "external:operator",
+        "external:public",
+        "external:maintainer",
+        "external:source-card",
+        "external:memory",
+    )
+    if value.startswith("external:") and not value.startswith(trusted_external_prefixes):
+        classification = {**classification, "public_safe": False, "reason": "untrusted external ref requires explicit sanitized/operator/public prefix"}
+    if classification.get("public_safe") and public_safe_text(value):
+        return value, None
+    redacted = {
+        "ref": "redacted:private-runtime-ref",
+        "artifact_class": classification.get("artifact_class") or "private_run_evidence",
+        "reason": classification.get("reason") or "private runtime marker",
+    }
+    return redacted["ref"], {"raw_ref_redacted": True, **redacted}
+
+
+def blocker_economics_entry(
+    *,
+    blocker_id: str,
+    owner: str,
+    risk_controlled: str,
+    cost_time_class: str,
+    dependency: str,
+    smallest_safe_next_action: str,
+    mutation_risk: str,
+    route: str,
+    status: str = "blocked",
+    expiry: str = "until evidence changes",
+) -> dict[str, str]:
+    return {
+        "blocker_id": sanitize_slug(blocker_id, fallback="blocker"),
+        "owner": owner,
+        "risk_controlled": risk_controlled,
+        "cost_time_class": cost_time_class,
+        "dependency": dependency,
+        "smallest_safe_next_action": smallest_safe_next_action,
+        "mutation_risk": mutation_risk,
+        "route": route,
+        "expiry": expiry,
+        "status": status,
+    }
+
+
+def worker_blocker_economics(worker_id: str, status: str, reason: str) -> dict[str, str]:
+    worker = WORKERS[worker_id]
+    route = "human_approval" if worker_id == "human-gate-clerk" else "hermes"
+    action = f"run {worker_id} and attach {worker.output_field}"
+    if status.startswith("blocked_"):
+        action = f"provide missing inputs for {worker_id}, then rerun gate-report"
+    return blocker_economics_entry(
+        blocker_id=f"worker:{worker_id}:{status}",
+        owner=worker_id,
+        risk_controlled=reason or "required worker evidence",
+        cost_time_class="bounded_worker_run",
+        dependency=worker.output_field,
+        smallest_safe_next_action=action,
+        mutation_risk="none_without_explicit_worker_execution",
+        route=route,
+        status="blocked" if status.startswith("blocked_") else "actionable",
+    )
 
 
 def scan_result_passed(value: Any) -> bool:
@@ -2607,6 +2750,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "toolset_policy": profile_binding.get("toolset_policy"),
             "skill_install_ref": profile_binding.get("skill_install_ref"),
             "last_hermes_smoke_ref": profile_binding.get("last_hermes_smoke_ref"),
+            "profile_readiness": profile_readiness_summary(worker_id),
         }
     return packet
 
@@ -2617,6 +2761,7 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
     worker_rows: dict[str, dict[str, Any]] = {}
     required_workers: list[str] = []
     blocked_workers: list[str] = []
+    blocker_economics: list[dict[str, str]] = []
     for worker_id in WORKERS:
         required, reason = worker_required(worker_id, card)
         status = build_worker_packet(worker_id, card, Path("<memory>"))["status"]
@@ -2629,14 +2774,52 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         }
         if required:
             required_workers.append(worker_id)
+            if status == "requires_execution" or str(status).startswith("blocked_"):
+                blocker_economics.append(worker_blocker_economics(worker_id, str(status), reason))
         if str(status).startswith("blocked_"):
             blocked_workers.append(worker_id)
+    for index, error in enumerate(validation_errors, start=1):
+        blocker_economics.append(
+            blocker_economics_entry(
+                blocker_id=f"card-validation:{index}",
+                owner="operator",
+                risk_controlled="canonical card contract integrity",
+                cost_time_class="local_edit",
+                dependency="card_contract",
+                smallest_safe_next_action=error,
+                mutation_risk="local_repo_only",
+                route="local",
+            )
+        )
     if validation_errors or blocked_workers:
         gate_status = "blocked"
     elif required_workers:
         gate_status = "ready_for_worker_execution"
     else:
         gate_status = "pass_no_workers_required"
+    next_safe_actions: list[dict[str, str]] = []
+    seen_actions: set[tuple[str, str, str]] = set()
+    for worker_id, row in worker_rows.items():
+        if not row.get("required"):
+            continue
+        status = str(row.get("status") or "")
+        if status not in {"requires_execution"} and not status.startswith("blocked_"):
+            continue
+        guidance_items = list(row.get("unblock_guidance", []))
+        if status == "requires_execution" and not guidance_items:
+            guidance_items.append(
+                {
+                    "field": WORKERS[worker_id].output_field,
+                    "action": f"execute {worker_id} and attach a valid {WORKERS[worker_id].output_field}",
+                    "authority": "assigned worker must produce evidence; operator may only route or approve where explicitly required",
+                }
+            )
+        for guidance in guidance_items:
+            key = (worker_id, str(guidance.get("field") or ""), str(guidance.get("action") or ""))
+            if key in seen_actions:
+                continue
+            seen_actions.add(key)
+            next_safe_actions.append({"worker_id": worker_id, **guidance})
     return {
         "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
         "report_type": "factory_gate_preflight",
@@ -2655,11 +2838,8 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         "blocked_workers": blocked_workers,
         "card_validation_errors": validation_errors,
         "card_validation_warnings": validation_warnings,
-        "next_safe_actions": [
-            guidance
-            for row in worker_rows.values()
-            for guidance in row.get("unblock_guidance", [])
-        ],
+        "blocker_economics": blocker_economics,
+        "next_safe_actions": next_safe_actions,
         "workers": worker_rows,
     }
 
@@ -3629,6 +3809,7 @@ def build_status_snapshot(
             "warnings": effective_gate_report.get("card_validation_warnings", []),
         },
         "blockers": blockers,
+        "blocker_economics": effective_gate_report.get("blocker_economics", []),
         "evidence": {
             "receipt_five_status": "attached" if isinstance(card.get("receipt_five"), dict) else "not_attached",
             "evidence_refs": evidence,
@@ -3672,6 +3853,575 @@ def validate_status_snapshot(snapshot: dict[str, Any]) -> list[str]:
         if boundary.get(field) is not True:
             errors.append(f"factory_status_snapshot.public_private_boundary.{field} must be true")
     return errors
+
+
+def load_optional_json(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    try:
+        data = load_json_like(path)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def collect_worker_result_records(worker_results_dir: Path | None) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    if worker_results_dir is None or not worker_results_dir.exists():
+        return records
+    for path in sorted(worker_results_dir.glob("*.json")):
+        data = load_optional_json(path)
+        if not data:
+            continue
+        record_type = str(data.get("record_type") or "").strip()
+        if not record_type:
+            continue
+        current = records.get(record_type)
+        if current is None or str(data.get("created_at") or "") >= str(current.get("created_at") or ""):
+            records[record_type] = {**data, "_public_ref": source_card_ref(path)}
+    return records
+
+
+def graph_add_node(nodes: dict[str, dict[str, Any]], node: dict[str, Any]) -> None:
+    nodes[str(node["id"])] = node
+
+
+def graph_add_edge(edges: list[dict[str, str]], source: str, target: str, relation: str) -> None:
+    edges.append({"source": source, "target": target, "relation": relation})
+
+
+def build_evidence_graph(
+    card: dict[str, Any],
+    card_path: Path,
+    *,
+    gate_report: dict[str, Any] | None = None,
+    worker_results_dir: Path | None = None,
+    receipt_path: Path | None = None,
+    hermes_evidence_path: Path | None = None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    effective_gate = gate_report or build_gate_report(card)
+    worker_results = collect_worker_result_records(worker_results_dir)
+    receipt = load_optional_json(receipt_path)
+    hermes_package = load_optional_json(hermes_evidence_path)
+    nodes: dict[str, dict[str, Any]] = {}
+    edges: list[dict[str, str]] = []
+    findings: list[dict[str, str]] = []
+
+    card_id = str(card.get("card_id") or card.get("id") or "unknown-card")
+    graph_add_node(
+        nodes,
+        {
+            "id": "card",
+            "node_type": "factory_card",
+            "ref": source_card_ref(card_path),
+            "status": "PASS" if not validate_card(card) else "BLOCKED",
+            "evidence_level": "contract_exists",
+        },
+    )
+    for index, source in enumerate(_list_items(card.get("source_refs")), start=1):
+        safe_ref, finding = sanitize_public_ref(source)
+        node_id = f"source:{index}"
+        graph_add_node(
+            nodes,
+            {
+                "id": node_id,
+                "node_type": "source_input",
+                "ref": safe_ref,
+                "status": "PASS" if finding is None else "BLOCKED",
+                "evidence_level": "source_ref",
+            },
+        )
+        graph_add_edge(edges, node_id, "card", "defines")
+        if finding:
+            findings.append({"severity": "BLOCKED", "node_id": node_id, "message": redact_private_text(finding["reason"])})
+
+    gate_status = str(effective_gate.get("gate_status") or "missing")
+    graph_add_node(
+        nodes,
+        {
+            "id": "gate-report",
+            "node_type": "gate_report",
+            "ref": "factoryctl:gate-report",
+            "status": "PASS" if gate_status != "blocked" else "BLOCKED",
+            "evidence_level": "runtime_enforced",
+        },
+    )
+    graph_add_edge(edges, "card", "gate-report", "validated_by")
+
+    for worker_id in _list_items(effective_gate.get("required_workers")):
+        worker = WORKERS[worker_id]
+        packet_id = f"worker-packet:{worker_id}"
+        result_id = f"worker-result:{worker.output_field}"
+        graph_add_node(
+            nodes,
+            {
+                "id": packet_id,
+                "node_type": "worker_packet",
+                "ref": f"factoryctl:worker-packet:{worker_id}",
+                "status": "PASS",
+                "worker_id": worker_id,
+                "evidence_level": "runtime_enforced",
+            },
+        )
+        graph_add_edge(edges, "gate-report", packet_id, "requires")
+        result = worker_results.get(worker.output_field)
+        if result is None:
+            graph_add_node(
+                nodes,
+                {
+                    "id": result_id,
+                    "node_type": "worker_result",
+                    "ref": f"missing:{worker.output_field}",
+                    "status": "MISSING",
+                    "worker_id": worker_id,
+                    "evidence_level": "blocked_missing_evidence",
+                    "staleness": "missing",
+                },
+            )
+            findings.append(
+                {
+                    "severity": "BLOCKED",
+                    "node_id": result_id,
+                    "message": f"{worker.output_field} is missing",
+                }
+            )
+        else:
+            validation_errors = validate_worker_result_record(
+                result,
+                expected_field=worker.output_field,
+                expected_worker_id=worker_id,
+                card=card,
+                evidence_root=ROOT,
+            )
+            safe_validation_errors = [redact_private_text(error) for error in validation_errors]
+            result_status = str(result.get("result") or result.get("decision") or "UNKNOWN")
+            stale = bool(result.get("superseded_by") or result.get("active") is False)
+            graph_add_node(
+                nodes,
+                {
+                    "id": result_id,
+                    "node_type": "worker_result",
+                    "ref": str(result.get("_public_ref") or f"external:{worker.output_field}"),
+                    "status": "BLOCKED" if validation_errors or stale or result_status not in PROMOTION_PASS_RESULTS else "PASS",
+                    "worker_id": worker_id,
+                    "evidence_level": "worker_result",
+                    "staleness": "stale" if stale else "current",
+                    "validation_errors": safe_validation_errors,
+                },
+            )
+            for ref_index, ref in enumerate(_list_items(result.get("evidence_refs")), start=1):
+                safe_ref, finding = sanitize_public_ref(ref)
+                artifact_id = f"artifact:{worker.output_field}:{ref_index}"
+                graph_add_node(
+                    nodes,
+                    {
+                        "id": artifact_id,
+                        "node_type": "artifact_ref",
+                        "ref": safe_ref,
+                        "status": "PASS" if finding is None else "BLOCKED",
+                        "evidence_level": "artifact_ref",
+                    },
+                )
+                graph_add_edge(edges, result_id, artifact_id, "cites")
+                if finding:
+                    findings.append({"severity": "BLOCKED", "node_id": artifact_id, "message": redact_private_text(finding["reason"])})
+            if validation_errors:
+                findings.append(
+                    {
+                        "severity": "BLOCKED",
+                        "node_id": result_id,
+                        "message": "; ".join(safe_validation_errors),
+                    }
+                )
+        graph_add_edge(edges, packet_id, result_id, "expects")
+
+    if receipt_path is not None:
+        receipt_errors = validate_completion(card, receipt or {})
+        graph_add_node(
+            nodes,
+            {
+                "id": "receipt-five",
+                "node_type": "receipt_five",
+                "ref": source_card_ref(receipt_path),
+                "status": "PASS" if receipt and not receipt_errors else "BLOCKED",
+                "evidence_level": "receipt_five",
+                "validation_errors": receipt_errors,
+            },
+        )
+        graph_add_edge(edges, "gate-report", "receipt-five", "closed_by")
+        if receipt_errors:
+            findings.append({"severity": "BLOCKED", "node_id": "receipt-five", "message": "; ".join(receipt_errors)})
+
+    if hermes_evidence_path is not None:
+        package_result = str((hermes_package or {}).get("result") or "MISSING")
+        graph_add_node(
+            nodes,
+            {
+                "id": "hermes-evidence",
+                "node_type": "hermes_evidence_package",
+                "ref": source_card_ref(hermes_evidence_path),
+                "status": "PASS" if package_result == "PASS" else "BLOCKED",
+                "evidence_level": "live_hermes_summary",
+            },
+        )
+        graph_add_edge(edges, "gate-report", "hermes-evidence", "summarized_by")
+        if package_result != "PASS":
+            findings.append({"severity": "BLOCKED", "node_id": "hermes-evidence", "message": "Hermes evidence package is missing or blocked"})
+
+    blocked = any(item["severity"] == "BLOCKED" for item in findings)
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/evidence-graph.schema.json",
+        "record_type": "evidence_graph",
+        "created_at": created_at or utc_now(),
+        "target": {"card_id": card_id, "card_ref": source_card_ref(card_path)},
+        "result": "BLOCKED" if blocked else "PASS",
+        "nodes": list(nodes.values()),
+        "edges": edges,
+        "findings": findings,
+        "public_private_boundary": {
+            "public_safe_summary_only": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+        },
+        "limits": [
+            "Graph existence is not completion proof.",
+            "Private Hermes evidence remains operator-owned and is represented only by sanitized summaries.",
+        ],
+    }
+
+
+TRUTH_LEVEL_ORDER = [
+    "contract_exists",
+    "runtime_enforced",
+    "bounded_public_proof",
+    "live_hermes_proof",
+    "product_specific_proof",
+    "production_ready",
+]
+
+
+def readiness_component(
+    capability_id: str,
+    truth_level: str,
+    result: str,
+    evidence_refs: list[str],
+    next_required_action: str,
+) -> dict[str, Any]:
+    return {
+        "capability_id": capability_id,
+        "truth_level": truth_level,
+        "result": result,
+        "evidence_refs": evidence_refs,
+        "next_required_action": next_required_action,
+        "blocker_economics": []
+        if result == "PASS"
+        else [
+            blocker_economics_entry(
+                blocker_id=f"truth:{capability_id}",
+                owner="operator",
+                risk_controlled=f"{capability_id} cannot be over-claimed as a stronger truth layer",
+                cost_time_class="bounded_followup",
+                dependency=capability_id,
+                smallest_safe_next_action=next_required_action,
+                mutation_risk="none_without_operator_action",
+                route="local",
+            )
+        ],
+    }
+
+
+def build_readiness_truth_ledger(
+    card: dict[str, Any],
+    card_path: Path,
+    *,
+    evidence_graph: dict[str, Any] | None = None,
+    production_readiness: dict[str, Any] | None = None,
+    hermes_evidence: dict[str, Any] | None = None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    gate = build_gate_report(card)
+    card_ok = not validate_card(card)
+    graph_ok = bool(evidence_graph and evidence_graph.get("result") == "PASS")
+    hermes_ok = bool(hermes_evidence and hermes_evidence.get("result") == "PASS")
+    receipt_ok = bool(evidence_graph and any(node.get("id") == "receipt-five" and node.get("status") == "PASS" for node in evidence_graph.get("nodes", [])))
+    production_ok = bool(production_readiness and production_readiness.get("result") == "PASS")
+    components = [
+        readiness_component(
+            "card_contract",
+            "contract_exists",
+            "PASS" if card_ok else "BLOCKED",
+            [source_card_ref(card_path)],
+            "fix card contract and rerun factoryctl validate-card",
+        ),
+        readiness_component(
+            "gate_report",
+            "runtime_enforced",
+            "PASS" if gate.get("gate_status") != "blocked" else "BLOCKED",
+            ["factoryctl:gate-report"],
+            "fix blocked gate inputs and rerun factoryctl gate-report",
+        ),
+        readiness_component(
+            "evidence_graph",
+            "bounded_public_proof",
+            "PASS" if graph_ok else "BLOCKED",
+            ["factoryctl:evidence-graph"],
+            "supply missing worker results, receipts or sanitized Hermes evidence and rebuild the graph",
+        ),
+        readiness_component(
+            "hermes_evidence_package",
+            "live_hermes_proof",
+            "PASS" if hermes_ok else "BLOCKED",
+            ["factoryctl:export-hermes-evidence"],
+            "export a sanitized local Hermes evidence package from the operator-owned runtime",
+        ),
+        readiness_component(
+            "receipt_five",
+            "product_specific_proof",
+            "PASS" if receipt_ok else "BLOCKED",
+            ["receipt-five"],
+            "reconcile worker results and attach a valid Receipt Five",
+        ),
+        readiness_component(
+            "production_readiness",
+            "production_ready",
+            "PASS" if production_ok else "BLOCKED",
+            ["scripts/factory_production_readiness.py"],
+            "pass production readiness only after product-specific and live proof receipts exist",
+        ),
+    ]
+    passed_levels = [item["truth_level"] for item in components if item["result"] == "PASS"]
+    overall = passed_levels[-1] if passed_levels else "blocked_missing_evidence"
+    blockers = [item for component in components for item in component["blocker_economics"]]
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/readiness-truth-ledger.schema.json",
+        "record_type": "readiness_truth_ledger",
+        "created_at": created_at or utc_now(),
+        "target": {"card_id": card.get("card_id"), "card_ref": source_card_ref(card_path)},
+        "overall_truth_level": overall,
+        "production_ready": overall == "production_ready",
+        "classification_order": TRUTH_LEVEL_ORDER,
+        "components": components,
+        "blocker_economics": blockers,
+        "limits": [
+            "A PASS in one truth layer never implies PASS in a stronger layer.",
+            "Public-safe summaries do not replace private runtime evidence or human approval.",
+        ],
+    }
+
+
+def build_hermes_evidence_package(
+    *,
+    board: str,
+    workspace: Path,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    records: list[dict[str, Any]] = []
+    redactions: list[dict[str, str]] = []
+    if workspace.exists():
+        for index, path in enumerate(sorted(workspace.rglob("*.json")), start=1):
+            data = load_optional_json(path)
+            if not data:
+                continue
+            evidence_refs: list[str] = []
+            for ref in _list_items(data.get("evidence_refs")):
+                safe_ref, finding = sanitize_public_ref(ref)
+                evidence_refs.append(safe_ref)
+                if finding:
+                    redactions.append({"record_ref": f"external:hermes-record-{index}", "reason": finding["reason"]})
+            worker = data.get("worker") if isinstance(data.get("worker"), dict) else {}
+            card_ref_value = data.get("card_ref") if isinstance(data.get("card_ref"), dict) else {}
+            records.append(
+                {
+                    "record_ref": f"external:hermes-record-{index}",
+                    "record_type": str(data.get("record_type") or "unknown"),
+                    "card_id": str(card_ref_value.get("card_id") or data.get("card_id") or ""),
+                    "worker_id": str(worker.get("id") or data.get("worker_id") or ""),
+                    "result": str(data.get("result") or data.get("decision") or "UNKNOWN"),
+                    "created_at": str(data.get("created_at") or data.get("decision_at") or ""),
+                    "evidence_refs": evidence_refs,
+                }
+            )
+    state = "blocked"
+    if records:
+        record_types = {record["record_type"] for record in records}
+        if "release_ops_result" in record_types:
+            state = "release-ready"
+        elif any("receipt" in item for item in record_types):
+            state = "done"
+        elif any(record["worker_id"] or record["record_type"] != "unknown" for record in records):
+            state = "partially_executed"
+        else:
+            state = "planning"
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/hermes-evidence-package.schema.json",
+        "record_type": "hermes_evidence_package",
+        "created_at": created_at or utc_now(),
+        "result": "PASS" if workspace.exists() and records and not redactions else "BLOCKED",
+        "board_ref": f"board:{sanitize_slug(board, fallback='operator-board')}",
+        "workspace_ref": "external:operator-owned-hermes-workspace",
+        "evidence_level": "live_hermes_summary" if records else "missing",
+        "state": state,
+        "records": records,
+        "redaction_findings": redactions,
+        "missing_or_stale": [] if records else ["no JSON evidence records found in workspace"],
+        "public_private_boundary": {
+            "sanitized_summary_only": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+        },
+    }
+
+
+def build_prepilot_loose_end_checklist(
+    *,
+    evidence_graph: dict[str, Any] | None,
+    readiness_ledger: dict[str, Any] | None,
+    hermes_evidence: dict[str, Any] | None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    graph_ok = bool(evidence_graph)
+    ledger_ok = bool(readiness_ledger)
+    hermes_path_ok = bool(hermes_evidence)
+    items = [
+        {
+            "id": "evidence_graph_path",
+            "status": "closed" if graph_ok else "blocking",
+            "evidence_ref": "factoryctl:evidence-graph",
+            "next_action": "build evidence graph before pilot execution",
+        },
+        {
+            "id": "readiness_truth_levels",
+            "status": "closed" if ledger_ok else "blocking",
+            "evidence_ref": "factoryctl:readiness-ledger",
+            "next_action": "build readiness truth ledger before pilot execution",
+        },
+        {
+            "id": "hermes_evidence_import_path",
+            "status": "closed" if hermes_path_ok else "deferred",
+            "evidence_ref": "factoryctl:export-hermes-evidence",
+            "next_action": "export sanitized Hermes package when operator runtime exists",
+        },
+        {
+            "id": "tests_hermetic_against_tmp",
+            "status": "deferred",
+            "evidence_ref": "PR-121",
+            "next_action": "land the foundation hermeticity PR before claiming pilot completion",
+        },
+        {
+            "id": "blockers_next_smallest_safe_action",
+            "status": "closed" if readiness_ledger and readiness_ledger.get("blocker_economics") is not None else "blocking",
+            "evidence_ref": "readiness_ledger.blocker_economics",
+            "next_action": "include blocker economics in gate, readiness and completion reports",
+        },
+        {
+            "id": "production_evidence_expectations_known",
+            "status": "closed",
+            "evidence_ref": "factoryctl:truth",
+            "next_action": "keep Product Face, security, remote proof, human gate and release evidence explicit in the truth packet",
+        },
+        {
+            "id": "pilot_success_definition",
+            "status": "closed",
+            "evidence_ref": "readiness_ledger.overall_truth_level",
+            "next_action": "state whether the pilot proves repo-only, Hermes-backed, bounded product proof or production readiness",
+        },
+    ]
+    blocking = [item["id"] for item in items if item["status"] == "blocking"]
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/prepilot-loose-end-checklist.schema.json",
+        "record_type": "prepilot_loose_end_checklist",
+        "created_at": created_at or utc_now(),
+        "result": "BLOCKED" if blocking else "PASS_WITH_DEFERRED_ITEMS",
+        "items": items,
+        "blocking_items": blocking,
+        "pilot_completion_claim_allowed": not blocking and bool(evidence_graph and evidence_graph.get("result") == "PASS"),
+        "public_private_boundary": {
+            "no_private_product_evidence": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+        },
+    }
+
+
+def run_json_command(command: list[str]) -> dict[str, Any]:
+    try:
+        result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=20)  # nosec B603
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"available": False, "error": exc.__class__.__name__}
+    if result.returncode != 0:
+        return {"available": False, "error": "command_failed"}
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {"available": False, "error": "invalid_json"}
+    return {"available": True, "data": data}
+
+
+def run_text_command(command: list[str]) -> dict[str, Any]:
+    try:
+        result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=20)  # nosec B603
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"available": False, "error": exc.__class__.__name__, "text": ""}
+    return {
+        "available": result.returncode == 0,
+        "error": None if result.returncode == 0 else "command_failed",
+        "text": result.stdout.strip(),
+    }
+
+
+def build_truth_packet(
+    *,
+    target: str,
+    card: dict[str, Any],
+    card_path: Path,
+    issue: str | None = None,
+    pr: str | None = None,
+    worker_results_dir: Path | None = None,
+    hermes_evidence_path: Path | None = None,
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    branch = run_text_command(["git", "branch", "--show-current"])
+    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, text=True, capture_output=True)  # nosec B603
+    issue_state = run_json_command(["gh", "issue", "view", issue, "--json", "number,title,state"]) if issue else {"available": False}
+    pr_state = run_json_command(["gh", "pr", "view", pr, "--json", "number,title,state,isDraft"]) if pr else {"available": False}
+    hermes_package = load_optional_json(hermes_evidence_path)
+    graph = build_evidence_graph(card, card_path, worker_results_dir=worker_results_dir, hermes_evidence_path=hermes_evidence_path)
+    ledger = build_readiness_truth_ledger(card, card_path, evidence_graph=graph, hermes_evidence=hermes_package)
+    blockers = ledger.get("blocker_economics", [])
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-truth-packet.schema.json",
+        "record_type": "factory_truth_packet",
+        "created_at": created_at or utc_now(),
+        "target": sanitize_slug(target, fallback="factory-target"),
+        "repo": {
+            "branch": branch.get("text") or "unknown",
+            "dirty": bool(dirty.stdout.strip()),
+            "dirty_file_count": len([line for line in dirty.stdout.splitlines() if line.strip()]),
+        },
+        "github": {
+            "issue": issue_state,
+            "pr": pr_state,
+        },
+        "hermes": {
+            "mode": "sanitized_package" if hermes_package else "repo_only_degraded",
+            "status": (hermes_package or {}).get("result") or "DEGRADED",
+        },
+        "evidence_graph": graph,
+        "readiness_ledger": ledger,
+        "current_blockers": blockers,
+        "next_smallest_safe_action": blockers[0]["smallest_safe_next_action"] if blockers else "review and approve only after stronger evidence remains current",
+        "truth_level": ledger["overall_truth_level"],
+        "production_ready": ledger["production_ready"],
+        "public_private_boundary": {
+            "json_first": True,
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+        },
+    }
 
 
 def command_validate_card(args: argparse.Namespace) -> int:
@@ -3835,6 +4585,93 @@ def command_status_snapshot(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_evidence_graph(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    graph = build_evidence_graph(
+        card,
+        args.card,
+        gate_report=load_optional_json(args.gate_report),
+        worker_results_dir=args.worker_results_dir,
+        receipt_path=args.receipt,
+        hermes_evidence_path=args.hermes_evidence,
+    )
+    write_json(args.out, graph)
+    return 0 if graph["result"] == "PASS" else 1
+
+
+def command_readiness_ledger(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    graph = load_optional_json(args.evidence_graph)
+    readiness = load_optional_json(args.production_readiness)
+    hermes = load_optional_json(args.hermes_evidence)
+    ledger = build_readiness_truth_ledger(
+        card,
+        args.card,
+        evidence_graph=graph,
+        production_readiness=readiness,
+        hermes_evidence=hermes,
+    )
+    write_json(args.out, ledger)
+    return 0 if ledger["production_ready"] else 1
+
+
+def command_export_hermes_evidence(args: argparse.Namespace) -> int:
+    package = build_hermes_evidence_package(board=args.board, workspace=args.workspace)
+    write_json(args.out, package)
+    if args.md_out:
+        lines = [
+            "# Hermes Evidence Package",
+            "",
+            f"Result: `{package['result']}`",
+            f"State: `{package['state']}`",
+            f"Records: `{len(package['records'])}`",
+            "",
+            "This is a sanitized operator-owned summary. Raw Hermes evidence stays local.",
+            "",
+        ]
+        args.md_out.parent.mkdir(parents=True, exist_ok=True)
+        args.md_out.write_text("\n".join(lines), encoding="utf-8")
+    return 0 if package["result"] == "PASS" else 1
+
+
+def command_prepilot_checklist(args: argparse.Namespace) -> int:
+    checklist = build_prepilot_loose_end_checklist(
+        evidence_graph=load_optional_json(args.evidence_graph),
+        readiness_ledger=load_optional_json(args.readiness_ledger),
+        hermes_evidence=load_optional_json(args.hermes_evidence),
+    )
+    write_json(args.out, checklist)
+    return 0 if checklist["pilot_completion_claim_allowed"] else 1
+
+
+def command_truth(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    packet = build_truth_packet(
+        target=args.target,
+        card=card,
+        card_path=args.card,
+        issue=args.issue,
+        pr=args.pr,
+        worker_results_dir=args.worker_results_dir,
+        hermes_evidence_path=args.hermes_evidence,
+    )
+    write_json(args.out, packet)
+    if args.md_out:
+        lines = [
+            "# Factory Truth Packet",
+            "",
+            f"Target: `{packet['target']}`",
+            f"Truth level: `{packet['truth_level']}`",
+            f"Production ready: `{str(packet['production_ready']).lower()}`",
+            "",
+            f"Next action: {packet['next_smallest_safe_action']}",
+            "",
+        ]
+        args.md_out.parent.mkdir(parents=True, exist_ok=True)
+        args.md_out.write_text("\n".join(lines), encoding="utf-8")
+    return 0 if packet["production_ready"] else 1
+
+
 def command_doctor(args: argparse.Namespace) -> int:
     report = build_doctor_report(args.hermes_home)
     if args.json:
@@ -3976,6 +4813,48 @@ def build_parser() -> argparse.ArgumentParser:
     status_snapshot_parser.add_argument("--evidence-ref", action="append")
     status_snapshot_parser.add_argument("--out", type=Path)
     status_snapshot_parser.set_defaults(func=command_status_snapshot)
+
+    evidence_graph_parser = sub.add_parser("evidence-graph")
+    evidence_graph_parser.add_argument("--card", type=Path, required=True)
+    evidence_graph_parser.add_argument("--gate-report", type=Path)
+    evidence_graph_parser.add_argument("--worker-results-dir", type=Path)
+    evidence_graph_parser.add_argument("--receipt", type=Path)
+    evidence_graph_parser.add_argument("--hermes-evidence", type=Path)
+    evidence_graph_parser.add_argument("--out", type=Path, default=DEFAULT_EVIDENCE_GRAPH_OUT)
+    evidence_graph_parser.set_defaults(func=command_evidence_graph)
+
+    readiness_ledger_parser = sub.add_parser("readiness-ledger")
+    readiness_ledger_parser.add_argument("--card", type=Path, required=True)
+    readiness_ledger_parser.add_argument("--evidence-graph", type=Path)
+    readiness_ledger_parser.add_argument("--production-readiness", type=Path)
+    readiness_ledger_parser.add_argument("--hermes-evidence", type=Path)
+    readiness_ledger_parser.add_argument("--out", type=Path, default=DEFAULT_READINESS_LEDGER_OUT)
+    readiness_ledger_parser.set_defaults(func=command_readiness_ledger)
+
+    export_hermes_parser = sub.add_parser("export-hermes-evidence")
+    export_hermes_parser.add_argument("--board", required=True)
+    export_hermes_parser.add_argument("--workspace", type=Path, required=True)
+    export_hermes_parser.add_argument("--out", type=Path, default=DEFAULT_HERMES_EVIDENCE_OUT)
+    export_hermes_parser.add_argument("--md-out", type=Path)
+    export_hermes_parser.set_defaults(func=command_export_hermes_evidence)
+
+    prepilot_parser = sub.add_parser("prepilot-checklist")
+    prepilot_parser.add_argument("--evidence-graph", type=Path)
+    prepilot_parser.add_argument("--readiness-ledger", type=Path)
+    prepilot_parser.add_argument("--hermes-evidence", type=Path)
+    prepilot_parser.add_argument("--out", type=Path, default=DEFAULT_PREPILOT_CHECKLIST_OUT)
+    prepilot_parser.set_defaults(func=command_prepilot_checklist)
+
+    truth_parser = sub.add_parser("truth")
+    truth_parser.add_argument("--target", required=True)
+    truth_parser.add_argument("--card", type=Path, required=True)
+    truth_parser.add_argument("--issue")
+    truth_parser.add_argument("--pr")
+    truth_parser.add_argument("--worker-results-dir", type=Path)
+    truth_parser.add_argument("--hermes-evidence", type=Path)
+    truth_parser.add_argument("--out", type=Path, default=DEFAULT_TRUTH_OUT)
+    truth_parser.add_argument("--md-out", type=Path)
+    truth_parser.set_defaults(func=command_truth)
 
     return parser
 
