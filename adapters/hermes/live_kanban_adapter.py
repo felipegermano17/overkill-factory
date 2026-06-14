@@ -24,7 +24,6 @@ Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 def default_runner(argv: list[str]) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.setdefault("HOME", str(Path.home()))
-    env.setdefault("HERMES_HOME", env["HOME"])
     return subprocess.run(argv, text=True, capture_output=True, env=env)  # nosec B603
 
 
@@ -124,7 +123,7 @@ def ensure_blocked_event(
     runner: Runner = default_runner,
 ) -> None:
     run_checked(
-        hermes_kanban(hermes_bin, board, "block", task_id, "--reason", reason, "--json"),
+        hermes_kanban(hermes_bin, board, "block", task_id, reason),
         runner,
     )
     shown = run_checked(hermes_kanban(hermes_bin, board, "show", task_id, "--json"), runner)
@@ -253,6 +252,23 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
     )
     plan = result["plan"]
     card_id = str(plan.get("event", {}).get("card_id") or card_path.stem)
+    if args.dry_run:
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "materialize",
+            "dry_run": True,
+            "board": args.board,
+            "board_created": False,
+            "board_create_requested": bool(args.ensure_board),
+            "board_create_checked": False,
+            "main_task_id": None,
+            "worker_task_ids": {},
+            "hook": result,
+        }
+        if args.out:
+            write_json(args.out, envelope)
+        return envelope
+
     board_created = False
     if args.ensure_board:
         board_created = ensure_board(
@@ -261,21 +277,6 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
             default_workdir=str(ROOT),
             runner=runner,
         )
-
-    if args.dry_run:
-        envelope = {
-            "$schema": LIVE_ADAPTER_SCHEMA,
-            "mode": "materialize",
-            "dry_run": True,
-            "board": args.board,
-            "board_created": board_created,
-            "main_task_id": None,
-            "worker_task_ids": {},
-            "hook": result,
-        }
-        if args.out:
-            write_json(args.out, envelope)
-        return envelope
 
     readiness_blockers = route_readiness_blockers(
         args.route_readiness,

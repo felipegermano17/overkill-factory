@@ -150,6 +150,27 @@
     "reusable_for_product": {
       "type": "boolean"
     },
+    "evidence_provenance": {
+      "type": "object",
+      "description": "Structured provenance for production-strict file-backed evidence.",
+      "properties": {
+        "producer": { "type": "string", "minLength": 2 },
+        "captured_at": { "type": "string", "minLength": 10 },
+        "source_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "artifact_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "integrity": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "waiver": {
       "type": "object",
       "required": [
