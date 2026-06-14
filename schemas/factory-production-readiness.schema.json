@@ -9,6 +9,7 @@
     "summary",
     "components",
     "blocking_items",
+    "blocker_economics",
     "attention_items",
     "evidence_refs",
     "next_required_actions",
@@ -49,6 +50,25 @@
     "blocking_items": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
+    },
+    "blocker_economics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "blocker_id",
+          "owner",
+          "risk_controlled",
+          "cost_time_class",
+          "dependency",
+          "smallest_safe_next_action",
+          "mutation_risk",
+          "route",
+          "expiry",
+          "status"
+        ],
+        "additionalProperties": true
+      }
     },
     "attention_items": {
       "type": "array",

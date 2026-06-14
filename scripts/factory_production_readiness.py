@@ -70,6 +70,21 @@ def component(component_id: str, path: Path, expected_pass: bool = True) -> dict
     }
 
 
+def blocker_economics_entry(component_id: str, reason: str | None, action: str) -> dict[str, str]:
+    return {
+        "blocker_id": f"readiness:{component_id}",
+        "owner": "operator",
+        "risk_controlled": reason or "production readiness evidence is missing or blocked",
+        "cost_time_class": "bounded_validation_run",
+        "dependency": component_id,
+        "smallest_safe_next_action": action,
+        "mutation_risk": "none_read_only",
+        "route": "local",
+        "expiry": "until readiness evidence changes",
+        "status": "blocked",
+    }
+
+
 def build_readiness(
     *,
     prepilot_master_path: Path = DEFAULT_PREPILOT_MASTER,
@@ -82,6 +97,7 @@ def build_readiness(
     public_worktree_path: Path = DEFAULT_PUBLIC_WORKTREE,
     public_head_path: Path = DEFAULT_PUBLIC_HEAD,
     public_origin_path: Path = DEFAULT_PUBLIC_ORIGIN,
+    evidence_graph_path: Path | None = None,
     created_at: str | None = None,
 ) -> dict[str, Any]:
     components = [
@@ -96,6 +112,8 @@ def build_readiness(
         component("public_safety_head", public_head_path),
         component("public_safety_origin_main", public_origin_path),
     ]
+    if evidence_graph_path is not None:
+        components.append(component("evidence_graph", evidence_graph_path))
 
     blocking_items: list[str] = []
     attention_items: list[str] = []
@@ -148,6 +166,26 @@ def build_readiness(
             "apply the explicit real-runtime update gate only after human approval",
         ]
 
+    action_by_component = {
+        "operator_control_tower_private_evidence_doctor": "replace private Control Tower placeholders with real runtime evidence",
+        "prepilot_master_task_readiness": "complete the 9-task prepilot readiness receipt",
+        "hermes_vfinal_runtime_status_check": "rerun and pass the public-safe read-only Hermes runtime status check",
+        "operator_control_tower_production_readiness": "run operator_control_tower_proof.py to create the production proof",
+        "hermes_real_runtime_update_preflight": "regenerate the complete Hermes update receipt and rerun the real-runtime update preflight",
+        "release_integration_preflight": "pass the release integration preflight",
+        "public_safety_origin_main": "integrate the public-safe worktree into the release ref and rerun public-safety scans",
+        "evidence_graph": "rebuild a PASS evidence graph from current worker results, receipts and sanitized Hermes evidence",
+    }
+    blocker_economics = [
+        blocker_economics_entry(
+            item["id"],
+            item.get("reason"),
+            action_by_component.get(item["id"], f"produce or refresh {item['id']} evidence"),
+        )
+        for item in components
+        if item["status"] in {"BLOCKED", "MISSING"}
+    ]
+
     evidence_refs = sorted({item["evidence_ref"] for item in components})
     readiness = {
         "$schema": "https://overkill-factory.dev/schemas/factory-production-readiness.schema.json",
@@ -157,6 +195,7 @@ def build_readiness(
         "summary": summary,
         "components": components,
         "blocking_items": sorted(set(blocking_items)),
+        "blocker_economics": blocker_economics,
         "attention_items": sorted(set(attention_items)),
         "evidence_refs": evidence_refs,
         "next_required_actions": next_required_actions,
@@ -173,12 +212,13 @@ def build_readiness(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--evidence-graph", type=Path)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    receipt = build_readiness()
+    receipt = build_readiness(evidence_graph_path=args.evidence_graph)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"result": receipt["result"], "out": repo_ref(args.out)}))
