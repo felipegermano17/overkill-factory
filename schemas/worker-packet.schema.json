@@ -225,6 +225,9 @@
       },
       "additionalProperties": false
     },
+    "agent_runtime_hardening_profile": {
+      "type": ["object", "null"]
+    },
     "status": {
       "enum": [
         "requires_execution",
