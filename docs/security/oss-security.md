@@ -15,6 +15,8 @@
   an SPDX SBOM when requested.
 - `scripts/secret_safety_scan.py` blocks obvious secrets.
 - `scripts/public_safety_scan.py` blocks private/public boundary leaks.
+- `secret_delivery_policy` and `agent_runtime_hardening_profile` describe how
+  material workers receive credentials and what runtime boundaries enforce.
 
 ## Local Check
 
@@ -29,3 +31,9 @@ python scripts/supply_chain_proof.py --check --no-write
 These checks protect the public repository. They do not prove that a user's
 product, Hermes runtime, production deployment, keys, wallets or cloud
 environment are secure.
+
+Passing `scripts/secret_safety_scan.py` means the scanned files did not contain
+known secret patterns. It does not prove that an autonomous worker received
+credentials safely at runtime. Material execution must use placeholder,
+simulator, user-mediated, JIT, signer or scoped-service delivery unless a real
+human-gated exception exists.

@@ -18,6 +18,12 @@
     "missing_capabilities": { "type": "array", "items": { "type": "string" } },
     "owner": { "type": "string", "minLength": 3 },
     "execution_limit": { "type": "string", "minLength": 3 },
+    "secret_delivery_status": { "type": "string", "minLength": 3 },
+    "secret_delivery_policy_ref": { "type": "string", "minLength": 3 },
+    "forbidden_secret_exposure": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
     "evidence_refs": { "type": "array", "items": { "type": "string" } }
   },
   "additionalProperties": true

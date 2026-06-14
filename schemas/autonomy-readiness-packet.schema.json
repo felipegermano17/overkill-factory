@@ -54,6 +54,36 @@
         "type": "string"
       }
     },
+    "secret_delivery_mode": {
+      "enum": [
+        "none",
+        "placeholder",
+        "simulator",
+        "user-mediated",
+        "jit_broker",
+        "vault_jit",
+        "hardware_signer",
+        "external_service",
+        "startup_env",
+        "runtime_file",
+        "prompt_context"
+      ]
+    },
+    "secret_delivery_policy_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "runtime_hardening_profile_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "runtime_hardening_evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
     "evidence_refs": {
       "type": "array",
       "items": {

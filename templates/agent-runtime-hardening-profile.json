@@ -1,0 +1,27 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/agent-runtime-hardening-profile.schema.json",
+  "record_type": "agent_runtime_hardening_profile",
+  "worker_id": "factory-orchestrator",
+  "runtime_kind": "hermes_profile",
+  "execution_mode": "bounded_execution",
+  "tool_surface": ["filesystem", "git", "shell"],
+  "filesystem_scope": "repo_write",
+  "network_scope": "allowlisted_egress",
+  "credential_exposure": "placeholder",
+  "secret_delivery_policy_ref": "templates/secret-delivery-policy.json",
+  "side_effect_policy": "bounded",
+  "sandbox_boundary": "process_user",
+  "identity_boundary": "factory-orchestrator profile binding",
+  "resource_limits": {
+    "timeout": "bounded by card runtime contract",
+    "cost": "no material spend"
+  },
+  "log_policy": "record commands and blocked actions with redaction; never log secrets",
+  "egress_policy": "allow public package/docs/test endpoints only unless card grants a narrower ref",
+  "mutation_policy": "repo-scoped edits only; no external runtime mutation without gate",
+  "rollback_or_kill_switch": "stop worker, revoke access ref and revert bounded slice",
+  "human_gate_triggers": ["production", "mainnet", "funds", "signing", "admin", "destructive", "startup_env", "runtime_file"],
+  "validation_commands": ["python scripts/factoryctl.py validate-card templates/vfinal-factory-card.json"],
+  "blocked_abuse_evidence_refs": ["external:blocked-prompt-injection-smoke"],
+  "evidence_refs": ["templates/agent-runtime-hardening-profile.json"]
+}
