@@ -1,0 +1,28 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/specialist-decision-packet.schema.json",
+  "record_type": "specialist_decision_packet",
+  "decision_id": "research-decision-001",
+  "research_plan_ref": "templates/specialist-research-plan.json",
+  "decision_summary": "The research pass produced an operational decision that changes planning, gates or proof.",
+  "claim_conflict_gap_ledger": [
+    {
+      "claim_id": "claim-001",
+      "classification": "accepted_decision",
+      "statement": "This claim is accepted only for the scope stated in the Product SOT.",
+      "status": "accepted",
+      "evidence_refs": ["templates/reference-source-registry.json"]
+    }
+  ],
+  "resolutions": ["product_sot_confirmation", "method_router_decision", "test_or_proof_requirement"],
+  "impacts": {
+    "sot": ["confirm or update Product SOT requirement refs"],
+    "architecture": ["record any trust boundary or tradeoff change"],
+    "method_router": ["select or adjust route and engineering methods"],
+    "gates": ["add any required gate or worker"],
+    "proof": ["add specific tests, audits, benchmarks or promotion checks"]
+  },
+  "unresolved_risk": [],
+  "human_decisions_required": [],
+  "public_safety_policy": "Store the decision and refs, not raw research material.",
+  "evidence_refs": ["templates/specialist-research-plan.json"]
+}

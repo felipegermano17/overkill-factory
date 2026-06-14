@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-truth-packet.schema.json",
+  "title": "Overkill Factory Truth Packet",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "target",
+    "repo",
+    "github",
+    "hermes",
+    "evidence_graph",
+    "readiness_ledger",
+    "current_blockers",
+    "next_smallest_safe_action",
+    "truth_level",
+    "production_ready",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-truth-packet.schema.json" },
+    "record_type": { "const": "factory_truth_packet" },
+    "created_at": { "type": "string", "minLength": 10 },
+    "target": { "type": "string", "minLength": 1 },
+    "repo": { "type": "object", "additionalProperties": true },
+    "github": { "type": "object", "additionalProperties": true },
+    "hermes": { "type": "object", "additionalProperties": true },
+    "evidence_graph": { "type": "object", "additionalProperties": true },
+    "readiness_ledger": { "type": "object", "additionalProperties": true },
+    "current_blockers": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "next_smallest_safe_action": { "type": "string", "minLength": 3 },
+    "truth_level": { "type": "string", "minLength": 3 },
+    "production_ready": { "type": "boolean" },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["json_first", "no_raw_logs", "no_private_paths", "no_private_ids"],
+      "properties": {
+        "json_first": { "const": true },
+        "no_raw_logs": { "const": true },
+        "no_private_paths": { "const": true },
+        "no_private_ids": { "const": true }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

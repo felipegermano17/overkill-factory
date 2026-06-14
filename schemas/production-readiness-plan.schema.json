@@ -3,13 +3,21 @@
   "$id": "https://overkill-factory.dev/schemas/production-readiness-plan.schema.json",
   "title": "Overkill Factory Production Readiness Plan",
   "type": "object",
-  "required": ["release_path", "rollback_path", "monitoring", "incident_owner", "support_path"],
+  "required": [
+    "release_path",
+    "rollback_path",
+    "monitoring",
+    "incident_owner",
+    "support_path",
+    "production_promotion_ladder_ref"
+  ],
   "properties": {
     "release_path": { "type": "string", "minLength": 3 },
     "rollback_path": { "type": "string", "minLength": 3 },
     "monitoring": { "type": "array", "items": { "type": "string" } },
     "incident_owner": { "type": "string", "minLength": 3 },
     "support_path": { "type": "string", "minLength": 3 },
+    "production_promotion_ladder_ref": { "type": "string", "minLength": 3 },
     "evidence_refs": { "type": "array", "items": { "type": "string" } }
   },
   "additionalProperties": true

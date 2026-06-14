@@ -1,0 +1,30 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-implementation-readiness.schema.json",
+  "record_type": "product_implementation_readiness",
+  "product_sot_ref": "templates/product-sot.json",
+  "method_contract_ref": "templates/method-contract.json",
+  "product_creation_plan_ref": "templates/product-creation-plan.json",
+  "artifact_alignment_result": "CONCERNS",
+  "requirements_trace": [
+    {
+      "requirement_ref": "product-sot#scope-in-001",
+      "work_unit_refs": ["work-unit-001"],
+      "proof_refs": ["test-plan#slice-001"],
+      "status": "mapped"
+    }
+  ],
+  "cross_slice_decision_coverage": ["architecture and method decisions are linked before implementation"],
+  "experience_trace": ["Product Experience refs are mapped when visible surfaces exist"],
+  "security_trace": ["security architecture or explicit non-applicability is recorded"],
+  "capability_pack_trace": ["required packs are ready or blocked"],
+  "access_and_secret_trace": ["required access is granted or blocked before execution"],
+  "proof_coverage": ["work units include verification commands and expected results"],
+  "stale_artifacts": [],
+  "contradictions": [],
+  "ready_work_units": ["work-unit-001"],
+  "blocked_work_units": [],
+  "human_decisions_required": [],
+  "allowed_next_actions": ["execute ready work units without changing canonical Product SOT scope"],
+  "forbidden_next_actions": ["claim complete product done from one bounded slice"],
+  "evidence_refs": ["templates/product-creation-plan.json"]
+}

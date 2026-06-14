@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -24,6 +25,40 @@ class CanonicalRuntimeEnforcementTest(unittest.TestCase):
         self.assertEqual(rulebook["record_type"], "canonical_runtime_rulebook")
         self.assertEqual(rulebook["summary"]["runtime_rules"], 1)
         self.assertEqual(rulebook["source_trace_ref"], "generated:fallback-vfinal-runtime-rulebook")
+
+    def test_default_rulebook_ignores_ambient_tmp_trace_unless_explicit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            trace = Path(tmp) / "canonical-linear-traceability.json"
+            trace.write_text(
+                json.dumps(
+                    {
+                        "checkpoints": [
+                            {
+                                "checkpoint_id": "explicit-trace",
+                                "sequence": 99,
+                                "canonical_heading": "Explicit trace only",
+                                "canonical_obligation": "Source evidence must be captured.",
+                                "implementation_status": "implemented_by_runtime",
+                                "implementation_refs": [],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            fallback = canonical_runtime_enforcement.default_rulebook()
+            explicit = canonical_runtime_enforcement.default_rulebook(trace)
+
+        self.assertEqual(fallback["source_trace_ref"], "generated:fallback-vfinal-runtime-rulebook")
+        self.assertEqual(explicit["rules"][0]["checkpoint_id"], "explicit-trace")
+
+    def test_explicit_missing_trace_is_not_silently_replaced(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            missing_trace = Path(tmp) / "missing-trace.json"
+
+            with self.assertRaises(FileNotFoundError):
+                canonical_runtime_enforcement.default_rulebook(missing_trace)
 
     def test_strict_vfinal_runtime_gate_blocks_missing_canonical_contracts(self) -> None:
         card = json.loads((ROOT / "templates" / "vfinal-factory-card.json").read_text(encoding="utf-8"))

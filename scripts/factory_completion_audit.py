@@ -78,6 +78,21 @@ def production_worker_result(rel_path: str, *, record_type: str | None = None) -
     return True
 
 
+def blocker_economics_entry(requirement: dict[str, Any]) -> dict[str, str]:
+    return {
+        "blocker_id": f"completion:{requirement['id']}",
+        "owner": "operator",
+        "risk_controlled": requirement["why_it_matters"],
+        "cost_time_class": "product_specific_validation",
+        "dependency": ",".join(requirement.get("expected_evidence_refs") or requirement.get("evidence_refs") or []),
+        "smallest_safe_next_action": requirement["next_action"],
+        "mutation_risk": "none_read_only",
+        "route": "local",
+        "expiry": "until completion evidence changes",
+        "status": "blocked",
+    }
+
+
 def production_cu_svm_economic_result(rel_path: str) -> bool:
     path = ROOT / rel_path
     if not path.exists():
@@ -687,6 +702,7 @@ def build_audit() -> dict[str, Any]:
         "requirements_blocking": len(blocking),
         "requirements": requirements,
         "blocking_summary": [item["id"] for item in blocking],
+        "blocker_economics": [blocker_economics_entry(item) for item in blocking],
         "policy_decision": (
             "Do not mark Overkill Factory as practical 10/10 until every blocking requirement has product-specific or provider-backed evidence."
             if blocking

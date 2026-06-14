@@ -1,0 +1,3504 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/issue-84-local-cockpit-ui-data.schema.json",
+  "created_at": "2026-06-14T12:28:35Z",
+  "metrics": {
+    "adapter_report_projections": 0,
+    "blocked_or_review_count": 17,
+    "current_state_counts": {
+      "blocked": 5,
+      "contradictory": 1,
+      "empty": 1,
+      "error": 1,
+      "loading": 1,
+      "manual_estimate": 1,
+      "missing": 1,
+      "missing-gate": 2,
+      "private_unavailable": 1,
+      "security_negative": 1,
+      "stale": 1,
+      "success": 1,
+      "superseded": 1
+    },
+    "raw_private_payload_count": 0,
+    "review_state_counts": {
+      "blocked": 9,
+      "failed": 1,
+      "missing": 3,
+      "passed": 1,
+      "pending": 2,
+      "stale": 1,
+      "superseded": 1
+    },
+    "state_ui_counts": {
+      "blocked_gate": 11,
+      "contradictory_state": 1,
+      "empty_no_snapshots": 1,
+      "input_error_or_parse_failure": 1,
+      "loading_snapshot": 1,
+      "private_evidence_unavailable": 1,
+      "stale_snapshot": 1,
+      "success_current_snapshot": 1
+    },
+    "status_fixture_projections": 18,
+    "total_snapshots": 18
+  },
+  "policy": {
+    "approval_claims_blocked": [
+      "worker_done is not reviewer approval",
+      "reviewer PASS is not human gate approval",
+      "Product Face packet is not Product Face result",
+      "local cockpit implementation is not release or issue completion"
+    ],
+    "external_fetch_allowed": false,
+    "forbidden_actions": [
+      "gate_approval",
+      "product_face_result_self_acceptance",
+      "runtime_mutation",
+      "card_state_mutation",
+      "mutation_endpoint",
+      "release",
+      "deployment",
+      "public_promotion",
+      "external_mutation",
+      "github_push_or_pr",
+      "secret_access",
+      "discord_runtime_use",
+      "raw_private_evidence_publication",
+      "public_server_binding",
+      "issue_completion_approval"
+    ],
+    "issue_completion_claim_allowed": false,
+    "product_face_result_self_acceptance": false,
+    "projection_only": true,
+    "public_binding_allowed": false,
+    "read_only_local_surface": true,
+    "runtime_mutation_allowed": false
+  },
+  "product_face": {
+    "accepted_reference_directions": [],
+    "anti_generic_criteria": [
+      "Every visible metric/card must tie to a factory object, gate, worker, receipt, evidence ref or next safe action."
+    ],
+    "density": "high-density desktop; mobile triage-first cards",
+    "interaction_style": "read-only inspection, drill-down, filter/search, timeline replay and evidence-ref expansion",
+    "job_to_be_done": "Understand phase, blockers, evidence refs and next safe action without private runtime.",
+    "mode": "reviewed Product Face packet unavailable in repo; use external reviewed packet summary",
+    "must_have": [
+      "visible source refs/provenance",
+      "clear next safe action",
+      "separate review/approval/done/release semantics"
+    ],
+    "must_not_have": [
+      "decorative KPIs",
+      "generic admin-dashboard labels",
+      "fake data implying gates passed"
+    ],
+    "proof_required": [
+      "desktop screenshot",
+      "mobile screenshot",
+      "state evidence",
+      "console error check",
+      "performance note"
+    ],
+    "rejected_reference_directions": [],
+    "required_states": [
+      "loading_snapshot",
+      "empty_no_snapshots",
+      "success_current_snapshot",
+      "input_error_or_parse_failure",
+      "blocked_gate",
+      "stale_snapshot",
+      "contradictory_state",
+      "private_evidence_unavailable",
+      "review_pending_failed_passed",
+      "long_dense_data"
+    ],
+    "source_ref": "external:reviewed-product-face-packet",
+    "surface": "local-first web cockpit",
+    "user": "Open-source operator supervising product-production work from local structured snapshots.",
+    "viewports": [
+      "desktop_1440x900",
+      "laptop_1280x800",
+      "mobile_390x844",
+      "mobile_360x800"
+    ],
+    "visual_tone": "serious, calm, exacting operations cockpit"
+  },
+  "product_face_review": {
+    "consume_scope": "blocked until independent Product Face packet review is available",
+    "is_product_face_result": false,
+    "may_consume_product_face_packet": false,
+    "source_ref": "external:product-face-packet-review",
+    "still_blocked": [
+      "Product Face Result evidence",
+      "release",
+      "issue completion"
+    ],
+    "verdict": "missing"
+  },
+  "record_type": "issue_84_local_cockpit_ui_data",
+  "snapshots": [
+    {
+      "adapter_current_state": "success",
+      "blockers": [],
+      "current_state": "success",
+      "density": {
+        "blocker_count": 0,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "current success projection",
+      "freshness_state": "current",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "passed",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX01",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX01-current_success_projection.json",
+      "next_safe_action": {
+        "action_type": "review",
+        "forbidden_action_taken": false,
+        "label": "Proceed to independent review packet; no runtime mutation is authorized.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX01-current_success_projection.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Proceed to independent review packet; no runtime mutation is authorized.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "passed"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": true,
+        "blocked": false,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": true
+      },
+      "state_ui": "success_current_snapshot",
+      "title": "Issue 84 StatusSnapshot v0 - current success projection",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "empty",
+      "blockers": [],
+      "current_state": "empty",
+      "density": {
+        "blocker_count": 0,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "empty state with no cards or runs",
+      "freshness_state": "current",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "pending",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX02",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX02-empty_no_cards_or_runs.json",
+      "next_safe_action": {
+        "action_type": "refresh",
+        "forbidden_action_taken": false,
+        "label": "Refresh canonical export or show empty state without implying completion.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX02-empty_no_cards_or_runs.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Refresh canonical export or show empty state without implying completion.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "pending"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": false,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "empty_no_snapshots",
+      "title": "Issue 84 StatusSnapshot v0 - empty state with no cards or runs",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "not_started",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "loading",
+      "blockers": [],
+      "current_state": "loading",
+      "density": {
+        "blocker_count": 0,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "loading snapshot refresh in progress",
+      "freshness_state": "loading",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "pending",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX03",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX03-loading_snapshot_refresh_in_progress.json",
+      "next_safe_action": {
+        "action_type": "refresh",
+        "forbidden_action_taken": false,
+        "label": "Keep loading state visible until the canonical export finishes.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX03-loading_snapshot_refresh_in_progress.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Keep loading state visible until the canonical export finishes.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "pending"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": false,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "loading_snapshot",
+      "title": "Issue 84 StatusSnapshot v0 - loading snapshot refresh in progress",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "running",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "error",
+      "blockers": [
+        {
+          "id": "B-ADAPTER-ERROR",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Adapter/export read failed.",
+          "unblock_condition": "repair export and rerun validators"
+        }
+      ],
+      "current_state": "error",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "adapter read error",
+      "freshness_state": "error",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "blocked",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX04",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX04-error_adapter_read_failed.json",
+      "next_safe_action": {
+        "action_type": "fix",
+        "forbidden_action_taken": false,
+        "label": "Fix the read-only adapter/export error before any acceptance claim.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX04-error_adapter_read_failed.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Fix the read-only adapter/export error before any acceptance claim.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "input_error_or_parse_failure",
+      "title": "Issue 84 StatusSnapshot v0 - adapter read error",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "failed",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "blocked",
+      "blockers": [
+        {
+          "id": "B-REVIEW-GATE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Required reviewer/human gate is not complete.",
+          "unblock_condition": "obtain scoped review or gate record"
+        }
+      ],
+      "current_state": "blocked",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "blocked waiting on human or reviewer",
+      "freshness_state": "current",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "blocked",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX05",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX05-blocked_waiting_human_or_reviewer.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block until independent reviewer or human gate resolves the blocker.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX05-blocked_waiting_human_or_reviewer.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block until independent reviewer or human gate resolves the blocker.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - blocked waiting on human or reviewer",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "stale",
+      "blockers": [
+        {
+          "id": "B-STALE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Snapshot is stale relative to source update.",
+          "unblock_condition": "refresh canonical status export"
+        }
+      ],
+      "current_state": "stale",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "stale observed or source-updated timestamp",
+      "freshness_state": "stale",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "stale",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX06",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX06-stale_observed_at_or_source_updated.json",
+      "next_safe_action": {
+        "action_type": "refresh",
+        "forbidden_action_taken": false,
+        "label": "Refresh stale snapshot from canonical sources before review.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX06-stale_observed_at_or_source_updated.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Refresh stale snapshot from canonical sources before review.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "stale"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-01T00:00:00Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "stale_snapshot",
+      "title": "Issue 84 StatusSnapshot v0 - stale observed or source-updated timestamp",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "missing",
+      "blockers": [
+        {
+          "id": "B-MISSING-EXPORT",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Canonical export is missing.",
+          "unblock_condition": "provide structured runtime/card export"
+        }
+      ],
+      "current_state": "missing",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "missing canonical export",
+      "freshness_state": "missing",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "missing",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX07",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX07-missing_canonical_export.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block until canonical runtime export is available.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX07-missing_canonical_export.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block until canonical runtime export is available.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "missing"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - missing canonical export",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "blocked",
+      "blockers": [
+        {
+          "id": "B-RECEIPT-FIVE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Worker done is not accepted without Receipt Five and review.",
+          "unblock_condition": "add Receipt Five and independent review result"
+        }
+      ],
+      "current_state": "blocked",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "worker done without Receipt Five or review",
+      "freshness_state": "current",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "missing",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX08",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX08-missing_receipt_five_or_review.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block done claim until Receipt Five and reviewer result are present.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX08-missing_receipt_five_or_review.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block done claim until Receipt Five and reviewer result are present.",
+        "reviewer_required": true,
+        "status": "missing",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "missing or incomplete Receipt Five must block done claims"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "missing"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": true,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - worker done without Receipt Five or review",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "security_negative",
+      "blockers": [
+        {
+          "id": "B-PRIVATE-EVIDENCE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Evidence is private/unavailable in public artifact.",
+          "unblock_condition": "provide public-safe metadata or redacted reason"
+        }
+      ],
+      "current_state": "private_unavailable",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "private_unavailable",
+          "id": "EV-PRIVATE-REDACTED",
+          "kind": "private_evidence",
+          "public_safety_state": "blocked",
+          "raw_payload_included": false,
+          "ref": "external:redacted-ref",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": "unsafe EvidenceRef source_refs were redacted",
+          "verification_status": "blocked"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "private evidence unavailable and redacted",
+      "freshness_state": "private_unavailable",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "blocked",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX09",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX09-private_evidence_unavailable_redacted.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block unsafe EvidenceRef values before cockpit projection.",
+        "source_refs": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "evidence_refs[0].source_refs[0]: redacted opaque (reference must be a public HTTPS URL, repo-relative artifact path, or source label)",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX09-private_evidence_unavailable_redacted.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block raw evidence rendering; show redacted metadata only.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "private_evidence_unavailable",
+      "title": "Issue 84 StatusSnapshot v0 - private evidence unavailable and redacted",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "security_negative",
+      "blockers": [
+        {
+          "id": "B-FORBIDDEN-EVIDENCE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Negative fixture carries a forbidden EvidenceRef for validator proof.",
+          "unblock_condition": "validator must reject the forbidden ref"
+        }
+      ],
+      "current_state": "security_negative",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-FORBIDDEN-LOCAL-PATH",
+          "kind": "worker_result",
+          "public_safety_state": "blocked",
+          "raw_payload_included": false,
+          "ref": "external:redacted-ref",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": "non-public or private-network URL denied",
+          "verification_status": "blocked"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "forbidden evidence ref negative case",
+      "freshness_state": "current",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "blocked",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX10",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX10-forbidden_evidence_ref_negative.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block unsafe EvidenceRef values before cockpit projection.",
+        "source_refs": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "evidence_refs[0].ref: redacted url (non-public or private-network URL denied)",
+          "evidence_refs[0].source_refs[0]: redacted opaque (reference must be a public HTTPS URL, repo-relative artifact path, or source label)",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX10-forbidden_evidence_ref_negative.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block unsafe EvidenceRef and fail public-safety validation.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - forbidden evidence ref negative case",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "blocked",
+      "blockers": [
+        {
+          "id": "B-PRODUCT-FACE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Product Face proof is pending.",
+          "unblock_condition": "produce Product Face Result with visual quality verdict"
+        }
+      ],
+      "current_state": "blocked",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 2,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "Product Face result pending",
+      "freshness_state": "current",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "product_face",
+          "label": "Product Face Result",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "pending",
+          "unblock_condition": "produce screenshots, state coverage, a11y, overlap and visual quality result"
+        }
+      ],
+      "id": "FX11",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX11-product_face_result_pending.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block UI acceptance until Product Face Result and visual quality review exist.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX11-product_face_result_pending.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block UI acceptance until Product Face Result and visual quality review exist.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - Product Face result pending",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "missing-gate",
+      "blockers": [
+        {
+          "id": "B-SECURITY-GATE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Security gates are missing for actual implementation.",
+          "unblock_condition": "rerun AppSec/public-safety/supply-chain gates"
+        }
+      ],
+      "current_state": "missing-gate",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 2,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "security gate missing blocks acceptance",
+      "freshness_state": "current",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "security_actual_diff",
+          "label": "Actual implementation security gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "missing",
+          "unblock_condition": "run security gates against actual implementation diff"
+        }
+      ],
+      "id": "FX12",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX12-security_gate_missing_blocks_acceptance.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block acceptance until AppSec/public-safety/supply-chain scans run on actual diff.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX12-security_gate_missing_blocks_acceptance.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block acceptance until AppSec/public-safety/supply-chain scans run on actual diff.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - security gate missing blocks acceptance",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "contradictory",
+      "blockers": [
+        {
+          "id": "B-CONTRADICTION",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Public issue state and merged support PR state conflict.",
+          "unblock_condition": "review canonical issue/gate state and supersede stale claims"
+        }
+      ],
+      "current_state": "contradictory",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-PR-91",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/pull/91",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        }
+      ],
+      "fixture_name": "contradictory merged PR while issue is reopened",
+      "freshness_state": "contradictory",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "blocked",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX13",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX13-contradictory_pr_merged_issue_reopened.json",
+      "next_safe_action": {
+        "action_type": "review",
+        "forbidden_action_taken": false,
+        "label": "Route contradiction to review; PR merge cannot imply issue completion.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "https://github.com/overkill-factory/overkill-factory/pull/91",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX13-contradictory_pr_merged_issue_reopened.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Route contradiction to review; PR merge cannot imply issue completion.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": true,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "contradictory_state",
+      "title": "Issue 84 StatusSnapshot v0 - contradictory merged PR while issue is reopened",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "missing-gate",
+      "blockers": [
+        {
+          "id": "B-MISSING-GATE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Required gate is absent.",
+          "unblock_condition": "provide gate record or keep blocked"
+        }
+      ],
+      "current_state": "missing-gate",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 2,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "missing required gate state",
+      "freshness_state": "missing",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "qa_verification",
+          "label": "QA verification gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "missing",
+          "unblock_condition": "run QA verification and independent review"
+        }
+      ],
+      "id": "FX14",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX14-missing_gate_state.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block until missing gate has explicit passed/failed/waived state.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX14-missing_gate_state.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block until missing gate has explicit passed/failed/waived state.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "missing"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - missing required gate state",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "superseded",
+      "blockers": [
+        {
+          "id": "B-SUPERSEDED",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Snapshot source has been superseded.",
+          "unblock_condition": "use superseding artifact and rerun validation"
+        }
+      ],
+      "current_state": "superseded",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "superseded artifact blocks claim",
+      "freshness_state": "superseded",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "superseded",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX15",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX15-superseded_artifact_blocks_claim.json",
+      "next_safe_action": {
+        "action_type": "review",
+        "forbidden_action_taken": false,
+        "label": "Review superseding artifact before using this snapshot.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX15-superseded_artifact_blocks_claim.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Review superseding artifact before using this snapshot.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "superseded"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": true,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - superseded artifact blocks claim",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "blocked",
+      "blockers": [
+        {
+          "id": "B-SOURCE-SYNC",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Source sync or clean worktree evidence is missing.",
+          "unblock_condition": "run source sync proof and record commit"
+        }
+      ],
+      "current_state": "blocked",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "source sync dirty or unverified",
+      "freshness_state": "manual_estimate",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "blocked",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX16",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX16-source_sync_dirty_or_unverified.json",
+      "next_safe_action": {
+        "action_type": "fix",
+        "forbidden_action_taken": false,
+        "label": "Reconcile clean worktree/source sync before local execution claims.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX16-source_sync_dirty_or_unverified.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Reconcile clean worktree/source sync before local execution claims.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - source sync dirty or unverified",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "manual_estimate",
+      "blockers": [
+        {
+          "id": "B-MANUAL-ESTIMATE",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Manual estimate is not canonical state.",
+          "unblock_condition": "refresh from structured runtime export"
+        }
+      ],
+      "current_state": "manual_estimate",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 3,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "manual estimate blocks done claim",
+      "freshness_state": "manual_estimate",
+      "gate_states": [
+        {
+          "id": "architecture",
+          "label": "Human architecture planning gate",
+          "owner": "factory-operator",
+          "source_refs": [
+            "HUMAN-GATE"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "documentation_os",
+          "label": "Documentation OS input",
+          "owner": "factory-operator",
+          "source_refs": [
+            "DOCS-OS"
+          ],
+          "state": "passed",
+          "unblock_condition": "none"
+        },
+        {
+          "id": "independent_review",
+          "label": "Independent implementation review",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "blocked",
+          "unblock_condition": "review actual implementation diff"
+        }
+      ],
+      "id": "FX17",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX17-manual_estimate_blocks_done_claim.json",
+      "next_safe_action": {
+        "action_type": "refresh",
+        "forbidden_action_taken": false,
+        "label": "Replace manual estimate with canonical export before done/release claims.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX17-manual_estimate_blocks_done_claim.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Replace manual estimate with canonical export before done/release claims.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "blocked"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - manual estimate blocks done claim",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    },
+    {
+      "adapter_current_state": "blocked",
+      "blockers": [
+        {
+          "id": "B-VISUAL-QUALITY",
+          "source_refs": [
+            "DOCS-OS",
+            "external:redacted-ref"
+          ],
+          "state": "active",
+          "summary": "Professional visual quality verdict failed.",
+          "unblock_condition": "fix UI quality and rerun Product Face review"
+        }
+      ],
+      "current_state": "blocked",
+      "density": {
+        "blocker_count": 1,
+        "evidence_count": 2,
+        "gate_count": 1,
+        "is_dense": false,
+        "worker_count": 1
+      },
+      "evidence_refs": [
+        {
+          "freshness_state": "current",
+          "id": "EV-ISSUE-84",
+          "kind": "public_url",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_public_api"
+        },
+        {
+          "freshness_state": "current",
+          "id": "EV-SCHEMA",
+          "kind": "schema",
+          "public_safety_state": "public_safe",
+          "raw_payload_included": false,
+          "ref": "schemas/factory-status-snapshot.schema.json",
+          "source_refs": [
+            "ISSUE-84"
+          ],
+          "unavailable_reason": null,
+          "verification_status": "verified_relative_artifact"
+        }
+      ],
+      "fixture_name": "mechanical Product Face pass but visual quality fail",
+      "freshness_state": "current",
+      "gate_states": [
+        {
+          "id": "product_face",
+          "label": "Product Face visual quality result",
+          "owner": "factory-operator",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "failed",
+          "unblock_condition": "redesign to meet professional cockpit reference bar"
+        }
+      ],
+      "id": "FX18",
+      "input_ref": "fixtures/issue-84/status-snapshot-v0/FX18-mechanical_product_face_pass_but_visual_quality_fail.json",
+      "next_safe_action": {
+        "action_type": "block",
+        "forbidden_action_taken": false,
+        "label": "Block generic dashboard quality despite mechanical checks passing.",
+        "source_refs": [
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "observed_at": "2026-06-14T03:30:00Z",
+      "phase": "F12/F13 first safe slice",
+      "public_private_boundary": {
+        "allowed_refs": [
+          "ISSUE-84",
+          "https://github.com/overkill-factory/overkill-factory/issues/84",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "external:redacted-ref",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "blocked_refs": [
+          "chat ids",
+          "file URIs",
+          "local absolute paths",
+          "private board links",
+          "raw private evidence",
+          "secrets or credential-looking values"
+        ],
+        "raw_private_payload_included": false
+      },
+      "receipt": {
+        "artifact_paths": [
+          "fixtures/issue-84/status-snapshot-v0/FX18-mechanical_product_face_pass_but_visual_quality_fail.json",
+          "schemas/factory-status-snapshot.schema.json"
+        ],
+        "next_action": "Block generic dashboard quality despite mechanical checks passing.",
+        "reviewer_required": true,
+        "status": "present",
+        "verification_commands": [
+          "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+          "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
+        ],
+        "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation"
+      },
+      "review": {
+        "executor_identity": "data-persistence-builder",
+        "required": true,
+        "reviewer_identity": "independent-reviewer",
+        "reviewer_result": "",
+        "status": "failed"
+      },
+      "risk_effective": "R2",
+      "source_kind": "status_fixture",
+      "source_updated_at": "2026-06-14T02:59:12Z",
+      "state_flags": {
+        "approval": false,
+        "blocked": true,
+        "done": false,
+        "implemented": false,
+        "integrated": false,
+        "released": false,
+        "request": true,
+        "superseded": false,
+        "validated": false
+      },
+      "state_ui": "blocked_gate",
+      "title": "Issue 84 StatusSnapshot v0 - mechanical Product Face pass but visual quality fail",
+      "traceability": {
+        "decision": [],
+        "inference": [],
+        "source": [
+          "ISSUE-84",
+          "PRODUCT-SOT",
+          "METHOD-CONTRACT",
+          "DOCS-OS",
+          "external:redacted-ref"
+        ]
+      },
+      "worker_state": [
+        {
+          "executor_identity": "data-persistence-builder",
+          "reviewer_identity": "independent-reviewer",
+          "source_refs": [
+            "external:redacted-ref"
+          ],
+          "state": "done",
+          "worker_id": "data-persistence-builder"
+        }
+      ]
+    }
+  ],
+  "source_inputs": {
+    "adapter_report_count": 0,
+    "normal_fetch_scope": "local-relative-json-only",
+    "product_face_independent_review": "external:product-face-packet-review",
+    "product_face_packet": "external:reviewed-product-face-packet",
+    "status_snapshot_fixture_count": 18,
+    "status_snapshot_fixture_dir": "fixtures/issue-84/status-snapshot-v0"
+  },
+  "state_registry": [
+    {
+      "demo_query": "?demo=loading",
+      "id": "loading_snapshot",
+      "label": "Loading snapshot",
+      "matches_current_states": [
+        "loading"
+      ],
+      "operator_meaning": "A local snapshot source is being read; no success metrics or approvals are inferred."
+    },
+    {
+      "demo_query": "?demo=empty",
+      "id": "empty_no_snapshots",
+      "label": "Empty / no snapshots",
+      "matches_current_states": [
+        "empty"
+      ],
+      "operator_meaning": "No canonical local snapshot is available; next action remains blocked/review."
+    },
+    {
+      "demo_query": "?state=success_current_snapshot",
+      "id": "success_current_snapshot",
+      "label": "Current success projection",
+      "matches_current_states": [
+        "success"
+      ],
+      "operator_meaning": "A reviewed local projection is current; still separate from release and issue-completion approval."
+    },
+    {
+      "demo_query": "?demo=error",
+      "id": "input_error_or_parse_failure",
+      "label": "Input error / parse failure",
+      "matches_current_states": [
+        "error"
+      ],
+      "operator_meaning": "The source could not be parsed or validated; the UI refuses to infer approvals from bad input."
+    },
+    {
+      "demo_query": "?state=blocked_gate",
+      "id": "blocked_gate",
+      "label": "Blocked gate",
+      "matches_current_states": [
+        "blocked",
+        "missing-gate",
+        "missing",
+        "manual_estimate",
+        "security_negative"
+      ],
+      "operator_meaning": "A gate/reviewer/human/security dependency is blocking progress with an explicit unblock condition."
+    },
+    {
+      "demo_query": "?state=stale_snapshot",
+      "id": "stale_snapshot",
+      "label": "Stale snapshot",
+      "matches_current_states": [
+        "stale"
+      ],
+      "operator_meaning": "Observed data is older than the source or explicitly stale; next safe action is refresh/review."
+    },
+    {
+      "demo_query": "?state=contradictory_state",
+      "id": "contradictory_state",
+      "label": "Contradictory state",
+      "matches_current_states": [
+        "contradictory"
+      ],
+      "operator_meaning": "Conflicting sources are shown side-by-side and are not collapsed into done/released."
+    },
+    {
+      "demo_query": "?state=private_evidence_unavailable",
+      "id": "private_evidence_unavailable",
+      "label": "Private evidence unavailable",
+      "matches_current_states": [
+        "private_unavailable"
+      ],
+      "operator_meaning": "Evidence is known only as redacted/unavailable metadata; raw private payloads are never displayed."
+    },
+    {
+      "demo_query": "?lane=review",
+      "id": "review_pending_failed_passed",
+      "label": "Review pending/failed/passed lane",
+      "matches_review_states": [
+        "missing",
+        "pending",
+        "failed",
+        "passed",
+        "blocked"
+      ],
+      "operator_meaning": "Worker done, reviewer result, human approval and release state are separate lanes."
+    },
+    {
+      "demo_query": "?density=long",
+      "id": "long_dense_data",
+      "label": "Long dense data",
+      "matches_density": "many cards, gates, blockers or evidence refs",
+      "operator_meaning": "Long gate/evidence/worker lists stay segmented and searchable without decorative KPIs."
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "success",
+      "label": "Issue 84 StatusSnapshot v0 - current success projection",
+      "next_action": "review",
+      "snapshot_id": "FX01",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX01-current_success_projection.json",
+      "state_ui": "success_current_snapshot"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "empty",
+      "label": "Issue 84 StatusSnapshot v0 - empty state with no cards or runs",
+      "next_action": "refresh",
+      "snapshot_id": "FX02",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX02-empty_no_cards_or_runs.json",
+      "state_ui": "empty_no_snapshots"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "loading",
+      "label": "Issue 84 StatusSnapshot v0 - loading snapshot refresh in progress",
+      "next_action": "refresh",
+      "snapshot_id": "FX03",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX03-loading_snapshot_refresh_in_progress.json",
+      "state_ui": "loading_snapshot"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "error",
+      "label": "Issue 84 StatusSnapshot v0 - adapter read error",
+      "next_action": "fix",
+      "snapshot_id": "FX04",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX04-error_adapter_read_failed.json",
+      "state_ui": "input_error_or_parse_failure"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "blocked",
+      "label": "Issue 84 StatusSnapshot v0 - blocked waiting on human or reviewer",
+      "next_action": "block",
+      "snapshot_id": "FX05",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX05-blocked_waiting_human_or_reviewer.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "stale",
+      "label": "Issue 84 StatusSnapshot v0 - stale observed or source-updated timestamp",
+      "next_action": "refresh",
+      "snapshot_id": "FX06",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX06-stale_observed_at_or_source_updated.json",
+      "state_ui": "stale_snapshot"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "missing",
+      "label": "Issue 84 StatusSnapshot v0 - missing canonical export",
+      "next_action": "block",
+      "snapshot_id": "FX07",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX07-missing_canonical_export.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "blocked",
+      "label": "Issue 84 StatusSnapshot v0 - worker done without Receipt Five or review",
+      "next_action": "block",
+      "snapshot_id": "FX08",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX08-missing_receipt_five_or_review.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "private_unavailable",
+      "label": "Issue 84 StatusSnapshot v0 - private evidence unavailable and redacted",
+      "next_action": "block",
+      "snapshot_id": "FX09",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX09-private_evidence_unavailable_redacted.json",
+      "state_ui": "private_evidence_unavailable"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "security_negative",
+      "label": "Issue 84 StatusSnapshot v0 - forbidden evidence ref negative case",
+      "next_action": "block",
+      "snapshot_id": "FX10",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX10-forbidden_evidence_ref_negative.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "blocked",
+      "label": "Issue 84 StatusSnapshot v0 - Product Face result pending",
+      "next_action": "block",
+      "snapshot_id": "FX11",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX11-product_face_result_pending.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "missing-gate",
+      "label": "Issue 84 StatusSnapshot v0 - security gate missing blocks acceptance",
+      "next_action": "block",
+      "snapshot_id": "FX12",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX12-security_gate_missing_blocks_acceptance.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "contradictory",
+      "label": "Issue 84 StatusSnapshot v0 - contradictory merged PR while issue is reopened",
+      "next_action": "review",
+      "snapshot_id": "FX13",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX13-contradictory_pr_merged_issue_reopened.json",
+      "state_ui": "contradictory_state"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "missing-gate",
+      "label": "Issue 84 StatusSnapshot v0 - missing required gate state",
+      "next_action": "block",
+      "snapshot_id": "FX14",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX14-missing_gate_state.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "superseded",
+      "label": "Issue 84 StatusSnapshot v0 - superseded artifact blocks claim",
+      "next_action": "review",
+      "snapshot_id": "FX15",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX15-superseded_artifact_blocks_claim.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "blocked",
+      "label": "Issue 84 StatusSnapshot v0 - source sync dirty or unverified",
+      "next_action": "fix",
+      "snapshot_id": "FX16",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX16-source_sync_dirty_or_unverified.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "manual_estimate",
+      "label": "Issue 84 StatusSnapshot v0 - manual estimate blocks done claim",
+      "next_action": "refresh",
+      "snapshot_id": "FX17",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX17-manual_estimate_blocks_done_claim.json",
+      "state_ui": "blocked_gate"
+    },
+    {
+      "at": "2026-06-14T03:30:00Z",
+      "current_state": "blocked",
+      "label": "Issue 84 StatusSnapshot v0 - mechanical Product Face pass but visual quality fail",
+      "next_action": "block",
+      "snapshot_id": "FX18",
+      "source_ref": "fixtures/issue-84/status-snapshot-v0/FX18-mechanical_product_face_pass_but_visual_quality_fail.json",
+      "state_ui": "blocked_gate"
+    }
+  ]
+}

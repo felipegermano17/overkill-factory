@@ -19,8 +19,27 @@ VALIDATION_COMMANDS = [
     [sys.executable, "scripts/validate_public_json_artifacts.py"],
     [sys.executable, "scripts/secret_safety_scan.py"],
     [sys.executable, "scripts/public_safety_scan.py"],
-    [sys.executable, "scripts/full_product_worker_graph.py", "--require-pass"],
+    [
+        sys.executable,
+        "scripts/production_full_product_worker_graph.py",
+        "--release-gate-upstream",
+        "--require-pass",
+        "--out",
+        ".tmp/factory-runs/production/release/upstream-worker-graph.json",
+        "--md-out",
+        ".tmp/factory-runs/production/release/upstream-worker-graph.md",
+    ],
 ]
+GENERATED_APPROVAL_MARKERS = ("fixture", "synthetic", "generated:", "placeholder", "todo", "example")
+
+
+def validation_commands(*, no_write: bool = False) -> list[list[str]]:
+    commands = [list(command) for command in VALIDATION_COMMANDS]
+    if no_write:
+        for command in commands:
+            if "scripts/production_full_product_worker_graph.py" in command:
+                command.append("--no-write")
+    return commands
 
 
 def utc_now() -> str:
@@ -86,71 +105,71 @@ def product_target() -> dict[str, str]:
     }
 
 
-def build_human_gate(*, approval_ref: str, approved_by: str, created_at: str) -> dict[str, Any]:
+def evidence_provenance(*, created_at: str, producer: str, artifact_refs: list[str]) -> dict[str, Any]:
     return {
-        "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
-        "record_type": "human_gate_record",
-        "created_at": created_at,
-        "worker": {
-            "id": "human-gate-clerk",
-            "name": "Human Gate Clerk",
-            "factory_phase": "F16",
+        "producer": producer,
+        "captured_at": created_at,
+        "source_refs": ["products/qvg-public-validation-product"],
+        "artifact_refs": artifact_refs,
+        "integrity": {
+            "product_source_sha256": source_sha256(),
+            "git_head": git_value("rev-parse", "HEAD"),
         },
-        "card_ref": {
-            "card_id": "QVG-PRODUCTION-RELEASE-GATE",
-            "slice_id": "QVG_PUBLIC_VALIDATION_PRODUCT",
-            "phase": "F16",
-            "risk_effective": "R4",
-            "surfaces": ["release", "public-repository", "rollback", "monitoring"],
-            "executor_identity": "release-ops-worker",
-            "reviewer_identity": "human-gate-clerk",
-        },
-        "product_target": product_target(),
-        "result": "PASS",
-        "blocking_findings": False,
-        "findings_summary": "Maintainer authorization was recorded for the public validation product release-control lane with rollback and monitoring boundaries.",
-        "tool_or_profile": "Hermes human-gate-clerk",
-        "executed_by": "human-gate-clerk",
-        "evidence_kind": "real",
-        "reusable_for_product": True,
-        "gate_type": "R4-public-validation-release",
-        "decision": "approved_with_boundaries",
-        "decision_at": created_at,
-        "decision_source": approval_ref,
-        "human_actor": approved_by,
-        "public_redaction_policy": "The raw authorization text and personal identity are intentionally kept outside the public repository.",
-        "approved_scope": [
-            "Run the public validation product through the Overkill Factory release-control lane.",
-            "Use Hermes/Kanban workers and Crabbox/container proof where available.",
-            "Write public-safe validation, release and audit artifacts.",
-            "Push public repository branch updates that contain no private project material.",
-        ],
-        "forbidden_scope": [
-            "secret disclosure",
-            "funds movement",
-            "wallet signing",
-            "mainnet write",
-            "unreviewed production infrastructure mutation",
-            "history rewrite",
-        ],
-        "risk_owner": "project-maintainer",
-        "security_owner": "security-reviewer",
-        "rollback_owner": "release-ops-worker",
-        "expiry": "Valid only for this public validation product and this release-control evidence round.",
-        "evidence_refs": [
-            ".tmp/factory-runs/production/release/human-gate-record.md",
-            ".tmp/factory-runs/production/release/release-ops-result.json",
-            ".tmp/factory-runs/production/remote-proof/managed-testbox-result.json",
-        ],
-        "next_action": "Keep future R4 gates product-specific and time-bounded.",
     }
 
 
-def build_release_ops(*, created_at: str, validation: list[dict[str, Any]]) -> dict[str, Any]:
+def human_gate_errors(record: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    if record.get("record_type") != "human_gate_record":
+        errors.append("human gate record_type must be human_gate_record")
+    if record.get("decision") not in {"approved", "approved_with_boundaries"}:
+        errors.append("human gate decision must be approved")
+    if record.get("evidence_kind") != "real":
+        errors.append("production human gate requires evidence_kind=real")
+    if record.get("reusable_for_product") is not True:
+        errors.append("production human gate requires reusable_for_product=true")
+    target = record.get("product_target") if isinstance(record.get("product_target"), dict) else {}
+    if target.get("product_id") != "qvg-public-validation-product":
+        errors.append("production human gate product_target.product_id must match")
+    approval_ref = str(record.get("approval_event_id") or record.get("approval_event_ref") or record.get("decision_source") or "").strip()
+    if not approval_ref:
+        errors.append("production human gate requires approval_event_id or approval_event_ref")
+    elif any(marker in approval_ref.lower() for marker in GENERATED_APPROVAL_MARKERS):
+        errors.append("production human gate cannot use generated, fixture, synthetic or placeholder approval evidence")
+    for field in ("human_actor", "decision_at", "risk_owner", "security_owner", "rollback_owner"):
+        if not str(record.get(field) or "").strip():
+            errors.append(f"production human gate requires {field}")
+    provenance = record.get("evidence_provenance") if isinstance(record.get("evidence_provenance"), dict) else {}
+    if not provenance:
+        errors.append("production human gate requires evidence_provenance")
+    else:
+        for field in ("producer", "captured_at", "artifact_refs", "integrity"):
+            if provenance.get(field) in (None, "", [], {}):
+                errors.append(f"production human gate evidence_provenance.{field} is required")
+    return errors
+
+
+def load_human_gate_record(path: Path) -> dict[str, Any]:
+    record = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(record, dict):
+        raise ValueError("human gate record must be a JSON object")
+    errors = human_gate_errors(record)
+    if errors:
+        raise ValueError("; ".join(errors))
+    return record
+
+
+def build_release_ops(*, created_at: str, validation: list[dict[str, Any]], human_gate_ref: str = ".tmp/factory-runs/production/release/human-gate-record.json") -> dict[str, Any]:
     head = git_value("rev-parse", "HEAD")
     branch = git_value("branch", "--show-current")
     remote_ref = git_value("ls-remote", "origin", branch)
     validation_passed = all(item["exit_code"] == 0 for item in validation)
+    evidence_refs = [
+        ".tmp/factory-runs/production/release/release-ops-result.md",
+        human_gate_ref,
+        ".tmp/factory-runs/production/remote-proof/managed-testbox-result.json",
+        ".tmp/factory-runs/production/release/upstream-worker-graph.json",
+    ]
     return {
         "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
         "record_type": "release_ops_result",
@@ -219,12 +238,12 @@ def build_release_ops(*, created_at: str, validation: list[dict[str, Any]]) -> d
             {"action": "infrastructure_mutation", "performed": False},
             {"action": "history_rewrite", "performed": False},
         ],
-        "evidence_refs": [
-            ".tmp/factory-runs/production/release/release-ops-result.md",
-            ".tmp/factory-runs/production/release/human-gate-record.json",
-            ".tmp/factory-runs/production/remote-proof/managed-testbox-result.json",
-            ".tmp/factory-runs/product-specific/qvg-full-product-worker-graph.json",
-        ],
+        "evidence_refs": evidence_refs,
+        "evidence_provenance": evidence_provenance(
+            created_at=created_at,
+            producer="release-ops-worker",
+            artifact_refs=evidence_refs,
+        ),
         "next_action": "Repeat this gate whenever the release target, product source, branch or authority boundary changes.",
     }
 
@@ -238,13 +257,13 @@ def write_markdown(path: Path, title: str, payload: dict[str, Any]) -> None:
     lines = [
         f"# {title}",
         "",
-        f"Result: `{payload['result']}`",
-        f"Reusable for product: `{str(payload['reusable_for_product']).lower()}`",
-        f"Product: `{payload['product_target']['product_id']}`",
+        f"Result: `{payload.get('result') or payload.get('decision')}`",
+        f"Reusable for product: `{str(payload.get('reusable_for_product')).lower()}`",
+        f"Product: `{payload.get('product_target', {}).get('product_id')}`",
         "",
         "## Summary",
         "",
-        payload["findings_summary"],
+        payload.get("findings_summary") or payload.get("public_redaction_policy") or "Structured human gate record.",
         "",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -254,15 +273,22 @@ def write_markdown(path: Path, title: str, payload: dict[str, Any]) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
-    parser.add_argument("--approval-ref", default="external:redacted-maintainer-authorization-2026-06-06")
-    parser.add_argument("--approved-by", default="project-maintainer")
+    parser.add_argument("--human-gate-record", type=Path, required=True)
     parser.add_argument("--no-write", action="store_true")
     args = parser.parse_args(argv)
 
     created_at = utc_now()
-    validation = [run_command(command) for command in VALIDATION_COMMANDS]
-    human_gate = build_human_gate(approval_ref=args.approval_ref, approved_by=args.approved_by, created_at=created_at)
-    release_ops = build_release_ops(created_at=created_at, validation=validation)
+    try:
+        human_gate = load_human_gate_record(args.human_gate_record)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"human gate record rejected: {exc}", file=sys.stderr)
+        return 1
+    validation = [run_command(command) for command in validation_commands(no_write=args.no_write)]
+    release_ops = build_release_ops(
+        created_at=created_at,
+        validation=validation,
+        human_gate_ref=repo_ref(args.human_gate_record.resolve()),
+    )
 
     if not args.no_write:
         write_json(args.out_dir / "human-gate-record.json", human_gate)

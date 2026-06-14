@@ -41,14 +41,36 @@ factoryctl init --out ../my-product-factory --project-name my-product
 factoryctl validate-card examples/minimal-hermes-project/card.md
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
+factoryctl help-next --card examples/minimal-hermes-project/card.md --out .tmp/factory-help.json
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 factoryctl transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready
 factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
 ```
 
+`help-next` reads the card, workflow catalog and gate report, then separates the
+factory's next action from bounded user decisions. It does not dispatch
+workers, approve gates, or make the operator coordinate schemas, worker packets
+or internal evidence machinery.
+
 `status-snapshot` projects card, gate, lane and evidence state for operators. It
 does not replace Hermes, card contracts, gate reports or Receipt Five as the
 source of truth.
+
+## Evidence And Truth Commands
+
+```bash
+factoryctl export-hermes-evidence --board my-board --workspace ../my-hermes-workspace --out .tmp/factory-runs/hermes-evidence/sanitized-package.json
+factoryctl evidence-graph --card examples/minimal-hermes-project/card.md --worker-results-dir .tmp/worker-results --out .tmp/factory-runs/evidence/evidence-graph.json
+factoryctl readiness-ledger --card examples/minimal-hermes-project/card.md --evidence-graph .tmp/factory-runs/evidence/evidence-graph.json --out .tmp/factory-runs/readiness/readiness-truth-ledger.json
+factoryctl truth --target issue-94 --card examples/minimal-hermes-project/card.md --out .tmp/factory-runs/truth/truth-packet.json
+factoryctl prepilot-checklist --evidence-graph .tmp/factory-runs/evidence/evidence-graph.json --readiness-ledger .tmp/factory-runs/readiness/readiness-truth-ledger.json
+```
+
+These commands are JSON-first. They summarize cards, worker results, receipts,
+readiness and sanitized Hermes evidence without importing raw private runtime
+evidence into the public repository. A weaker truth layer such as
+`contract_exists` or `runtime_enforced` must not be read as
+`production_ready`.
 
 ### Test Runner Fallback
 
