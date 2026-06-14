@@ -1,0 +1,51 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-creation-plan.schema.json",
+  "record_type": "product_creation_plan",
+  "product_sot_ref": "templates/product-sot.json",
+  "method_contract_ref": "templates/method-contract.json",
+  "research_decision_refs": ["templates/specialist-decision-packet.json"],
+  "architecture_decision_refs": ["templates/architecture-review-packet.md"],
+  "complete_product_required": true,
+  "complete_product_scope": ["every meaningful Product SOT capability, operation, proof and release requirement"],
+  "complete_product_non_goals": ["anything explicitly marked out of scope by the Product SOT"],
+  "production_readiness_scope": ["release path", "rollback", "monitoring", "support", "customer readiness"],
+  "surface_matrix": [
+    {
+      "surface": "code",
+      "required_pack": "web-saas-core",
+      "proof": "tests and review"
+    }
+  ],
+  "capability_pack_requirements": ["templates/capability-pack-contract.json"],
+  "work_units": [
+    {
+      "unit_id": "work-unit-001",
+      "product_sot_requirement_refs": ["product-sot#scope-in-001"],
+      "objective": "Deliver one safe execution slice without reducing the Product SOT scope.",
+      "scope_in": ["the named Product SOT requirement refs"],
+      "scope_out": ["unrelated Product SOT requirements"],
+      "verification": ["run the checks named by the work unit"],
+      "expected_result": "PASS or explicit BLOCK with owner",
+      "stop_conditions": ["Product SOT drifted", "required context packet is stale"],
+      "status": "ready",
+      "product_context_packet_ref": "templates/product-context-packet.json"
+    }
+  ],
+  "execution_order": ["work-unit-001"],
+  "slice_boundaries": ["each slice is reversible and does not redefine product scope"],
+  "dependency_graph": [
+    {
+      "from": "product-sot#scope-in-001",
+      "to": "work-unit-001"
+    }
+  ],
+  "risk_map": ["scope shrinkage is blocked by the full Product SOT coverage map"],
+  "access_and_secret_requirements": ["no secrets required by default"],
+  "release_promotion_ladder_refs": ["templates/production-promotion-ladder.json"],
+  "complete_product_done_criteria": ["all SOT requirements are done, blocked, deferred with owner, or out of scope"],
+  "slice_done_criteria": ["slice verification passes and evidence refs are attached"],
+  "drift_check": "Refresh this plan when Product SOT, method, architecture, capability packs or landed slices change.",
+  "stop_conditions": ["missing Product SOT coverage", "missing promotion ladder for production intent", "stale product context"],
+  "reconciliation_policy": "Mark work units todo, ready, blocked, done, rejected, superseded or needs_refresh; never treat a done slice as whole-product completion.",
+  "evidence_refs": ["templates/full-product-sot-scope-coverage.json"]
+}

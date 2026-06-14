@@ -6,5 +6,20 @@
   "reviewed": ["review evidence"],
   "residual_risk": ["known remaining risk with owner"],
   "decision": "done_with_owner",
+  "sot_claim_results": [
+    {
+      "claim_ref": "product-sot#scope-in-001",
+      "status": "DEFERRED_WITH_OWNER",
+      "owner": "product-owner",
+      "evidence_refs": ["templates/full-product-sot-scope-coverage.json"]
+    }
+  ],
+  "method_execution_results": [
+    {
+      "method": "spec-first",
+      "status": "EXECUTED",
+      "evidence_refs": ["templates/spec-graph.json"]
+    }
+  ],
   "evidence_refs": ["receipt-five.json", "gate-report.json"]
 }

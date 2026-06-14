@@ -1,0 +1,30 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/full-product-sot-scope-coverage.schema.json",
+  "record_type": "full_product_sot_scope_coverage",
+  "product_sot_ref": "templates/product-sot.json",
+  "coverage_policy": "The Product SOT is planned as the complete product target before any execution slice starts.",
+  "source_claim_resolution": [
+    {
+      "claim_ref": "source-ledger#claim-001",
+      "disposition": "promoted",
+      "rationale": "The claim is supported by source resolution and belongs in the approved Product SOT.",
+      "authority_ref": "product-owner"
+    }
+  ],
+  "requirement_coverage": [
+    {
+      "requirement_ref": "product-sot#scope-in-001",
+      "status": "planned",
+      "owner": "decomposition-planner",
+      "work_unit_refs": ["work-unit-001"],
+      "evidence_refs": ["templates/product-creation-plan.json"]
+    }
+  ],
+  "slice_policy": {
+    "scope_reduction_forbidden": true,
+    "slices_are_order_only": true,
+    "waiver_required_for_defer": true
+  },
+  "completion_rule": "The Product SOT cannot be claimed complete until every meaningful SOT requirement is done, blocked, deferred with owner, or explicitly out of scope.",
+  "evidence_refs": ["source-ledger.md"]
+}

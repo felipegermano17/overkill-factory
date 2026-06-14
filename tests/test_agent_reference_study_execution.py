@@ -18,6 +18,13 @@ class AgentReferenceStudyExecutionTest(unittest.TestCase):
             "templates/reviewer-selection-plan.json": "schemas/reviewer-selection-plan.schema.json",
             "templates/qa-verification-plan.json": "schemas/qa-verification-plan.schema.json",
             "templates/agent-eval-result.json": "schemas/agent-eval-result.schema.json",
+            "templates/full-product-sot-scope-coverage.json": "schemas/full-product-sot-scope-coverage.schema.json",
+            "templates/specialist-research-plan.json": "schemas/specialist-research-plan.schema.json",
+            "templates/specialist-decision-packet.json": "schemas/specialist-decision-packet.schema.json",
+            "templates/production-promotion-ladder.json": "schemas/production-promotion-ladder.schema.json",
+            "templates/product-creation-plan.json": "schemas/product-creation-plan.schema.json",
+            "templates/product-context-packet.json": "schemas/product-context-packet.schema.json",
+            "templates/product-implementation-readiness.json": "schemas/product-implementation-readiness.schema.json",
         }
 
         for template_path, schema_path in pairs.items():

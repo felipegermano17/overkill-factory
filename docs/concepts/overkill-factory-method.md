@@ -42,24 +42,26 @@ chooses the minimum safe path for the input, risk and surface.
 2. Outcome before plan.
 3. Discovery before treating a paper as truth.
 4. The right method before execution.
-5. Organized development before loose worker activity.
-6. Product experience before calling a surface ready.
-7. Data and metrics before claiming success.
-8. Security architecture before material build work.
-9. Explicit dependencies before integration.
-10. Access and capability before material execution.
-11. Cost and limits before expensive or remote execution.
-12. Explicit authority before material action.
-13. Privacy, compliance and security throughout the process.
-14. Evals before trusting important agents, skills, prompts or models.
-15. Evidence before done.
-16. Independent review before confidence.
-17. Human authority for material risk.
-18. Release needs an owner, rollback path, monitoring and channel.
-19. Incidents become tests, policies, skills, docs or product changes.
-20. The factory itself must be audited so gaps do not depend on memory.
-21. Human interfaces mirror the factory; they do not replace durable state.
-22. A runtime records the operational truth; chat is an operator view.
+5. The Product SOT is planned as a complete product target before slices execute.
+6. Specialized research must resolve into SOT, architecture, method, gate, proof, blocker or human-decision changes.
+7. Organized development before loose worker activity.
+8. Product experience before calling a surface ready.
+9. Data and metrics before claiming success.
+10. Security architecture before material build work.
+11. Explicit dependencies before integration.
+12. Access and capability before material execution.
+13. Cost and limits before expensive or remote execution.
+14. Explicit authority before material action.
+15. Privacy, compliance and security throughout the process.
+16. Evals before trusting important agents, skills, prompts or models.
+17. Evidence before done.
+18. Independent review before confidence.
+19. Human authority for material risk.
+20. Release needs an owner, rollback path, monitoring, channel and promotion ladder.
+21. Incidents become tests, policies, skills, docs or product changes.
+22. The factory itself must be audited so gaps do not depend on memory.
+23. Human interfaces mirror the factory; they do not replace durable state.
+24. A runtime records the operational truth; chat is an operator view.
 
 ## Public Vocabulary
 
@@ -70,10 +72,16 @@ chooses the minimum safe path for the input, risk and surface.
 | Runtime Adapter | The bridge that turns factory rules into runtime events, worker tasks and transition blocks. |
 | Product Outcome & Discovery OS | The layer that defines the result, user, problem, assumptions and missing research. |
 | Product SOT | The source-of-truth candidate for scope, non-goals, acceptance criteria and success. |
+| Full Product SOT Scope Coverage | The map proving every meaningful SOT requirement is planned, blocked, deferred with owner, out of scope, human-owned or done. |
+| Specialist Research OS | The research lane that turns high-risk uncertainty into operational decisions instead of commentary. |
 | Product Pack | Product-specific rules, glossary, risks, policies, examples and specialist routing. |
 | Surface Pack | Rules for a visible or operational surface such as web, mobile, CLI, docs or onboarding. |
 | Method Router | The decision step that chooses the process weight and required gates. |
-| Method Contract | The recorded router decision: included methods, excluded methods, evidence and blockers. |
+| Method Contract | The recorded router decision: canonical SOT scope, factory route, engineering methods, evidence and blockers. |
+| Product Creation Plan | The complete product decomposition from Product SOT into work units, slices, proof, stop rules and reconciliation. |
+| Product Context Packet | The compact product-specific rules that implementation and review workers load instead of relying on chat memory. |
+| Product Implementation Readiness | The alignment gate across SOT, method, research, architecture, experience, work units, packs, access and proof. |
+| Production Promotion Ladder | The environment path and proof boundaries from local or test environments to production, mainnet or live customer use. |
 | Loop Plan | The executable plan: workers, order, scope, limits, evidence and stop criteria. |
 | Worker Packet | A structured request for one specialist worker. |
 | Worker Result | The structured result produced after the worker actually runs. |
@@ -116,33 +124,38 @@ record why a step is omitted.
 3. Source Resolution
 4. Product Outcome & Discovery
 5. Product SOT
-6. Agentic Method Router
-7. Method Contract
-8. Product Pack and Surface Pack selection
-9. Risk, Authority, Dependency, Compliance, Access and Budget Gates
-10. Security Architecture Plan when material risk exists
-11. Software Development Plan
-12. Product Experience Plan when a product surface exists
-13. Data, Metrics & Analytics Plan when success must be measured
-14. Agent Quality & Evals Plan when agents, skills or models matter
-15. Spec Graph
-16. Loop Plan
-17. Autonomy Readiness Packet
-18. Ready Gate
-19. Operator Projection
-20. Runtime execution
-21. Worker Results
-22. Verification
-23. Independent Review
-24. Human Gate when required
-25. Closure Summary
-26. Receipt Five
-27. Completion Audit
-28. Production Operations
-29. Release or Block
-30. Monitoring, Incident and Support when needed
-31. Learnback
-32. Factory Maturity Audit
+6. Full Product SOT Scope Coverage
+7. Specialist Research OS when material uncertainty exists
+8. Agentic Method Router
+9. Method Contract
+10. Product Pack and Surface Pack selection
+11. Risk, Authority, Dependency, Compliance, Access and Budget Gates
+12. Security Architecture Plan when material risk exists
+13. Product Creation Plan
+14. Software Development Plan
+15. Product Experience Plan when a product surface exists
+16. Data, Metrics & Analytics Plan when success must be measured
+17. Agent Quality & Evals Plan when agents, skills or models matter
+18. Spec Graph
+19. Loop Plan
+20. Product Context Packet
+21. Product Implementation Readiness
+22. Autonomy Readiness Packet
+23. Ready Gate
+24. Operator Projection
+25. Runtime execution
+26. Worker Results
+27. Verification
+28. Independent Review
+29. Human Gate when required
+30. Closure Summary
+31. Receipt Five
+32. Completion Audit
+33. Production Promotion Ladder and Operations
+34. Release or Block
+35. Monitoring, Incident and Support when needed
+36. Learnback
+37. Factory Maturity Audit
 ```
 
 ## Work Units
@@ -153,8 +166,13 @@ The method uses different units for different parts of the line:
 | --- | --- |
 | Source Ledger | Captures where claims came from. |
 | Source Resolution | Separates fact, inference, decision, conflict and gap. |
-| Product SOT | Defines the product or slice to build. |
-| Method Contract | Records the selected process and required gates. |
+| Product SOT | Defines the complete product target, not an MVP or convenient first slice. |
+| Full Product SOT Scope Coverage | Proves every SOT requirement is accounted for before slice execution. |
+| Specialist Research Plan / Decision Packet | Converts research questions into operational decisions, blockers or proof requirements. |
+| Method Contract | Records canonical scope, factory route, engineering methods and required gates. |
+| Product Creation Plan | Decomposes the complete product into safe execution slices and reconciliation rules. |
+| Product Context Packet | Gives workers compact product-specific implementation rules. |
+| Product Implementation Readiness | Blocks execution when planning artifacts are missing, stale or contradictory. |
 | Product Pack | Keeps product-specific context out of the public core. |
 | Surface Pack | Defines what a surface must plan, build and prove. |
 | Factory Card | Machine-checkable work contract consumed by Hermes and `factoryctl.py`. |

@@ -9,7 +9,11 @@ from jumping straight from a vague request to a confident completion claim.
 | --- | --- |
 | Product paper | The short project brief or source material that starts the line. |
 | Source resolution | The step that separates source facts, inference, decisions, conflicts and gaps. |
-| Product SOT | The source-of-truth candidate for product scope, non-goals and acceptance criteria. |
+| Product SOT | The source-of-truth candidate for the complete product scope, non-goals and acceptance criteria. |
+| Full Product SOT scope coverage | The map that prevents a first slice from silently becoming the whole product. |
+| Specialist research decision | A public-safe research result that changes SOT, architecture, method, gate, worker, proof or blocker state. |
+| Product Creation Plan | The complete product decomposition into safe execution slices, proof and stop rules. |
+| Product Implementation Readiness | The gate that checks SOT, method, research, architecture, work units, packs, access and proof before material execution. |
 | Factory card | The machine-checkable work contract consumed by Hermes and `factoryctl.py`. |
 | Worker packet | The task-specific assignment generated for one worker role. |
 | Worker result | The evidence-bearing result produced after a worker actually runs. |
@@ -22,8 +26,12 @@ from jumping straight from a vague request to a confident completion claim.
 source intake
 -> source resolution
 -> Product SOT
+-> full Product SOT scope coverage
+-> specialist research decisions when needed
 -> architecture and risk routing
 -> method contract
+-> Product Creation Plan
+-> Product Implementation Readiness
 -> Product Face or surface-specific plan
 -> security, access and budget gates
 -> decomposition into Hermes cards
@@ -44,6 +52,10 @@ A card should stay blocked when:
 
 - source facts and inference are mixed;
 - Product SOT or architecture is only a candidate but treated as approval;
+- a first slice exists but the full Product SOT scope coverage is missing;
+- research is required but no specialist research plan exists;
+- Product Creation Plan or Product Implementation Readiness is missing for complete-product work;
+- production or mainnet intent lacks a promotion ladder with environment-specific proof;
 - a required worker packet exists but the worker result does not;
 - Product Face, security, Auditor, QA or review evidence is missing;
 - executor and reviewer are the same identity;
