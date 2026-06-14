@@ -19,12 +19,15 @@ class FactoryCompletionAuditTests(unittest.TestCase):
             self.assertFalse(result["completion_claim_allowed"])
             self.assertEqual(result["score_estimate"], "9.992/10")
             self.assertGreater(result["requirements_blocking"], 0)
+            self.assertEqual(len(result["blocker_economics"]), result["requirements_blocking"])
 
     def test_blocks_only_real_remaining_gaps_when_incomplete(self):
         result = audit.build_audit()
         blockers = set(result["blocking_summary"])
+        blocker_ids = {item["blocker_id"] for item in result["blocker_economics"]}
 
         self.assertIn("production_product_face", blockers)
+        self.assertIn("completion:production_product_face", blocker_ids)
         self.assertIn("production_quasar_auditor", blockers)
         if result["status"] == "COMPLETE":
             self.assertEqual(blockers, set())

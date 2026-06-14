@@ -53,6 +53,7 @@
       ]
     }
   ],
+  "blocker_economics": [],
   "blockers": [
     {
       "id": "B-MANUAL-ESTIMATE",

@@ -82,6 +82,10 @@
         "additionalProperties": true
       }
     },
+    "blocker_economics": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
     "worker_state": {
       "type": "array",
       "minItems": 1,
