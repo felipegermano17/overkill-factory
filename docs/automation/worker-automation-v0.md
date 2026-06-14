@@ -35,10 +35,17 @@ That binding connects the card to:
 - required skill refs;
 - the expected result schema;
 - the receipt field the worker must produce.
+- a public-safe profile readiness summary from
+  `agents/worker-profile-readiness.public.json`.
 
 This is better than assigning by worker name alone. Hermes profile names can
 drift, skills can be missing and a worker can be too vague to operate. The
 binding makes that drift visible and testable.
+
+Readiness is stricter than binding existence. A worker packet may show that the
+profile contract exists while the profile readiness remains degraded because no
+fresh smoke/eval ledger has been produced. Hermes must not treat degraded public
+contract rows as current runtime readiness.
 
 ## CLI
 
