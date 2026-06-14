@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,8 @@ PROFILES_PATH = ROOT / "agents" / "worker-profiles.public.json"
 BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 SECURITY_MATRIX_PATH = ROOT / "docs" / "agents" / "security-specialist-matrix.md"
 PROFILE_SMOKE_PATH = ROOT / ".tmp" / "factory-runs" / "hermes-live" / "factory12-agent-profile-smoke.json"
+PROFILE_READINESS_PATH = ROOT / "agents" / "worker-profile-readiness.public.json"
+PROFILE_READINESS_REF = "agents/worker-profile-readiness.public.json"
 
 
 SECURITY_DOMAINS = {
@@ -52,6 +55,14 @@ SECURITY_CRITICAL_WORKERS = {
 
 ALLOWED_PHASES = {f"F{index}" for index in range(30)}
 ALLOWED_RISKS = {"R0", "R1", "R2", "R3", "R4"}
+READINESS_STATES = {
+    "contract_only",
+    "degraded_without_current_runtime_ledger",
+    "blocked",
+    "current_profile_ready",
+}
+SMOKE_RESULTS = {"PASS", "BLOCKED", "NOT_RUN"}
+EVAL_RESULTS = {"PASS", "BLOCKED", "NOT_RUN", "WAIVED"}
 
 EARLY_SECURITY_WORKERS = {
     "security-orchestrator",
@@ -79,7 +90,115 @@ def combined_text(value: Any) -> str:
     return str(value)
 
 
-def validate() -> list[str]:
+def parse_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        normalized = value.strip().replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def effective_readiness_rows(ledger: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    default_record = ledger.get("default_record", {})
+    worker_rows = ledger.get("worker_readiness", {})
+    if not isinstance(default_record, dict) or not isinstance(worker_rows, dict):
+        return {}
+    rows: dict[str, dict[str, Any]] = {}
+    for worker_id, row in worker_rows.items():
+        if isinstance(row, dict):
+            rows[str(worker_id)] = {**default_record, **row, "worker_id": str(worker_id)}
+    return rows
+
+
+def validate_readiness_ledger(
+    worker_ids: set[str],
+    profiles: dict[str, Any],
+    bindings: dict[str, Any],
+    *,
+    ledger_path: Path,
+    now: datetime,
+) -> tuple[list[str], dict[str, dict[str, Any]]]:
+    findings: list[str] = []
+    if not ledger_path.exists():
+        return [f"{PROFILE_READINESS_REF}: missing worker profile readiness ledger"], {}
+
+    try:
+        ledger = load_json(ledger_path)
+    except (json.JSONDecodeError, ValueError) as exc:
+        return [f"{PROFILE_READINESS_REF}: invalid worker profile readiness ledger: {exc}"], {}
+
+    rows = effective_readiness_rows(ledger)
+    if not rows:
+        findings.append(f"{PROFILE_READINESS_REF}: worker_readiness must contain public-safe readiness rows")
+        return findings, {}
+
+    row_ids = set(rows)
+    for missing in sorted(worker_ids - row_ids):
+        findings.append(f"{missing}: missing worker profile readiness row")
+    for extra in sorted(row_ids - worker_ids):
+        findings.append(f"{extra}: readiness row has no registered worker")
+
+    for worker_id in sorted(worker_ids & row_ids):
+        row = rows[worker_id]
+        profile = profiles.get(worker_id, {}) if isinstance(profiles.get(worker_id), dict) else {}
+        binding = bindings.get(worker_id, {}) if isinstance(bindings.get(worker_id), dict) else {}
+
+        if row.get("profile_id") != profile.get("profile_id"):
+            findings.append(f"{worker_id}: readiness ledger profile_id must match profile")
+        if row.get("hermes_profile_name") != binding.get("hermes_profile_name"):
+            findings.append(f"{worker_id}: readiness ledger hermes_profile_name must match binding")
+
+        for field in ("packet_fixture_ref", "checked_at", "producer"):
+            if not str(row.get(field) or "").strip():
+                findings.append(f"{worker_id}: readiness ledger missing {field}")
+
+        smoke_result = str(row.get("smoke_result") or "")
+        eval_result = str(row.get("eval_result") or "")
+        readiness_state = str(row.get("readiness_state") or "")
+        if smoke_result not in SMOKE_RESULTS:
+            findings.append(f"{worker_id}: readiness smoke_result must be one of {sorted(SMOKE_RESULTS)}")
+        if eval_result not in EVAL_RESULTS:
+            findings.append(f"{worker_id}: readiness eval_result must be one of {sorted(EVAL_RESULTS)}")
+        if readiness_state not in READINESS_STATES:
+            findings.append(f"{worker_id}: readiness_state must be one of {sorted(READINESS_STATES)}")
+
+        freshness = row.get("freshness_policy")
+        if not isinstance(freshness, dict):
+            findings.append(f"{worker_id}: readiness ledger missing freshness_policy")
+            freshness = {}
+        current_claim = freshness.get("current_runtime_claim") is True
+        checked_at = parse_datetime(row.get("checked_at"))
+        if checked_at is None:
+            findings.append(f"{worker_id}: readiness checked_at must be an ISO timestamp")
+
+        if readiness_state == "current_profile_ready":
+            if not current_claim:
+                findings.append(f"{worker_id}: current_profile_ready requires freshness_policy.current_runtime_claim=true")
+            if smoke_result != "PASS":
+                findings.append(f"{worker_id}: current_profile_ready requires smoke_result=PASS")
+            if eval_result != "PASS":
+                findings.append(f"{worker_id}: current_profile_ready requires eval_result=PASS")
+            max_age_days = freshness.get("max_age_days_for_current_claim")
+            if not isinstance(max_age_days, int):
+                findings.append(f"{worker_id}: current_profile_ready requires integer max_age_days_for_current_claim")
+            elif checked_at and (now - checked_at).total_seconds() > max_age_days * 86400:
+                findings.append(f"{worker_id}: current_profile_ready evidence is stale")
+        elif current_claim:
+            findings.append(f"{worker_id}: degraded readiness rows must not claim current runtime readiness")
+
+    return findings, rows
+
+
+def validate(
+    *,
+    readiness_ledger_path: Path = PROFILE_READINESS_PATH,
+    now: datetime | None = None,
+) -> list[str]:
     findings: list[str] = []
     registry = load_json(REGISTRY_PATH)
     profiles_doc = load_json(PROFILES_PATH)
@@ -109,6 +228,15 @@ def validate() -> list[str]:
     worker_ids = set(workers)
     profile_ids = set(profiles)
     binding_ids = set(bindings)
+    readiness_findings, _ = validate_readiness_ledger(
+        worker_ids,
+        profiles,
+        bindings,
+        ledger_path=readiness_ledger_path,
+        now=(now or datetime.now(timezone.utc)),
+    )
+    findings.extend(readiness_findings)
+
     for missing in sorted(worker_ids - profile_ids):
         findings.append(f"{missing}: missing worker profile")
     for extra in sorted(profile_ids - worker_ids):

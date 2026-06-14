@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "full-product-worker-graph.json"
 DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "full-product-worker-graph.md"
 PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
+RELEASE_GATE_UPSTREAM_EXCLUDED_LANES = {"human_gate", "release_ops"}
 
 
 LANES: tuple[dict[str, Any], ...] = (
@@ -98,8 +100,6 @@ def utc_now() -> str:
 
 
 def source_sha256(path: Path = PRODUCT_SOURCE) -> str:
-    import hashlib
-
     digest = hashlib.sha256()
     for item in sorted(path.rglob("*")):
         if item.is_file():
@@ -107,6 +107,12 @@ def source_sha256(path: Path = PRODUCT_SOURCE) -> str:
             digest.update(b"\0")
             digest.update(item.read_bytes())
             digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    digest.update(path.read_bytes())
     return digest.hexdigest()
 
 
@@ -161,6 +167,17 @@ def validate_lane(lane: dict[str, Any]) -> dict[str, Any]:
                 errors.append("strict lane product_target is missing")
             elif target.get("product_id") != "qvg-public-validation-product":
                 errors.append("strict lane product_id does not match")
+    provenance: dict[str, Any] = {
+        "ref": rel_path,
+        "exists": path.exists(),
+        "loaded_at": utc_now(),
+        "record_type": data.get("record_type") or lane.get("record_type") or lane.get("kind", "file"),
+        "$schema": data.get("$schema"),
+        "product_id": (data.get("product_target") or {}).get("product_id") if isinstance(data.get("product_target"), dict) else None,
+    }
+    if path.exists():
+        provenance["size_bytes"] = path.stat().st_size
+        provenance["sha256"] = file_sha256(path)
 
     return {
         "lane_id": lane["lane_id"],
@@ -176,16 +193,26 @@ def validate_lane(lane: dict[str, Any]) -> dict[str, Any]:
         "reusable_for_product": bool(data.get("reusable_for_product")) if data else lane.get("reusable_policy") == "supporting",
         "evidence_ref_count": len(data.get("evidence_refs") or []) if data else 1 if path.exists() else 0,
         "stale_evidence_refs": [],
+        "evidence_provenance": provenance,
         "status": "PASS" if not errors else "FAIL",
         "validation_errors": errors,
     }
 
 
-def build_graph() -> dict[str, Any]:
-    lanes = [validate_lane(lane) for lane in LANES]
+def filter_lanes_for_mode(lanes: tuple[dict[str, Any], ...], graph_mode: str) -> tuple[tuple[dict[str, Any], ...], list[str]]:
+    if graph_mode != "release_gate_upstream":
+        return lanes, []
+    selected = tuple(lane for lane in lanes if lane["lane_id"] not in RELEASE_GATE_UPSTREAM_EXCLUDED_LANES)
+    omitted = [lane["lane_id"] for lane in lanes if lane["lane_id"] in RELEASE_GATE_UPSTREAM_EXCLUDED_LANES]
+    return selected, omitted
+
+
+def build_graph(lanes: tuple[dict[str, Any], ...] = LANES, *, graph_mode: str = "full_product") -> dict[str, Any]:
+    selected_lanes, omitted_lanes = filter_lanes_for_mode(lanes, graph_mode)
+    lane_results = [validate_lane(lane) for lane in selected_lanes]
     blocking = [
         f"{lane['lane_id']}: " + "; ".join(lane["validation_errors"])
-        for lane in lanes
+        for lane in lane_results
         if lane["validation_errors"]
     ]
     passed = not blocking
@@ -194,6 +221,7 @@ def build_graph() -> dict[str, Any]:
         "record_type": "full_product_worker_graph",
         "created_at": utc_now(),
         "graph_kind": "production_public_validation_product_graph",
+        "graph_mode": graph_mode,
         "product_id": "qvg-public-validation-product",
         "product_name": "Quasar Vault Guard public validation product",
         "product_target": product_target(),
@@ -201,18 +229,21 @@ def build_graph() -> dict[str, Any]:
         "blocking_findings": not passed,
         "evidence_kind": "real",
         "reusable_for_product": passed,
-        "completion_claim_allowed": passed,
-        "lanes_total": len(lanes),
-        "lanes_passed": sum(1 for lane in lanes if lane["status"] == "PASS"),
-        "product_lanes_total": sum(1 for lane in lanes if lane["scope"] == "product"),
-        "supporting_lanes_total": sum(1 for lane in lanes if lane["scope"] == "supporting"),
-        "reusable_for_product_lanes": sum(1 for lane in lanes if lane["reusable_for_product"]),
-        "lanes": lanes,
+        "completion_claim_allowed": passed and not omitted_lanes,
+        "omitted_lanes": omitted_lanes,
+        "lanes_total": len(lane_results),
+        "lanes_passed": sum(1 for lane in lane_results if lane["status"] == "PASS"),
+        "product_lanes_total": sum(1 for lane in lane_results if lane["scope"] == "product"),
+        "supporting_lanes_total": sum(1 for lane in lane_results if lane["scope"] == "supporting"),
+        "reusable_for_product_lanes": sum(1 for lane in lane_results if lane["reusable_for_product"]),
+        "lanes": lane_results,
         "blocking_summary": blocking,
         "production_blockers": blocking or ["none"],
-        "evidence_refs": [str(lane["path"]) for lane in LANES],
+        "evidence_refs": [str(lane["path"]) for lane in selected_lanes],
         "policy_decision": (
             "The public validation product has a reconciled production-scoped worker graph."
+            if passed and not omitted_lanes
+            else "The release gate upstream graph is reusable for release validation; run the full graph after release-ops evidence is written."
             if passed
             else "Do not claim full product graph completion until every strict lane has reusable product evidence."
         ),
@@ -251,9 +282,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--md-out", type=Path, default=DEFAULT_MD_OUT)
     parser.add_argument("--no-write", action="store_true")
     parser.add_argument("--require-pass", action="store_true")
+    parser.add_argument("--release-gate-upstream", action="store_true")
     args = parser.parse_args(argv)
 
-    graph = build_graph()
+    graph_mode = "release_gate_upstream" if args.release_gate_upstream else "full_product"
+    graph = build_graph(graph_mode=graph_mode)
     if not args.no_write:
         write_json(args.out, graph)
         write_markdown(args.md_out, graph)

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-evidence-package.schema.json",
+  "title": "Overkill Factory Hermes Evidence Package",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "result",
+    "board_ref",
+    "workspace_ref",
+    "evidence_level",
+    "state",
+    "records",
+    "redaction_findings",
+    "missing_or_stale",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/hermes-evidence-package.schema.json" },
+    "record_type": { "const": "hermes_evidence_package" },
+    "created_at": { "type": "string", "minLength": 10 },
+    "result": { "enum": ["PASS", "BLOCKED"] },
+    "board_ref": { "type": "string", "minLength": 3 },
+    "workspace_ref": { "const": "external:operator-owned-hermes-workspace" },
+    "evidence_level": { "enum": ["live_hermes_summary", "missing"] },
+    "state": { "enum": ["planning", "partially_executed", "done", "release-ready", "blocked"] },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["record_ref", "record_type", "result", "evidence_refs"],
+        "additionalProperties": true
+      }
+    },
+    "redaction_findings": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "missing_or_stale": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["sanitized_summary_only", "no_raw_logs", "no_private_paths", "no_private_ids"],
+      "properties": {
+        "sanitized_summary_only": { "const": true },
+        "no_raw_logs": { "const": true },
+        "no_private_paths": { "const": true },
+        "no_private_ids": { "const": true }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

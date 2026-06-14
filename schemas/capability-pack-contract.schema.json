@@ -10,6 +10,14 @@
     "covered_surfaces",
     "specialist_workers",
     "activation_evidence_refs",
+    "lifecycle_state",
+    "tool_refs",
+    "local_smoke_path",
+    "eval_path",
+    "smoke_evidence_ref",
+    "eval_evidence_ref",
+    "profile_binding_refs",
+    "permission_class",
     "missing_capabilities",
     "execution_rule",
     "product_pack_id",
@@ -40,6 +48,18 @@
         "needs_pack_creation"
       ]
     },
+    "lifecycle_state": {
+      "enum": [
+        "template",
+        "proposed",
+        "installed",
+        "smoke-tested",
+        "eval-tested",
+        "activated",
+        "deprecated",
+        "blocked"
+      ]
+    },
     "covered_surfaces": {
       "type": "array",
       "minItems": 1,
@@ -63,6 +83,42 @@
         "type": "string",
         "minLength": 3
       }
+    },
+    "tool_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "local_smoke_path": {
+      "type": "string",
+      "minLength": 3
+    },
+    "eval_path": {
+      "type": "string",
+      "minLength": 3
+    },
+    "smoke_evidence_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "eval_evidence_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "profile_binding_refs": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "permission_class": {
+      "type": "string",
+      "minLength": 3
     },
     "missing_capabilities": {
       "type": "array",

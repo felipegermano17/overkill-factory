@@ -23,7 +23,8 @@
         "screen",
         "ux",
         "product-face",
-        "mobile",
+        "responsive",
+        "mobile-web",
         "wallet-ui",
         "backend",
         "api",
@@ -108,7 +109,7 @@
       "pack_id": "mobile-app-pack",
       "status": "pack_template",
       "plain_purpose": "Covers native or React Native mobile apps, device UX, app-store constraints, mobile wallet flows and mobile performance.",
-      "covers_surfaces": ["ios", "android", "react-native", "expo", "mobile-wallet", "deep-linking", "app-store", "play-store"],
+      "covers_surfaces": ["ios", "android", "react-native", "expo", "native-mobile", "mobile-wallet", "deep-linking", "app-store", "play-store"],
       "existing_workers": ["frontend-builder", "product-face", "qa-verification-worker", "wallet-transaction-builder"],
       "missing_worker_templates": [
         {

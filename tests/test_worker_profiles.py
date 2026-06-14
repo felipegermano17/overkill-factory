@@ -3,7 +3,9 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -46,8 +48,86 @@ CONCEPTUAL_ROLE_PROFILE_DUPLICATES = {
 
 
 class WorkerProfilesTest(unittest.TestCase):
+    def write_readiness_ledger(self, data: dict) -> Path:
+        tempdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tempdir.cleanup)
+        path = Path(tempdir.name) / "worker-profile-readiness.public.json"
+        path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        return path
+
+    def readiness_ledger(self) -> dict:
+        return json.loads((ROOT / "agents" / "worker-profile-readiness.public.json").read_text(encoding="utf-8"))
+
     def test_worker_profiles_are_complete_and_bound_to_hermes(self) -> None:
         self.assertEqual(profile_validator.validate(), [])
+
+    def test_missing_worker_profile_readiness_ledger_blocks_profile_readiness_claim(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            missing_path = Path(tempdir) / "missing-readiness.json"
+
+            findings = profile_validator.validate(readiness_ledger_path=missing_path)
+
+        self.assertIn(
+            "agents/worker-profile-readiness.public.json: missing worker profile readiness ledger",
+            findings,
+        )
+
+    def test_worker_profile_readiness_ledger_rejects_wrong_profile(self) -> None:
+        ledger = self.readiness_ledger()
+        ledger["worker_readiness"]["product-face"]["profile_id"] = "wrong-profile.profile.v1"
+        path = self.write_readiness_ledger(ledger)
+
+        findings = profile_validator.validate(readiness_ledger_path=path)
+
+        self.assertIn("product-face: readiness ledger profile_id must match profile", findings)
+
+    def test_current_worker_profile_readiness_cannot_use_stale_evidence(self) -> None:
+        ledger = self.readiness_ledger()
+        ledger["worker_readiness"]["product-face"].update(
+            {
+                "smoke_result": "PASS",
+                "eval_result": "PASS",
+                "readiness_state": "current_profile_ready",
+                "checked_at": "2026-06-01T00:00:00Z",
+                "freshness_policy": {
+                    "current_runtime_claim": True,
+                    "current_claim_requires": "fresh sanitized smoke and eval ledger",
+                    "max_age_days_for_current_claim": 7,
+                },
+            }
+        )
+        path = self.write_readiness_ledger(ledger)
+
+        findings = profile_validator.validate(
+            readiness_ledger_path=path,
+            now=datetime(2026, 6, 14, tzinfo=timezone.utc),
+        )
+
+        self.assertIn("product-face: current_profile_ready evidence is stale", findings)
+
+    def test_current_worker_profile_readiness_passes_with_fresh_smoke_and_eval(self) -> None:
+        ledger = self.readiness_ledger()
+        ledger["worker_readiness"]["product-face"].update(
+            {
+                "smoke_result": "PASS",
+                "eval_result": "PASS",
+                "readiness_state": "current_profile_ready",
+                "checked_at": "2026-06-14T00:00:00Z",
+                "freshness_policy": {
+                    "current_runtime_claim": True,
+                    "current_claim_requires": "fresh sanitized smoke and eval ledger",
+                    "max_age_days_for_current_claim": 7,
+                },
+            }
+        )
+        path = self.write_readiness_ledger(ledger)
+
+        findings = profile_validator.validate(
+            readiness_ledger_path=path,
+            now=datetime(2026, 6, 15, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(findings, [])
 
     def test_conceptual_role_names_are_not_registered_as_loose_workers(self) -> None:
         registry = json.loads((ROOT / "agents" / "worker-registry.public.json").read_text(encoding="utf-8"))
@@ -85,6 +165,10 @@ class WorkerProfilesTest(unittest.TestCase):
         self.assertIn("hermes-kanban", packet["profile_binding"]["skill_refs"])
         self.assertFalse(packet["profile_binding"]["can_mutate_card_state"])
         self.assertEqual(packet["profile_binding"]["last_hermes_smoke_ref"], ".tmp/factory-runs/hermes-live/factory12-agent-profile-smoke.md")
+        readiness = packet["profile_binding"]["profile_readiness"]
+        self.assertEqual(readiness["ledger_ref"], "agents/worker-profile-readiness.public.json")
+        self.assertEqual(readiness["readiness_state"], "degraded_without_current_runtime_ledger")
+        self.assertFalse(readiness["current_runtime_claim"])
 
     def test_transition_plan_exposes_profile_binding_on_worker_tasks(self) -> None:
         card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"

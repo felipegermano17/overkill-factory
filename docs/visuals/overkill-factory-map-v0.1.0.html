@@ -4,6 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Overkill Factory</title>
+<script type="application/json" id="overkill-public-surface-metadata">
+{
+  "surface_id": "visual-map-v0.1.0-html",
+  "manifest_ref": "docs/public-surface.manifest.json",
+  "authority_level": "conceptual_supporting_surface",
+  "source_refs": [
+    "agents/worker-registry.public.json",
+    "agents/worker-profiles.public.json",
+    "agents/hermes-profile-bindings.public.json",
+    "docs/agents/factory-stage-agent-map.md",
+    "scripts/factoryctl.py"
+  ],
+  "claim_checks": ["worker_count", "stage_count", "risk_tiers", "source_of_truth_disclaimer", "no_runtime_proof_claim"]
+}
+</script>
 <style>
   :root {
     --bg: #151514;
