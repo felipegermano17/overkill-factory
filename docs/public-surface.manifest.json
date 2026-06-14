@@ -11,6 +11,7 @@
     "docs/concepts/factory-flow.md",
     "docs/concepts/operator-journey.md",
     "docs/concepts/overkill-factory-method.md",
+    "planning-bundles/manifest.json",
     "schemas/",
     "scripts/factoryctl.py"
   ],
@@ -175,6 +176,26 @@
       "required_phrases": [
         "Hermes remains the runtime source of truth",
         "only the operator"
+      ]
+    },
+    {
+      "surface_id": "planning-bundles-index",
+      "path": "planning-bundles/README.md",
+      "surface_type": "public_planning_bundle_index",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "planning-bundles/manifest.json",
+        "schemas/planning-bundle-manifest.schema.json",
+        "scripts/validate_planning_bundles.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Every bundle output is a candidate artifact",
+        "They do not replace the factory runtime"
       ]
     },
     {

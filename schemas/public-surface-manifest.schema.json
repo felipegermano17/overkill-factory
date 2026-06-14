@@ -61,7 +61,8 @@
               "static_visual_preview",
               "concept_doc",
               "root_readme",
-              "public_visual_index"
+              "public_visual_index",
+              "public_planning_bundle_index"
             ]
           },
           "authority_level": {

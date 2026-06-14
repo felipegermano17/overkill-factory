@@ -18,7 +18,14 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "schemas"
-SCAN_DIRS = [ROOT / "examples", ROOT / ".tmp" / "factory-runs", ROOT / "agents", ROOT / "templates", ROOT / "docs"]
+SCAN_DIRS = [
+    ROOT / "examples",
+    ROOT / ".tmp" / "factory-runs",
+    ROOT / "agents",
+    ROOT / "templates",
+    ROOT / "docs",
+    ROOT / "planning-bundles",
+]
 
 SCHEMA_OPTIONAL = {
     ".tmp/factory-runs/product-face/console.json",
