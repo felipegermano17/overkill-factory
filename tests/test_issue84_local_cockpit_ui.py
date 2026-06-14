@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_BUILDER_PATH = ROOT / "scripts" / "issue84" / "build_local_cockpit_data.py"
+FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
 UI_DIR = ROOT / "ui" / "issue-84-local-cockpit"
 FIXTURES = ROOT / "fixtures" / "issue-84" / "status-snapshot-v0"
 
@@ -64,6 +65,16 @@ def load_data_builder():
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     sys.modules["issue84_build_local_cockpit_data"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_factoryctl():
+    spec = importlib.util.spec_from_file_location("factoryctl_for_issue84_ui", FACTORYCTL_PATH)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules["factoryctl_for_issue84_ui"] = module
     spec.loader.exec_module(module)
     return module
 
@@ -171,6 +182,14 @@ class Issue84LocalCockpitUITest(unittest.TestCase):
         self.assertNotIn("innerHTML", script)
         self.assertIn("textContent", script)
         self.assertNotRegex(script, r"https?://")
+        self.assertIn("brand-lockup", html)
+        self.assertIn("state-rail", script)
+        self.assertIn("snapshot-head", script)
+        self.assertIn("inspector-stack", script)
+        self.assertNotIn("radial-gradient", styles)
+        self.assertNotIn("letter-spacing: -", styles)
+        self.assertNotRegex(styles, r"font-size:\s*clamp")
+        self.assertNotIn("999px", styles)
         self.assertNotIn("Approve gate", html + script)
         self.assertNotIn("Release now", html + script)
         self.assertNotIn("Complete issue", html + script)
@@ -215,6 +234,14 @@ class Issue84LocalCockpitUITest(unittest.TestCase):
         self.assertTrue(module.is_loopback_host("localhost"))
         self.assertFalse(module.is_loopback_host("0.0.0.0"))
         self.assertFalse(module.is_loopback_host("192.168.1.20"))
+
+    def test_local_cockpit_professional_design_process_is_valid(self) -> None:
+        factoryctl = load_factoryctl()
+        process = json.loads((UI_DIR / "professional-design-process.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(process["record_type"], "professional_design_process")
+        self.assertEqual(factoryctl.validate_professional_design_process(process), [])
+        self.assertGreaterEqual(len(process["reference_research"]["sources"]), 3)
 
 
 if __name__ == "__main__":

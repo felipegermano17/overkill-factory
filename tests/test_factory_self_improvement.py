@@ -48,6 +48,33 @@ class FactorySelfImprovementTest(unittest.TestCase):
 
         self.assertIn("reference_quality_packet required for vFinal product-facing surfaces", errors)
 
+    def test_vfinal_product_surface_requires_professional_design_process(self) -> None:
+        card = vfinal_card()
+        card["surfaces"] = ["frontend"]
+        card.pop("professional_design_process")
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("professional_design_process required for vFinal product-facing surfaces", errors)
+
+    def test_professional_design_process_rejects_nominal_reference_research(self) -> None:
+        process = json.loads(json.dumps(vfinal_card()["professional_design_process"]))
+        process["reference_research"]["sources"] = process["reference_research"]["sources"][:1]
+        process["reference_research"]["sources"][0]["extracted_patterns"] = ["single pattern is too weak"]
+        process["wireframe_gate"]["status"] = "BLOCK"
+
+        errors = factoryctl.validate_professional_design_process(process)
+
+        self.assertIn("professional_design_process.reference_research.sources requires at least 3 sources", errors)
+        self.assertIn(
+            "professional_design_process.reference_research.sources[0].extracted_patterns requires at least 2 items",
+            errors,
+        )
+        self.assertIn(
+            "professional_design_process.wireframe_gate.status must be PASS before product-facing implementation",
+            errors,
+        )
+
     def test_reference_quality_rejects_copy_without_license_ref(self) -> None:
         packet = dict(vfinal_card()["reference_quality_packet"])
         packet["references"] = [
@@ -72,6 +99,7 @@ class FactorySelfImprovementTest(unittest.TestCase):
 
         self.assertEqual(packet["input_contract"]["reasoning_policy"]["record_type"], "reasoning_policy")
         self.assertEqual(packet["input_contract"]["reference_quality_packet"]["record_type"], "reference_quality_packet")
+        self.assertEqual(packet["input_contract"]["professional_design_process"]["record_type"], "professional_design_process")
         self.assertEqual(packet["input_contract"]["learning_proposal_refs"], ["templates/factory-learning-proposal.json"])
 
     def test_default_reference_registry_contains_post_sources_as_catalog_entries(self) -> None:

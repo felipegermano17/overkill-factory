@@ -1,0 +1,205 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/professional-design-process.schema.json",
+  "record_type": "professional_design_process",
+  "surface_type": "web_app",
+  "mode": "greenfield",
+  "design_brief": {
+    "user": "Primary operator or product user for this surface.",
+    "job_to_be_done": "Complete the surface's main product job with clear state, evidence and next action.",
+    "decision_surface": "The screen or flow where the user makes the important product decision.",
+    "success_signal": "A reviewer can explain the surface hierarchy, state, action and evidence without private context.",
+    "failure_risks": [
+      "The surface looks like a generic AI dashboard instead of the product being built.",
+      "The surface hides blockers, stale state or evidence gaps behind successful-looking cards."
+    ]
+  },
+  "task_map": [
+    {
+      "task_id": "T1",
+      "user_goal": "Understand the current state.",
+      "trigger": "User opens the product surface.",
+      "success_signal": "Current state, source and freshness are visible without scanning decorative text.",
+      "failure_state": "The UI implies progress or success without durable evidence."
+    },
+    {
+      "task_id": "T2",
+      "user_goal": "Find the next safe action.",
+      "trigger": "User sees a blocked, stale or contradictory state.",
+      "success_signal": "The next action is specific, bounded and tied to a source ref.",
+      "failure_state": "The user sees a vague CTA or an unsafe action."
+    },
+    {
+      "task_id": "T3",
+      "user_goal": "Verify the visual result against the promised product job.",
+      "trigger": "Product Face review runs before done or release.",
+      "success_signal": "Reviewer compares screenshots, states and flows to the reference bar.",
+      "failure_state": "Mechanical browser proof passes but the surface still looks generic or audience-mismatched."
+    }
+  ],
+  "reference_research": {
+    "registry_refs": [
+      "templates/reference-source-registry.json#21st-dev",
+      "templates/reference-source-registry.json#refero-styles",
+      "templates/reference-source-registry.json#motionsites"
+    ],
+    "selection_rationale": "Use component/reference libraries for interaction and visual craft, but copy no code or assets without license review.",
+    "sources": [
+      {
+        "source_id": "radix-ui-themes",
+        "source_url_or_ref": "https://www.radix-ui.com/themes",
+        "use_type": "accessibility-and-token-system-reference",
+        "what_to_learn": [
+          "Accessible primitives and design tokens",
+          "Light/dark color scales and component density"
+        ],
+        "extracted_patterns": [
+          "Use semantic color roles instead of one-note decorative palettes.",
+          "Prefer small composable controls over oversized explanatory blocks."
+        ],
+        "copy_policy": "do_not_copy",
+        "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+        "public_safety_notes": "Reference only; no source code, text or assets copied."
+      },
+      {
+        "source_id": "shadcn-data-table",
+        "source_url_or_ref": "https://ui.shadcn.com/docs/components/data-table",
+        "use_type": "structured-data-interaction-reference",
+        "what_to_learn": [
+          "Filtering, sorting and row actions for dense operational data",
+          "Reusable table composition without inventing custom controls"
+        ],
+        "extracted_patterns": [
+          "Dense data surfaces need search, filter, sort and row focus states.",
+          "Controls should stay close to the data they affect."
+        ],
+        "copy_policy": "do_not_copy",
+        "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+        "public_safety_notes": "Reference only; no source code, text or assets copied."
+      },
+      {
+        "source_id": "linear-product-workflow",
+        "source_url_or_ref": "https://linear.app",
+        "use_type": "product-workflow-and-state-reference",
+        "what_to_learn": [
+          "Fast product work navigation",
+          "Clear distinction between issue state, owner, priority and next action"
+        ],
+        "extracted_patterns": [
+          "Operational product tools should be compact, scannable and state-first.",
+          "Primary work context should be visible without a marketing-style hero."
+        ],
+        "copy_policy": "do_not_copy",
+        "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+        "public_safety_notes": "Reference only; no source code, text or assets copied."
+      }
+    ]
+  },
+  "ux_architecture": {
+    "information_hierarchy": [
+      "source and freshness",
+      "current state and blocker",
+      "next safe action",
+      "evidence and review status",
+      "detail drill-down"
+    ],
+    "navigation_model": "App-shell view with compact command bar, state lane, focused work list and detail inspector.",
+    "state_model": [
+      "loading",
+      "empty",
+      "success",
+      "error",
+      "blocked",
+      "stale",
+      "private_unavailable",
+      "contradictory"
+    ],
+    "density_rationale": "Use dense, quiet, repeatable product-tool layout for operators instead of a landing page or generic analytics dashboard."
+  },
+  "wireframe_gate": {
+    "status": "PASS",
+    "reviewer": "product-face",
+    "artifact_refs": [
+      "templates/professional-design-process.json#ux_architecture"
+    ],
+    "basis": "Layout separates source, state, work queue and inspector before visual styling."
+  },
+  "visual_direction": {
+    "typography": "Compact system UI scale; no hero-scale type inside product tools.",
+    "spacing": "Tight app-shell spacing with stable row, toolbar and inspector dimensions.",
+    "color_semantics": "Neutral base with distinct semantic states for success, warning, blocked, error and private/unavailable.",
+    "component_model": "Toolbar, segmented state controls, searchable work list, lane rows, data list, inspector and evidence chips.",
+    "anti_generic_commitments": [
+      "No decorative KPI cards detached from factory objects.",
+      "No oversized hero section for an operational tool.",
+      "No vague AI-dashboard copy in place of state and evidence."
+    ]
+  },
+  "prototype_gate": {
+    "status": "PASS",
+    "reviewer": "product-face",
+    "artifact_refs": [
+      "templates/professional-design-process.json"
+    ],
+    "basis": "Prototype must cover real state categories and unhappy paths before implementation.",
+    "real_data_states": [
+      "long dense data",
+      "blocked gate",
+      "stale snapshot",
+      "private evidence unavailable",
+      "contradictory state"
+    ]
+  },
+  "design_qa_plan": {
+    "viewports": [
+      "desktop 1440x900",
+      "laptop 1280x800",
+      "mobile 390x844"
+    ],
+    "accessibility_checks": [
+      "keyboard focus names",
+      "semantic headings",
+      "contrast",
+      "aria-live load and error states"
+    ],
+    "performance_checks": [
+      "local JSON render remains responsive",
+      "no remote fetch",
+      "no expensive decoration blocking first render"
+    ],
+    "screenshot_requirements": [
+      "desktop current state",
+      "mobile current state",
+      "blocked or error state"
+    ],
+    "console_check_required": true,
+    "overlap_check_required": true
+  },
+  "comparative_review_gate": {
+    "status": "PASS",
+    "reviewer_role": "product-face",
+    "must_compare_to_reference_packet": true,
+    "basis": "Product Face reviewer must compare the implemented surface to the reference research and block generic AI-dashboard symptoms.",
+    "block_when": [
+      "The result resembles a generic dashboard rather than the product's task model.",
+      "Reference research exists but did not affect layout, hierarchy, controls or state treatment.",
+      "Mechanical screenshots pass while the visual hierarchy is not credible for a professional product."
+    ]
+  },
+  "handoff_requirements": {
+    "required_before_implementation": [
+      "design brief",
+      "task map",
+      "reference research",
+      "UX architecture",
+      "wireframe gate",
+      "visual direction",
+      "prototype gate",
+      "design QA plan",
+      "comparative review gate"
+    ],
+    "product_face_result_must_include": [
+      "professional_design_process_ref",
+      "professional_design_process_comparison.status=pass"
+    ]
+  }
+}

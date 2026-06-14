@@ -1,0 +1,183 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/professional-design-process.schema.json",
+  "record_type": "professional_design_process",
+  "surface_type": "local web operations cockpit",
+  "mode": "redesign",
+  "design_brief": {
+    "user": "external open-source factory operator",
+    "job_to_be_done": "Supervise factory state, blockers, evidence and next safe action from local structured snapshots.",
+    "decision_surface": "Local web cockpit current-state view and selected snapshot inspector.",
+    "success_signal": "Operator can distinguish state, freshness, blockers, review status and next action without private context.",
+    "failure_risks": [
+      "The UI looks like a generic generated dashboard instead of an operations cockpit.",
+      "The UI blurs request, approval, done, release, stale and blocked states."
+    ]
+  },
+  "task_map": [
+    {
+      "task_id": "T1",
+      "user_goal": "Understand the current projection.",
+      "trigger": "Operator opens the local cockpit.",
+      "success_signal": "Current state, source kind, freshness and risk are visible in one scan.",
+      "failure_state": "Decorative metrics imply success without evidence."
+    },
+    {
+      "task_id": "T2",
+      "user_goal": "Find and inspect blockers.",
+      "trigger": "A gate, review or evidence dependency is blocked.",
+      "success_signal": "Blocker owner, unblock condition and source refs are visible in the inspector.",
+      "failure_state": "The operator must read raw JSON or infer blockers from generic cards."
+    },
+    {
+      "task_id": "T3",
+      "user_goal": "Verify whether the surface is safe to trust.",
+      "trigger": "Product Face review evaluates the cockpit.",
+      "success_signal": "Screenshots, states, evidence refs and visual quality verdict compare against this process.",
+      "failure_state": "Mechanical browser proof passes while visual/product quality is unacceptable."
+    }
+  ],
+  "reference_research": {
+    "registry_refs": [
+      "templates/reference-source-registry.json#21st-dev",
+      "templates/reference-source-registry.json#refero-styles",
+      "templates/reference-source-registry.json#motionsites"
+    ],
+    "selection_rationale": "Use professional product-tool and component references to define compact state-first hierarchy, not to copy assets or brand.",
+    "sources": [
+      {
+        "source_id": "radix-ui-themes",
+        "source_url_or_ref": "https://www.radix-ui.com/themes",
+        "use_type": "token-and-accessibility-reference",
+        "what_to_learn": ["semantic color tokens", "accessible component primitives"],
+        "extracted_patterns": [
+          "Use semantic state colors rather than a one-note decorative palette.",
+          "Keep controls compact and named by function."
+        ],
+        "copy_policy": "do_not_copy",
+        "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+        "public_safety_notes": "Reference only; no code or assets copied."
+      },
+      {
+        "source_id": "shadcn-data-table",
+        "source_url_or_ref": "https://ui.shadcn.com/docs/components/data-table",
+        "use_type": "dense-data-interaction-reference",
+        "what_to_learn": ["filtering and sorting patterns", "row action ergonomics"],
+        "extracted_patterns": [
+          "Dense operational views need search, filters and stable row focus.",
+          "Detail inspection should stay adjacent to the selected row context."
+        ],
+        "copy_policy": "do_not_copy",
+        "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+        "public_safety_notes": "Reference only; no code or assets copied."
+      },
+      {
+        "source_id": "linear-product-workflow",
+        "source_url_or_ref": "https://linear.app",
+        "use_type": "product-workflow-reference",
+        "what_to_learn": ["state-first product work navigation", "low-friction worklist scanning"],
+        "extracted_patterns": [
+          "Work status, owner and next action should be visible without a marketing hero.",
+          "Focused work lists should be fast to scan and keep hierarchy quiet."
+        ],
+        "copy_policy": "do_not_copy",
+        "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+        "public_safety_notes": "Reference only; no code or assets copied."
+      }
+    ]
+  },
+  "ux_architecture": {
+    "information_hierarchy": [
+      "source and freshness",
+      "current state",
+      "blockers and gates",
+      "next safe action",
+      "evidence refs",
+      "timeline"
+    ],
+    "navigation_model": "Local app shell with command strip, state rail, searchable snapshot list, selected snapshot inspector and product face panel.",
+    "state_model": [
+      "loading",
+      "empty",
+      "success",
+      "error",
+      "blocked",
+      "stale",
+      "contradictory",
+      "private_unavailable"
+    ],
+    "density_rationale": "This is a repeated-use operator tool, so dense state-first layout is required; hero or decorative dashboard layout is blocked."
+  },
+  "wireframe_gate": {
+    "status": "PASS",
+    "reviewer": "product-face",
+    "artifact_refs": [
+      "ui/issue-84-local-cockpit/index.html",
+      "ui/issue-84-local-cockpit/app.js"
+    ],
+    "basis": "The implemented structure separates state rail, work queue and inspector before visual styling."
+  },
+  "visual_direction": {
+    "typography": "Compact system UI scale; no hero type inside the tool.",
+    "spacing": "Stable rows, toolbar and inspector spacing with no layout shift on state changes.",
+    "color_semantics": "Neutral app base with separate semantic colors for pass, warn, blocked, fail, stale and private-unavailable states.",
+    "component_model": "Segmented controls, search, state rail, row list, inspector, evidence chips and timeline rows.",
+    "anti_generic_commitments": [
+      "No decorative KPI cards detached from factory objects.",
+      "No generic dashboard visuals or fake charts.",
+      "No excessive explanatory copy where structure should carry meaning."
+    ]
+  },
+  "prototype_gate": {
+    "status": "PASS",
+    "reviewer": "product-face",
+    "artifact_refs": [
+      "ui/issue-84-local-cockpit/index.html",
+      "ui/issue-84-local-cockpit/styles.css"
+    ],
+    "basis": "The redesign covers the required state matrix and the FX18 visual-quality-failure case.",
+    "real_data_states": [
+      "success current snapshot",
+      "blocked gate",
+      "stale snapshot",
+      "contradictory state",
+      "private evidence unavailable",
+      "mechanical pass but visual quality fail"
+    ]
+  },
+  "design_qa_plan": {
+    "viewports": ["desktop 1440x900", "laptop 1280x800", "mobile 390x844"],
+    "accessibility_checks": ["keyboard focus names", "semantic headings", "contrast", "aria-live load/error states"],
+    "performance_checks": ["local JSON render remains responsive", "no remote fetch", "no heavy decorative effects"],
+    "screenshot_requirements": ["desktop current state", "mobile current state", "blocked state"],
+    "console_check_required": true,
+    "overlap_check_required": true
+  },
+  "comparative_review_gate": {
+    "status": "PASS",
+    "reviewer_role": "product-face",
+    "must_compare_to_reference_packet": true,
+    "basis": "The cockpit uses a state-first app shell and blocks the previous generic dashboard failure mode.",
+    "block_when": [
+      "The result resembles a generic dashboard.",
+      "State, source and next safe action are not first-class.",
+      "Reference research does not affect layout, hierarchy, controls or state treatment."
+    ]
+  },
+  "handoff_requirements": {
+    "required_before_implementation": [
+      "design brief",
+      "task map",
+      "reference research",
+      "UX architecture",
+      "wireframe gate",
+      "visual direction",
+      "prototype gate",
+      "design QA plan",
+      "comparative review gate"
+    ],
+    "product_face_result_must_include": [
+      "professional_design_process_ref",
+      "professional_design_process_comparison.status=pass"
+    ]
+  }
+}
