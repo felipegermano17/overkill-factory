@@ -19,6 +19,7 @@
     "design_fit_review",
     "professional_design_process_ref",
     "professional_design_process_comparison",
+    "reference_quality_comparison",
     "visual_quality_result",
     "blocking_findings",
     "evidence_refs",
@@ -127,6 +128,46 @@
       },
       "additionalProperties": true
     },
+    "reference_quality_comparison": {
+      "type": "object",
+      "required": [
+        "status",
+        "basis",
+        "reference_set_ref",
+        "compared_source_ids",
+        "dimensions",
+        "reviewer_independent_from_implementation"
+      ],
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail", "pending"] },
+        "basis": { "type": "string", "minLength": 3 },
+        "reference_set_ref": { "type": "string", "minLength": 3 },
+        "compared_source_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "reviewer_independent_from_implementation": { "type": "boolean" },
+        "dimensions": {
+          "type": "object",
+          "required": [
+            "layout_hierarchy",
+            "interaction_model",
+            "state_coverage",
+            "visual_language",
+            "density_spacing"
+          ],
+          "properties": {
+            "layout_hierarchy": { "$ref": "#/$defs/reference_dimension_verdict" },
+            "interaction_model": { "$ref": "#/$defs/reference_dimension_verdict" },
+            "state_coverage": { "$ref": "#/$defs/reference_dimension_verdict" },
+            "visual_language": { "$ref": "#/$defs/reference_dimension_verdict" },
+            "density_spacing": { "$ref": "#/$defs/reference_dimension_verdict" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
     "visual_quality_result": {
       "type": "object",
       "required": ["status", "reviewer", "basis", "reference_quality_bar_checked", "ai_generic_symptoms"],
@@ -162,6 +203,17 @@
     },
     "next_action": {
       "type": "string"
+    }
+  },
+  "$defs": {
+    "reference_dimension_verdict": {
+      "type": "object",
+      "required": ["status", "basis"],
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail", "pending"] },
+        "basis": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

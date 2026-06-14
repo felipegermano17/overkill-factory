@@ -39,6 +39,28 @@ PRODUCT_FACE_ALIGNMENT_FIELDS = (
     "source_promise_coverage",
     "design_fit_review",
     "professional_design_process_comparison",
+    "reference_quality_comparison",
+)
+REFERENCE_RESEARCH_SOURCE_TYPES = {
+    "component_registry",
+    "design_library",
+    "design_system",
+    "product_reference",
+    "site_gallery",
+    "user_flow_library",
+}
+REFERENCE_RESEARCH_LIBRARY_TYPES = {
+    "component_registry",
+    "design_library",
+    "site_gallery",
+    "user_flow_library",
+}
+REFERENCE_COMPARISON_DIMENSIONS = (
+    "layout_hierarchy",
+    "interaction_model",
+    "state_coverage",
+    "visual_language",
+    "density_spacing",
 )
 PRIVATE_USERS_PATH = "C:" + r"[\\/]+" + "Users"
 PRIVATE_SYNC_ROOT = "One" + "Drive"
@@ -189,24 +211,98 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             value = data.get(field)
             if not isinstance(value, dict) or value.get("status") != "pass":
                 errors.append(f"{at}: reusable product_face_result requires {field}.status=pass")
+        comparison = data.get("reference_quality_comparison")
+        if isinstance(comparison, dict) and comparison.get("status") == "pass":
+            if len([item for item in comparison.get("compared_source_ids") or [] if str(item).strip()]) < 3:
+                errors.append(f"{at}: reusable product_face_result requires at least 3 compared reference ids")
+            if comparison.get("reviewer_independent_from_implementation") is not True:
+                errors.append(f"{at}: reference_quality_comparison requires independent reviewer proof")
+            dimensions = comparison.get("dimensions") if isinstance(comparison.get("dimensions"), dict) else {}
+            for dimension in REFERENCE_COMPARISON_DIMENSIONS:
+                verdict = dimensions.get(dimension)
+                if not isinstance(verdict, dict) or verdict.get("status") != "pass" or not str(verdict.get("basis") or "").strip():
+                    errors.append(f"{at}: reference_quality_comparison.dimensions.{dimension} requires status=pass and basis")
     if data.get("record_type") == "professional_design_process":
         research = data.get("reference_research") if isinstance(data.get("reference_research"), dict) else {}
         sources = research.get("sources") if isinstance(research.get("sources"), list) else []
+        library_searches = research.get("library_searches") if isinstance(research.get("library_searches"), list) else []
+        rejected_references = research.get("rejected_references") if isinstance(research.get("rejected_references"), list) else []
+        pattern_synthesis = research.get("pattern_synthesis") if isinstance(research.get("pattern_synthesis"), dict) else {}
+        evidence_policy = research.get("reference_evidence_policy") if isinstance(research.get("reference_evidence_policy"), dict) else {}
+        source_types: set[str] = set()
         if len(sources) < 3:
             errors.append(f"{at}: professional_design_process requires at least 3 reference sources")
+        if len(library_searches) < 2:
+            errors.append(f"{at}: professional_design_process requires at least 2 library searches")
+        for index, search in enumerate(library_searches):
+            if not isinstance(search, dict):
+                errors.append(f"{at}.reference_research.library_searches[{index}]: expected object")
+                continue
+            for field in ("library", "library_url", "query_or_category", "searched_at"):
+                if not str(search.get(field) or "").strip():
+                    errors.append(f"{at}.reference_research.library_searches[{index}]: missing {field}")
+            if len(search.get("selection_criteria") or []) < 2:
+                errors.append(f"{at}.reference_research.library_searches[{index}]: requires at least 2 selection_criteria")
+            if int(search.get("candidate_count") or 0) < 3:
+                errors.append(f"{at}.reference_research.library_searches[{index}]: candidate_count must be at least 3")
+            if not search.get("selected_source_ids"):
+                errors.append(f"{at}.reference_research.library_searches[{index}]: selected_source_ids is required")
+            if not search.get("rejected_candidate_ids"):
+                errors.append(f"{at}.reference_research.library_searches[{index}]: rejected_candidate_ids is required")
         for index, source in enumerate(sources):
             if not isinstance(source, dict):
                 errors.append(f"{at}.reference_research.sources[{index}]: expected object")
                 continue
+            source_type = str(source.get("source_type") or "").strip()
+            if source_type not in REFERENCE_RESEARCH_SOURCE_TYPES:
+                errors.append(f"{at}.reference_research.sources[{index}]: source_type must be a known reference type")
+            else:
+                source_types.add(source_type)
+            for field in ("library_source", "candidate_reason", "license_or_terms_ref"):
+                if not str(source.get(field) or "").strip():
+                    errors.append(f"{at}.reference_research.sources[{index}]: missing {field}")
+            if len(source.get("what_to_learn") or []) < 2:
+                errors.append(f"{at}.reference_research.sources[{index}]: requires at least 2 what_to_learn items")
             if len(source.get("extracted_patterns") or []) < 2:
                 errors.append(f"{at}.reference_research.sources[{index}]: requires at least 2 extracted_patterns")
+            if len(source.get("selected_patterns") or []) < 2:
+                errors.append(f"{at}.reference_research.sources[{index}]: requires at least 2 selected_patterns")
+            if len(source.get("visual_dimensions_covered") or []) < 3:
+                errors.append(f"{at}.reference_research.sources[{index}]: requires at least 3 visual_dimensions_covered")
             copy_policy = str(source.get("copy_policy") or "").lower()
             if copy_policy in {"copy", "blind_copy"}:
                 errors.append(f"{at}.reference_research.sources[{index}]: copy_policy must not allow blind copying")
+        if not (source_types & REFERENCE_RESEARCH_LIBRARY_TYPES):
+            errors.append(f"{at}: professional_design_process requires a design library, component registry, site gallery or user-flow library source")
+        if len(source_types) < 2:
+            errors.append(f"{at}: professional_design_process requires at least 2 distinct source types")
+        if len(rejected_references) < 2:
+            errors.append(f"{at}: professional_design_process requires at least 2 rejected references")
+        for index, rejected in enumerate(rejected_references):
+            if not isinstance(rejected, dict):
+                errors.append(f"{at}.reference_research.rejected_references[{index}]: expected object")
+                continue
+            for field in ("source_id", "source_url_or_ref", "rejection_reason"):
+                if not str(rejected.get(field) or "").strip():
+                    errors.append(f"{at}.reference_research.rejected_references[{index}]: missing {field}")
+        for dimension in REFERENCE_COMPARISON_DIMENSIONS:
+            if not str(pattern_synthesis.get(dimension) or "").strip():
+                errors.append(f"{at}.reference_research.pattern_synthesis.{dimension}: required")
+        for field in (
+            "capture_required_before_implementation",
+            "side_by_side_comparison_required_before_pass",
+            "public_refs_only",
+            "no_private_screenshots_in_repo",
+        ):
+            if evidence_policy.get(field) is not True:
+                errors.append(f"{at}.reference_research.reference_evidence_policy.{field}: must be true")
         for gate_name in ("wireframe_gate", "prototype_gate", "comparative_review_gate"):
             gate = data.get(gate_name) if isinstance(data.get(gate_name), dict) else {}
             if gate.get("status") != "PASS":
                 errors.append(f"{at}: professional_design_process {gate_name}.status must be PASS")
+        reviewer_role = str((data.get("comparative_review_gate") or {}).get("reviewer_role") or "").lower()
+        if "independent" not in reviewer_role:
+            errors.append(f"{at}: professional_design_process comparative_review_gate requires an independent reviewer")
     if data.get("record_type") == "factory_learning_proposal":
         serialized_refs = "\n".join(str(ref) for ref in data.get("source_evidence_refs", []))
         if PRIVATE_MARKERS.search(serialized_refs):

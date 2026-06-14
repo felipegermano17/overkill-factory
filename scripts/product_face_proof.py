@@ -27,8 +27,16 @@ PRODUCT_ALIGNMENT_FIELDS = (
     "source_promise_coverage",
     "design_fit_review",
     "professional_design_process_comparison",
+    "reference_quality_comparison",
 )
 VISUAL_QUALITY_PASS_RESULTS = {"PASS", "PASS_WITH_RESIDUALS"}
+REFERENCE_COMPARISON_DIMENSIONS = (
+    "layout_hierarchy",
+    "interaction_model",
+    "state_coverage",
+    "visual_language",
+    "density_spacing",
+)
 
 
 class PlaywrightUnavailable(RuntimeError):
@@ -105,6 +113,20 @@ def parse_viewport(raw: str) -> Viewport:
     if width < 1 or height < 1:
         raise ValueError(f"viewport dimensions must be positive, got {raw!r}")
     return Viewport(name=name.strip() or f"{width}x{height}", width=width, height=height)
+
+
+def parse_reference_dimension(raw: str) -> tuple[str, str]:
+    if "=" not in raw:
+        raise ValueError("--reference-comparison-dimension must be DIMENSION=BASIS")
+    dimension, basis = raw.split("=", 1)
+    dimension = dimension.strip()
+    basis = basis.strip()
+    if dimension not in REFERENCE_COMPARISON_DIMENSIONS:
+        allowed = ", ".join(REFERENCE_COMPARISON_DIMENSIONS)
+        raise ValueError(f"--reference-comparison-dimension dimension must be one of: {allowed}")
+    if not basis:
+        raise ValueError("--reference-comparison-dimension basis must be non-empty")
+    return dimension, basis
 
 
 def resolve_target(target: str, *, allow_external_file: bool = False) -> tuple[str, Path | None]:
@@ -356,6 +378,20 @@ def base_result(
             "status": "pending",
             "basis": "Product Face proof must compare the result against the professional design process before promotion.",
         },
+        "reference_quality_comparison": {
+            "status": "pending",
+            "basis": "Product Face proof must compare the implemented surface against selected design-library references before promotion.",
+            "reference_set_ref": "",
+            "compared_source_ids": [],
+            "reviewer_independent_from_implementation": False,
+            "dimensions": {
+                dimension: {
+                    "status": "pending",
+                    "basis": "Reference comparison not recorded.",
+                }
+                for dimension in REFERENCE_COMPARISON_DIMENSIONS
+            },
+        },
         "visual_quality_result": {
             "status": "BLOCK",
             "reviewer": "product-face-proof-runner",
@@ -397,11 +433,13 @@ def validate_reusable_product_scope(
         raise ValueError(
             "--reusable-for-product requires Product Face alignment: packet_ref, "
             "packet_comparison=pass, source_promise_coverage=pass, design_fit_review=pass and "
-            "professional_design_process_comparison=pass"
+            "professional_design_process_comparison=pass, reference_quality_comparison=pass"
         )
     visual_quality = result.get("visual_quality_result") if isinstance(result.get("visual_quality_result"), dict) else {}
     if visual_quality.get("status") not in VISUAL_QUALITY_PASS_RESULTS or visual_quality.get("reference_quality_bar_checked") is not True:
         raise ValueError("reusable Product Face evidence requires visual_quality_result PASS or PASS_WITH_RESIDUALS")
+    if not reference_quality_passes(result):
+        raise ValueError("reusable Product Face evidence requires dimensioned reference_quality_comparison PASS")
 
 
 def product_alignment_passes(result: dict[str, Any]) -> bool:
@@ -433,6 +471,34 @@ def visual_quality_passes(result: dict[str, Any]) -> bool:
     return True
 
 
+def reference_quality_passes(result: dict[str, Any]) -> bool:
+    comparison = result.get("reference_quality_comparison")
+    if not isinstance(comparison, dict):
+        return False
+    if comparison.get("status") != "pass":
+        return False
+    if not str(comparison.get("basis") or "").strip():
+        return False
+    if not str(comparison.get("reference_set_ref") or "").strip():
+        return False
+    if len([item for item in comparison.get("compared_source_ids") or [] if str(item).strip()]) < 3:
+        return False
+    if comparison.get("reviewer_independent_from_implementation") is not True:
+        return False
+    dimensions = comparison.get("dimensions")
+    if not isinstance(dimensions, dict):
+        return False
+    for dimension in REFERENCE_COMPARISON_DIMENSIONS:
+        verdict = dimensions.get(dimension)
+        if not isinstance(verdict, dict):
+            return False
+        if verdict.get("status") != "pass":
+            return False
+        if not str(verdict.get("basis") or "").strip():
+            return False
+    return True
+
+
 def apply_product_alignment(
     *,
     result: dict[str, Any],
@@ -442,6 +508,10 @@ def apply_product_alignment(
     design_fit_review_basis: str | None,
     professional_design_process_ref: str | None,
     professional_design_process_comparison_basis: str | None,
+    reference_quality_ref: str | None,
+    reference_quality_comparison_basis: str | None,
+    compared_reference_ids: list[str] | None,
+    reference_quality_dimensions: dict[str, str] | None,
 ) -> None:
     values = {
         "packet_ref": packet_ref,
@@ -450,11 +520,26 @@ def apply_product_alignment(
         "design_fit_review": design_fit_review_basis,
         "professional_design_process_ref": professional_design_process_ref,
         "professional_design_process_comparison": professional_design_process_comparison_basis,
+        "reference_quality_ref": reference_quality_ref,
+        "reference_quality_comparison": reference_quality_comparison_basis,
     }
     supplied = {field for field, value in values.items() if str(value or "").strip()}
+    if compared_reference_ids:
+        supplied.add("compared_reference_ids")
+    if reference_quality_dimensions:
+        supplied.add("reference_quality_dimensions")
     if not supplied:
         return
     missing = [field for field, value in values.items() if not str(value or "").strip()]
+    if not compared_reference_ids or len([item for item in compared_reference_ids if str(item).strip()]) < 3:
+        missing.append("compared_reference_ids")
+    missing_dimensions = [
+        dimension
+        for dimension in REFERENCE_COMPARISON_DIMENSIONS
+        if not str((reference_quality_dimensions or {}).get(dimension) or "").strip()
+    ]
+    if missing_dimensions:
+        missing.extend(f"reference_comparison_dimension:{dimension}" for dimension in missing_dimensions)
     if missing:
         raise ValueError("Product Face alignment is incomplete: missing " + ", ".join(missing))
     result["packet_ref"] = str(packet_ref).strip()
@@ -474,6 +559,20 @@ def apply_product_alignment(
     result["professional_design_process_comparison"] = {
         "status": "pass",
         "basis": str(professional_design_process_comparison_basis).strip(),
+    }
+    result["reference_quality_comparison"] = {
+        "status": "pass",
+        "basis": str(reference_quality_comparison_basis).strip(),
+        "reference_set_ref": str(reference_quality_ref).strip(),
+        "compared_source_ids": [str(item).strip() for item in compared_reference_ids or [] if str(item).strip()],
+        "reviewer_independent_from_implementation": True,
+        "dimensions": {
+            dimension: {
+                "status": "pass",
+                "basis": str((reference_quality_dimensions or {}).get(dimension)).strip(),
+            }
+            for dimension in REFERENCE_COMPARISON_DIMENSIONS
+        },
     }
 
 
@@ -511,14 +610,14 @@ def apply_visual_quality_review(
 
 
 def enforce_visual_quality_gate(result: dict[str, Any]) -> None:
-    if result.get("result") == "PASS" and not visual_quality_passes(result):
+    if result.get("result") == "PASS" and (not visual_quality_passes(result) or not reference_quality_passes(result)):
         result["result"] = "WAIVED"
         result["blocking_findings"] = True
         result["findings_summary"] = (
-            "Mechanical Product Face proof ran, but professional visual quality approval is missing or blocked."
+            "Mechanical Product Face proof ran, but professional visual/reference quality approval is missing or blocked."
         )
         result["next_action"] = (
-            "Record visual_quality_result PASS or PASS_WITH_RESIDUALS from an empowered Product Face reviewer before promotion."
+            "Record visual_quality_result and dimensioned reference_quality_comparison PASS from an independent Product Face reviewer before promotion."
         )
 
 
@@ -838,6 +937,10 @@ def build_product_face_proof(
     design_fit_review_basis: str | None = None,
     professional_design_process_ref: str | None = None,
     professional_design_process_comparison_basis: str | None = None,
+    reference_quality_ref: str | None = None,
+    reference_quality_comparison_basis: str | None = None,
+    compared_reference_ids: list[str] | None = None,
+    reference_quality_dimensions: dict[str, str] | None = None,
     visual_quality_status: str | None = None,
     visual_quality_reviewer: str | None = None,
     visual_quality_basis: str | None = None,
@@ -902,6 +1005,10 @@ def build_product_face_proof(
         design_fit_review_basis=design_fit_review_basis,
         professional_design_process_ref=professional_design_process_ref,
         professional_design_process_comparison_basis=professional_design_process_comparison_basis,
+        reference_quality_ref=reference_quality_ref,
+        reference_quality_comparison_basis=reference_quality_comparison_basis,
+        compared_reference_ids=compared_reference_ids,
+        reference_quality_dimensions=reference_quality_dimensions,
     )
     apply_visual_quality_review(
         result=result,
@@ -953,6 +1060,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--design-fit-review-basis", help="Why this proof fits the intended product/design direction.")
     parser.add_argument("--professional-design-process-ref", help="Professional Design Process packet used for Product Face approval.")
     parser.add_argument("--professional-design-process-comparison-basis", help="Why this proof satisfies the professional design process.")
+    parser.add_argument("--reference-quality-ref", help="Reference research packet/set used for dimensioned Product Face comparison.")
+    parser.add_argument("--reference-quality-comparison-basis", help="Why this proof matches the selected professional references.")
+    parser.add_argument("--compared-reference-id", action="append", help="Reference source id used in the side-by-side comparison. Repeat at least 3 times.")
+    parser.add_argument(
+        "--reference-comparison-dimension",
+        action="append",
+        help="Dimension comparison as DIMENSION=BASIS. Required dimensions: layout_hierarchy, interaction_model, state_coverage, visual_language, density_spacing.",
+    )
     parser.add_argument("--visual-quality-status", choices=["PASS", "BLOCK", "PASS_WITH_RESIDUALS"], help="Professional visual quality verdict.")
     parser.add_argument("--visual-quality-reviewer", help="Reviewer empowered to block visually unacceptable UI.")
     parser.add_argument("--visual-quality-basis", help="Why the surface meets or fails the product-specific quality bar.")
@@ -964,6 +1079,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv or sys.argv[1:])
     try:
         viewports = [parse_viewport(raw) for raw in args.viewport] if args.viewport else None
+        reference_dimensions = {
+            dimension: basis
+            for dimension, basis in (
+                parse_reference_dimension(raw) for raw in args.reference_comparison_dimension or []
+            )
+        }
         result = build_product_face_proof(
             target=args.target,
             out=Path(args.out),
@@ -984,6 +1105,10 @@ def main(argv: list[str] | None = None) -> int:
             design_fit_review_basis=args.design_fit_review_basis,
             professional_design_process_ref=args.professional_design_process_ref,
             professional_design_process_comparison_basis=args.professional_design_process_comparison_basis,
+            reference_quality_ref=args.reference_quality_ref,
+            reference_quality_comparison_basis=args.reference_quality_comparison_basis,
+            compared_reference_ids=args.compared_reference_id,
+            reference_quality_dimensions=reference_dimensions,
             visual_quality_status=args.visual_quality_status,
             visual_quality_reviewer=args.visual_quality_reviewer,
             visual_quality_basis=args.visual_quality_basis,

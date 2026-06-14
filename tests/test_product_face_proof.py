@@ -18,6 +18,13 @@ sys.modules["product_face_proof"] = product_face_proof
 SPEC.loader.exec_module(product_face_proof)
 
 
+def reference_dimension_basis() -> dict[str, str]:
+    return {
+        dimension: f"Unit proof compares {dimension} against selected professional references."
+        for dimension in product_face_proof.REFERENCE_COMPARISON_DIMENSIONS
+    }
+
+
 class ProductFaceProofTest(unittest.TestCase):
     def test_parse_viewport_accepts_named_size(self) -> None:
         viewport = product_face_proof.parse_viewport("tablet=768x1024")
@@ -101,6 +108,7 @@ class ProductFaceProofTest(unittest.TestCase):
             "design_fit_review",
             "professional_design_process_ref",
             "professional_design_process_comparison",
+            "reference_quality_comparison",
             "visual_quality_result",
             "blocking_findings",
             "evidence_refs",
@@ -188,6 +196,14 @@ class ProductFaceProofTest(unittest.TestCase):
                 design_fit_review_basis="Unit proof includes an explicit design-fit review.",
                 professional_design_process_ref="templates/professional-design-process.json",
                 professional_design_process_comparison_basis="Unit proof satisfies the professional design process gates.",
+                reference_quality_ref="templates/professional-design-process.json#reference_research",
+                reference_quality_comparison_basis="Unit proof compares against selected professional design references.",
+                compared_reference_ids=[
+                    "21st-dev-components",
+                    "mobbin-workflow-patterns",
+                    "pageflows-review-approval",
+                ],
+                reference_quality_dimensions=reference_dimension_basis(),
             )
             product_face_proof.apply_visual_quality_review(
                 result=result,

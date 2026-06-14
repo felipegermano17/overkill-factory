@@ -155,7 +155,13 @@ def validate_lane(lane: dict[str, Any]) -> dict[str, Any]:
         if lane.get("reusable_policy") == "strict" and data.get("reusable_for_product") is not True:
             errors.append("strict lane must be reusable_for_product=true")
         if lane.get("record_type") == "product_face_result" and lane.get("reusable_policy") == "strict":
-            for field in ("packet_comparison", "source_promise_coverage", "design_fit_review", "professional_design_process_comparison"):
+            for field in (
+                "packet_comparison",
+                "source_promise_coverage",
+                "design_fit_review",
+                "professional_design_process_comparison",
+                "reference_quality_comparison",
+            ):
                 value = data.get(field)
                 if not isinstance(value, dict) or value.get("status") != "pass":
                     errors.append(f"strict Product Face lane requires {field}.status=pass")

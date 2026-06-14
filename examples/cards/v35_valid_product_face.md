@@ -141,47 +141,276 @@
     "reference_research": {
       "registry_refs": [
         "templates/reference-source-registry.json#21st-dev",
-        "templates/reference-source-registry.json#refero-styles"
+        "templates/reference-source-registry.json#refero-styles",
+        "templates/reference-source-registry.json#mobbin",
+        "templates/reference-source-registry.json#pageflows"
       ],
-      "selection_rationale": "Use professional product-tool references to avoid generic generated UI.",
+      "selection_rationale": "Search professional component libraries, product-flow libraries and public product references before implementation; select and reject candidates explicitly, synthesize reusable patterns, and copy no code, text, screenshots or assets without license review.",
       "sources": [
         {
           "source_id": "radix-ui-themes",
           "source_url_or_ref": "https://www.radix-ui.com/themes",
           "use_type": "accessibility-reference",
-          "what_to_learn": ["semantic tokens", "accessible controls"],
+          "what_to_learn": [
+            "semantic tokens",
+            "accessible controls"
+          ],
           "extracted_patterns": [
             "Use state semantics over decoration.",
             "Keep controls compact and named."
           ],
           "copy_policy": "do_not_copy",
-          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied"
+          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+          "source_type": "design_system",
+          "library_source": "Radix Themes",
+          "candidate_reason": "Selected for accessibility, semantic token and component density discipline.",
+          "selected_patterns": [
+            "Semantic color roles must drive product states instead of decorative palettes.",
+            "Composable, named controls should replace oversized explanatory blocks."
+          ],
+          "visual_dimensions_covered": [
+            "visual_language",
+            "density_spacing",
+            "interaction_model"
+          ],
+          "public_safety_notes": "Reference only; no code, text or assets copied."
         },
         {
           "source_id": "shadcn-data-table",
           "source_url_or_ref": "https://ui.shadcn.com/docs/components/data-table",
           "use_type": "dense-data-reference",
-          "what_to_learn": ["row scanning", "filters"],
+          "what_to_learn": [
+            "row scanning",
+            "filters"
+          ],
           "extracted_patterns": [
             "Dense lists need stable row focus.",
             "Controls should stay near affected data."
           ],
           "copy_policy": "do_not_copy",
-          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied"
+          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+          "source_type": "component_registry",
+          "library_source": "shadcn/ui",
+          "candidate_reason": "Selected for dense data-table ergonomics, filtering, sorting and row action patterns.",
+          "selected_patterns": [
+            "Dense operational data needs search, filters, sort and visible row focus.",
+            "Controls belong close to the data or state they affect."
+          ],
+          "visual_dimensions_covered": [
+            "layout_hierarchy",
+            "interaction_model",
+            "density_spacing"
+          ],
+          "public_safety_notes": "Reference only; no code, text or assets copied."
         },
         {
           "source_id": "linear-product-workflow",
           "source_url_or_ref": "https://linear.app",
           "use_type": "workflow-reference",
-          "what_to_learn": ["state-first workflow", "quiet product-tool hierarchy"],
+          "what_to_learn": [
+            "state-first workflow",
+            "quiet product-tool hierarchy"
+          ],
           "extracted_patterns": [
             "Work context should be visible without a hero.",
             "Status hierarchy should be compact and scannable."
           ],
           "copy_policy": "do_not_copy",
-          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied"
+          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+          "source_type": "product_reference",
+          "library_source": "Linear public product reference",
+          "candidate_reason": "Selected for compact work management hierarchy, state clarity and low-friction navigation.",
+          "selected_patterns": [
+            "Operational product tools should be compact, scannable and state-first.",
+            "Primary work context should be visible without a marketing-style hero."
+          ],
+          "visual_dimensions_covered": [
+            "layout_hierarchy",
+            "state_coverage",
+            "density_spacing"
+          ],
+          "public_safety_notes": "Reference only; no code, text or assets copied."
+        },
+        {
+          "source_id": "21st-dev-components",
+          "source_url_or_ref": "https://21st.dev/",
+          "source_type": "component_registry",
+          "library_source": "21st.dev",
+          "use_type": "component-library-and-craft-benchmark",
+          "candidate_reason": "Selected to compare component polish, hierarchy, spacing and interaction finish against modern React/Tailwind component references.",
+          "what_to_learn": [
+            "How modern component libraries compose dense command surfaces without looking generic.",
+            "How spacing, state affordances and micro-interactions make controls feel deliberate."
+          ],
+          "extracted_patterns": [
+            "Reusable components need explicit state, focus, hover and disabled behavior before visual approval.",
+            "Component density should be tuned to the operator task instead of stretched into marketing cards."
+          ],
+          "selected_patterns": [
+            "Require explicit states for controls and rows before Product Face PASS.",
+            "Use compact component groups with clear hierarchy instead of decorative dashboard blocks."
+          ],
+          "visual_dimensions_covered": [
+            "interaction_model",
+            "visual_language",
+            "density_spacing"
+          ],
+          "copy_policy": "do_not_copy",
+          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+          "public_safety_notes": "Reference only; no source code, text or assets copied."
+        },
+        {
+          "source_id": "mobbin-workflow-patterns",
+          "source_url_or_ref": "https://mobbin.com/",
+          "source_type": "user_flow_library",
+          "library_source": "Mobbin",
+          "use_type": "real-product-flow-and-screen-benchmark",
+          "candidate_reason": "Selected because real product flows expose navigation, density and state decisions that isolated mockups hide.",
+          "what_to_learn": [
+            "How professional products sequence navigation, detail inspection and recovery states.",
+            "How repeated-use workflows avoid decorative elements that slow scanning."
+          ],
+          "extracted_patterns": [
+            "A serious workflow needs visible current state, selected object, next action and recovery path.",
+            "Reference study must cover multiple screens or states, not a single attractive screenshot."
+          ],
+          "selected_patterns": [
+            "Require current object, state and next action to be visible together.",
+            "Reject single-screen inspiration that does not explain workflow behavior."
+          ],
+          "visual_dimensions_covered": [
+            "layout_hierarchy",
+            "interaction_model",
+            "state_coverage"
+          ],
+          "copy_policy": "do_not_copy",
+          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+          "public_safety_notes": "Use synthesized observations only; do not commit screenshots or private captures."
+        },
+        {
+          "source_id": "pageflows-review-approval",
+          "source_url_or_ref": "https://pageflows.com/",
+          "source_type": "user_flow_library",
+          "library_source": "Page Flows",
+          "use_type": "journey-state-and-approval-flow-benchmark",
+          "candidate_reason": "Selected to force journey-level coverage for approval, error, review and onboarding states.",
+          "what_to_learn": [
+            "How professional products communicate progress, blocking states and fallback paths across a journey.",
+            "How approval and review flows preserve confidence without hiding consequences."
+          ],
+          "extracted_patterns": [
+            "Approval surfaces need consequence, evidence and rollback context before the action.",
+            "Error and blocked states should preserve orientation and show the next safe action."
+          ],
+          "selected_patterns": [
+            "Require consequence, evidence and fallback context for approval surfaces.",
+            "Treat blocked/error states as first-class Product Face screenshots."
+          ],
+          "visual_dimensions_covered": [
+            "interaction_model",
+            "state_coverage",
+            "layout_hierarchy"
+          ],
+          "copy_policy": "do_not_copy",
+          "license_or_terms_ref": "benchmark_only_no_code_or_assets_copied",
+          "public_safety_notes": "Use journey-level learning only; no copied videos, screenshots or private material."
         }
-      ]
+      ],
+      "library_searches": [
+        {
+          "library": "21st.dev",
+          "library_url": "https://21st.dev/",
+          "query_or_category": "operations dashboard, command surface, data table and review components",
+          "searched_at": "2026-06-14",
+          "selection_criteria": [
+            "component craft supports dense repeated operator use",
+            "states and controls can be adapted without copying code or assets"
+          ],
+          "candidate_count": 6,
+          "selected_source_ids": [
+            "21st-dev-components",
+            "shadcn-data-table"
+          ],
+          "rejected_candidate_ids": [
+            "decorative-dashboard-template",
+            "oversized-hero-block"
+          ]
+        },
+        {
+          "library": "Mobbin",
+          "library_url": "https://mobbin.com/",
+          "query_or_category": "workflow, status, review, incident and project operations flows",
+          "searched_at": "2026-06-14",
+          "selection_criteria": [
+            "real product flow exposes navigation and state transitions",
+            "patterns improve operator speed instead of presentation aesthetics"
+          ],
+          "candidate_count": 6,
+          "selected_source_ids": [
+            "mobbin-workflow-patterns",
+            "linear-product-workflow"
+          ],
+          "rejected_candidate_ids": [
+            "marketing-dashboard-gallery",
+            "single-screenshot-flow"
+          ]
+        },
+        {
+          "library": "Page Flows",
+          "library_url": "https://pageflows.com/",
+          "query_or_category": "approval, review, onboarding, error and blocked-state journeys",
+          "searched_at": "2026-06-14",
+          "selection_criteria": [
+            "journey shows consequences and recovery states",
+            "flow can be compared dimension-by-dimension against the product task model"
+          ],
+          "candidate_count": 5,
+          "selected_source_ids": [
+            "pageflows-review-approval"
+          ],
+          "rejected_candidate_ids": [
+            "happy-path-only-flow"
+          ]
+        }
+      ],
+      "rejected_references": [
+        {
+          "source_id": "decorative-dashboard-template",
+          "source_url_or_ref": "external:generic-dashboard-gallery",
+          "rejection_reason": "Rejected because decorative metrics and large cards do not prove gate, evidence or next-action clarity."
+        },
+        {
+          "source_id": "marketing-dashboard-gallery",
+          "source_url_or_ref": "external:marketing-dashboard-gallery",
+          "rejection_reason": "Rejected because the surface optimizes for presentation, not repeated operator decisions and recovery states."
+        },
+        {
+          "source_id": "happy-path-only-flow",
+          "source_url_or_ref": "external:single-happy-path-flow",
+          "rejection_reason": "Rejected because it does not show blocked, error, review or approval consequences."
+        }
+      ],
+      "pattern_synthesis": {
+        "layout_hierarchy": "Lead with source freshness, current state, blocker/next action and selected object before secondary metrics or explanation.",
+        "interaction_model": "Use command strips, segmented state filters, searchable lists, adjacent inspectors and explicit approval/recovery actions.",
+        "state_coverage": "Design and capture loading, empty, success, blocked, stale, contradictory, private-unavailable and visual-quality-fail states before PASS.",
+        "visual_language": "Use a restrained professional product-tool language with semantic status color, crisp typography and no generic AI-dashboard decoration.",
+        "density_spacing": "Keep dense but readable rows, fixed tool dimensions and compact panels so repeated operation is fast and stable.",
+        "anti_patterns": [
+          "single attractive screenshot without workflow proof",
+          "decorative KPI cards disconnected from factory objects",
+          "hero layout or marketing composition inside an operational cockpit"
+        ]
+      },
+      "reference_evidence_policy": {
+        "capture_required_before_implementation": true,
+        "side_by_side_comparison_required_before_pass": true,
+        "public_refs_only": true,
+        "no_private_screenshots_in_repo": true,
+        "public_safe_evidence_refs": [
+          "professional_design_process.reference_research.sources"
+        ]
+      }
     },
     "ux_architecture": {
       "information_hierarchy": ["status", "evidence", "review", "next action"],
@@ -222,17 +451,32 @@
     },
     "comparative_review_gate": {
       "status": "PASS",
-      "reviewer_role": "product-face",
+      "reviewer_role": "independent-product-face-reviewer",
       "must_compare_to_reference_packet": true,
-      "basis": "Product Face reviewer compares result to packet and reference quality bar.",
+      "basis": "Independent Product Face reviewer must compare the implemented surface side-by-side against selected references, the pattern synthesis, task model and Product Face packet before approval.",
       "block_when": [
         "Generic dashboard visual quality appears.",
-        "Evidence hierarchy is unclear."
+        "Evidence hierarchy is unclear.",
+        "Reference research lacks real library searches, selected candidates and rejected candidates.",
+        "The result cannot explain, dimension by dimension, how it matches or deliberately differs from the chosen references."
       ]
     },
     "handoff_requirements": {
-      "required_before_implementation": ["reference research", "wireframe gate", "prototype gate", "design QA plan"],
-      "product_face_result_must_include": ["professional_design_process_ref", "professional_design_process_comparison.status=pass"]
+      "required_before_implementation": [
+        "reference research",
+        "wireframe gate",
+        "prototype gate",
+        "design QA plan",
+        "library searches",
+        "rejected references",
+        "pattern synthesis",
+        "reference evidence policy"
+      ],
+      "product_face_result_must_include": [
+        "professional_design_process_ref",
+        "professional_design_process_comparison.status=pass",
+        "reference_quality_comparison.status=pass"
+      ]
     }
   }
 }
