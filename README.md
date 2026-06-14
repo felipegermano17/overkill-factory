@@ -164,6 +164,7 @@ as a place to add files.
 | `agents/` | Public worker registry, profiles, permissions and Hermes bindings. See `agents/README.md`. |
 | `docs/` | Human guides for getting started, concepts, operations, agents and integrations. See `docs/README.md`. |
 | `examples/` | Small source examples and fixtures that teach or test the factory path. See `examples/README.md`. |
+| `planning-bundles/` | Public-safe planning protocols for creating candidate artifacts in web LLMs before factory validation. See `planning-bundles/README.md`. |
 | `products/` | Public validation products used by product-like and production-lane checks. See `products/README.md`. |
 | `schemas/` | Machine contracts for cards, receipts, worker outputs and gates. See `schemas/README.md`. |
 | `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. See `scripts/README.md`. |
@@ -221,6 +222,8 @@ adapter rule or receipt contract.
 - `docs/visuals/README.md`: public visual-map boundary and validation rules.
 - Public visual map:
   `https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html`.
+- `planning-bundles/README.md`: public-safe planning protocols for candidate
+  artifacts that must be imported and validated before execution.
 - `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
   evidence.
 - `agents/README.md`: human entrypoint for the agent contract directory.
@@ -257,6 +260,7 @@ Run these before publishing:
 python scripts/validate_document_governance.py
 python scripts/secret_safety_scan.py
 python scripts/public_safety_scan.py
+python scripts/validate_planning_bundles.py
 python scripts/validate_public_json_artifacts.py
 ```
 
