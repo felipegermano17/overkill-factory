@@ -80,6 +80,7 @@
     "human_gate_packet": { "type": "object" },
     "reasoning_policy": { "$ref": "reasoning-policy.schema.json" },
     "reference_quality_packet": { "$ref": "reference-quality-packet.schema.json" },
+    "professional_design_process": { "$ref": "professional-design-process.schema.json" },
     "r4_gate": { "type": "object" },
     "outcome_contract": { "type": "object" },
     "discovery_brief": { "type": "object" },

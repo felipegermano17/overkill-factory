@@ -26,6 +26,7 @@ PRODUCT_ALIGNMENT_FIELDS = (
     "packet_comparison",
     "source_promise_coverage",
     "design_fit_review",
+    "professional_design_process_comparison",
 )
 VISUAL_QUALITY_PASS_RESULTS = {"PASS", "PASS_WITH_RESIDUALS"}
 
@@ -350,6 +351,11 @@ def base_result(
             "status": "pending",
             "basis": "Visual/product-fit review must be recorded by Product Face reviewer before promotion.",
         },
+        "professional_design_process_ref": "",
+        "professional_design_process_comparison": {
+            "status": "pending",
+            "basis": "Product Face proof must compare the result against the professional design process before promotion.",
+        },
         "visual_quality_result": {
             "status": "BLOCK",
             "reviewer": "product-face-proof-runner",
@@ -390,7 +396,8 @@ def validate_reusable_product_scope(
     if not product_alignment_passes(result):
         raise ValueError(
             "--reusable-for-product requires Product Face alignment: packet_ref, "
-            "packet_comparison=pass, source_promise_coverage=pass and design_fit_review=pass"
+            "packet_comparison=pass, source_promise_coverage=pass, design_fit_review=pass and "
+            "professional_design_process_comparison=pass"
         )
     visual_quality = result.get("visual_quality_result") if isinstance(result.get("visual_quality_result"), dict) else {}
     if visual_quality.get("status") not in VISUAL_QUALITY_PASS_RESULTS or visual_quality.get("reference_quality_bar_checked") is not True:
@@ -433,12 +440,16 @@ def apply_product_alignment(
     packet_comparison_basis: str | None,
     source_promise_coverage_basis: str | None,
     design_fit_review_basis: str | None,
+    professional_design_process_ref: str | None,
+    professional_design_process_comparison_basis: str | None,
 ) -> None:
     values = {
         "packet_ref": packet_ref,
         "packet_comparison": packet_comparison_basis,
         "source_promise_coverage": source_promise_coverage_basis,
         "design_fit_review": design_fit_review_basis,
+        "professional_design_process_ref": professional_design_process_ref,
+        "professional_design_process_comparison": professional_design_process_comparison_basis,
     }
     supplied = {field for field, value in values.items() if str(value or "").strip()}
     if not supplied:
@@ -458,6 +469,11 @@ def apply_product_alignment(
     result["design_fit_review"] = {
         "status": "pass",
         "basis": str(design_fit_review_basis).strip(),
+    }
+    result["professional_design_process_ref"] = str(professional_design_process_ref).strip()
+    result["professional_design_process_comparison"] = {
+        "status": "pass",
+        "basis": str(professional_design_process_comparison_basis).strip(),
     }
 
 
@@ -820,6 +836,8 @@ def build_product_face_proof(
     packet_comparison_basis: str | None = None,
     source_promise_coverage_basis: str | None = None,
     design_fit_review_basis: str | None = None,
+    professional_design_process_ref: str | None = None,
+    professional_design_process_comparison_basis: str | None = None,
     visual_quality_status: str | None = None,
     visual_quality_reviewer: str | None = None,
     visual_quality_basis: str | None = None,
@@ -882,6 +900,8 @@ def build_product_face_proof(
         packet_comparison_basis=packet_comparison_basis,
         source_promise_coverage_basis=source_promise_coverage_basis,
         design_fit_review_basis=design_fit_review_basis,
+        professional_design_process_ref=professional_design_process_ref,
+        professional_design_process_comparison_basis=professional_design_process_comparison_basis,
     )
     apply_visual_quality_review(
         result=result,
@@ -931,6 +951,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--packet-comparison-basis", help="Why this proof matches the Product Face Packet.")
     parser.add_argument("--source-promise-coverage-basis", help="Why this proof covers the source/product promise.")
     parser.add_argument("--design-fit-review-basis", help="Why this proof fits the intended product/design direction.")
+    parser.add_argument("--professional-design-process-ref", help="Professional Design Process packet used for Product Face approval.")
+    parser.add_argument("--professional-design-process-comparison-basis", help="Why this proof satisfies the professional design process.")
     parser.add_argument("--visual-quality-status", choices=["PASS", "BLOCK", "PASS_WITH_RESIDUALS"], help="Professional visual quality verdict.")
     parser.add_argument("--visual-quality-reviewer", help="Reviewer empowered to block visually unacceptable UI.")
     parser.add_argument("--visual-quality-basis", help="Why the surface meets or fails the product-specific quality bar.")
@@ -960,6 +982,8 @@ def main(argv: list[str] | None = None) -> int:
             packet_comparison_basis=args.packet_comparison_basis,
             source_promise_coverage_basis=args.source_promise_coverage_basis,
             design_fit_review_basis=args.design_fit_review_basis,
+            professional_design_process_ref=args.professional_design_process_ref,
+            professional_design_process_comparison_basis=args.professional_design_process_comparison_basis,
             visual_quality_status=args.visual_quality_status,
             visual_quality_reviewer=args.visual_quality_reviewer,
             visual_quality_basis=args.visual_quality_basis,

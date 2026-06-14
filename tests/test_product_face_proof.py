@@ -99,6 +99,8 @@ class ProductFaceProofTest(unittest.TestCase):
             "packet_comparison",
             "source_promise_coverage",
             "design_fit_review",
+            "professional_design_process_ref",
+            "professional_design_process_comparison",
             "visual_quality_result",
             "blocking_findings",
             "evidence_refs",
@@ -184,6 +186,8 @@ class ProductFaceProofTest(unittest.TestCase):
                 packet_comparison_basis="Unit proof is explicitly matched to the packet.",
                 source_promise_coverage_basis="Unit proof covers the named product promise.",
                 design_fit_review_basis="Unit proof includes an explicit design-fit review.",
+                professional_design_process_ref="templates/professional-design-process.json",
+                professional_design_process_comparison_basis="Unit proof satisfies the professional design process gates.",
             )
             product_face_proof.apply_visual_quality_review(
                 result=result,

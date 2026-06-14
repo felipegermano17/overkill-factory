@@ -48,7 +48,9 @@
   ],
   "done_definition": [
     "Product Face Packet exists before implementation",
+    "Professional Design Process exists before implementation",
     "Product Face Result compares screenshots/states/flows against the packet",
+    "Product Face Result compares screenshots/states/flows against the professional design process",
     "review confirms evidence matches the original product promise",
     "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"
   ],
@@ -58,6 +60,7 @@
     "reason": "Set required=true when visual/product direction is not already approved or affects external user promise."
   },
   "prototype_decision": "prototype_not_required because flow is known; update when uncertainty exists",
+  "professional_design_process_ref": "templates/professional-design-process.json",
   "device_or_viewport_scope": [
     "desktop 1440x900",
     "mobile 390x844 when mobile is in scope"

@@ -269,7 +269,9 @@ def reusable_product_scope_is_valid(data: dict[str, Any], *, record_type: str | 
             return False
         if not str(data.get("packet_ref") or "").strip():
             return False
-        for field in ("packet_comparison", "source_promise_coverage", "design_fit_review"):
+        if not str(data.get("professional_design_process_ref") or "").strip():
+            return False
+        for field in ("packet_comparison", "source_promise_coverage", "design_fit_review", "professional_design_process_comparison"):
             value = data.get(field)
             if not isinstance(value, dict) or value.get("status") != "pass":
                 return False

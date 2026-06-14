@@ -38,6 +38,7 @@ PRODUCT_FACE_ALIGNMENT_FIELDS = (
     "packet_comparison",
     "source_promise_coverage",
     "design_fit_review",
+    "professional_design_process_comparison",
 )
 PRIVATE_USERS_PATH = "C:" + r"[\\/]+" + "Users"
 PRIVATE_SYNC_ROOT = "One" + "Drive"
@@ -182,10 +183,30 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
     if data.get("record_type") == "product_face_result" and data.get("reusable_for_product") is True:
         if not str(data.get("packet_ref") or "").strip():
             errors.append(f"{at}: reusable product_face_result requires packet_ref")
+        if not str(data.get("professional_design_process_ref") or "").strip():
+            errors.append(f"{at}: reusable product_face_result requires professional_design_process_ref")
         for field in PRODUCT_FACE_ALIGNMENT_FIELDS:
             value = data.get(field)
             if not isinstance(value, dict) or value.get("status") != "pass":
                 errors.append(f"{at}: reusable product_face_result requires {field}.status=pass")
+    if data.get("record_type") == "professional_design_process":
+        research = data.get("reference_research") if isinstance(data.get("reference_research"), dict) else {}
+        sources = research.get("sources") if isinstance(research.get("sources"), list) else []
+        if len(sources) < 3:
+            errors.append(f"{at}: professional_design_process requires at least 3 reference sources")
+        for index, source in enumerate(sources):
+            if not isinstance(source, dict):
+                errors.append(f"{at}.reference_research.sources[{index}]: expected object")
+                continue
+            if len(source.get("extracted_patterns") or []) < 2:
+                errors.append(f"{at}.reference_research.sources[{index}]: requires at least 2 extracted_patterns")
+            copy_policy = str(source.get("copy_policy") or "").lower()
+            if copy_policy in {"copy", "blind_copy"}:
+                errors.append(f"{at}.reference_research.sources[{index}]: copy_policy must not allow blind copying")
+        for gate_name in ("wireframe_gate", "prototype_gate", "comparative_review_gate"):
+            gate = data.get(gate_name) if isinstance(data.get(gate_name), dict) else {}
+            if gate.get("status") != "PASS":
+                errors.append(f"{at}: professional_design_process {gate_name}.status must be PASS")
     if data.get("record_type") == "factory_learning_proposal":
         serialized_refs = "\n".join(str(ref) for ref in data.get("source_evidence_refs", []))
         if PRIVATE_MARKERS.search(serialized_refs):

@@ -53,7 +53,7 @@ function sectionTitle(eyebrow, title, copy) {
   const children = [];
   if (eyebrow) children.push(node("p", { className: "eyebrow", text: eyebrow }));
   children.push(node("h2", { text: title }));
-  if (copy) children.push(node("p", { className: "subtle", text: copy }));
+  if (copy) children.push(node("p", { className: "section-meta", text: copy }));
   return children;
 }
 
@@ -116,10 +116,10 @@ function stateCountFor(stateId) {
 function renderCommandStrip() {
   const metrics = state.data.metrics;
   return node("section", { className: "command-strip", "aria-label": "Cockpit summary metrics" }, [
-    metric("Fixture projections", metrics.status_fixture_projections),
-    metric("Adapter report projections", metrics.adapter_report_projections),
-    metric("Blocked or review states", metrics.blocked_or_review_count),
-    metric("Raw private payloads shown", metrics.raw_private_payload_count),
+    metric("Fixture snapshots", metrics.status_fixture_projections),
+    metric("Adapter reports", metrics.adapter_report_projections),
+    metric("Blocked / review", metrics.blocked_or_review_count),
+    metric("Private payloads", metrics.raw_private_payload_count),
   ]);
 }
 
@@ -149,8 +149,8 @@ function renderStateFilters() {
     }, [node("strong", { text: entry.label }), node("br"), node("span", { className: "subtle", text: `${stateCountFor(entry.id)} matches · ${entry.demo_query}` })]));
   });
 
-  return node("section", { className: "panel", "aria-label": "State filters" }, [
-    ...sectionTitle("State semantics", "Required states", "Filter by the Product Face packet state matrix. Color is paired with text labels."),
+  return node("section", { className: "panel state-rail", "aria-label": "State filters" }, [
+    ...sectionTitle("State rail", "Required states"),
     node("div", { className: "state-filter-grid" }, buttons),
   ]);
 }
@@ -196,19 +196,30 @@ function renderSnapshotList() {
       renderApp();
     },
   }, [
-    node("strong", { text: snapshot.title }),
-    node("span", { className: "subtle", text: snapshot.input_ref }),
-    node("span", { className: "snapshot-meta" }, [
-      pill("state", snapshot.current_state, "state-pill current-pill"),
-      pill("ui", snapshot.state_ui, "state-pill"),
-      pill("review", snapshot.review.status),
+    node("span", { className: "snapshot-status" }, [
+      pill("", snapshot.current_state, "state-pill current-pill"),
+      pill("", snapshot.review.status, "pill"),
     ]),
+    node("span", { className: "snapshot-title-cell" }, [
+      node("strong", { text: snapshot.title }),
+      node("span", { className: "subtle", text: snapshot.input_ref }),
+    ]),
+    node("span", { className: "snapshot-phase", text: snapshot.phase }),
+    node("span", { className: "snapshot-action", text: snapshot.next_safe_action.action_type }),
   ]));
 
   return node("aside", { className: "panel", "aria-label": "Snapshot list" }, [
-    ...sectionTitle("Local sources", "Snapshots", "Fixture and adapter report projections only."),
+    ...sectionTitle("Local sources", "Snapshots & work queue"),
     node("div", { className: "search-row" }, [input]),
-    rows.length ? node("div", { className: "snapshot-list" }, rows) : node("p", { className: "subtle", text: "No snapshot matches the current filter." }),
+    rows.length ? node("div", { className: "snapshot-list" }, [
+      node("div", { className: "snapshot-head", "aria-hidden": "true" }, [
+        node("span", { text: "State" }),
+        node("span", { text: "Source" }),
+        node("span", { text: "Phase" }),
+        node("span", { text: "Action" }),
+      ]),
+      ...rows,
+    ]) : node("p", { className: "subtle", text: "No snapshot matches the current filter." }),
   ]);
 }
 
@@ -218,7 +229,7 @@ function kv(label, value) {
 
 function renderObjectList(title, items, formatter, emptyCopy) {
   const content = items && items.length
-    ? node("ul", { className: "object-list" }, items.map((item) => node("li", { className: "object-card" }, formatter(item))))
+    ? node("ul", { className: "object-list" }, items.map((item) => node("li", { className: "object-row" }, formatter(item))))
     : node("p", { className: "subtle", text: emptyCopy });
   return node("section", { className: "stack", "aria-label": title }, [node("h3", { text: title }), content]);
 }
@@ -237,9 +248,12 @@ function renderDetail() {
     "data-current-state": selected.current_state,
     "aria-label": "Selected snapshot detail",
   }, [
-    node("p", { className: "eyebrow", text: selected.phase }),
+    node("div", { className: "inspector-kicker" }, [
+      node("p", { className: "eyebrow", text: "Inspector" }),
+      node("span", { className: "subtle", text: selected.phase }),
+    ]),
     node("h2", { text: selected.title }),
-    node("p", { className: "subtle", text: selected.next_safe_action.label }),
+    node("p", { className: "next-action", text: selected.next_safe_action.label }),
     node("div", { className: "pill-row" }, [
       pill("current", selected.current_state, "state-pill current-pill"),
       pill("ui", selected.state_ui, "state-pill"),
@@ -278,7 +292,7 @@ function renderProductFacePanel() {
   const packet = state.data.product_face;
   const review = state.data.product_face_review;
   return node("aside", { className: "panel", "aria-label": "Product Face contract" }, [
-    ...sectionTitle("Product Face packet", packet.surface, packet.job_to_be_done),
+    ...sectionTitle("Product Face", packet.surface),
     node("div", { className: "pill-row" }, [
       pill("review", review.verdict),
       pill("consume", review.may_consume_product_face_packet ? "bounded yes" : "blocked"),
@@ -300,7 +314,7 @@ function renderStateCoverage() {
     pill("matches", stateCountFor(entry.id), "state-pill"),
   ]));
   return node("section", { className: "panel", "aria-label": "State coverage matrix" }, [
-    ...sectionTitle("State coverage", "Packet-required state matrix", "Each state is text-labeled and available through fixtures, adapter projections or explicit demo mode."),
+    ...sectionTitle("State coverage", "Packet-required state matrix"),
     node("div", { className: "state-coverage-grid" }, cards),
   ]);
 }
@@ -312,14 +326,14 @@ function renderTimeline() {
     node("p", { className: "subtle", text: `${item.current_state} · ${item.next_action} · ${item.source_ref}` }),
   ]));
   return node("section", { className: "panel", "aria-label": "Transition timeline" }, [
-    ...sectionTitle("Timeline", "Recent projections", "Replay is based on source refs, not chat memory."),
+    ...sectionTitle("Timeline", "Recent projections"),
     node("div", { className: "timeline" }, rows),
   ]);
 }
 
 function renderGuardrails() {
   return node("section", { className: "panel", "aria-label": "Forbidden actions" }, [
-    ...sectionTitle("Safety boundary", "Forbidden by this surface", "The cockpit makes boundaries visible instead of hiding them behind successful-looking cards."),
+    ...sectionTitle("Safety boundary", "Forbidden by this surface"),
     node("ul", { className: "guardrail-list" }, state.data.policy.forbidden_actions.map((item) => node("li", { text: item }))),
   ]);
 }
@@ -334,9 +348,9 @@ function renderApp() {
   if (!state.selectedId) state.selectedId = state.data.snapshots[0].id;
   root.appendChild(renderCommandStrip());
   root.appendChild(node("div", { className: "layout" }, [
-    node("div", { className: "stack" }, [renderStateFilters(), renderSnapshotList()]),
-    node("div", { className: "stack" }, [renderDetail(), renderStateCoverage(), renderTimeline(), renderGuardrails()]),
-    renderProductFacePanel(),
+    renderStateFilters(),
+    node("div", { className: "stack main-stack" }, [renderSnapshotList(), renderStateCoverage()]),
+    node("div", { className: "stack inspector-stack" }, [renderDetail(), renderProductFacePanel(), renderTimeline(), renderGuardrails()]),
   ]));
 }
 

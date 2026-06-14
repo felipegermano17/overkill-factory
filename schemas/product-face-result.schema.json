@@ -17,6 +17,8 @@
     "packet_comparison",
     "source_promise_coverage",
     "design_fit_review",
+    "professional_design_process_ref",
+    "professional_design_process_comparison",
     "visual_quality_result",
     "blocking_findings",
     "evidence_refs",
@@ -105,6 +107,18 @@
       "additionalProperties": true
     },
     "design_fit_review": {
+      "type": "object",
+      "required": ["status", "basis"],
+      "properties": {
+        "status": { "enum": ["pass", "warn", "fail", "pending"] },
+        "basis": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "professional_design_process_ref": {
+      "type": "string"
+    },
+    "professional_design_process_comparison": {
       "type": "object",
       "required": ["status", "basis"],
       "properties": {

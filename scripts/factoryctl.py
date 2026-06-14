@@ -354,6 +354,21 @@ REFERENCE_QUALITY_REQUIRED_FIELDS = (
     "performance_constraints",
     "acceptance_criteria",
 )
+PROFESSIONAL_DESIGN_PROCESS_REQUIRED_FIELDS = (
+    "record_type",
+    "surface_type",
+    "mode",
+    "design_brief",
+    "task_map",
+    "reference_research",
+    "ux_architecture",
+    "wireframe_gate",
+    "visual_direction",
+    "prototype_gate",
+    "design_qa_plan",
+    "comparative_review_gate",
+    "handoff_requirements",
+)
 REASONING_POLICY_REQUIRED_FIELDS = (
     "record_type",
     "reasoning_class",
@@ -369,6 +384,7 @@ PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS = (
     "packet_comparison",
     "source_promise_coverage",
     "design_fit_review",
+    "professional_design_process_comparison",
 )
 VISUAL_QUALITY_ALLOWED_RESULTS = {"PASS", "PASS_WITH_RESIDUALS", "BLOCK"}
 
@@ -418,12 +434,12 @@ WORKERS: dict[str, WorkerDefinition] = {
         factory_phase="F5/F13",
         output_field="product_face_result",
         tool_required="browser screenshot/a11y/mobile validation runner",
-        timing="after product_face_packet and before product-facing done",
+        timing="after product_face_packet and professional_design_process, before product-facing done",
         blocking_policy=(
             "Frontend, UX, mobile, wallet UI, or visible product work cannot be "
             "declared complete without screen/state/mobile/a11y evidence."
         ),
-        required_inputs=("product_face_packet", "target_repo_paths", "acceptance_criteria"),
+        required_inputs=("product_face_packet", "professional_design_process", "target_repo_paths", "acceptance_criteria"),
     ),
     "independent-reviewer": WorkerDefinition(
         worker_id="independent-reviewer",
@@ -552,7 +568,7 @@ WORKERS: dict[str, WorkerDefinition] = {
         tool_required="frontend runtime, browser, component tests and visual proof handoff",
         timing="during scoped visible-product implementation, before Product Face validation",
         blocking_policy="Frontend work cannot be treated as generic code when visible product surfaces are in scope.",
-        required_inputs=("product_face_packet", "scope_in", "scope_out", "done_definition"),
+        required_inputs=("product_face_packet", "professional_design_process", "scope_in", "scope_out", "done_definition"),
     ),
     "backend-api-builder": WorkerDefinition(
         worker_id="backend-api-builder",
@@ -2142,6 +2158,114 @@ def validate_reference_quality_packet(packet: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for field in PROFESSIONAL_DESIGN_PROCESS_REQUIRED_FIELDS:
+        value = process.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"professional_design_process.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"professional_design_process.{field} must be a non-empty object")
+        elif not _non_empty_text(value):
+            errors.append(f"professional_design_process.{field} is required")
+
+    if process.get("record_type") not in (None, "professional_design_process"):
+        errors.append("professional_design_process.record_type must be professional_design_process")
+
+    brief = process.get("design_brief") if isinstance(process.get("design_brief"), dict) else {}
+    for field in ("user", "job_to_be_done", "decision_surface", "success_signal"):
+        if not _non_empty_text(brief.get(field)):
+            errors.append(f"professional_design_process.design_brief.{field} is required")
+    if len(_list_items(brief.get("failure_risks"))) < 2:
+        errors.append("professional_design_process.design_brief.failure_risks requires at least 2 risks")
+
+    tasks = process.get("task_map") if isinstance(process.get("task_map"), list) else []
+    if len(tasks) < 3:
+        errors.append("professional_design_process.task_map requires at least 3 user/system tasks")
+    for index, task in enumerate(tasks):
+        if not isinstance(task, dict):
+            errors.append(f"professional_design_process.task_map[{index}] must be an object")
+            continue
+        for field in ("task_id", "user_goal", "trigger", "success_signal", "failure_state"):
+            if not _non_empty_text(task.get(field)):
+                errors.append(f"professional_design_process.task_map[{index}].{field} is required")
+
+    research = process.get("reference_research") if isinstance(process.get("reference_research"), dict) else {}
+    sources = research.get("sources") if isinstance(research.get("sources"), list) else []
+    if len(sources) < 3:
+        errors.append("professional_design_process.reference_research.sources requires at least 3 sources")
+    if len(_list_items(research.get("registry_refs"))) < 2:
+        errors.append("professional_design_process.reference_research.registry_refs requires at least 2 registry refs")
+    if not _non_empty_text(research.get("selection_rationale")):
+        errors.append("professional_design_process.reference_research.selection_rationale is required")
+    for index, source in enumerate(sources):
+        if not isinstance(source, dict):
+            errors.append(f"professional_design_process.reference_research.sources[{index}] must be an object")
+            continue
+        for field in ("source_id", "source_url_or_ref", "use_type", "copy_policy", "license_or_terms_ref"):
+            if not _non_empty_text(source.get(field)):
+                errors.append(f"professional_design_process.reference_research.sources[{index}].{field} is required")
+        if len(_list_items(source.get("what_to_learn"))) < 2:
+            errors.append(f"professional_design_process.reference_research.sources[{index}].what_to_learn requires at least 2 items")
+        if len(_list_items(source.get("extracted_patterns"))) < 2:
+            errors.append(f"professional_design_process.reference_research.sources[{index}].extracted_patterns requires at least 2 items")
+        if str(source.get("copy_policy") or "").strip().lower() in {"copy", "blind_copy"}:
+            errors.append(f"professional_design_process.reference_research.sources[{index}].copy_policy must not allow blind copying")
+
+    architecture = process.get("ux_architecture") if isinstance(process.get("ux_architecture"), dict) else {}
+    for field in ("information_hierarchy", "navigation_model", "state_model", "density_rationale"):
+        value = architecture.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"professional_design_process.ux_architecture.{field} must be a non-empty array")
+        elif not _non_empty_text(value):
+            errors.append(f"professional_design_process.ux_architecture.{field} is required")
+
+    for field in ("wireframe_gate", "prototype_gate"):
+        gate = process.get(field) if isinstance(process.get(field), dict) else {}
+        if gate.get("status") != "PASS":
+            errors.append(f"professional_design_process.{field}.status must be PASS before product-facing implementation")
+        if not _non_empty_text(gate.get("reviewer")):
+            errors.append(f"professional_design_process.{field}.reviewer is required")
+        if not _list_items(gate.get("artifact_refs")):
+            errors.append(f"professional_design_process.{field}.artifact_refs must be a non-empty array")
+        if not _non_empty_text(gate.get("basis")):
+            errors.append(f"professional_design_process.{field}.basis is required")
+
+    visual_direction = process.get("visual_direction") if isinstance(process.get("visual_direction"), dict) else {}
+    for field in ("typography", "spacing", "color_semantics", "component_model", "anti_generic_commitments"):
+        value = visual_direction.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"professional_design_process.visual_direction.{field} must be a non-empty array")
+        elif not _non_empty_text(value):
+            errors.append(f"professional_design_process.visual_direction.{field} is required")
+
+    qa_plan = process.get("design_qa_plan") if isinstance(process.get("design_qa_plan"), dict) else {}
+    for field in ("viewports", "accessibility_checks", "performance_checks", "screenshot_requirements"):
+        if not _list_items(qa_plan.get(field)):
+            errors.append(f"professional_design_process.design_qa_plan.{field} must be a non-empty array")
+    for field in ("console_check_required", "overlap_check_required"):
+        if qa_plan.get(field) is not True:
+            errors.append(f"professional_design_process.design_qa_plan.{field} must be true")
+
+    comparative = process.get("comparative_review_gate") if isinstance(process.get("comparative_review_gate"), dict) else {}
+    if comparative.get("status") != "PASS":
+        errors.append("professional_design_process.comparative_review_gate.status must be PASS")
+    if comparative.get("must_compare_to_reference_packet") is not True:
+        errors.append("professional_design_process.comparative_review_gate.must_compare_to_reference_packet must be true")
+    if not _non_empty_text(comparative.get("reviewer_role")):
+        errors.append("professional_design_process.comparative_review_gate.reviewer_role is required")
+    if not _non_empty_text(comparative.get("basis")):
+        errors.append("professional_design_process.comparative_review_gate.basis is required")
+    if not _list_items(comparative.get("block_when")):
+        errors.append("professional_design_process.comparative_review_gate.block_when must be a non-empty array")
+
+    return errors
+
+
 def validate_reasoning_policy(policy: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     for field in REASONING_POLICY_REQUIRED_FIELDS:
@@ -2285,6 +2409,10 @@ def validate_card(data: dict[str, Any]) -> list[str]:
                     errors.append("product_experience_plan.reference_quality_waiver requires owner and reason")
             else:
                 errors.extend(validate_reference_quality_packet(data["reference_quality_packet"]))
+            if not isinstance(data.get("professional_design_process"), dict):
+                errors.append("professional_design_process required for vFinal product-facing surfaces")
+            else:
+                errors.extend(validate_professional_design_process(data["professional_design_process"]))
     phase = str(data.get("phase", "")).upper()
     if surfaces & PRODUCT_FACE_SURFACES and phase in {"F11", "F16", "F17"}:
         if not isinstance(data.get("product_face_result"), dict) and not str(data.get("product_face_result_ref") or "").strip():
@@ -2368,6 +2496,16 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
             errors.append("product_face_result PASS requires visual_quality_result.status PASS or PASS_WITH_RESIDUALS")
         if is_pass and visual_status == "PASS_WITH_RESIDUALS" and not _list_items(visual_quality.get("residuals")):
             errors.append("product_face_result PASS_WITH_RESIDUALS requires residuals")
+    professional_comparison = result.get("professional_design_process_comparison")
+    if is_pass:
+        if not _non_empty_text(result.get("professional_design_process_ref")):
+            errors.append("product_face_result.professional_design_process_ref is required for PASS")
+        if not isinstance(professional_comparison, dict) or not professional_comparison:
+            errors.append("product_face_result.professional_design_process_comparison is required for PASS")
+        elif _status_value(professional_comparison) != "pass":
+            errors.append("product_face_result.professional_design_process_comparison.status must be pass")
+        elif not _non_empty_text(professional_comparison.get("basis")):
+            errors.append("product_face_result.professional_design_process_comparison.basis is required")
     return errors
 
 
@@ -2419,6 +2557,9 @@ def validate_product_face_result_against_card(result: dict[str, Any], card: dict
     packet_ref = str(result.get("packet_ref") or "").strip()
     if strict_product_experience_required(card) and not packet_ref:
         errors.append("product_face_result.packet_ref is required for vFinal product-facing completion")
+    professional_ref = str(result.get("professional_design_process_ref") or "").strip()
+    if strict_product_experience_required(card) and not professional_ref:
+        errors.append("product_face_result.professional_design_process_ref is required for vFinal product-facing completion")
 
     return errors
 
@@ -3085,6 +3226,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "parallel_lane_contracts": lane_contracts,
             "reasoning_policy": card.get("reasoning_policy"),
             "reference_quality_packet": card.get("reference_quality_packet"),
+            "professional_design_process": card.get("professional_design_process"),
             "learning_proposal_refs": card.get("learning_proposal_refs", []),
             "canonical_product_sot_ref": card.get("canonical_product_sot_ref") or "card.product_sot",
             "product_creation_plan_ref": card.get("product_creation_plan_ref")
@@ -3883,6 +4025,11 @@ def build_worker_result(
                 "design_fit_review": {
                     "status": "pass" if not blocking_findings else "fail",
                     "basis": "Design fit reviewed by Product Face validator for this bounded card.",
+                },
+                "professional_design_process_ref": "card.professional_design_process",
+                "professional_design_process_comparison": {
+                    "status": "pass" if not blocking_findings else "fail",
+                    "basis": "Product Face evidence is explicitly compared to the professional design process.",
                 },
                 "visual_quality_result": {
                     "status": "PASS" if not blocking_findings else "BLOCK",

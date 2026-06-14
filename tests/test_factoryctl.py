@@ -439,6 +439,11 @@ class FactoryCtlTest(unittest.TestCase):
                     "status": "pass",
                     "basis": "The validator confirmed this bounded SaaS surface matches the Product Face packet."
                 },
+                "professional_design_process_ref": "examples/cards/v35_valid_product_face.md#professional_design_process",
+                "professional_design_process_comparison": {
+                    "status": "pass",
+                    "basis": "The validator confirmed the result satisfies the professional design process gates."
+                },
                 "visual_quality_result": {
                     "status": "PASS",
                     "reviewer": "product-face-reviewer",
@@ -498,6 +503,8 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_result.packet_comparison is required for product-facing completion", errors)
         self.assertIn("product_face_result.source_promise_coverage is required for product-facing completion", errors)
         self.assertIn("product_face_result.design_fit_review is required for product-facing completion", errors)
+        self.assertIn("product_face_result.professional_design_process_comparison is required for product-facing completion", errors)
+        self.assertIn("product_face_result.professional_design_process_ref is required for PASS", errors)
         self.assertIn("product_face_result.visual_quality_result is required", errors)
 
     def test_product_face_completion_blocks_mechanically_ok_but_ai_generic_ui(self) -> None:
@@ -545,6 +552,11 @@ class FactoryCtlTest(unittest.TestCase):
                 "design_fit_review": {
                     "status": "pass",
                     "basis": "Mechanical layout and state checks passed."
+                },
+                "professional_design_process_ref": "examples/cards/v35_valid_product_face.md#professional_design_process",
+                "professional_design_process_comparison": {
+                    "status": "pass",
+                    "basis": "Mechanical proof claims the process was followed, but visual quality review blocks it."
                 },
                 "visual_quality_result": {
                     "status": "BLOCK",
