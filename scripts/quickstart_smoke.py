@@ -7,6 +7,7 @@ import argparse
 import importlib.util
 import json
 import sys
+import sysconfig
 from pathlib import Path
 from typing import Any
 
@@ -15,17 +16,31 @@ CODE_ROOT = Path(__file__).resolve().parents[1]
 FACTORYCTL_PATH = CODE_ROOT / "scripts" / "factoryctl.py"
 
 
+def installed_asset_root() -> Path | None:
+    candidates = [
+        Path(sysconfig.get_path("data") or "") / "share" / "overkill-factory",
+        CODE_ROOT / "share" / "overkill-factory",
+    ]
+    for candidate in candidates:
+        if (candidate / "examples" / "minimal-hermes-project" / "card.md").exists():
+            return candidate
+    return None
+
+
 def default_work_root() -> Path:
     cwd = Path.cwd()
     if (cwd / "examples" / "minimal-hermes-project" / "card.md").exists():
         return cwd
+    installed_root = installed_asset_root()
+    if installed_root is not None:
+        return installed_root
     return CODE_ROOT
 
 
 WORK_ROOT = default_work_root()
 DEFAULT_CARD = WORK_ROOT / "examples" / "minimal-hermes-project" / "card.md"
-DEFAULT_OUT = WORK_ROOT / ".tmp" / "quickstart-result.json"
-DEFAULT_PACKETS_OUT = WORK_ROOT / ".tmp" / "minimal-worker-packets"
+DEFAULT_OUT = Path.cwd() / ".tmp" / "quickstart-result.json"
+DEFAULT_PACKETS_OUT = Path.cwd() / ".tmp" / "minimal-worker-packets"
 
 
 def load_factoryctl() -> Any:

@@ -15,7 +15,7 @@ generated output under `.tmp/`.
 ## 1. Fresh Clone
 
 ```bash
-git clone https://github.com/<owner>/overkill-factory.git
+git clone https://github.com/felipegermano17/overkill-factory.git
 cd overkill-factory
 python -m pip install -e .
 ```

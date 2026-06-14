@@ -15,6 +15,7 @@ import json
 import re
 import subprocess
 import sys
+import sysconfig
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PureWindowsPath
@@ -24,12 +25,29 @@ from typing import Any
 CODE_ROOT = Path(__file__).resolve().parents[1]
 
 
+def installed_asset_root() -> Path | None:
+    candidates = [
+        Path(sysconfig.get_path("data") or "") / "share" / "overkill-factory",
+        CODE_ROOT / "share" / "overkill-factory",
+    ]
+    for candidate in candidates:
+        if (
+            (candidate / "agents" / "hermes-profile-bindings.public.json").exists()
+            and (candidate / "examples" / "minimal-hermes-project" / "card.md").exists()
+        ):
+            return candidate
+    return None
+
+
 def default_work_root() -> Path:
     cwd = Path.cwd()
     if (cwd / "agents" / "hermes-profile-bindings.public.json").exists() and (
         cwd / "examples" / "minimal-hermes-project" / "card.md"
     ).exists():
         return cwd
+    installed_root = installed_asset_root()
+    if installed_root is not None:
+        return installed_root
     return CODE_ROOT
 
 
@@ -41,8 +59,8 @@ CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
 DEFAULT_WORKFLOW_CATALOG = ROOT / "docs" / "factory-workflow.catalog.json"
 CANONICAL_RUNTIME_ENFORCEMENT_PATH = CODE_ROOT / "scripts" / "canonical_runtime_enforcement.py"
 DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
-DEFAULT_QUICKSTART_OUT = ROOT / ".tmp" / "quickstart-result.json"
-DEFAULT_PACKETS_OUT = ROOT / ".tmp" / "minimal-worker-packets"
+DEFAULT_QUICKSTART_OUT = Path.cwd() / ".tmp" / "quickstart-result.json"
+DEFAULT_PACKETS_OUT = Path.cwd() / ".tmp" / "minimal-worker-packets"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 DEFAULT_TRUTH_OUT = ROOT / ".tmp" / "factory-runs" / "truth" / "truth-packet.json"
 DEFAULT_EVIDENCE_GRAPH_OUT = ROOT / ".tmp" / "factory-runs" / "evidence" / "evidence-graph.json"

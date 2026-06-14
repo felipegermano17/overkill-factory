@@ -3,8 +3,11 @@ name: release-cli-smoke
 on:
   pull_request:
     paths:
+      - "README.md"
       - "pyproject.toml"
       - "scripts/**"
+      - "docs/getting-started/**"
+      - "docs/reference/cli.md"
       - ".github/workflows/release-cli-smoke.yml"
   push:
     branches:
@@ -18,7 +21,14 @@ permissions:
 
 jobs:
   package-cli-smoke:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -26,10 +36,16 @@ jobs:
           python-version: "3.12"
       - name: Install package from clean checkout
         run: python -m pip install .
-      - name: CLI entrypoint smoke
-        run: factoryctl --help
-      - name: Quickstart entrypoint smoke
-        run: overkill-quickstart
+      - name: CLI smoke outside checkout
+        run: |
+          $smoke = Join-Path $env:RUNNER_TEMP "overkill-factory-cli-smoke"
+          New-Item -ItemType Directory -Force -Path $smoke | Out-Null
+          Push-Location $smoke
+          factoryctl --help
+          factoryctl doctor --json
+          factoryctl run minimal --out (Join-Path $smoke "quickstart-result.json") --packets-out (Join-Path $smoke "packets")
+          overkill-quickstart --out (Join-Path $smoke "quickstart-result-compat.json") --packets-out (Join-Path $smoke "packets-compat")
+          Pop-Location
       - name: Public safety before publication
         run: python scripts/public_safety_scan.py
       - name: Secret safety before publication

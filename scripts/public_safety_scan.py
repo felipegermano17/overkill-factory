@@ -19,7 +19,6 @@ SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".pdf", ".tgz
 SKIP_PARTS = {".git", ".tmp", ".pytest_cache", ".venv", "__pycache__", "build", "dist", "node_modules", "venv"}
 SKIP_PART_SUFFIXES = (".egg-info",)
 PUBLIC_REPO_URL = "https://github.com/felipegermano17/overkill-factory"
-PUBLIC_REPO_METADATA_RELS = {"pyproject.toml", "mkdocs.yml"}
 
 PATTERN_SPECS = [
     ("private_product_marker", re.compile(r"KAXIS|Kaxis|kaxis")),
@@ -77,8 +76,8 @@ def is_declared_negative_fixture_guard(path_parts: tuple[str, ...], line: str) -
 
 
 def is_allowed_public_repo_metadata_line(rel: str, line: str) -> bool:
-    """Allow the canonical public GitHub URL only where package/site metadata needs it."""
-    return rel in PUBLIC_REPO_METADATA_RELS and PUBLIC_REPO_URL in line
+    """Allow the canonical public GitHub URL without allowing loose owner markers."""
+    return PUBLIC_REPO_URL in line
 
 
 def rel_parts(rel: str) -> tuple[str, ...]:

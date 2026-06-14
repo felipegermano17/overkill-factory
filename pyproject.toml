@@ -33,6 +33,24 @@ overkill-quickstart = "scripts.quickstart_smoke:main"
 
 [tool.setuptools]
 py-modules = []
+include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["scripts*"]
+
+[tool.setuptools.data-files]
+"share/overkill-factory" = ["README.md", "LICENSE", "pyproject.toml"]
+"share/overkill-factory/adapters" = ["adapters/README.md"]
+"share/overkill-factory/adapters/hermes" = ["adapters/hermes/*.md", "adapters/hermes/*.py"]
+"share/overkill-factory/adapters/hermes/patches" = ["adapters/hermes/patches/*.patch"]
+"share/overkill-factory/agents" = ["agents/*.json", "agents/*.md"]
+"share/overkill-factory/docs" = ["docs/index.md", "docs/README.md"]
+"share/overkill-factory/docs/getting-started" = ["docs/getting-started/*.md"]
+"share/overkill-factory/docs/reference" = ["docs/reference/*.md"]
+"share/overkill-factory/examples" = ["examples/README.md"]
+"share/overkill-factory/examples/minimal-hermes-project" = ["examples/minimal-hermes-project/*"]
+"share/overkill-factory/schemas" = ["schemas/*.json"]
+"share/overkill-factory/skills" = ["skills/README.md"]
+"share/overkill-factory/skills/codex/overkill-factory" = ["skills/codex/overkill-factory/SKILL.md"]
+"share/overkill-factory/skills/codex/overkill-factory/references" = ["skills/codex/overkill-factory/references/*.md"]
+"share/overkill-factory/templates" = ["templates/*.json", "templates/*.md"]

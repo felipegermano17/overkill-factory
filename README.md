@@ -118,7 +118,7 @@ behind docs, schemas and tests.
 Three-command local smoke from a fresh checkout:
 
 ```bash
-git clone https://github.com/<owner>/overkill-factory.git
+git clone https://github.com/felipegermano17/overkill-factory.git
 cd overkill-factory
 python -m pip install -e .
 factoryctl doctor
@@ -133,6 +133,10 @@ configuration notes.
 `python scripts/quickstart_smoke.py` and `overkill-quickstart` remain
 compatibility entrypoints, but `factoryctl run minimal` is the public operator
 path.
+
+Installed package commands can run outside the checkout for `factoryctl doctor`,
+`factoryctl run minimal` and `factoryctl init`. Use a checkout when you need to
+inspect docs, patch Hermes, run maintainer scripts or contribute changes.
 
 ## First Value In 10 Minutes
 
