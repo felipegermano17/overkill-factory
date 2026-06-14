@@ -134,6 +134,27 @@ def human_gate_record(source_card: dict | None = None) -> dict:
     }
 
 
+def reference_quality_comparison_fixture() -> dict:
+    return {
+        "status": "pass",
+        "basis": "Independent reviewer compared the Product Face result against selected professional references.",
+        "reference_set_ref": "examples/cards/v35_valid_product_face.md#professional_design_process.reference_research",
+        "compared_source_ids": [
+            "21st-dev-components",
+            "mobbin-workflow-patterns",
+            "pageflows-review-approval",
+        ],
+        "reviewer_independent_from_implementation": True,
+        "dimensions": {
+            dimension: {
+                "status": "pass",
+                "basis": f"The result satisfies the {dimension} bar from the selected references.",
+            }
+            for dimension in factoryctl.REFERENCE_COMPARISON_DIMENSIONS
+        },
+    }
+
+
 PRIVATE_NAME = "KA" + "XIS"
 PRIVATE_ENV = "V" + "M"
 PRIVATE_USERS_PATH = "C:" + "\\\\" + "Users"
@@ -444,6 +465,7 @@ class FactoryCtlTest(unittest.TestCase):
                     "status": "pass",
                     "basis": "The validator confirmed the result satisfies the professional design process gates."
                 },
+                "reference_quality_comparison": reference_quality_comparison_fixture(),
                 "visual_quality_result": {
                     "status": "PASS",
                     "reviewer": "product-face-reviewer",
@@ -504,6 +526,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_result.source_promise_coverage is required for product-facing completion", errors)
         self.assertIn("product_face_result.design_fit_review is required for product-facing completion", errors)
         self.assertIn("product_face_result.professional_design_process_comparison is required for product-facing completion", errors)
+        self.assertIn("product_face_result.reference_quality_comparison is required for product-facing completion", errors)
         self.assertIn("product_face_result.professional_design_process_ref is required for PASS", errors)
         self.assertIn("product_face_result.visual_quality_result is required", errors)
 
@@ -558,6 +581,7 @@ class FactoryCtlTest(unittest.TestCase):
                     "status": "pass",
                     "basis": "Mechanical proof claims the process was followed, but visual quality review blocks it."
                 },
+                "reference_quality_comparison": reference_quality_comparison_fixture(),
                 "visual_quality_result": {
                     "status": "BLOCK",
                     "reviewer": "product-face-reviewer",
@@ -600,6 +624,60 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_result PASS requires a11y.status=pass", errors)
         self.assertIn("product_face_result PASS requires overlap_check.status=pass", errors)
         self.assertIn("product_face_result.visual_quality_result is required", errors)
+
+    def test_product_face_waived_allows_pending_reference_quality(self) -> None:
+        result = {
+            "result": "WAIVED",
+            "tool_or_profile": "browser-proof-runner",
+            "executed_by": "product-face-validator",
+            "screenshots": ["not-captured: fallback"],
+            "viewports": ["1440x900"],
+            "checked_states": ["initial-render"],
+            "user_journeys_checked": ["open target"],
+            "a11y": {"status": "fail"},
+            "overlap_check": {"status": "fail"},
+            "performance_note": "fallback validation only",
+            "packet_comparison": {"status": "pending", "basis": "Pending proof."},
+            "source_promise_coverage": {"status": "pending", "basis": "Pending proof."},
+            "design_fit_review": {"status": "pending", "basis": "Pending proof."},
+            "professional_design_process_ref": "",
+            "professional_design_process_comparison": {"status": "pending", "basis": "Pending proof."},
+            "reference_quality_comparison": {
+                "status": "pending",
+                "basis": "Reference comparison not recorded yet.",
+                "reference_set_ref": "pending-reference-set",
+                "compared_source_ids": [],
+                "reviewer_independent_from_implementation": False,
+                "dimensions": {
+                    dimension: {
+                        "status": "pending",
+                        "basis": "Reference comparison not recorded yet.",
+                    }
+                    for dimension in factoryctl.REFERENCE_COMPARISON_DIMENSIONS
+                },
+            },
+            "visual_quality_result": {
+                "status": "BLOCK",
+                "reviewer": "product-face-reviewer",
+                "basis": "Visual quality not approved.",
+                "reference_quality_bar_checked": False,
+                "ai_generic_symptoms": ["missing independent visual review"],
+            },
+            "blocking_findings": True,
+            "evidence_refs": ["reports/product-face.md"],
+            "next_action": "rerun proof",
+        }
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertNotIn(
+            "product_face_result.reference_quality_comparison.compared_source_ids requires at least 3 references",
+            errors,
+        )
+        self.assertNotIn(
+            "product_face_result.reference_quality_comparison.reviewer_independent_from_implementation must be true",
+            errors,
+        )
 
     def test_auditor_preflight_cannot_claim_pass(self) -> None:
         bad = {

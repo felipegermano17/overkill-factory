@@ -33,6 +33,26 @@
       "informs_product_experience_fields": ["design_direction", "component expectations"]
     },
     {
+      "source_id": "mobbin",
+      "name": "Mobbin",
+      "url": "https://mobbin.com/",
+      "allowed_use": ["real product flow benchmark", "mobile and web UX pattern study"],
+      "forbidden_use": ["copying product screenshots into the repo", "copying brand-specific layouts or assets"],
+      "license_terms_status": "operator must verify current terms before reuse; default to reference-only study",
+      "public_safety_notes": "Record synthesized patterns and public URLs only; do not commit private screenshots.",
+      "informs_product_experience_fields": ["interaction_model", "state_coverage", "workflow ergonomics"]
+    },
+    {
+      "source_id": "pageflows",
+      "name": "Page Flows",
+      "url": "https://pageflows.com/",
+      "allowed_use": ["user journey benchmark", "state and transition coverage study"],
+      "forbidden_use": ["copying videos/screenshots into the repo", "treating a single screen as full UX proof"],
+      "license_terms_status": "operator must verify current terms before reuse; default to reference-only study",
+      "public_safety_notes": "Use as journey evidence source; publish only synthesized observations unless licensed.",
+      "informs_product_experience_fields": ["task_model", "interaction_model", "state_coverage"]
+    },
+    {
       "source_id": "sceneai",
       "name": "SceneAI",
       "url": "https://sceneai.art/",

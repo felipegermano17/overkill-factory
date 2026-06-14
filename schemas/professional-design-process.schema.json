@@ -66,7 +66,15 @@
     },
     "reference_research": {
       "type": "object",
-      "required": ["registry_refs", "selection_rationale", "sources"],
+      "required": [
+        "registry_refs",
+        "selection_rationale",
+        "library_searches",
+        "sources",
+        "rejected_references",
+        "pattern_synthesis",
+        "reference_evidence_policy"
+      ],
       "properties": {
         "registry_refs": {
           "type": "array",
@@ -74,6 +82,46 @@
           "items": { "type": "string", "minLength": 1 }
         },
         "selection_rationale": { "type": "string", "minLength": 3 },
+        "library_searches": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "library",
+              "library_url",
+              "query_or_category",
+              "searched_at",
+              "selection_criteria",
+              "candidate_count",
+              "selected_source_ids",
+              "rejected_candidate_ids"
+            ],
+            "properties": {
+              "library": { "type": "string", "minLength": 2 },
+              "library_url": { "type": "string", "minLength": 3 },
+              "query_or_category": { "type": "string", "minLength": 2 },
+              "searched_at": { "type": "string", "minLength": 3 },
+              "selection_criteria": {
+                "type": "array",
+                "minItems": 2,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "candidate_count": { "type": "integer", "minimum": 3 },
+              "selected_source_ids": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "rejected_candidate_ids": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
         "sources": {
           "type": "array",
           "minItems": 3,
@@ -82,16 +130,33 @@
             "required": [
               "source_id",
               "source_url_or_ref",
+              "source_type",
+              "library_source",
               "use_type",
+              "candidate_reason",
               "what_to_learn",
               "extracted_patterns",
+              "selected_patterns",
+              "visual_dimensions_covered",
               "copy_policy",
               "license_or_terms_ref"
             ],
             "properties": {
               "source_id": { "type": "string", "minLength": 1 },
               "source_url_or_ref": { "type": "string", "minLength": 3 },
+              "source_type": {
+                "enum": [
+                  "component_registry",
+                  "design_library",
+                  "design_system",
+                  "product_reference",
+                  "site_gallery",
+                  "user_flow_library"
+                ]
+              },
+              "library_source": { "type": "string", "minLength": 2 },
               "use_type": { "type": "string", "minLength": 3 },
+              "candidate_reason": { "type": "string", "minLength": 3 },
               "what_to_learn": {
                 "type": "array",
                 "minItems": 2,
@@ -102,12 +167,78 @@
                 "minItems": 2,
                 "items": { "type": "string", "minLength": 1 }
               },
+              "selected_patterns": {
+                "type": "array",
+                "minItems": 2,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "visual_dimensions_covered": {
+                "type": "array",
+                "minItems": 3,
+                "items": { "type": "string", "minLength": 1 }
+              },
               "copy_policy": { "type": "string", "minLength": 3 },
               "license_or_terms_ref": { "type": "string", "minLength": 3 },
               "public_safety_notes": { "type": "string" }
             },
             "additionalProperties": true
           }
+        },
+        "rejected_references": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["source_id", "source_url_or_ref", "rejection_reason"],
+            "properties": {
+              "source_id": { "type": "string", "minLength": 1 },
+              "source_url_or_ref": { "type": "string", "minLength": 3 },
+              "rejection_reason": { "type": "string", "minLength": 3 }
+            },
+            "additionalProperties": true
+          }
+        },
+        "pattern_synthesis": {
+          "type": "object",
+          "required": [
+            "layout_hierarchy",
+            "interaction_model",
+            "state_coverage",
+            "visual_language",
+            "density_spacing"
+          ],
+          "properties": {
+            "layout_hierarchy": { "type": "string", "minLength": 3 },
+            "interaction_model": { "type": "string", "minLength": 3 },
+            "state_coverage": { "type": "string", "minLength": 3 },
+            "visual_language": { "type": "string", "minLength": 3 },
+            "density_spacing": { "type": "string", "minLength": 3 },
+            "anti_patterns": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          },
+          "additionalProperties": true
+        },
+        "reference_evidence_policy": {
+          "type": "object",
+          "required": [
+            "capture_required_before_implementation",
+            "side_by_side_comparison_required_before_pass",
+            "public_refs_only",
+            "no_private_screenshots_in_repo"
+          ],
+          "properties": {
+            "capture_required_before_implementation": { "const": true },
+            "side_by_side_comparison_required_before_pass": { "const": true },
+            "public_refs_only": { "const": true },
+            "no_private_screenshots_in_repo": { "const": true },
+            "public_safe_evidence_refs": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          },
+          "additionalProperties": true
         }
       },
       "additionalProperties": true

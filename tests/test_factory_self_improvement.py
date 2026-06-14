@@ -75,6 +75,33 @@ class FactorySelfImprovementTest(unittest.TestCase):
             errors,
         )
 
+    def test_professional_design_process_requires_real_library_research(self) -> None:
+        process = json.loads(json.dumps(vfinal_card()["professional_design_process"]))
+        process["reference_research"].pop("library_searches")
+        process["reference_research"].pop("rejected_references")
+        process["reference_research"].pop("pattern_synthesis")
+        process["reference_research"]["reference_evidence_policy"] = {
+            "capture_required_before_implementation": False,
+            "side_by_side_comparison_required_before_pass": False,
+            "public_refs_only": True,
+            "no_private_screenshots_in_repo": True,
+        }
+        process["comparative_review_gate"]["reviewer_role"] = "product-face"
+
+        errors = factoryctl.validate_professional_design_process(process)
+
+        self.assertIn("professional_design_process.reference_research.library_searches requires at least 2 library searches", errors)
+        self.assertIn("professional_design_process.reference_research.rejected_references requires at least 2 rejected candidates", errors)
+        self.assertIn("professional_design_process.reference_research.pattern_synthesis.layout_hierarchy is required", errors)
+        self.assertIn(
+            "professional_design_process.reference_research.reference_evidence_policy.capture_required_before_implementation must be true",
+            errors,
+        )
+        self.assertIn(
+            "professional_design_process.comparative_review_gate.reviewer_role must identify an independent design/Product Face reviewer",
+            errors,
+        )
+
     def test_reference_quality_rejects_copy_without_license_ref(self) -> None:
         packet = dict(vfinal_card()["reference_quality_packet"])
         packet["references"] = [
@@ -109,6 +136,8 @@ class FactorySelfImprovementTest(unittest.TestCase):
         self.assertIn("motionsites", source_ids)
         self.assertIn("uiverse", source_ids)
         self.assertIn("21st-dev", source_ids)
+        self.assertIn("mobbin", source_ids)
+        self.assertIn("pageflows", source_ids)
         self.assertIn("sceneai", source_ids)
         self.assertIn("refero-styles", source_ids)
 

@@ -385,8 +385,30 @@ PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS = (
     "source_promise_coverage",
     "design_fit_review",
     "professional_design_process_comparison",
+    "reference_quality_comparison",
 )
 VISUAL_QUALITY_ALLOWED_RESULTS = {"PASS", "PASS_WITH_RESIDUALS", "BLOCK"}
+REFERENCE_RESEARCH_SOURCE_TYPES = {
+    "component_registry",
+    "design_library",
+    "design_system",
+    "product_reference",
+    "site_gallery",
+    "user_flow_library",
+}
+REFERENCE_RESEARCH_LIBRARY_TYPES = {
+    "component_registry",
+    "design_library",
+    "site_gallery",
+    "user_flow_library",
+}
+REFERENCE_COMPARISON_DIMENSIONS = (
+    "layout_hierarchy",
+    "interaction_model",
+    "state_coverage",
+    "visual_language",
+    "density_spacing",
+)
 
 
 @dataclass(frozen=True)
@@ -2194,25 +2216,112 @@ def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
 
     research = process.get("reference_research") if isinstance(process.get("reference_research"), dict) else {}
     sources = research.get("sources") if isinstance(research.get("sources"), list) else []
+    library_searches = research.get("library_searches") if isinstance(research.get("library_searches"), list) else []
+    rejected_references = (
+        research.get("rejected_references") if isinstance(research.get("rejected_references"), list) else []
+    )
     if len(sources) < 3:
         errors.append("professional_design_process.reference_research.sources requires at least 3 sources")
     if len(_list_items(research.get("registry_refs"))) < 2:
         errors.append("professional_design_process.reference_research.registry_refs requires at least 2 registry refs")
     if not _non_empty_text(research.get("selection_rationale")):
         errors.append("professional_design_process.reference_research.selection_rationale is required")
+    if len(library_searches) < 2:
+        errors.append("professional_design_process.reference_research.library_searches requires at least 2 library searches")
+    for index, search in enumerate(library_searches):
+        if not isinstance(search, dict):
+            errors.append(f"professional_design_process.reference_research.library_searches[{index}] must be an object")
+            continue
+        for field in ("library", "library_url", "query_or_category", "searched_at"):
+            if not _non_empty_text(search.get(field)):
+                errors.append(f"professional_design_process.reference_research.library_searches[{index}].{field} is required")
+        if len(_list_items(search.get("selection_criteria"))) < 2:
+            errors.append(
+                f"professional_design_process.reference_research.library_searches[{index}].selection_criteria requires at least 2 items"
+            )
+        candidate_count = search.get("candidate_count")
+        if not isinstance(candidate_count, int) or candidate_count < 3:
+            errors.append(
+                f"professional_design_process.reference_research.library_searches[{index}].candidate_count must be at least 3"
+            )
+        if not _list_items(search.get("selected_source_ids")):
+            errors.append(
+                f"professional_design_process.reference_research.library_searches[{index}].selected_source_ids is required"
+            )
+        if not _list_items(search.get("rejected_candidate_ids")):
+            errors.append(
+                f"professional_design_process.reference_research.library_searches[{index}].rejected_candidate_ids is required"
+            )
+
+    source_types: set[str] = set()
     for index, source in enumerate(sources):
         if not isinstance(source, dict):
             errors.append(f"professional_design_process.reference_research.sources[{index}] must be an object")
             continue
-        for field in ("source_id", "source_url_or_ref", "use_type", "copy_policy", "license_or_terms_ref"):
+        for field in (
+            "source_id",
+            "source_url_or_ref",
+            "source_type",
+            "library_source",
+            "use_type",
+            "candidate_reason",
+            "copy_policy",
+            "license_or_terms_ref",
+        ):
             if not _non_empty_text(source.get(field)):
                 errors.append(f"professional_design_process.reference_research.sources[{index}].{field} is required")
+        source_type = str(source.get("source_type") or "").strip()
+        if source_type:
+            source_types.add(source_type)
+            if source_type not in REFERENCE_RESEARCH_SOURCE_TYPES:
+                errors.append(
+                    f"professional_design_process.reference_research.sources[{index}].source_type must be a known design reference type"
+                )
         if len(_list_items(source.get("what_to_learn"))) < 2:
             errors.append(f"professional_design_process.reference_research.sources[{index}].what_to_learn requires at least 2 items")
         if len(_list_items(source.get("extracted_patterns"))) < 2:
             errors.append(f"professional_design_process.reference_research.sources[{index}].extracted_patterns requires at least 2 items")
+        if len(_list_items(source.get("selected_patterns"))) < 2:
+            errors.append(
+                f"professional_design_process.reference_research.sources[{index}].selected_patterns requires at least 2 items"
+            )
+        if len(_list_items(source.get("visual_dimensions_covered"))) < 3:
+            errors.append(
+                f"professional_design_process.reference_research.sources[{index}].visual_dimensions_covered requires at least 3 items"
+            )
         if str(source.get("copy_policy") or "").strip().lower() in {"copy", "blind_copy"}:
             errors.append(f"professional_design_process.reference_research.sources[{index}].copy_policy must not allow blind copying")
+    if not source_types & REFERENCE_RESEARCH_LIBRARY_TYPES:
+        errors.append("professional_design_process.reference_research.sources requires at least one design library, component registry, site gallery or user-flow library source")
+    if len(source_types) < 2:
+        errors.append("professional_design_process.reference_research.sources requires at least 2 distinct source types")
+
+    if len(rejected_references) < 2:
+        errors.append("professional_design_process.reference_research.rejected_references requires at least 2 rejected candidates")
+    for index, rejected in enumerate(rejected_references):
+        if not isinstance(rejected, dict):
+            errors.append(f"professional_design_process.reference_research.rejected_references[{index}] must be an object")
+            continue
+        for field in ("source_id", "source_url_or_ref", "rejection_reason"):
+            if not _non_empty_text(rejected.get(field)):
+                errors.append(f"professional_design_process.reference_research.rejected_references[{index}].{field} is required")
+
+    synthesis = research.get("pattern_synthesis") if isinstance(research.get("pattern_synthesis"), dict) else {}
+    for field in REFERENCE_COMPARISON_DIMENSIONS:
+        if not _non_empty_text(synthesis.get(field)):
+            errors.append(f"professional_design_process.reference_research.pattern_synthesis.{field} is required")
+
+    evidence_policy = (
+        research.get("reference_evidence_policy") if isinstance(research.get("reference_evidence_policy"), dict) else {}
+    )
+    for field in (
+        "capture_required_before_implementation",
+        "side_by_side_comparison_required_before_pass",
+        "public_refs_only",
+        "no_private_screenshots_in_repo",
+    ):
+        if evidence_policy.get(field) is not True:
+            errors.append(f"professional_design_process.reference_research.reference_evidence_policy.{field} must be true")
 
     architecture = process.get("ux_architecture") if isinstance(process.get("ux_architecture"), dict) else {}
     for field in ("information_hierarchy", "navigation_model", "state_model", "density_rationale"):
@@ -2258,6 +2367,8 @@ def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
         errors.append("professional_design_process.comparative_review_gate.must_compare_to_reference_packet must be true")
     if not _non_empty_text(comparative.get("reviewer_role")):
         errors.append("professional_design_process.comparative_review_gate.reviewer_role is required")
+    elif "independent" not in str(comparative.get("reviewer_role") or "").strip().lower():
+        errors.append("professional_design_process.comparative_review_gate.reviewer_role must identify an independent design/Product Face reviewer")
     if not _non_empty_text(comparative.get("basis")):
         errors.append("professional_design_process.comparative_review_gate.basis is required")
     if not _list_items(comparative.get("block_when")):
@@ -2448,6 +2559,35 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_reference_quality_comparison(comparison: Any, *, is_pass: bool) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(comparison, dict) or not comparison:
+        if is_pass:
+            errors.append("product_face_result.reference_quality_comparison is required for PASS")
+        return errors
+    if is_pass and _status_value(comparison) != "pass":
+        errors.append("product_face_result.reference_quality_comparison.status must be pass")
+    if not _non_empty_text(comparison.get("basis")):
+        errors.append("product_face_result.reference_quality_comparison.basis is required")
+    if not _non_empty_text(comparison.get("reference_set_ref")):
+        errors.append("product_face_result.reference_quality_comparison.reference_set_ref is required")
+    if is_pass and len(_list_items(comparison.get("compared_source_ids"))) < 3:
+        errors.append("product_face_result.reference_quality_comparison.compared_source_ids requires at least 3 references")
+    if is_pass and comparison.get("reviewer_independent_from_implementation") is not True:
+        errors.append("product_face_result.reference_quality_comparison.reviewer_independent_from_implementation must be true")
+    dimensions = comparison.get("dimensions") if isinstance(comparison.get("dimensions"), dict) else {}
+    for dimension in REFERENCE_COMPARISON_DIMENSIONS:
+        verdict = dimensions.get(dimension)
+        if not isinstance(verdict, dict):
+            errors.append(f"product_face_result.reference_quality_comparison.dimensions.{dimension} is required")
+            continue
+        if is_pass and _status_value(verdict) != "pass":
+            errors.append(f"product_face_result.reference_quality_comparison.dimensions.{dimension}.status must be pass")
+        if not _non_empty_text(verdict.get("basis")):
+            errors.append(f"product_face_result.reference_quality_comparison.dimensions.{dimension}.basis is required")
+    return errors
+
+
 def validate_product_face_result(result: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     required_string = ["result", "tool_or_profile", "executed_by", "performance_note", "next_action"]
@@ -2486,6 +2626,8 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
             errors.append("product_face_result.visual_quality_result.status must be PASS, PASS_WITH_RESIDUALS or BLOCK")
         if not _non_empty_text(visual_quality.get("reviewer")):
             errors.append("product_face_result.visual_quality_result.reviewer is required")
+        elif is_pass and str(visual_quality.get("reviewer") or "").strip() == str(result.get("executed_by") or "").strip():
+            errors.append("product_face_result.visual_quality_result.reviewer must differ from executed_by")
         if not _non_empty_text(visual_quality.get("basis")):
             errors.append("product_face_result.visual_quality_result.basis is required")
         if visual_status in {"PASS", "PASS_WITH_RESIDUALS"} and visual_quality.get("reference_quality_bar_checked") is not True:
@@ -2506,6 +2648,7 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
             errors.append("product_face_result.professional_design_process_comparison.status must be pass")
         elif not _non_empty_text(professional_comparison.get("basis")):
             errors.append("product_face_result.professional_design_process_comparison.basis is required")
+    errors.extend(validate_reference_quality_comparison(result.get("reference_quality_comparison"), is_pass=is_pass))
     return errors
 
 
@@ -4031,9 +4174,23 @@ def build_worker_result(
                     "status": "pass" if not blocking_findings else "fail",
                     "basis": "Product Face evidence is explicitly compared to the professional design process.",
                 },
+                "reference_quality_comparison": {
+                    "status": "pass" if not blocking_findings else "fail",
+                    "basis": "Product Face evidence is compared against the selected design/reference library packet.",
+                    "reference_set_ref": "card.professional_design_process.reference_research",
+                    "compared_source_ids": ["design-library-reference", "component-registry-reference", "product-flow-reference"],
+                    "reviewer_independent_from_implementation": not blocking_findings,
+                    "dimensions": {
+                        dimension: {
+                            "status": "pass" if not blocking_findings else "fail",
+                            "basis": f"{dimension} compared against selected reference patterns.",
+                        }
+                        for dimension in REFERENCE_COMPARISON_DIMENSIONS
+                    },
+                },
                 "visual_quality_result": {
                     "status": "PASS" if not blocking_findings else "BLOCK",
-                    "reviewer": "product-face-validator",
+                    "reviewer": "independent-product-face-reviewer",
                     "basis": (
                         "Professional visual quality bar reviewed for this bounded card."
                         if not blocking_findings
