@@ -8,6 +8,7 @@ nav:
   - First Operator Walkthrough: getting-started/first-external-operator-walkthrough.md
   - CLI Reference: reference/cli.md
   - Examples: examples/gallery.md
+  - Visuals: visuals/README.md
   - Concepts:
       - Factory Flow: concepts/factory-flow.md
       - Operator Journey: concepts/operator-journey.md

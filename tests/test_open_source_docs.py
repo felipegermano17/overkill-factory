@@ -19,9 +19,10 @@ class OpenSourceDocsTest(unittest.TestCase):
         readme = read_text("README.md")
         required_headings = [
             "What It Is",
+            "Factory Map",
             "Who It Is For",
             "What It Does",
-            "What It Does Not Do",
+            "Operating Boundaries",
             "How Hermes Fits",
             "Operator Path",
             "Quickstart",
@@ -36,11 +37,15 @@ class OpenSourceDocsTest(unittest.TestCase):
                 self.assertIn(f"## {heading}", readme)
 
         for rel in [
+            "README.pt-BR.md",
             "docs/getting-started/quickstart-hermes.md",
             "docs/governance/document-governance.md",
             "docs/concepts/factory-flow.md",
             "docs/concepts/overkill-factory-method.md",
             "docs/concepts/operator-journey.md",
+            "docs/visuals/overkill-factory-map-v0.1.0.png",
+            "docs/visuals/overkill-factory-map-v0.1.0.svg",
+            "docs/visuals/overkill-factory-map-v0.1.0.html",
             "docs/agents/worker-profiles.md",
             "agents/README.md",
             "docs/agents/factory-stage-agent-map.md",
@@ -54,6 +59,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/examples/gallery.md",
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
+            "docs/visuals/README.md",
             "examples/minimal-hermes-project/README.md",
             ".env.example",
             "CHANGELOG.md",
@@ -67,8 +73,48 @@ class OpenSourceDocsTest(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn(command, readme)
 
+    def test_readme_has_portuguese_entrypoint(self) -> None:
+        readme = read_text("README.md")
+        readme_pt = read_text("README.pt-BR.md")
+
+        self.assertIn("Language: **English** | [Português](README.pt-BR.md)", readme)
+        self.assertIn("Idioma: [English](README.md) | **Português**", readme_pt)
+
+        for heading in [
+            "O Que É",
+            "Mapa Da Fábrica",
+            "Para Quem É",
+            "O Que Faz",
+            "Limites De Operação",
+            "Como O Hermes Entra",
+            "Caminho Do Operador",
+            "Quickstart",
+            "Primeiro Valor Em 10 Minutos",
+            "Formato Do Repositório",
+            "Status Atual",
+            "Mapa Da Documentação",
+            "Segurança Pública",
+        ]:
+            with self.subTest(heading=heading):
+                self.assertIn(f"## {heading}", readme_pt)
+
+        for required in [
+            "docs/visuals/overkill-factory-map-v0.1.0.png",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html",
+            "factoryctl doctor",
+            "factoryctl init",
+            "factoryctl run minimal",
+            "python scripts/public_safety_scan.py",
+            "Receipt Five continuam sendo o estado durável",
+            "a fábrica registra a lacuna",
+            "Artefatos públicos não devem conter segredos",
+        ]:
+            with self.subTest(required=required):
+                self.assertIn(required, readme_pt)
+
     def test_public_docs_skeleton_exists(self) -> None:
         required_paths = [
+            "README.pt-BR.md",
             "docs/getting-started/quickstart-hermes.md",
             "docs/governance/document-governance.md",
             "docs/concepts/factory-flow.md",
@@ -89,6 +135,10 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/examples/gallery.md",
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
+            "docs/visuals/README.md",
+            "docs/visuals/overkill-factory-map-v0.1.0.png",
+            "docs/visuals/overkill-factory-map-v0.1.0.svg",
+            "docs/visuals/overkill-factory-map-v0.1.0.html",
             "examples/minimal-hermes-project/README.md",
             "examples/minimal-hermes-project/input-paper.md",
             "examples/minimal-hermes-project/expected-flow.md",
@@ -271,6 +321,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Install In Your Hermes",
             "CLI Reference",
             "Examples",
+            "Visuals",
             "Security",
             "Release",
             "Maintainer Internals",
@@ -286,6 +337,25 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Operator surface", repo_surface)
         self.assertIn("Maintainer internals", repo_surface)
         self.assertIn("Generated output", repo_surface)
+
+    def test_visual_map_is_visible_without_becoming_source_authority(self) -> None:
+        readme = read_text("README.md")
+        visuals = read_text("docs/visuals/README.md")
+        svg = read_text("docs/visuals/overkill-factory-map-v0.1.0.svg")
+        html = read_text("docs/visuals/overkill-factory-map-v0.1.0.html")
+        png = ROOT / "docs/visuals/overkill-factory-map-v0.1.0.png"
+
+        self.assertIn("![Overkill Factory visual map]", readme)
+        self.assertIn("docs/visuals/overkill-factory-map-v0.1.0.png", readme)
+        self.assertIn("docs/visuals/overkill-factory-map-v0.1.0.html", readme)
+        self.assertIn("https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html", readme)
+        self.assertIn("onboarding aid, not runtime evidence or source authority", readme)
+        self.assertIn("Real screenshot preview", visuals)
+        self.assertIn("Interactive map", visuals)
+        self.assertGreater(png.stat().st_size, 100_000)
+        self.assertIn("Static preview for GitHub README", svg)
+        self.assertIn("interactive HTML guide", svg)
+        self.assertIn("Overkill Factory", html)
 
     def test_release_security_and_example_gallery_are_professional_surfaces(self) -> None:
         changelog = read_text("CHANGELOG.md")

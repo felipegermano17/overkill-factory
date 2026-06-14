@@ -33,6 +33,12 @@ over calling many scripts directly.
 Use `examples/gallery.md` to choose a minimal, Product Face, security or onchain
 example. Example files are source material, not historical proof.
 
+## Visuals
+
+Use `visuals/overkill-factory-map-v0.1.0.html` for an interactive map of the
+factory line, risk tiers and public agent catalog. Visuals explain current
+contracts; they are not runtime evidence.
+
 ## Security
 
 Use `security/oss-security.md` before changing dependencies, workflows, release

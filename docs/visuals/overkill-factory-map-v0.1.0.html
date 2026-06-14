@@ -946,7 +946,7 @@ const STAGES = [
   { id: "monitoring", n: "30", layer: "ops", x: 388, y: 990, w: 150, title: "Monitoramento e Suporte", mini: "pós-release real", body: "Acompanha saúde, alertas, métricas, erros, incidentes, suporte, custo, dependências, sinais de UX e risco.", output: ["Evidência de monitoramento", "Registro de incidente", "Rota de suporte"] },
   { id: "learnback", n: "31", layer: "ops", x: 550, y: 990, w: 120, title: "Learnback", mini: "falha vira melhoria", body: "Bug repetido vira teste. Falha de agente vira eval. Falha de UX vira atualização de pack. Incidente vira runbook.", output: ["Registro de aprendizado", "Atualização de pack/skill/gate/doc/teste"] },
   { id: "maturity", n: "32", layer: "ops", x: 682, y: 990, w: 152, title: "Auditoria de Maturidade", mini: "a fábrica se audita", body: "Verifica resultado, discovery, SOT, método, packs, dados, evals, dependências, compliance, orçamento, operação, prova, revisão, humano e limite público/privado.", output: ["Scorecard de maturidade", "Matriz de pontos cegos", "Registro de lacunas"], gate: true },
-  { id: "readiness", n: "R", layer: "ops", x: 846, y: 990, w: 140, title: "Plano != Execução", mini: "tese não é prova", body: "Arquitetura e regra orientam o trabalho, mas não provam entrega. Prontidão, roadmap e status dizem o que ainda falta implementar, provar ou operar.", output: ["Plano declarado", "Prontidão separada", "Sem overclaim"], warn: true },
+  { id: "readiness", n: "R", layer: "ops", x: 846, y: 990, w: 140, title: "Plano != Execução", mini: "tese não é prova", body: "Mapa, plano e arquitetura orientam o trabalho; evidência, runtime e receipts provam entrega. Prontidão, roadmap e status dizem o que ainda falta implementar, provar ou operar.", output: ["Plano declarado", "Prontidão separada", "Sem overclaim"], warn: true },
   { id: "r4", n: "R4", layer: "ops", x: 998, y: 990, w: 132, title: "Rigor R4", mini: "limite material", body: "Produção, ação irreversível, signing, fundos, release crítico, alto custo ou risco regulatório exigem gate humano, dono, rollback, monitoramento e prova forte.", output: ["Gate humano", "Rollback/mitigação", "Dono de risco", "Dono de budget"], warn: true, gate: true }
 ];
 
@@ -1348,7 +1348,7 @@ const STAGE_DETAILS = {
     worker: "skill-eval-distiller + independent-reviewer"
   },
   readiness: {
-    plain: ["Readiness mantém honestidade entre tese, implementação e prova real.", "Um mapa pode estar conceitualmente certo sem significar que tudo já roda, está integrado ou está pronto para produção."],
+    plain: ["Readiness mantém honestidade entre tese, implementação e prova real.", "Mapa, plano e arquitetura orientam; evidência, runtime e receipts provam. Um mapa pode estar conceitualmente certo sem significar que tudo já roda, está integrado ou está pronto para produção."],
     decision: ["O que é arquitetura, o que está implementado, o que foi provado e o que ainda é roadmap."],
     inside: ["Separa arquitetura canônica, status de implementação, roadmap, prova de runtime e produção real.", "O documento pode estar correto mesmo quando parte do sistema ainda não está pronta."],
     blocks: ["Overclaim.", "Confundir mapa conceitual com prova de operação."],
