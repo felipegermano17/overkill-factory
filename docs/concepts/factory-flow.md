@@ -46,6 +46,17 @@ source intake
 Not every project uses every worker. The card surfaces, risk class and done
 definition decide which workers are required.
 
+## User Role
+
+The normal user provides material, goals, constraints, access when required,
+bounded approvals and final review. The factory owns source resolution, Product
+SOT drafting, method routing, research routing, worker packets, execution
+routing, verification, review, evidence capture and completion audit.
+
+Internal objects such as schemas, worker packets, source ledgers, method
+contracts and evidence graphs may be visible for audit or maintainer work, but
+they should not become mandatory user labor.
+
 ## What Blocks A Card
 
 A card should stay blocked when:

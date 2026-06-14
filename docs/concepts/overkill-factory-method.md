@@ -36,6 +36,23 @@ input
 Not every project runs every step with the same weight. The Method Router
 chooses the minimum safe path for the input, risk and surface.
 
+## User-Facing Autonomy
+
+The factory promise is that the user submits material, goals and constraints,
+then receives bounded decisions, blockers, progress proof and final review
+points. The user should not need to coordinate Source Ledger, Product SOT,
+Method Router, worker packets, gates, research lanes, evidence graphs or
+Receipt Five to get value.
+
+Those objects remain inspectable for audit and maintainer work. In the normal
+flow, `factoryctl help-next` and the workflow catalog compress them into:
+
+- what the factory understood;
+- what the factory will do next;
+- what user decision, access or approval is actually required;
+- what is blocked and why;
+- what evidence proves progress.
+
 ## Core Principles
 
 1. Source before opinion.

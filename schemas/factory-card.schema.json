@@ -105,6 +105,8 @@
     "product_context_packet_ref": { "type": "string" },
     "product_implementation_readiness": { "type": "object" },
     "product_implementation_readiness_ref": { "type": "string" },
+    "user_facing_autonomy_contract": { "type": "object" },
+    "user_facing_autonomy_contract_ref": { "type": "string" },
     "product_experience_plan": { "type": "object" },
     "data_metrics_plan": { "type": "object" },
     "agent_eval_plan": { "type": "object" },

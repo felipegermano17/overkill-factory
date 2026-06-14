@@ -1,0 +1,102 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/user-facing-autonomy-contract.schema.json",
+  "record_type": "user_facing_autonomy_contract",
+  "intake_source": "mixed",
+  "user_roles": ["submitter", "approver", "reviewer", "access_provider", "risk_owner"],
+  "factory_owns": [
+    "source resolution",
+    "Product SOT candidate creation",
+    "method routing",
+    "specialist research routing",
+    "architecture and security planning",
+    "capability pack selection",
+    "decomposition and worker packet creation",
+    "execution routing",
+    "verification and independent review",
+    "evidence capture",
+    "completion audit and Receipt Five preparation"
+  ],
+  "user_must_not_do": [
+    "coordinate internal workers",
+    "manually assemble worker packets",
+    "operate schemas or internal gates",
+    "search internal evidence artifacts",
+    "decide method internals without a bounded approval request"
+  ],
+  "allowed_user_question_classes": [
+    "preference",
+    "authority_required",
+    "access_required",
+    "risk_acceptance",
+    "blocked"
+  ],
+  "user_questions": [],
+  "human_gate_triggers": [
+    "production release",
+    "mainnet or funds",
+    "credential or secret access",
+    "privacy, legal or security-sensitive decision",
+    "destructive or irreversible action",
+    "major scope or risk acceptance"
+  ],
+  "approval_points": [
+    "Product SOT approval when material scope is unresolved",
+    "architecture approval when risk or cost is material",
+    "access approval when credentials or accounts are required",
+    "release approval for production or irreversible promotion",
+    "final acceptance after evidence and review"
+  ],
+  "autonomy_level": "gated_autonomous_execution",
+  "handoff_mode": "compressed operator view with understanding, bounded decisions, blockers, proof and next action",
+  "blocked_state_policy": "stop with a named blocker, owner, evidence needed and smallest safe next action instead of pushing open-ended work to the user",
+  "burden_budget": [
+    {
+      "phase": "intake",
+      "allowed_user_work": ["provide material, intent and constraints"],
+      "factory_work": ["classify input and start source resolution"]
+    },
+    {
+      "phase": "planning",
+      "allowed_user_work": ["approve or reject material scope and risk decisions"],
+      "factory_work": ["create Product SOT, route methods, research and plans"]
+    },
+    {
+      "phase": "execution",
+      "allowed_user_work": ["provide access only when required"],
+      "factory_work": ["route workers, run checks, capture evidence and review"]
+    },
+    {
+      "phase": "promotion",
+      "allowed_user_work": ["approve high-risk release or risk acceptance"],
+      "factory_work": ["prepare promotion evidence, rollback and monitoring"]
+    },
+    {
+      "phase": "completion",
+      "allowed_user_work": ["review final proof and acceptance"],
+      "factory_work": ["reconcile Receipt Five and completion audit"]
+    }
+  ],
+  "surface_map": [
+    {
+      "capability": "worker packets",
+      "internal": true,
+      "user_facing": false,
+      "maintainer_facing": true,
+      "normal_user_view": "factory is preparing worker tasks"
+    },
+    {
+      "capability": "human gates",
+      "internal": false,
+      "user_facing": true,
+      "maintainer_facing": true,
+      "normal_user_view": "bounded approval request with scope, risk and evidence"
+    },
+    {
+      "capability": "evidence graph",
+      "internal": true,
+      "user_facing": true,
+      "maintainer_facing": true,
+      "normal_user_view": "what evidence proves progress"
+    }
+  ]
+}
