@@ -1,17 +1,83 @@
 # Overkill Factory
 
 Overkill Factory is an open source production line for agentic product work.
-It helps a Hermes operator turn a raw product or project paper into a controlled
-sequence of source resolution, planning, architecture, specialist work,
-evidence, review, gates and receipts.
+Today, it is a force multiplier for Hermes: a pluggable method, contract and
+gate layer that uses Hermes Kanban as the operational floor.
 
-The project is not a chat prompt. It is a set of public contracts, worker
-profiles, adapter hooks, examples and validation scripts that make agent work
-inspectable before it is allowed to move forward.
+It helps a Hermes operator turn a raw product or project paper into controlled
+cards, worker packets, gates, evidence and receipts.
 
-## What It Is
+It is for people who want agents to move work forward without hiding source
+gaps, missing authority, weak review or unproven release claims.
 
-Overkill Factory gives Hermes a product-production method:
+Most people only need the first three sections of this README.
+
+## Start Here
+
+Run the local smoke first. It does not require Discord, private evidence or a
+live Hermes runtime.
+
+```bash
+git clone https://github.com/<owner>/overkill-factory.git
+cd overkill-factory
+python -m pip install -e .
+factoryctl doctor
+factoryctl run minimal
+```
+
+First value is binary: the quickstart prints `PASS`, writes
+`.tmp/quickstart-result.json` and generates worker packets under
+`.tmp/minimal-worker-packets/`.
+
+This proves the local contracts, gates and packets. Real factory operation still
+depends on plugging those packets and transition rules into Hermes.
+
+After that run, you should know:
+
+- whether the minimal card contract is valid;
+- which workers are required before execution;
+- whether the gate is ready for worker execution;
+- which packet files Hermes would receive next.
+
+Generated worker packets and gate reports belong in `.tmp/`, not in the public
+repository.
+
+## Factory Map
+
+[Open the interactive factory map](https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html)
+or read the versioned source at `docs/visuals/overkill-factory-map-v0.1.0.html`.
+
+The map is an onboarding aid. Runtime authority stays in `factoryctl`, schemas,
+tests, adapter hooks, Hermes state and Receipt Five.
+
+## Choose Your Path
+
+| If you are... | Do this first | Then read |
+| --- | --- | --- |
+| Evaluating the project | Run `factoryctl doctor` and `factoryctl run minimal` | `docs/getting-started/quickstart-hermes.md` |
+| Installing into your Hermes | Run `factoryctl init --out ../my-product-factory --project-name my-product` | `docs/getting-started/install-in-hermes.md` |
+| Creating a real card | Validate a small project card before routing workers | `docs/concepts/factory-flow.md` |
+| Maintaining or releasing | Run the validation and release checks before publishing | `docs/operations/validation-and-release.md` |
+
+Start with the CLI path. Open dense contracts only when the first smoke passes.
+
+## What You Get
+
+Overkill Factory provides:
+
+- a card contract for phase, risk, scope, runtime, security and done evidence;
+- a worker registry and Hermes profile bindings for routing work to the right
+  role;
+- a capability pack registry for checking whether a product surface has ready
+  specialist coverage before execution;
+- a single `factoryctl` CLI for install health, project init, local smoke,
+  card validation, gate reports and worker packets;
+- a Hermes adapter and transition hook that can block weak `ready` and `done`
+  transitions;
+- public-safe examples and receipt contracts;
+- safety scans for secrets and public/private boundary mistakes.
+
+The minimal flow is:
 
 ```text
 paper or project brief
@@ -25,65 +91,15 @@ paper or project brief
 -> release readiness
 ```
 
-The repository contains the public method, card and receipt schemas, worker
-registry, Hermes profile bindings, adapter scripts, tests and a small runnable
-example.
-
-## Who It Is For
-
-Use it when you already run, or want to run, product work with Hermes and need:
-
-- repeatable gates instead of informal agent handoffs;
-- explicit worker roles for planning, building, security, proof and release;
-- receipts that make completion inspectable beyond a chat transcript;
-- a way to let agents work while still preserving human authority for high-risk
-  decisions.
-
-It is especially useful for product teams, solo builders and agent operators who
-want autonomous help without pretending that autonomy removes gates, access
-control, review or release responsibility.
-
-## What It Does
-
-Overkill Factory provides:
-
-- a card contract for describing phase, risk, scope, runtime, security and done
-  evidence;
-- a worker registry and Hermes profile bindings for routing work to the right
-  role;
-- a capability pack registry for checking whether the product type has ready
-  specialist coverage before execution;
-- a single `factoryctl` CLI for install health, project init, local smoke,
-  card validation, gate reports and worker packets;
-- a Hermes adapter and transition hook that can block weak `ready` and `done`
-  transitions;
-- public-safe examples and receipt contracts;
-- safety scans for secrets and private/public boundary mistakes.
-
-## What It Does Not Do
-
-Overkill Factory does not automatically:
-
-- understand your business without source material;
-- approve architecture, security, release or human gates;
-- deploy to production;
-- move funds, sign transactions or handle real keys;
-- replace Codex Security, Auditor, Product Face proof, QA or human review;
-- require Discord as a source of truth;
-- make every registered worker run on every card;
-- pretend every product type already has executable specialists. If a paper
-  asks for mobile, desktop, game, AI/ML, fintech, regulated, analytics,
-  browser-extension or hardware work, capability-pack validation can block until
-  the matching pack is activated.
-
-Hermes and Receipt Five remain the source of truth. Discord or another Control
-Tower can be a cockpit, but it is not the evidence store.
-
 ## How Hermes Fits
 
-Hermes is the first supported runtime. Overkill Factory supplies the factory
-method and contracts; Hermes supplies the Kanban floor where cards, workers and
-state transitions live.
+Hermes is the required runtime for real operation today. Overkill Factory
+supplies the factory method, contracts, worker routing and gate rules; Hermes
+supplies the Kanban floor where cards, workers and state transitions live.
+
+Future adapters may support other systems. The current public factory is built
+around Hermes because the Kanban board is where operational state, worker
+handoffs and transition control become real.
 
 The adapter files are under `adapters/hermes/`:
 
@@ -96,60 +112,35 @@ The adapter files are under `adapters/hermes/`:
 You can run local validation without Discord. Configure a Control Tower only
 after the local card, worker packet and receipt path is clear.
 
-## Operator Path
+## Operating Boundaries
 
-For a person or AI installing the factory into their own Hermes, use the CLI
-path first and open dense contracts only when needed:
+Overkill Factory is designed to keep material decisions explicit:
 
-```bash
-python -m pip install -e .
-factoryctl doctor
-factoryctl run minimal
-factoryctl init --out ../my-product-factory --project-name my-product
-```
+- source material is required before product claims become scope;
+- architecture, security, release and human gates need recorded approval or a
+  recorded block;
+- production deploys, funds, signing and real keys stay under the operator's
+  runtime, credentials and authority;
+- Codex Security, Auditor, Product Face proof, QA and human review remain
+  specialist evidence paths, not prose summaries;
+- Discord or another Control Tower can be an operator cockpit, while Hermes,
+  evidence refs and Receipt Five remain the durable state;
+- each card runs only the workers required by its phase, surfaces, risk and done
+  definition;
+- capability packs define which product surfaces are executable today. If a
+  product type is not covered yet, the factory records the gap instead of
+  pretending the specialist path exists.
 
-Then read `docs/getting-started/install-in-hermes.md` and connect generated
-worker packets to your Hermes test runtime. The factory is easy to maintain
-when common user flows go through `factoryctl` and maintainer internals stay
-behind docs, schemas and tests.
+## Current Status
 
-## Quickstart
+The public repository has validated schemas, worker profiles, Hermes profile
+bindings, adapter hooks, safety scans, a packaged CLI and a runnable public
+example. The adapter patch and transition hook are public, and the local
+validation suite is the required first check before publication or release work.
 
-Three-command local smoke from a fresh checkout:
-
-```bash
-git clone https://github.com/<owner>/overkill-factory.git
-cd overkill-factory
-python -m pip install -e .
-factoryctl doctor
-factoryctl run minimal
-```
-
-The smoke writes `.tmp/quickstart-result.json` and required worker packets under
-`.tmp/minimal-worker-packets/`. Read
-`docs/getting-started/quickstart-hermes.md` for the same path with Hermes
-configuration notes.
-
-`python scripts/quickstart_smoke.py` and `overkill-quickstart` remain
-compatibility entrypoints, but `factoryctl run minimal` is the public operator
-path.
-
-## First Value In 10 Minutes
-
-First value is binary: the quickstart prints `PASS`, writes
-`.tmp/quickstart-result.json` and generates worker packets in
-`.tmp/minimal-worker-packets/`.
-
-After that run, you should know:
-
-- whether the minimal card contract is valid;
-- which workers are required before execution;
-- whether the gate is ready for worker execution;
-- which packet files Hermes would receive next.
-
-Generated worker packets and gate reports belong in `.tmp/`, not in the public
-repository. Commit source examples, schemas, scripts and tests; regenerate run
-outputs locally.
+The project is not a hosted service, standalone runtime or production launch. A
+user must connect it to their own Hermes runtime, configure any real tools
+workers should use, and provide real approval records for high-risk work.
 
 ## Repository Shape
 
@@ -171,17 +162,6 @@ as a place to add files.
 | `templates/` | Contract templates paired with schemas and tests. See `templates/README.md`. |
 | `tests/` | Regression coverage for the public contracts and quickstart path. See `tests/README.md`. |
 
-## Current Status
-
-The public repository has validated schemas, worker profiles, Hermes profile
-bindings, adapter hooks, safety scans, a packaged CLI and a runnable public
-example. The adapter patch and transition hook are public, and the local
-validation suite is the required first check before publication or release work.
-
-The project is still not a hosted service and not a production launch. A user
-must connect it to their own Hermes runtime, configure any real tools they want
-workers to use, and provide real approval records for high-risk work.
-
 ## Documentation Authority
 
 The current external-user path is this README, the quickstart, the concept flow,
@@ -200,7 +180,6 @@ When documents disagree, use this order:
 3. Agent, worker, capability, security and Product Face support docs.
 4. Generated local outputs under `.tmp/factory-runs/` only for the run that
    produced them. They are not source authority and must not be committed.
-   Generated worker packets and gate reports belong in `.tmp/`.
 
 See `docs/governance/document-governance.md` for the document status rules. A
 task idea is not a runtime gate until it has a schema, script, test, worker,
@@ -218,6 +197,10 @@ adapter rule or receipt contract.
 - `docs/concepts/factory-flow.md`: core concepts and phase flow.
 - `docs/concepts/overkill-factory-method.md`: human-readable method guide.
 - `docs/concepts/operator-journey.md`: step-by-step operator journey.
+- `docs/visuals/README.md`: visual guide boundaries and validation rules.
+- `docs/visuals/overkill-factory-map-v0.1.0.html`: interactive map of the
+  factory line, risk tiers and public agent catalog.
+- `docs/visuals/overkill-factory-map-v0.1.0.svg`: static diagram source asset.
 - `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
   evidence.
 - `agents/README.md`: human entrypoint for the agent contract directory.

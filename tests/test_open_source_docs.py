@@ -18,16 +18,14 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_readme_is_external_user_entrypoint(self) -> None:
         readme = read_text("README.md")
         required_headings = [
-            "What It Is",
-            "Who It Is For",
-            "What It Does",
-            "What It Does Not Do",
+            "Start Here",
+            "Factory Map",
+            "Choose Your Path",
+            "What You Get",
             "How Hermes Fits",
-            "Operator Path",
-            "Quickstart",
-            "First Value In 10 Minutes",
-            "Repository Shape",
+            "Operating Boundaries",
             "Current Status",
+            "Repository Shape",
             "Documentation Map",
         ]
 
@@ -51,6 +49,9 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/architecture/hermes-integration.md",
             "docs/getting-started/install-in-hermes.md",
             "docs/reference/cli.md",
+            "docs/visuals/README.md",
+            "docs/visuals/overkill-factory-map-v0.1.0.html",
+            "docs/visuals/overkill-factory-map-v0.1.0.svg",
             "docs/examples/gallery.md",
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
@@ -66,6 +67,15 @@ class OpenSourceDocsTest(unittest.TestCase):
         for command in ["factoryctl doctor", "factoryctl init", "factoryctl run minimal"]:
             with self.subTest(command=command):
                 self.assertIn(command, readme)
+
+        self.assertNotIn("## What It Does Not Do", readme)
+        self.assertIn("Most people only need the first three sections", readme)
+        self.assertIn("force multiplier for Hermes", readme)
+        self.assertIn("pluggable method, contract and", readme)
+        self.assertIn("gate layer that uses Hermes Kanban", readme)
+        self.assertIn("Hermes is the required runtime for real operation today", readme)
+        self.assertIn("Future adapters may support other systems", readme)
+        self.assertIn("not a hosted service, standalone runtime or production launch", readme)
 
     def test_public_docs_skeleton_exists(self) -> None:
         required_paths = [
