@@ -98,6 +98,44 @@ PROMOTION_PASS_RESULTS = {"PASS", "WAIVED"}
 ARTIFACT_PUBLIC_CLASSES = {"public_safe", "sanitized_report", "publication_candidate"}
 ARTIFACT_PRIVATE_CLASSES = {"private_run_evidence", "transient_cache"}
 PUBLICATION_SCANNER_FIELDS = ("public_safety_scan", "secret_safety_scan")
+SECRET_DELIVERY_SAFE_MODES = {
+    "none",
+    "placeholder",
+    "simulator",
+    "user-mediated",
+    "jit_broker",
+    "vault_jit",
+    "hardware_signer",
+    "external_service",
+}
+SECRET_DELIVERY_EXCEPTION_MODES = {"startup_env", "runtime_file"}
+SECRET_DELIVERY_FORBIDDEN_MODES = {"prompt_context"}
+SECRET_POLICY_FORBIDDEN_KEYS = {
+    "secret",
+    "secret_value",
+    "raw_secret",
+    "credential_value",
+    "private_key",
+    "env_dump",
+    "runtime_file_path",
+    "local_secret_path",
+}
+HARDENING_REQUIRED_EXECUTION_MODES = {"bounded_execution", "material_execution", "production_operation"}
+TOOL_USING_SURFACES = {
+    "shell",
+    "browser",
+    "filesystem",
+    "network",
+    "mcp",
+    "git",
+    "github",
+    "cloud",
+    "database",
+    "wallet",
+    "messaging",
+}
+WIDE_FILESYSTEM_SCOPES = {"workspace_wide", "external_mount"}
+WIDE_NETWORK_SCOPES = {"unrestricted"}
 PARALLEL_EDIT_LANE_KINDS = {"write", "execution"}
 V2_APPROVAL_KEYS = [
     "qa",
@@ -1147,6 +1185,177 @@ def _status_value(value: Any) -> str:
     return str(value or "").strip().lower()
 
 
+def _execution_mode(card: dict[str, Any]) -> str:
+    autonomy = card.get("autonomy_readiness_packet") if isinstance(card.get("autonomy_readiness_packet"), dict) else {}
+    hardening = card.get("agent_runtime_hardening_profile") if isinstance(card.get("agent_runtime_hardening_profile"), dict) else {}
+    runtime = card.get("runtime_contract") if isinstance(card.get("runtime_contract"), dict) else {}
+    for source in (autonomy, hardening, runtime):
+        value = str(source.get("execution_mode") or source.get("mode") or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _tool_surfaces_from(card: dict[str, Any]) -> set[str]:
+    surfaces: set[str] = set()
+    for source_name in ("agent_runtime_hardening_profile", "runtime_contract"):
+        source = card.get(source_name) if isinstance(card.get(source_name), dict) else {}
+        for key in ("tool_surface", "tool_surfaces"):
+            value = source.get(key)
+            if isinstance(value, list):
+                surfaces.update(item.lower() for item in _list_items(value))
+            elif _non_empty_text(value):
+                surfaces.add(str(value).strip().lower())
+    return surfaces
+
+
+def _has_human_gate_ref(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(_non_empty_text(value.get(field)) for field in ("gate_ref", "reviewer_or_human_gate_ref"))
+    if isinstance(value, list):
+        return bool(_list_items(value))
+    return _non_empty_text(value)
+
+
+def _contains_forbidden_secret_key(value: Any) -> bool:
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            if str(key).strip().lower() in SECRET_POLICY_FORBIDDEN_KEYS:
+                return True
+            if _contains_forbidden_secret_key(nested):
+                return True
+    elif isinstance(value, list):
+        return any(_contains_forbidden_secret_key(item) for item in value)
+    return False
+
+
+def validate_secret_delivery_policy(policy: Any, *, material_execution: bool) -> list[str]:
+    if not isinstance(policy, dict):
+        if material_execution:
+            return ["secret_delivery_policy is required for material autonomous execution"]
+        return []
+
+    errors: list[str] = []
+    mode = str(policy.get("delivery_mode") or "").strip()
+    sensitivity = str(policy.get("sensitivity") or "").strip()
+    environment = str(policy.get("environment") or "").strip()
+
+    for field in (
+        "secret_type",
+        "sensitivity",
+        "environment",
+        "delivery_mode",
+        "scope",
+        "ttl_or_expiry",
+        "rotation_policy",
+        "audit_log_ref",
+        "redaction_policy",
+        "revocation_path",
+    ):
+        if not _non_empty_text(policy.get(field)):
+            errors.append(f"secret_delivery_policy.{field} is required")
+    if not isinstance(policy.get("allowed_worker_ids"), list) or not _list_items(policy.get("allowed_worker_ids")):
+        errors.append("secret_delivery_policy.allowed_worker_ids must name scoped workers")
+    if not isinstance(policy.get("forbidden_exposure"), list) or not _list_items(policy.get("forbidden_exposure")):
+        errors.append("secret_delivery_policy.forbidden_exposure must name forbidden exposure channels")
+    if not isinstance(policy.get("evidence_refs"), list) or not _list_items(policy.get("evidence_refs")):
+        errors.append("secret_delivery_policy.evidence_refs must include public-safe refs")
+    if _contains_forbidden_secret_key(policy):
+        errors.append("secret_delivery_policy must contain refs and policy only, never raw secret values or private secret paths")
+
+    if mode in SECRET_DELIVERY_FORBIDDEN_MODES:
+        errors.append("secret_delivery_policy.delivery_mode prompt_context is always forbidden")
+    elif mode in SECRET_DELIVERY_EXCEPTION_MODES:
+        waiver = policy.get("human_gated_waiver")
+        has_waiver = isinstance(waiver, dict) and _has_human_gate_ref(waiver) and bool(_list_items(waiver.get("compensating_controls")))
+        if not has_waiver:
+            errors.append(
+                f"secret_delivery_policy.delivery_mode {mode} requires explicit human-gated waiver with compensating controls"
+            )
+    elif mode not in SECRET_DELIVERY_SAFE_MODES:
+        errors.append("secret_delivery_policy.delivery_mode is not recognized")
+
+    if material_execution and sensitivity in {"high", "critical"} and environment in {"production", "mainnet"}:
+        if mode in {"none", "placeholder", "simulator"}:
+            errors.append("real production/mainnet secrets cannot use none, placeholder or simulator mode")
+        if policy.get("human_gate_required") is not True and mode not in {"jit_broker", "vault_jit", "hardware_signer", "external_service", "user-mediated"}:
+            errors.append("sensitive production/mainnet secret use requires a human gate or safe delegated delivery mode")
+    return errors
+
+
+def validate_agent_runtime_hardening_profile(card: dict[str, Any]) -> list[str]:
+    execution_mode = _execution_mode(card)
+    material_execution = execution_mode in HARDENING_REQUIRED_EXECUTION_MODES
+    tool_surfaces = _tool_surfaces_from(card)
+    profile = card.get("agent_runtime_hardening_profile")
+    autonomy = card.get("autonomy_readiness_packet") if isinstance(card.get("autonomy_readiness_packet"), dict) else {}
+    secret_policy = card.get("secret_delivery_policy")
+    errors: list[str] = []
+
+    if not material_execution and not tool_surfaces:
+        return validate_secret_delivery_policy(secret_policy, material_execution=False)
+
+    if not isinstance(profile, dict):
+        if material_execution or tool_surfaces & TOOL_USING_SURFACES:
+            errors.append("agent_runtime_hardening_profile required for tool-using material execution")
+        errors.extend(validate_secret_delivery_policy(secret_policy, material_execution=material_execution))
+        return errors
+
+    required_text_fields = (
+        "worker_id",
+        "runtime_kind",
+        "execution_mode",
+        "filesystem_scope",
+        "network_scope",
+        "credential_exposure",
+        "secret_delivery_policy_ref",
+        "side_effect_policy",
+        "sandbox_boundary",
+        "identity_boundary",
+        "log_policy",
+        "egress_policy",
+        "mutation_policy",
+        "rollback_or_kill_switch",
+    )
+    for field in required_text_fields:
+        if not _non_empty_text(profile.get(field)):
+            errors.append(f"agent_runtime_hardening_profile.{field} is required")
+    for field in ("tool_surface", "human_gate_triggers", "validation_commands", "evidence_refs"):
+        if not isinstance(profile.get(field), list) or not _list_items(profile.get(field)):
+            errors.append(f"agent_runtime_hardening_profile.{field} must be a non-empty array")
+    if not isinstance(profile.get("resource_limits"), dict) or not profile.get("resource_limits"):
+        errors.append("agent_runtime_hardening_profile.resource_limits must be a non-empty object")
+
+    profile_mode = str(profile.get("execution_mode") or "").strip()
+    if material_execution and profile_mode != execution_mode:
+        errors.append("agent_runtime_hardening_profile.execution_mode must match autonomy readiness execution_mode")
+
+    filesystem_scope = str(profile.get("filesystem_scope") or "").strip()
+    network_scope = str(profile.get("network_scope") or "").strip()
+    human_gate_triggers = _list_items(profile.get("human_gate_triggers"))
+    if filesystem_scope in WIDE_FILESYSTEM_SCOPES and not human_gate_triggers:
+        errors.append("agent_runtime_hardening_profile wide filesystem scope requires human_gate_triggers")
+    if network_scope in WIDE_NETWORK_SCOPES and not human_gate_triggers:
+        errors.append("agent_runtime_hardening_profile unrestricted network requires human_gate_triggers")
+
+    profile_tools = {item.lower() for item in _list_items(profile.get("tool_surface"))}
+    if profile_tools & TOOL_USING_SURFACES and not _list_items(profile.get("blocked_abuse_evidence_refs")):
+        errors.append("agent_runtime_hardening_profile.blocked_abuse_evidence_refs required for tool-using workers")
+
+    if material_execution:
+        if not _non_empty_text(autonomy.get("runtime_hardening_profile_ref")):
+            errors.append("autonomy_readiness_packet.runtime_hardening_profile_ref required for material execution")
+        if not _non_empty_text(autonomy.get("secret_delivery_policy_ref")):
+            errors.append("autonomy_readiness_packet.secret_delivery_policy_ref required for material execution")
+        if not _non_empty_text(autonomy.get("secret_delivery_mode")):
+            errors.append("autonomy_readiness_packet.secret_delivery_mode required for material execution")
+        if not isinstance(autonomy.get("runtime_hardening_evidence_refs"), list) or not _list_items(autonomy.get("runtime_hardening_evidence_refs")):
+            errors.append("autonomy_readiness_packet.runtime_hardening_evidence_refs required for material execution")
+
+    errors.extend(validate_secret_delivery_policy(secret_policy, material_execution=material_execution))
+    return errors
+
+
 def _card_parallel_execution_requested(card: dict[str, Any]) -> bool:
     runtime_contract = card.get("runtime_contract") if isinstance(card.get("runtime_contract"), dict) else {}
     loop_plan = card.get("loop_plan") if isinstance(card.get("loop_plan"), dict) else {}
@@ -1473,6 +1682,7 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_vfinal_card_contract(data))
     errors.extend(validate_canonical_runtime_gate(data))
     errors.extend(validate_capability_coverage(data))
+    errors.extend(validate_agent_runtime_hardening_profile(data))
     if data.get("factory_method_version") == "OVERKILL_VFINAL":
         if not isinstance(data.get("reasoning_policy"), dict):
             errors.append("reasoning_policy required for OVERKILL_VFINAL cards")
@@ -2262,6 +2472,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "reference_quality_packet": card.get("reference_quality_packet"),
             "learning_proposal_refs": card.get("learning_proposal_refs", []),
         },
+        "agent_runtime_hardening_profile": card.get("agent_runtime_hardening_profile"),
         "runtime_decision": runtime_decision,
         "output_contract": {
             "receipt_field": worker.output_field,
