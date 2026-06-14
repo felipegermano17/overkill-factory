@@ -26,7 +26,7 @@ class OperatorExperienceTest(unittest.TestCase):
         help_text = run_factoryctl("--help").stdout
         run_help = run_factoryctl("run", "--help").stdout
 
-        for command in ["doctor", "init", "run", "unblock-plan"]:
+        for command in ["doctor", "init", "run", "unblock-plan", "help-next"]:
             with self.subTest(command=command):
                 self.assertIn(command, help_text)
         self.assertIn("minimal", run_help)

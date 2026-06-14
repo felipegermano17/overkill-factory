@@ -25,6 +25,7 @@ class AgentReferenceStudyExecutionTest(unittest.TestCase):
             "templates/product-creation-plan.json": "schemas/product-creation-plan.schema.json",
             "templates/product-context-packet.json": "schemas/product-context-packet.schema.json",
             "templates/product-implementation-readiness.json": "schemas/product-implementation-readiness.schema.json",
+            "templates/user-facing-autonomy-contract.json": "schemas/user-facing-autonomy-contract.schema.json",
         }
 
         for template_path, schema_path in pairs.items():
