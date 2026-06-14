@@ -14,13 +14,17 @@ workspace and know exactly what to connect to their Hermes runtime.
 ## Install
 
 ```bash
-git clone https://github.com/<owner>/overkill-factory.git
+git clone https://github.com/felipegermano17/overkill-factory.git
 cd overkill-factory
 python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
 factoryctl init --out ../my-product-factory --project-name my-product
 ```
+
+Package-installed CLI commands can run outside this checkout for health checks,
+minimal smoke and workspace initialization. Keep the checkout when applying the
+Hermes adapter patch or inspecting public docs and examples.
 
 ## Fresh Adapter Smoke
 

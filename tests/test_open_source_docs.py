@@ -391,9 +391,11 @@ class OpenSourceDocsTest(unittest.TestCase):
         walkthrough = read_text("docs/getting-started/first-external-operator-walkthrough.md")
         install = read_text("docs/getting-started/install-in-hermes.md")
         combined = f"{walkthrough}\n{install}"
+        owner = "feli" + "pegermano17"
+        repo_url = f"https://github.com/{owner}/overkill-factory"
 
         for expected in [
-            "git clone https://github.com/<owner>/overkill-factory.git",
+            f"git clone {repo_url}.git",
             "factoryctl gate-report --card examples/minimal-hermes-project/card.md",
             "--out .tmp/external-operator-worker-packets",
             "--out .tmp/external-hermes-worker-packets",
@@ -410,9 +412,14 @@ class OpenSourceDocsTest(unittest.TestCase):
         workflow = read_text(".github/workflows/release-cli-smoke.yml")
 
         for expected in [
+            "ubuntu-latest",
+            "windows-latest",
             "python -m pip install .",
             "factoryctl --help",
+            "factoryctl doctor --json",
+            "factoryctl run minimal",
             "overkill-quickstart",
+            "$env:RUNNER_TEMP",
             "python scripts/public_safety_scan.py",
             "python scripts/secret_safety_scan.py",
             "tags:",
@@ -420,6 +427,21 @@ class OpenSourceDocsTest(unittest.TestCase):
         ]:
             with self.subTest(expected=expected):
                 self.assertIn(expected, workflow)
+
+    def test_package_metadata_includes_cli_runtime_assets(self) -> None:
+        pyproject = read_text("pyproject.toml")
+
+        for expected in [
+            "[tool.setuptools.data-files]",
+            "share/overkill-factory/agents",
+            "share/overkill-factory/examples/minimal-hermes-project",
+            "share/overkill-factory/schemas",
+            "share/overkill-factory/templates",
+            "share/overkill-factory/adapters/hermes",
+            "share/overkill-factory/skills/codex/overkill-factory",
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, pyproject)
 
     def test_minimal_example_is_public_safe_and_reproducible(self) -> None:
         example = read_text("examples/minimal-hermes-project/README.md")

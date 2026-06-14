@@ -15,7 +15,7 @@ Discord is optional cockpit UI. It is not the source of truth.
 ## Three Commands
 
 ```bash
-git clone https://github.com/<owner>/overkill-factory.git
+git clone https://github.com/felipegermano17/overkill-factory.git
 cd overkill-factory
 python -m pip install -e .
 factoryctl doctor
@@ -51,6 +51,10 @@ factoryctl gate-report --card examples/minimal-hermes-project/card.md
 
 `python scripts/quickstart_smoke.py` and `overkill-quickstart` remain available
 for compatibility.
+
+If the package is already installed, `factoryctl doctor`, `factoryctl run
+minimal` and `overkill-quickstart` can run from another working directory. Use a
+checkout for Hermes adapter patching, maintainer scripts and source changes.
 
 ## What To Inspect
 
