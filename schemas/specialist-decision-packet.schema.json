@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/specialist-decision-packet.schema.json",
+  "title": "Overkill Factory Specialist Decision Packet",
+  "type": "object",
+  "required": [
+    "record_type",
+    "decision_id",
+    "research_plan_ref",
+    "decision_summary",
+    "claim_conflict_gap_ledger",
+    "resolutions",
+    "impacts",
+    "unresolved_risk",
+    "human_decisions_required",
+    "public_safety_policy",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/specialist-decision-packet.schema.json" },
+    "record_type": { "const": "specialist_decision_packet" },
+    "decision_id": { "type": "string", "minLength": 3 },
+    "research_plan_ref": { "type": "string", "minLength": 3 },
+    "decision_summary": { "type": "string", "minLength": 8 },
+    "claim_conflict_gap_ledger": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "classification", "statement", "status", "evidence_refs"],
+        "properties": {
+          "claim_id": { "type": "string", "minLength": 3 },
+          "classification": {
+            "enum": [
+              "source_fact",
+              "inference",
+              "specialist_judgment",
+              "accepted_decision",
+              "rejected_claim",
+              "conflict",
+              "gap",
+              "stale_material",
+              "assumption_requires_human_approval"
+            ]
+          },
+          "statement": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["accepted", "rejected", "blocked", "deferred"] },
+          "evidence_refs": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "resolutions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "product_sot_change",
+          "product_sot_confirmation",
+          "architecture_decision",
+          "method_router_decision",
+          "engineering_method_requirement",
+          "gate_requirement",
+          "worker_requirement",
+          "test_or_proof_requirement",
+          "blocker",
+          "deferred_with_owner",
+          "explicit_rejection",
+          "human_decision_request"
+        ]
+      }
+    },
+    "impacts": {
+      "type": "object",
+      "required": ["sot", "architecture", "method_router", "gates", "proof"],
+      "additionalProperties": true
+    },
+    "unresolved_risk": { "type": "array", "items": { "type": "string" } },
+    "human_decisions_required": { "type": "array", "items": { "type": "string" } },
+    "public_safety_policy": { "type": "string", "minLength": 8 },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": true
+}

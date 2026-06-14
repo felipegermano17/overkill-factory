@@ -3,7 +3,16 @@
   "$id": "https://overkill-factory.dev/schemas/completion-audit.schema.json",
   "title": "Overkill Factory Completion Audit",
   "type": "object",
-  "required": ["promised", "delivered", "verified", "reviewed", "residual_risk", "decision"],
+  "required": [
+    "promised",
+    "delivered",
+    "verified",
+    "reviewed",
+    "residual_risk",
+    "decision",
+    "sot_claim_results",
+    "method_execution_results"
+  ],
   "properties": {
     "promised": { "type": "array", "items": { "type": "string" } },
     "delivered": { "type": "array", "items": { "type": "string" } },
@@ -11,6 +20,33 @@
     "reviewed": { "type": "array", "items": { "type": "string" } },
     "residual_risk": { "type": "array", "items": { "type": "string" } },
     "decision": { "enum": ["done", "block", "done_with_owner"] },
+    "sot_claim_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim_ref", "status", "owner"],
+        "properties": {
+          "claim_ref": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["DONE", "BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"] },
+          "owner": { "type": "string", "minLength": 3 },
+          "evidence_refs": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "method_execution_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["method", "status", "evidence_refs"],
+        "properties": {
+          "method": { "type": "string", "minLength": 2 },
+          "status": { "enum": ["EXECUTED", "WAIVED", "BLOCKED"] },
+          "evidence_refs": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
     "evidence_refs": { "type": "array", "items": { "type": "string" } }
   },
   "additionalProperties": true

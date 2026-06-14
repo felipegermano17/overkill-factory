@@ -10,6 +10,13 @@
     "required_plans",
     "required_gates",
     "waivers",
+    "canonical_scope_source",
+    "scope_intent",
+    "factory_route",
+    "required_factory_artifacts",
+    "engineering_method_matrix",
+    "slice_execution_policy",
+    "production_route_decision",
     "work_type",
     "selected_methods",
     "skipped_methods",
@@ -55,6 +62,82 @@
       "items": {
         "type": "object"
       }
+    },
+    "canonical_scope_source": {
+      "type": "string",
+      "minLength": 3
+    },
+    "scope_intent": {
+      "enum": [
+        "full_product",
+        "child_slice",
+        "bug",
+        "release",
+        "incident",
+        "doc",
+        "migration",
+        "integration"
+      ]
+    },
+    "factory_route": {
+      "type": "string",
+      "minLength": 3
+    },
+    "required_factory_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "engineering_method_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "surface_or_component",
+          "methods",
+          "reason",
+          "required_artifacts",
+          "evidence_required"
+        ],
+        "properties": {
+          "surface_or_component": { "type": "string", "minLength": 3 },
+          "methods": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2 } },
+          "reason": { "type": "string", "minLength": 3 },
+          "required_artifacts": { "type": "array", "items": { "type": "string" } },
+          "evidence_required": { "type": "array", "items": { "type": "string" } },
+          "skipped_methods": { "type": "array", "items": { "type": "object" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "slice_execution_policy": {
+      "type": "object",
+      "required": [
+        "slices_are_execution_units_only",
+        "canonical_scope_must_not_shrink"
+      ],
+      "properties": {
+        "slices_are_execution_units_only": { "const": true },
+        "canonical_scope_must_not_shrink": { "const": true },
+        "first_slice_completion_is_not_product_completion": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "production_route_decision": {
+      "type": "string",
+      "minLength": 3
+    },
+    "research_decision_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "research_route_impacts": {
+      "type": "array",
+      "items": { "type": "string" }
     },
     "work_type": {
       "type": "string",
