@@ -7,12 +7,14 @@
     "record_type",
     "created_at",
     "graph_kind",
+    "graph_mode",
     "product_id",
     "result",
     "blocking_findings",
     "evidence_kind",
     "reusable_for_product",
     "completion_claim_allowed",
+    "omitted_lanes",
     "lanes_total",
     "lanes_passed",
     "lanes",
@@ -37,6 +39,9 @@
     "graph_kind": {
       "type": "string",
       "minLength": 3
+    },
+    "graph_mode": {
+      "enum": ["full_product", "release_gate_upstream"]
     },
     "product_id": {
       "type": "string",
@@ -63,6 +68,13 @@
     "completion_claim_allowed": {
       "type": "boolean"
     },
+    "omitted_lanes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "lanes_total": {
       "type": "integer"
     },
@@ -87,6 +99,7 @@
           "lane_id",
           "scope",
           "evidence_ref",
+          "evidence_provenance",
           "status",
           "validation_errors",
           "reusable_for_product"
@@ -135,6 +148,21 @@
             "items": {
               "type": "string"
             }
+          },
+          "evidence_provenance": {
+            "type": "object",
+            "required": ["ref", "exists", "loaded_at"],
+            "properties": {
+              "ref": { "type": "string", "minLength": 3 },
+              "exists": { "type": "boolean" },
+              "loaded_at": { "type": "string", "minLength": 10 },
+              "size_bytes": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string", "minLength": 64 },
+              "record_type": { "type": ["string", "null"] },
+              "$schema": { "type": ["string", "null"] },
+              "product_id": { "type": ["string", "null"] }
+            },
+            "additionalProperties": true
           },
           "status": {
             "enum": ["PASS", "FAIL"]
