@@ -53,14 +53,15 @@ class PublicSafetyScanTest(unittest.TestCase):
 
         self.assertEqual(findings, [])
 
-    def test_allows_canonical_public_repo_url_only_in_metadata(self) -> None:
+    def test_allows_canonical_public_repo_url_but_blocks_loose_owner_marker(self) -> None:
         owner = "feli" + "pegermano17"
         repo_url = f"https://github.com/{owner}/overkill-factory"
 
         self.assertEqual(public_safety_scan.scan_text("pyproject.toml", f'Repository = "{repo_url}"'), [])
         self.assertEqual(public_safety_scan.scan_text("mkdocs.yml", f"repo_url: {repo_url}"), [])
+        self.assertEqual(public_safety_scan.scan_text("docs/example.md", f"git clone {repo_url}.git"), [])
 
-        findings = public_safety_scan.scan_text("docs/example.md", f"See {repo_url}")
+        findings = public_safety_scan.scan_text("docs/example.md", f"Ask {owner} for private evidence")
         self.assertTrue(findings)
         self.assertIn("private_owner_marker", findings[0])
 
