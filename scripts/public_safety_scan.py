@@ -62,6 +62,20 @@ def is_negative_test_guard(path_parts: tuple[str, ...], line: str) -> bool:
     return any(marker in line for marker in guard_markers)
 
 
+def is_declared_negative_fixture_guard(path_parts: tuple[str, ...], line: str) -> bool:
+    """Allow the Issue 84 negative EvidenceRef fixture to carry the blocked sample.
+
+    The fixture is itself public proof that the EvidenceRef validator rejects
+    local/private refs. Keep the exemption narrow: only the named negative
+    fixture may contain the sample, and only on the concrete ref line.
+    """
+    if path_parts != ("fixtures", "issue-84", "status-snapshot-v0", "FX10-forbidden_evidence_ref_negative.json"):
+        return False
+    if '"ref"' not in line:
+        return False
+    return any(marker in line for marker in ("C:\\\\Users", "C:\\Users", "/srv/hermes", "file://"))
+
+
 def is_allowed_public_repo_metadata_line(rel: str, line: str) -> bool:
     """Allow the canonical public GitHub URL only where package/site metadata needs it."""
     return rel in PUBLIC_REPO_METADATA_RELS and PUBLIC_REPO_URL in line
@@ -97,7 +111,7 @@ def scan_text(rel: str, text: str) -> list[str]:
     findings: list[str] = []
     parts = rel_parts(rel)
     for lineno, line in enumerate(text.splitlines(), start=1):
-        if is_negative_test_guard(parts, line):
+        if is_negative_test_guard(parts, line) or is_declared_negative_fixture_guard(parts, line):
             continue
         for category, pattern in PATTERN_SPECS:
             if category == "private_owner_marker" and is_allowed_public_repo_metadata_line(rel, line):

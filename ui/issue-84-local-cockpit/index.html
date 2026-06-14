@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Issue 84 Local Cockpit</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#cockpit-main">Skip to cockpit</a>
+    <header class="topbar" role="banner">
+      <div>
+        <p class="eyebrow">Overkill Factory · local-first projection</p>
+        <h1>Issue 84 Local Cockpit</h1>
+        <p class="lede">
+          Read-only factory state, gates, blockers, evidence refs and next safe action from local fixtures and reviewed adapter output.
+        </p>
+      </div>
+      <div class="mode-card" aria-label="Safety mode">
+        <strong>Projection only</strong>
+        <span>No runtime mutation, no product-face approval, no release claim.</span>
+      </div>
+    </header>
+
+    <main id="cockpit-main" data-cockpit-root class="cockpit" aria-live="polite" aria-busy="true">
+      <section class="loading-panel" aria-label="Loading local cockpit data">
+        <p class="eyebrow">Loading snapshot</p>
+        <h2>Reading local StatusSnapshot projections</h2>
+        <p>No success metrics are inferred until the local JSON bundle is parsed.</p>
+      </section>
+    </main>
+
+    <noscript>
+      <section class="noscript" aria-label="No JavaScript fallback">
+        This local cockpit needs JavaScript to render the fixture-backed inspection panels. It has no mutation routes.
+      </section>
+    </noscript>
+    <script src="app.js" defer></script>
+  </body>
+</html>

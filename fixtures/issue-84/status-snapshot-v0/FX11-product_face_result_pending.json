@@ -2,24 +2,27 @@
   "$schema": "https://overkill-factory.dev/schemas/factory-status-snapshot.schema.json",
   "schema_version": "status-snapshot-v0",
   "record_type": "factory_status_snapshot",
-  "fixture_id": "TEMPLATE-STATUS-SNAPSHOT",
-  "fixture_name": "manual estimate template blocks completion claim",
+  "fixture_id": "FX11",
+  "fixture_name": "Product Face result pending",
   "kind": "fixture",
-  "title": "Factory StatusSnapshot v0 template - manual estimate blocks completion claim",
-  "phase": "F12/F13 bounded implementation",
-  "risk_effective": "R1",
-  "observed_at": "2026-01-01T00:00:00Z",
-  "source_updated_at": "2026-01-01T00:00:00Z",
-  "freshness_state": "manual_estimate",
-  "current_state": "manual_estimate",
+  "title": "Issue 84 StatusSnapshot v0 - Product Face result pending",
+  "phase": "F12/F13 first safe slice",
+  "risk_effective": "R2",
+  "observed_at": "2026-06-14T03:30:00Z",
+  "source_updated_at": "2026-06-14T02:59:12Z",
+  "freshness_state": "current",
+  "current_state": "blocked",
   "source_refs": [
-    "CARD-001",
-    "GATE-REPORT",
-    "FIXTURE-TEMPLATE"
+    "ISSUE-84",
+    "PRODUCT-SOT",
+    "METHOD-CONTRACT",
+    "DOCS-OS",
+    "FIXTURE-PLAN"
   ],
   "canonical_refs": [
+    "https://github.com/overkill-factory/overkill-factory/issues/84",
     "schemas/factory-status-snapshot.schema.json",
-    "templates/factory-status-snapshot.json"
+    "schemas/worker-result.schema.json"
   ],
   "gate_states": [
     {
@@ -29,98 +32,89 @@
       "owner": "factory-operator",
       "unblock_condition": "none",
       "source_refs": [
-        "GATE-REPORT"
+        "HUMAN-GATE"
       ]
     },
     {
-      "id": "documentation_os",
-      "label": "Documentation or source packet input",
-      "state": "passed",
+      "id": "product_face",
+      "label": "Product Face Result",
+      "state": "pending",
       "owner": "factory-operator",
-      "unblock_condition": "none",
+      "unblock_condition": "produce screenshots, state coverage, a11y, overlap and visual quality result",
       "source_refs": [
-        "GATE-REPORT"
-      ]
-    },
-    {
-      "id": "independent_review",
-      "label": "Independent implementation review",
-      "state": "blocked",
-      "owner": "factory-operator",
-      "unblock_condition": "review actual implementation diff",
-      "source_refs": [
-        "GATE-REPORT"
+        "PRODUCT-FACE"
       ]
     }
   ],
   "blockers": [
     {
-      "id": "B-MANUAL-ESTIMATE",
+      "id": "B-PRODUCT-FACE",
       "state": "active",
-      "summary": "Manual estimate is not canonical state.",
-      "unblock_condition": "refresh from structured runtime export",
+      "summary": "Product Face proof is pending.",
+      "unblock_condition": "produce Product Face Result with visual quality verdict",
       "source_refs": [
-        "FIXTURE-TEMPLATE"
+        "DOCS-OS",
+        "FIXTURE-PLAN"
       ]
     }
   ],
   "worker_state": [
     {
-      "worker_id": "example-worker",
+      "worker_id": "data-persistence-builder",
       "state": "done",
-      "executor_identity": "example-worker",
-      "reviewer_identity": "example-reviewer",
+      "executor_identity": "data-persistence-builder",
+      "reviewer_identity": "independent-reviewer",
       "source_refs": [
-        "FIXTURE-TEMPLATE"
+        "FIXTURE-PLAN"
       ]
     }
   ],
   "review_state": {
     "required": true,
     "status": "blocked",
-    "executor_identity": "example-worker",
-    "reviewer_identity": "example-reviewer",
+    "executor_identity": "data-persistence-builder",
+    "reviewer_identity": "independent-reviewer",
     "source_refs": [
-      "GATE-REPORT"
+      "REVIEW-GATE"
     ]
   },
   "receipt_five_status": {
     "status": "present",
     "reviewer_required": true,
     "reviewer_result": "review pending for future implementation",
-    "changed": "Template StatusSnapshot v0 projection; replace fields with current public-safe runtime evidence.",
+    "changed": "StatusSnapshot v0 projection fixture for Issue 84.",
     "artifact_paths": [
-      "templates/factory-status-snapshot.json",
+      "fixtures/issue-84/status-snapshot-v0/FX11-product_face_result_pending.json",
       "schemas/factory-status-snapshot.schema.json"
     ],
     "verification_commands": [
-      "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed",
-      "python3 scripts/validate_public_json_artifacts.py"
+      "for f in fixtures/issue-84/status-snapshot-v0/*.json; do python3 -m json.tool \"$f\" >/dev/null || exit 1; done",
+      "python3 scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed"
     ],
-    "verification_result": "Template structure is expected to validate against StatusSnapshot v0 schema.",
-    "next_action": "Replace manual estimate with current structured runtime export before done/release claims."
+    "verification_result": "fixture expected to satisfy StatusSnapshot v0 structural validation",
+    "next_action": "Block UI acceptance until Product Face Result and visual quality review exist."
   },
   "evidence_refs": [
+    {
+      "id": "EV-ISSUE-84",
+      "kind": "public_url",
+      "ref": "https://github.com/overkill-factory/overkill-factory/issues/84",
+      "source_refs": [
+        "ISSUE-84"
+      ],
+      "freshness_state": "current",
+      "public_safety_state": "public_safe",
+      "verification_status": "verified_public_api",
+      "raw_payload_included": false
+    },
     {
       "id": "EV-SCHEMA",
       "kind": "schema",
       "ref": "schemas/factory-status-snapshot.schema.json",
       "source_refs": [
-        "FIXTURE-TEMPLATE"
+        "ISSUE-84"
       ],
       "freshness_state": "current",
-      "public_safety_state": "public_safe",
-      "verification_status": "verified_relative_artifact",
-      "raw_payload_included": false
-    },
-    {
-      "id": "EV-TEMPLATE",
-      "kind": "template",
-      "ref": "templates/factory-status-snapshot.json",
-      "source_refs": [
-        "FIXTURE-TEMPLATE"
-      ],
-      "freshness_state": "manual_estimate",
       "public_safety_state": "public_safe",
       "verification_status": "verified_relative_artifact",
       "raw_payload_included": false
@@ -161,11 +155,11 @@
     "release or publish without later human/security gates"
   ],
   "next_safe_action": {
-    "action_type": "refresh",
-    "label": "Replace manual estimate with current structured runtime export before done/release claims.",
+    "action_type": "block",
+    "label": "Block UI acceptance until Product Face Result and visual quality review exist.",
     "source_refs": [
-      "GATE-REPORT",
-      "FIXTURE-TEMPLATE"
+      "DOCS-OS",
+      "FIXTURE-PLAN"
     ],
     "forbidden_action_taken": false
   },
@@ -175,7 +169,7 @@
     "fail_closed_required": true,
     "required_assertions": [
       "schema fields present",
-      "template does not claim runtime completion",
+      "evidence refs are metadata only",
       "next action preserves gate boundaries"
     ]
   }

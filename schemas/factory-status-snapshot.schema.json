@@ -1,103 +1,201 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://overkill-factory.dev/schemas/factory-status-snapshot.schema.json",
-  "title": "Overkill Factory Status Snapshot",
+  "title": "Overkill Factory StatusSnapshot v0",
   "type": "object",
   "required": [
     "$schema",
+    "schema_version",
     "record_type",
-    "created_at",
-    "card",
-    "current_state",
+    "fixture_id",
+    "fixture_name",
+    "kind",
+    "title",
     "phase",
     "risk_effective",
+    "observed_at",
+    "freshness_state",
+    "current_state",
     "source_refs",
-    "staleness",
-    "workers",
-    "lanes",
-    "gates",
+    "canonical_refs",
+    "gate_states",
     "blockers",
-    "evidence",
-    "state_flags",
-    "next_safe_actions",
-    "forbidden_actions",
+    "worker_state",
+    "review_state",
+    "receipt_five_status",
+    "evidence_refs",
     "public_private_boundary",
-    "continuation"
+    "state_flags",
+    "forbidden_actions",
+    "next_safe_action",
+    "validation_expectations"
   ],
   "properties": {
     "$schema": { "const": "https://overkill-factory.dev/schemas/factory-status-snapshot.schema.json" },
+    "schema_version": { "const": "status-snapshot-v0" },
     "record_type": { "const": "factory_status_snapshot" },
-    "created_at": { "type": "string", "minLength": 10 },
-    "card": {
-      "type": "object",
-      "required": ["id", "title", "ref"],
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "title": { "type": "string", "minLength": 1 },
-        "ref": { "type": "string", "minLength": 1 }
-      },
-      "additionalProperties": true
+    "fixture_id": { "type": "string", "minLength": 4 },
+    "fixture_name": { "type": "string", "minLength": 3 },
+    "kind": { "enum": ["issue", "card", "run", "gate", "portfolio", "fixture"] },
+    "title": { "type": "string", "minLength": 3 },
+    "phase": { "type": "string", "minLength": 2 },
+    "risk_effective": { "enum": ["R0", "R1", "R2", "R3", "R4"] },
+    "observed_at": { "type": "string", "minLength": 10 },
+    "source_updated_at": { "type": ["string", "null"] },
+    "freshness_state": {
+      "enum": ["current", "stale", "missing", "manual_estimate", "contradictory", "superseded", "private_unavailable", "loading", "error"]
     },
     "current_state": {
-      "enum": ["planning", "blocked", "ready", "executing", "reviewing", "human_gate", "release_candidate", "released", "archived", "superseded"]
+      "enum": ["success", "empty", "loading", "error", "blocked", "stale", "missing", "missing-gate", "contradictory", "private_unavailable", "superseded", "manual_estimate", "security_negative"]
     },
-    "phase": { "type": "string", "minLength": 1 },
-    "risk_effective": { "type": "string", "minLength": 1 },
-    "source_refs": {
+    "source_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "canonical_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "gate_states": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["claim", "ref"],
+        "required": ["id", "label", "state", "source_refs"],
         "properties": {
-          "claim": { "type": "string", "minLength": 1 },
-          "ref": { "type": "string", "minLength": 1 }
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "state": { "enum": ["passed", "failed", "missing", "stale", "blocked", "superseded", "waived", "pending"] },
+          "owner": { "type": "string" },
+          "unblock_condition": { "type": "string" },
+          "source_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } }
         },
         "additionalProperties": true
       }
     },
-    "staleness": {
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "state", "summary", "unblock_condition", "source_refs"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "state": { "type": "string", "minLength": 1 },
+          "summary": { "type": "string", "minLength": 1 },
+          "unblock_condition": { "type": "string", "minLength": 1 },
+          "source_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "worker_state": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["worker_id", "state", "executor_identity", "source_refs"],
+        "properties": {
+          "worker_id": { "type": "string", "minLength": 1 },
+          "state": { "enum": ["not_started", "running", "done", "blocked", "failed", "review_required", "reviewed", "superseded"] },
+          "executor_identity": { "type": "string", "minLength": 1 },
+          "reviewer_identity": { "type": "string" },
+          "source_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "review_state": {
       "type": "object",
-      "required": ["status", "last_updated_ref", "warning"],
+      "required": ["required", "status", "executor_identity", "reviewer_identity", "source_refs"],
       "properties": {
-        "status": { "enum": ["fresh", "manual_estimate", "stale", "blocked"] },
-        "last_updated_ref": { "type": "string", "minLength": 1 },
-        "warning": { "type": "string" }
+        "required": { "type": "boolean" },
+        "status": { "enum": ["passed", "failed", "missing", "stale", "blocked", "superseded", "waived", "pending", "not_required"] },
+        "executor_identity": { "type": "string" },
+        "reviewer_identity": { "type": "string" },
+        "source_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } }
       },
       "additionalProperties": true
     },
-    "workers": { "type": "object", "additionalProperties": true },
-    "lanes": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
-    "gates": { "type": "object", "additionalProperties": true },
-    "blockers": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
-    "evidence": { "type": "object", "additionalProperties": true },
-    "state_flags": {
+    "receipt_five_status": {
       "type": "object",
-      "required": ["implemented", "validated", "integrated", "released", "blocked", "superseded"],
+      "required": ["status", "reviewer_required", "changed", "artifact_paths", "verification_commands", "verification_result", "next_action"],
       "properties": {
-        "implemented": { "type": "boolean" },
-        "validated": { "type": "boolean" },
-        "integrated": { "type": "boolean" },
-        "released": { "type": "boolean" },
-        "blocked": { "type": "boolean" },
-        "superseded": { "type": "boolean" }
+        "status": { "enum": ["present", "missing", "stale", "invalid", "review_missing", "not_applicable"] },
+        "reviewer_required": { "type": "boolean" },
+        "reviewer_result": { "type": "string" },
+        "changed": { "type": "string" },
+        "artifact_paths": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "verification_commands": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "verification_result": { "type": "string" },
+        "next_action": { "type": "string" }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
-    "next_safe_actions": { "type": "array", "items": { "type": "string" } },
-    "forbidden_actions": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "source_refs", "freshness_state", "public_safety_state", "verification_status", "raw_payload_included"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "minLength": 1 },
+          "ref": { "type": "string" },
+          "ref_label": { "type": "string" },
+          "source_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "freshness_state": { "enum": ["current", "stale", "missing", "manual_estimate", "contradictory", "superseded", "private_unavailable", "loading", "error"] },
+          "public_safety_state": { "enum": ["public_safe", "private_redacted", "blocked", "missing", "unverified"] },
+          "verification_status": { "enum": ["verified_public_api", "verified_relative_artifact", "json_and_receipt_validated", "private_redacted", "missing", "unverified", "blocked"] },
+          "raw_payload_included": { "type": "boolean" },
+          "unavailable_reason": { "type": "string" },
+          "redaction_note": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
     "public_private_boundary": {
       "type": "object",
-      "required": ["projection_not_source_of_truth", "no_raw_logs", "no_private_paths", "no_private_ids"],
+      "required": ["allowed_refs", "blocked_refs", "raw_private_payload_included"],
       "properties": {
-        "projection_not_source_of_truth": { "const": true },
-        "no_raw_logs": { "const": true },
-        "no_private_paths": { "const": true },
-        "no_private_ids": { "const": true }
+        "allowed_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "blocked_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "raw_private_payload_included": { "type": "boolean" }
       },
       "additionalProperties": true
     },
-    "continuation": { "type": "string", "minLength": 1 }
+    "state_flags": {
+      "type": "object",
+      "required": ["request", "approval", "blocked", "done", "released", "superseded", "implemented", "validated", "integrated"],
+      "properties": {
+        "request": { "type": "boolean" },
+        "approval": { "type": "boolean" },
+        "blocked": { "type": "boolean" },
+        "done": { "type": "boolean" },
+        "released": { "type": "boolean" },
+        "superseded": { "type": "boolean" },
+        "implemented": { "type": "boolean" },
+        "validated": { "type": "boolean" },
+        "integrated": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "forbidden_actions": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "next_safe_action": {
+      "type": "object",
+      "required": ["action_type", "label", "source_refs", "forbidden_action_taken"],
+      "properties": {
+        "action_type": { "enum": ["review", "block", "refresh", "fix", "none", "implement", "release", "approve_gate", "mutate_runtime"] },
+        "label": { "type": "string", "minLength": 1 },
+        "source_refs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "forbidden_action_taken": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "validation_expectations": {
+      "type": "object",
+      "required": ["expected_fixture_validator", "evidence_ref_public_safety_expected", "fail_closed_required", "required_assertions"],
+      "properties": {
+        "expected_fixture_validator": { "enum": ["pass", "fail"] },
+        "evidence_ref_public_safety_expected": { "enum": ["pass", "fail"] },
+        "fail_closed_required": { "type": "boolean" },
+        "required_assertions": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    }
   },
   "additionalProperties": true
 }
