@@ -1,0 +1,67 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/planning-bundle-manifest.schema.json",
+  "record_type": "planning_bundle_manifest",
+  "manifest_version": "v1",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "bundles": [
+    {
+      "bundle_id": "product-sot-drafting-v1",
+      "bundle_kind": "planning_protocol",
+      "version": "v1",
+      "status": "prototype_public_safe",
+      "target_platforms": [
+        "chatgpt-custom-gpt",
+        "gemini-gem",
+        "web-llm"
+      ],
+      "entrypoint": "planning-bundles/product-sot-drafting/INSTRUCTIONS.md",
+      "included_files": [
+        "planning-bundles/product-sot-drafting/INSTRUCTIONS.md",
+        "planning-bundles/product-sot-drafting/SKILL.md",
+        "planning-bundles/product-sot-drafting/templates/product-sot-candidate.md",
+        "planning-bundles/product-sot-drafting/checklists/pre-import-checklist.md"
+      ],
+      "compatible_factory_method_versions": [
+        "OVERKILL_VFINAL"
+      ],
+      "compatible_schema_refs": [
+        "schemas/product-sot.schema.json",
+        "schemas/full-product-sot-scope-coverage.schema.json",
+        "schemas/product-creation-plan.schema.json",
+        "schemas/product-implementation-readiness.schema.json"
+      ],
+      "expected_outputs": [
+        {
+          "output_id": "product_sot_candidate",
+          "output_type": "Product SOT candidate",
+          "candidate_schema_ref": "schemas/product-sot.schema.json",
+          "authority": "candidate_only"
+        },
+        {
+          "output_id": "open_decision_list",
+          "output_type": "Open decision list",
+          "candidate_schema_ref": "schemas/open-decision-list.schema.json",
+          "authority": "candidate_only"
+        }
+      ],
+      "import_validation": {
+        "handoff_rule": "Bring output back as a candidate artifact. These commands validate bundle definitions only; the imported candidate must be validated against its candidate_schema_ref and factory gates before execution.",
+        "commands": [
+          "python scripts/validate_planning_bundles.py",
+          "python scripts/validate_public_json_artifacts.py"
+        ]
+      },
+      "safety_rules": [
+        "Do not paste secrets, credentials, private keys, payment data or raw private logs into web LLMs.",
+        "Use redacted summaries or public-safe excerpts when source material is sensitive.",
+        "Mark every generated artifact as candidate_only until validated by the factory."
+      ],
+      "non_authority_rules": [
+        "A planning bundle is not runtime proof.",
+        "A planning bundle is not human approval.",
+        "A planning bundle is not production readiness.",
+        "A planning bundle is not a capability pack."
+      ]
+    }
+  ]
+}
