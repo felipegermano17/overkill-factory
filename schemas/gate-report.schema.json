@@ -41,6 +41,20 @@
         "required": ["required", "reason", "status"],
         "additionalProperties": true
       }
+    },
+    "next_safe_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["worker_id", "field", "action", "authority"],
+        "properties": {
+          "worker_id": { "type": "string", "minLength": 3 },
+          "field": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 3 },
+          "authority": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": true
+      }
     }
   },
   "additionalProperties": true

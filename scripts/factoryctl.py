@@ -2328,6 +2328,29 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         gate_status = "ready_for_worker_execution"
     else:
         gate_status = "pass_no_workers_required"
+    next_safe_actions: list[dict[str, str]] = []
+    seen_actions: set[tuple[str, str, str]] = set()
+    for worker_id, row in worker_rows.items():
+        if not row.get("required"):
+            continue
+        status = str(row.get("status") or "")
+        if status not in {"requires_execution"} and not status.startswith("blocked_"):
+            continue
+        guidance_items = list(row.get("unblock_guidance", []))
+        if status == "requires_execution" and not guidance_items:
+            guidance_items.append(
+                {
+                    "field": WORKERS[worker_id].output_field,
+                    "action": f"execute {worker_id} and attach a valid {WORKERS[worker_id].output_field}",
+                    "authority": "assigned worker must produce evidence; operator may only route or approve where explicitly required",
+                }
+            )
+        for guidance in guidance_items:
+            key = (worker_id, str(guidance.get("field") or ""), str(guidance.get("action") or ""))
+            if key in seen_actions:
+                continue
+            seen_actions.add(key)
+            next_safe_actions.append({"worker_id": worker_id, **guidance})
     return {
         "$schema": "https://overkill-factory.dev/schemas/gate-report.schema.json",
         "report_type": "factory_gate_preflight",
@@ -2346,11 +2369,7 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
         "blocked_workers": blocked_workers,
         "card_validation_errors": validation_errors,
         "card_validation_warnings": validation_warnings,
-        "next_safe_actions": [
-            guidance
-            for row in worker_rows.values()
-            for guidance in row.get("unblock_guidance", [])
-        ],
+        "next_safe_actions": next_safe_actions,
         "workers": worker_rows,
     }
 

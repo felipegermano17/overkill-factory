@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TRACE = ROOT / ".tmp" / "factory-runs" / "canonical-linear-traceability" / "canonical-linear-traceability.json"
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "canonical-runtime-enforcement" / "canonical-runtime-rulebook.json"
 SCHEMA = "https://overkill-factory.dev/schemas/canonical-runtime-rulebook.schema.json"
+FALLBACK_SOURCE_TRACE_REF = "generated:fallback-vfinal-runtime-rulebook"
 
 NON_RUNTIME_LINEAR_STATUSES = {"foundational_text_tracked"}
 CORE_RUNTIME_FIELDS = (
@@ -217,39 +218,45 @@ def build_rulebook(trace: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def default_rulebook() -> dict[str, Any]:
-    if not DEFAULT_TRACE.exists():
-        return {
-            "$schema": SCHEMA,
-            "record_type": "canonical_runtime_rulebook",
-            "source_trace_ref": "generated:fallback-vfinal-runtime-rulebook",
-            "summary": {
-                "checkpoints_checked": 1,
-                "runtime_rules": 1,
-                "non_runtime_processes": 0,
-                "unmapped_actionable_checkpoints": 0,
-            },
-            "rules": [
-                {
-                    "rule_id": "canonical-runtime::vfinal-core-contract",
-                    "checkpoint_id": "vfinal-core-contract",
-                    "sequence": 1,
-                    "canonical_line": None,
-                    "canonical_heading": "vFinal core runtime contract",
-                    "linear_status": "implemented_by_runtime",
-                    "enforcement_points": [
-                        "scripts/canonical_runtime_enforcement.py",
-                        "scripts/factoryctl.py validate-card",
-                        "adapters/hermes/transition_hook.py",
-                    ],
-                    "required_fields": list(VFINAL_FALLBACK_FIELDS),
-                    "block_policy": "missing_required_fields_blocks_vfinal_runtime_gate",
-                }
-            ],
-            "non_runtime_processes": [],
-            "unmapped_actionable_checkpoints": [],
-        }
-    return build_rulebook(load_json(DEFAULT_TRACE))
+def fallback_rulebook() -> dict[str, Any]:
+    return {
+        "$schema": SCHEMA,
+        "record_type": "canonical_runtime_rulebook",
+        "source_trace_ref": FALLBACK_SOURCE_TRACE_REF,
+        "summary": {
+            "checkpoints_checked": 1,
+            "runtime_rules": 1,
+            "non_runtime_processes": 0,
+            "unmapped_actionable_checkpoints": 0,
+        },
+        "rules": [
+            {
+                "rule_id": "canonical-runtime::vfinal-core-contract",
+                "checkpoint_id": "vfinal-core-contract",
+                "sequence": 1,
+                "canonical_line": None,
+                "canonical_heading": "vFinal core runtime contract",
+                "linear_status": "implemented_by_runtime",
+                "enforcement_points": [
+                    "scripts/canonical_runtime_enforcement.py",
+                    "scripts/factoryctl.py validate-card",
+                    "adapters/hermes/transition_hook.py",
+                ],
+                "required_fields": list(VFINAL_FALLBACK_FIELDS),
+                "block_policy": "missing_required_fields_blocks_vfinal_runtime_gate",
+            }
+        ],
+        "non_runtime_processes": [],
+        "unmapped_actionable_checkpoints": [],
+    }
+
+
+def default_rulebook(trace_path: Path | None = None) -> dict[str, Any]:
+    if trace_path is None:
+        return fallback_rulebook()
+    if not trace_path.exists():
+        raise FileNotFoundError(f"canonical trace does not exist: {trace_path}")
+    return build_rulebook(load_json(trace_path))
 
 
 def validate_card_runtime_rules(card: dict[str, Any], rulebook: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -282,12 +289,12 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build or run canonical runtime enforcement.")
-    parser.add_argument("--trace", type=Path, default=DEFAULT_TRACE)
+    parser.add_argument("--trace", type=Path)
     parser.add_argument("--card", type=Path)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = parser.parse_args(argv)
 
-    rulebook = build_rulebook(load_json(args.trace))
+    rulebook = default_rulebook(args.trace)
     if args.card:
         card = load_json(args.card)
         blockers = validate_card_runtime_rules(card, rulebook)

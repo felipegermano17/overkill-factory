@@ -248,6 +248,11 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("codex-security", report["blocked_workers"])
         self.assertEqual(report["workers"]["public-safety-gate"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["release-ops-worker"]["status"], "blocked_missing_inputs")
+        next_action_workers = {item["worker_id"] for item in report["next_safe_actions"]}
+        self.assertTrue(next_action_workers <= set(report["required_workers"]))
+        self.assertIn("codex-security", next_action_workers)
+        self.assertIn("release-ops-worker", next_action_workers)
+        self.assertNotIn("product-face", next_action_workers)
 
     def test_security_scan_packet_can_require_codex_security_on_r2_product_face(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
