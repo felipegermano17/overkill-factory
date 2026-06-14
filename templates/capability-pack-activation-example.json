@@ -1,0 +1,36 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/capability-pack-contract.schema.json",
+  "record_type": "capability_pack_contract",
+  "pack_id": "game-product-pack",
+  "status": "blocked",
+  "lifecycle_state": "proposed",
+  "covered_surfaces": ["game", "3d", "asset-pipeline"],
+  "specialist_workers": ["game-runtime-builder", "game-design-specialist", "game-qa-specialist"],
+  "activation_evidence_refs": ["external:replace-with-game-pack-activation-ref"],
+  "tool_refs": ["external:replace-with-game-runtime-tool-ref"],
+  "local_smoke_path": "external:replace-with-playable-smoke-command",
+  "eval_path": "external:replace-with-game-eval-command",
+  "smoke_evidence_ref": "external:replace-with-playable-smoke-ref",
+  "eval_evidence_ref": "external:replace-with-game-eval-ref",
+  "profile_binding_refs": {
+    "game-runtime-builder": "external:replace-with-game-runtime-profile-binding",
+    "game-design-specialist": "external:replace-with-game-design-profile-binding",
+    "game-qa-specialist": "external:replace-with-game-qa-profile-binding"
+  },
+  "permission_class": "bounded-worker",
+  "missing_capabilities": [
+    "replace placeholder refs with real public-safe smoke and eval evidence before changing status to activated"
+  ],
+  "execution_rule": "This example is not execution approval. Material game execution stays blocked until lifecycle_state=activated, missing_capabilities is empty and every smoke, eval, tool and profile binding ref is real.",
+  "product_pack_id": "game-product-pack",
+  "product_pack_version": "example-v1",
+  "surface_pack_id": "game-3d-asset-pipeline",
+  "risk_addendum": ["games require playable smoke, performance budget and playtest evidence before material execution"],
+  "templates_required": ["templates/product-experience-plan.json", "templates/software-development-plan.json"],
+  "evidence_required": ["playable smoke", "performance budget", "game eval", "independent game UX review"],
+  "worker_mapping": {
+    "runtime": ["game-runtime-builder"],
+    "design": ["game-design-specialist"],
+    "qa": ["game-qa-specialist"]
+  }
+}
