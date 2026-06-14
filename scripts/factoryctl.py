@@ -34,6 +34,7 @@ def default_work_root() -> Path:
 ROOT = default_work_root()
 PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
+DEFAULT_WORKFLOW_CATALOG = ROOT / "docs" / "factory-workflow.catalog.json"
 CANONICAL_RUNTIME_ENFORCEMENT_PATH = CODE_ROOT / "scripts" / "canonical_runtime_enforcement.py"
 DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
 DEFAULT_QUICKSTART_OUT = ROOT / ".tmp" / "quickstart-result.json"
@@ -100,6 +101,23 @@ PRODUCTION_SURFACES = {
 }
 COMPLETION_SOT_STATUSES = {"DONE", "BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"}
 COMPLETION_METHOD_STATUSES = {"EXECUTED", "WAIVED", "BLOCKED"}
+USER_QUESTION_CLASSES = {"discoverable", "preference", "authority_required", "access_required", "risk_acceptance", "blocked"}
+ALLOWED_USER_QUESTION_CLASSES = USER_QUESTION_CLASSES - {"discoverable"}
+INTERNAL_COORDINATION_TERMS = {
+    "worker packet",
+    "worker packets",
+    "internal worker",
+    "internal workers",
+    "schema",
+    "schemas",
+    "evidence graph",
+    "source ledger",
+    "method router",
+    "gate report",
+    "receipt five",
+    "hermes card",
+    "kanban card",
+}
 
 RECEIPT_REQUIRED = {
     "changed",
@@ -1378,6 +1396,53 @@ def validate_production_promotion_ladder_contract(card: dict[str, Any]) -> list[
     return errors
 
 
+def _contains_internal_coordination_request(text: Any) -> bool:
+    normalized = str(text or "").strip().lower()
+    return any(term in normalized for term in INTERNAL_COORDINATION_TERMS)
+
+
+def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
+    contract = card.get("user_facing_autonomy_contract")
+    if not isinstance(contract, dict):
+        return []
+
+    errors: list[str] = []
+    if contract.get("record_type") not in (None, "user_facing_autonomy_contract"):
+        errors.append("user_facing_autonomy_contract.record_type must be user_facing_autonomy_contract")
+
+    allowed_classes = set(_list_items(contract.get("allowed_user_question_classes")))
+    if "discoverable" in allowed_classes:
+        errors.append("user_facing_autonomy_contract.allowed_user_question_classes must not include discoverable")
+    unknown_classes = allowed_classes - ALLOWED_USER_QUESTION_CLASSES
+    if unknown_classes:
+        errors.append("user_facing_autonomy_contract.allowed_user_question_classes contains unknown classes: " + ", ".join(sorted(unknown_classes)))
+
+    factory_owns = " ".join(_list_items(contract.get("factory_owns"))).lower()
+    for required in ("source resolution", "method routing", "execution routing", "verification"):
+        if required not in factory_owns:
+            errors.append(f"user_facing_autonomy_contract.factory_owns must include {required}")
+
+    user_must_not_do = " ".join(_list_items(contract.get("user_must_not_do"))).lower()
+    if "worker" not in user_must_not_do or "schema" not in user_must_not_do:
+        errors.append("user_facing_autonomy_contract.user_must_not_do must keep worker/schema coordination inside the factory")
+
+    for index, question in enumerate(contract.get("user_questions", []) if isinstance(contract.get("user_questions"), list) else []):
+        if not isinstance(question, dict):
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}] must be an object")
+            continue
+        question_class = str(question.get("class") or "").strip()
+        if question_class not in USER_QUESTION_CLASSES:
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}].class is unknown")
+        if question_class == "discoverable":
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}] is discoverable and must be resolved by the factory before asking the user")
+        if _contains_internal_coordination_request(question.get("question")):
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}] asks the user to perform internal factory coordination")
+        if not _non_empty_text(question.get("factory_resolution_path")):
+            errors.append(f"user_facing_autonomy_contract.user_questions[{index}].factory_resolution_path is required")
+
+    return errors
+
+
 def _status_value(value: Any) -> str:
     if isinstance(value, dict):
         return str(value.get("status") or "").strip().lower()
@@ -1672,6 +1737,7 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_specialist_research_contract(data))
     errors.extend(validate_product_creation_readiness_contract(data))
     errors.extend(validate_production_promotion_ladder_contract(data))
+    errors.extend(validate_user_facing_autonomy_contract(data))
     return errors
 
 
@@ -3651,6 +3717,212 @@ def build_status_snapshot(
     }
 
 
+def load_workflow_catalog(path: Path | None = None) -> dict[str, Any]:
+    catalog_path = path or DEFAULT_WORKFLOW_CATALOG
+    if not catalog_path.exists():
+        return {
+            "record_type": "factory_workflow_catalog",
+            "factory_method_version": "OVERKILL_VFINAL",
+            "catalog_version": "missing",
+            "phases": [],
+        }
+    return load_json_like(catalog_path)
+
+
+def workflow_phase_for_card(card: dict[str, Any], catalog: dict[str, Any]) -> dict[str, Any]:
+    phase = str(card.get("phase") or "unknown").strip()
+    for row in catalog.get("phases", []) if isinstance(catalog.get("phases"), list) else []:
+        if isinstance(row, dict) and str(row.get("phase_id") or "").strip().upper() == phase.upper():
+            return row
+    return {
+        "phase_id": phase or "unknown",
+        "phase_name": "Unknown phase",
+        "operator_visible_summary": "Factory phase is not present in the workflow catalog.",
+        "blocked_actions": ["advance without a cataloged gate"],
+        "required_artifacts": [],
+        "required_gates": [],
+        "required_workers": [],
+        "related_command_refs": ["factoryctl gate-report"],
+    }
+
+
+def truth_scope_for_card(card: dict[str, Any]) -> str:
+    if card.get("release_ref") or card.get("production_release_ref"):
+        return "production_ready"
+    receipt = card.get("receipt_five") if isinstance(card.get("receipt_five"), dict) else {}
+    completion = card.get("completion_audit") if isinstance(card.get("completion_audit"), dict) else {}
+    if str(receipt.get("verification_result") or "").strip().upper() in {"PASS", "WAIVED"}:
+        return "bounded_proof"
+    if str(completion.get("result") or "").strip().upper() == "PASS":
+        return "bounded_proof"
+    runtime_contract = card.get("runtime_contract") if isinstance(card.get("runtime_contract"), dict) else {}
+    if runtime_contract.get("hermes_backed") is True or runtime_contract.get("runtime_state_ref"):
+        return "runtime_backed"
+    return "repo_only"
+
+
+def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], phase_row: dict[str, Any]) -> dict[str, Any]:
+    errors = _list_items(gate_report.get("card_validation_errors"))
+    blocked_workers = _list_items(gate_report.get("blocked_workers"))
+    command_refs = _list_items(phase_row.get("related_command_refs")) or ["factoryctl gate-report"]
+
+    if any("product_sot" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "create or attach the Product SOT and scope coverage before any implementation routing",
+            "why": "The product source of truth is the canonical scope; the input paper is source material, not execution authority.",
+            "command_refs": command_refs,
+        }
+    if any("product_creation_plan" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "create or attach the Product Creation Plan before implementation",
+            "why": "Execution slices cannot replace the complete production-ready product plan.",
+            "command_refs": command_refs,
+        }
+    if any("product_implementation_readiness" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "produce Product Implementation Readiness before dispatching material work",
+            "why": "The factory must prove the plan, context and work units are aligned before execution.",
+            "command_refs": command_refs,
+        }
+    if any("specialist_research_plan" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "run Specialist Research OS and resolve it into operational decisions",
+            "why": "Research only counts when it changes or confirms SOT, method, gates or proof.",
+            "command_refs": command_refs,
+        }
+    if any("method_contract" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "record the Method Contract before creating execution work",
+            "why": "The user should not choose internal method machinery; the factory records the route.",
+            "command_refs": command_refs,
+        }
+    if errors:
+        return {
+            "owner": "factory",
+            "action": "repair the canonical factory card contract before asking the user for decisions",
+            "why": errors[0],
+            "command_refs": ["factoryctl validate-card", "factoryctl gate-report"],
+        }
+    if blocked_workers:
+        return {
+            "owner": "factory",
+            "action": "prepare the missing worker inputs or evidence for the blocked workers",
+            "why": "Blocked worker inputs are factory coordination work, not open-ended user labor.",
+            "command_refs": ["factoryctl worker-packet", "factoryctl gate-report"],
+        }
+    if gate_report.get("gate_predicate_result") == "PASS" and _list_items(gate_report.get("required_workers")):
+        return {
+            "owner": "factory",
+            "action": "generate required worker packets and dispatch through the selected runtime gate",
+            "why": "The current card is ready for worker execution within its authority limits.",
+            "command_refs": ["factoryctl worker-packet", "factoryctl transition-plan"],
+        }
+    return {
+        "owner": "factory",
+        "action": "continue the cataloged workflow from the current phase",
+        "why": str(phase_row.get("operator_visible_summary") or "No blocking gate is present."),
+        "command_refs": command_refs,
+    }
+
+
+def user_decisions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -> list[dict[str, str]]:
+    decisions: list[dict[str, str]] = []
+    contract = card.get("user_facing_autonomy_contract") if isinstance(card.get("user_facing_autonomy_contract"), dict) else {}
+    for question in contract.get("user_questions", []) if isinstance(contract.get("user_questions"), list) else []:
+        if not isinstance(question, dict):
+            continue
+        question_class = str(question.get("class") or "").strip()
+        if question_class in ALLOWED_USER_QUESTION_CLASSES and not _contains_internal_coordination_request(question.get("question")):
+            decisions.append(
+                {
+                    "decision_type": question_class,
+                    "reason": str(question.get("question") or "User decision is required."),
+                    "user_action": "answer, approve, reject or defer this bounded question",
+                    "factory_prepares": str(question.get("factory_resolution_path") or "decision packet"),
+                }
+            )
+
+    review = card.get("review") if isinstance(card.get("review"), dict) else {}
+    if review.get("human_gate_required") is True or "human-gate-clerk" in _list_items(gate_report.get("required_workers")):
+        decisions.append(
+            {
+                "decision_type": "authority_required",
+                "reason": "Human gate is required by risk, authority or release policy.",
+                "user_action": "approve, reject or request changes on the bounded gate packet",
+                "factory_prepares": "human gate packet with scope, risk, evidence and forbidden actions",
+            }
+        )
+
+    access = card.get("access_capability") if isinstance(card.get("access_capability"), dict) else {}
+    if card.get("requires_access") is True or _list_items(access.get("missing_capabilities")):
+        decisions.append(
+            {
+                "decision_type": "access_required",
+                "reason": "Material execution needs access or capability that the factory cannot grant by itself.",
+                "user_action": "grant, deny or defer the named access",
+                "factory_prepares": "access request with scope, least privilege and stop conditions",
+            }
+        )
+
+    return decisions
+
+
+def build_factory_help(card: dict[str, Any], card_path: Path, *, catalog_path: Path | None = None) -> dict[str, Any]:
+    catalog = load_workflow_catalog(catalog_path)
+    phase_row = workflow_phase_for_card(card, catalog)
+    gate_report = build_gate_report(card)
+    factory_action = help_action_from_gate(card, gate_report, phase_row)
+    blocked_workers = _list_items(gate_report.get("blocked_workers"))
+    validation_errors = _list_items(gate_report.get("card_validation_errors"))
+    next_actions: list[str] = []
+    for item in gate_report.get("next_safe_actions", []):
+        next_action_text = str(item.get("action") if isinstance(item, dict) else item).strip()
+        if next_action_text and next_action_text not in next_actions:
+            next_actions.append(next_action_text)
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-help.schema.json",
+        "record_type": "factory_help_next_action",
+        "created_at": utc_now(),
+        "card_id": str(card.get("card_id") or "unknown-card"),
+        "phase": str(card.get("phase") or "unknown"),
+        "workflow_phase": {
+            "phase_id": str(phase_row.get("phase_id") or card.get("phase") or "unknown"),
+            "phase_name": str(phase_row.get("phase_name") or "Unknown phase"),
+            "operator_visible_summary": str(phase_row.get("operator_visible_summary") or ""),
+        },
+        "gate_status": str(gate_report.get("gate_status") or "not_run"),
+        "truth_scope": truth_scope_for_card(card),
+        "factory_next_action": factory_action,
+        "user_decision_required": user_decisions_for_card(card, gate_report),
+        "blocked_because": validation_errors + [f"{worker_id} is blocked by missing inputs" for worker_id in blocked_workers],
+        "blocked_actions": sorted(set(_list_items(phase_row.get("blocked_actions")) + _list_items(card.get("forbidden_actions")))),
+        "evidence_needed": next_actions or _list_items(phase_row.get("required_artifacts")) + _list_items(phase_row.get("required_gates")),
+        "required_workers": _list_items(gate_report.get("required_workers")),
+        "blocked_workers": blocked_workers,
+        "source_refs": [
+            {"claim": "card", "ref": source_card_ref(card_path)},
+            {"claim": "workflow_catalog", "ref": source_card_ref(catalog_path or DEFAULT_WORKFLOW_CATALOG)},
+            {"claim": "gate_report", "ref": "factoryctl:gate-report"},
+        ],
+        "public_private_boundary": {
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+            "projection_not_source_of_truth": True,
+        },
+        "limits": [
+            "This help output does not execute workers, approve gates, or replace Hermes/runtime truth.",
+            "The operator/user should see bounded decisions, blockers and proof, not internal worker coordination.",
+        ],
+    }
+
+
 def validate_status_snapshot(snapshot: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if not isinstance(snapshot.get("source_refs"), list) or not snapshot.get("source_refs"):
@@ -3746,6 +4018,13 @@ def command_unblock_plan(args: argparse.Namespace) -> int:
     }
     write_json(args.out, plan)
     return 1 if report.get("gate_predicate_result") == "BLOCK" else 0
+
+
+def command_help_next(args: argparse.Namespace) -> int:
+    card = load_json_like(args.card)
+    payload = build_factory_help(card, args.card, catalog_path=args.catalog)
+    write_json(args.out, payload)
+    return 0
 
 
 def command_evidence_record(args: argparse.Namespace) -> int:
@@ -3921,6 +4200,12 @@ def build_parser() -> argparse.ArgumentParser:
     unblock_plan_parser.add_argument("--card", type=Path, required=True)
     unblock_plan_parser.add_argument("--out", type=Path)
     unblock_plan_parser.set_defaults(func=command_unblock_plan)
+
+    help_next_parser = sub.add_parser("help-next", help="Show the next safe action without making the user operate internal factory machinery.")
+    help_next_parser.add_argument("--card", type=Path, required=True)
+    help_next_parser.add_argument("--catalog", type=Path)
+    help_next_parser.add_argument("--out", type=Path)
+    help_next_parser.set_defaults(func=command_help_next)
 
     evidence_record_parser = sub.add_parser("evidence-record")
     evidence_record_parser.add_argument(
