@@ -218,6 +218,9 @@ adapter rule or receipt contract.
 - `docs/concepts/factory-flow.md`: core concepts and phase flow.
 - `docs/concepts/overkill-factory-method.md`: human-readable method guide.
 - `docs/concepts/operator-journey.md`: step-by-step operator journey.
+- `docs/visuals/README.md`: public visual-map boundary and validation rules.
+- Public visual map:
+  `https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html`.
 - `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
   evidence.
 - `agents/README.md`: human entrypoint for the agent contract directory.

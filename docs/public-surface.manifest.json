@@ -1,0 +1,204 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/public-surface-manifest.schema.json",
+  "record_type": "public_surface_manifest",
+  "manifest_version": "v1",
+  "created_at": "2026-06-14T00:00:00Z",
+  "canonical_sources": [
+    "agents/worker-registry.public.json",
+    "agents/worker-profiles.public.json",
+    "agents/hermes-profile-bindings.public.json",
+    "docs/agents/factory-stage-agent-map.md",
+    "docs/concepts/factory-flow.md",
+    "docs/concepts/operator-journey.md",
+    "docs/concepts/overkill-factory-method.md",
+    "schemas/",
+    "scripts/factoryctl.py"
+  ],
+  "published_check_policy": {
+    "default_status_without_network": "not_checked",
+    "comparison": "sha256"
+  },
+  "surfaces": [
+    {
+      "surface_id": "visual-map-v0.1.0-html",
+      "path": "docs/visuals/overkill-factory-map-v0.1.0.html",
+      "published_url": "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html",
+      "surface_type": "conceptual_visual_map",
+      "authority_level": "conceptual_supporting_surface",
+      "source_refs": [
+        "agents/worker-registry.public.json",
+        "agents/worker-profiles.public.json",
+        "agents/hermes-profile-bindings.public.json",
+        "docs/agents/factory-stage-agent-map.md",
+        "scripts/factoryctl.py"
+      ],
+      "claim_checks": [
+        "metadata",
+        "source_refs_exist",
+        "worker_count",
+        "stage_count",
+        "risk_tiers",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "expected_worker_count": 40,
+      "expected_stage_count": 33,
+      "canonical_stage_count": 32,
+      "conceptual_exceptions": [
+        "The visual map includes two conceptual summary nodes for readiness and R4 rigor in addition to the canonical 32-stage agent map."
+      ],
+      "required_phrases": [
+        "Hermes segue como fonte da verdade",
+        "não provam entrega"
+      ]
+    },
+    {
+      "surface_id": "visual-map-v0.1.0-svg",
+      "path": "docs/visuals/overkill-factory-map-v0.1.0.svg",
+      "surface_type": "static_visual_preview",
+      "authority_level": "conceptual_supporting_surface",
+      "source_refs": [
+        "docs/visuals/README.md",
+        "docs/visuals/overkill-factory-map-v0.1.0.html",
+        "docs/agents/factory-stage-agent-map.md"
+      ],
+      "claim_checks": [
+        "metadata",
+        "source_refs_exist",
+        "risk_tiers",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "not runtime evidence",
+        "not a source of truth"
+      ]
+    },
+    {
+      "surface_id": "visuals-index",
+      "path": "docs/visuals/README.md",
+      "surface_type": "public_visual_index",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "docs/public-surface.manifest.json",
+        "docs/visuals/overkill-factory-map-v0.1.0.html",
+        "docs/visuals/overkill-factory-map-v0.1.0.svg"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Executable contracts remain authoritative",
+        "they do not replace them"
+      ]
+    },
+    {
+      "surface_id": "factory-flow-concepts",
+      "path": "docs/concepts/factory-flow.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "docs/agents/factory-stage-agent-map.md",
+        "schemas/factory-card.schema.json",
+        "scripts/factoryctl.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Hermes Kanban state plus repo-relative evidence and receipts are the source of truth",
+        "they do not close work by themselves"
+      ]
+    },
+    {
+      "surface_id": "operator-journey",
+      "path": "docs/concepts/operator-journey.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "docs/agents/factory-stage-agent-map.md",
+        "docs/factory-workflow.catalog.json",
+        "scripts/factoryctl.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "runtime state and receipts decide completion",
+        "Done without evidence is only a claim"
+      ]
+    },
+    {
+      "surface_id": "overkill-factory-method",
+      "path": "docs/concepts/overkill-factory-method.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "docs/factory-workflow.catalog.json",
+        "schemas/factory-card.schema.json",
+        "scripts/factoryctl.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "risk_tiers",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "executable gates and runtime receipts decide whether work can move",
+        "An agent saying \"finished\" is not enough"
+      ]
+    },
+    {
+      "surface_id": "stage-agent-map",
+      "path": "docs/agents/factory-stage-agent-map.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "agents/worker-registry.public.json",
+        "agents/worker-profiles.public.json",
+        "agents/hermes-profile-bindings.public.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "stage_count",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "canonical_stage_count": 32,
+      "required_phrases": [
+        "Hermes remains the runtime source of truth",
+        "only the operator"
+      ]
+    },
+    {
+      "surface_id": "root-readme",
+      "path": "README.md",
+      "surface_type": "root_readme",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "docs/visuals/README.md",
+        "docs/public-surface.manifest.json",
+        "docs/visuals/overkill-factory-map-v0.1.0.html"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "expected_links",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Hermes and Receipt Five remain the source of truth"
+      ],
+      "expected_links": [
+        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html"
+      ]
+    }
+  ]
+}
