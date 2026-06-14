@@ -198,6 +198,18 @@ QUASAR_TOOLCHAIN_PROOF_REQUIRED = (
 )
 CAPABILITY_READY_STATES = {"core_ready", "pack_ready"}
 CAPABILITY_ACTIVATED_STATES = {"ready", "activated"}
+CAPABILITY_ACTIVE_LIFECYCLE_STATES = {"activated"}
+CAPABILITY_AMBIGUOUS_SURFACE_GUIDANCE = {
+    "mobile": "use responsive/mobile-web for browser UI or ios/android/react-native for native mobile work"
+}
+CAPABILITY_CONTRACT_TEXT_FIELDS = (
+    "lifecycle_state",
+    "permission_class",
+    "local_smoke_path",
+    "eval_path",
+    "smoke_evidence_ref",
+    "eval_evidence_ref",
+)
 PRODUCT_EXPERIENCE_REQUIRED_FIELDS = (
     "surface_type",
     "surface_pack",
@@ -762,6 +774,71 @@ def _activated_capability_pack_ids(contract: Any) -> set[str]:
     return ids
 
 
+def validate_activated_capability_contract(
+    contract: Any,
+    *,
+    candidate_pack_ids: set[str],
+    requested_surfaces: set[str],
+) -> list[str]:
+    if not isinstance(contract, dict):
+        return ["capability_pack_contract object is required to activate a template capability pack"]
+
+    errors: list[str] = []
+    status = str(contract.get("status") or "").strip().lower()
+    lifecycle_state = str(contract.get("lifecycle_state") or "").strip().lower()
+    contract_pack_ids = _activated_capability_pack_ids(contract)
+    covered_surfaces = {item.lower() for item in _list_items(contract.get("covered_surfaces"))}
+    specialist_workers = _list_items(contract.get("specialist_workers"))
+    activation_refs = _list_items(contract.get("activation_evidence_refs"))
+    tool_refs = _list_items(contract.get("tool_refs"))
+    missing_capabilities = _list_items(contract.get("missing_capabilities"))
+
+    if status not in CAPABILITY_ACTIVATED_STATES:
+        errors.append("capability_pack_contract.status must be ready or activated")
+    if lifecycle_state not in CAPABILITY_ACTIVE_LIFECYCLE_STATES:
+        errors.append("capability_pack_contract.lifecycle_state must be activated before material execution")
+    if not contract_pack_ids.intersection(candidate_pack_ids):
+        candidates = ", ".join(sorted(candidate_pack_ids))
+        errors.append(f"capability_pack_contract.pack_id must match one of the required packs: {candidates}")
+
+    missing_surfaces = sorted(requested_surfaces - covered_surfaces)
+    for surface in missing_surfaces:
+        errors.append(f"capability_pack_contract.covered_surfaces missing required surface {surface!r}")
+
+    for field in CAPABILITY_CONTRACT_TEXT_FIELDS:
+        if not _non_empty_text(contract.get(field)):
+            errors.append(f"capability_pack_contract.{field} is required for activated packs")
+    if not specialist_workers:
+        errors.append("capability_pack_contract.specialist_workers must name activated specialist workers")
+    if not activation_refs:
+        errors.append("capability_pack_contract.activation_evidence_refs must include public-safe activation evidence refs")
+    if not tool_refs:
+        errors.append("capability_pack_contract.tool_refs must name the activated tools or commands")
+    if missing_capabilities:
+        errors.append("capability_pack_contract.missing_capabilities must be empty before material execution")
+
+    profile_binding_refs = contract.get("profile_binding_refs")
+    if not isinstance(profile_binding_refs, dict) or not profile_binding_refs:
+        errors.append("capability_pack_contract.profile_binding_refs must map each specialist worker to a profile binding ref")
+    else:
+        for worker_id in specialist_workers:
+            if not _non_empty_text(profile_binding_refs.get(worker_id)):
+                errors.append(f"capability_pack_contract.profile_binding_refs missing {worker_id!r}")
+
+    worker_mapping = contract.get("worker_mapping")
+    if isinstance(worker_mapping, dict) and specialist_workers:
+        worker_set = set(specialist_workers)
+        for lane, workers in worker_mapping.items():
+            for worker_id in _list_items(workers):
+                if worker_id not in worker_set:
+                    errors.append(
+                        f"capability_pack_contract.worker_mapping.{lane} references worker {worker_id!r} "
+                        "outside specialist_workers"
+                    )
+
+    return errors
+
+
 def validate_capability_coverage(card: dict[str, Any]) -> list[str]:
     packs = load_capability_packs()
     if not packs:
@@ -774,8 +851,15 @@ def validate_capability_coverage(card: dict[str, Any]) -> list[str]:
     activated_pack_ids = _activated_capability_pack_ids(card.get("capability_pack_contract"))
     errors: list[str] = []
     covered_surfaces: set[str] = set()
+    activation_required_surfaces: set[str] = set()
+    activation_candidate_pack_ids: set[str] = set()
 
     for surface in sorted(surfaces):
+        if surface in CAPABILITY_AMBIGUOUS_SURFACE_GUIDANCE:
+            errors.append(
+                f"ambiguous capability surface {surface!r}; {CAPABILITY_AMBIGUOUS_SURFACE_GUIDANCE[surface]}"
+            )
+            continue
         matching = [
             (pack_id, pack)
             for pack_id, pack in packs.items()
@@ -788,11 +872,25 @@ def validate_capability_coverage(card: dict[str, Any]) -> list[str]:
         covered_surfaces.add(surface)
         ready = any(str(pack.get("status") or "").strip() in CAPABILITY_READY_STATES for _, pack in matching)
         activated = any(pack_id in activated_pack_ids for pack_id, _ in matching)
-        if not ready and not activated:
+        if ready:
+            continue
+        if activated:
+            activation_required_surfaces.add(surface)
+            activation_candidate_pack_ids.update(pack_id for pack_id, _ in matching)
+        else:
             pack_ids = ", ".join(pack_id for pack_id, _ in matching)
             errors.append(
                 f"capability_pack_contract ready/activated is required for surface {surface!r}; candidate packs: {pack_ids}"
             )
+
+    if activation_required_surfaces:
+        errors.extend(
+            validate_activated_capability_contract(
+                card.get("capability_pack_contract"),
+                candidate_pack_ids=activation_candidate_pack_ids,
+                requested_surfaces=activation_required_surfaces,
+            )
+        )
 
     if strict and not covered_surfaces:
         errors.append("capability_coverage_required=true but no card surface is covered by the capability pack registry")
