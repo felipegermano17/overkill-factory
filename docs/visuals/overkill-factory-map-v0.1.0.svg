@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
   <title id="title">Overkill Factory visual map</title>
   <desc id="desc">Static preview of the Overkill Factory production line from source intake to Product SOT, gates, execution, proof, release and learnback.</desc>
+  <metadata id="overkill-public-surface-metadata">{"surface_id":"visual-map-v0.1.0-svg","manifest_ref":"docs/public-surface.manifest.json","authority_level":"conceptual_supporting_surface","source_refs":["docs/visuals/README.md","docs/visuals/overkill-factory-map-v0.1.0.html","docs/agents/factory-stage-agent-map.md"],"claim_checks":["risk_tiers","source_of_truth_disclaimer","no_runtime_proof_claim"]}</metadata>
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
       <stop offset="0" stop-color="#151514"/>

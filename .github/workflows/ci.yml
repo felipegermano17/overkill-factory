@@ -53,6 +53,8 @@ jobs:
         run: python adapters/hermes/compatibility-check.py
       - name: Public JSON artifact validation
         run: python scripts/validate_public_json_artifacts.py
+      - name: Public surface sync
+        run: python scripts/validate_public_surface_sync.py
       - name: Worker profile validation
         run: python scripts/validate_worker_profiles.py
       - name: Supply-chain proof

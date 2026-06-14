@@ -13,6 +13,7 @@ factoryctl run minimal
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/validate_public_json_artifacts.py
+python scripts/validate_public_surface_sync.py
 python scripts/validate_worker_profiles.py
 python scripts/secret_safety_scan.py
 python scripts/public_safety_scan.py
@@ -45,10 +46,16 @@ Run this before a public branch, release tag or pull request:
 python scripts/release_integration_preflight.py --out .tmp/release-check.json
 python scripts/factory_production_readiness.py --out .tmp/readiness-check.json
 python scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
+python scripts/validate_public_surface_sync.py --check-published
 ```
 
 These commands write local summaries under `.tmp` when an output path is
 provided. Generated summaries must not be committed as release proof.
+
+`validate_public_surface_sync.py --check-published` compares the validated local
+map to the published public object. Run it only after the public object has been
+published or refreshed; before publication it may correctly report the remote
+map as out of sync.
 
 ## Full Validation Battery
 
@@ -61,6 +68,7 @@ python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/validate_worker_profiles.py
 python scripts/validate_public_json_artifacts.py
+python scripts/validate_public_surface_sync.py
 python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
 python scripts/supply_chain_proof.py --check --no-write
