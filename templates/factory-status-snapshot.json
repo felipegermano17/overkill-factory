@@ -27,6 +27,7 @@
     "gate_status": "not_run"
   },
   "blockers": [],
+  "blocker_economics": [],
   "evidence": {
     "receipt_five_status": "not_attached",
     "evidence_refs": []

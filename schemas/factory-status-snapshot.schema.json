@@ -17,6 +17,7 @@
     "lanes",
     "gates",
     "blockers",
+    "blocker_economics",
     "evidence",
     "state_flags",
     "next_safe_actions",
@@ -70,6 +71,7 @@
     "lanes": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "gates": { "type": "object", "additionalProperties": true },
     "blockers": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+    "blocker_economics": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
     "evidence": { "type": "object", "additionalProperties": true },
     "state_flags": {
       "type": "object",

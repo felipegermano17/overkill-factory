@@ -15,6 +15,7 @@
     "requirements_blocking",
     "requirements",
     "blocking_summary",
+    "blocker_economics",
     "policy_decision"
   ],
   "properties": {
@@ -111,6 +112,25 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "blocker_economics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "blocker_id",
+          "owner",
+          "risk_controlled",
+          "cost_time_class",
+          "dependency",
+          "smallest_safe_next_action",
+          "mutation_risk",
+          "route",
+          "expiry",
+          "status"
+        ],
+        "additionalProperties": true
       }
     },
     "policy_decision": {

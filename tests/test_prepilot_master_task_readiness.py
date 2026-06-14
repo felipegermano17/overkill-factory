@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import subprocess
 import unittest
+import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from scripts import factory_production_readiness
 
@@ -53,6 +55,28 @@ class PrepilotMasterTaskReadinessTest(unittest.TestCase):
 
         self.assertEqual(receipt["result"], "BLOCKED")
         self.assertTrue(all(ref.startswith(".tmp/factory-runs/") for ref in receipt["evidence_refs"]))
+        self.assertTrue(receipt["blocker_economics"])
+        self.assertTrue(all("smallest_safe_next_action" in item for item in receipt["blocker_economics"]))
+
+    def test_production_readiness_can_consume_evidence_graph_component(self) -> None:
+        with TemporaryDirectory() as tmp:
+            graph_path = Path(tmp) / "evidence-graph.json"
+            graph_path.write_text(
+                json.dumps(
+                    {
+                        "$schema": "https://overkill-factory.dev/schemas/evidence-graph.schema.json",
+                        "record_type": "evidence_graph",
+                        "result": "BLOCKED",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            receipt = factory_production_readiness.build_readiness(evidence_graph_path=graph_path)
+
+        by_id = {item["id"]: item for item in receipt["components"]}
+        self.assertIn("evidence_graph", by_id)
+        self.assertEqual(by_id["evidence_graph"]["status"], "BLOCKED")
 
     def test_public_readme_rejects_narrative_history_as_onboarding(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

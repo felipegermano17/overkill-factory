@@ -41,6 +41,37 @@
         "required": ["required", "reason", "status"],
         "additionalProperties": true
       }
+    },
+    "blocker_economics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "blocker_id",
+          "owner",
+          "risk_controlled",
+          "cost_time_class",
+          "dependency",
+          "smallest_safe_next_action",
+          "mutation_risk",
+          "route",
+          "expiry",
+          "status"
+        ],
+        "properties": {
+          "blocker_id": { "type": "string", "minLength": 3 },
+          "owner": { "type": "string", "minLength": 2 },
+          "risk_controlled": { "type": "string", "minLength": 3 },
+          "cost_time_class": { "type": "string", "minLength": 3 },
+          "dependency": { "type": "string", "minLength": 1 },
+          "smallest_safe_next_action": { "type": "string", "minLength": 3 },
+          "mutation_risk": { "type": "string", "minLength": 3 },
+          "route": { "enum": ["local", "hermes", "github", "human_approval", "must_not_proceed"] },
+          "expiry": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["blocked", "actionable", "deferred"] }
+        },
+        "additionalProperties": true
+      }
     }
   },
   "additionalProperties": true

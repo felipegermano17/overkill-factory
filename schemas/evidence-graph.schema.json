@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/evidence-graph.schema.json",
+  "title": "Overkill Factory Evidence Graph",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "target",
+    "result",
+    "nodes",
+    "edges",
+    "findings",
+    "public_private_boundary",
+    "limits"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/evidence-graph.schema.json" },
+    "record_type": { "const": "evidence_graph" },
+    "created_at": { "type": "string", "minLength": 10 },
+    "target": {
+      "type": "object",
+      "required": ["card_id", "card_ref"],
+      "additionalProperties": true
+    },
+    "result": { "enum": ["PASS", "BLOCKED"] },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "node_type", "ref", "status", "evidence_level"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "node_type": { "type": "string", "minLength": 3 },
+          "ref": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["PASS", "BLOCKED", "MISSING"] },
+          "evidence_level": { "type": "string", "minLength": 3 },
+          "staleness": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "target", "relation"],
+        "additionalProperties": true
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "node_id", "message"],
+        "additionalProperties": true
+      }
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["public_safe_summary_only", "no_raw_logs", "no_private_paths", "no_private_ids"],
+      "properties": {
+        "public_safe_summary_only": { "const": true },
+        "no_raw_logs": { "const": true },
+        "no_private_paths": { "const": true },
+        "no_private_ids": { "const": true }
+      },
+      "additionalProperties": true
+    },
+    "limits": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": true
+}

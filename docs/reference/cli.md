@@ -50,6 +50,22 @@ factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out 
 does not replace Hermes, card contracts, gate reports or Receipt Five as the
 source of truth.
 
+## Evidence And Truth Commands
+
+```bash
+factoryctl export-hermes-evidence --board my-board --workspace ../my-hermes-workspace --out .tmp/factory-runs/hermes-evidence/sanitized-package.json
+factoryctl evidence-graph --card examples/minimal-hermes-project/card.md --worker-results-dir .tmp/worker-results --out .tmp/factory-runs/evidence/evidence-graph.json
+factoryctl readiness-ledger --card examples/minimal-hermes-project/card.md --evidence-graph .tmp/factory-runs/evidence/evidence-graph.json --out .tmp/factory-runs/readiness/readiness-truth-ledger.json
+factoryctl truth --target issue-94 --card examples/minimal-hermes-project/card.md --out .tmp/factory-runs/truth/truth-packet.json
+factoryctl prepilot-checklist --evidence-graph .tmp/factory-runs/evidence/evidence-graph.json --readiness-ledger .tmp/factory-runs/readiness/readiness-truth-ledger.json
+```
+
+These commands are JSON-first. They summarize cards, worker results, receipts,
+readiness and sanitized Hermes evidence without importing raw private runtime
+evidence into the public repository. A weaker truth layer such as
+`contract_exists` or `runtime_enforced` must not be read as
+`production_ready`.
+
 ### Test Runner Fallback
 
 Worker packets should run commands as argv lists, not shell strings. Use
