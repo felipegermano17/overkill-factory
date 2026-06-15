@@ -31,6 +31,21 @@ class PlanningBundleValidationTest(unittest.TestCase):
     def test_current_manifest_passes(self) -> None:
         self.assertEqual(planning_bundles.validate(), [])
 
+    def test_manifest_schema_blocks_string_compatibility_versions_before_semantic_checks(self) -> None:
+        manifest = self.manifest()
+        mutated = copy.deepcopy(manifest)
+        mutated["bundles"][0]["compatible_factory_method_versions"] = "OVERKILL_VFINAL"
+
+        findings = planning_bundles.validate_manifest_data(mutated)
+
+        self.assertTrue(
+            any(
+                "$.bundles[0].compatible_factory_method_versions" in finding and "expected type array" in finding
+                for finding in findings
+            ),
+            findings,
+        )
+
     def test_missing_included_file_is_detected(self) -> None:
         manifest = self.manifest()
         mutated = copy.deepcopy(manifest)
@@ -52,7 +67,7 @@ class PlanningBundleValidationTest(unittest.TestCase):
         findings = planning_bundles.validate_manifest_data(mutated)
 
         self.assertIn(
-            "product-sot-drafting-v1: expected output product_sot_candidate must be candidate_only",
+            "manifest schema: $.bundles[0].expected_outputs[0].authority: expected const 'candidate_only'",
             findings,
         )
 
@@ -77,7 +92,7 @@ class PlanningBundleValidationTest(unittest.TestCase):
 
         findings = planning_bundles.validate_manifest_data(mutated)
 
-        self.assertIn("product-sot-drafting-v1: bundle_kind must be planning_protocol", findings)
+        self.assertIn("manifest schema: $.bundles[0].bundle_kind: expected const 'planning_protocol'", findings)
 
     def test_included_files_must_stay_inside_bundle_directory(self) -> None:
         manifest = self.manifest()

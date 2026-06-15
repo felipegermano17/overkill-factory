@@ -14,7 +14,14 @@ from typing import Any, Callable
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from validate_public_json_artifacts import load_schemas, validate_node  # noqa: E402
+
 MANIFEST_PATH = ROOT / "docs" / "public-surface.manifest.json"
+MANIFEST_SCHEMA_NAME = "public-surface-manifest.schema.json"
 
 RISK_TIERS = {"R0", "R1", "R2", "R3", "R4"}
 OVERCLAIM_PATTERNS = [
@@ -185,7 +192,9 @@ def validate_manifest_data(
     check_published: bool = False,
     fetcher: Callable[[str], bytes] | None = None,
 ) -> list[str]:
-    findings: list[str] = []
+    findings = validate_manifest_schema(manifest)
+    if findings:
+        return findings
     for ref in manifest.get("canonical_sources", []):
         if not source_ref_exists(root, str(ref)):
             findings.append(f"manifest: canonical source does not exist: {ref}")
@@ -206,6 +215,15 @@ def validate_manifest_data(
         else:
             findings.append("manifest: surface entry must be an object")
     return findings
+
+
+def validate_manifest_schema(manifest: dict[str, Any]) -> list[str]:
+    schemas = load_schemas()
+    schema = schemas[MANIFEST_SCHEMA_NAME]
+    return [
+        f"manifest schema: {error}"
+        for error in validate_node(schema, manifest, "$", schemas=schemas, root_schema=schema)
+    ]
 
 
 def validate_manifest(
