@@ -360,6 +360,16 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         self.assertEqual(fake.tasks[task_id]["status"], "ready")
 
+    def test_recovery_route_digest_matches_factoryctl_contract(self) -> None:
+        route = {
+            "recovery_route_id": "recovery:card:review-block",
+            "created_at": "2026-06-06T00:00:00+00:00",
+            "repair_owner_worker": "handoff-packer",
+            "fresh_review_required": True,
+        }
+
+        self.assertEqual(adapter.recovery_route_digest(route), factoryctl.recovery_route_digest(route))
+
     def test_dispatch_reports_tasks_that_entered_running_even_when_native_spawned_is_empty(self) -> None:
         fake = FakeDispatchHermes(native_spawned=False)
         args = adapter.build_parser().parse_args(["dispatch", "--board", TEST_BOARD])
@@ -888,6 +898,10 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             reviewer_required=True,
             reviewer_result="PENDING",
         )
+        route_ref = "recovery:val-solana-quasar-r3:review-block:handoff"
+        route_digest = "sha256:" + ("2" * 64)
+        handoff["recovery_route_refs"] = [route_ref]
+        handoff["recovery_route_digests"] = [route_digest]
         requirement = factoryctl.declared_graph_requirements(
             "handoff_packet_result",
             handoff,
@@ -905,6 +919,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             next_action="continue downstream",
         )
         review["graph_requirement_refs"] = [requirement["requirement_id"]]
+        review["reviewed_recovery_route_refs"] = [route_ref]
+        review["reviewed_recovery_route_digests"] = [route_digest]
         review["authorized_downstream_worker_ids"] = [
             "qa-verification-worker",
             "human-gate-clerk",
@@ -1009,6 +1025,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 and "authorized_worker_id=qa-verification-worker" in call[6]
                 and f"requirement_id={requirement['requirement_id']}" in call[6]
                 and "review_evidence_ref=receipt:review" in call[6]
+                and f"recovery_route_ref={route_ref}" in call[6]
+                and f"recovery_route_digest={route_digest}" in call[6]
                 for call in unblock_calls
             )
         )

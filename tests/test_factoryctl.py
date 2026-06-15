@@ -1801,6 +1801,58 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("handoff-packer", authorization["forbidden_worker_ids"])
         self.assertIn("independent-reviewer", authorization["forbidden_worker_ids"])
 
+    def test_recovery_route_review_must_close_route_before_downstream_authorization(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        route_ref = "recovery:val-solana-quasar-r3:review-block:handoff"
+        route_digest = "sha256:" + ("1" * 64)
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+        handoff["recovery_route_refs"] = [route_ref]
+        handoff["recovery_route_digests"] = [route_digest]
+        requirement_id = factoryctl.declared_graph_requirements(
+            "handoff_packet_result",
+            handoff,
+            evidence_ref="receipt:handoff_packet_result",
+        )[0]["requirement_id"]
+        review = worker_result("independent_review_result", source_card=card)
+        review["graph_requirement_refs"] = [requirement_id]
+        review["authorized_downstream_worker_ids"] = ["qa-verification-worker"]
+        receipt = {
+            "handoff_packet_result": handoff,
+            "independent_review_result": review,
+            "orchestration_result": worker_result("orchestration_result", source_card=card),
+            "source_ledger_result": worker_result("source_ledger_result", source_card=card),
+            "security_orchestration_result": worker_result("security_orchestration_result", source_card=card),
+            "supply_chain_result": worker_result("supply_chain_result", source_card=card),
+        }
+
+        generic_pass = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="review",
+            to_status="ready",
+            receipt=receipt,
+        )
+
+        self.assertEqual(generic_pass["downstream_task_authorizations"], [])
+        self.assertEqual(generic_pass["graph_requirements"][0]["status"], "pending")
+
+        review["reviewed_recovery_route_refs"] = [route_ref]
+        review["reviewed_recovery_route_digests"] = [route_digest]
+        route_closed = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="review",
+            to_status="ready",
+            receipt=receipt,
+        )
+
+        authorization = route_closed["downstream_task_authorizations"][0]
+        self.assertEqual(authorization["authorized_worker_ids"], ["qa-verification-worker"])
+        self.assertEqual(authorization["recovery_route_refs"], [route_ref])
+        self.assertEqual(authorization["recovery_route_digests"], [route_digest])
+
     def test_worker_closure_does_not_satisfy_handoff_review_with_generic_review_result(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]

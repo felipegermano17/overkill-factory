@@ -873,10 +873,24 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
                 for auth in auths
                 if str(auth.get("review_evidence_ref") or "").strip()
             ]
+            recovery_route_refs = [
+                str(route_ref or "").strip()
+                for auth in auths
+                for route_ref in auth.get("recovery_route_refs") or []
+                if str(route_ref or "").strip()
+            ]
+            recovery_route_digests = [
+                str(route_digest or "").strip()
+                for auth in auths
+                for route_digest in auth.get("recovery_route_digests") or []
+                if str(route_digest or "").strip()
+            ]
             readback_markers = [
                 f"authorized_worker_id={worker_id}",
                 *[f"requirement_id={requirement_id}" for requirement_id in requirement_ids],
                 *[f"review_evidence_ref={review_ref}" for review_ref in review_refs],
+                *[f"recovery_route_ref={route_ref}" for route_ref in recovery_route_refs],
+                *[f"recovery_route_digest={route_digest}" for route_digest in recovery_route_digests],
             ]
             unblock_task(
                 hermes_bin=args.hermes_bin,

@@ -193,6 +193,22 @@
       "type": "array",
       "items": { "type": "string", "minLength": 3 }
     },
+    "recovery_route_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "recovery_route_digests": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+    },
+    "reviewed_recovery_route_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "reviewed_recovery_route_digests": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+    },
     "review_required_handoff": {
       "type": "object",
       "required": [
