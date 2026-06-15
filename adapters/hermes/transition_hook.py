@@ -73,6 +73,7 @@ def load_ledger(path: Path) -> dict[str, Any]:
             "runtime_authority": "hermes_kanban",
             "local_state_authority": False,
             "tasks": {},
+            "graph_requirements": {},
         }
     data = load_json(path)
     data.setdefault("$schema", "https://overkill-factory.dev/schemas/hermes-worker-ledger.schema.json")
@@ -82,15 +83,21 @@ def load_ledger(path: Path) -> dict[str, Any]:
     data.setdefault("local_state_authority", False)
     if not isinstance(data.get("tasks"), dict):
         data["tasks"] = {}
+    if not isinstance(data.get("graph_requirements"), dict):
+        data["graph_requirements"] = {}
     return data
 
 
 def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, Any]:
     ledger = load_ledger(ledger_path)
     tasks: dict[str, Any] = ledger["tasks"]
+    graph_requirements: dict[str, Any] = ledger["graph_requirements"]
     created: list[str] = []
     unchanged: list[str] = []
     updated: list[str] = []
+    graph_created: list[str] = []
+    graph_unchanged: list[str] = []
+    graph_updated: list[str] = []
     card_id = str(plan.get("event", {}).get("card_id") or "factory-card")
 
     for task in plan.get("worker_tasks", []):
@@ -115,6 +122,7 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
             "expected_receipt_field": task.get("expected_receipt_field"),
             "status": task.get("status"),
             "packet": task.get("packet"),
+            "graph_requirement_refs": task.get("graph_requirement_refs", []),
         }
         previous = tasks.get(ident)
         if previous is None:
@@ -126,6 +134,31 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
             tasks[ident] = payload
             updated.append(ident)
 
+    for requirement in plan.get("graph_requirements", []):
+        ident = str(requirement.get("requirement_id") or "").strip()
+        if not ident:
+            continue
+        payload = {
+            **requirement,
+            "requirement_id": ident,
+            "materialization_state": (
+                "projection_only" if requirement.get("status") == "satisfied" else "pending_hermes_materialization"
+            ),
+            "local_record_role": "idempotency_projection",
+            "card_id": card_id,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+        }
+        previous = graph_requirements.get(ident)
+        if previous is None:
+            graph_requirements[ident] = payload
+            graph_created.append(ident)
+        elif previous == payload:
+            graph_unchanged.append(ident)
+        else:
+            graph_requirements[ident] = payload
+            graph_updated.append(ident)
+
     ledger["last_transition"] = plan.get("event", {})
     ledger["last_action"] = plan.get("transition_action")
     write_json(ledger_path, ledger)
@@ -135,6 +168,10 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
         "updated": updated,
         "unchanged": unchanged,
         "task_count": len(tasks),
+        "graph_created": graph_created,
+        "graph_updated": graph_updated,
+        "graph_unchanged": graph_unchanged,
+        "graph_requirement_count": len(graph_requirements),
     }
 
 

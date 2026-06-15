@@ -72,6 +72,54 @@ class HermesTransitionHookTest(unittest.TestCase):
         self.assertEqual(result["transition_action"], "block_transition")
         self.assertTrue(any("result is required before done" in reason for reason in result["blocked_reasons"]))
 
+    def test_hook_persists_declared_graph_review_requirements(self) -> None:
+        factoryctl = transition_hook.load_factoryctl()
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card_data = factoryctl.load_json_like(card)
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card_data,
+            result="PASS",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Handoff packet declares an independent review gate.",
+            next_action="independent review required before implementation consumption",
+        )
+        handoff["reviewer_required"] = True
+        handoff["reviewer_result"] = "PENDING"
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            tmp_path = Path(tmp)
+            receipt = tmp_path / "receipt.json"
+            ledger = tmp_path / "worker-ledger.json"
+            receipt.write_text(json.dumps({"handoff_packet_result": handoff}), encoding="utf-8")
+
+            result = transition_hook.build_hook_result(
+                card_path=card,
+                from_status="draft",
+                to_status="ready",
+                receipt_path=receipt,
+                worker_results_dir=None,
+                ledger_path=ledger,
+            )
+            ledger_data = json.loads(ledger.read_text(encoding="utf-8"))
+
+        requirement = result["plan"]["graph_requirements"][0]
+        self.assertEqual(requirement["status"], "pending")
+        self.assertIn(requirement["requirement_id"], ledger_data["graph_requirements"])
+        self.assertEqual(
+            ledger_data["graph_requirements"][requirement["requirement_id"]]["materialization_state"],
+            "pending_hermes_materialization",
+        )
+        self.assertTrue(
+            any(
+                requirement["requirement_id"] in task.get("graph_requirement_refs", [])
+                for task in ledger_data["tasks"].values()
+            )
+        )
+
     def test_cli_is_fail_closed_for_before_ready_blocks(self) -> None:
         card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:

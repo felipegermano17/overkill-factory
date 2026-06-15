@@ -4067,13 +4067,18 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             evidence_root=ROOT,
         )
         authority = data.get("promotion_authority") if isinstance(data.get("promotion_authority"), dict) else {}
+        evidence_ref = source_card_ref(path)
         records_by_type.setdefault(record_type, []).append(
             {
-                "evidence_ref": source_card_ref(path),
+                "evidence_ref": evidence_ref,
                 "created_at": data.get("created_at") or data.get("decision_at"),
                 "result": data.get("result") or data.get("decision"),
                 "active": authority.get("active", data.get("active", True)) is not False and not data.get("superseded_by"),
                 "valid": not errors,
+                "consumable": not errors,
+                "graph_requirements": (
+                    declared_graph_requirements(record_type, data, evidence_ref=evidence_ref) if not errors else []
+                ),
                 "validation_errors": errors,
             }
         )
@@ -4107,9 +4112,191 @@ def receipt_result_fields(
                 "evidence_ref": None,
                 "result": value.get("result") or value.get("decision"),
                 "valid": not errors,
+                "consumable": not errors,
+                "graph_requirements": (
+                    declared_graph_requirements(
+                        worker.output_field,
+                        value,
+                        evidence_ref=f"receipt:{worker.output_field}",
+                    )
+                    if not errors
+                    else []
+                ),
                 "validation_errors": errors,
             }
     return fields
+
+
+def _review_declared_by_next_action(value: Any) -> bool:
+    text = str(value or "").strip().lower()
+    if "review" not in text:
+        return False
+    return any(marker in text for marker in ("before", "required", "independent", "gate", "handoff"))
+
+
+def _review_required_by_handoff_metadata(data: dict[str, Any]) -> bool:
+    for key in ("handoff", "handoff_gate", "gate_handoff", "review_gate", "handoff_metadata"):
+        value = data.get(key)
+        if not isinstance(value, dict):
+            continue
+        if value.get("reviewer_required") is True or value.get("requires_review") is True:
+            return True
+        if _review_declared_by_next_action(value.get("next_action") or value.get("action")):
+            return True
+    return False
+
+
+def _declared_review_worker_id(data: dict[str, Any]) -> str:
+    worker_id = str(data.get("review_worker_id") or data.get("reviewer_worker_id") or "").strip()
+    return worker_id if worker_id in WORKERS else "independent-reviewer"
+
+
+def declared_graph_requirements(record_type: str, data: dict[str, Any], *, evidence_ref: str | None) -> list[dict[str, Any]]:
+    reviewer_required = (
+        data.get("reviewer_required") is True
+        or data.get("handoff_requires_review") is True
+        or _review_declared_by_next_action(data.get("next_action"))
+        or _review_required_by_handoff_metadata(data)
+    )
+    if not reviewer_required:
+        return []
+    review_worker_id = _declared_review_worker_id(data)
+    required_review_field = WORKERS[review_worker_id].output_field
+    reviewer_result = str(data.get("reviewer_result") or "").strip().upper()
+    status = "satisfied" if reviewer_result == "PASS" else "pending"
+    requirement_ref = evidence_ref or f"external:{record_type}"
+    return [
+        {
+            "requirement_type": "review_before_consumption",
+            "requirement_id": (
+                f"review-before-consumption:{sanitize_slug(record_type, fallback='record')}:"
+                f"{sanitize_slug(requirement_ref, fallback='evidence')}"
+            ),
+            "producer_field": record_type,
+            "producer_ref": requirement_ref,
+            "review_worker_id": review_worker_id,
+            "required_review_field": required_review_field,
+            "required_result": "PASS",
+            "status": status,
+            "reviewer_result": reviewer_result or "missing",
+            "downstream_scope": ["implementation", "done", "release"],
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+        }
+    ]
+
+
+def resolve_graph_requirements(fields: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    requirements: list[dict[str, Any]] = []
+    for record in fields.values():
+        for requirement in record.get("graph_requirements", []):
+            requirement = dict(requirement)
+            review_record = fields.get(str(requirement.get("required_review_field") or ""))
+            if requirement.get("status") != "satisfied" and review_record:
+                if review_record.get("valid") and str(review_record.get("result") or "").strip().upper() == "PASS":
+                    requirement["status"] = "satisfied"
+                    requirement["reviewer_result"] = "PASS"
+                    requirement["review_evidence_ref"] = review_record.get("evidence_ref") or "receipt:review"
+            requirements.append(requirement)
+    for record in fields.values():
+        graph_requirements = [dict(item) for item in record.get("graph_requirements", [])]
+        resolved_for_record = [
+            requirement
+            for requirement in requirements
+            if requirement.get("producer_field") in {item.get("producer_field") for item in graph_requirements}
+        ]
+        record["graph_requirements"] = resolved_for_record
+        record["consumable"] = bool(record.get("valid")) and not any(
+            requirement.get("status") != "satisfied" for requirement in resolved_for_record
+        )
+    return requirements
+
+
+def graph_requirement_block_reason(requirement: dict[str, Any]) -> str:
+    producer = str(requirement.get("producer_field") or "worker result")
+    review_worker = str(requirement.get("review_worker_id") or "independent-reviewer")
+    return f"{producer} requires {review_worker} PASS before downstream consumption"
+
+
+def transition_consumes_graph_requirements(normalized_to: str) -> bool:
+    return normalized_to in {
+        "ready",
+        "in_progress",
+        "doing",
+        "review",
+        "review-ready",
+        "ready_for_review",
+        "done",
+        "closed",
+        "complete",
+    }
+
+
+def build_graph_requirement_review_task(
+    requirement: dict[str, Any],
+    card: dict[str, Any],
+    source_path: Path,
+) -> dict[str, Any]:
+    worker_id = str(requirement.get("review_worker_id") or "independent-reviewer")
+    worker = WORKERS.get(worker_id, WORKERS["independent-reviewer"])
+    task = build_worker_task(worker.worker_id, card, source_path)
+    packet = dict(task.get("packet") or {})
+    missing_inputs = missing_required_inputs(worker, card)
+    status = "blocked_missing_inputs" if missing_inputs else "requires_execution"
+    queue_class = worker_queue_class(worker.worker_id, card)
+    requirement_id = str(requirement.get("requirement_id") or "")
+
+    packet["status"] = status
+    packet["trigger"] = {
+        **dict(packet.get("trigger") or {}),
+        "required": True,
+        "reason": graph_requirement_block_reason(requirement),
+        "timing": "after producer evidence exists and before downstream consumption",
+        "blocking_policy": "Declared handoff reviews must PASS before the producer result can be consumed downstream.",
+    }
+    input_contract = dict(packet.get("input_contract") or {})
+    input_contract["missing_fields"] = missing_inputs
+    input_contract["graph_requirement_ref"] = requirement_id
+    packet["input_contract"] = input_contract
+
+    task.update(
+        {
+            "gate_timing_class": queue_class,
+            "queue_class": queue_class,
+            "required_before": "ready" if queue_class == "blocking-before-ready" else "done",
+            "status": status,
+            "packet": packet,
+            "graph_requirement_refs": [requirement_id],
+        }
+    )
+    return task
+
+
+def attach_graph_requirement_tasks(
+    worker_tasks: list[dict[str, Any]],
+    graph_requirements: list[dict[str, Any]],
+    card: dict[str, Any],
+    source_path: Path,
+) -> None:
+    tasks_by_worker = {str(task.get("worker_id") or ""): task for task in worker_tasks}
+    for requirement in graph_requirements:
+        if requirement.get("status") == "satisfied":
+            continue
+        worker_id = str(requirement.get("review_worker_id") or "independent-reviewer")
+        requirement_id = str(requirement.get("requirement_id") or "")
+        existing = tasks_by_worker.get(worker_id)
+        if existing:
+            refs = list(existing.get("graph_requirement_refs") or [])
+            if requirement_id and requirement_id not in refs:
+                refs.append(requirement_id)
+            existing["graph_requirement_refs"] = refs
+            packet = existing.get("packet") if isinstance(existing.get("packet"), dict) else {}
+            packet.setdefault("graph_requirement_refs", refs)
+            existing["packet"] = packet
+            continue
+        task = build_graph_requirement_review_task(requirement, card, source_path)
+        worker_tasks.append(task)
+        tasks_by_worker[worker_id] = task
 
 
 def _worker_record_sort_key(record: dict[str, Any]) -> tuple[str, str]:
@@ -4148,36 +4335,51 @@ def build_worker_closure(
     present_fields = receipt_result_fields(card, metadata, evidence_root=ROOT)
     result_files = collect_worker_result_fields(card, results_dir)
     present_fields.update(result_files)
+    graph_requirements = resolve_graph_requirements(present_fields)
     rows: dict[str, dict[str, Any]] = {}
     missing_blocking: list[str] = []
     invalid_blocking: list[str] = []
+    unconsumable_blocking: list[str] = []
 
     for worker_id in required_worker_ids(card):
         worker = WORKERS[worker_id]
         queue_class = worker_queue_class(worker_id, card)
         required_for_done = queue_class == "blocking-before-done"
         record = present_fields.get(worker.output_field)
-        satisfied = bool(record and record.get("valid"))
+        valid = bool(record and record.get("valid"))
+        consumable = bool(record and record.get("consumable", True))
+        satisfied = bool(valid and consumable)
         rows[worker_id] = {
             "queue_class": queue_class,
             "required_for_done": required_for_done,
             "output_field": worker.output_field,
+            "valid": valid,
+            "consumable": consumable,
             "satisfied": satisfied,
             "evidence_ref": record.get("evidence_ref") if record else None,
             "result": record.get("result") if record else None,
+            "graph_requirements": record.get("graph_requirements", []) if record else [],
             "validation_errors": record.get("validation_errors", []) if record else [],
         }
         if required_for_done and not satisfied:
-            if record:
+            if record and valid:
+                unconsumable_blocking.append(worker_id)
+            elif record:
                 invalid_blocking.append(worker_id)
             else:
                 missing_blocking.append(worker_id)
+    unsatisfied_graph_requirements = [
+        requirement for requirement in graph_requirements if requirement.get("status") != "satisfied"
+    ]
 
     return {
         "closure_type": "worker_result_reconciliation",
         "required_workers": required_worker_ids(card),
         "missing_blocking_workers": missing_blocking,
         "invalid_blocking_workers": invalid_blocking,
+        "unconsumable_blocking_workers": unconsumable_blocking,
+        "graph_requirements": graph_requirements,
+        "unsatisfied_graph_requirements": unsatisfied_graph_requirements,
         "workers": rows,
     }
 
@@ -4221,6 +4423,23 @@ def build_transition_plan(
         for worker_id in gate["required_workers"]
         if gate["workers"][worker_id]["status"] != "not_required_by_current_card"
     ]
+    graph_completion = (
+        build_worker_closure(card, receipt or {}, worker_results_dir)
+        if transition_consumes_graph_requirements(normalized_to)
+        else None
+    )
+    graph_requirements = graph_completion.get("graph_requirements", []) if graph_completion else []
+    unsatisfied_graph_requirements = (
+        graph_completion.get("unsatisfied_graph_requirements", []) if graph_completion else []
+    )
+    if graph_requirements:
+        attach_graph_requirement_tasks(worker_tasks, graph_requirements, card, source_path)
+
+    def append_unsatisfied_graph_requirement_blocks() -> None:
+        for requirement in unsatisfied_graph_requirements:
+            reason = graph_requirement_block_reason(requirement)
+            if reason not in blocked_reasons:
+                blocked_reasons.append(reason)
 
     if normalized_to in {"ready", "in_progress", "doing"}:
         blocked_reasons.extend(gate["card_validation_errors"])
@@ -4234,6 +4453,7 @@ def build_transition_plan(
         ]
         for worker_id in before_ready:
             blocked_reasons.append(f"{worker_id} result is required before ready")
+        append_unsatisfied_graph_requirement_blocks()
         if blocked_reasons and before_ready:
             transition_action = "block_and_create_before_ready_tasks"
         else:
@@ -4251,15 +4471,17 @@ def build_transition_plan(
         ]
         for worker_id in before_ready:
             blocked_reasons.append(f"{worker_id} result is required before review-ready")
+        append_unsatisfied_graph_requirement_blocks()
         transition_action = "block_transition" if blocked_reasons else "allow_review_ready"
-        completion = build_worker_closure(card, receipt or {}, worker_results_dir)
+        completion = graph_completion
     elif normalized_to in {"done", "closed", "complete"}:
         blocked_reasons.extend(gate["card_validation_errors"])
         for worker_id in gate["blocked_workers"]:
             blocked_reasons.append(f"{worker_id} missing inputs before done")
         if receipt is None:
             blocked_reasons.append("receipt metadata is required for done transition")
-            completion = build_worker_closure(card, {}, worker_results_dir)
+            completion = graph_completion
+            append_unsatisfied_graph_requirement_blocks()
         else:
             blocked_reasons.extend(validate_completion(card, receipt))
             blocked_reasons.extend(receipt_reconciliation_errors(receipt))
@@ -4270,11 +4492,24 @@ def build_transition_plan(
                     to_status=to_status,
                 )
             )
-            completion = build_worker_closure(card, receipt, worker_results_dir)
+            completion = graph_completion
             for worker_id in completion["missing_blocking_workers"]:
                 blocked_reasons.append(f"{worker_id} result is required before done")
             for worker_id in completion.get("invalid_blocking_workers", []):
                 blocked_reasons.append(f"{worker_id} result is invalid before done")
+            for worker_id in completion.get("unconsumable_blocking_workers", []):
+                worker = WORKERS[worker_id]
+                record = completion.get("workers", {}).get(worker_id, {})
+                requirements = record.get("graph_requirements", [])
+                if requirements:
+                    for requirement in requirements:
+                        if requirement.get("status") != "satisfied":
+                            reason = graph_requirement_block_reason(requirement)
+                            if reason not in blocked_reasons:
+                                blocked_reasons.append(reason)
+                else:
+                    blocked_reasons.append(f"{worker_id} result is not consumable before done")
+            append_unsatisfied_graph_requirement_blocks()
         transition_action = "block_transition" if blocked_reasons else "allow_done"
     else:
         blocked_reasons.extend(gate["card_validation_errors"])
@@ -4295,6 +4530,7 @@ def build_transition_plan(
         "blocked_reasons": blocked_reasons,
         "gate_report": gate,
         "worker_tasks": worker_tasks,
+        "graph_requirements": graph_requirements,
         "completion_reconciliation": completion,
     }
 

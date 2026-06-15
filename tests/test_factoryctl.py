@@ -1170,6 +1170,71 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("appsec-owasp-specialist missing inputs for blocking-before-done", plan["blocked_reasons"])
         self.assertIn("factory-orchestrator result is required before ready", plan["blocked_reasons"])
 
+    def test_worker_closure_marks_review_required_handoff_valid_but_not_consumable(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card)
+        handoff["reviewer_required"] = True
+        handoff["reviewer_result"] = "PENDING"
+
+        closure = factoryctl.build_worker_closure(card, {"handoff_packet_result": handoff}, None)
+
+        handoff_row = closure["workers"]["handoff-packer"]
+        self.assertTrue(handoff_row["valid"])
+        self.assertFalse(handoff_row["consumable"])
+        self.assertFalse(handoff_row["satisfied"])
+        self.assertIn("handoff-packer", closure["unconsumable_blocking_workers"])
+        self.assertEqual(closure["unsatisfied_graph_requirements"][0]["requirement_type"], "review_before_consumption")
+        self.assertEqual(closure["unsatisfied_graph_requirements"][0]["review_worker_id"], "independent-reviewer")
+
+    def test_transition_plan_blocks_declared_handoff_review_before_downstream_consumption(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = factoryctl.load_json_like(card_path)
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card)
+        handoff["reviewer_required"] = True
+        handoff["reviewer_result"] = "PENDING"
+
+        plan = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="draft",
+            to_status="ready",
+            receipt={"handoff_packet_result": handoff},
+        )
+
+        self.assertEqual(plan["graph_requirements"][0]["status"], "pending")
+        self.assertIn(
+            "handoff_packet_result requires independent-reviewer PASS before downstream consumption",
+            plan["blocked_reasons"],
+        )
+        review_tasks = [task for task in plan["worker_tasks"] if task["worker_id"] == "independent-reviewer"]
+        self.assertTrue(review_tasks)
+        self.assertIn(plan["graph_requirements"][0]["requirement_id"], review_tasks[0]["graph_requirement_refs"])
+
+    def test_worker_closure_satisfies_handoff_review_from_independent_review_result(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card)
+        handoff["reviewer_required"] = True
+        handoff["reviewer_result"] = "PENDING"
+
+        closure = factoryctl.build_worker_closure(
+            card,
+            {
+                "handoff_packet_result": handoff,
+                "independent_review_result": worker_result("independent_review_result", source_card=card),
+            },
+            None,
+        )
+
+        handoff_row = closure["workers"]["handoff-packer"]
+        self.assertTrue(handoff_row["valid"])
+        self.assertTrue(handoff_row["consumable"])
+        self.assertTrue(handoff_row["satisfied"])
+        self.assertEqual(closure["unsatisfied_graph_requirements"], [])
+        self.assertEqual(closure["graph_requirements"][0]["status"], "satisfied")
+
     def test_transition_plan_done_blocks_missing_required_worker_results(self) -> None:
         card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
