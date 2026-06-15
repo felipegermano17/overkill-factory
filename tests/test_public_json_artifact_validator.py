@@ -61,6 +61,34 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         self.assertTrue(any("does not contain" in error for error in errors))
 
+    def test_schema_keyword_audit_rejects_unsupported_validation_keywords(self) -> None:
+        validator = load_validator()
+        schema = {
+            "type": "object",
+            "oneOf": [{"required": ["mode"]}],
+            "properties": {
+                "not": {"type": "string"},
+                "gate": {"not": {"const": "bypass"}},
+            },
+        }
+
+        errors = validator.validate_schema_keywords(schema)
+
+        self.assertTrue(any("unsupported JSON Schema keyword 'oneOf'" in error for error in errors))
+        self.assertTrue(any("unsupported JSON Schema keyword 'not'" in error for error in errors))
+        self.assertFalse(any("$/properties/not:" in error for error in errors))
+
+    def test_current_public_schemas_use_only_enforced_keywords(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+
+        errors = []
+        for name, schema in schemas.items():
+            if name.endswith(".json"):
+                errors.extend(f"{name}: {error}" for error in validator.validate_schema_keywords(schema))
+
+        self.assertEqual(errors, [])
+
     def test_resolves_schema_file_refs_used_by_factory_card(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()
