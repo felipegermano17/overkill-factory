@@ -4,6 +4,7 @@
   "surface_pack": "web-app-surface-pack",
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
   "domain_proof_required": ["generic.operator-usability"],
+  "surface_evidence_profile": "web_visual_ui",
   "experience_sot": "What the user must be able to understand and accomplish.",
   "user": "Primary user or operator who touches this surface.",
   "job_to_be_done": "The concrete job this surface must help the user complete.",

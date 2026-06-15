@@ -302,6 +302,18 @@ def product_face_result_fixture(**overrides: object) -> dict:
         "result": "PASS",
         "tool_or_profile": "browser-proof-runner",
         "executed_by": "product-face-validator",
+        "surface_evidence_profile": {
+            "profile_id": "web_visual_ui",
+            "surface": "web_app",
+            "evidence_kind": "visual_ui",
+        },
+        "surface_evidence_profiles": [
+            {
+                "profile_id": "web_visual_ui",
+                "surface": "web_app",
+                "evidence_kind": "visual_ui",
+            }
+        ],
         "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
         "viewports": ["desktop 1440x900", "mobile 390x844"],
         "checked_states": ["empty", "loading", "pending", "success", "error"],
@@ -342,6 +354,37 @@ def product_face_result_fixture(**overrides: object) -> dict:
     }
     result.update(overrides)
     return result
+
+
+def surface_profile(profile_id: str, surface: str) -> dict:
+    return {
+        "profile_id": profile_id,
+        "surface": surface,
+        "evidence_kind": {
+            "web_visual_ui": "visual_ui",
+            "cli_tui": "command_transcript",
+            "docs_onboarding": "reader_success",
+            "agentic_interface": "task_transcript",
+        }[profile_id],
+    }
+
+
+def product_surface_card_fixture(surface: str, profile_id: str) -> dict:
+    return {
+        "surfaces": [surface],
+        "product_face_packet": {
+            "surface": surface,
+            "surface_evidence_profile": profile_id,
+            "required_states": ["success", "error"],
+            "proof_required": [f"{surface} product proof"],
+        },
+        "product_experience_plan": {
+            "surface_type": surface,
+            "surface_evidence_profile": profile_id,
+            "required_states": ["success", "error"],
+            "proof_required": [f"{surface} product proof"],
+        },
+    }
 
 
 PRIVATE_NAME = "KA" + "XIS"
@@ -717,6 +760,8 @@ class FactoryCtlTest(unittest.TestCase):
                 "result": "PASS",
                 "tool_or_profile": "browser-proof-runner",
                 "executed_by": "product-face-validator",
+                "surface_evidence_profile": surface_profile("web_visual_ui", "web_app"),
+                "surface_evidence_profiles": [surface_profile("web_visual_ui", "web_app")],
                 "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
                 "viewports": ["1440x900", "390x844"],
                 "checked_states": ["empty", "loading", "pending", "success", "error"],
@@ -1118,6 +1163,63 @@ class FactoryCtlTest(unittest.TestCase):
             "product_face_result.reference_quality_comparison.reviewer_independent_from_implementation must be true",
             errors,
         )
+
+    def test_cli_tui_surface_cannot_pass_with_screenshot_only_product_face(self) -> None:
+        card = product_surface_card_fixture("cli", "cli_tui")
+        result = product_face_result_fixture(
+            surface_evidence_profile=surface_profile("cli_tui", "cli"),
+            surface_evidence_profiles=[surface_profile("cli_tui", "cli")],
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn("product_face_result.cli_tui_evidence is required for cli_tui PASS", errors)
+
+    def test_cli_tui_surface_passes_with_command_profile_evidence(self) -> None:
+        card = product_surface_card_fixture("cli", "cli_tui")
+        result = product_face_result_fixture(
+            surface_evidence_profile=surface_profile("cli_tui", "cli"),
+            surface_evidence_profiles=[surface_profile("cli_tui", "cli")],
+            cli_tui_evidence={
+                "golden_path_transcript_refs": ["reports/cli/golden-path.txt"],
+                "help_output_refs": ["reports/cli/help.txt"],
+                "error_state_refs": ["reports/cli/error-state.txt"],
+                "install_run_refs": ["reports/cli/install-run.txt"],
+                "cross_platform_terminal_refs": ["reports/cli/windows.txt", "reports/cli/linux.txt"],
+            },
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
+    def test_docs_onboarding_surface_cannot_pass_with_prose_only_product_face(self) -> None:
+        card = product_surface_card_fixture("docs", "docs_onboarding")
+        result = product_face_result_fixture(
+            surface_evidence_profile=surface_profile("docs_onboarding", "docs"),
+            surface_evidence_profiles=[surface_profile("docs_onboarding", "docs")],
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.docs_onboarding_evidence is required for docs_onboarding PASS",
+            errors,
+        )
+
+    def test_agentic_surface_requires_task_state_control_and_recovery_evidence(self) -> None:
+        card = product_surface_card_fixture("agentic_interface", "agentic_interface")
+        result = product_face_result_fixture(
+            surface_evidence_profile=surface_profile("agentic_interface", "agentic_interface"),
+            surface_evidence_profiles=[surface_profile("agentic_interface", "agentic_interface")],
+            agentic_interface_evidence={
+                "task_transcript_refs": ["reports/agentic/task-transcript.json"],
+                "state_transition_refs": ["reports/agentic/state-transitions.json"],
+                "approval_boundary_refs": ["reports/agentic/approval-boundaries.json"],
+                "user_control_refs": ["reports/agentic/user-control.json"],
+                "recovery_error_refs": ["reports/agentic/recovery-error.json"],
+            },
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
 
     def test_auditor_preflight_cannot_claim_pass(self) -> None:
         bad = {

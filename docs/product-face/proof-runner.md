@@ -18,22 +18,31 @@ Run for any vFinal card with Product Experience surfaces, including:
 Legacy cards keep their existing narrower Product Face triggers unless they
 explicitly set `product_face_result_required=true`.
 
-## Required Evidence
+## Surface Evidence Profiles
 
-- desktop screenshot;
-- mobile screenshot;
-- important state matrix;
-- empty/loading/error/success states when applicable;
-- accessibility basics;
-- visual overlap check;
-- user-facing copy sanity;
-- wallet flow evidence when wallet UI exists;
-- performance budget note.
+Product Face proof is surface-specific. A result must declare the profile it
+proves, and completion validation compares that profile to the Product Face
+Packet or Product Experience Plan.
+
+- `web_visual_ui`: screenshots, viewports, important state matrix,
+  empty/loading/error/success states when applicable, accessibility basics,
+  visual overlap check, console status, copy sanity and performance note.
+- `cli_tui`: golden path transcript, help output, install/run path, error-state
+  transcript and cross-platform terminal evidence.
+- `docs_onboarding`: first-success replay, tasks covered, stale-link check,
+  public-safety check and reader success criteria.
+- `agentic_interface`: task transcript, state transitions, approval boundaries,
+  user control boundaries and recovery/error handling evidence.
+
+The repo runner in `scripts/product_face_proof.py` is a `web_visual_ui` runner.
+It should not be used to claim CLI/TUI, docs/onboarding or agentic-interface
+PASS without the matching profile evidence.
 
 ## Output
 
 `product_face_result` with:
 
+- surface evidence profile;
 - screenshots;
 - checked states;
 - viewport list;
