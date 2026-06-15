@@ -3050,13 +3050,18 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
 
 def validate_completion_audit_contract(card: dict[str, Any], audit: dict[str, Any]) -> list[str]:
     errors: list[str] = []
+    decision = str(audit.get("decision") or "").strip().lower()
+    if decision not in {"done", "block", "done_with_owner"}:
+        errors.append("completion_audit.decision must be done, block or done_with_owner")
     claim_results = audit.get("sot_claim_results")
+    sot_statuses: list[str] = []
     if not isinstance(claim_results, list) or not claim_results:
         errors.append("completion_audit.sot_claim_results is required")
     else:
         for index, item in enumerate(claim_results):
             item = item if isinstance(item, dict) else {}
             status = str(item.get("status") or "").strip().upper()
+            sot_statuses.append(status)
             if not _non_empty_text(item.get("claim_ref")):
                 errors.append(f"completion_audit.sot_claim_results[{index}].claim_ref is required")
             if status not in COMPLETION_SOT_STATUSES:
@@ -3065,6 +3070,14 @@ def validate_completion_audit_contract(card: dict[str, Any], audit: dict[str, An
                 )
             if status in {"BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"} and not _non_empty_text(item.get("owner")):
                 errors.append(f"completion_audit.sot_claim_results[{index}].owner is required for non-DONE status")
+        if "BLOCKED" in sot_statuses and decision != "block":
+            errors.append("completion_audit.decision must be block when any SOT claim is BLOCKED")
+        elif "DEFERRED_WITH_OWNER" in sot_statuses and decision != "done_with_owner":
+            errors.append("completion_audit.decision must be done_with_owner when any SOT claim is DEFERRED_WITH_OWNER")
+        elif decision == "done":
+            incomplete = sorted(set(sot_statuses) - {"DONE", "OUT_OF_SCOPE"})
+            if incomplete:
+                errors.append("completion_audit.decision=done requires SOT claims to be DONE or OUT_OF_SCOPE, found " + ", ".join(incomplete))
 
     method_results = audit.get("method_execution_results")
     if not isinstance(method_results, list) or not method_results:

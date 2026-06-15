@@ -554,6 +554,41 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("kanban_transition_event.allowed must be true for done promotion", errors)
         self.assertIn("receipt_five_reconciliation_result is required for done promotion", errors)
 
+    def test_completion_audit_blocks_done_with_blocked_sot_claim(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        audit = {
+            "decision": "done",
+            "sot_claim_results": [
+                {"claim_ref": "product-sot#scope", "status": "BLOCKED", "owner": "product-owner"}
+            ],
+            "method_execution_results": [
+                {"method": "security-review", "status": "EXECUTED", "evidence_refs": ["README.md"]}
+            ],
+        }
+
+        errors = factoryctl.validate_completion_audit_contract(card, audit)
+
+        self.assertIn("completion_audit.decision must be block when any SOT claim is BLOCKED", errors)
+
+    def test_completion_audit_routes_deferred_sot_to_done_with_owner(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        audit = {
+            "decision": "done",
+            "sot_claim_results": [
+                {"claim_ref": "product-sot#scope", "status": "DEFERRED_WITH_OWNER", "owner": "product-owner"}
+            ],
+            "method_execution_results": [
+                {"method": "security-review", "status": "EXECUTED", "evidence_refs": ["README.md"]}
+            ],
+        }
+
+        errors = factoryctl.validate_completion_audit_contract(card, audit)
+
+        self.assertIn(
+            "completion_audit.decision must be done_with_owner when any SOT claim is DEFERRED_WITH_OWNER",
+            errors,
+        )
+
     def test_product_face_completion_rejects_screenshot_without_plan_alignment(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
         card["product_face_result_required"] = True
