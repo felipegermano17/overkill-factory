@@ -122,6 +122,21 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         self.assertTrue(any("truth_source_available" in error and "expected const True" in error for error in errors))
         self.assertTrue(any("source_of_truth.freshness" in error and "expected const 'runtime_fresh'" in error for error in errors))
 
+    def test_public_ref_hygiene_blocks_raw_kanban_task_ids_recursively(self) -> None:
+        validator = load_validator()
+        raw_task = "t_" + "ready0001"
+
+        errors = validator.validate_public_ref_hygiene(
+            {"evidence_refs": [{"ref": f"Hermes task {raw_task}"}]},
+            "$",
+        )
+
+        self.assertTrue(any("$.evidence_refs[0].ref" in error for error in errors))
+        self.assertEqual(
+            validator.validate_public_ref_hygiene({"ref": "kanban:<redacted>", "issue": "github-issue-84"}, "$"),
+            [],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

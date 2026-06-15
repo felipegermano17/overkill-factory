@@ -18,8 +18,12 @@ from typing import Any
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
+SCRIPTS_ROOT = SCRIPT_DIR.parent
+if str(SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_ROOT))
 
 import status_snapshot_contract as contract
+from public_refs import contains_private_kanban_task_marker  # noqa: E402
 
 PRIVATE_RUNTIME_FRAGMENT = "/" + "srv/hermes"
 LOCAL_PATH_RE = re.compile(
@@ -28,7 +32,6 @@ LOCAL_PATH_RE = re.compile(
 )
 FILE_URI_RE = re.compile(r"^file:", re.IGNORECASE)
 CHAT_ID_RE = re.compile(r"(discord(?:\.com|://)|slack(?:\.com|://)|telegram(?:\.me|://)|\bchannel[_-]?id\b|\bmessage[_-]?id\b)", re.IGNORECASE)
-PRIVATE_TASK_RE = re.compile(r"\bt_[a-f0-9]{8}\b")
 SECRET_RE = re.compile(
     r"(?i)(aws_access_key_id|aws_secret_access_key|api[_-]?key|token|secret|password|private[_-]?key)\s*[:=]\s*[A-Za-z0-9_./+=-]{8,}"
 )
@@ -78,7 +81,7 @@ def scan_evidence_ref(evidence: dict[str, Any], *, deny_raw_private: bool = True
             continue
         if deny_local_paths and (FILE_URI_RE.search(value) or LOCAL_PATH_RE.search(value)):
             errors.append(f"{evidence_id}:{at}: local path or file URI is forbidden")
-        if deny_chat_ids and (CHAT_ID_RE.search(value) or PRIVATE_TASK_RE.search(value)):
+        if deny_chat_ids and (CHAT_ID_RE.search(value) or contains_private_kanban_task_marker(value)):
             errors.append(f"{evidence_id}:{at}: private task/chat identifier is forbidden")
         if deny_secrets and SECRET_RE.search(value):
             errors.append(f"{evidence_id}:{at}: secret-looking value is forbidden")

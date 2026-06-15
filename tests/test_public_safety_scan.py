@@ -21,6 +21,8 @@ sys.modules["public_safety_scan"] = public_safety_scan
 SPEC.loader.exec_module(public_safety_scan)
 
 PRIVATE_MARKER = "KA" + "XIS"
+RAW_TASK_MARKER = "t_" + "deadbeefcafebabe"
+RAW_ALPHANUM_TASK_MARKER = "t_" + "ready0001"
 
 
 class PublicSafetyScanTest(unittest.TestCase):
@@ -64,6 +66,34 @@ class PublicSafetyScanTest(unittest.TestCase):
         )
 
         self.assertEqual(findings, [])
+
+    def test_blocks_long_raw_kanban_task_marker(self) -> None:
+        findings = public_safety_scan.scan_text("docs/example.md", f"leaked {RAW_TASK_MARKER}")
+
+        self.assertTrue(findings)
+        self.assertIn("private_task_marker", findings[0])
+
+    def test_blocks_alphanumeric_raw_kanban_task_marker(self) -> None:
+        findings = public_safety_scan.scan_text("docs/example.md", f"leaked {RAW_ALPHANUM_TASK_MARKER}")
+
+        self.assertTrue(findings)
+        self.assertIn("private_task_marker", findings[0])
+
+    def test_blocks_long_raw_kanban_task_marker_in_binary_metadata(self) -> None:
+        findings = public_safety_scan.scan_binary("screenshots/example.png", f"meta {RAW_TASK_MARKER}".encode())
+
+        self.assertTrue(findings)
+        self.assertIn("private_task_marker", findings[0])
+
+    def test_public_safe_kanban_ref_redacts_raw_runtime_ids(self) -> None:
+        self.assertEqual(
+            public_safety_scan.public_safe_kanban_ref(f"Hermes task {RAW_TASK_MARKER}"),
+            "Hermes task kanban:<redacted>",
+        )
+        self.assertEqual(
+            public_safety_scan.scan_text("docs/example.md", "tracked as kanban:<redacted> and github-issue-84"),
+            [],
+        )
 
     def test_allows_canonical_public_repo_url_only_in_metadata_and_blocks_loose_owner_marker(self) -> None:
         owner = "feli" + "pegermano17"
@@ -133,6 +163,17 @@ class PublicSafetyScanTest(unittest.TestCase):
         self.assertEqual(summary["finding_count"], 1)
         self.assertIn("private_product_marker", summary_text)
         self.assertNotIn(PRIVATE_MARKER, summary_text)
+
+    def test_summary_sanitizes_raw_kanban_task_ref_target(self) -> None:
+        summary = public_safety_scan.build_summary(
+            [],
+            git_ref=RAW_TASK_MARKER,
+            created_at="2026-06-10T00:00:00Z",
+        )
+        summary_text = json.dumps(summary)
+
+        self.assertEqual(summary["target"]["ref"], "kanban:<redacted>")
+        self.assertNotIn(RAW_TASK_MARKER, summary_text)
 
     def test_cli_writes_public_safe_summary_for_failing_git_ref_scan(self) -> None:
         original_root = public_safety_scan.ROOT

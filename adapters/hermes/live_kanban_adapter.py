@@ -16,7 +16,17 @@ from transition_hook import ACTION_BLOCK_TRANSITION, build_hook_result, write_js
 
 
 ROOT = Path(__file__).resolve().parents[2]
-TASK_ID_RE = re.compile(r"\bt_[a-f0-9]{8,}\b")
+SCRIPTS_DIR = ROOT / "scripts"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+from public_refs import (  # noqa: E402
+    PRIVATE_KANBAN_TASK_MARKER_RE,
+    PUBLIC_SAFE_KANBAN_REF,
+    sanitize_public_refs,
+)
+
+TASK_ID_RE = PRIVATE_KANBAN_TASK_MARKER_RE
 LIVE_ADAPTER_SCHEMA = "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json"
 ROUTE_READINESS_SCHEMA = "https://overkill-factory.dev/schemas/hermes-worker-route-readiness.schema.json"
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
@@ -521,9 +531,10 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         "review_promoted_worker_task_ids": review_promoted_worker_task_ids,
         "hook": result,
     }
+    public_envelope = sanitize_public_refs(envelope)
     if args.out:
-        write_json(args.out, envelope)
-    return envelope
+        write_json(args.out, public_envelope)
+    return public_envelope
 
 
 def enforce_done(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
@@ -544,10 +555,11 @@ def enforce_done(args: argparse.Namespace, runner: Runner = default_runner) -> d
         "main_task_id": args.main_task_id,
         "hook": result,
     }
+    public_envelope = sanitize_public_refs(envelope)
     if args.out:
-        write_json(args.out, envelope)
+        write_json(args.out, public_envelope)
     if blocked:
-        return envelope
+        return public_envelope
     readiness_blockers = route_readiness_blockers(args.route_readiness, ["evidence-reconciler"])
     if readiness_blockers:
         raise RuntimeError("pre-completion route readiness blocked live completion: " + "; ".join(readiness_blockers))
@@ -575,7 +587,7 @@ def enforce_done(args: argparse.Namespace, runner: Runner = default_runner) -> d
             ),
             runner,
         )
-    return envelope
+    return public_envelope
 
 
 def dispatch(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
@@ -679,9 +691,10 @@ def dispatch(args: argparse.Namespace, runner: Runner = default_runner) -> dict[
             "reporting_policy": "Hermes dispatch remains authoritative; this adapter only enriches the returned report from Hermes state.",
         },
     }
+    public_envelope = sanitize_public_refs(envelope)
     if args.out:
-        write_json(args.out, envelope)
-    return envelope
+        write_json(args.out, public_envelope)
+    return public_envelope
 
 
 def build_parser() -> argparse.ArgumentParser:

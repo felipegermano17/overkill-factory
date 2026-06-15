@@ -23,6 +23,11 @@ from typing import Any
 
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from public_refs import contains_private_kanban_task_marker, public_safe_kanban_ref, sanitize_public_refs  # noqa: E402
 
 
 def installed_asset_root() -> Path | None:
@@ -1127,6 +1132,8 @@ def classify_artifact_ref(ref: Any) -> dict[str, Any]:
     normalized = value.replace("\\", "/")
     if not value:
         return {"ref": value, "artifact_class": "invalid", "public_safe": False, "reason": "empty artifact ref"}
+    if contains_private_kanban_task_marker(value):
+        return {"ref": value, "artifact_class": "private_run_evidence", "public_safe": False, "reason": "raw private Kanban task id"}
     if value.startswith("external:"):
         return {"ref": value, "artifact_class": "sanitized_report", "public_safe": True, "reason": "explicit external/sanitized ref"}
     if value.startswith(("http://", "https://", "file://")) or Path(value).is_absolute() or ":" in normalized.split("/", 1)[0]:
@@ -1154,7 +1161,8 @@ def artifact_contract_for_refs(refs: list[str]) -> dict[str, Any]:
 
 
 def public_safe_text(value: Any) -> bool:
-    return PRIVATE_RUNTIME_REF_RE.search(str(value or "")) is None
+    text = str(value or "")
+    return PRIVATE_RUNTIME_REF_RE.search(text) is None and not contains_private_kanban_task_marker(text)
 
 
 def sanitize_slug(value: Any, *, fallback: str = "item") -> str:
@@ -1167,6 +1175,7 @@ def redact_private_text(value: Any) -> str:
     text = re.sub(r"[A-Za-z]:[\\/][^ \];,\"]+", "[redacted-private-ref]", text)
     text = re.sub(r"/(?:home|Users|srv|var)/[^ \];,\"]+", "[redacted-private-ref]", text)
     text = PRIVATE_RUNTIME_REF_RE.sub("[redacted-private-marker]", text)
+    text = public_safe_kanban_ref(text) or ""
     return text
 
 
@@ -4728,7 +4737,7 @@ def build_transition_plan(
 
 
 def card_ref(card: dict[str, Any]) -> dict[str, Any]:
-    return {
+    return sanitize_public_refs({
         "card_id": card.get("card_id"),
         "slice_id": card.get("slice_id"),
         "phase": card.get("phase"),
@@ -4736,7 +4745,7 @@ def card_ref(card: dict[str, Any]) -> dict[str, Any]:
         "surfaces": card.get("surfaces", []),
         "executor_identity": card.get("executor_identity"),
         "reviewer_identity": card.get("reviewer_identity"),
-    }
+    })
 
 
 def build_worker_result(

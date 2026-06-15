@@ -934,6 +934,40 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("result must be PASS or WAIVED to satisfy a required worker", errors)
         self.assertNotIn("BLOCKED worker result requires recovery_recommendation", errors)
 
+    def test_worker_result_public_card_ref_redacts_raw_kanban_task_markers(self) -> None:
+        card = dict(load_card("v35_valid_security_with_scan.md"))
+        raw_task = "t_" + "ready0001"
+        card["card_id"] = raw_task
+        card["slice_id"] = f"slice-{raw_task}"
+
+        result = factoryctl.build_worker_result(
+            "codex-security",
+            card,
+            result="PASS",
+            tool_or_profile="codex-security:scoped-security-scan",
+            executed_by="codex-security-runner",
+            evidence_refs=["reports/security.md"],
+            blocking_findings=False,
+            findings_summary="No blocking finding.",
+            next_action="continue",
+        )
+        serialized = json.dumps(result)
+
+        self.assertEqual(result["card_ref"]["card_id"], "kanban:<redacted>")
+        self.assertEqual(result["card_ref"]["slice_id"], "slice-kanban:<redacted>")
+        self.assertNotIn(raw_task, serialized)
+
+    def test_artifact_ref_with_raw_kanban_task_marker_is_private(self) -> None:
+        raw_task = "t_" + "ready0001"
+
+        classification = factoryctl.classify_artifact_ref(f"reports/{raw_task}.json")
+        sanitized, redaction = factoryctl.sanitize_public_ref(f"reports/{raw_task}.json")
+
+        self.assertFalse(classification["public_safe"])
+        self.assertEqual(classification["artifact_class"], "private_run_evidence")
+        self.assertEqual(sanitized, "redacted:private-runtime-ref")
+        self.assertIsNotNone(redaction)
+
     def test_real_specialist_result_requires_domain_contract_fields(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md")
         result = worker_result("appsec_owasp_result")
