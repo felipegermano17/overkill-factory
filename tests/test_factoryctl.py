@@ -524,6 +524,30 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_packet.surface is required", errors)
         self.assertIn("product_face_packet.design_direction is required", errors)
 
+    def test_vfinal_product_experience_surfaces_route_to_product_face(self) -> None:
+        for surface in ("website", "desktop", "extension", "docs", "agentic_interface", "ai_interface", "design_system"):
+            with self.subTest(surface=surface):
+                card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+                card["surfaces"] = [surface]
+                card["capability_pack_contract"] = dict(card["capability_pack_contract"])
+                card["capability_pack_contract"]["covered_surfaces"] = [surface]
+                card.pop("product_experience_plan", None)
+                card.pop("product_face_packet", None)
+
+                errors = factoryctl.validate_card(card)
+
+                self.assertIn("product_experience_plan required for vFinal product-facing surfaces", errors)
+                self.assertIn("product_face_packet required for product-facing surfaces", errors)
+                required, reason = factoryctl.worker_required("product-face", card)
+                self.assertTrue(required, reason)
+
+    def test_legacy_docs_surface_does_not_implicitly_require_product_face(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "factory-card.json")
+
+        required, reason = factoryctl.worker_required("product-face", card)
+
+        self.assertFalse(required, reason)
+
     def test_vfinal_product_surface_accepts_product_experience_os_contract(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
         card["surfaces"] = ["frontend", "product-face"]
