@@ -69,11 +69,17 @@ def load_ledger(path: Path) -> dict[str, Any]:
         return {
             "$schema": "https://overkill-factory.dev/schemas/hermes-worker-ledger.schema.json",
             "ledger_type": "overkill_factory_hermes_worker_ledger",
+            "ledger_scope": "projection_idempotency_only",
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
             "tasks": {},
         }
     data = load_json(path)
     data.setdefault("$schema", "https://overkill-factory.dev/schemas/hermes-worker-ledger.schema.json")
     data.setdefault("ledger_type", "overkill_factory_hermes_worker_ledger")
+    data.setdefault("ledger_scope", "projection_idempotency_only")
+    data.setdefault("runtime_authority", "hermes_kanban")
+    data.setdefault("local_state_authority", False)
     if not isinstance(data.get("tasks"), dict):
         data["tasks"] = {}
     return data
@@ -94,6 +100,13 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
         ident = task_id(card_id, worker_id)
         payload = {
             "task_id": ident,
+            "materialization_state": "pending_hermes_materialization",
+            "runtime_refs": {
+                "hermes_board_ref": "external:pending-hermes-board",
+                "hermes_task_ref": f"external:pending-hermes-task:{ident}",
+                "hermes_run_ref": "external:pending-hermes-run",
+            },
+            "local_record_role": "idempotency_projection",
             "card_id": card_id,
             "worker_id": worker_id,
             "title": task.get("title"),

@@ -866,6 +866,36 @@ class FactoryCtlTest(unittest.TestCase):
                 next_action="fix",
             )
 
+    def test_blocked_worker_result_carries_recovery_recommendation_without_promotion_authority(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+
+        result = factoryctl.build_worker_result(
+            "codex-security",
+            card,
+            result="BLOCKED",
+            tool_or_profile="codex-security:security-scan",
+            executed_by="security-runner",
+            evidence_refs=["reports/security.md"],
+            blocking_findings=True,
+            findings_summary="Security finding blocks continuation.",
+            next_action="repair finding and rerun security scan",
+        )
+
+        recovery = result["recovery_recommendation"]
+        self.assertEqual(recovery["blocker_type"], "security")
+        self.assertTrue(recovery["factory_owned_repair_allowed"])
+        self.assertEqual(recovery["hermes_runtime_boundary"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(recovery["hermes_runtime_boundary"]["local_state_authority"])
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="security_scan_result",
+            expected_worker_id="codex-security",
+            card=card,
+            evidence_root=ROOT,
+        )
+        self.assertIn("result must be PASS or WAIVED to satisfy a required worker", errors)
+        self.assertNotIn("BLOCKED worker result requires recovery_recommendation", errors)
+
     def test_real_specialist_result_requires_domain_contract_fields(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md")
         result = worker_result("appsec_owasp_result")
@@ -1071,6 +1101,34 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(queues["supply-chain-gate"], "blocking-before-ready")
         self.assertEqual(queues["codex-security"], "blocking-before-done")
         self.assertEqual(queues["solana-quasar-auditor"], "blocking-before-done")
+
+    def test_recovery_plan_does_not_turn_normal_execution_into_recovery(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+
+        plan = factoryctl.build_factory_recovery_plan(card)
+
+        self.assertEqual(plan["gate_predicate_result"], "PASS")
+        self.assertEqual(plan["recovery_routes"], [])
+        self.assertEqual(plan["hermes_runtime_boundary"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(plan["hermes_runtime_boundary"]["local_state_authority"])
+
+    def test_recovery_plan_for_blocked_gate_uses_hermes_native_boundary(self) -> None:
+        card = load_card("v35_valid_product_face.md")
+        card.pop("security_scan_packet", None)
+
+        plan = factoryctl.build_factory_recovery_plan(card)
+
+        self.assertEqual(plan["gate_predicate_result"], "BLOCK")
+        self.assertGreater(len(plan["recovery_routes"]), 0)
+        route = plan["recovery_routes"][0]
+        self.assertIn("repair_task_ref", route)
+        self.assertIn("downstream_freeze_scope", route)
+        self.assertIn("unblock_authority_ref", route)
+        self.assertEqual(route["hermes_materialization"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(route["hermes_materialization"]["local_state_authority"])
+        self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_scheduler"])
+        self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_dispatcher"])
+        self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_dependency_engine"])
 
     def test_hermes_schemas_allow_before_ready_block_action(self) -> None:
         action = "block_and_create_before_ready_tasks"

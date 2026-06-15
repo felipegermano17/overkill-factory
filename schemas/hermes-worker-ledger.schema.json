@@ -3,15 +3,27 @@
   "$id": "https://overkill-factory.dev/schemas/hermes-worker-ledger.schema.json",
   "title": "Overkill Factory Hermes Worker Ledger",
   "type": "object",
-  "required": ["ledger_type", "tasks"],
+  "required": [
+    "ledger_type",
+    "ledger_scope",
+    "runtime_authority",
+    "local_state_authority",
+    "tasks"
+  ],
   "properties": {
     "ledger_type": { "const": "overkill_factory_hermes_worker_ledger" },
+    "ledger_scope": { "const": "projection_idempotency_only" },
+    "runtime_authority": { "const": "hermes_kanban" },
+    "local_state_authority": { "const": false },
     "tasks": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
         "required": [
           "task_id",
+          "materialization_state",
+          "runtime_refs",
+          "local_record_role",
           "card_id",
           "worker_id",
           "queue_class",
@@ -20,6 +32,30 @@
           "status",
           "packet"
         ],
+        "properties": {
+          "materialization_state": {
+            "enum": [
+              "pending_hermes_materialization",
+              "materialized_in_hermes",
+              "projection_only"
+            ]
+          },
+          "runtime_refs": {
+            "type": "object",
+            "required": [
+              "hermes_board_ref",
+              "hermes_task_ref",
+              "hermes_run_ref"
+            ],
+            "properties": {
+              "hermes_board_ref": { "type": "string", "minLength": 3 },
+              "hermes_task_ref": { "type": "string", "minLength": 3 },
+              "hermes_run_ref": { "type": "string", "minLength": 3 }
+            },
+            "additionalProperties": false
+          },
+          "local_record_role": { "const": "idempotency_projection" }
+        },
         "additionalProperties": true
       }
     },

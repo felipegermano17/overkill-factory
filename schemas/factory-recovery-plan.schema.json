@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-recovery-plan.schema.json",
+  "title": "Overkill Factory Recovery Plan",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "card_id",
+    "gate_predicate_result",
+    "blocked_workers",
+    "recovery_routes",
+    "hermes_runtime_boundary",
+    "public_private_boundary",
+    "limits"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-recovery-plan.schema.json"
+    },
+    "record_type": { "const": "factory_recovery_plan" },
+    "created_at": { "type": "string", "minLength": 10 },
+    "card_id": { "type": ["string", "null"] },
+    "gate_predicate_result": { "enum": ["PASS", "BLOCK"] },
+    "blocked_workers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "next_safe_actions": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "recovery_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "recovery_route_id",
+          "blocker_type",
+          "factory_owned_repair_allowed",
+          "human_gate_required",
+          "repair_owner_worker",
+          "repair_task_ref",
+          "repair_inputs",
+          "expected_repair_outputs",
+          "commands_or_worker_routes",
+          "invalidates_refs",
+          "supersedes_refs",
+          "dependency_edge_patch",
+          "downstream_freeze_scope",
+          "fresh_review_required",
+          "fresh_review_result_ref",
+          "unblock_authority_ref",
+          "retry_policy",
+          "audit_trail_refs",
+          "hermes_materialization"
+        ],
+        "properties": {
+          "recovery_route_id": { "type": "string", "minLength": 3 },
+          "blocker_type": {
+            "enum": [
+              "product",
+              "security",
+              "source",
+              "orchestration",
+              "runtime",
+              "capability",
+              "dependency",
+              "human_gate",
+              "must_not_proceed"
+            ]
+          },
+          "factory_owned_repair_allowed": { "type": "boolean" },
+          "human_gate_required": { "type": "boolean" },
+          "repair_owner_worker": { "type": "string", "minLength": 3 },
+          "repair_task_ref": { "type": "string", "minLength": 3 },
+          "repair_inputs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "expected_repair_outputs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "commands_or_worker_routes": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "invalidates_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "supersedes_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "dependency_edge_patch": {
+            "type": "object",
+            "required": ["old_edges", "new_edges", "patch_authority"],
+            "properties": {
+              "old_edges": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "new_edges": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "patch_authority": { "type": "string", "minLength": 3 }
+            },
+            "additionalProperties": true
+          },
+          "downstream_freeze_scope": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "fresh_review_required": { "type": "boolean" },
+          "fresh_review_result_ref": { "type": "string", "minLength": 3 },
+          "unblock_authority_ref": { "type": "string", "minLength": 3 },
+          "retry_policy": {
+            "type": "object",
+            "required": ["max_attempts", "attempt_number", "stop_classes"],
+            "properties": {
+              "max_attempts": { "type": "integer", "minimum": 1 },
+              "attempt_number": { "type": "integer", "minimum": 1 },
+              "stop_classes": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "escalation_reason": { "type": "string" }
+            },
+            "additionalProperties": true
+          },
+          "audit_trail_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "hermes_materialization": {
+            "type": "object",
+            "required": [
+              "runtime_authority",
+              "native_primitives",
+              "task_intent",
+              "parent_link_policy",
+              "comments_metadata_policy",
+              "local_state_authority"
+            ],
+            "properties": {
+              "runtime_authority": { "const": "hermes_kanban" },
+              "native_primitives": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "kanban_task",
+                    "parent_link",
+                    "blocked_state",
+                    "comment_metadata",
+                    "run_history",
+                    "reclaim_reassign"
+                  ]
+                }
+              },
+              "task_intent": { "type": "string", "minLength": 3 },
+              "parent_link_policy": { "type": "string", "minLength": 3 },
+              "comments_metadata_policy": { "type": "string", "minLength": 3 },
+              "local_state_authority": { "const": false }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "hermes_runtime_boundary": {
+      "type": "object",
+      "required": [
+        "runtime_authority",
+        "factory_output",
+        "no_shadow_scheduler",
+        "no_shadow_dispatcher",
+        "no_shadow_dependency_engine",
+        "local_state_authority"
+      ],
+      "properties": {
+        "runtime_authority": { "const": "hermes_kanban" },
+        "factory_output": { "const": "semantic_recovery_contract" },
+        "no_shadow_scheduler": { "const": true },
+        "no_shadow_dispatcher": { "const": true },
+        "no_shadow_dependency_engine": { "const": true },
+        "local_state_authority": { "const": false }
+      },
+      "additionalProperties": true
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["no_raw_logs", "no_private_paths", "no_private_ids"],
+      "properties": {
+        "no_raw_logs": { "const": true },
+        "no_private_paths": { "const": true },
+        "no_private_ids": { "const": true }
+      },
+      "additionalProperties": true
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": true
+}

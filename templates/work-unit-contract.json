@@ -21,5 +21,11 @@
   "product_context_packet_ref": "templates/product-context-packet.json",
   "reviewer_selection_ref": "templates/reviewer-selection-plan.json",
   "rollback_or_recovery": "Revert this slice without touching unrelated work.",
+  "runtime_boundary": {
+    "state_role": "planning_only",
+    "runtime_authority": "hermes_kanban",
+    "local_state_authority": false,
+    "materialized_hermes_task_ref": "external:not-materialized"
+  },
   "evidence_refs": ["work-unit-contract.md"]
 }

@@ -24,6 +24,7 @@
     "product_context_packet_ref",
     "reviewer_selection_ref",
     "rollback_or_recovery",
+    "runtime_boundary",
     "evidence_refs"
   ],
   "properties": {
@@ -97,6 +98,17 @@
     "product_context_packet_ref": { "type": "string", "minLength": 3 },
     "reviewer_selection_ref": { "type": "string", "minLength": 3 },
     "rollback_or_recovery": { "type": "string", "minLength": 3 },
+    "runtime_boundary": {
+      "type": "object",
+      "required": ["state_role", "runtime_authority", "local_state_authority"],
+      "properties": {
+        "state_role": { "enum": ["planning_only", "materialized_runtime_refs"] },
+        "runtime_authority": { "const": "hermes_kanban" },
+        "local_state_authority": { "const": false },
+        "materialized_hermes_task_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
     "evidence_refs": {
       "type": "array",
       "minItems": 1,

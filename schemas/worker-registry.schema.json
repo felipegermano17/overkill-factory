@@ -22,7 +22,7 @@
           "authority_max",
           "veto_conditions",
           "evidence_required",
-          "kanban_transition_rules",
+          "factory_gate_transition_policy",
           "promotion_rule",
           "public_safety_notes"
         ],

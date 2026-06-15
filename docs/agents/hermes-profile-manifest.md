@@ -27,14 +27,15 @@ and refusal boundaries for that builder's surface. A frontend builder without
 Product Face handoff, or a Solana builder without Quasar/Auditor boundaries, is
 not considered operable.
 
-## Source Of Truth
+## Gate Timing Boundary
 
-The runtime profile does not decide its own queue. Runtime queue is computed by
-`factoryctl.worker_queue_class` and exposed on `worker_task.queue_class`.
+The runtime profile does not decide its own execution queue. Factory gate timing
+is computed by `factoryctl.worker_gate_timing_class` and exposed on
+`worker_task.gate_timing_class`.
 
-The profile binding may describe queue policy, but it is not an execution
-source. This avoids split-brain behavior between Hermes routing and factory
-transition planning.
+The profile binding may describe gate timing policy, but it is not an execution
+source. Hermes Kanban remains responsible for dispatch, dependencies, worker
+lifecycle, block/unblock and durable audit history.
 
 ## Result Schema Rule
 

@@ -21,7 +21,7 @@
           "worker_id",
           "profile_id",
           "hermes_profile_name",
-          "dispatch_queue_policy",
+          "factory_gate_timing_policy",
           "skill_refs",
           "result_schema",
           "receipt_field",
@@ -38,11 +38,19 @@
           "worker_id": { "type": "string", "minLength": 3 },
           "profile_id": { "type": "string", "minLength": 3 },
           "hermes_profile_name": { "type": "string", "minLength": 3 },
-          "dispatch_queue_policy": {
+          "factory_gate_timing_policy": {
             "type": "object",
-            "required": ["source_of_truth", "default_queue", "allowed_effective_queues"],
+            "required": [
+              "policy_kind",
+              "policy_basis",
+              "runtime_authority",
+              "default_queue",
+              "allowed_effective_queues"
+            ],
             "properties": {
-              "source_of_truth": { "const": "factoryctl.worker_queue_class" },
+              "policy_kind": { "const": "factory_gate_timing_policy" },
+              "policy_basis": { "const": "factoryctl.worker_gate_timing_class" },
+              "runtime_authority": { "const": "hermes_kanban" },
               "default_queue": {
                 "enum": [
                   "blocking-before-ready",

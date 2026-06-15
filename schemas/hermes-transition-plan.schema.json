@@ -44,7 +44,10 @@
           "task_type",
           "worker_id",
           "title",
+          "gate_timing_class",
           "queue_class",
+          "runtime_authority",
+          "local_state_authority",
           "required_before",
           "packet",
           "expected_receipt_field",
@@ -52,6 +55,13 @@
         ],
         "properties": {
           "task_type": { "const": "worker_subtask" },
+          "gate_timing_class": {
+            "enum": [
+              "blocking-before-ready",
+              "blocking-before-done",
+              "advisory-review"
+            ]
+          },
           "queue_class": {
             "enum": [
               "blocking-before-ready",
@@ -62,6 +72,8 @@
           "required_before": {
             "enum": ["ready", "done"]
           },
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false },
           "status": {
             "enum": [
               "requires_execution",

@@ -34,6 +34,7 @@
     "cleanup_status",
     "integration_owner",
     "residual_risks",
+    "runtime_boundary",
     "public_safety_boundary"
   ],
   "properties": {
@@ -145,6 +146,20 @@
     "residual_risks": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
+    },
+    "runtime_boundary": {
+      "type": "object",
+      "required": ["state_role", "runtime_authority", "local_state_authority"],
+      "properties": {
+        "state_role": { "enum": ["planning_only", "projection_only", "materialized_runtime_refs"] },
+        "runtime_authority": { "const": "hermes_kanban" },
+        "local_state_authority": { "const": false },
+        "materialized_hermes_task_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
     },
     "public_safety_boundary": {
       "type": "object",

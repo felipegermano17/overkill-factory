@@ -62,7 +62,7 @@ def render_soul(worker: dict, binding: dict) -> str:
     understanding_contract = worker.get("understanding_contract", {})
     failure_contract = worker.get("failure_contract", {})
     promotion_contract = worker.get("promotion_contract", {})
-    dispatch_policy = binding.get("dispatch_queue_policy", {})
+    gate_timing_policy = binding.get("factory_gate_timing_policy", {})
 
     parts = [
         f"# {worker.get('display_name', worker['worker_id'])}",
@@ -117,12 +117,14 @@ def render_soul(worker: dict, binding: dict) -> str:
             "Hermes Binding",
             "\n".join(
                 [
-                    f"Queue source of truth: {dispatch_policy.get('source_of_truth', 'factoryctl.worker_queue_class')}",
+                    f"Gate timing policy basis: {gate_timing_policy.get('policy_basis', 'factoryctl.worker_gate_timing_class')}",
                     "",
-                    f"Default queue policy: {dispatch_policy.get('default_queue', 'blocking-before-done')}",
+                    f"Runtime authority: {gate_timing_policy.get('runtime_authority', 'hermes_kanban')}",
                     "",
-                    "Allowed effective queues:",
-                    bullets(dispatch_policy.get("allowed_effective_queues")),
+                    f"Default gate timing: {gate_timing_policy.get('default_queue', 'blocking-before-done')}",
+                    "",
+                    "Allowed effective gate timings:",
+                    bullets(gate_timing_policy.get("allowed_effective_queues")),
                     "",
                     f"Result schema: {binding.get('result_schema', 'schemas/worker-result.schema.json')}",
                     "",
@@ -133,7 +135,7 @@ def render_soul(worker: dict, binding: dict) -> str:
                     "",
                     f"Can mutate card state: {str(binding.get('can_mutate_card_state', False)).lower()}",
                     "",
-                    "Card state mutation: forbidden directly; adapter owns state mutation.",
+                    "Card state mutation: forbidden directly; Hermes Kanban owns runtime state and the adapter only materializes intent.",
                 ]
             ),
         ),

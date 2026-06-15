@@ -46,16 +46,17 @@ Before `done`, the adapter should:
 - enforce independent review and human gate requirements;
 - return an explicit block reason instead of silently closing.
 
-## Queue Classes
+## Gate Timing Classes
 
-| Queue | Meaning |
+| Gate timing | Meaning |
 | --- | --- |
 | `blocking-before-ready` | The main card should not become ready until this planning or gate input exists. |
 | `blocking-before-done` | The main card may be ready, but cannot close until the worker result exists. |
 | `advisory-review` | Useful review path that becomes blocking only when the card contract requires it. |
 
-The executable queue is computed by `factoryctl.worker_queue_class`; the binding
-records policy, not a second source of truth.
+Gate timing is computed by `factoryctl.worker_gate_timing_class`; the binding
+records semantic policy, not a second dispatch source of truth. Hermes Kanban
+owns runtime queueing, dependencies, worker lifecycle and durable state.
 
 ## Evidence Boundary
 
