@@ -482,6 +482,7 @@ class FactoryCtlTest(unittest.TestCase):
                 "allowed": True,
             },
             "independent_review_result": worker_result("independent_review_result", source_card=card),
+            "receipt_five_reconciliation_result": worker_result("receipt_five_reconciliation_result", source_card=card),
             "product_face_result": {
                 "result": "PASS",
                 "tool_or_profile": "browser-proof-runner",
@@ -526,6 +527,32 @@ class FactoryCtlTest(unittest.TestCase):
         }
 
         self.assertEqual(factoryctl.validate_completion(card, receipt), [])
+
+    def test_validate_completion_requires_done_promotion_gate(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        receipt = {
+            "receipt_five": {
+                "changed": "validated onchain gate",
+                "artifact_paths": ["examples/minimal-hermes-project/card.md"],
+                "verification_commands": ["python scripts/factoryctl.py validate-card examples/minimal-hermes-project/card.md"],
+                "verification_result": "PASS",
+                "reviewer_required": False,
+                "next_action": "continue",
+            },
+            "kanban_transition_event": {
+                "from_status": "review",
+                "to_status": "done",
+                "actor": "factory-orchestrator",
+                "worker": "factory-orchestrator",
+                "receipt_refs": ["receipt_five"],
+                "artifact_refs": ["examples/minimal-hermes-project/card.md"],
+            },
+        }
+
+        errors = factoryctl.validate_completion(card, receipt)
+
+        self.assertIn("kanban_transition_event.allowed must be true for done promotion", errors)
+        self.assertIn("receipt_five_reconciliation_result is required for done promotion", errors)
 
     def test_product_face_completion_rejects_screenshot_without_plan_alignment(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
