@@ -118,6 +118,50 @@ class FactorySelfImprovementTest(unittest.TestCase):
 
         self.assertIn("reference_quality_packet.references[0].license_or_terms_ref is required for copied code/assets", errors)
 
+    def test_product_ui_reference_quality_rejects_single_weak_reference(self) -> None:
+        packet = json.loads(json.dumps(vfinal_card()["reference_quality_packet"]))
+        packet["references"] = packet["references"][:1]
+        packet.pop("rejected_references")
+        packet.pop("dimensional_synthesis")
+
+        errors = factoryctl.validate_reference_quality_packet(packet)
+
+        self.assertIn(
+            "reference_quality_packet.single_reference_waiver is required for single-reference product/UI packets",
+            errors,
+        )
+        self.assertIn("reference_quality_packet.references requires at least 3 sources for product/UI work", errors)
+        self.assertIn(
+            "reference_quality_packet.rejected_references requires at least 2 rejected candidates for product/UI work",
+            errors,
+        )
+        self.assertIn("reference_quality_packet.dimensional_synthesis is required for product/UI work", errors)
+
+    def test_product_ui_reference_quality_allows_bounded_single_reference_waiver(self) -> None:
+        packet = json.loads(json.dumps(vfinal_card()["reference_quality_packet"]))
+        packet["references"] = packet["references"][:1]
+        packet.pop("rejected_references")
+        packet.pop("dimensional_synthesis")
+        packet["single_reference_waiver"] = {
+            "owner": "product-owner",
+            "reason": "Only one authoritative source exists for this bounded visual decision.",
+            "expires_at": "before-product-face-pass",
+            "forbidden_claims": ["full product quality benchmark", "best-in-class visual comparison"],
+        }
+
+        self.assertEqual(factoryctl.validate_reference_quality_packet(packet), [])
+
+    def test_reference_quality_does_not_force_visual_bar_for_technical_domain(self) -> None:
+        packet = json.loads(json.dumps(vfinal_card()["reference_quality_packet"]))
+        packet["reference_domain"] = "technical_domain"
+        packet["experience_category"] = "database migration safety"
+        packet["references"] = packet["references"][:1]
+        packet.pop("rejected_references")
+        packet.pop("dimensional_synthesis")
+        packet.pop("product_experience_fields_informed")
+
+        self.assertEqual(factoryctl.validate_reference_quality_packet(packet), [])
+
     def test_worker_packet_carries_reasoning_and_reference_contracts(self) -> None:
         card_path = ROOT / "templates" / "vfinal-factory-card.json"
         card = vfinal_card()

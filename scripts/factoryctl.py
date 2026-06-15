@@ -406,6 +406,14 @@ REFERENCE_QUALITY_REQUIRED_FIELDS = (
     "performance_constraints",
     "acceptance_criteria",
 )
+PRODUCT_UI_REFERENCE_DOMAINS = {"product_ui", "visual_design", "product_experience"}
+REFERENCE_QUALITY_SYNTHESIS_DIMENSIONS = (
+    "layout_hierarchy",
+    "interaction_model",
+    "visual_language",
+    "content_density",
+    "failure_modes",
+)
 PROFESSIONAL_DESIGN_PROCESS_REQUIRED_FIELDS = (
     "record_type",
     "surface_type",
@@ -2616,6 +2624,24 @@ def _validate_delivery_profile_proof_coverage(
     return errors
 
 
+def _is_product_ui_reference_packet(packet: dict[str, Any]) -> bool:
+    domain = str(packet.get("reference_domain") or "").strip().lower().replace("-", "_")
+    return domain in PRODUCT_UI_REFERENCE_DOMAINS
+
+
+def _single_reference_waiver_errors(packet: dict[str, Any]) -> list[str]:
+    waiver = packet.get("single_reference_waiver") if isinstance(packet.get("single_reference_waiver"), dict) else {}
+    errors: list[str] = []
+    if not waiver:
+        return ["reference_quality_packet.single_reference_waiver is required for single-reference product/UI packets"]
+    for field in ("owner", "reason", "expires_at"):
+        if not _non_empty_text(waiver.get(field)):
+            errors.append(f"reference_quality_packet.single_reference_waiver.{field} is required")
+    if not _list_items(waiver.get("forbidden_claims")):
+        errors.append("reference_quality_packet.single_reference_waiver.forbidden_claims must be a non-empty array")
+    return errors
+
+
 def validate_reference_quality_packet(packet: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     for field in REFERENCE_QUALITY_REQUIRED_FIELDS:
@@ -2632,7 +2658,8 @@ def validate_reference_quality_packet(packet: dict[str, Any]) -> list[str]:
     if packet.get("record_type") not in (None, "reference_quality_packet"):
         errors.append("reference_quality_packet.record_type must be reference_quality_packet")
 
-    for idx, ref in enumerate(packet.get("references", []) if isinstance(packet.get("references"), list) else []):
+    references = packet.get("references", []) if isinstance(packet.get("references"), list) else []
+    for idx, ref in enumerate(references):
         if not isinstance(ref, dict):
             errors.append(f"reference_quality_packet.references[{idx}] must be an object")
             continue
@@ -2647,6 +2674,46 @@ def validate_reference_quality_packet(packet: dict[str, Any]) -> list[str]:
             errors.append(f"reference_quality_packet.references[{idx}].license_or_terms_ref is required for copied code/assets")
         if str(ref.get("copy_policy") or "").strip().lower() in {"copy", "blind_copy"}:
             errors.append(f"reference_quality_packet.references[{idx}].copy_policy must not allow blind copying")
+
+    product_ui_packet = _is_product_ui_reference_packet(packet)
+    single_reference_waived = False
+    if product_ui_packet and len(references) == 1:
+        waiver_errors = _single_reference_waiver_errors(packet)
+        errors.extend(waiver_errors)
+        single_reference_waived = not waiver_errors
+
+    if product_ui_packet and not single_reference_waived:
+        if len(references) < 3:
+            errors.append("reference_quality_packet.references requires at least 3 sources for product/UI work")
+        source_types = {
+            str(ref.get("use_type") or "").strip()
+            for ref in references
+            if isinstance(ref, dict) and _non_empty_text(ref.get("use_type"))
+        }
+        if len(source_types) < 2:
+            errors.append("reference_quality_packet.references requires at least 2 source types for product/UI work")
+
+        rejected = packet.get("rejected_references") if isinstance(packet.get("rejected_references"), list) else []
+        if len(rejected) < 2:
+            errors.append("reference_quality_packet.rejected_references requires at least 2 rejected candidates for product/UI work")
+        for idx, rejected_ref in enumerate(rejected):
+            if not isinstance(rejected_ref, dict):
+                errors.append(f"reference_quality_packet.rejected_references[{idx}] must be an object")
+                continue
+            for field in ("source_id", "reason_rejected", "risk_prevented"):
+                if not _non_empty_text(rejected_ref.get(field)):
+                    errors.append(f"reference_quality_packet.rejected_references[{idx}].{field} is required")
+
+        synthesis = packet.get("dimensional_synthesis") if isinstance(packet.get("dimensional_synthesis"), dict) else {}
+        if not synthesis:
+            errors.append("reference_quality_packet.dimensional_synthesis is required for product/UI work")
+        for dimension in REFERENCE_QUALITY_SYNTHESIS_DIMENSIONS:
+            value = synthesis.get(dimension)
+            if isinstance(value, list):
+                if not _list_items(value):
+                    errors.append(f"reference_quality_packet.dimensional_synthesis.{dimension} must be a non-empty array")
+            elif not _non_empty_text(value):
+                errors.append(f"reference_quality_packet.dimensional_synthesis.{dimension} is required")
 
     reuse = packet.get("reuse_policy") if isinstance(packet.get("reuse_policy"), dict) else {}
     forbidden = " ".join(_list_items(reuse.get("forbidden"))).lower()

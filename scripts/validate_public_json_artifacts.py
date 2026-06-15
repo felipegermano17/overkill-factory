@@ -131,6 +131,7 @@ SUPPORTED_SCHEMA_KEYWORDS = ANNOTATION_SCHEMA_KEYWORDS | {
     "minItems",
     "minLength",
     "minProperties",
+    "oneOf",
     "pattern",
     "properties",
     "required",
@@ -140,7 +141,7 @@ SUPPORTED_SCHEMA_KEYWORDS = ANNOTATION_SCHEMA_KEYWORDS | {
 }
 SCHEMA_MAP_CHILDREN = {"$defs", "properties"}
 SCHEMA_OBJECT_CHILDREN = {"additionalProperties", "contains", "else", "if", "items", "then"}
-SCHEMA_ARRAY_CHILDREN = {"allOf"}
+SCHEMA_ARRAY_CHILDREN = {"allOf", "oneOf"}
 
 
 def load_json(path: Path) -> Any:
@@ -279,6 +280,20 @@ def validate_node(
         for index, subschema in enumerate(schema["allOf"]):
             if isinstance(subschema, dict):
                 errors.extend(validate_node(subschema, value, f"{at}.allOf[{index}]", schemas=schemas, root_schema=root, seen_refs=seen))
+    if isinstance(schema.get("oneOf"), list):
+        match_count = 0
+        for subschema in schema["oneOf"]:
+            if isinstance(subschema, dict) and schema_matches(
+                subschema,
+                value,
+                at,
+                schemas=schemas,
+                root_schema=root,
+                seen_refs=seen,
+            ):
+                match_count += 1
+        if match_count != 1:
+            errors.append(f"{at}: expected exactly one oneOf schema match, got {match_count}")
     if "if" in schema and isinstance(schema["if"], dict):
         if schema_matches(schema["if"], value, at, schemas=schemas, root_schema=root, seen_refs=seen):
             then_schema = schema.get("then")

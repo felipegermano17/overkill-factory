@@ -97,11 +97,29 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         self.assertTrue(any("does not contain" in error for error in errors))
 
+    def test_enforces_one_of_used_by_reference_quality_schema(self) -> None:
+        validator = load_validator()
+        schema = {
+            "oneOf": [
+                {"required": ["strong_bar"], "properties": {"mode": {"const": "strong"}}},
+                {"required": ["waiver"], "properties": {"mode": {"const": "waived"}}},
+            ]
+        }
+
+        self.assertEqual(validator.validate_node(schema, {"mode": "strong", "strong_bar": True}, "$"), [])
+        self.assertEqual(validator.validate_node(schema, {"mode": "waived", "waiver": True}, "$"), [])
+        self.assertTrue(any("expected exactly one oneOf" in error for error in validator.validate_node(schema, {}, "$")))
+        self.assertTrue(
+            any(
+                "expected exactly one oneOf" in error
+                for error in validator.validate_node(schema, {"strong_bar": True, "waiver": True}, "$")
+            )
+        )
+
     def test_schema_keyword_audit_rejects_unsupported_validation_keywords(self) -> None:
         validator = load_validator()
         schema = {
             "type": "object",
-            "oneOf": [{"required": ["mode"]}],
             "properties": {
                 "not": {"type": "string"},
                 "gate": {"not": {"const": "bypass"}},
@@ -110,7 +128,6 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         errors = validator.validate_schema_keywords(schema)
 
-        self.assertTrue(any("unsupported JSON Schema keyword 'oneOf'" in error for error in errors))
         self.assertTrue(any("unsupported JSON Schema keyword 'not'" in error for error in errors))
         self.assertFalse(any("$/properties/not:" in error for error in errors))
 
