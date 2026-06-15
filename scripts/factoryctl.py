@@ -3092,8 +3092,15 @@ def validate_completion_audit_contract(card: dict[str, Any], audit: dict[str, An
     return errors
 
 
-def validate_completion(card: dict[str, Any], metadata: dict[str, Any]) -> list[str]:
+def validate_completion(
+    card: dict[str, Any],
+    metadata: dict[str, Any],
+    *,
+    from_status: str | None = None,
+    to_status: str | None = None,
+) -> list[str]:
     errors = validate_receipt(metadata)
+    errors.extend(done_promotion_errors(metadata, from_status=from_status, to_status=to_status))
     receipt = metadata.get("receipt_five") if isinstance(metadata.get("receipt_five"), dict) else {}
     if receipt.get("reviewer_required") is True and str(receipt.get("reviewer_result") or "").strip().upper() != "PASS":
         errors.append("reviewer_result must be PASS when reviewer_required=true")
@@ -4943,6 +4950,24 @@ def receipt_reconciliation_errors(metadata: dict[str, Any] | None) -> list[str]:
     return errors
 
 
+def done_promotion_errors(
+    metadata: dict[str, Any] | None,
+    *,
+    from_status: str | None = None,
+    to_status: str | None = None,
+) -> list[str]:
+    errors = receipt_reconciliation_errors(metadata)
+    if from_status is not None and to_status is not None and isinstance(metadata, dict):
+        errors.extend(
+            validate_transition_event_matches(
+                metadata,
+                from_status=from_status,
+                to_status=to_status,
+            )
+        )
+    return errors
+
+
 def build_transition_plan(
     card: dict[str, Any],
     source_path: Path,
@@ -5062,10 +5087,9 @@ def build_transition_plan(
             completion = graph_completion
             append_unsatisfied_graph_requirement_blocks()
         else:
-            blocked_reasons.extend(validate_completion(card, receipt))
-            blocked_reasons.extend(receipt_reconciliation_errors(receipt))
             blocked_reasons.extend(
-                validate_transition_event_matches(
+                validate_completion(
+                    card,
                     receipt,
                     from_status=from_status,
                     to_status=to_status,
