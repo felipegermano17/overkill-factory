@@ -16,6 +16,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
 AUDITOR_SOURCE = "https://github.com/solanabr/Auditor"
+PUBLIC_QVG_CARD = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
 ALLOWED_SOURCE_ENV_CLASSES = {
     "production-validation-quasar-source",
     "production-quasar-source",
@@ -353,7 +354,7 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create QVG product-like Auditor code-audit result.")
     parser.add_argument("--auditor-dir", type=Path, required=True)
     parser.add_argument(
@@ -369,7 +370,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--card",
         type=Path,
-        default=ROOT / "pilots" / "quasar-vault-guard-test" / "cards" / "qvg-first-slice.md",
+        default=PUBLIC_QVG_CARD,
     )
     parser.add_argument(
         "--report-out",
@@ -389,11 +390,11 @@ def parse_args() -> argparse.Namespace:
         help="Required with --reusable-for-product.",
     )
     parser.add_argument("--approval-scope")
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     auditor_dir = args.auditor_dir if args.auditor_dir.is_absolute() else ROOT / args.auditor_dir
     runtime_proof = args.runtime_proof if args.runtime_proof.is_absolute() else ROOT / args.runtime_proof
     card_path = args.card if args.card.is_absolute() else ROOT / args.card
