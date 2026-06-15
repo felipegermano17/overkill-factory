@@ -6,9 +6,10 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +46,43 @@ def load_json(path: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def materialize_preflight_inputs(
+    *,
+    inventory_path: Path = DEFAULT_INVENTORY,
+    public_worktree_path: Path = DEFAULT_PUBLIC_WORKTREE,
+    public_head_path: Path = DEFAULT_PUBLIC_HEAD,
+    public_origin_path: Path = DEFAULT_PUBLIC_ORIGIN,
+    runner: Callable[..., subprocess.CompletedProcess[Any]] = subprocess.run,
+) -> list[Path]:
+    commands = [
+        [sys.executable, "scripts/worktree_release_inventory.py", "--out", str(inventory_path)],
+        [sys.executable, "scripts/public_safety_scan.py", "--summary-json", str(public_worktree_path)],
+        [
+            sys.executable,
+            "scripts/public_safety_scan.py",
+            "--git-ref",
+            "HEAD",
+            "--summary-json",
+            str(public_head_path),
+        ],
+        [
+            sys.executable,
+            "scripts/public_safety_scan.py",
+            "--git-ref",
+            "origin/main",
+            "--summary-json",
+            str(public_origin_path),
+        ],
+    ]
+    for command in commands:
+        runner(command, cwd=ROOT, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return [
+        path
+        for path in (inventory_path, public_worktree_path, public_head_path, public_origin_path)
+        if not path.is_file()
+    ]
 
 
 def git_text(*args: str) -> str:
@@ -102,6 +140,9 @@ def build_preflight(
     public_worktree = load_json(public_worktree_path)
     public_head = load_json(public_head_path)
     public_origin = load_json(public_origin_path)
+    evidence_paths = [inventory_path, public_worktree_path, public_head_path, public_origin_path]
+    missing_evidence_refs = [repo_ref(path) for path in evidence_paths if not path.is_file()]
+    evidence_refs = [repo_ref(path) for path in evidence_paths if path.is_file()]
 
     branch = branch_name if branch_name is not None else git_text("branch", "--show-current")
     actual_status_entries = actual_generated_entries = 0
@@ -122,6 +163,7 @@ def build_preflight(
         "worktree_public_safety_passed": public_worktree.get("result") == "PASS",
         "head_public_safety_passed": public_head.get("result") == "PASS",
         "origin_main_public_safety_passed": public_origin.get("result") == "PASS",
+        "preflight_evidence_refs_exist": not missing_evidence_refs,
         "worktree_inventory_has_no_unknown_entries": needs_human_review_entries == 0,
         "worktree_inventory_has_no_cleanup_candidates": safe_cleanup_candidates == 0,
         "worktree_has_release_candidate_material": release_candidate_entries > 0,
@@ -152,6 +194,8 @@ def build_preflight(
         next_required_actions.append("move release-candidate work off dirty main or commit through an explicit release branch")
     if not checks["release_ref_has_no_unintegrated_worktree_entries"]:
         next_required_actions.append("integrate the public-safe worktree into the target release ref")
+    if not checks["preflight_evidence_refs_exist"]:
+        next_required_actions.append("materialize missing preflight evidence summaries before release review")
     if not checks["head_public_safety_passed"] or not checks["origin_main_public_safety_passed"]:
         next_required_actions.append("rerun exact public-safety scans after the release ref is updated")
     if not next_required_actions:
@@ -199,12 +243,8 @@ def build_preflight(
         },
         "blocking_items": sorted(blocking_items),
         "attention_items": sorted(attention_items),
-        "evidence_refs": [
-            repo_ref(inventory_path),
-            repo_ref(public_worktree_path),
-            repo_ref(public_head_path),
-            repo_ref(public_origin_path),
-        ],
+        "evidence_refs": evidence_refs,
+        "missing_evidence_refs": missing_evidence_refs,
         "next_required_actions": next_required_actions,
         "limits": [
             "This preflight is public-safe and intentionally omits raw file paths.",
@@ -222,6 +262,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    materialize_preflight_inputs()
     receipt = build_preflight()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")

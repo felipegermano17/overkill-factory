@@ -14,6 +14,7 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Iterator
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,6 +71,35 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
+def iter_scan_paths(root: Path) -> Iterator[Path]:
+    try:
+        entries = list(root.iterdir())
+    except OSError:
+        return
+
+    for entry in entries:
+        try:
+            if any(part in SKIP_PARTS for part in entry.parts):
+                continue
+            if entry.is_dir():
+                yield from iter_scan_paths(entry)
+            else:
+                yield entry
+        except OSError:
+            continue
+
+
+def read_scannable_text(path: Path) -> tuple[str, str] | None:
+    try:
+        if not path.is_file() or not should_scan(path):
+            return None
+        rel = path.relative_to(ROOT).as_posix()
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    return rel, text
+
+
 def build_summary(findings: list[str]) -> dict[str, object]:
     return {
         "$schema": "https://overkill-factory.dev/schemas/secret-safety-scan-summary.schema.json",
@@ -87,11 +117,11 @@ def build_summary(findings: list[str]) -> dict[str, object]:
 
 def scan() -> list[str]:
     findings: list[str] = []
-    for path in ROOT.rglob("*"):
-        if not path.is_file() or not should_scan(path):
+    for path in iter_scan_paths(ROOT):
+        scannable = read_scannable_text(path)
+        if scannable is None:
             continue
-        rel = path.relative_to(ROOT).as_posix()
-        text = path.read_text(encoding="utf-8", errors="replace")
+        rel, text = scannable
         for lineno, line in enumerate(text.splitlines(), start=1):
             for pattern in SECRET_PATTERNS:
                 if pattern.search(line):

@@ -70,16 +70,31 @@ def write_route_readiness(path: Path) -> None:
     path.write_text(
         json.dumps(
             {
-                "routes": {
-                    worker: {
+                "$schema": "https://overkill-factory.dev/schemas/hermes-worker-route-readiness.schema.json",
+                "schema": "overkill_factory_hermes_worker_route_readiness.v1",
+                "ledger_ref": "external:test-route-ledger",
+                "hermes_home_ref": "redacted-hermes-home",
+                "result": "PASS",
+                "worker_count": len(workers),
+                "blocked_worker_count": 0,
+                "blocked_workers": [],
+                "checks": [
+                    {
+                        "worker_id": worker,
+                        "task_id": f"route:{worker}",
+                        "required_before": "done",
+                        "queue_class": "blocking-before-done",
+                        "status": "ready",
                         "profile_exists": True,
                         "provider_configured": True,
                         "model_configured": True,
                         "credential_status": "pass",
-                        "capability_manifest_ok": True,
+                        "credential_evidence": ["external:test-credential-evidence"],
+                        "blocked_reasons": [],
                     }
                     for worker in workers
-                }
+                ],
+                "production_rule": "Do not dispatch unless every required worker route is ready.",
             }
         ),
         encoding="utf-8",
@@ -117,6 +132,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(binding["binding_role"], "hermes_ref_projection")
         self.assertEqual(binding["runtime_authority"], "hermes_kanban")
         self.assertFalse(binding["local_state_authority"])
+        materialized_tasks = [
+            task for task in ledger_data["tasks"].values()
+            if task["worker_id"] == "codex-security" and task["materialization_state"] == "materialized_in_hermes"
+        ]
+        self.assertEqual(len(materialized_tasks), 1)
+        self.assertEqual(materialized_tasks[0]["runtime_refs"]["hermes_board_ref"], f"hermes:{TEST_BOARD}")
+        self.assertTrue(materialized_tasks[0]["runtime_refs"]["hermes_task_ref"].startswith("t_"))
         link_calls = [call for call in fake.calls if len(call) >= 7 and call[4] == "link"]
         self.assertTrue(link_calls)
         for call in link_calls:
@@ -189,14 +211,59 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
     def test_complete_main_requires_materialized_live_binding(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             ledger = Path(tmp) / "ledger.json"
-            ledger.write_text(json.dumps({"tasks": {}}), encoding="utf-8")
+            ledger.write_text(
+                json.dumps(
+                    {
+                        "ledger_type": "overkill_factory_hermes_worker_ledger",
+                        "ledger_scope": "projection_idempotency_only",
+                        "runtime_authority": "hermes_kanban",
+                        "local_state_authority": False,
+                        "tasks": {},
+                    }
+                ),
+                encoding="utf-8",
+            )
 
             with self.assertRaisesRegex(RuntimeError, "missing live binding"):
                 adapter.validate_live_binding(
                     ledger_path=ledger,
                     card_id="CARD-001",
                     board=TEST_BOARD,
-                    main_task_id="t_" + "deadbeef",
+                    main_task_id="fixture-main-task",
+                )
+
+    def test_complete_main_rejects_local_authority_live_binding(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.json"
+            ledger.write_text(
+                json.dumps(
+                    {
+                        "ledger_type": "overkill_factory_hermes_worker_ledger",
+                        "ledger_scope": "projection_idempotency_only",
+                        "runtime_authority": "hermes_kanban",
+                        "local_state_authority": False,
+                        "tasks": {},
+                        "live_bindings": {
+                            "CARD-001": {
+                                "binding_role": "local_state",
+                                "runtime_authority": "local-file",
+                                "local_state_authority": True,
+                                "board": TEST_BOARD,
+                                "main_task_id": "fixture-main-task",
+                                "worker_task_ids": {},
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "not a Hermes-authoritative projection"):
+                adapter.validate_live_binding(
+                    ledger_path=ledger,
+                    card_id="CARD-001",
+                    board=TEST_BOARD,
+                    main_task_id="fixture-main-task",
                 )
 
 

@@ -18,6 +18,7 @@ from transition_hook import ACTION_BLOCK_TRANSITION, build_hook_result, write_js
 ROOT = Path(__file__).resolve().parents[2]
 TASK_ID_RE = re.compile(r"\bt_[a-f0-9]{8,}\b")
 LIVE_ADAPTER_SCHEMA = "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json"
+ROUTE_READINESS_SCHEMA = "https://overkill-factory.dev/schemas/hermes-worker-route-readiness.schema.json"
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 
 
@@ -71,7 +72,20 @@ def route_readiness_blockers(path: Path | None, required_worker_ids: list[str]) 
     if path is None:
         return ["route readiness manifest is required before live Hermes dispatch"]
     data = load_json(path)
-    raw_routes = data.get("routes") or data.get("workers") or {}
+    blockers: list[str] = []
+    official_manifest = data.get("$schema") == ROUTE_READINESS_SCHEMA or "checks" in data
+    if official_manifest:
+        if data.get("$schema") != ROUTE_READINESS_SCHEMA:
+            blockers.append("route readiness manifest must declare the official hermes-worker-route-readiness schema")
+        if data.get("result") != "PASS":
+            blockers.append(f"route readiness result is {data.get('result')!r}, expected PASS")
+        if data.get("blocked_worker_count") not in {0, None}:
+            blockers.append(f"route readiness has {data.get('blocked_worker_count')} blocked worker(s)")
+        for worker_id in data.get("blocked_workers") or []:
+            blockers.append(f"{worker_id}: route readiness reports worker blocked")
+        raw_routes = data.get("checks") or []
+    else:
+        raw_routes = data.get("routes") or data.get("workers") or {}
     if isinstance(raw_routes, list):
         routes = {
             str(route.get("worker_id") or route.get("worker") or ""): route
@@ -82,19 +96,22 @@ def route_readiness_blockers(path: Path | None, required_worker_ids: list[str]) 
         routes = {str(worker_id): route for worker_id, route in raw_routes.items() if isinstance(route, dict)}
     else:
         routes = {}
-    blockers: list[str] = []
     for worker_id in sorted(set(required_worker_ids)):
         route = routes.get(worker_id)
         if not route:
             blockers.append(f"{worker_id}: missing route readiness record")
             continue
         checks = {
+            "status_ready": str(route.get("status") or "ready").strip().lower() == "ready",
             "profile_exists": route.get("profile_exists") is True,
             "provider_configured": route.get("provider_configured", route.get("provider_status")) in {True, "pass", "PASS"},
             "model_configured": route.get("model_configured", route.get("model_status")) in {True, "pass", "PASS"},
             "credential_status": str(route.get("credential_status") or "").strip().lower() == "pass",
-            "capability_manifest": route.get("capability_manifest_ok", route.get("capability_status")) in {True, "pass", "PASS"},
         }
+        if not official_manifest:
+            checks["capability_manifest"] = route.get("capability_manifest_ok", route.get("capability_status")) in {True, "pass", "PASS"}
+        if route.get("blocked_reasons"):
+            checks["blocked_reasons_empty"] = False
         failed = [name for name, ok in checks.items() if not ok]
         if failed:
             blockers.append(f"{worker_id}: route readiness failed ({', '.join(failed)})")
@@ -144,6 +161,21 @@ def record_live_binding(
     worker_task_ids: dict[str, str],
 ) -> None:
     ledger = load_json(ledger_path)
+    tasks = ledger.setdefault("tasks", {})
+    for task in tasks.values():
+        if not isinstance(task, dict):
+            continue
+        worker_id = str(task.get("worker_id") or "")
+        hermes_task_id = worker_task_ids.get(worker_id)
+        if str(task.get("card_id") or "") != card_id or not hermes_task_id:
+            continue
+        task["materialization_state"] = "materialized_in_hermes"
+        task["runtime_refs"] = {
+            "hermes_board_ref": f"hermes:{board}",
+            "hermes_task_ref": hermes_task_id,
+            "hermes_run_ref": "external:pending-hermes-run",
+        }
+        task["local_record_role"] = "idempotency_projection"
     bindings = ledger.setdefault("live_bindings", {})
     bindings[card_id] = {
         "binding_role": "hermes_ref_projection",
@@ -158,9 +190,15 @@ def record_live_binding(
 
 def validate_live_binding(*, ledger_path: Path, card_id: str, board: str, main_task_id: str) -> None:
     ledger = load_json(ledger_path)
+    if ledger.get("runtime_authority") != "hermes_kanban" or ledger.get("local_state_authority") is not False:
+        raise RuntimeError("ledger is not a Hermes-authoritative projection; refuse to complete arbitrary Hermes task")
     binding = (ledger.get("live_bindings") or {}).get(card_id)
     if not isinstance(binding, dict):
         raise RuntimeError(f"missing live binding for card {card_id}; refuse to complete arbitrary Hermes task")
+    if binding.get("runtime_authority") != "hermes_kanban" or binding.get("local_state_authority") is not False:
+        raise RuntimeError("live binding is not a Hermes-authoritative projection; refuse to complete arbitrary Hermes task")
+    if binding.get("binding_role") != "hermes_ref_projection":
+        raise RuntimeError("live binding must be a Hermes ref projection")
     if binding.get("board") != board or binding.get("main_task_id") != main_task_id:
         raise RuntimeError("main task id does not match the live binding for this card and board")
 
