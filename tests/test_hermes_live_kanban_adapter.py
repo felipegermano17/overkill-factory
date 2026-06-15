@@ -15,6 +15,7 @@ MODULE_PATH = ADAPTER_DIR / "live_kanban_adapter.py"
 FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
 TEST_BOARD = "overkill-" + "factory-live-smoke"
 MAIN_TASK_ID = "t_" + "00000001"
+READY_TASK_ID = "t_" + "ready0001"
 sys.path.insert(0, str(ADAPTER_DIR))
 SPEC = importlib.util.spec_from_file_location("live_kanban_adapter", MODULE_PATH)
 assert SPEC is not None
@@ -82,7 +83,7 @@ class FakeDispatchHermes:
                     stdout=json.dumps(
                         [
                             {
-                                "id": "t_ready0001",
+                                "id": READY_TASK_ID,
                                 "assignee": "implementation-worker",
                                 "workspace": private_windows_workspace_ref(),
                             }
@@ -100,7 +101,7 @@ class FakeDispatchHermes:
                     stdout=json.dumps(
                         [
                             {
-                                "id": "t_ready0001",
+                                "id": READY_TASK_ID,
                                 "assignee": "implementation-worker",
                                 "current_run_id": 42,
                                 "worker_pid": 12345,
@@ -114,7 +115,7 @@ class FakeDispatchHermes:
             spawned = (
                 [
                     {
-                        "task_id": "t_ready0001",
+                        "task_id": READY_TASK_ID,
                         "assignee": "implementation-worker",
                         "workspace": private_windows_workspace_ref(),
                     }
@@ -214,7 +215,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         result = adapter.dispatch(args, runner=fake)
 
         self.assertEqual(result["mode"], "dispatch")
-        self.assertEqual(result["spawned"][0]["task_id"], "t_ready0001")
+        self.assertEqual(result["spawned"][0]["task_id"], adapter.PUBLIC_SAFE_KANBAN_REF)
         self.assertEqual(result["spawned"][0]["run_id"], 42)
         self.assertEqual(result["spawned"][0]["worker_pid"], 12345)
         self.assertEqual(result["spawned"][0]["workspace"], "redacted:absolute-hermes-workspace")
@@ -236,7 +237,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         self.assertEqual(len(result["spawned_by_this_command"]), 1)
         spawned = result["spawned_by_this_command"][0]
-        self.assertEqual(spawned["task_id"], "t_ready0001")
+        self.assertEqual(spawned["task_id"], adapter.PUBLIC_SAFE_KANBAN_REF)
         self.assertEqual(spawned["run_id"], 42)
         self.assertEqual(spawned["worker_pid"], 12345)
         self.assertEqual(spawned["dispatch_observation"], "native_dispatch_spawned")
@@ -267,8 +268,9 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             result = adapter.materialize(args, runner=fake)
             ledger_data = json.loads((Path(tmp) / "ledger.json").read_text(encoding="utf-8"))
 
-        self.assertEqual(result["main_task_id"], MAIN_TASK_ID)
+        self.assertEqual(result["main_task_id"], adapter.PUBLIC_SAFE_KANBAN_REF)
         self.assertIn("codex-security", result["worker_task_ids"])
+        self.assertEqual(result["worker_task_ids"]["codex-security"], adapter.PUBLIC_SAFE_KANBAN_REF)
         binding = ledger_data["live_bindings"]["KFP-V35-POS-ONCHAIN-AUDITOR"]
         self.assertEqual(binding["binding_role"], "hermes_ref_projection")
         self.assertEqual(binding["runtime_authority"], "hermes_kanban")
@@ -377,13 +379,21 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 ]
             )
             result = adapter.materialize(args, runner=fake)
+            ledger_data = json.loads(ledger.read_text(encoding="utf-8"))
 
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        review_tasks = [
+            task for task in ledger_data["tasks"].values()
+            if task["worker_id"] == "independent-reviewer" and task["materialization_state"] == "materialized_in_hermes"
+        ]
+        self.assertEqual(len(review_tasks), 1)
+        review_task_id = review_tasks[0]["runtime_refs"]["hermes_task_ref"]
         self.assertEqual(len(unblock_calls), 1)
-        self.assertEqual(unblock_calls[0][5], result["worker_task_ids"]["independent-reviewer"])
+        self.assertEqual(unblock_calls[0][5], review_task_id)
+        self.assertEqual(result["worker_task_ids"]["independent-reviewer"], adapter.PUBLIC_SAFE_KANBAN_REF)
         self.assertEqual(
             result["review_promoted_worker_task_ids"],
-            {"independent-reviewer": result["worker_task_ids"]["independent-reviewer"]},
+            {"independent-reviewer": adapter.PUBLIC_SAFE_KANBAN_REF},
         )
         self.assertNotIn("handoff-packer", result["review_promoted_worker_task_ids"])
 

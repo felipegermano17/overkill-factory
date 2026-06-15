@@ -19,6 +19,13 @@ Templates are starter contract files paired with schemas and tests.
 Templates are examples of valid shape. Schemas and validation scripts decide
 whether an artifact is acceptable.
 
+## Public Runtime Refs
+
+Public templates and generated public artifacts must never contain raw Hermes
+Kanban task IDs. Use stable issue refs such as `github-issue-84`, semantic
+artifact refs, or `kanban:<redacted>` when private runtime traceability exists
+only in Hermes.
+
 ## How It Is Validated
 
 Run template and schema checks:

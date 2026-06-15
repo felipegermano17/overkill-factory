@@ -17,6 +17,12 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from public_refs import contains_private_kanban_task_marker  # noqa: E402
+
 SCHEMA_DIR = ROOT / "schemas"
 SCAN_DIRS = [
     ROOT / "examples",
@@ -259,6 +265,7 @@ def validate_node(
 
 def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
     errors: list[str] = []
+    errors.extend(validate_public_ref_hygiene(data, at))
     if data.get("record_type") in RESEARCH_RECORD_TYPES:
         serialized = json.dumps(data, sort_keys=True)
         if PRIVATE_MARKERS.search(serialized):
@@ -446,6 +453,20 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         for field in required_checks:
             if checks.get(field) is not True:
                 errors.append(f"{at}: discord_control_tower_ux_audit requires {field}=true")
+    return errors
+
+
+def validate_public_ref_hygiene(value: Any, at: str = "$") -> list[str]:
+    errors: list[str] = []
+    if isinstance(value, str):
+        if contains_private_kanban_task_marker(value):
+            errors.append(f"{at}: public artifact must not contain raw Hermes Kanban task id")
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            errors.extend(validate_public_ref_hygiene(item, f"{at}[{index}]"))
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            errors.extend(validate_public_ref_hygiene(item, f"{at}.{key}"))
     return errors
 
 

@@ -21,6 +21,12 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parents[1]
+SCRIPTS_ROOT = SCRIPT_DIR.parent
+if str(SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_ROOT))
+
+from public_refs import PRIVATE_KANBAN_TASK_MARKER_RE  # noqa: E402
+
 FIXTURE_DIR = ROOT / "fixtures" / "issue-84" / "status-snapshot-v0"
 DEFAULT_OUTPUT = ROOT / "ui" / "issue-84-local-cockpit" / "data" / "status-cockpit.json"
 
@@ -155,7 +161,7 @@ _PRIVATE_WINDOWS_DOUBLE = "C:" + "\\\\" + "Users"
 PRIVATE_PATTERNS = [
     re.compile(re.escape(_PRIVATE_RUNTIME_ROOT) + r"[^\s\"']*"),
     re.compile(r"file://[^\s\"']*"),
-    re.compile(r"\bt_[a-f0-9]{8}\b"),
+    PRIVATE_KANBAN_TASK_MARKER_RE,
     *[re.compile(r"\b" + re.escape(marker) + r"\b") for marker in _PRIVATE_PRODUCT_MARKERS],
     *[re.compile(r"\b" + re.escape(marker) + r"\b") for marker in _PRIVATE_OWNER_MARKERS],
     re.compile(re.escape(_PRIVATE_WINDOWS_DOUBLE) + r"[^\s\"']*"),

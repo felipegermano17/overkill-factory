@@ -14,6 +14,16 @@ from pathlib import Path, PurePosixPath
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from public_refs import (  # noqa: E402
+    PRIVATE_KANBAN_TASK_MARKER_BYTES_RE,
+    PRIVATE_KANBAN_TASK_MARKER_RE,
+    PUBLIC_SAFE_KANBAN_REF,
+    public_safe_kanban_ref,
+)
 
 SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".pdf", ".tgz", ".zip"}
 SKIP_PARTS = {".git", ".tmp", ".pytest_cache", ".venv", "__pycache__", "build", "dist", "node_modules", "venv"}
@@ -31,9 +41,8 @@ PATTERN_SPECS = [
     ("private_windows_path", re.compile(r"C:\\\\Users")),
     ("private_sync_root", re.compile(r"OneDrive")),
     ("private_workspace_marker", re.compile(r"felipe-s-workspace")),
-    ("private_task_marker", re.compile(r"\bt_[a-f0-9]{8}\b")),
+    ("private_task_marker", PRIVATE_KANBAN_TASK_MARKER_RE),
     ("private_live_smoke_marker", re.compile(r"\boverkill-factory-live-smoke\b")),
-    ("private_task_marker", re.compile(r"\bHermes task:\s*t_[a-f0-9]{8}\b", re.IGNORECASE)),
     ("private_whimsical_board_marker", re.compile(r"\bWhimsical primary board:\s*[A-Za-z0-9_-]{4,}\b")),
     ("private_whimsical_board_marker", re.compile(r"--board-id\s+(?!<)[A-Za-z0-9_-]{4,}\b")),
 ]
@@ -50,6 +59,10 @@ BYTE_PATTERN_SPECS = [
     ("private_runtime_path", b"/srv/hermes"),
     ("private_workspace_marker", b"felipe-s-workspace"),
     ("private_live_smoke_marker", b"overkill-factory-live-smoke"),
+]
+
+BYTE_REGEX_PATTERN_SPECS = [
+    ("private_task_marker", PRIVATE_KANBAN_TASK_MARKER_BYTES_RE),
 ]
 
 
@@ -127,6 +140,12 @@ def scan_binary(rel: str, data: bytes) -> list[str]:
         if pattern in data:
             findings.append(f"{rel}:binary: {category}")
             break
+    if findings:
+        return findings
+    for category, pattern in BYTE_REGEX_PATTERN_SPECS:
+        if pattern.search(data):
+            findings.append(f"{rel}:binary: {category}")
+            break
     return findings
 
 
@@ -141,6 +160,7 @@ def finding_category(finding: str) -> str:
 def safe_ref(value: str | None) -> str | None:
     if value is None:
         return None
+    value = public_safe_kanban_ref(value)
     for _, pattern in PATTERN_SPECS:
         if pattern.search(value):
             return "redacted-ref"
@@ -165,6 +185,8 @@ def build_summary(findings: list[str], *, git_ref: str | None = None, created_at
             "private_run_evidence": "not_scanned_for_publication",
             "sanitized_report": "allowed_when_raw_private_markers_are_absent",
             "publication_candidate": "fail_closed_on_any_private_marker",
+            "private_kanban_task_ids": f"replace_with_{PUBLIC_SAFE_KANBAN_REF}",
+            "stable_issue_refs": "allowed",
         },
         "forbidden_hits": [
             {"category": category, "count": count}

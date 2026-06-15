@@ -10,6 +10,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS_DIR = ROOT / "scripts"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+from public_refs import PRIVATE_KANBAN_TASK_MARKER_RE  # noqa: E402
+
 DATA_BUILDER_PATH = ROOT / "scripts" / "issue84" / "build_local_cockpit_data.py"
 FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
 UI_DIR = ROOT / "ui" / "issue-84-local-cockpit"
@@ -49,7 +55,7 @@ def private_marker_patterns() -> list[re.Pattern[str]]:
     return [
         re.compile(re.escape(runtime_root)),
         re.compile(r"file://"),
-        re.compile(r"\bt_[a-f0-9]{8}\b"),
+        PRIVATE_KANBAN_TASK_MARKER_RE,
         re.compile(r"\b" + re.escape(product_marker) + r"\b"),
         re.compile(r"\b" + re.escape(owner_marker) + r"\b"),
         re.compile(re.escape(windows_root)),
