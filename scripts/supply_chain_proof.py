@@ -25,6 +25,7 @@ USES_RE = re.compile(r"uses:\s*(\S+)")
 
 SKIP_PARTS = {".git", "__pycache__", ".mypy_cache", ".pytest_cache"}
 SKIP_OUTPUT_PARTS = {".tmp/factory-runs/supply-chain"}
+NON_RUNTIME_OPTIONAL_DEPENDENCY_GROUPS = {"ci", "dev", "doc", "docs", "test", "tests"}
 
 
 def now_iso() -> str:
@@ -172,7 +173,13 @@ def dependency_posture() -> dict[str, Any]:
     if "pyproject.toml" in runtime_dependency_manifests:
         pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
         project = pyproject.get("project", {}) if isinstance(pyproject, dict) else {}
-        has_runtime_dependencies = bool(project.get("dependencies") or project.get("optional-dependencies"))
+        optional_dependencies = project.get("optional-dependencies") or {}
+        runtime_optional_groups = [
+            name
+            for name, dependencies in optional_dependencies.items()
+            if dependencies and str(name).lower() not in NON_RUNTIME_OPTIONAL_DEPENDENCY_GROUPS
+        ]
+        has_runtime_dependencies = bool(project.get("dependencies") or runtime_optional_groups)
         if not has_runtime_dependencies:
             runtime_dependency_manifests.remove("pyproject.toml")
     return {
@@ -184,7 +191,8 @@ def dependency_posture() -> dict[str, Any]:
             "must add lockfile/audit evidence before release."
             if not present
             else (
-                "Only packaging metadata without runtime dependencies is present; no dependency audit follow-up is required."
+                "Only packaging metadata and non-runtime optional tooling dependencies are present; "
+                "no runtime dependency audit follow-up is required."
                 if not runtime_dependency_manifests
                 else "Dependency manifests with runtime dependencies are present and require the repository-specific audit path."
             )

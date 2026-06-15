@@ -11,6 +11,9 @@
     "docs/concepts/factory-flow.md",
     "docs/concepts/operator-journey.md",
     "docs/concepts/overkill-factory-method.md",
+    "docs/getting-started/quickstart-hermes.md",
+    "docs/operations/validation-and-release.md",
+    "docs/reference/cli.md",
     "planning-bundles/manifest.json",
     "schemas/",
     "scripts/factoryctl.py"
@@ -196,6 +199,76 @@
       "required_phrases": [
         "Every bundle output is a candidate artifact",
         "They do not replace the factory runtime"
+      ]
+    },
+    {
+      "surface_id": "quickstart-hermes",
+      "path": "docs/getting-started/quickstart-hermes.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "README.md",
+        "adapters/hermes/README.md",
+        "examples/minimal-hermes-project/card.md",
+        "scripts/factoryctl.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "expected_links",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Discord is optional cockpit UI. It is not the source of truth.",
+        "Attach worker results and Receipt Five before any `done` transition."
+      ],
+      "expected_links": [
+        "adapters/hermes/README.md",
+        "examples/minimal-hermes-project/card.md"
+      ]
+    },
+    {
+      "surface_id": "cli-reference",
+      "path": "docs/reference/cli.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "README.md",
+        "scripts/factoryctl.py",
+        "tests/test_factoryctl.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "the runtime source of truth for real cards and transitions.",
+        "does not replace Hermes, card contracts, gate reports or Receipt Five as the source of truth."
+      ]
+    },
+    {
+      "surface_id": "validation-and-release",
+      "path": "docs/operations/validation-and-release.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "scripts/release_integration_preflight.py",
+        "scripts/worktree_release_inventory.py",
+        "scripts/validate_public_surface_sync.py",
+        "scripts/public_safety_scan.py",
+        "scripts/secret_safety_scan.py",
+        "scripts/supply_chain_proof.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "operator status can be projected without becoming the source of truth.",
+        "Generated summaries must not be committed as release proof.",
+        "No single chat answer, dashboard status or worker packet is a release proof."
       ]
     },
     {

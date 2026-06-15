@@ -106,6 +106,40 @@ class SupplyChainProofTests(unittest.TestCase):
         self.assertTrue(posture["requires_followup"])
         self.assertEqual(posture["detected_manifests"], ["requirements.txt"])
 
+    def test_docs_optional_dependency_does_not_count_as_runtime_dependency(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "pyproject.toml").write_text(
+                "[project]\n"
+                'name = "fixture"\n'
+                "[project.optional-dependencies]\n"
+                'docs = ["mkdocs>=1.6,<2"]\n',
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(proof, "ROOT", root):
+                posture = proof.dependency_posture()
+
+        self.assertFalse(posture["requires_followup"])
+        self.assertEqual(posture["detected_manifests"], ["pyproject.toml"])
+
+    def test_runtime_optional_dependency_requires_followup(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "pyproject.toml").write_text(
+                "[project]\n"
+                'name = "fixture"\n'
+                "[project.optional-dependencies]\n"
+                'postgres = ["psycopg[binary]>=3"]\n',
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(proof, "ROOT", root):
+                posture = proof.dependency_posture()
+
+        self.assertTrue(posture["requires_followup"])
+        self.assertEqual(posture["detected_manifests"], ["pyproject.toml"])
+
     def test_no_dependency_manifest_is_current_public_pass(self):
         with mock.patch.object(proof, "ROOT", Path(__file__).resolve().parents[1]):
             posture = proof.dependency_posture()
