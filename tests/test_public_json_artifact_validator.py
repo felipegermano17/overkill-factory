@@ -52,6 +52,15 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         errors = validator.validate_node(schema, {"result": "BLOCKED"}, "$")
         self.assertTrue(any("recovery_recommendation" in error for error in errors))
 
+    def test_enforces_contains_used_by_review_authorization_schemas(self) -> None:
+        validator = load_validator()
+        schema = {"type": "array", "contains": {"const": "review"}}
+
+        self.assertEqual(validator.validate_node(schema, ["implementation", "review"], "$"), [])
+        errors = validator.validate_node(schema, ["implementation", "qa"], "$")
+
+        self.assertTrue(any("does not contain" in error for error in errors))
+
     def test_resolves_schema_file_refs_used_by_factory_card(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()
