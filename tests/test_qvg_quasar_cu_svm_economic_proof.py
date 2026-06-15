@@ -1,5 +1,8 @@
 import json
+import subprocess
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from scripts import qvg_quasar_cu_svm_economic_proof as proof
 
@@ -48,6 +51,56 @@ class QvgQuasarCuSvmEconomicProofTests(unittest.TestCase):
         self.assertIn("production_svm_success_and_failure_matrix", harness)
         self.assertIn("OF_SVM_CU review_vault_instruction", harness)
         json.dumps({"harness_sha256": proof.sha256_text(harness)})
+
+    def test_build_result_blocks_when_runtime_proof_source_hash_is_stale(self):
+        with TemporaryDirectory() as source_tmp, TemporaryDirectory() as work_tmp:
+            source_dir = Path(source_tmp)
+            (source_dir / "lib.rs").write_text("pub fn review() {}\n", encoding="utf-8")
+            runtime_proof = Path(work_tmp) / "runtime-proof.json"
+            runtime_proof.write_text(
+                json.dumps({"source_sha256": "0" * 64}),
+                encoding="utf-8",
+            )
+            work_dir = Path(work_tmp)
+            (work_dir / "build_status.txt").write_text("PASS", encoding="utf-8")
+            (work_dir / "svm_test_status.txt").write_text("PASS", encoding="utf-8")
+            (work_dir / "quasar_head.txt").write_text(proof.QUASAR_SOURCE_HEAD, encoding="utf-8")
+            (work_dir / "quasar_ref.txt").write_text(proof.QUASAR_SOURCE_REF, encoding="utf-8")
+            (work_dir / "svm-test.log").write_text(
+                "\n".join(
+                    [
+                        "OF_SVM_CU review_vault_instruction 1410",
+                        "OF_SVM_FLOW review_vault_instruction PASS",
+                        "OF_SVM_CU record_audit_receipt 1330",
+                        "OF_SVM_FLOW record_audit_receipt PASS",
+                        "OF_SVM_CU block_instruction 1180",
+                        "OF_SVM_FLOW block_instruction PASS",
+                        "OF_SVM_FLOW sequential_review_record_block PASS",
+                        "OF_SVM_NEGATIVE review_zero_hash PASS",
+                        "OF_SVM_NEGATIVE record_zero_hash PASS",
+                        "OF_SVM_NEGATIVE block_zero_reason PASS",
+                        "OF_SVM_ECONOMIC lamports_unchanged PASS",
+                        "OF_SVM_ECONOMIC pda_data_unchanged PASS",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            completed = subprocess.CompletedProcess(args=["docker"], returncode=0, stdout="", stderr="")
+
+            result = proof.build_result(
+                source_dir=source_dir,
+                runtime_proof_path=runtime_proof,
+                work_dir=work_dir,
+                completed=completed,
+                started_at="2026-06-15T00:00:00+00:00",
+                ended_at="2026-06-15T00:00:01+00:00",
+                project_name="qvg-public-validation-product",
+                compute_budget=200_000,
+            )
+
+        self.assertEqual(result["result"], "FAIL")
+        self.assertFalse(result["runtime_source_match"]["matches"])
+        self.assertTrue(result["runtime_source_match"]["blocking_for_this_proof"])
 
 
 if __name__ == "__main__":

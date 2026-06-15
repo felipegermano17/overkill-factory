@@ -12,7 +12,9 @@
     "source_target",
     "source_sha256",
     "runtime_proof_ref",
+    "runtime_source_match",
     "product_target",
+    "toolchain_proof",
     "property_fuzz_coverage",
     "compute_unit_profile",
     "svm_or_client_flow_coverage",
@@ -52,6 +54,27 @@
     "runtime_proof_ref": {
       "type": "string",
       "minLength": 3
+    },
+    "runtime_source_match": {
+      "type": "object",
+      "required": ["runtime_source_sha256", "current_source_sha256", "matches", "blocking_for_this_proof"],
+      "properties": {
+        "runtime_source_sha256": {
+          "type": "string",
+          "minLength": 64
+        },
+        "current_source_sha256": {
+          "type": "string",
+          "minLength": 64
+        },
+        "matches": {
+          "type": "boolean"
+        },
+        "blocking_for_this_proof": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
     },
     "product_target": {
       "type": "object",
@@ -123,6 +146,72 @@
       },
       "additionalProperties": true
     },
+    "toolchain_proof": {
+      "type": "object",
+      "required": [
+        "container_image",
+        "solana_release",
+        "solana_install_url",
+        "install_source",
+        "source_ref",
+        "source_head_expected",
+        "source_head",
+        "source_head_matches",
+        "rustc",
+        "cargo",
+        "solana",
+        "quasar",
+        "init_command",
+        "build_command",
+        "svm_test_command",
+        "build_status",
+        "svm_test_status",
+        "returncode"
+      ],
+      "properties": {
+        "container_image": {
+          "type": "string",
+          "pattern": "@sha256:[0-9a-f]{64}$"
+        },
+        "solana_release": {
+          "type": "string",
+          "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+([-._a-zA-Z0-9]+)?$"
+        },
+        "solana_install_url": {
+          "type": "string",
+          "pattern": "^https://release\\.anza\\.xyz/v[0-9]+\\.[0-9]+\\.[0-9]+([-._a-zA-Z0-9]+)?/install$"
+        },
+        "install_source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 7
+        },
+        "source_head_expected": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "source_head": {
+          "type": "string"
+        },
+        "source_head_matches": {
+          "type": "boolean"
+        },
+        "rustc": { "type": "string", "minLength": 1 },
+        "cargo": { "type": "string", "minLength": 1 },
+        "solana": { "type": "string", "minLength": 1 },
+        "quasar": { "type": "string", "minLength": 1 },
+        "init_command": { "type": "string", "minLength": 1 },
+        "build_command": { "type": "string", "minLength": 1 },
+        "svm_test_command": { "type": "string", "minLength": 1 },
+        "build_status": { "type": "string", "minLength": 1 },
+        "svm_test_status": { "type": "string", "minLength": 1 },
+        "returncode": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
     "svm_or_client_flow_coverage": {
       "type": "object",
       "required": ["quasar_test_passed", "flows", "real_svm_transaction_harness"],
@@ -179,5 +268,49 @@
       "minLength": 3
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result": {
+            "const": "PASS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "runtime_source_match": {
+            "properties": {
+              "matches": {
+                "const": true
+              },
+              "blocking_for_this_proof": {
+                "const": true
+              }
+            }
+          },
+          "toolchain_proof": {
+            "properties": {
+              "source_head_matches": {
+                "const": true
+              },
+              "source_head": {
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "build_status": {
+                "const": "PASS"
+              },
+              "svm_test_status": {
+                "const": "PASS"
+              },
+              "returncode": {
+                "const": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": true
 }

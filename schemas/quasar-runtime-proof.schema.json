@@ -6,6 +6,13 @@
     "result",
     "proof_kind",
     "install_source",
+    "source_ref",
+    "source_head_expected",
+    "source_head",
+    "source_head_matches",
+    "container_image",
+    "solana_release",
+    "solana_install_url",
     "policy_decision"
   ],
   "properties": {
@@ -29,6 +36,29 @@
     "source_head": {
       "type": "string"
     },
+    "source_ref": {
+      "type": "string",
+      "minLength": 7
+    },
+    "source_head_expected": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "source_head_matches": {
+      "type": "boolean"
+    },
+    "container_image": {
+      "type": "string",
+      "pattern": "@sha256:[0-9a-f]{64}$"
+    },
+    "solana_release": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+([-._a-zA-Z0-9]+)?$"
+    },
+    "solana_install_url": {
+      "type": "string",
+      "pattern": "^https://release\\.anza\\.xyz/v[0-9]+\\.[0-9]+\\.[0-9]+([-._a-zA-Z0-9]+)?/install$"
+    },
     "build_status": {
       "type": "string"
     },
@@ -40,5 +70,26 @@
       "minLength": 1
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result": {
+            "const": "PASS"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source_head_matches": {
+            "const": true
+          },
+          "source_head": {
+            "pattern": "^[0-9a-f]{40}$"
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": true
 }

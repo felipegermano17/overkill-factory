@@ -52,6 +52,33 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         errors = validator.validate_node(schema, {"result": "BLOCKED"}, "$")
         self.assertTrue(any("recovery_recommendation" in error for error in errors))
 
+    def test_quasar_runtime_schema_requires_pinned_head_only_for_pass(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["quasar-runtime-proof.schema.json"]
+        artifact = {
+            "$schema": "https://overkill-factory.dev/schemas/quasar-runtime-proof.schema.json",
+            "result": "FAIL",
+            "proof_kind": "containerized_product_like_quasar_build_test",
+            "install_source": "github:blueshift-gg/quasar",
+            "source_ref": "a89a9329f05740a20520607608b2b3b78c74f7c4",
+            "source_head_expected": "a89a9329f05740a20520607608b2b3b78c74f7c4",
+            "source_head": "",
+            "source_head_matches": False,
+            "container_image": "rust:1.91.0-bookworm@sha256:e187887ec511b3d93e45c0231d2f0fd59f1347526c58aa86343aa83c74f3e1a9",
+            "solana_release": "v4.0.2",
+            "solana_install_url": "https://release.anza.xyz/v4.0.2/install",
+            "policy_decision": "blocked until the pinned checkout resolves",
+        }
+
+        self.assertEqual(validator.validate_node(schema, artifact, "$", schemas=schemas, root_schema=schema), [])
+
+        artifact["result"] = "PASS"
+        errors = validator.validate_node(schema, artifact, "$", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("source_head_matches" in error and "expected const True" in error for error in errors))
+        self.assertTrue(any("source_head" in error and "does not match pattern" in error for error in errors))
+
     def test_enforces_contains_used_by_review_authorization_schemas(self) -> None:
         validator = load_validator()
         schema = {"type": "array", "contains": {"const": "review"}}
