@@ -4009,12 +4009,27 @@ def validate_worker_result_record(
         if not isinstance(authority, dict):
             errors.append("promotion_authority object is required")
         else:
+            review_declared = worker_result_declares_review(data)
             if authority.get("active") is False:
                 errors.append("superseded worker result cannot satisfy promotion")
             if str(authority.get("result") or "").strip().upper() != "PASS":
                 errors.append("promotion_authority.result must be PASS")
-            scopes = string_list(authority.get("allowed_transition_scopes"))
-            if "done" not in [scope.lower() for scope in scopes]:
+            scopes = [scope.lower() for scope in string_list(authority.get("allowed_transition_scopes"))]
+            if review_declared:
+                if "review" not in scopes:
+                    errors.append("review-required handoff authority must include review scope")
+                forbidden_scopes = {
+                    "done",
+                    "release",
+                    "deployment",
+                    "github_mutation",
+                    "issue_completion",
+                    "product_acceptance",
+                }
+                leaked = sorted(forbidden_scopes & set(scopes))
+                if leaked:
+                    errors.append("review-required handoff authority must not include " + ", ".join(leaked))
+            elif "done" not in scopes:
                 errors.append("promotion_authority.allowed_transition_scopes must include done")
 
     evidence_refs = string_list(data.get("evidence_refs"))
@@ -4068,19 +4083,30 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
         )
         authority = data.get("promotion_authority") if isinstance(data.get("promotion_authority"), dict) else {}
         evidence_ref = source_card_ref(path)
+        review_declared = worker_result_declares_review(data)
+        graph_requirements = declared_graph_requirements(record_type, data, evidence_ref=evidence_ref) if not errors else []
+        record = {
+            "evidence_ref": evidence_ref,
+            "created_at": data.get("created_at") or data.get("decision_at"),
+            "result": data.get("result") or data.get("decision"),
+            "active": authority.get("active", data.get("active", True)) is not False and not data.get("superseded_by"),
+            "valid": not errors,
+            "consumable": not errors,
+            "review_declared": review_declared,
+            "graph_requirements": graph_requirements,
+            "graph_requirement_refs": string_list(data.get("graph_requirement_refs")),
+            "review_requirement_refs": string_list(data.get("review_requirement_refs")),
+            "reviewed_requirement_refs": string_list(data.get("reviewed_requirement_refs")),
+            "reviewed_producer_refs": string_list(data.get("reviewed_producer_refs")),
+            "producer_refs_reviewed": string_list(data.get("producer_refs_reviewed")),
+            "review_task_authorizations": [
+                item for item in data.get("review_task_authorizations", []) if isinstance(item, dict)
+            ],
+            "validation_errors": errors,
+        }
+        apply_record_consumption_state(record)
         records_by_type.setdefault(record_type, []).append(
-            {
-                "evidence_ref": evidence_ref,
-                "created_at": data.get("created_at") or data.get("decision_at"),
-                "result": data.get("result") or data.get("decision"),
-                "active": authority.get("active", data.get("active", True)) is not False and not data.get("superseded_by"),
-                "valid": not errors,
-                "consumable": not errors,
-                "graph_requirements": (
-                    declared_graph_requirements(record_type, data, evidence_ref=evidence_ref) if not errors else []
-                ),
-                "validation_errors": errors,
-            }
+            record
         )
     records: dict[str, dict[str, Any]] = {}
     for record_type, candidates in records_by_type.items():
@@ -4108,57 +4134,75 @@ def receipt_result_fields(
                 card=card,
                 evidence_root=evidence_root,
             )
-            fields[worker.output_field] = {
+            review_declared = worker_result_declares_review(value)
+            graph_requirements = (
+                declared_graph_requirements(
+                    worker.output_field,
+                    value,
+                    evidence_ref=f"receipt:{worker.output_field}",
+                )
+                if not errors
+                else []
+            )
+            record = {
                 "evidence_ref": None,
                 "result": value.get("result") or value.get("decision"),
                 "valid": not errors,
                 "consumable": not errors,
-                "graph_requirements": (
-                    declared_graph_requirements(
-                        worker.output_field,
-                        value,
-                        evidence_ref=f"receipt:{worker.output_field}",
-                    )
-                    if not errors
-                    else []
-                ),
+                "review_declared": review_declared,
+                "graph_requirements": graph_requirements,
+                "graph_requirement_refs": string_list(value.get("graph_requirement_refs")),
+                "review_requirement_refs": string_list(value.get("review_requirement_refs")),
+                "reviewed_requirement_refs": string_list(value.get("reviewed_requirement_refs")),
+                "reviewed_producer_refs": string_list(value.get("reviewed_producer_refs")),
+                "producer_refs_reviewed": string_list(value.get("producer_refs_reviewed")),
+                "review_task_authorizations": [
+                    item for item in value.get("review_task_authorizations", []) if isinstance(item, dict)
+                ],
                 "validation_errors": errors,
             }
+            apply_record_consumption_state(record)
+            fields[worker.output_field] = record
     return fields
 
 
-def _review_declared_by_next_action(value: Any) -> bool:
-    text = str(value or "").strip().lower()
-    if "review" not in text:
-        return False
-    return any(marker in text for marker in ("before", "required", "independent", "gate", "handoff"))
-
-
 def _review_required_by_handoff_metadata(data: dict[str, Any]) -> bool:
-    for key in ("handoff", "handoff_gate", "gate_handoff", "review_gate", "handoff_metadata"):
+    for key in ("handoff", "handoff_gate", "gate_handoff", "review_gate", "handoff_metadata", "review_required_handoff"):
         value = data.get(key)
         if not isinstance(value, dict):
             continue
         if value.get("reviewer_required") is True or value.get("requires_review") is True:
             return True
-        if _review_declared_by_next_action(value.get("next_action") or value.get("action")):
+        if value.get("review_required") is True or value.get("enabled") is True:
             return True
     return False
 
 
+def worker_result_declares_review(data: dict[str, Any]) -> bool:
+    return (
+        data.get("reviewer_required") is True
+        or data.get("handoff_requires_review") is True
+        or data.get("review_declared") is True
+        or data.get("review_ready") is True
+        or str(data.get("handoff_state") or "").strip() == "implementation_ready_for_review"
+        or _review_required_by_handoff_metadata(data)
+    )
+
+
 def _declared_review_worker_id(data: dict[str, Any]) -> str:
-    worker_id = str(data.get("review_worker_id") or data.get("reviewer_worker_id") or "").strip()
+    nested = data.get("review_required_handoff") if isinstance(data.get("review_required_handoff"), dict) else {}
+    worker_id = str(
+        data.get("review_worker_id")
+        or data.get("reviewer_worker_id")
+        or nested.get("review_worker_id")
+        or nested.get("reviewer_worker_id")
+        or ""
+    ).strip()
     return worker_id if worker_id in WORKERS else "independent-reviewer"
 
 
 def declared_graph_requirements(record_type: str, data: dict[str, Any], *, evidence_ref: str | None) -> list[dict[str, Any]]:
-    reviewer_required = (
-        data.get("reviewer_required") is True
-        or data.get("handoff_requires_review") is True
-        or _review_declared_by_next_action(data.get("next_action"))
-        or _review_required_by_handoff_metadata(data)
-    )
-    if not reviewer_required:
+    if not worker_result_declares_review(data):
         return []
     review_worker_id = _declared_review_worker_id(data)
     required_review_field = WORKERS[review_worker_id].output_field
@@ -4180,10 +4224,84 @@ def declared_graph_requirements(record_type: str, data: dict[str, Any], *, evide
             "status": status,
             "reviewer_result": reviewer_result or "missing",
             "downstream_scope": ["implementation", "done", "release"],
+            "review_authorized_scope": ["review"],
+            "producer_handoff_state": "implementation_ready_for_review"
+            if status == "pending"
+            else "review_satisfied",
             "runtime_authority": "hermes_kanban",
             "local_state_authority": False,
         }
     ]
+
+
+def review_task_authorization(requirement: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "authorization_type": "review_task_only",
+        "authorization_state": "review_task_ready",
+        "requirement_id": requirement.get("requirement_id"),
+        "producer_field": requirement.get("producer_field"),
+        "producer_ref": requirement.get("producer_ref"),
+        "authorized_worker_id": requirement.get("review_worker_id"),
+        "authorized_receipt_field": requirement.get("required_review_field"),
+        "authorized_scope": ["review"],
+        "forbidden_scope_until_review_pass": [
+            "release",
+            "deployment",
+            "github_mutation",
+            "issue_completion",
+            "product_acceptance",
+        ],
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+    }
+
+
+def review_record_matches_requirement(review_record: dict[str, Any], requirement: dict[str, Any]) -> bool:
+    requirement_id = str(requirement.get("requirement_id") or "").strip()
+    producer_ref = str(requirement.get("producer_ref") or "").strip()
+    explicit_refs = set(string_list(review_record.get("graph_requirement_refs")))
+    explicit_refs.update(string_list(review_record.get("review_requirement_refs")))
+    explicit_refs.update(string_list(review_record.get("reviewed_requirement_refs")))
+    if requirement_id and requirement_id in explicit_refs:
+        return True
+    producer_refs = set(string_list(review_record.get("reviewed_producer_refs")))
+    producer_refs.update(string_list(review_record.get("producer_refs_reviewed")))
+    if producer_ref and producer_ref in producer_refs:
+        return True
+    for authorization in review_record.get("review_task_authorizations", []):
+        if not isinstance(authorization, dict):
+            continue
+        if requirement_id and authorization.get("requirement_id") == requirement_id:
+            return True
+        if producer_ref and authorization.get("producer_ref") == producer_ref:
+            return True
+    return False
+
+
+def apply_record_consumption_state(record: dict[str, Any]) -> None:
+    valid = bool(record.get("valid"))
+    requirements = [dict(item) for item in record.get("graph_requirements", [])]
+    pending = [requirement for requirement in requirements if requirement.get("status") != "satisfied"]
+    review_declared = bool(record.get("review_declared") or requirements)
+
+    if not valid:
+        handoff_state = "blocked" if review_declared else "invalid"
+        consumable = False
+        authorized_scope: list[str] = []
+    elif pending:
+        handoff_state = "implementation_ready_for_review"
+        consumable = False
+        authorized_scope = ["review"]
+    else:
+        handoff_state = "consumable"
+        consumable = True
+        authorized_scope = ["implementation", "done", "release"]
+
+    record["handoff_state"] = handoff_state
+    record["review_ready"] = handoff_state == "implementation_ready_for_review"
+    record["consumable"] = consumable
+    record["authorized_downstream_scope"] = authorized_scope
+    record["review_task_authorizations"] = [review_task_authorization(requirement) for requirement in pending]
 
 
 def resolve_graph_requirements(fields: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
@@ -4193,7 +4311,11 @@ def resolve_graph_requirements(fields: dict[str, dict[str, Any]]) -> list[dict[s
             requirement = dict(requirement)
             review_record = fields.get(str(requirement.get("required_review_field") or ""))
             if requirement.get("status") != "satisfied" and review_record:
-                if review_record.get("valid") and str(review_record.get("result") or "").strip().upper() == "PASS":
+                if (
+                    review_record.get("valid")
+                    and str(review_record.get("result") or "").strip().upper() == "PASS"
+                    and review_record_matches_requirement(review_record, requirement)
+                ):
                     requirement["status"] = "satisfied"
                     requirement["reviewer_result"] = "PASS"
                     requirement["review_evidence_ref"] = review_record.get("evidence_ref") or "receipt:review"
@@ -4206,9 +4328,7 @@ def resolve_graph_requirements(fields: dict[str, dict[str, Any]]) -> list[dict[s
             if requirement.get("producer_field") in {item.get("producer_field") for item in graph_requirements}
         ]
         record["graph_requirements"] = resolved_for_record
-        record["consumable"] = bool(record.get("valid")) and not any(
-            requirement.get("status") != "satisfied" for requirement in resolved_for_record
-        )
+        apply_record_consumption_state(record)
     return requirements
 
 
@@ -4226,9 +4346,21 @@ def transition_consumes_graph_requirements(normalized_to: str) -> bool:
         "review",
         "review-ready",
         "ready_for_review",
+        "implementation-ready-for-review",
+        "implementation_ready_for_review",
         "done",
         "closed",
         "complete",
+    }
+
+
+def transition_is_review_ready(normalized_to: str) -> bool:
+    return normalized_to in {
+        "review",
+        "review-ready",
+        "ready_for_review",
+        "implementation-ready-for-review",
+        "implementation_ready_for_review",
     }
 
 
@@ -4245,6 +4377,7 @@ def build_graph_requirement_review_task(
     status = "blocked_missing_inputs" if missing_inputs else "requires_execution"
     queue_class = worker_queue_class(worker.worker_id, card)
     requirement_id = str(requirement.get("requirement_id") or "")
+    authorization = review_task_authorization(requirement)
 
     packet["status"] = status
     packet["trigger"] = {
@@ -4257,7 +4390,9 @@ def build_graph_requirement_review_task(
     input_contract = dict(packet.get("input_contract") or {})
     input_contract["missing_fields"] = missing_inputs
     input_contract["graph_requirement_ref"] = requirement_id
+    input_contract["review_task_authorizations"] = [authorization]
     packet["input_contract"] = input_contract
+    packet["review_task_authorizations"] = [authorization]
 
     task.update(
         {
@@ -4267,6 +4402,8 @@ def build_graph_requirement_review_task(
             "status": status,
             "packet": packet,
             "graph_requirement_refs": [requirement_id],
+            "dependency_authorization_state": "review_ready",
+            "review_task_authorizations": [authorization],
         }
     )
     return task
@@ -4285,13 +4422,23 @@ def attach_graph_requirement_tasks(
         worker_id = str(requirement.get("review_worker_id") or "independent-reviewer")
         requirement_id = str(requirement.get("requirement_id") or "")
         existing = tasks_by_worker.get(worker_id)
+        authorization = review_task_authorization(requirement)
         if existing:
             refs = list(existing.get("graph_requirement_refs") or [])
             if requirement_id and requirement_id not in refs:
                 refs.append(requirement_id)
             existing["graph_requirement_refs"] = refs
+            authorizations = list(existing.get("review_task_authorizations") or [])
+            if authorization not in authorizations:
+                authorizations.append(authorization)
+            existing["dependency_authorization_state"] = "review_ready"
+            existing["review_task_authorizations"] = authorizations
             packet = existing.get("packet") if isinstance(existing.get("packet"), dict) else {}
-            packet.setdefault("graph_requirement_refs", refs)
+            packet["graph_requirement_refs"] = refs
+            packet["review_task_authorizations"] = authorizations
+            input_contract = dict(packet.get("input_contract") or {})
+            input_contract["review_task_authorizations"] = authorizations
+            packet["input_contract"] = input_contract
             existing["packet"] = packet
             continue
         task = build_graph_requirement_review_task(requirement, card, source_path)
@@ -4358,6 +4505,11 @@ def build_worker_closure(
             "satisfied": satisfied,
             "evidence_ref": record.get("evidence_ref") if record else None,
             "result": record.get("result") if record else None,
+            "review_declared": record.get("review_declared", False) if record else False,
+            "handoff_state": record.get("handoff_state") if record else None,
+            "review_ready": record.get("review_ready", False) if record else False,
+            "authorized_downstream_scope": record.get("authorized_downstream_scope", []) if record else [],
+            "review_task_authorizations": record.get("review_task_authorizations", []) if record else [],
             "graph_requirements": record.get("graph_requirements", []) if record else [],
             "validation_errors": record.get("validation_errors", []) if record else [],
         }
@@ -4432,6 +4584,26 @@ def build_transition_plan(
     unsatisfied_graph_requirements = (
         graph_completion.get("unsatisfied_graph_requirements", []) if graph_completion else []
     )
+    review_ready_handoffs: list[dict[str, Any]] = []
+    review_task_authorizations: list[dict[str, Any]] = []
+    if graph_completion:
+        for worker_id, row in graph_completion.get("workers", {}).items():
+            if not row.get("review_ready"):
+                continue
+            row_authorizations = list(row.get("review_task_authorizations", []))
+            review_ready_handoffs.append(
+                {
+                    "worker_id": worker_id,
+                    "output_field": row.get("output_field"),
+                    "handoff_state": row.get("handoff_state"),
+                    "evidence_ref": row.get("evidence_ref"),
+                    "authorized_downstream_scope": row.get("authorized_downstream_scope", []),
+                    "review_task_authorization_refs": [
+                        authorization.get("requirement_id") for authorization in row_authorizations
+                    ],
+                }
+            )
+            review_task_authorizations.extend(row_authorizations)
     if graph_requirements:
         attach_graph_requirement_tasks(worker_tasks, graph_requirements, card, source_path)
 
@@ -4440,6 +4612,22 @@ def build_transition_plan(
             reason = graph_requirement_block_reason(requirement)
             if reason not in blocked_reasons:
                 blocked_reasons.append(reason)
+
+    def worker_result_satisfied(worker_id: str) -> bool:
+        if not graph_completion:
+            return False
+        row = graph_completion.get("workers", {}).get(worker_id, {})
+        return bool(row.get("satisfied") or row.get("review_ready"))
+
+    def append_invalid_review_handoff_blocks() -> None:
+        if not graph_completion:
+            return
+        for row in graph_completion.get("workers", {}).values():
+            if row.get("review_declared") and not row.get("valid"):
+                field = str(row.get("output_field") or "worker result")
+                reason = f"{field} cannot authorize review because result is invalid"
+                if reason not in blocked_reasons:
+                    blocked_reasons.append(reason)
 
     if normalized_to in {"ready", "in_progress", "doing"}:
         blocked_reasons.extend(gate["card_validation_errors"])
@@ -4452,14 +4640,15 @@ def build_transition_plan(
             if task["queue_class"] == "blocking-before-ready"
         ]
         for worker_id in before_ready:
-            blocked_reasons.append(f"{worker_id} result is required before ready")
+            if not worker_result_satisfied(worker_id):
+                blocked_reasons.append(f"{worker_id} result is required before ready")
         append_unsatisfied_graph_requirement_blocks()
         if blocked_reasons and before_ready:
             transition_action = "block_and_create_before_ready_tasks"
         else:
             transition_action = "block_transition" if blocked_reasons else "allow_and_create_worker_tasks"
         completion = None
-    elif normalized_to in {"review", "review-ready", "ready_for_review"}:
+    elif transition_is_review_ready(normalized_to):
         blocked_reasons.extend(gate["card_validation_errors"])
         for worker_id in gate["blocked_workers"]:
             queue_class = worker_queue_class(worker_id, card)
@@ -4470,8 +4659,9 @@ def build_transition_plan(
             if task["queue_class"] == "blocking-before-ready"
         ]
         for worker_id in before_ready:
-            blocked_reasons.append(f"{worker_id} result is required before review-ready")
-        append_unsatisfied_graph_requirement_blocks()
+            if not worker_result_satisfied(worker_id):
+                blocked_reasons.append(f"{worker_id} result is required before review-ready")
+        append_invalid_review_handoff_blocks()
         transition_action = "block_transition" if blocked_reasons else "allow_review_ready"
         completion = graph_completion
     elif normalized_to in {"done", "closed", "complete"}:
@@ -4531,6 +4721,8 @@ def build_transition_plan(
         "gate_report": gate,
         "worker_tasks": worker_tasks,
         "graph_requirements": graph_requirements,
+        "review_ready_handoffs": review_ready_handoffs,
+        "review_task_authorizations": review_task_authorizations,
         "completion_reconciliation": completion,
     }
 
@@ -4560,6 +4752,9 @@ def build_worker_result(
     next_action: str,
     evidence_kind: str = "real",
     reusable_for_product: bool = True,
+    reviewer_required: bool = False,
+    review_worker_id: str | None = None,
+    reviewer_result: str | None = None,
 ) -> dict[str, Any]:
     if worker_id == "human-gate-clerk":
         raise ValueError("use human-gate-record for human decisions")
@@ -4571,6 +4766,8 @@ def build_worker_result(
     worker = WORKERS[worker_id]
     artifact_contract = artifact_contract_for_refs(evidence_refs)
     positive_authority = result in PROMOTION_PASS_RESULTS and blocking_findings is False
+    review_worker = review_worker_id if review_worker_id in WORKERS else "independent-reviewer"
+    allowed_transition_scopes = ["review"] if reviewer_required and positive_authority else ["done"] if positive_authority else []
     payload = {
         "$schema": worker_result_schema_url(worker_id),
         "record_type": worker.output_field,
@@ -4594,11 +4791,40 @@ def build_worker_result(
         "next_action": next_action,
         "promotion_authority": {
             "result": "PASS" if positive_authority else "BLOCK",
-            "predicate": "worker result is PASS/WAIVED, valid, scoped to the current card, and has blocking_findings=false",
-            "allowed_transition_scopes": ["done"] if positive_authority else [],
+            "predicate": (
+                "worker result is valid and authorizes only the required review child"
+                if reviewer_required and positive_authority
+                else "worker result is PASS/WAIVED, valid, scoped to the current card, and has blocking_findings=false"
+            ),
+            "allowed_transition_scopes": allowed_transition_scopes,
             "active": True,
         },
     }
+    if reviewer_required:
+        payload.update(
+            {
+                "reviewer_required": True,
+                "review_worker_id": review_worker,
+                "reviewer_result": reviewer_result or "PENDING",
+                "handoff_state": "implementation_ready_for_review" if positive_authority else "blocked",
+                "review_declared": True,
+                "review_ready": positive_authority,
+                "authorized_downstream_scope": ["review"] if positive_authority else [],
+                "review_required_handoff": {
+                    "review_required": True,
+                    "review_worker_id": review_worker,
+                    "required_review_field": WORKERS[review_worker].output_field,
+                    "authorized_scope": ["review"],
+                    "forbidden_scope_until_review_pass": [
+                        "release",
+                        "deployment",
+                        "github_mutation",
+                        "issue_completion",
+                        "product_acceptance",
+                    ],
+                },
+            }
+        )
     if result == "BLOCKED":
         payload["recovery_recommendation"] = recovery_recommendation_for_worker(
             worker_id=worker_id,
@@ -5287,6 +5513,12 @@ def build_evidence_graph(
 ) -> dict[str, Any]:
     effective_gate = gate_report or build_gate_report(card)
     worker_results = collect_worker_result_records(worker_results_dir)
+    worker_closure = build_worker_closure(card, {}, worker_results_dir) if worker_results_dir else None
+    closure_by_field = {
+        str(row.get("output_field") or ""): row
+        for row in (worker_closure or {}).get("workers", {}).values()
+        if isinstance(row, dict)
+    }
     receipt = load_optional_json(receipt_path)
     hermes_package = load_optional_json(hermes_evidence_path)
     nodes: dict[str, dict[str, Any]] = {}
@@ -5382,6 +5614,8 @@ def build_evidence_graph(
             safe_validation_errors = [redact_private_text(error) for error in validation_errors]
             result_status = str(result.get("result") or result.get("decision") or "UNKNOWN")
             stale = bool(result.get("superseded_by") or result.get("active") is False)
+            closure_row = closure_by_field.get(worker.output_field, {})
+            review_ready = bool(closure_row.get("review_ready"))
             graph_add_node(
                 nodes,
                 {
@@ -5390,11 +5624,26 @@ def build_evidence_graph(
                     "ref": str(result.get("_public_ref") or f"external:{worker.output_field}"),
                     "status": "BLOCKED" if validation_errors or stale or result_status not in PROMOTION_PASS_RESULTS else "PASS",
                     "worker_id": worker_id,
+                    "handoff_state": closure_row.get("handoff_state"),
+                    "review_ready": review_ready,
+                    "authorized_downstream_scope": closure_row.get("authorized_downstream_scope", []),
+                    "graph_requirements": closure_row.get("graph_requirements", []),
                     "evidence_level": "worker_result",
                     "staleness": "stale" if stale else "current",
                     "validation_errors": safe_validation_errors,
                 },
             )
+            if review_ready:
+                findings.append(
+                    {
+                        "severity": "BLOCKED",
+                        "node_id": result_id,
+                        "message": (
+                            f"{worker.output_field} is implementation_ready_for_review; "
+                            "only the matching review task may consume it until review PASS"
+                        ),
+                    }
+                )
             for ref_index, ref in enumerate(_list_items(result.get("evidence_refs")), start=1):
                 safe_ref, finding = sanitize_public_ref(ref)
                 artifact_id = f"artifact:{worker.output_field}:{ref_index}"
@@ -5898,6 +6147,9 @@ def command_evidence_record(args: argparse.Namespace) -> int:
             next_action=args.next_action,
             evidence_kind=args.evidence_kind,
             reusable_for_product=not args.not_reusable_for_product,
+            reviewer_required=args.reviewer_required,
+            review_worker_id=args.review_worker_id,
+            reviewer_result=args.reviewer_result,
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
@@ -6171,6 +6423,9 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_record_parser.add_argument("--next-action", default="")
     evidence_record_parser.add_argument("--evidence-kind", choices=["real", "synthetic", "waiver"], default="real")
     evidence_record_parser.add_argument("--not-reusable-for-product", action="store_true")
+    evidence_record_parser.add_argument("--reviewer-required", action="store_true")
+    evidence_record_parser.add_argument("--review-worker-id")
+    evidence_record_parser.add_argument("--reviewer-result")
     evidence_record_parser.add_argument("--out", type=Path)
     evidence_record_parser.set_defaults(func=command_evidence_record)
 

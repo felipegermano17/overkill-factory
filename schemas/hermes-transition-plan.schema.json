@@ -80,6 +80,13 @@
               "blocked_missing_inputs",
               "not_required_by_current_card"
             ]
+          },
+          "dependency_authorization_state": {
+            "enum": ["review_ready", null]
+          },
+          "review_task_authorizations": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
           }
         },
         "additionalProperties": true
@@ -106,6 +113,49 @@
           "required_result": { "const": "PASS" },
           "status": {
             "enum": ["pending", "satisfied"]
+          },
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false }
+        },
+        "additionalProperties": true
+      }
+    },
+    "review_ready_handoffs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["worker_id", "output_field", "handoff_state", "authorized_downstream_scope"],
+        "properties": {
+          "handoff_state": { "const": "implementation_ready_for_review" },
+          "authorized_downstream_scope": {
+            "type": "array",
+            "contains": { "const": "review" }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "review_task_authorizations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "authorization_type",
+          "authorization_state",
+          "requirement_id",
+          "producer_field",
+          "producer_ref",
+          "authorized_worker_id",
+          "authorized_scope",
+          "runtime_authority",
+          "local_state_authority"
+        ],
+        "properties": {
+          "authorization_type": { "const": "review_task_only" },
+          "authorization_state": { "const": "review_task_ready" },
+          "authorized_scope": {
+            "type": "array",
+            "contains": { "const": "review" }
           },
           "runtime_authority": { "const": "hermes_kanban" },
           "local_state_authority": { "const": false }

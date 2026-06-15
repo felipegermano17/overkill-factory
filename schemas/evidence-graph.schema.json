@@ -36,6 +36,25 @@
           "node_type": { "type": "string", "minLength": 3 },
           "ref": { "type": "string", "minLength": 1 },
           "status": { "enum": ["PASS", "BLOCKED", "MISSING"] },
+          "handoff_state": {
+            "enum": [
+              "consumable",
+              "implementation_ready_for_review",
+              "review_satisfied",
+              "blocked",
+              "invalid",
+              null
+            ]
+          },
+          "review_ready": { "type": "boolean" },
+          "authorized_downstream_scope": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 2 }
+          },
+          "graph_requirements": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
           "evidence_level": { "type": "string", "minLength": 3 },
           "staleness": { "type": "string" }
         },

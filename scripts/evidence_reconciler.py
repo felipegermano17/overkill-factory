@@ -47,19 +47,36 @@ def result_entry(card: dict[str, Any], path: Path, data: dict[str, Any]) -> dict
     if active is None:
         active = data.get("active", True)
     superseded_by = data.get("superseded_by") or authority.get("superseded_by")
+    evidence_ref = factoryctl.source_card_ref(path)
+    review_declared = factoryctl.worker_result_declares_review(data)
+    graph_requirements = (
+        factoryctl.declared_graph_requirements(record_type, data, evidence_ref=evidence_ref)
+        if not validation_errors
+        else []
+    )
     return {
         "record_type": record_type,
         "worker_id": worker_ref.get("id"),
         "result": data.get("result") or data.get("decision"),
         "blocking_findings": data.get("blocking_findings"),
         "created_at": data.get("created_at") or data.get("decision_at"),
-        "evidence_ref": factoryctl.source_card_ref(path),
+        "evidence_ref": evidence_ref,
         "active": bool(active) and not bool(superseded_by),
         "supersession_key": data.get("supersession_key") or record_type,
         "supersedes": data.get("supersedes") or authority.get("supersedes"),
         "superseded_by": superseded_by,
         "supersession_reason": data.get("supersession_reason") or authority.get("supersession_reason"),
         "valid_for_closure": not validation_errors,
+        "review_declared": review_declared,
+        "graph_requirements": graph_requirements,
+        "graph_requirement_refs": factoryctl.string_list(data.get("graph_requirement_refs")),
+        "review_requirement_refs": factoryctl.string_list(data.get("review_requirement_refs")),
+        "reviewed_requirement_refs": factoryctl.string_list(data.get("reviewed_requirement_refs")),
+        "reviewed_producer_refs": factoryctl.string_list(data.get("reviewed_producer_refs")),
+        "producer_refs_reviewed": factoryctl.string_list(data.get("producer_refs_reviewed")),
+        "review_task_authorizations": [
+            item for item in data.get("review_task_authorizations", []) if isinstance(item, dict)
+        ],
         "validation_errors": validation_errors,
     }
 
@@ -156,12 +173,43 @@ def reconcile(
         field for field in required_fields if field not in effective_results
     ]
     blocking_current_results: list[dict[str, Any]] = []
+    closure_fields = {
+        field: {
+            "valid": bool(entry.get("valid_for_closure")),
+            "result": entry.get("result"),
+            "evidence_ref": entry.get("evidence_ref"),
+            "review_declared": entry.get("review_declared", False),
+            "graph_requirements": entry.get("graph_requirements", []),
+            "graph_requirement_refs": entry.get("graph_requirement_refs", []),
+            "review_requirement_refs": entry.get("review_requirement_refs", []),
+            "reviewed_requirement_refs": entry.get("reviewed_requirement_refs", []),
+            "reviewed_producer_refs": entry.get("reviewed_producer_refs", []),
+            "producer_refs_reviewed": entry.get("producer_refs_reviewed", []),
+            "review_task_authorizations": entry.get("review_task_authorizations", []),
+        }
+        for field, entry in effective_results.items()
+    }
+    factoryctl.resolve_graph_requirements(closure_fields)
     for field in required_fields:
         current = effective_results.get(field)
         if not current:
             continue
         if not current.get("valid_for_closure"):
             blocking_current_results.append(current)
+            continue
+        closure_record = closure_fields.get(field, {})
+        if closure_record.get("review_ready"):
+            blocking_current_results.append(
+                {
+                    **current,
+                    "valid_for_closure": False,
+                    "handoff_state": closure_record.get("handoff_state"),
+                    "review_ready": True,
+                    "validation_errors": [
+                        "review-required handoff is valid for review task execution but not Receipt Five closure"
+                    ],
+                }
+            )
 
     receipt_five_ready = not missing_required_fields and not blocking_current_results
     return {

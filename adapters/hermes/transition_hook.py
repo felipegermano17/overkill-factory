@@ -74,6 +74,7 @@ def load_ledger(path: Path) -> dict[str, Any]:
             "local_state_authority": False,
             "tasks": {},
             "graph_requirements": {},
+            "review_task_authorizations": {},
         }
     data = load_json(path)
     data.setdefault("$schema", "https://overkill-factory.dev/schemas/hermes-worker-ledger.schema.json")
@@ -85,6 +86,8 @@ def load_ledger(path: Path) -> dict[str, Any]:
         data["tasks"] = {}
     if not isinstance(data.get("graph_requirements"), dict):
         data["graph_requirements"] = {}
+    if not isinstance(data.get("review_task_authorizations"), dict):
+        data["review_task_authorizations"] = {}
     return data
 
 
@@ -92,12 +95,16 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
     ledger = load_ledger(ledger_path)
     tasks: dict[str, Any] = ledger["tasks"]
     graph_requirements: dict[str, Any] = ledger["graph_requirements"]
+    review_task_authorizations: dict[str, Any] = ledger["review_task_authorizations"]
     created: list[str] = []
     unchanged: list[str] = []
     updated: list[str] = []
     graph_created: list[str] = []
     graph_unchanged: list[str] = []
     graph_updated: list[str] = []
+    review_auth_created: list[str] = []
+    review_auth_unchanged: list[str] = []
+    review_auth_updated: list[str] = []
     card_id = str(plan.get("event", {}).get("card_id") or "factory-card")
 
     for task in plan.get("worker_tasks", []):
@@ -123,6 +130,8 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
             "status": task.get("status"),
             "packet": task.get("packet"),
             "graph_requirement_refs": task.get("graph_requirement_refs", []),
+            "dependency_authorization_state": task.get("dependency_authorization_state"),
+            "review_task_authorizations": task.get("review_task_authorizations", []),
         }
         previous = tasks.get(ident)
         if previous is None:
@@ -159,6 +168,30 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
             graph_requirements[ident] = payload
             graph_updated.append(ident)
 
+    for authorization in plan.get("review_task_authorizations", []):
+        requirement_id = str(authorization.get("requirement_id") or "").strip()
+        worker_id = str(authorization.get("authorized_worker_id") or "").strip()
+        ident = f"{requirement_id}:{worker_id}" if requirement_id and worker_id else requirement_id or worker_id
+        if not ident:
+            continue
+        payload = {
+            **authorization,
+            "authorization_id": ident,
+            "local_record_role": "idempotency_projection",
+            "card_id": card_id,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+        }
+        previous = review_task_authorizations.get(ident)
+        if previous is None:
+            review_task_authorizations[ident] = payload
+            review_auth_created.append(ident)
+        elif previous == payload:
+            review_auth_unchanged.append(ident)
+        else:
+            review_task_authorizations[ident] = payload
+            review_auth_updated.append(ident)
+
     ledger["last_transition"] = plan.get("event", {})
     ledger["last_action"] = plan.get("transition_action")
     write_json(ledger_path, ledger)
@@ -172,6 +205,10 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
         "graph_updated": graph_updated,
         "graph_unchanged": graph_unchanged,
         "graph_requirement_count": len(graph_requirements),
+        "review_auth_created": review_auth_created,
+        "review_auth_updated": review_auth_updated,
+        "review_auth_unchanged": review_auth_unchanged,
+        "review_task_authorization_count": len(review_task_authorizations),
     }
 
 
@@ -202,6 +239,7 @@ def build_hook_result(
         "transition_action": plan["transition_action"],
         "blocked_reasons": plan["blocked_reasons"],
         "completion_reconciliation": plan.get("completion_reconciliation"),
+        "review_task_authorizations": plan.get("review_task_authorizations", []),
         "plan": plan,
         "ledger": ledger_result,
     }

@@ -24,7 +24,15 @@ def load_card(name: str) -> dict:
     return factoryctl.load_json_like(ROOT / "examples" / "cards" / name)
 
 
-def worker_result(record_type: str, *, result: str = "PASS", source_card: dict | None = None) -> dict:
+def worker_result(
+    record_type: str,
+    *,
+    result: str = "PASS",
+    source_card: dict | None = None,
+    reviewer_required: bool = False,
+    reviewer_result: str = "PENDING",
+    review_worker_id: str = "independent-reviewer",
+) -> dict:
     worker_id = {
         "security_scan_result": "codex-security",
         "auditor_result": "solana-quasar-auditor",
@@ -47,6 +55,7 @@ def worker_result(record_type: str, *, result: str = "PASS", source_card: dict |
     phase = str((source_card or {}).get("phase") or "F13")
     risk_effective = str((source_card or {}).get("risk_effective") or "R3")
     surfaces = (source_card or {}).get("surfaces") or ["solana-quasar"]
+    positive_authority = result in {"PASS", "WAIVED"}
     payload = {
         "$schema": factoryctl.worker_result_schema_url(worker_id) if worker_id in factoryctl.WORKERS else "https://overkill-factory.dev/schemas/worker-result.schema.json",
         "record_type": record_type,
@@ -73,10 +82,39 @@ def worker_result(record_type: str, *, result: str = "PASS", source_card: dict |
         "promotion_authority": {
             "result": "PASS" if result in {"PASS", "WAIVED"} else "BLOCK",
             "predicate": "synthetic fixture authority",
-            "allowed_transition_scopes": ["done"] if result in {"PASS", "WAIVED"} else [],
+            "allowed_transition_scopes": ["review"] if reviewer_required and positive_authority else ["done"] if positive_authority else [],
             "active": True,
         },
     }
+    if reviewer_required:
+        review_field = factoryctl.WORKERS.get(
+            review_worker_id,
+            factoryctl.WORKERS["independent-reviewer"],
+        ).output_field
+        payload.update(
+            {
+                "reviewer_required": True,
+                "review_worker_id": review_worker_id,
+                "reviewer_result": reviewer_result,
+                "handoff_state": "implementation_ready_for_review" if positive_authority else "blocked",
+                "review_declared": True,
+                "review_ready": positive_authority,
+                "authorized_downstream_scope": ["review"] if positive_authority else [],
+                "review_required_handoff": {
+                    "review_required": True,
+                    "review_worker_id": review_worker_id,
+                    "required_review_field": review_field,
+                    "authorized_scope": ["review"],
+                    "forbidden_scope_until_review_pass": [
+                        "release",
+                        "deployment",
+                        "github_mutation",
+                        "issue_completion",
+                        "product_acceptance",
+                    ],
+                },
+            }
+        )
     if record_type == "security_scan_result":
         payload["scanner_agent"] = "codex-security-runner"
         payload["tool"] = "codex-security:security-scan"
@@ -1173,9 +1211,7 @@ class FactoryCtlTest(unittest.TestCase):
     def test_worker_closure_marks_review_required_handoff_valid_but_not_consumable(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
-        handoff = worker_result("handoff_packet_result", source_card=card)
-        handoff["reviewer_required"] = True
-        handoff["reviewer_result"] = "PENDING"
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
 
         closure = factoryctl.build_worker_closure(card, {"handoff_packet_result": handoff}, None)
 
@@ -1191,9 +1227,7 @@ class FactoryCtlTest(unittest.TestCase):
         card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
         card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
-        handoff = worker_result("handoff_packet_result", source_card=card)
-        handoff["reviewer_required"] = True
-        handoff["reviewer_result"] = "PENDING"
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
 
         plan = factoryctl.build_transition_plan(
             card,
@@ -1212,12 +1246,110 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertTrue(review_tasks)
         self.assertIn(plan["graph_requirements"][0]["requirement_id"], review_tasks[0]["graph_requirement_refs"])
 
+    def test_transition_plan_allows_review_ready_for_valid_review_required_handoff(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = factoryctl.load_json_like(card_path)
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+        receipt = {
+            "handoff_packet_result": handoff,
+            "orchestration_result": worker_result("orchestration_result", source_card=card),
+            "source_ledger_result": worker_result("source_ledger_result", source_card=card),
+            "security_orchestration_result": worker_result("security_orchestration_result", source_card=card),
+            "supply_chain_result": worker_result("supply_chain_result", source_card=card),
+        }
+
+        plan = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="doing",
+            to_status="implementation-ready-for-review",
+            receipt=receipt,
+        )
+
+        self.assertEqual(plan["transition_action"], "allow_review_ready")
+        self.assertEqual(plan["blocked_reasons"], [])
+        self.assertEqual(plan["review_ready_handoffs"][0]["handoff_state"], "implementation_ready_for_review")
+        self.assertEqual(plan["review_ready_handoffs"][0]["authorized_downstream_scope"], ["review"])
+        self.assertEqual(plan["review_task_authorizations"][0]["authorization_state"], "review_task_ready")
+        review_tasks = [task for task in plan["worker_tasks"] if task["worker_id"] == "independent-reviewer"]
+        self.assertEqual(review_tasks[0]["dependency_authorization_state"], "review_ready")
+        self.assertEqual(review_tasks[0]["review_task_authorizations"][0]["authorized_scope"], ["review"])
+
+    def test_transition_plan_keeps_unsafe_review_handoff_blocked(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = factoryctl.load_json_like(card_path)
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card,
+            result="BLOCKED",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=True,
+            findings_summary="Handoff is missing required artifacts.",
+            next_action="independent review required after repair",
+            evidence_kind="synthetic",
+            reusable_for_product=False,
+            reviewer_required=True,
+        )
+        receipt = {
+            "handoff_packet_result": handoff,
+            "orchestration_result": worker_result("orchestration_result", source_card=card),
+            "source_ledger_result": worker_result("source_ledger_result", source_card=card),
+            "security_orchestration_result": worker_result("security_orchestration_result", source_card=card),
+            "supply_chain_result": worker_result("supply_chain_result", source_card=card),
+        }
+
+        plan = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="doing",
+            to_status="implementation-ready-for-review",
+            receipt=receipt,
+        )
+
+        self.assertEqual(plan["transition_action"], "block_transition")
+        self.assertIn(
+            "handoff_packet_result cannot authorize review because result is invalid",
+            plan["blocked_reasons"],
+        )
+        self.assertEqual(plan["review_ready_handoffs"], [])
+        self.assertEqual(plan["review_task_authorizations"], [])
+
     def test_worker_closure_satisfies_handoff_review_from_independent_review_result(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
-        handoff = worker_result("handoff_packet_result", source_card=card)
-        handoff["reviewer_required"] = True
-        handoff["reviewer_result"] = "PENDING"
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+        requirement_id = factoryctl.declared_graph_requirements(
+            "handoff_packet_result",
+            handoff,
+            evidence_ref="receipt:handoff_packet_result",
+        )[0]["requirement_id"]
+        review = worker_result("independent_review_result", source_card=card)
+        review["graph_requirement_refs"] = [requirement_id]
+
+        closure = factoryctl.build_worker_closure(
+            card,
+            {
+                "handoff_packet_result": handoff,
+                "independent_review_result": review,
+            },
+            None,
+        )
+
+        handoff_row = closure["workers"]["handoff-packer"]
+        self.assertTrue(handoff_row["valid"])
+        self.assertTrue(handoff_row["consumable"])
+        self.assertTrue(handoff_row["satisfied"])
+        self.assertEqual(closure["unsatisfied_graph_requirements"], [])
+        self.assertEqual(closure["graph_requirements"][0]["status"], "satisfied")
+
+    def test_worker_closure_does_not_satisfy_handoff_review_with_generic_review_result(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
 
         closure = factoryctl.build_worker_closure(
             card,
@@ -1229,11 +1361,9 @@ class FactoryCtlTest(unittest.TestCase):
         )
 
         handoff_row = closure["workers"]["handoff-packer"]
-        self.assertTrue(handoff_row["valid"])
-        self.assertTrue(handoff_row["consumable"])
-        self.assertTrue(handoff_row["satisfied"])
-        self.assertEqual(closure["unsatisfied_graph_requirements"], [])
-        self.assertEqual(closure["graph_requirements"][0]["status"], "satisfied")
+        self.assertFalse(handoff_row["consumable"])
+        self.assertEqual(closure["graph_requirements"][0]["status"], "pending")
+        self.assertEqual(closure["unsatisfied_graph_requirements"][0]["producer_field"], "handoff_packet_result")
 
     def test_transition_plan_done_blocks_missing_required_worker_results(self) -> None:
         card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"

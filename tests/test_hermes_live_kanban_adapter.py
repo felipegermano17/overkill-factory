@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ADAPTER_DIR = ROOT / "adapters" / "hermes"
 MODULE_PATH = ADAPTER_DIR / "live_kanban_adapter.py"
+FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
 TEST_BOARD = "overkill-" + "factory-live-smoke"
 MAIN_TASK_ID = "t_" + "00000001"
 sys.path.insert(0, str(ADAPTER_DIR))
@@ -21,6 +22,12 @@ adapter = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 sys.modules["live_kanban_adapter"] = adapter
 SPEC.loader.exec_module(adapter)
+FACTORYCTL_SPEC = importlib.util.spec_from_file_location("factoryctl_live_test", FACTORYCTL_PATH)
+assert FACTORYCTL_SPEC is not None
+factoryctl = importlib.util.module_from_spec(FACTORYCTL_SPEC)
+assert FACTORYCTL_SPEC.loader is not None
+sys.modules["factoryctl_live_test"] = factoryctl
+FACTORYCTL_SPEC.loader.exec_module(factoryctl)
 
 
 class FakeHermes:
@@ -40,6 +47,8 @@ class FakeHermes:
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
         if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"blocked"}', stderr="")
+        if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "unblock":
+            return subprocess.CompletedProcess(argv, 0, stdout='{"status":"ready"}', stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
             return subprocess.CompletedProcess(
                 argv,
@@ -144,6 +153,107 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         for call in link_calls:
             self.assertEqual(call[-1], MAIN_TASK_ID)
             self.assertNotEqual(call[-2], MAIN_TASK_ID)
+
+    def test_materialize_promotes_only_authorized_review_child(self) -> None:
+        fake = FakeHermes()
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card_data = factoryctl.load_json_like(card)
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card_data,
+            result="PASS",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Handoff packet declares an independent review gate.",
+            next_action="continue after review",
+            reviewer_required=True,
+            reviewer_result="PENDING",
+        )
+        receipt_payload = {
+            "handoff_packet_result": handoff,
+            "orchestration_result": factoryctl.build_worker_result(
+                "factory-orchestrator",
+                card_data,
+                result="PASS",
+                tool_or_profile="orchestration-smoke",
+                executed_by="factory-orchestrator",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Orchestration precondition passed.",
+                next_action="continue",
+            ),
+            "source_ledger_result": factoryctl.build_worker_result(
+                "source-ledger-worker",
+                card_data,
+                result="PASS",
+                tool_or_profile="source-ledger-smoke",
+                executed_by="source-ledger-worker",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Source ledger precondition passed.",
+                next_action="continue",
+            ),
+            "security_orchestration_result": factoryctl.build_worker_result(
+                "security-orchestrator",
+                card_data,
+                result="PASS",
+                tool_or_profile="security-orchestration-smoke",
+                executed_by="security-orchestrator",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Security orchestration precondition passed.",
+                next_action="continue",
+            ),
+            "supply_chain_result": factoryctl.build_worker_result(
+                "supply-chain-gate",
+                card_data,
+                result="PASS",
+                tool_or_profile="supply-chain-smoke",
+                executed_by="supply-chain-gate",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Supply chain precondition passed.",
+                next_action="continue",
+            ),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            readiness = tmp_path / "route-readiness.json"
+            receipt = tmp_path / "receipt.json"
+            ledger = tmp_path / "ledger.json"
+            write_route_readiness(readiness)
+            receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--ledger",
+                    str(ledger),
+                    "--receipt",
+                    str(receipt),
+                    "--from-status",
+                    "doing",
+                    "--to-status",
+                    "implementation-ready-for-review",
+                    "--route-readiness",
+                    str(readiness),
+                ]
+            )
+            result = adapter.materialize(args, runner=fake)
+
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(len(unblock_calls), 1)
+        self.assertEqual(unblock_calls[0][5], result["worker_task_ids"]["independent-reviewer"])
+        self.assertEqual(
+            result["review_promoted_worker_task_ids"],
+            {"independent-reviewer": result["worker_task_ids"]["independent-reviewer"]},
+        )
+        self.assertNotIn("handoff-packer", result["review_promoted_worker_task_ids"])
 
     def test_materialize_dry_run_does_not_call_hermes_create(self) -> None:
         fake = FakeHermes()

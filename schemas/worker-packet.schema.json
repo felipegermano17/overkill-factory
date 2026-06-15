@@ -287,6 +287,37 @@
         "blocked_missing_profile_binding",
         "not_required_by_current_card"
       ]
+    },
+    "graph_requirement_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "review_task_authorizations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "authorization_type",
+          "authorization_state",
+          "requirement_id",
+          "producer_field",
+          "authorized_worker_id",
+          "authorized_scope",
+          "runtime_authority",
+          "local_state_authority"
+        ],
+        "properties": {
+          "authorization_type": { "const": "review_task_only" },
+          "authorization_state": { "const": "review_task_ready" },
+          "authorized_scope": {
+            "type": "array",
+            "contains": { "const": "review" }
+          },
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false }
+        },
+        "additionalProperties": true
+      }
     }
   },
   "additionalProperties": true
