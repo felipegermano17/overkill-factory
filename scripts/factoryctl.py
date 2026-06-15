@@ -414,6 +414,19 @@ REFERENCE_QUALITY_SYNTHESIS_DIMENSIONS = (
     "content_density",
     "failure_modes",
 )
+DATA_METRICS_REQUIRED_FIELDS = (
+    "success_metrics",
+    "events",
+    "owners",
+    "privacy_limits",
+    "risk_metrics",
+    "logs",
+    "alerts",
+    "personal_data",
+    "visibility",
+    "instrumentation_proof",
+)
+DATA_METRICS_RUNTIME_REQUIRED_FIELDS = DATA_METRICS_REQUIRED_FIELDS + ("dashboards", "evidence_refs")
 PROFESSIONAL_DESIGN_PROCESS_REQUIRED_FIELDS = (
     "record_type",
     "surface_type",
@@ -2724,6 +2737,49 @@ def validate_reference_quality_packet(packet: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_data_metrics_plan(plan: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for field in DATA_METRICS_RUNTIME_REQUIRED_FIELDS:
+        if not _list_items(plan.get(field)):
+            errors.append(f"data_metrics_plan.{field} must be a non-empty array")
+
+    for idx, event in enumerate(_list_items(plan.get("events"))):
+        if " " in event.strip():
+            errors.append(f"data_metrics_plan.events[{idx}] must be a stable event id, not prose")
+
+    proof_text = " ".join(_list_items(plan.get("instrumentation_proof")) + _list_items(plan.get("evidence_refs"))).lower()
+    if not any(term in proof_text for term in ("test", "dashboard", "log", "report", "trace", "artifact", "receipt")):
+        errors.append("data_metrics_plan.instrumentation_proof must name test, dashboard, log, report, trace, artifact or receipt evidence")
+    return errors
+
+
+def validate_user_docs_onboarding_plan(plan: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    audience = plan.get("audience")
+    if isinstance(audience, list):
+        if not _list_items(audience):
+            errors.append("user_docs_onboarding_plan.audience must be a non-empty string or array")
+    elif not _non_empty_text(audience):
+        errors.append("user_docs_onboarding_plan.audience is required")
+
+    for field in ("first_success_path",):
+        if not _non_empty_text(plan.get(field)):
+            errors.append(f"user_docs_onboarding_plan.{field} is required")
+
+    for field in ("tasks_covered", "proof_required", "evidence_refs"):
+        if not _list_items(plan.get(field)):
+            errors.append(f"user_docs_onboarding_plan.{field} must be a non-empty array")
+
+    proof_text = " ".join(_list_items(plan.get("proof_required")) + _list_items(plan.get("evidence_refs"))).lower()
+    if not any(term in proof_text for term in ("first", "reader", "link", "test", "smoke", "review", "artifact")):
+        errors.append("user_docs_onboarding_plan.proof_required must name reader, first-success, link, test, smoke, review or artifact evidence")
+    return errors
+
+
+def _strict_plan_gate_enabled(plan: dict[str, Any]) -> bool:
+    return str(plan.get("gate_enforcement") or "").strip().lower() in {"strict", "production"}
+
+
 def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     for field in PROFESSIONAL_DESIGN_PROCESS_REQUIRED_FIELDS:
@@ -2985,6 +3041,10 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_product_creation_readiness_contract(data))
     errors.extend(validate_production_promotion_ladder_contract(data))
     errors.extend(validate_user_facing_autonomy_contract(data))
+    if isinstance(data.get("data_metrics_plan"), dict) and _strict_plan_gate_enabled(data["data_metrics_plan"]):
+        errors.extend(validate_data_metrics_plan(data["data_metrics_plan"]))
+    if isinstance(data.get("user_docs_onboarding_plan"), dict) and _strict_plan_gate_enabled(data["user_docs_onboarding_plan"]):
+        errors.extend(validate_user_docs_onboarding_plan(data["user_docs_onboarding_plan"]))
     return errors
 
 

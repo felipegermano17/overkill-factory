@@ -909,14 +909,19 @@
   },
   "data_metrics_plan": {
     "$schema": "https://overkill-factory.dev/schemas/data-metrics-plan.schema.json",
+    "gate_enforcement": "strict",
     "success_metrics": ["observable success signal"],
     "risk_metrics": ["observable risk signal"],
     "events": ["factory.card.transition"],
+    "owners": ["product-owner"],
+    "privacy_limits": ["no private source material or sensitive payloads in public metrics"],
     "dashboards": ["Project Projection"],
     "logs": ["runtime gate output"],
     "alerts": ["blocked material transition"],
-    "privacy_notes": ["no private source material in public receipts"],
-    "instrumentation_proof": ["gate report artifact"]
+    "personal_data": ["none in the public template, or explicitly named data classes with limits"],
+    "visibility": ["operator and authorized reviewers only before public release"],
+    "instrumentation_proof": ["gate report artifact", "dashboard/report test"],
+    "evidence_refs": ["templates/vfinal-factory-card.json#data_metrics_plan"]
   },
   "agent_eval_plan": {
     "$schema": "https://overkill-factory.dev/schemas/agent-eval-plan.schema.json",
@@ -1058,10 +1063,12 @@
   },
   "user_docs_onboarding_plan": {
     "$schema": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
-    "audience": ["operator", "external contributor"],
-    "docs_required": ["quickstart", "validation and release", "troubleshooting"],
-    "acceptance": ["another agent can continue from docs"],
-    "public_safety": ["no private paths or raw private source"]
+    "gate_enforcement": "strict",
+    "audience": "operator and external contributor",
+    "first_success_path": "new operator reaches the first validated local factory check without private context",
+    "tasks_covered": ["setup", "first validation command", "troubleshooting blocked evidence"],
+    "proof_required": ["fresh-reader review", "broken-link check", "first-success smoke artifact"],
+    "evidence_refs": ["templates/vfinal-factory-card.json#user_docs_onboarding_plan"]
   },
   "project_projection": {
     "$schema": "https://overkill-factory.dev/schemas/project-projection.schema.json",
