@@ -226,6 +226,87 @@ def reference_quality_comparison_fixture() -> dict:
     }
 
 
+def product_delivery_quality_profile_fixture() -> dict:
+    return {
+        "record_type": "product_delivery_quality_profile",
+        "profile_id": "game-product-v1",
+        "archetype": "game product",
+        "applies_to_surfaces": ["game", "3d", "gameplay"],
+        "quality_dimensions": [
+            {
+                "dimension_id": "playable-loop",
+                "bar": "The game has a playable loop with input, feedback and completion feedback.",
+                "block_when": ["Only static screenshots exist."]
+            }
+        ],
+        "required_proofs": [
+            {
+                "proof_id": "game.playable-smoke",
+                "name": "Playable smoke",
+                "required_at": ["before_completion"],
+                "owner_worker": "game-runtime-builder",
+                "reviewer_role": "game-qa-specialist",
+                "evidence_kind": "runtime",
+                "human_gate_required": False,
+            }
+        ],
+        "waiver_policy": {
+            "allowed": True,
+            "requires_owner": True,
+            "requires_reason": True,
+            "cannot_claim_full_acceptance": True,
+        },
+        "evidence_refs": ["agents/capability-packs.public.json#game-product-pack"],
+    }
+
+
+def product_face_result_fixture(**overrides: object) -> dict:
+    result = {
+        "result": "PASS",
+        "tool_or_profile": "browser-proof-runner",
+        "executed_by": "product-face-validator",
+        "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
+        "viewports": ["desktop 1440x900", "mobile 390x844"],
+        "checked_states": ["empty", "loading", "pending", "success", "error"],
+        "user_journeys_checked": ["dashboard to detail", "settings save"],
+        "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
+        "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
+        "console": {"status": "pass"},
+        "performance_note": "static validation scenario only",
+        "packet_ref": "examples/cards/v35_valid_product_face.md#product_face_packet",
+        "packet_comparison": {
+            "status": "pass",
+            "basis": "All planned screens, states and viewports are covered."
+        },
+        "source_promise_coverage": {
+            "status": "pass",
+            "basis": "The result covers the visible validation promise in the card."
+        },
+        "design_fit_review": {
+            "status": "pass",
+            "basis": "The result matches the Product Face packet."
+        },
+        "professional_design_process_ref": "examples/cards/v35_valid_product_face.md#professional_design_process",
+        "professional_design_process_comparison": {
+            "status": "pass",
+            "basis": "The result satisfies the professional design process gates."
+        },
+        "reference_quality_comparison": reference_quality_comparison_fixture(),
+        "visual_quality_result": {
+            "status": "PASS",
+            "reviewer": "product-face-reviewer",
+            "basis": "The surface meets the Product Face packet quality bar.",
+            "reference_quality_bar_checked": True,
+            "ai_generic_symptoms": [],
+        },
+        "blocking_findings": False,
+        "evidence_refs": ["reports/product-face.md"],
+        "next_action": "independent review",
+    }
+    result.update(overrides)
+    return result
+
+
 PRIVATE_NAME = "KA" + "XIS"
 PRIVATE_ENV = "V" + "M"
 PRIVATE_USERS_PATH = "C:" + "\\\\" + "Users"
@@ -552,6 +633,57 @@ class FactoryCtlTest(unittest.TestCase):
         }
 
         self.assertEqual(factoryctl.validate_completion(card, receipt), [])
+
+    def test_product_face_completion_requires_domain_proof_coverage_when_profile_declares_it(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile"] = product_delivery_quality_profile_fixture()
+
+        errors = factoryctl.validate_product_face_result_against_card(product_face_result_fixture(), card)
+
+        self.assertIn(
+            "product_face_result.domain_proof_coverage missing product delivery proof coverage for required proof ids: game.playable-smoke",
+            errors,
+        )
+
+    def test_product_face_completion_accepts_required_domain_proof_coverage(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile"] = product_delivery_quality_profile_fixture()
+        result = product_face_result_fixture(
+            domain_proof_coverage=[
+                {
+                    "proof_id": "game.playable-smoke",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/game/playable-smoke.md"],
+                    "reviewer": "game-qa-specialist",
+                    "basis": "Playable smoke covered input, feedback and completion feedback.",
+                }
+            ]
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
+    def test_product_face_completion_rejects_waived_domain_proof_as_full_acceptance(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile"] = product_delivery_quality_profile_fixture()
+        result = product_face_result_fixture(
+            domain_proof_coverage=[
+                {
+                    "proof_id": "game.playable-smoke",
+                    "status": "WAIVED",
+                    "evidence_refs": ["reports/game/waiver.md"],
+                    "basis": "Playable smoke is unavailable in this bounded proof.",
+                    "waiver_owner": "product-owner",
+                    "waiver_reason": "Runtime not activated yet.",
+                }
+            ]
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.domain_proof_coverage[0] WAIVED proof cannot support full product acceptance",
+            errors,
+        )
 
     def test_validate_completion_requires_done_promotion_gate(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")

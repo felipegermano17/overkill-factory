@@ -67,6 +67,7 @@
       "required_before_execution": true,
       "activation_rule": "Available by default for ordinary web/product software when no specialized template-only surface is present.",
       "evidence_required": ["factoryctl gate report", "worker packets", "Receipt Five"],
+      "structured_proofs_required": ["generic.scope-fit", "generic.operator-usability", "web.runtime-smoke"],
       "reference_sources": ["ring dev-team", "gstack qa/review/ship", "aiox-core development agents"]
     },
     "cloud-native-core": {
@@ -79,6 +80,7 @@
       "required_before_execution": true,
       "activation_rule": "Available by default for non-secret cloud/runtime wiring; production authority still requires human and release gates.",
       "evidence_required": ["runtime contract", "rollback proof", "monitoring proof"],
+      "structured_proofs_required": ["cloud.runtime-contract", "cloud.rollback-proof", "cloud.monitoring-proof"],
       "reference_sources": ["ring devops/sre/obs-reviewer", "gstack canary/land-and-deploy"]
     },
     "agent-runtime-core": {
@@ -91,6 +93,7 @@
       "required_before_execution": true,
       "activation_rule": "Available by default after agent_eval_plan, permission class and reviewer separation exist.",
       "evidence_required": ["agent eval plan", "permission class", "security handoff", "profile/binding refs"],
+      "structured_proofs_required": ["agent.eval-plan", "agent.permission-boundary", "agent.profile-binding"],
       "reference_sources": ["ring prompt-reviewer", "mattpocock/skills", "orca workflow/review"]
     },
     "solana-quasar-core": {
@@ -103,6 +106,7 @@
       "required_before_execution": true,
       "activation_rule": "Available for Quasar-first work only; Anchor or Pinocchio require a separate optional pack and human decision.",
       "evidence_required": ["onchain work package", "Auditor result", "signer boundary", "Quasar proof"],
+      "structured_proofs_required": ["solana.work-package", "solana.auditor-result", "solana.devnet-proof", "solana.signer-boundary"],
       "reference_sources": ["solanabr/solana-claude", "ring security-reviewer"]
     },
     "mobile-app-pack": {
@@ -126,6 +130,7 @@
       "required_before_execution": true,
       "activation_rule": "Block material mobile execution until the pack is activated or explicitly waived with a human gate.",
       "evidence_required": ["mobile architecture packet", "device/simulator smoke", "mobile Product Face result"],
+      "structured_proofs_required": ["mobile.architecture-packet", "mobile.device-smoke", "mobile.lifecycle-permissions", "mobile.product-face-result"],
       "reference_sources": ["solana-claude mobile-engineer", "gstack ios-qa/ios-fix/ios-design-review"]
     },
     "desktop-app-pack": {
@@ -144,6 +149,7 @@
       "required_before_execution": true,
       "activation_rule": "Block desktop execution until the pack is activated for the selected runtime.",
       "evidence_required": ["desktop runtime decision", "packaging proof", "desktop QA proof"],
+      "structured_proofs_required": ["desktop.runtime-decision", "desktop.packaging-proof", "desktop.update-rollback-proof", "desktop.qa-proof"],
       "reference_sources": ["ring dev-team frontend/devops", "gstack design-review/qa"]
     },
     "game-product-pack": {
@@ -172,6 +178,7 @@
       "required_before_execution": true,
       "activation_rule": "Block game execution until the game pack is activated for 2D, 3D, web, mobile or onchain game scope.",
       "evidence_required": ["game design packet", "runtime choice", "playable smoke", "performance budget"],
+      "structured_proofs_required": ["game.design-packet", "game.runtime-choice", "game.playable-smoke", "game.performance-budget", "game.playtest-review"],
       "reference_sources": ["solana-claude game-architect/unity-engineer", "gstack design-shotgun/design-review/qa"]
     },
     "ai-ml-product-pack": {
@@ -195,6 +202,7 @@
       "required_before_execution": true,
       "activation_rule": "Block AI/ML execution until model/data/eval contracts are activated.",
       "evidence_required": ["model contract", "eval plan", "data policy", "safety review"],
+      "structured_proofs_required": ["ai.model-contract", "ai.eval-plan", "ai.data-policy", "ai.safety-review", "ai.regression-eval"],
       "reference_sources": ["gstack benchmark-models/ML prompt-injection designs", "ring prompt-reviewer", "mattpocock/skills"]
     },
     "fintech-payments-pack": {
@@ -218,6 +226,7 @@
       "required_before_execution": true,
       "activation_rule": "Block fintech/payment execution until the pack is activated and human/security gates exist.",
       "evidence_required": ["ledger model", "risk matrix", "security scan", "human gate"],
+      "structured_proofs_required": ["fintech.ledger-model", "fintech.idempotency-proof", "fintech.reconciliation-proof", "fintech.risk-matrix", "fintech.human-gate"],
       "reference_sources": ["ring tenancy/security/logic reviewers", "gstack cso/review"]
     },
     "regulated-domain-pack": {
@@ -236,6 +245,7 @@
       "required_before_execution": true,
       "activation_rule": "Block regulated-domain execution until a domain compliance pack is created for the exact jurisdiction and product class.",
       "evidence_required": ["domain risk packet", "compliance owner", "human gate", "scope boundaries"],
+      "structured_proofs_required": ["regulated.domain-risk-packet", "regulated.compliance-owner", "regulated.scope-boundary", "regulated.human-gate"],
       "reference_sources": ["aiox-core analyst/pm/po gating", "ring product/PM standards"]
     },
     "data-analytics-pack": {
@@ -254,6 +264,7 @@
       "required_before_execution": true,
       "activation_rule": "Block analytics-heavy execution until metric/data contracts are activated.",
       "evidence_required": ["metric definitions", "data quality checks", "lineage note", "dashboard proof"],
+      "structured_proofs_required": ["analytics.metric-definitions", "analytics.data-quality", "analytics.lineage", "analytics.dashboard-proof"],
       "reference_sources": ["aiox-core data-engineer", "ring creating-grafana-dashboard skills"]
     },
     "browser-extension-pack": {
@@ -272,6 +283,7 @@
       "required_before_execution": true,
       "activation_rule": "Block extension execution until extension-specific security and packaging proof exist.",
       "evidence_required": ["permission review", "browser smoke", "packaging proof"],
+      "structured_proofs_required": ["extension.permission-review", "extension.browser-smoke", "extension.service-worker-content-script", "extension.packaging-proof"],
       "reference_sources": ["gstack browser/sidebar designs", "ring prompt/security reviewers"]
     },
     "operator-onboarding-pack": {
@@ -284,6 +296,7 @@
       "required_before_execution": true,
       "activation_rule": "Available by default for public onboarding and operator walkthrough work that does not mutate a real Hermes runtime.",
       "evidence_required": ["fresh install commands", "quickstart smoke", "worker packet output under .tmp", "public safety scan"],
+      "structured_proofs_required": ["onboarding.fresh-install", "onboarding.quickstart-smoke", "onboarding.worker-packet-output", "onboarding.public-safety"],
       "input_contract": ["fresh checkout", "operator-owned Hermes target or deferred adapter boundary", "minimal public example card"],
       "output_contract": ["validated install path", "worker packets under .tmp", "operator next-step checklist"],
       "local_smoke_path": "python scripts/quickstart_smoke.py",
@@ -299,6 +312,7 @@
       "required_before_execution": true,
       "activation_rule": "Available by default for documentation and knowledge artifacts when generated evidence stays out of the public repo.",
       "evidence_required": ["document governance validation", "public safety scan", "secret safety scan", "focused doc tests"],
+      "structured_proofs_required": ["docs.governance-validation", "docs.public-safety", "docs.secret-safety", "docs.focused-tests"],
       "input_contract": ["public-safe source refs", "target reader", "validation commands"],
       "output_contract": ["current guide or template", "clear source-of-truth boundary", "no historical private evidence"],
       "local_smoke_path": "python scripts/validate_document_governance.py",
@@ -335,6 +349,7 @@
       "required_before_execution": true,
       "activation_rule": "Always block until a dedicated hardware/IoT pack is installed for the exact product.",
       "evidence_required": ["hardware safety packet", "device test plan", "domain expert review"],
+      "structured_proofs_required": ["hardware.safety-packet", "hardware.device-test-plan", "hardware.domain-expert-review"],
       "reference_sources": ["aiox-core architecture gates", "ring production-readiness patterns"]
     }
   }

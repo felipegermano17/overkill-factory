@@ -22,6 +22,7 @@ class AgentReferenceStudyExecutionTest(unittest.TestCase):
             "templates/specialist-research-plan.json": "schemas/specialist-research-plan.schema.json",
             "templates/specialist-decision-packet.json": "schemas/specialist-decision-packet.schema.json",
             "templates/production-promotion-ladder.json": "schemas/production-promotion-ladder.schema.json",
+            "templates/product-delivery-quality-profile.json": "schemas/product-delivery-quality-profile.schema.json",
             "templates/product-creation-plan.json": "schemas/product-creation-plan.schema.json",
             "templates/product-context-packet.json": "schemas/product-context-packet.schema.json",
             "templates/product-implementation-readiness.json": "schemas/product-implementation-readiness.schema.json",

@@ -75,6 +75,24 @@ class CapabilityPacksTest(unittest.TestCase):
                 self.assertTrue(packs[pack_id]["covers_surfaces"])
                 self.assertTrue(packs[pack_id]["evidence_required"])
 
+        for pack_id in [
+            "web-saas-core",
+            "operator-onboarding-pack",
+            "public-docs-knowledge-pack",
+            "mobile-app-pack",
+            "desktop-app-pack",
+            "game-product-pack",
+            "ai-ml-product-pack",
+            "fintech-payments-pack",
+            "regulated-domain-pack",
+            "data-analytics-pack",
+            "browser-extension-pack",
+            "hardware-iot-pack",
+        ]:
+            with self.subTest(structured_proofs=pack_id):
+                self.assertTrue(packs[pack_id]["structured_proofs_required"])
+                self.assertTrue(all("." in proof_id for proof_id in packs[pack_id]["structured_proofs_required"]))
+
     def test_new_operator_packs_have_executable_contracts(self) -> None:
         packs = json.loads((ROOT / "agents" / "capability-packs.public.json").read_text(encoding="utf-8"))["packs"]
 

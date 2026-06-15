@@ -2,6 +2,8 @@
   "$schema": "https://overkill-factory.dev/schemas/product-face-packet.schema.json",
   "surface": "web_app",
   "mode": "greenfield",
+  "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+  "domain_proof_required": ["generic.operator-usability"],
   "user": "Primary external or internal user.",
   "job_to_be_done": "What this user must understand or accomplish on the surface.",
   "main_flows": [

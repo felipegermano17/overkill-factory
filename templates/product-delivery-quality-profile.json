@@ -1,0 +1,46 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-delivery-quality-profile.schema.json",
+  "record_type": "product_delivery_quality_profile",
+  "profile_id": "generic-software-product-v1",
+  "archetype": "generic software product",
+  "applies_to_surfaces": ["code", "frontend", "backend", "api", "docs"],
+  "quality_dimensions": [
+    {
+      "dimension_id": "scope-fit",
+      "bar": "The delivered product behavior maps back to the approved Product SOT and complete-product plan.",
+      "block_when": ["The implementation proves only a convenient slice while hiding missing Product SOT scope."]
+    },
+    {
+      "dimension_id": "operator-usability",
+      "bar": "A target user or operator can use the delivered surface, workflow or docs without private context.",
+      "block_when": ["The result needs private chat context, hidden assumptions or manual operator assembly."]
+    }
+  ],
+  "required_proofs": [
+    {
+      "proof_id": "generic.scope-fit",
+      "name": "Product SOT scope-fit proof",
+      "required_at": ["before_implementation"],
+      "owner_worker": "factory-orchestrator",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "human_gate_required": false
+    },
+    {
+      "proof_id": "generic.operator-usability",
+      "name": "Operator usability proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "qa-verification-worker",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "review",
+      "human_gate_required": false
+    }
+  ],
+  "waiver_policy": {
+    "allowed": true,
+    "requires_owner": true,
+    "requires_reason": true,
+    "cannot_claim_full_acceptance": true
+  },
+  "evidence_refs": ["templates/product-creation-plan.json", "templates/product-implementation-readiness.json"]
+}

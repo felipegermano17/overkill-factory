@@ -3,6 +3,7 @@
   "record_type": "product_creation_plan",
   "product_sot_ref": "templates/product-sot.json",
   "method_contract_ref": "templates/method-contract.json",
+  "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
   "research_decision_refs": ["templates/specialist-decision-packet.json"],
   "architecture_decision_refs": ["templates/architecture-review-packet.md"],
   "complete_product_required": true,
@@ -13,7 +14,8 @@
     {
       "surface": "code",
       "required_pack": "web-saas-core",
-      "proof": "tests and review"
+      "proof": "tests and review",
+      "structured_proofs_required": ["generic.scope-fit", "generic.operator-usability"]
     }
   ],
   "capability_pack_requirements": ["templates/capability-pack-contract.json"],
