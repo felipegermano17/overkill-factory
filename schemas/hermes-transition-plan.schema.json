@@ -163,6 +163,40 @@
         "additionalProperties": true
       }
     },
+    "recovery_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "recovery_route_id",
+          "blocker_type",
+          "factory_owned_repair_allowed",
+          "human_gate_required",
+          "repair_owner_worker",
+          "repair_task_ref",
+          "invalidates_refs",
+          "supersedes_refs",
+          "fresh_review_required",
+          "unblock_authority_ref",
+          "retry_policy",
+          "hermes_materialization"
+        ],
+        "properties": {
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false },
+          "hermes_materialization": {
+            "type": "object",
+            "required": ["runtime_authority", "local_state_authority"],
+            "properties": {
+              "runtime_authority": { "const": "hermes_kanban" },
+              "local_state_authority": { "const": false }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
     "completion_reconciliation": {
       "type": ["object", "null"],
       "additionalProperties": true

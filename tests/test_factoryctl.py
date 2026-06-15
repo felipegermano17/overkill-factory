@@ -1202,6 +1202,156 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_dispatcher"])
         self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_dependency_engine"])
 
+    def test_recovery_plan_routes_blocked_review_back_to_handoff_producer(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmpdir:
+            results_dir = Path(tmpdir)
+            handoff_path = results_dir / "handoff.json"
+            review_path = results_dir / "review.json"
+            handoff_path.write_text(json.dumps(handoff), encoding="utf-8")
+            requirement = factoryctl.declared_graph_requirements(
+                "handoff_packet_result",
+                handoff,
+                evidence_ref=factoryctl.source_card_ref(handoff_path),
+            )[0]
+            blocked_review = factoryctl.build_worker_result(
+                "independent-reviewer",
+                card,
+                result="BLOCKED",
+                tool_or_profile="independent-review-smoke",
+                executed_by="independent-reviewer",
+                evidence_refs=["README.md"],
+                blocking_findings=True,
+                findings_summary="Review found the handoff packet incomplete.",
+                next_action="repair handoff packet and rerun independent review",
+                evidence_kind="synthetic",
+                reusable_for_product=False,
+            )
+            blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
+            review_path.write_text(json.dumps(blocked_review), encoding="utf-8")
+
+            plan = factoryctl.build_factory_recovery_plan(card, worker_results_dir=results_dir)
+
+        self.assertEqual(plan["gate_predicate_result"], "BLOCK")
+        route = plan["recovery_routes"][0]
+        self.assertEqual(route["repair_owner_worker"], "handoff-packer")
+        self.assertEqual(route["blocker_type"], "dependency")
+        self.assertTrue(route["fresh_review_required"])
+        self.assertIn("handoff_packet_result", route["expected_repair_outputs"])
+        self.assertIn("independent_review_result", route["expected_repair_outputs"])
+        self.assertIn(requirement["requirement_id"], route["dependency_edge_patch"]["old_edges"])
+        self.assertEqual(route["hermes_materialization"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(route["hermes_materialization"]["local_state_authority"])
+
+    def test_recovery_plan_reads_blocked_review_from_receipt_metadata(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+        requirement = factoryctl.declared_graph_requirements(
+            "handoff_packet_result",
+            handoff,
+            evidence_ref="receipt:handoff_packet_result",
+        )[0]
+        blocked_review = factoryctl.build_worker_result(
+            "independent-reviewer",
+            card,
+            result="BLOCKED",
+            tool_or_profile="independent-review-smoke",
+            executed_by="independent-reviewer",
+            evidence_refs=["README.md"],
+            blocking_findings=True,
+            findings_summary="Review found the inline handoff packet incomplete.",
+            next_action="repair handoff packet and rerun independent review",
+            evidence_kind="synthetic",
+            reusable_for_product=False,
+        )
+        blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
+
+        plan = factoryctl.build_factory_recovery_plan(
+            card,
+            receipt={
+                "handoff_packet_result": handoff,
+                "independent_review_result": blocked_review,
+            },
+        )
+
+        route = plan["recovery_routes"][0]
+        self.assertEqual(plan["gate_predicate_result"], "BLOCK")
+        self.assertEqual(route["repair_owner_worker"], "handoff-packer")
+        self.assertIn("receipt:handoff_packet_result", route["invalidates_refs"])
+
+    def test_transition_plan_attaches_recovery_route_to_repair_worker_task(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = factoryctl.load_json_like(card_path)
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmpdir:
+            results_dir = Path(tmpdir)
+            handoff_path = results_dir / "handoff.json"
+            review_path = results_dir / "review.json"
+            handoff_path.write_text(json.dumps(handoff), encoding="utf-8")
+            requirement = factoryctl.declared_graph_requirements(
+                "handoff_packet_result",
+                handoff,
+                evidence_ref=factoryctl.source_card_ref(handoff_path),
+            )[0]
+            blocked_review = factoryctl.build_worker_result(
+                "independent-reviewer",
+                card,
+                result="BLOCKED",
+                tool_or_profile="independent-review-smoke",
+                executed_by="independent-reviewer",
+                evidence_refs=["README.md"],
+                blocking_findings=True,
+                findings_summary="Review found the handoff packet incomplete.",
+                next_action="repair handoff packet and rerun independent review",
+                evidence_kind="synthetic",
+                reusable_for_product=False,
+            )
+            blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
+            review_path.write_text(json.dumps(blocked_review), encoding="utf-8")
+
+            plan = factoryctl.build_transition_plan(
+                card,
+                card_path,
+                from_status="review",
+                to_status="done",
+                receipt={
+                    "receipt_five": {
+                        "changed": "fixture",
+                        "artifact_paths": ["README.md"],
+                        "verification_commands": ["fixture"],
+                        "verification_result": "PASS",
+                        "reviewer_required": True,
+                        "reviewer_result": "BLOCKED",
+                        "next_action": "repair",
+                    },
+                    "kanban_transition_event": {
+                        "from_status": "review",
+                        "to_status": "done",
+                        "actor": "factory-orchestrator",
+                        "worker": "factory-orchestrator",
+                        "receipt_refs": ["receipt_five"],
+                        "artifact_refs": ["README.md"],
+                        "allowed": True,
+                    },
+                },
+                worker_results_dir=results_dir,
+            )
+
+        self.assertEqual(plan["transition_action"], "block_transition")
+        self.assertTrue(plan["recovery_routes"])
+        route_id = plan["recovery_routes"][0]["recovery_route_id"]
+        repair_task = next(task for task in plan["worker_tasks"] if task["worker_id"] == "handoff-packer")
+        self.assertIn(route_id, repair_task["recovery_route_refs"])
+        self.assertIn(route_id, repair_task["packet"]["input_contract"]["recovery_route_refs"])
+        self.assertEqual(repair_task["packet"]["input_contract"]["recovery_routes"][0]["repair_owner_worker"], "handoff-packer")
+        self.assertTrue(any("requires independent-reviewer PASS" in reason for reason in plan["blocked_reasons"]))
+
     def test_hermes_schemas_allow_before_ready_block_action(self) -> None:
         action = "block_and_create_before_ready_tasks"
         transition_plan_schema = json.loads((ROOT / "schemas" / "hermes-transition-plan.schema.json").read_text(encoding="utf-8"))
