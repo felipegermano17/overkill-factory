@@ -248,6 +248,15 @@ def task_has_blocked_event(payload: dict[str, Any]) -> bool:
     return False
 
 
+def task_has_unblocked_event(payload: dict[str, Any]) -> bool:
+    if str(payload.get("status") or "").strip().lower() == "blocked":
+        return False
+    events = payload.get("events") or payload.get("history") or payload.get("timeline") or []
+    if isinstance(events, list):
+        return any("unblock" in str(event).lower() for event in events)
+    return False
+
+
 def ensure_blocked_event(
     *,
     hermes_bin: str,
@@ -278,6 +287,13 @@ def unblock_task(
     runner: Runner = default_runner,
 ) -> None:
     run_checked(hermes_kanban(hermes_bin, board, "unblock", task_id, reason), runner)
+    shown = run_checked(hermes_kanban(hermes_bin, board, "show", task_id, "--json"), runner)
+    try:
+        payload = json.loads(shown.stdout or "{}")
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Hermes show --json did not return JSON while verifying unblock event") from exc
+    if not isinstance(payload, dict) or not task_has_unblocked_event(payload):
+        raise RuntimeError(f"Hermes task {task_id} is not durably unblocked after unblock command")
 
 
 def record_live_binding(
@@ -416,7 +432,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         from_status=args.from_status,
         to_status=args.to_status,
         receipt_path=args.receipt,
-        worker_results_dir=None,
+        worker_results_dir=args.worker_results_dir,
         ledger_path=ledger_path,
     )
     plan = result["plan"]
@@ -472,6 +488,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
     )
     worker_task_ids: dict[str, str] = {}
     review_promoted_worker_task_ids: dict[str, str] = {}
+    recovery_promoted_worker_task_ids: dict[str, str] = {}
     for task in plan.get("worker_tasks", []):
         worker_id = str(task.get("worker_id") or "").strip()
         if not worker_id or task.get("status") == "not_required_by_current_card":
@@ -511,6 +528,30 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
                 runner=runner,
             )
             review_promoted_worker_task_ids[worker_id] = task_id
+        recovery_routes = [
+            route
+            for route in (packet.get("input_contract") or {}).get("recovery_routes", [])
+            if isinstance(route, dict)
+        ]
+        recovery_authorized = any(
+            route.get("factory_owned_repair_allowed") is True and route.get("human_gate_required") is False
+            for route in recovery_routes
+        )
+        if recovery_authorized and not args.worker_ready:
+            route = recovery_routes[0]
+            route_id = str(route.get("recovery_route_id") or "factory-recovery-route")
+            fresh_review_ref = str(route.get("fresh_review_result_ref") or "fresh-review-required")
+            unblock_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=task_id,
+                reason=(
+                    "Factory-owned recovery route authorized repair task "
+                    f"{route_id}; downstream remains gated until {fresh_review_ref} passes."
+                ),
+                runner=runner,
+            )
+            recovery_promoted_worker_task_ids[worker_id] = task_id
 
     record_live_binding(
         ledger_path=ledger_path,
@@ -529,6 +570,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         "main_task_id": main_task_id,
         "worker_task_ids": worker_task_ids,
         "review_promoted_worker_task_ids": review_promoted_worker_task_ids,
+        "recovery_promoted_worker_task_ids": recovery_promoted_worker_task_ids,
         "hook": result,
     }
     public_envelope = sanitize_public_refs(envelope)
@@ -706,6 +748,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_mat.add_argument("--board", required=True)
     p_mat.add_argument("--ledger", type=Path, required=True)
     p_mat.add_argument("--receipt", type=Path)
+    p_mat.add_argument("--worker-results-dir", type=Path)
     p_mat.add_argument("--from-status", default="blocked")
     p_mat.add_argument("--to-status", default="ready")
     p_mat.add_argument("--hermes-bin", default="hermes")

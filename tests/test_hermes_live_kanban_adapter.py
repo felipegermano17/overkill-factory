@@ -35,6 +35,7 @@ class FakeHermes:
     def __init__(self) -> None:
         self.calls: list[list[str]] = []
         self.counter = 0
+        self.tasks: dict[str, dict[str, object]] = {}
 
     def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
         self.calls.append(argv)
@@ -45,18 +46,22 @@ class FakeHermes:
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "create":
             self.counter += 1
             task_id = "t_" + f"{self.counter:08x}"
+            initial_status = "blocked" if "--initial-status" in argv and "blocked" in argv else "ready"
+            self.tasks[task_id] = {"status": initial_status, "events": []}
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
         if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
+            task = self.tasks.setdefault(argv[5], {"status": "ready", "events": []})
+            task["status"] = "blocked"
+            task.setdefault("events", []).append({"type": "blocked", "reason": argv[6]})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"blocked"}', stderr="")
         if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "unblock":
+            task = self.tasks.setdefault(argv[5], {"status": "blocked", "events": []})
+            task["status"] = "ready"
+            task.setdefault("events", []).append({"type": "unblocked", "reason": argv[6]})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"ready"}', stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
-            return subprocess.CompletedProcess(
-                argv,
-                0,
-                stdout='{"status":"blocked","events":[{"type":"blocked","reason":"gate"}]}',
-                stderr="",
-            )
+            payload = self.tasks.get(argv[5], {"status": "blocked", "events": [{"type": "blocked", "reason": "gate"}]})
+            return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(payload), stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
             return subprocess.CompletedProcess(argv, 0, stdout="linked", stderr="")
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
@@ -396,6 +401,80 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             {"independent-reviewer": adapter.PUBLIC_SAFE_KANBAN_REF},
         )
         self.assertNotIn("handoff-packer", result["review_promoted_worker_task_ids"])
+
+    def test_materialize_promotes_factory_owned_recovery_repair_task(self) -> None:
+        fake = FakeHermes()
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card_data = factoryctl.load_json_like(card)
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card_data,
+            result="PASS",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Handoff packet declares an independent review gate.",
+            next_action="continue after review",
+            reviewer_required=True,
+            reviewer_result="PENDING",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            readiness = tmp_path / "route-readiness.json"
+            worker_results = tmp_path / "worker-results"
+            worker_results.mkdir()
+            ledger = tmp_path / "ledger.json"
+            handoff_path = worker_results / "handoff.json"
+            review_path = worker_results / "review.json"
+            write_route_readiness(readiness)
+            handoff_path.write_text(json.dumps(handoff), encoding="utf-8")
+            requirement = factoryctl.declared_graph_requirements(
+                "handoff_packet_result",
+                handoff,
+                evidence_ref=factoryctl.source_card_ref(handoff_path),
+            )[0]
+            blocked_review = factoryctl.build_worker_result(
+                "independent-reviewer",
+                card_data,
+                result="BLOCKED",
+                tool_or_profile="independent-review-smoke",
+                executed_by="independent-reviewer",
+                evidence_refs=["README.md"],
+                blocking_findings=True,
+                findings_summary="Review found the handoff packet incomplete.",
+                next_action="repair handoff packet and rerun independent review",
+                reusable_for_product=False,
+            )
+            blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
+            review_path.write_text(json.dumps(blocked_review), encoding="utf-8")
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--ledger",
+                    str(ledger),
+                    "--worker-results-dir",
+                    str(worker_results),
+                    "--route-readiness",
+                    str(readiness),
+                ]
+            )
+            result = adapter.materialize(args, runner=fake)
+            ledger_data = json.loads(ledger.read_text(encoding="utf-8"))
+
+        self.assertEqual(result["recovery_promoted_worker_task_ids"], {"handoff-packer": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(result["review_promoted_worker_task_ids"], {"independent-reviewer": adapter.PUBLIC_SAFE_KANBAN_REF})
+        handoff_task = next(task for task in ledger_data["tasks"].values() if task["worker_id"] == "handoff-packer")
+        handoff_task_id = handoff_task["runtime_refs"]["hermes_task_ref"]
+        self.assertTrue(handoff_task["recovery_route_refs"])
+        self.assertEqual(fake.tasks[handoff_task_id]["status"], "ready")
+        self.assertEqual(fake.tasks[MAIN_TASK_ID]["status"], "blocked")
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertTrue(any(call[5] == handoff_task_id and "downstream remains gated" in call[6] for call in unblock_calls))
 
     def test_materialize_dry_run_does_not_call_hermes_create(self) -> None:
         fake = FakeHermes()
