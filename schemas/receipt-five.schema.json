@@ -20,23 +20,41 @@
         "artifact_paths": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string" }
+          "items": { "type": "string", "minLength": 1 }
         },
         "verification_commands": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string" }
+          "items": { "type": "string", "minLength": 1 }
         },
         "verification_result": { "enum": ["PASS", "BLOCKED", "WAIVED"] },
         "reviewer_required": { "type": "boolean" },
         "reviewer_result": { "type": "string" },
-        "next_action": { "type": "string" }
+        "next_action": { "type": "string", "minLength": 3 }
       },
       "additionalProperties": true
     },
     "kanban_transition_event": {
       "type": "object",
       "required": ["from_status", "to_status", "actor", "worker", "receipt_refs", "artifact_refs"],
+      "properties": {
+        "from_status": { "type": "string", "minLength": 1 },
+        "to_status": { "type": "string", "minLength": 1 },
+        "actor": { "type": "string", "minLength": 1 },
+        "worker": { "type": "string", "minLength": 1 },
+        "receipt_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "artifact_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "allowed": { "type": "boolean" },
+        "result": { "enum": ["PASS", "ALLOW", "APPROVED"] }
+      },
       "additionalProperties": true
     },
     "hermes_legacy_completion_required": {

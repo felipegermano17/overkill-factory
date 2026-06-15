@@ -112,6 +112,27 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         self.assertTrue(any("$.review" in error and "expected type object" in error for error in errors))
         self.assertTrue(any("$.owner_worker" in error and "expected type string" in error for error in errors))
 
+    def test_receipt_five_schema_rejects_invalid_transition_event_shapes(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["receipt-five.schema.json"]
+        receipt = json.loads((ROOT / "templates" / "receipt-five.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(validator.validate_node(schema, receipt, "$", schemas=schemas, root_schema=schema), [])
+
+        invalid = json.loads(json.dumps(receipt))
+        invalid["kanban_transition_event"]["from_status"] = ""
+        invalid["kanban_transition_event"]["receipt_refs"] = "receipt_five"
+        invalid["kanban_transition_event"]["artifact_refs"] = [""]
+        invalid["kanban_transition_event"]["allowed"] = "yes"
+
+        errors = validator.validate_node(schema, invalid, "$", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("$.kanban_transition_event.from_status" in error and "shorter" in error for error in errors))
+        self.assertTrue(any("$.kanban_transition_event.receipt_refs" in error and "expected type array" in error for error in errors))
+        self.assertTrue(any("$.kanban_transition_event.artifact_refs[0]" in error and "shorter" in error for error in errors))
+        self.assertTrue(any("$.kanban_transition_event.allowed" in error and "expected type boolean" in error for error in errors))
+
     def test_resolves_schema_file_refs_used_by_factory_card(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()
