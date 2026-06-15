@@ -4434,7 +4434,9 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
         active = [candidate for candidate in candidates if candidate.get("active")]
         ordered = sorted(active or candidates, key=_worker_record_sort_key, reverse=True)
         if ordered:
-            records[record_type] = ordered[0]
+            selected = dict(ordered[0])
+            selected["candidate_records"] = ordered
+            records[record_type] = selected
     return records
 
 
@@ -4644,25 +4646,55 @@ def apply_record_consumption_state(record: dict[str, Any]) -> None:
     record["review_task_authorizations"] = [review_task_authorization(requirement) for requirement in pending]
 
 
+def candidate_records_for_field(fields: dict[str, dict[str, Any]], field: str) -> list[dict[str, Any]]:
+    record = fields.get(field)
+    if not isinstance(record, dict):
+        return []
+    candidates = [record]
+    for candidate in record.get("candidate_records", []):
+        if isinstance(candidate, dict):
+            candidates.append(candidate)
+    deduped: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for candidate in candidates:
+        key = (
+            str(candidate.get("created_at") or ""),
+            str(candidate.get("evidence_ref") or ""),
+        )
+        if key not in seen:
+            deduped.append(candidate)
+            seen.add(key)
+    return deduped
+
+
 def resolve_graph_requirements(fields: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
     requirements: list[dict[str, Any]] = []
     for record in fields.values():
         for requirement in record.get("graph_requirements", []):
             requirement = dict(requirement)
-            review_record = fields.get(str(requirement.get("required_review_field") or ""))
-            if requirement.get("status") != "satisfied" and review_record:
-                if (
-                    review_record.get("valid")
-                    and str(review_record.get("result") or "").strip().upper() == "PASS"
-                    and review_record_matches_requirement(review_record, requirement)
-                ):
+            review_candidates = candidate_records_for_field(
+                fields,
+                str(requirement.get("required_review_field") or ""),
+            )
+            if requirement.get("status") != "satisfied" and review_candidates:
+                matching_review = next(
+                    (
+                        candidate
+                        for candidate in review_candidates
+                        if candidate.get("valid")
+                        and str(candidate.get("result") or "").strip().upper() == "PASS"
+                        and review_record_matches_requirement(candidate, requirement)
+                    ),
+                    None,
+                )
+                if matching_review:
                     requirement["status"] = "satisfied"
                     requirement["reviewer_result"] = "PASS"
-                    requirement["review_evidence_ref"] = review_record.get("evidence_ref") or "receipt:review"
+                    requirement["review_evidence_ref"] = matching_review.get("evidence_ref") or "receipt:review"
                     authorized_worker_ids = registered_nonhuman_worker_ids(
-                        review_record.get("authorized_downstream_worker_ids")
-                        or review_record.get("authorized_next_worker_ids")
-                        or review_record.get("downstream_worker_ids")
+                        matching_review.get("authorized_downstream_worker_ids")
+                        or matching_review.get("authorized_next_worker_ids")
+                        or matching_review.get("downstream_worker_ids")
                     )
                     if authorized_worker_ids:
                         requirement["authorized_downstream_worker_ids"] = authorized_worker_ids

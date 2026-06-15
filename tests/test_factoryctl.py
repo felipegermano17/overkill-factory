@@ -1820,6 +1820,41 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(closure["graph_requirements"][0]["status"], "pending")
         self.assertEqual(closure["unsatisfied_graph_requirements"][0]["producer_field"], "handoff_packet_result")
 
+    def test_worker_closure_uses_matching_review_candidate_not_newest_unrelated_review(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmpdir:
+            results_dir = Path(tmpdir)
+            handoff_path = results_dir / "handoff.json"
+            handoff_path.write_text(json.dumps(handoff), encoding="utf-8")
+            requirement_id = factoryctl.declared_graph_requirements(
+                "handoff_packet_result",
+                handoff,
+                evidence_ref=factoryctl.source_card_ref(handoff_path),
+            )[0]["requirement_id"]
+
+            matching_review = worker_result("independent_review_result", source_card=card)
+            matching_review["created_at"] = "2026-06-06T00:01:00+00:00"
+            matching_review["graph_requirement_refs"] = [requirement_id]
+            matching_review["authorized_downstream_worker_ids"] = ["qa-verification-worker"]
+            (results_dir / "matching-review.json").write_text(json.dumps(matching_review), encoding="utf-8")
+
+            unrelated_review = worker_result("independent_review_result", source_card=card)
+            unrelated_review["created_at"] = "2026-06-06T00:02:00+00:00"
+            unrelated_review["findings_summary"] = "Fresh, but for a different dependency."
+            (results_dir / "z-unrelated-review.json").write_text(json.dumps(unrelated_review), encoding="utf-8")
+
+            closure = factoryctl.build_worker_closure(card, {}, results_dir)
+
+        requirement = closure["graph_requirements"][0]
+        self.assertEqual(requirement["status"], "satisfied")
+        self.assertTrue(requirement["review_evidence_ref"].endswith("/matching-review.json"))
+        self.assertEqual(requirement["authorized_downstream_worker_ids"], ["qa-verification-worker"])
+        self.assertEqual(closure["unsatisfied_graph_requirements"], [])
+        self.assertTrue(closure["workers"]["handoff-packer"]["satisfied"])
+
     def test_transition_plan_done_blocks_missing_required_worker_results(self) -> None:
         card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)
