@@ -48,14 +48,20 @@ def utc_now() -> str:
 
 def repo_ref(path: Path) -> str:
     try:
-        return path.relative_to(ROOT).as_posix()
+        return path.resolve().relative_to(ROOT).as_posix()
     except ValueError:
         return f"external:{path.name}"
 
 
 def redact(text: str) -> str:
     text = URL_RE.sub("<url-redacted>", text)
-    return SECRETISH_RE.sub("<redacted>", text)
+    text = SECRETISH_RE.sub("<redacted>", text)
+    text = text.replace(str(ROOT), "<repo-root>").replace(str(ROOT).replace("\\", "/"), "<repo-root>")
+    text = text.replace(str(Path.home()), "<home>").replace(str(Path.home()).replace("\\", "/"), "<home>")
+    text = re.sub(r"<home>[\\/][^\s\"')<]+", "<home>", text)
+    text = re.sub(r"(?<![A-Za-z])[A-Za-z]:[\\/][^\s\"')<]+", "<redacted-local-path>", text)
+    text = re.sub(r"/(?:Users|home|srv|tmp)/[^\s\"')<]+", "<redacted-local-path>", text)
+    return text
 
 
 def run_probe_command(argv: list[str], timeout: int = 20) -> dict[str, Any]:

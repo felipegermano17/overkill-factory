@@ -19,6 +19,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE_OUTPUT_PATTERNS = [
     re.compile(r"C:[/\\]+Users[/\\]+", re.IGNORECASE),
+    re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/][^\s\"')<]+", re.IGNORECASE),
+    re.compile(r"/(?:Users|home|srv|tmp)/[^\s\"')<]+"),
     re.compile("/srv/" + "hermes"),
     re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{30,}\b"),
     re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
@@ -69,8 +71,13 @@ def run_command(command: str, cwd: Path, timeout: int) -> dict[str, object]:
 
 
 def redact_output(text: str) -> str:
-    redacted = text.replace(str(Path.home()), "<home>").replace(str(Path.home()).replace("\\", "\\\\"), "<home>")
+    redacted = text.replace(str(ROOT), "<repo>").replace(str(ROOT).replace("\\", "/"), "<repo>")
+    redacted = redacted.replace(str(Path.home()), "<home>").replace(str(Path.home()).replace("\\", "/"), "<home>")
+    redacted = redacted.replace(str(Path.home()).replace("\\", "\\\\"), "<home>")
+    redacted = re.sub(r"<home>[\\/][^\s\"')<]+", "<home>", redacted)
     redacted = re.sub(r"C:[/\\]+Users[/\\]+[^\s\"')<]+", "<redacted-local-path>", redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r"(?<![A-Za-z])[A-Za-z]:[\\/][^\s\"')<]+", "<redacted-local-path>", redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r"/(?:Users|home|srv|tmp)/[^\s\"')<]+", "<redacted-local-path>", redacted)
     redacted = re.sub(r"<home>\\AppData\\Local\\Temp\\[^\s\\]+", "<temp>", redacted)
     redacted = re.sub(r"/" + r"tmp/[^\s/]+", "<temp>", redacted)
     redacted = re.sub(r"\bgh[pousr]_[A-Za-z0-9_]{10,}\b", "<redacted-token>", redacted)

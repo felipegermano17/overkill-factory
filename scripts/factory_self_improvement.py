@@ -12,7 +12,7 @@ import argparse
 import json
 import re
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 
@@ -78,7 +78,18 @@ def write_json(path: Path | None, data: Any) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
-    print(f"Wrote {path}")
+    print(f"Wrote {public_path_ref(path)}")
+
+
+def public_path_ref(path: Path, fallback: str = "artifact") -> str:
+    raw = str(path)
+    windows_path = PureWindowsPath(raw)
+    if windows_path.is_absolute() or (len(raw) >= 2 and raw[1] == ":"):
+        return f"external:{windows_path.name or fallback}"
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except (OSError, ValueError):
+        return f"external:{path.name or fallback}"
 
 
 def clean_public_text(value: Any) -> str:

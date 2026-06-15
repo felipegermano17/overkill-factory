@@ -10,7 +10,7 @@ import json
 import re
 import urllib.parse
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 
@@ -22,6 +22,10 @@ PRIVATE_PATTERNS = [
     (re.compile(r"https://whimsical\.com/[^\s\"<>]+", re.IGNORECASE), "<whimsical-url>"),
     (re.compile(r"C:[/\\]+Users[/\\]+[^\s\"<>]+", re.IGNORECASE), "<local-path>"),
     (re.compile(r"(?i)\b[a-z0-9._%+-]*" + "fel" + "ipe" + r"[a-z0-9._%+-]*\b"), "<user>"),
+]
+PRIVATE_PATH_PATTERNS = [
+    (re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/][^\s\"')<]+", re.IGNORECASE), "<local-path>"),
+    (re.compile(r"/(?:Users|home|srv|tmp)/[^\s\"')<]+"), "<local-path>"),
 ]
 
 
@@ -103,16 +107,27 @@ def validate_endpoint(endpoint: str) -> urllib.parse.ParseResult:
     return parsed
 
 
-def redact(value: Any) -> Any:
+def public_path_ref(path: Path, fallback: str = "artifact") -> str:
+    raw = str(path)
+    windows_path = PureWindowsPath(raw)
+    if windows_path.is_absolute() or (len(raw) >= 2 and raw[1] == ":"):
+        return f"external:{windows_path.name or fallback}"
+    return f"external:{path.name or fallback}"
+
+
+def redact(value: Any, *, include_private_content: bool = True) -> Any:
     if isinstance(value, str):
         redacted = value
-        for pattern, replacement in PRIVATE_PATTERNS:
+        patterns = [*PRIVATE_PATH_PATTERNS]
+        if include_private_content:
+            patterns.extend(PRIVATE_PATTERNS)
+        for pattern, replacement in patterns:
             redacted = pattern.sub(replacement, redacted)
         return redacted
     if isinstance(value, list):
-        return [redact(item) for item in value]
+        return [redact(item, include_private_content=include_private_content) for item in value]
     if isinstance(value, dict):
-        return {key: redact(item) for key, item in value.items()}
+        return {key: redact(item, include_private_content=include_private_content) for key, item in value.items()}
     return value
 
 
@@ -138,7 +153,7 @@ def build_health(initialize_response: dict[str, Any], tools_response: dict[str, 
 
 
 def print_json(data: Any, *, should_redact: bool) -> None:
-    safe = redact(data) if should_redact else data
+    safe = redact(data, include_private_content=should_redact)
     print(json.dumps(safe, indent=2, sort_keys=True, ensure_ascii=True))
 
 
@@ -217,7 +232,7 @@ def run_snapshot(args: argparse.Namespace, client: McpClient, should_redact: boo
         {
             "status": "PASS",
             "metadata": text_blocks,
-            "output": str(out_path),
+            "output": public_path_ref(out_path),
             "bytes": out_path.stat().st_size,
         },
         should_redact=should_redact,

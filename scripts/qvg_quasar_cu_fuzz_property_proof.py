@@ -246,7 +246,17 @@ def main(argv: list[str] | None = None) -> int:
     source_dir = args.source_dir if args.source_dir.is_absolute() else ROOT / args.source_dir
     runtime_proof = args.runtime_proof if args.runtime_proof.is_absolute() else ROOT / args.runtime_proof
     out = args.out if args.out.is_absolute() else ROOT / args.out
-    result = build_result(source_dir.resolve(), runtime_proof.resolve())
+    source_dir = source_dir.resolve()
+    runtime_proof = runtime_proof.resolve()
+    if not source_dir.exists():
+        raise SystemExit(f"source dir does not exist: {repo_ref(source_dir)}")
+    if not runtime_proof.exists():
+        raise SystemExit(f"runtime proof does not exist: {repo_ref(runtime_proof)}")
+    try:
+        result = build_result(source_dir, runtime_proof)
+    except (OSError, json.JSONDecodeError) as exc:
+        target = runtime_proof if isinstance(exc, json.JSONDecodeError) else source_dir
+        raise SystemExit(f"proof input rejected: {repo_ref(target)}") from None
     write_json(out, result)
     print(json.dumps({"result": result["result"], "out": repo_ref(out), "total_cases": result["property_fuzz_coverage"]["total_cases"]}, indent=2))
     return 0 if result["result"] == "PASS" else 1
