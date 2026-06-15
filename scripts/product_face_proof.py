@@ -350,6 +350,18 @@ def base_result(
         "findings_summary": "Product Face browser proof captured.",
         "tool_or_profile": tool_or_profile,
         "executed_by": "product-face-proof-runner",
+        "surface_evidence_profile": {
+            "profile_id": "web_visual_ui",
+            "surface": "web_app",
+            "evidence_kind": "visual_ui",
+        },
+        "surface_evidence_profiles": [
+            {
+                "profile_id": "web_visual_ui",
+                "surface": "web_app",
+                "evidence_kind": "visual_ui",
+            }
+        ],
         "screenshots": [],
         "viewports": [viewport.label for viewport in viewports],
         "checked_states": states,
@@ -1028,6 +1040,12 @@ def build_product_face_proof(
             approval_scope=approval_scope,
         )
     result["evidence_refs"] = [*result["evidence_refs"], repo_ref(report_path), repo_ref(result_path)]
+    profile_refs = result["evidence_refs"]
+    if isinstance(result.get("surface_evidence_profile"), dict):
+        result["surface_evidence_profile"]["evidence_refs"] = profile_refs
+    for profile in result.get("surface_evidence_profiles") or []:
+        if isinstance(profile, dict):
+            profile["evidence_refs"] = profile_refs
     if result.get("result") == "WAIVED":
         result["waiver"] = build_waiver(result)
     write_json(result_path, result)

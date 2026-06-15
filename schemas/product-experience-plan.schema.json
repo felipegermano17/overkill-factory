@@ -44,6 +44,16 @@
       "items": { "type": "string", "minLength": 3 },
       "uniqueItems": true
     },
+    "surface_evidence_profile": {
+      "enum": ["web_visual_ui", "cli_tui", "docs_onboarding", "agentic_interface"]
+    },
+    "surface_evidence_profiles": {
+      "type": "array",
+      "items": {
+        "enum": ["web_visual_ui", "cli_tui", "docs_onboarding", "agentic_interface"]
+      },
+      "uniqueItems": true
+    },
     "states": {
       "type": "array",
       "items": {

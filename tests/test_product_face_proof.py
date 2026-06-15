@@ -154,6 +154,8 @@ class ProductFaceProofTest(unittest.TestCase):
 
         self.assertEqual(result["card_ref"]["card_id"], "CARD-001")
         self.assertEqual(result["card_ref"]["slice_id"], "SLICE-001")
+        self.assertEqual(result["surface_evidence_profile"]["profile_id"], "web_visual_ui")
+        self.assertEqual(result["surface_evidence_profiles"][0]["profile_id"], "web_visual_ui")
         self.assertEqual(result["journeys"], result["user_journeys_checked"])
         self.assertEqual(result["accessibility"], result["a11y"])
         self.assertEqual(result["overlap"], result["overlap_check"])

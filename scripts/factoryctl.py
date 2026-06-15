@@ -493,6 +493,68 @@ REFERENCE_COMPARISON_DIMENSIONS = (
     "visual_language",
     "density_spacing",
 )
+SURFACE_EVIDENCE_PROFILES = {"web_visual_ui", "cli_tui", "docs_onboarding", "agentic_interface"}
+SURFACE_EVIDENCE_PROFILE_BLOCKS = {
+    "cli_tui": (
+        "cli_tui_evidence",
+        (
+            "golden_path_transcript_refs",
+            "help_output_refs",
+            "error_state_refs",
+            "install_run_refs",
+            "cross_platform_terminal_refs",
+        ),
+    ),
+    "docs_onboarding": (
+        "docs_onboarding_evidence",
+        (
+            "first_success_replay_refs",
+            "tasks_covered",
+            "stale_link_check_refs",
+            "public_safety_check_refs",
+            "reader_success_criteria",
+        ),
+    ),
+    "agentic_interface": (
+        "agentic_interface_evidence",
+        (
+            "task_transcript_refs",
+            "state_transition_refs",
+            "approval_boundary_refs",
+            "user_control_refs",
+            "recovery_error_refs",
+        ),
+    ),
+}
+CLI_TUI_SURFACE_TOKENS = {"cli", "tui", "terminal", "console", "command_line", "command-line"}
+DOCS_ONBOARDING_SURFACE_TOKENS = {"docs", "documentation", "onboarding", "quickstart", "guide"}
+AGENTIC_INTERFACE_SURFACE_TOKENS = {
+    "agentic_interface",
+    "agentic-interface",
+    "ai_interface",
+    "ai-interface",
+    "chat_ui",
+    "chat-ui",
+    "assistant",
+    "copilot",
+}
+VISUAL_UI_SURFACE_TOKENS = PRODUCT_FACE_SURFACES | {
+    "web",
+    "web-app",
+    "web_app",
+    "website",
+    "site",
+    "landing",
+    "landing-page",
+    "screen",
+    "component",
+    "desktop",
+    "desktop-app",
+    "extension",
+    "browser-extension",
+    "design-system",
+    "design_system",
+}
 
 
 @dataclass(frozen=True)
@@ -1734,6 +1796,42 @@ def _list_items(value: Any) -> list[str]:
     return [str(item).strip() for item in value if str(item).strip()]
 
 
+def _normalized_contract_token(value: Any) -> str:
+    return str(value or "").strip().lower().replace(" ", "_").replace("-", "_")
+
+
+def _surface_evidence_profile_id(value: Any) -> str:
+    if isinstance(value, dict):
+        value = value.get("profile_id")
+    return _normalized_contract_token(value)
+
+
+def _declared_surface_evidence_profiles(data: dict[str, Any]) -> list[str]:
+    profile_ids: list[str] = []
+    single = _surface_evidence_profile_id(data.get("surface_evidence_profile"))
+    if single:
+        profile_ids.append(single)
+    raw_profiles = data.get("surface_evidence_profiles")
+    if isinstance(raw_profiles, list):
+        profile_ids.extend(_surface_evidence_profile_id(item) for item in raw_profiles)
+    return sorted({profile_id for profile_id in profile_ids if profile_id})
+
+
+def _validate_surface_evidence_profile_declarations(data: dict[str, Any], *, at: str) -> list[str]:
+    errors: list[str] = []
+    if "surface_evidence_profile" in data and not _surface_evidence_profile_id(data.get("surface_evidence_profile")):
+        errors.append(f"{at}.surface_evidence_profile.profile_id is required")
+    raw_profiles = data.get("surface_evidence_profiles")
+    if isinstance(raw_profiles, list):
+        for index, profile in enumerate(raw_profiles):
+            if not _surface_evidence_profile_id(profile):
+                errors.append(f"{at}.surface_evidence_profiles[{index}].profile_id is required")
+    for profile_id in _declared_surface_evidence_profiles(data):
+        if profile_id not in SURFACE_EVIDENCE_PROFILES:
+            errors.append(f"{at}.surface_evidence_profile must be one of " + ", ".join(sorted(SURFACE_EVIDENCE_PROFILES)))
+    return errors
+
+
 def _has_contract(data: dict[str, Any], field: str) -> bool:
     value = data.get(field)
     if isinstance(value, dict) and value:
@@ -2352,6 +2450,41 @@ def normalized_surfaces(card: dict[str, Any]) -> set[str]:
     return {str(value).strip().lower() for value in raw if str(value).strip()}
 
 
+def _surface_profile_tokens(card: dict[str, Any]) -> set[str]:
+    tokens = {_normalized_contract_token(surface) for surface in normalized_surfaces(card)}
+    packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
+    plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
+    for field in ("surface", "surface_type", "surface_pack"):
+        if _non_empty_text(packet.get(field)):
+            tokens.add(_normalized_contract_token(packet.get(field)))
+        if _non_empty_text(plan.get(field)):
+            tokens.add(_normalized_contract_token(plan.get(field)))
+    return {token for token in tokens if token}
+
+
+def _expected_surface_evidence_profiles(card: dict[str, Any]) -> list[str]:
+    profiles = set()
+    packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
+    plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
+    for source in (packet, plan):
+        profiles.update(_declared_surface_evidence_profiles(source))
+    if profiles:
+        return sorted(profile for profile in profiles if profile in SURFACE_EVIDENCE_PROFILES)
+
+    tokens = _surface_profile_tokens(card)
+    if tokens & {_normalized_contract_token(token) for token in CLI_TUI_SURFACE_TOKENS}:
+        profiles.add("cli_tui")
+    if tokens & {_normalized_contract_token(token) for token in DOCS_ONBOARDING_SURFACE_TOKENS}:
+        profiles.add("docs_onboarding")
+    if tokens & {_normalized_contract_token(token) for token in AGENTIC_INTERFACE_SURFACE_TOKENS}:
+        profiles.add("agentic_interface")
+    if tokens & {_normalized_contract_token(token) for token in VISUAL_UI_SURFACE_TOKENS}:
+        profiles.add("web_visual_ui")
+    if not profiles and product_experience_surface_required(card):
+        profiles.add("web_visual_ui")
+    return sorted(profiles)
+
+
 def risk(card: dict[str, Any]) -> str:
     return str(card.get("risk_effective", "")).strip().upper()
 
@@ -2373,6 +2506,7 @@ def validate_product_face_packet(packet: dict[str, Any], *, strict: bool) -> lis
     errors: list[str] = []
     if not strict:
         return errors
+    errors.extend(_validate_surface_evidence_profile_declarations(packet, at="product_face_packet"))
 
     for field in PRODUCT_FACE_PACKET_REQUIRED_FIELDS:
         value = packet.get(field)
@@ -2403,6 +2537,7 @@ def validate_product_face_packet(packet: dict[str, Any], *, strict: bool) -> lis
 
 def validate_product_experience_plan(plan: dict[str, Any]) -> list[str]:
     errors: list[str] = []
+    errors.extend(_validate_surface_evidence_profile_declarations(plan, at="product_experience_plan"))
     for field in PRODUCT_EXPERIENCE_REQUIRED_FIELDS:
         value = plan.get(field)
         if isinstance(value, list):
@@ -3192,8 +3327,33 @@ def validate_reference_quality_comparison(comparison: Any, *, is_pass: bool) -> 
     return errors
 
 
+def validate_surface_evidence_profile_result(
+    result: dict[str, Any],
+    profile_id: str,
+    *,
+    is_pass: bool,
+) -> list[str]:
+    errors: list[str] = []
+    if profile_id not in SURFACE_EVIDENCE_PROFILES:
+        errors.append("product_face_result.surface_evidence_profile must be one of " + ", ".join(sorted(SURFACE_EVIDENCE_PROFILES)))
+        return errors
+    if not is_pass or profile_id == "web_visual_ui":
+        return errors
+
+    block_name, required_fields = SURFACE_EVIDENCE_PROFILE_BLOCKS[profile_id]
+    evidence = result.get(block_name)
+    if not isinstance(evidence, dict) or not evidence:
+        errors.append(f"product_face_result.{block_name} is required for {profile_id} PASS")
+        return errors
+    for field in required_fields:
+        if not _list_items(evidence.get(field)):
+            errors.append(f"product_face_result.{block_name}.{field} must be a non-empty array for {profile_id} PASS")
+    return errors
+
+
 def validate_product_face_result(result: dict[str, Any]) -> list[str]:
     errors: list[str] = []
+    errors.extend(_validate_surface_evidence_profile_declarations(result, at="product_face_result"))
     required_string = ["result", "tool_or_profile", "executed_by", "performance_note", "next_action"]
     missing_string = [field for field in required_string if not str(result.get(field) or "").strip()]
     if missing_string:
@@ -3253,6 +3413,8 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
         elif not _non_empty_text(professional_comparison.get("basis")):
             errors.append("product_face_result.professional_design_process_comparison.basis is required")
     errors.extend(validate_reference_quality_comparison(result.get("reference_quality_comparison"), is_pass=is_pass))
+    for profile_id in _declared_surface_evidence_profiles(result):
+        errors.extend(validate_surface_evidence_profile_result(result, profile_id, is_pass=is_pass))
     return errors
 
 
@@ -3281,6 +3443,17 @@ def validate_product_face_result_against_card(result: dict[str, Any], card: dict
     errors.extend(_product_delivery_quality_profile_ref_errors(card))
     if str(result.get("result") or "").upper() != "PASS":
         return errors
+
+    required_profiles = _expected_surface_evidence_profiles(card)
+    declared_profiles = set(_declared_surface_evidence_profiles(result))
+    missing_profiles = [profile for profile in required_profiles if profile not in declared_profiles]
+    if missing_profiles:
+        errors.append(
+            "product_face_result.surface_evidence_profiles missing required profile(s): "
+            + ", ".join(missing_profiles)
+        )
+    for profile_id in required_profiles:
+        errors.extend(validate_surface_evidence_profile_result(result, profile_id, is_pass=True))
 
     for field in PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS:
         value = result.get(field)
