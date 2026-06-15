@@ -31,6 +31,18 @@ class PublicSurfaceSyncTest(unittest.TestCase):
     def test_public_surface_manifest_is_current(self) -> None:
         self.assertEqual(surface_sync.validate_manifest(), [])
 
+    def test_manifest_schema_blocks_claim_checks_string_before_semantic_checks(self) -> None:
+        manifest = self.manifest()
+        mutated = copy.deepcopy(manifest)
+        mutated["surfaces"][0]["claim_checks"] = "source_refs_exist"
+
+        findings = surface_sync.validate_manifest_data(mutated)
+
+        self.assertTrue(
+            any("$.surfaces[0].claim_checks" in finding and "expected type array" in finding for finding in findings),
+            findings,
+        )
+
     def test_worker_count_drift_is_detected(self) -> None:
         manifest = self.manifest()
         mutated = copy.deepcopy(manifest)

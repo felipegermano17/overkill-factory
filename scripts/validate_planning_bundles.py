@@ -10,7 +10,14 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from validate_public_json_artifacts import load_schemas, validate_node  # noqa: E402
+
 MANIFEST_PATH = ROOT / "planning-bundles" / "manifest.json"
+MANIFEST_SCHEMA_NAME = "planning-bundle-manifest.schema.json"
 
 REQUIRED_TEXT_MARKERS = (
     "candidate_only",
@@ -66,7 +73,9 @@ def contains_forbidden_fragment(value: str, fragments: tuple[str, ...]) -> str |
 
 
 def validate_manifest_data(manifest: dict[str, Any], *, root: Path = ROOT) -> list[str]:
-    findings: list[str] = []
+    findings = validate_manifest_schema(manifest)
+    if findings:
+        return findings
     bundles = manifest.get("bundles", [])
     if not isinstance(bundles, list) or not bundles:
         return ["planning-bundles/manifest.json: bundles must be a non-empty array"]
@@ -152,6 +161,15 @@ def validate_manifest_data(manifest: dict[str, Any], *, root: Path = ROOT) -> li
                 findings.append(f"{bundle_id}: missing required safety marker {marker!r}")
 
     return findings
+
+
+def validate_manifest_schema(manifest: dict[str, Any]) -> list[str]:
+    schemas = load_schemas()
+    schema = schemas[MANIFEST_SCHEMA_NAME]
+    return [
+        f"manifest schema: {error}"
+        for error in validate_node(schema, manifest, "$", schemas=schemas, root_schema=schema)
+    ]
 
 
 def validate(path: Path = MANIFEST_PATH) -> list[str]:
