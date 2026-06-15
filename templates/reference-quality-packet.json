@@ -2,6 +2,7 @@
   "$schema": "https://overkill-factory.dev/schemas/reference-quality-packet.schema.json",
   "record_type": "reference_quality_packet",
   "experience_category": "web product surface",
+  "reference_domain": "product_ui",
   "quality_bar": "Specific, product-fit experience that avoids generic generated UI.",
   "anti_generic_criteria": [
     "The output must reflect the product job, not a generic landing-page template.",
@@ -16,9 +17,46 @@
       "copy_policy": "do_not_copy",
       "license_or_terms_ref": "operator must verify current terms before reuse",
       "public_safety_notes": "Use as a benchmark reference, not as copied content."
+    },
+    {
+      "source_id": "operator-approved-flow-benchmark",
+      "source_url_or_ref": "external:operator-approved-flow-benchmark",
+      "use_type": "benchmark",
+      "what_to_learn": ["flow density", "state visibility"],
+      "copy_policy": "do_not_copy",
+      "license_or_terms_ref": "not_applicable_for_benchmark_only",
+      "public_safety_notes": "Replace with a public-safe or operator-approved benchmark before execution."
+    },
+    {
+      "source_id": "operator-approved-component-pattern",
+      "source_url_or_ref": "external:operator-approved-component-pattern",
+      "use_type": "inspiration",
+      "what_to_learn": ["component hierarchy", "empty and blocked states"],
+      "copy_policy": "do_not_copy",
+      "license_or_terms_ref": "not_applicable_for_inspiration_only",
+      "public_safety_notes": "Use only to describe patterns; do not copy layout, text, code or assets."
     }
   ],
   "design_rationale": "References establish the quality baseline before generation.",
+  "rejected_references": [
+    {
+      "source_id": "generic-dashboard-template",
+      "reason_rejected": "Too generic for a product-specific job-to-be-done.",
+      "risk_prevented": "Avoids polished but interchangeable AI-dashboard output."
+    },
+    {
+      "source_id": "marketing-landing-page-only",
+      "reason_rejected": "Optimized for persuasion rather than repeated product operation.",
+      "risk_prevented": "Prevents hero-page styling from replacing the actual product workflow."
+    }
+  ],
+  "dimensional_synthesis": {
+    "layout_hierarchy": "The primary user job, status, evidence and next action must be visually ordered before decorative content.",
+    "interaction_model": "States, transitions, disabled actions and recovery paths must be visible before implementation.",
+    "visual_language": "Use a product-fit visual system derived from references without copying source assets or layouts.",
+    "content_density": "Match density to the operator task instead of defaulting to sparse marketing composition.",
+    "failure_modes": ["generic AI-dashboard look", "unclear blocked state", "reference copying"]
+  },
   "component_expectations": ["components must match the job-to-be-done"],
   "interaction_expectations": ["states and transitions must be observable"],
   "visual_constraints": ["avoid stock/generic composition"],
