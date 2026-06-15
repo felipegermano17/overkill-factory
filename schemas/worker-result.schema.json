@@ -150,6 +150,97 @@
     "reusable_for_product": {
       "type": "boolean"
     },
+    "handoff_state": {
+      "enum": [
+        "consumable",
+        "implementation_ready_for_review",
+        "review_satisfied",
+        "blocked",
+        "invalid"
+      ]
+    },
+    "reviewer_required": { "type": "boolean" },
+    "review_worker_id": { "type": "string", "minLength": 3 },
+    "reviewer_worker_id": { "type": "string", "minLength": 3 },
+    "reviewer_result": { "type": "string", "minLength": 2 },
+    "review_declared": { "type": "boolean" },
+    "review_ready": { "type": "boolean" },
+    "authorized_downstream_scope": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 2 }
+    },
+    "graph_requirement_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "review_requirement_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "reviewed_requirement_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "reviewed_producer_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "producer_refs_reviewed": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "review_required_handoff": {
+      "type": "object",
+      "required": [
+        "review_required",
+        "review_worker_id",
+        "required_review_field",
+        "authorized_scope",
+        "forbidden_scope_until_review_pass"
+      ],
+      "properties": {
+        "review_required": { "const": true },
+        "review_worker_id": { "type": "string", "minLength": 3 },
+        "required_review_field": { "type": "string", "minLength": 3 },
+        "authorized_scope": {
+          "type": "array",
+          "contains": { "const": "review" }
+        },
+        "forbidden_scope_until_review_pass": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "review_task_authorizations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "authorization_type",
+          "authorization_state",
+          "requirement_id",
+          "producer_field",
+          "producer_ref",
+          "authorized_worker_id",
+          "authorized_scope",
+          "runtime_authority",
+          "local_state_authority"
+        ],
+        "properties": {
+          "authorization_type": { "const": "review_task_only" },
+          "authorization_state": { "const": "review_task_ready" },
+          "authorized_scope": {
+            "type": "array",
+            "contains": { "const": "review" }
+          },
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false }
+        },
+        "additionalProperties": true
+      }
+    },
     "evidence_provenance": {
       "type": "object",
       "description": "Structured provenance for production-strict file-backed evidence.",

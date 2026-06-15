@@ -54,7 +54,14 @@
             },
             "additionalProperties": false
           },
-          "local_record_role": { "const": "idempotency_projection" }
+          "local_record_role": { "const": "idempotency_projection" },
+          "dependency_authorization_state": {
+            "enum": ["review_ready", null]
+          },
+          "review_task_authorizations": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          }
         },
         "additionalProperties": true
       }
@@ -89,6 +96,37 @@
           "runtime_authority": { "const": "hermes_kanban" },
           "local_state_authority": { "const": false },
           "status": { "enum": ["pending", "satisfied"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "review_task_authorizations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "authorization_id",
+          "authorization_type",
+          "authorization_state",
+          "local_record_role",
+          "card_id",
+          "requirement_id",
+          "producer_field",
+          "authorized_worker_id",
+          "authorized_scope",
+          "runtime_authority",
+          "local_state_authority"
+        ],
+        "properties": {
+          "authorization_type": { "const": "review_task_only" },
+          "authorization_state": { "const": "review_task_ready" },
+          "local_record_role": { "const": "idempotency_projection" },
+          "authorized_scope": {
+            "type": "array",
+            "contains": { "const": "review" }
+          },
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false }
         },
         "additionalProperties": true
       }

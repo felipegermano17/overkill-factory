@@ -86,9 +86,9 @@ class HermesTransitionHookTest(unittest.TestCase):
             blocking_findings=False,
             findings_summary="Handoff packet declares an independent review gate.",
             next_action="independent review required before implementation consumption",
+            reviewer_required=True,
+            reviewer_result="PENDING",
         )
-        handoff["reviewer_required"] = True
-        handoff["reviewer_result"] = "PENDING"
 
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             tmp_path = Path(tmp)
@@ -119,6 +119,94 @@ class HermesTransitionHookTest(unittest.TestCase):
                 for task in ledger_data["tasks"].values()
             )
         )
+
+    def test_hook_persists_review_ready_authorizations(self) -> None:
+        factoryctl = transition_hook.load_factoryctl()
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card_data = factoryctl.load_json_like(card)
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card_data,
+            result="PASS",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Handoff packet declares an independent review gate.",
+            next_action="independent review required before implementation consumption",
+            reviewer_required=True,
+            reviewer_result="PENDING",
+        )
+        receipt_payload = {
+            "handoff_packet_result": handoff,
+            "orchestration_result": factoryctl.build_worker_result(
+                "factory-orchestrator",
+                card_data,
+                result="PASS",
+                tool_or_profile="orchestration-smoke",
+                executed_by="factory-orchestrator",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Orchestration precondition passed.",
+                next_action="continue",
+            ),
+            "source_ledger_result": factoryctl.build_worker_result(
+                "source-ledger-worker",
+                card_data,
+                result="PASS",
+                tool_or_profile="source-ledger-smoke",
+                executed_by="source-ledger-worker",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Source ledger precondition passed.",
+                next_action="continue",
+            ),
+            "security_orchestration_result": factoryctl.build_worker_result(
+                "security-orchestrator",
+                card_data,
+                result="PASS",
+                tool_or_profile="security-orchestration-smoke",
+                executed_by="security-orchestrator",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Security orchestration precondition passed.",
+                next_action="continue",
+            ),
+            "supply_chain_result": factoryctl.build_worker_result(
+                "supply-chain-gate",
+                card_data,
+                result="PASS",
+                tool_or_profile="supply-chain-smoke",
+                executed_by="supply-chain-gate",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Supply chain precondition passed.",
+                next_action="continue",
+            ),
+        }
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            tmp_path = Path(tmp)
+            receipt = tmp_path / "receipt.json"
+            ledger = tmp_path / "worker-ledger.json"
+            receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
+
+            result = transition_hook.build_hook_result(
+                card_path=card,
+                from_status="doing",
+                to_status="implementation-ready-for-review",
+                receipt_path=receipt,
+                worker_results_dir=None,
+                ledger_path=ledger,
+            )
+            ledger_data = json.loads(ledger.read_text(encoding="utf-8"))
+
+        self.assertEqual(result["transition_action"], "allow_review_ready")
+        self.assertEqual(result["blocked_reasons"], [])
+        self.assertTrue(ledger_data["review_task_authorizations"])
+        task = next(task for task in ledger_data["tasks"].values() if task["worker_id"] == "independent-reviewer")
+        self.assertEqual(task["dependency_authorization_state"], "review_ready")
+        self.assertEqual(task["review_task_authorizations"][0]["authorized_scope"], ["review"])
 
     def test_cli_is_fail_closed_for_before_ready_blocks(self) -> None:
         card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"

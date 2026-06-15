@@ -152,6 +152,17 @@ def ensure_blocked_event(
         raise RuntimeError(f"Hermes task {task_id} is not durably blocked after block command")
 
 
+def unblock_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    reason: str,
+    runner: Runner = default_runner,
+) -> None:
+    run_checked(hermes_kanban(hermes_bin, board, "unblock", task_id, reason), runner)
+
+
 def record_live_binding(
     *,
     ledger_path: Path,
@@ -287,7 +298,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         card_path=card_path,
         from_status=args.from_status,
         to_status=args.to_status,
-        receipt_path=None,
+        receipt_path=args.receipt,
         worker_results_dir=None,
         ledger_path=ledger_path,
     )
@@ -343,6 +354,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         runner=runner,
     )
     worker_task_ids: dict[str, str] = {}
+    review_promoted_worker_task_ids: dict[str, str] = {}
     for task in plan.get("worker_tasks", []):
         worker_id = str(task.get("worker_id") or "").strip()
         if not worker_id or task.get("status") == "not_required_by_current_card":
@@ -362,6 +374,26 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         )
         worker_task_ids[worker_id] = task_id
         run_checked(hermes_kanban(args.hermes_bin, args.board, "link", task_id, main_task_id), runner)
+        review_authorized = (
+            task.get("dependency_authorization_state") == "review_ready"
+            and task.get("status") == "requires_execution"
+            and bool(task.get("review_task_authorizations"))
+        )
+        if review_authorized and not args.worker_ready:
+            auth = task["review_task_authorizations"][0]
+            requirement_id = str(auth.get("requirement_id") or "review-required-handoff")
+            producer_ref = str(auth.get("producer_ref") or "producer-handoff")
+            unblock_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=task_id,
+                reason=(
+                    "Review task authorized by valid review-required handoff "
+                    f"{requirement_id} from {producer_ref}; non-review downstream remains gated."
+                ),
+                runner=runner,
+            )
+            review_promoted_worker_task_ids[worker_id] = task_id
 
     record_live_binding(
         ledger_path=ledger_path,
@@ -379,6 +411,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         "board_created": board_created,
         "main_task_id": main_task_id,
         "worker_task_ids": worker_task_ids,
+        "review_promoted_worker_task_ids": review_promoted_worker_task_ids,
         "hook": result,
     }
     if args.out:
@@ -446,6 +479,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_mat.add_argument("--card", type=Path, required=True)
     p_mat.add_argument("--board", required=True)
     p_mat.add_argument("--ledger", type=Path, required=True)
+    p_mat.add_argument("--receipt", type=Path)
     p_mat.add_argument("--from-status", default="blocked")
     p_mat.add_argument("--to-status", default="ready")
     p_mat.add_argument("--hermes-bin", default="hermes")

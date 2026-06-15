@@ -29,6 +29,10 @@
     "worker_task_ids": {
       "type": "object"
     },
+    "review_promoted_worker_task_ids": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 3 }
+    },
     "hook": {
       "type": "object"
     }
