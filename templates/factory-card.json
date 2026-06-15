@@ -43,7 +43,7 @@
   "runtime_contract": { "mode": "bounded_worker" },
   "security_contract": { "security_boundary": "no_sensitive_action" },
   "forbidden_actions": ["deploy", "secret_access", "funds", "mainnet"],
-  "done_definition": "Define exactly what must be true before done.",
+  "done_definition": ["Define exactly what must be true before done."],
   "transition_event_required": true,
   "kanban_transition_event_ref": "required_before_ready",
   "capability_pack_contract": {

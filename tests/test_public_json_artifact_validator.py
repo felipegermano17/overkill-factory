@@ -89,6 +89,29 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         self.assertEqual(errors, [])
 
+    def test_factory_card_schema_rejects_absurd_required_field_shapes(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["factory-card.schema.json"]
+        card = json.loads((ROOT / "templates" / "vfinal-factory-card.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(validator.validate_node(schema, card, "$", schemas=schemas, root_schema=schema), [])
+
+        invalid = dict(card)
+        invalid["source_refs"] = "source-ledger.md"
+        invalid["done_definition"] = "ship it"
+        invalid["transition_event_required"] = "yes"
+        invalid["review"] = "self-review"
+        invalid["owner_worker"] = []
+
+        errors = validator.validate_node(schema, invalid, "$", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("$.source_refs" in error and "expected type array" in error for error in errors))
+        self.assertTrue(any("$.done_definition" in error and "expected type array" in error for error in errors))
+        self.assertTrue(any("$.transition_event_required" in error and "expected type boolean" in error for error in errors))
+        self.assertTrue(any("$.review" in error and "expected type object" in error for error in errors))
+        self.assertTrue(any("$.owner_worker" in error and "expected type string" in error for error in errors))
+
     def test_resolves_schema_file_refs_used_by_factory_card(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()
