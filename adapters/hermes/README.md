@@ -149,6 +149,14 @@ stays blocked until a fresh review result provides the stated unblock
 authority. The adapter verifies Hermes readback after block/unblock operations;
 it does not keep a parallel lifecycle state.
 
+When that fresh review records a matching `PASS`, the adapter can reopen only
+the explicitly authorized downstream worker ids from the transition plan. This
+is not a broad card approval: satisfied producer/reviewer tasks stay closed for
+execution purposes, `human-gate-clerk` stays blocked until real human evidence
+exists, and the main card remains blocked until the normal completion gate
+passes. Without `downstream_task_authorizations`, no downstream worker is
+unblocked.
+
 ## Dispatch Reporting
 
 Hermes owns dispatch. The adapter does not schedule workers itself, but it can

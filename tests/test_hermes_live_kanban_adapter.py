@@ -476,6 +476,145 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertTrue(any(call[5] == handoff_task_id and "downstream remains gated" in call[6] for call in unblock_calls))
 
+    def test_materialize_promotes_downstream_workers_after_fresh_review_pass(self) -> None:
+        fake = FakeHermes()
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card_data = factoryctl.load_json_like(card)
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card_data,
+            result="PASS",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Handoff packet declares an independent review gate.",
+            next_action="continue after review",
+            reviewer_required=True,
+            reviewer_result="PENDING",
+        )
+        requirement = factoryctl.declared_graph_requirements(
+            "handoff_packet_result",
+            handoff,
+            evidence_ref="receipt:handoff_packet_result",
+        )[0]
+        review = factoryctl.build_worker_result(
+            "independent-reviewer",
+            card_data,
+            result="PASS",
+            tool_or_profile="independent-review-smoke",
+            executed_by="independent-reviewer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Fresh review passed the repaired handoff packet.",
+            next_action="continue downstream",
+        )
+        review["graph_requirement_refs"] = [requirement["requirement_id"]]
+        review["authorized_downstream_worker_ids"] = [
+            "qa-verification-worker",
+            "human-gate-clerk",
+            "handoff-packer",
+            "unknown-worker",
+        ]
+        receipt_payload = {
+            "handoff_packet_result": handoff,
+            "independent_review_result": review,
+            "orchestration_result": factoryctl.build_worker_result(
+                "factory-orchestrator",
+                card_data,
+                result="PASS",
+                tool_or_profile="orchestration-smoke",
+                executed_by="factory-orchestrator",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Orchestration precondition passed.",
+                next_action="continue",
+            ),
+            "source_ledger_result": factoryctl.build_worker_result(
+                "source-ledger-worker",
+                card_data,
+                result="PASS",
+                tool_or_profile="source-ledger-smoke",
+                executed_by="source-ledger-worker",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Source ledger precondition passed.",
+                next_action="continue",
+            ),
+            "security_orchestration_result": factoryctl.build_worker_result(
+                "security-orchestrator",
+                card_data,
+                result="PASS",
+                tool_or_profile="security-orchestration-smoke",
+                executed_by="security-orchestrator",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Security orchestration precondition passed.",
+                next_action="continue",
+            ),
+            "supply_chain_result": factoryctl.build_worker_result(
+                "supply-chain-gate",
+                card_data,
+                result="PASS",
+                tool_or_profile="supply-chain-smoke",
+                executed_by="supply-chain-gate",
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="Supply chain precondition passed.",
+                next_action="continue",
+            ),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            readiness = tmp_path / "route-readiness.json"
+            receipt = tmp_path / "receipt.json"
+            ledger = tmp_path / "ledger.json"
+            write_route_readiness(readiness)
+            receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--ledger",
+                    str(ledger),
+                    "--receipt",
+                    str(receipt),
+                    "--from-status",
+                    "review",
+                    "--to-status",
+                    "ready",
+                    "--route-readiness",
+                    str(readiness),
+                ]
+            )
+            result = adapter.materialize(args, runner=fake)
+            ledger_data = json.loads(ledger.read_text(encoding="utf-8"))
+
+        promoted = result["downstream_promoted_worker_task_ids"]
+        self.assertEqual(promoted, {"qa-verification-worker": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertNotIn("codex-security", promoted)
+        self.assertNotIn("human-gate-clerk", promoted)
+        self.assertNotIn("handoff-packer", promoted)
+        self.assertNotIn("independent-reviewer", promoted)
+        qa_task = next(task for task in ledger_data["tasks"].values() if task["worker_id"] == "qa-verification-worker")
+        codex_security_task = next(task for task in ledger_data["tasks"].values() if task["worker_id"] == "codex-security")
+        human_gate_task = next(task for task in ledger_data["tasks"].values() if task["worker_id"] == "human-gate-clerk")
+        self.assertEqual(fake.tasks[qa_task["runtime_refs"]["hermes_task_ref"]]["status"], "ready")
+        self.assertEqual(fake.tasks[codex_security_task["runtime_refs"]["hermes_task_ref"]]["status"], "blocked")
+        self.assertEqual(fake.tasks[human_gate_task["runtime_refs"]["hermes_task_ref"]]["status"], "blocked")
+        self.assertEqual(fake.tasks[MAIN_TASK_ID]["status"], "blocked")
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertTrue(
+            any(
+                call[5] == qa_task["runtime_refs"]["hermes_task_ref"]
+                and "Fresh PASS review authorized exact downstream worker" in call[6]
+                for call in unblock_calls
+            )
+        )
+
     def test_materialize_dry_run_does_not_call_hermes_create(self) -> None:
         fake = FakeHermes()
         card = ROOT / "examples" / "cards" / "v35_valid_product_face.md"

@@ -4318,6 +4318,11 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             "reviewed_requirement_refs": string_list(data.get("reviewed_requirement_refs")),
             "reviewed_producer_refs": string_list(data.get("reviewed_producer_refs")),
             "producer_refs_reviewed": string_list(data.get("producer_refs_reviewed")),
+            "authorized_downstream_worker_ids": registered_nonhuman_worker_ids(
+                data.get("authorized_downstream_worker_ids")
+                or data.get("authorized_next_worker_ids")
+                or data.get("downstream_worker_ids")
+            ),
             "review_task_authorizations": [
                 item for item in data.get("review_task_authorizations", []) if isinstance(item, dict)
             ],
@@ -4380,6 +4385,11 @@ def receipt_result_fields(
                 "reviewed_requirement_refs": string_list(value.get("reviewed_requirement_refs")),
                 "reviewed_producer_refs": string_list(value.get("reviewed_producer_refs")),
                 "producer_refs_reviewed": string_list(value.get("producer_refs_reviewed")),
+                "authorized_downstream_worker_ids": registered_nonhuman_worker_ids(
+                    value.get("authorized_downstream_worker_ids")
+                    or value.get("authorized_next_worker_ids")
+                    or value.get("downstream_worker_ids")
+                ),
                 "review_task_authorizations": [
                     item for item in value.get("review_task_authorizations", []) if isinstance(item, dict)
                 ],
@@ -4426,6 +4436,14 @@ def _declared_review_worker_id(data: dict[str, Any]) -> str:
         or ""
     ).strip()
     return worker_id if worker_id in WORKERS else "independent-reviewer"
+
+
+def registered_nonhuman_worker_ids(value: Any) -> list[str]:
+    worker_ids: list[str] = []
+    for worker_id in string_list(value):
+        if worker_id in WORKERS and worker_id != "human-gate-clerk" and worker_id not in worker_ids:
+            worker_ids.append(worker_id)
+    return worker_ids
 
 
 def declared_graph_requirements(record_type: str, data: dict[str, Any], *, evidence_ref: str | None) -> list[dict[str, Any]]:
@@ -4546,6 +4564,13 @@ def resolve_graph_requirements(fields: dict[str, dict[str, Any]]) -> list[dict[s
                     requirement["status"] = "satisfied"
                     requirement["reviewer_result"] = "PASS"
                     requirement["review_evidence_ref"] = review_record.get("evidence_ref") or "receipt:review"
+                    authorized_worker_ids = registered_nonhuman_worker_ids(
+                        review_record.get("authorized_downstream_worker_ids")
+                        or review_record.get("authorized_next_worker_ids")
+                        or review_record.get("downstream_worker_ids")
+                    )
+                    if authorized_worker_ids:
+                        requirement["authorized_downstream_worker_ids"] = authorized_worker_ids
             requirements.append(requirement)
     for record in fields.values():
         graph_requirements = [dict(item) for item in record.get("graph_requirements", [])]
@@ -4557,6 +4582,62 @@ def resolve_graph_requirements(fields: dict[str, dict[str, Any]]) -> list[dict[s
         record["graph_requirements"] = resolved_for_record
         apply_record_consumption_state(record)
     return requirements
+
+
+def downstream_task_authorization(requirement: dict[str, Any], worker_tasks: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if requirement.get("status") != "satisfied":
+        return None
+    review_evidence_ref = str(requirement.get("review_evidence_ref") or "").strip()
+    if not review_evidence_ref:
+        return None
+    available_workers = {
+        str(task.get("worker_id") or "")
+        for task in worker_tasks
+        if task.get("status") == "requires_execution"
+    }
+    producer_worker = _worker_id_for_output_field(str(requirement.get("producer_field") or ""))
+    review_worker = str(requirement.get("review_worker_id") or "")
+    forbidden_worker_ids = sorted(
+        worker_id
+        for worker_id in {"human-gate-clerk", producer_worker or "", review_worker}
+        if worker_id
+    )
+    authorized_worker_ids = [
+        worker_id
+        for worker_id in registered_nonhuman_worker_ids(requirement.get("authorized_downstream_worker_ids"))
+        if worker_id in available_workers and worker_id not in forbidden_worker_ids
+    ]
+    if not authorized_worker_ids:
+        return None
+    requirement_id = str(requirement.get("requirement_id") or "").strip()
+    return {
+        "authorization_type": "fresh_review_downstream_task",
+        "authorization_state": "worker_task_ready",
+        "requirement_id": requirement_id,
+        "producer_field": requirement.get("producer_field"),
+        "producer_ref": requirement.get("producer_ref"),
+        "review_evidence_ref": review_evidence_ref,
+        "authorized_worker_ids": authorized_worker_ids,
+        "forbidden_worker_ids": forbidden_worker_ids,
+        "unblock_reason": (
+            f"Fresh PASS review {review_evidence_ref} satisfied {requirement_id}; "
+            f"authorized next worker(s): {', '.join(authorized_worker_ids)}"
+        ),
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+    }
+
+
+def downstream_task_authorizations(
+    graph_requirements: list[dict[str, Any]],
+    worker_tasks: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    authorizations: list[dict[str, Any]] = []
+    for requirement in graph_requirements:
+        authorization = downstream_task_authorization(requirement, worker_tasks)
+        if authorization:
+            authorizations.append(authorization)
+    return authorizations
 
 
 def graph_requirement_block_reason(requirement: dict[str, Any]) -> str:
@@ -4871,6 +4952,7 @@ def build_transition_plan(
         attach_graph_requirement_tasks(worker_tasks, graph_requirements, card, source_path)
     if recovery_routes:
         attach_recovery_routes_to_tasks(worker_tasks, recovery_routes, card, source_path)
+    downstream_authorizations = downstream_task_authorizations(graph_requirements, worker_tasks)
 
     def append_unsatisfied_graph_requirement_blocks() -> None:
         for requirement in unsatisfied_graph_requirements:
@@ -4912,7 +4994,7 @@ def build_transition_plan(
             transition_action = "block_and_create_before_ready_tasks"
         else:
             transition_action = "block_transition" if blocked_reasons else "allow_and_create_worker_tasks"
-        completion = None
+        completion = graph_completion
     elif transition_is_review_ready(normalized_to):
         blocked_reasons.extend(gate["card_validation_errors"])
         for worker_id in gate["blocked_workers"]:
@@ -4989,6 +5071,7 @@ def build_transition_plan(
         "recovery_routes": recovery_routes,
         "review_ready_handoffs": review_ready_handoffs,
         "review_task_authorizations": review_task_authorizations,
+        "downstream_task_authorizations": downstream_authorizations,
         "completion_reconciliation": completion,
     }
 

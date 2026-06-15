@@ -257,6 +257,59 @@ def task_has_unblocked_event(payload: dict[str, Any]) -> bool:
     return False
 
 
+def worker_satisfied_by_reconciliation(plan: dict[str, Any], worker_id: str) -> bool:
+    reconciliation = plan.get("completion_reconciliation")
+    if not isinstance(reconciliation, dict):
+        return False
+    workers = reconciliation.get("workers")
+    if not isinstance(workers, dict):
+        return False
+    row = workers.get(worker_id)
+    return isinstance(row, dict) and row.get("satisfied") is True
+
+
+def downstream_authorizations_by_worker(plan: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    by_worker: dict[str, list[dict[str, Any]]] = {}
+    for authorization in plan.get("downstream_task_authorizations") or []:
+        if not isinstance(authorization, dict):
+            continue
+        if (
+            authorization.get("authorization_type") != "fresh_review_downstream_task"
+            or authorization.get("authorization_state") != "worker_task_ready"
+            or authorization.get("runtime_authority") != "hermes_kanban"
+            or authorization.get("local_state_authority") is not False
+        ):
+            continue
+        for worker_id in authorization.get("authorized_worker_ids") or []:
+            worker_id = str(worker_id or "").strip()
+            if worker_id and worker_id != "human-gate-clerk":
+                by_worker.setdefault(worker_id, []).append(authorization)
+    return by_worker
+
+
+def downstream_worker_ready_after_fresh_review(
+    plan: dict[str, Any],
+    task: dict[str, Any],
+    authorizations: dict[str, list[dict[str, Any]]],
+) -> bool:
+    if plan.get("transition_action") != "allow_and_create_worker_tasks":
+        return False
+    worker_id = str(task.get("worker_id") or "").strip()
+    if not worker_id or worker_id == "human-gate-clerk":
+        return False
+    if worker_id not in authorizations:
+        return False
+    if task.get("status") != "requires_execution":
+        return False
+    if task.get("required_before") != "done":
+        return False
+    if task.get("dependency_authorization_state") == "review_ready":
+        return False
+    if worker_satisfied_by_reconciliation(plan, worker_id):
+        return False
+    return True
+
+
 def ensure_blocked_event(
     *,
     hermes_bin: str,
@@ -489,6 +542,8 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
     worker_task_ids: dict[str, str] = {}
     review_promoted_worker_task_ids: dict[str, str] = {}
     recovery_promoted_worker_task_ids: dict[str, str] = {}
+    downstream_promoted_worker_task_ids: dict[str, str] = {}
+    downstream_authorizations = downstream_authorizations_by_worker(plan)
     for task in plan.get("worker_tasks", []):
         worker_id = str(task.get("worker_id") or "").strip()
         if not worker_id or task.get("status") == "not_required_by_current_card":
@@ -533,12 +588,14 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
             for route in (packet.get("input_contract") or {}).get("recovery_routes", [])
             if isinstance(route, dict)
         ]
-        recovery_authorized = any(
-            route.get("factory_owned_repair_allowed") is True and route.get("human_gate_required") is False
+        authorized_recovery_routes = [
+            route
             for route in recovery_routes
-        )
+            if route.get("factory_owned_repair_allowed") is True and route.get("human_gate_required") is False
+        ]
+        recovery_authorized = bool(authorized_recovery_routes)
         if recovery_authorized and not args.worker_ready:
-            route = recovery_routes[0]
+            route = authorized_recovery_routes[0]
             route_id = str(route.get("recovery_route_id") or "factory-recovery-route")
             fresh_review_ref = str(route.get("fresh_review_result_ref") or "fresh-review-required")
             unblock_task(
@@ -552,6 +609,35 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
                 runner=runner,
             )
             recovery_promoted_worker_task_ids[worker_id] = task_id
+        downstream_authorized = (
+            downstream_worker_ready_after_fresh_review(plan, task, downstream_authorizations)
+            and worker_id not in review_promoted_worker_task_ids
+            and worker_id not in recovery_promoted_worker_task_ids
+        )
+        if downstream_authorized and not args.worker_ready:
+            auths = downstream_authorizations[worker_id]
+            requirement_ids = [
+                str(auth.get("requirement_id") or "").strip()
+                for auth in auths
+                if str(auth.get("requirement_id") or "").strip()
+            ]
+            review_refs = [
+                str(auth.get("review_evidence_ref") or "").strip()
+                for auth in auths
+                if str(auth.get("review_evidence_ref") or "").strip()
+            ]
+            unblock_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=task_id,
+                reason=(
+                    "Fresh PASS review authorized exact downstream worker "
+                    f"{worker_id}; requirement(s): {', '.join(requirement_ids)}; "
+                    f"review ref(s): {', '.join(review_refs)}; main gate remains blocked."
+                ),
+                runner=runner,
+            )
+            downstream_promoted_worker_task_ids[worker_id] = task_id
 
     record_live_binding(
         ledger_path=ledger_path,
@@ -571,6 +657,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         "worker_task_ids": worker_task_ids,
         "review_promoted_worker_task_ids": review_promoted_worker_task_ids,
         "recovery_promoted_worker_task_ids": recovery_promoted_worker_task_ids,
+        "downstream_promoted_worker_task_ids": downstream_promoted_worker_task_ids,
         "hook": result,
     }
     public_envelope = sanitize_public_refs(envelope)

@@ -169,6 +169,10 @@
       "type": "array",
       "items": { "type": "string", "minLength": 2 }
     },
+    "authorized_downstream_worker_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
     "graph_requirement_refs": {
       "type": "array",
       "items": { "type": "string", "minLength": 3 }

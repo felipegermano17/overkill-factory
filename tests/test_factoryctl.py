@@ -1530,6 +1530,59 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(closure["unsatisfied_graph_requirements"], [])
         self.assertEqual(closure["graph_requirements"][0]["status"], "satisfied")
 
+    def test_transition_plan_downstream_authorization_requires_explicit_review_worker_ids(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = factoryctl.load_json_like(card_path)
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+        requirement_id = factoryctl.declared_graph_requirements(
+            "handoff_packet_result",
+            handoff,
+            evidence_ref="receipt:handoff_packet_result",
+        )[0]["requirement_id"]
+        review = worker_result("independent_review_result", source_card=card)
+        review["graph_requirement_refs"] = [requirement_id]
+        receipt = {
+            "handoff_packet_result": handoff,
+            "independent_review_result": review,
+            "orchestration_result": worker_result("orchestration_result", source_card=card),
+            "source_ledger_result": worker_result("source_ledger_result", source_card=card),
+            "security_orchestration_result": worker_result("security_orchestration_result", source_card=card),
+            "supply_chain_result": worker_result("supply_chain_result", source_card=card),
+        }
+
+        without_explicit_auth = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="review",
+            to_status="ready",
+            receipt=receipt,
+        )
+
+        self.assertEqual(without_explicit_auth["downstream_task_authorizations"], [])
+
+        review["authorized_downstream_worker_ids"] = [
+            "qa-verification-worker",
+            "human-gate-clerk",
+            "handoff-packer",
+            "unknown-worker",
+        ]
+        with_explicit_auth = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="review",
+            to_status="ready",
+            receipt=receipt,
+        )
+
+        self.assertEqual(len(with_explicit_auth["downstream_task_authorizations"]), 1)
+        authorization = with_explicit_auth["downstream_task_authorizations"][0]
+        self.assertEqual(authorization["authorization_type"], "fresh_review_downstream_task")
+        self.assertEqual(authorization["authorized_worker_ids"], ["qa-verification-worker"])
+        self.assertIn("human-gate-clerk", authorization["forbidden_worker_ids"])
+        self.assertIn("handoff-packer", authorization["forbidden_worker_ids"])
+        self.assertIn("independent-reviewer", authorization["forbidden_worker_ids"])
+
     def test_worker_closure_does_not_satisfy_handoff_review_with_generic_review_result(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
