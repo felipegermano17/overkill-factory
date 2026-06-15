@@ -1625,6 +1625,26 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(closure["unsatisfied_graph_requirements"][0]["requirement_type"], "review_before_consumption")
         self.assertEqual(closure["unsatisfied_graph_requirements"][0]["review_worker_id"], "independent-reviewer")
 
+    def test_worker_closure_ignores_inline_reviewer_pass_on_producer_handoff(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result(
+            "handoff_packet_result",
+            source_card=card,
+            reviewer_required=True,
+            reviewer_result="PASS",
+        )
+
+        closure = factoryctl.build_worker_closure(card, {"handoff_packet_result": handoff}, None)
+
+        handoff_row = closure["workers"]["handoff-packer"]
+        self.assertTrue(handoff_row["valid"])
+        self.assertFalse(handoff_row["consumable"])
+        self.assertFalse(handoff_row["satisfied"])
+        self.assertEqual(closure["graph_requirements"][0]["status"], "pending")
+        self.assertEqual(closure["graph_requirements"][0]["reviewer_result"], "PASS")
+        self.assertEqual(closure["unsatisfied_graph_requirements"][0]["review_worker_id"], "independent-reviewer")
+
     def test_transition_plan_blocks_declared_handoff_review_before_downstream_consumption(self) -> None:
         card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         card = factoryctl.load_json_like(card_path)

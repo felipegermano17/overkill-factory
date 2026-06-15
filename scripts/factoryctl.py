@@ -4609,7 +4609,7 @@ def declared_graph_requirements(record_type: str, data: dict[str, Any], *, evide
     review_worker_id = _declared_review_worker_id(data)
     required_review_field = WORKERS[review_worker_id].output_field
     reviewer_result = str(data.get("reviewer_result") or "").strip().upper()
-    status = "satisfied" if reviewer_result == "PASS" else "pending"
+    status = "pending"
     requirement_ref = evidence_ref or f"external:{record_type}"
     recovery_route_refs = string_list(data.get("recovery_route_refs"))
     recovery_route_digests = recovery_route_digest_list(data.get("recovery_route_digests"))
@@ -4628,9 +4628,7 @@ def declared_graph_requirements(record_type: str, data: dict[str, Any], *, evide
         "reviewer_result": reviewer_result or "missing",
         "downstream_scope": ["implementation", "done", "release"],
         "review_authorized_scope": ["review"],
-        "producer_handoff_state": "implementation_ready_for_review"
-        if status == "pending"
-        else "review_satisfied",
+        "producer_handoff_state": "implementation_ready_for_review",
         "runtime_authority": "hermes_kanban",
         "local_state_authority": False,
     }
