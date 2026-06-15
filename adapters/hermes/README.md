@@ -147,7 +147,14 @@ When a `BLOCKED` review produces a factory-owned `recovery_route`, the adapter
 unblocks only the repair worker task authorized by that route. Downstream work
 stays blocked until a fresh review result provides the stated unblock
 authority. The adapter verifies Hermes readback after block/unblock operations;
-it does not keep a parallel lifecycle state.
+it does not keep a parallel lifecycle state. Recovery retry attempts are derived
+from stable `factory_recovery_attempt` markers in the Hermes task history for
+that route before each unblock. If Hermes cannot return a task history source,
+or if the route's `retry_policy.max_attempts` is exceeded, the adapter leaves
+the task blocked and reports `recovery_retry_blocked_worker_task_ids`. If an
+idempotent rerun finds the repair task already ready, running or done, the
+adapter records an `already_active_no_new_attempt` no-op instead of blocking or
+unblocking it again.
 
 When that fresh review records a matching `PASS`, the adapter can reopen only
 the explicitly authorized downstream worker ids from the transition plan. This

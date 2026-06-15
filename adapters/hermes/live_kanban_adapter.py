@@ -30,6 +30,9 @@ TASK_ID_RE = PRIVATE_KANBAN_TASK_MARKER_RE
 LIVE_ADAPTER_SCHEMA = "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json"
 ROUTE_READINESS_SCHEMA = "https://overkill-factory.dev/schemas/hermes-worker-route-readiness.schema.json"
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
+RECOVERY_ATTEMPT_MARKER = "factory_recovery_attempt"
+ACTIVE_OR_TERMINAL_STATUSES = {"ready", "running", "done", "complete", "completed"}
+HISTORY_SOURCE_KEYS = ("events", "history", "timeline", "comments", "runs")
 
 
 def default_runner(argv: list[str]) -> subprocess.CompletedProcess[str]:
@@ -149,6 +152,10 @@ def show_task(
     return payload if isinstance(payload, dict) else {}
 
 
+def task_status(payload: dict[str, Any]) -> str:
+    return str(payload.get("status") or "").strip().lower()
+
+
 def enrich_dispatch_task(
     *,
     hermes_bin: str,
@@ -244,7 +251,14 @@ def task_has_blocked_event(payload: dict[str, Any]) -> bool:
     if str(payload.get("status") or "").strip().lower() == "blocked":
         events = payload.get("events") or payload.get("history") or payload.get("timeline") or []
         if isinstance(events, list):
-            return any("block" in str(event).lower() for event in events)
+            for event in events:
+                if isinstance(event, dict):
+                    event_type = str(event.get("type") or event.get("event") or event.get("action") or "").strip().lower()
+                    if event_type in {"block", "blocked"}:
+                        return True
+                text = str(event).lower()
+                if re.search(r"\bblocked\b", text) and not re.search(r"\bunblocked\b", text):
+                    return True
     return False
 
 
@@ -308,6 +322,39 @@ def downstream_worker_ready_after_fresh_review(
     if worker_satisfied_by_reconciliation(plan, worker_id):
         return False
     return True
+
+
+def history_items(payload: dict[str, Any]) -> list[tuple[str, int, Any]]:
+    items: list[tuple[str, int, Any]] = []
+    for key in HISTORY_SOURCE_KEYS:
+        value = payload.get(key)
+        if isinstance(value, list):
+            items.extend((key, index, item) for index, item in enumerate(value))
+    return items
+
+
+def has_history_source(payload: dict[str, Any]) -> bool:
+    return any(isinstance(payload.get(key), list) for key in HISTORY_SOURCE_KEYS)
+
+
+def recovery_attempt_history_refs(payload: dict[str, Any], route_id: str) -> list[str]:
+    route = route_id.strip().lower()
+    if not route:
+        return []
+    refs: list[str] = []
+    for key, index, item in history_items(payload):
+        text = json.dumps(item, ensure_ascii=True, sort_keys=True).lower() if isinstance(item, dict) else str(item).lower()
+        if route in text and RECOVERY_ATTEMPT_MARKER in text:
+            refs.append(f"{key}:{index}")
+    return refs
+
+
+def retry_policy_max_attempts(route: dict[str, Any]) -> int:
+    policy = route.get("retry_policy")
+    value = policy.get("max_attempts") if isinstance(policy, dict) else None
+    if isinstance(value, int) and value >= 1:
+        return value
+    return 1
 
 
 def ensure_blocked_event(
@@ -467,13 +514,23 @@ def create_task(
         args.extend(["--initial-status", "blocked"])
     task_id = parse_task_id(run_checked(args, runner).stdout)
     if blocked:
-        ensure_blocked_event(
+        shown_task = show_task(
             hermes_bin=hermes_bin,
             board=board,
             task_id=task_id,
-            reason="Overkill Factory gate starts blocked until required authority evidence passes.",
             runner=runner,
         )
+        status = task_status(shown_task)
+        if status in ACTIVE_OR_TERMINAL_STATUSES:
+            return task_id
+        if not task_has_blocked_event(shown_task):
+            ensure_blocked_event(
+                hermes_bin=hermes_bin,
+                board=board,
+                task_id=task_id,
+                reason="Overkill Factory gate starts blocked until required authority evidence passes.",
+                runner=runner,
+            )
     return task_id
 
 
@@ -542,6 +599,8 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
     worker_task_ids: dict[str, str] = {}
     review_promoted_worker_task_ids: dict[str, str] = {}
     recovery_promoted_worker_task_ids: dict[str, str] = {}
+    recovery_retry_blocked_worker_task_ids: dict[str, str] = {}
+    recovery_attempts: dict[str, dict[str, Any]] = {}
     downstream_promoted_worker_task_ids: dict[str, str] = {}
     downstream_authorizations = downstream_authorizations_by_worker(plan)
     for task in plan.get("worker_tasks", []):
@@ -598,13 +657,54 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
             route = authorized_recovery_routes[0]
             route_id = str(route.get("recovery_route_id") or "factory-recovery-route")
             fresh_review_ref = str(route.get("fresh_review_result_ref") or "fresh-review-required")
+            shown_task = show_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=task_id,
+                runner=runner,
+            )
+            task_status_value = task_status(shown_task)
+            history_refs = recovery_attempt_history_refs(shown_task, route_id)
+            previous_attempts = len(history_refs)
+            attempt_number = previous_attempts + 1
+            max_attempts = retry_policy_max_attempts(route)
+            recovery_attempts[worker_id] = {
+                "recovery_route_id": route_id,
+                "worker_id": worker_id,
+                "hermes_task_ref": task_id,
+                "previous_attempts": previous_attempts,
+                "attempt_number": attempt_number,
+                "max_attempts": max_attempts,
+                "attempt_source": "hermes_task_history",
+                "history_refs": history_refs,
+                "history_ref_count": len(history_refs),
+                "task_status": task_status_value or "unknown",
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "attempted_this_run": False,
+            }
+            if task_status_value in ACTIVE_OR_TERMINAL_STATUSES:
+                recovery_attempts[worker_id]["status"] = "already_active_no_new_attempt"
+                continue
+            if not has_history_source(shown_task):
+                recovery_attempts[worker_id]["status"] = "history_unavailable"
+                recovery_retry_blocked_worker_task_ids[worker_id] = task_id
+                continue
+            if attempt_number > max_attempts:
+                recovery_attempts[worker_id]["status"] = "retry_limit_exceeded"
+                recovery_retry_blocked_worker_task_ids[worker_id] = task_id
+                continue
+            recovery_attempts[worker_id]["status"] = "attempt_authorized"
+            recovery_attempts[worker_id]["attempted_this_run"] = True
             unblock_task(
                 hermes_bin=args.hermes_bin,
                 board=args.board,
                 task_id=task_id,
                 reason=(
-                    "Factory-owned recovery route authorized repair task "
-                    f"{route_id}; downstream remains gated until {fresh_review_ref} passes."
+                    f"{RECOVERY_ATTEMPT_MARKER} route_id={route_id} "
+                    f"attempt_number={attempt_number} max_attempts={max_attempts}; "
+                    "Factory-owned recovery route authorized repair task; downstream remains gated until "
+                    f"{fresh_review_ref} passes."
                 ),
                 runner=runner,
             )
@@ -657,6 +757,8 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         "worker_task_ids": worker_task_ids,
         "review_promoted_worker_task_ids": review_promoted_worker_task_ids,
         "recovery_promoted_worker_task_ids": recovery_promoted_worker_task_ids,
+        "recovery_retry_blocked_worker_task_ids": recovery_retry_blocked_worker_task_ids,
+        "recovery_attempts": recovery_attempts,
         "downstream_promoted_worker_task_ids": downstream_promoted_worker_task_ids,
         "hook": result,
     }
