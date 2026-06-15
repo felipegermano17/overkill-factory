@@ -78,7 +78,14 @@ def write_json(path: Path | None, data: Any) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
-    print(f"Wrote {path}")
+    print(f"Wrote {public_path_ref(path)}")
+
+
+def public_path_ref(path: Path, fallback: str = "artifact") -> str:
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except (OSError, ValueError):
+        return f"external:{path.name or fallback}"
 
 
 def clean_public_text(value: Any) -> str:

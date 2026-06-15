@@ -51,6 +51,8 @@ def redact_text(text: str, source_dir: Path, work_dir: Path) -> str:
     }
     for before, after in replacements.items():
         redacted = redacted.replace(before, after)
+    redacted = re.sub(r"(?<![A-Za-z])[A-Za-z]:[\\/][^\s\"')<]+", "<redacted-local-path>", redacted)
+    redacted = re.sub(r"/(?:Users|home|srv|tmp)/[^\s\"')<]+", "<redacted-local-path>", redacted)
     return redacted
 
 
@@ -234,7 +236,7 @@ def main(argv: list[str] | None = None) -> int:
     source_dir = args.source_dir if args.source_dir.is_absolute() else ROOT / args.source_dir
     source_dir = source_dir.resolve()
     if not source_dir.exists():
-        raise SystemExit(f"source dir does not exist: {source_dir}")
+        raise SystemExit(f"source dir does not exist: {repo_ref(source_dir)}")
     if not PROJECT_NAME_RE.fullmatch(args.project_name):
         raise SystemExit("--project-name must be 3-64 chars of lowercase letters, numbers or hyphens")
     out = args.out if args.out.is_absolute() else ROOT / args.out

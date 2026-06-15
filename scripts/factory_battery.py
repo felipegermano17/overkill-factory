@@ -20,7 +20,7 @@ BATTERY_SCHEMA = "https://overkill-factory.dev/schemas/factory-battery-result.sc
 def load_factoryctl() -> Any:
     spec = importlib.util.spec_from_file_location("battery_factoryctl", FACTORYCTL)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"cannot load factoryctl from {FACTORYCTL}")
+        raise RuntimeError("cannot load factoryctl from scripts/factoryctl.py")
     module = importlib.util.module_from_spec(spec)
     sys.modules["battery_factoryctl"] = module
     spec.loader.exec_module(module)
@@ -30,6 +30,13 @@ def load_factoryctl() -> Any:
 def write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+
+
+def public_path_ref(path: Path, fallback: str = "artifact") -> str:
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except (OSError, ValueError):
+        return f"external:{path.name or fallback}"
 
 
 def scenario_pass(name: str, *, expected: dict[str, Any], observed: dict[str, Any]) -> dict[str, Any]:
@@ -257,7 +264,7 @@ def main() -> int:
         "using public examples only.\n",
         encoding="utf-8",
     )
-    print(json.dumps({"out": str(args.out), "failed_count": result["failed_count"]}, indent=2))
+    print(json.dumps({"out": public_path_ref(args.out), "failed_count": result["failed_count"]}, indent=2))
     return 0 if result["failed_count"] == 0 else 1
 
 

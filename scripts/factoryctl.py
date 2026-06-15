@@ -73,7 +73,7 @@ DEFAULT_READINESS_LEDGER_OUT = ROOT / ".tmp" / "factory-runs" / "readiness" / "r
 DEFAULT_HERMES_EVIDENCE_OUT = ROOT / ".tmp" / "factory-runs" / "hermes-evidence" / "sanitized-package.json"
 DEFAULT_PREPILOT_CHECKLIST_OUT = ROOT / ".tmp" / "factory-runs" / "prepilot" / "loose-end-checklist.json"
 PRIVATE_RUNTIME_REF_RE = re.compile(
-    r"([A-Za-z]:[\\/]|\\\\|/home/|/Users/|/srv/|/var/|discord(app)?\.com|webhook|token|secret|guild[_-]?id|channel[_-]?id|message[_-]?id)",
+    r"((?<![A-Za-z])[A-Za-z]:[\\/]|\\\\|/home/|/Users/|/srv/|/var/|discord(app)?\.com|webhook|token|secret|guild[_-]?id|channel[_-]?id|message[_-]?id)",
     re.IGNORECASE,
 )
 
@@ -884,7 +884,7 @@ def load_json_like(path: Path) -> dict[str, Any]:
             text = "\n".join(lines[1:-1]).strip()
     data = json.loads(text)
     if not isinstance(data, dict):
-        raise ValueError(f"{path} must contain a JSON object")
+        raise ValueError(f"{public_path_ref(path)} must contain a JSON object")
     return data
 
 
@@ -1110,7 +1110,7 @@ def write_json(path: Path | None, data: dict[str, Any]) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
-    print(f"Wrote {path}")
+    print(f"Wrote {public_path_ref(path)}")
 
 
 def source_card_ref(source_path: Path) -> str:
@@ -1131,6 +1131,14 @@ def source_card_ref(source_path: Path) -> str:
         if windows_path.is_absolute() or (len(raw_normalized) >= 2 and raw_normalized[1] == ":"):
             return f"external:{windows_path.name or 'source-card'}"
         return f"external:{source_path.name or 'source-card'}"
+
+
+def public_path_ref(path: Path, fallback: str = "artifact") -> str:
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except (OSError, ValueError):
+        name = path.name or fallback
+        return f"external:{name}"
 
 
 def classify_artifact_ref(ref: Any) -> dict[str, Any]:
@@ -1178,7 +1186,7 @@ def sanitize_slug(value: Any, *, fallback: str = "item") -> str:
 
 def redact_private_text(value: Any) -> str:
     text = str(value or "")
-    text = re.sub(r"[A-Za-z]:[\\/][^ \];,\"]+", "[redacted-private-ref]", text)
+    text = re.sub(r"(?<![A-Za-z])[A-Za-z]:[\\/][^ \];,\"]+", "[redacted-private-ref]", text)
     text = re.sub(r"/(?:home|Users|srv|var)/[^ \];,\"]+", "[redacted-private-ref]", text)
     text = PRIVATE_RUNTIME_REF_RE.sub("[redacted-private-marker]", text)
     text = public_safe_kanban_ref(text) or ""
@@ -1549,7 +1557,7 @@ def build_doctor_report(hermes_home: Path | None = None) -> dict[str, Any]:
 
 def write_operator_workspace(target: Path, project_name: str, hermes_home: Path | None, force: bool = False) -> None:
     if target.exists() and any(target.iterdir()) and not force:
-        raise ValueError(f"{target} is not empty; use --force to write into it")
+        raise ValueError(f"{public_path_ref(target, fallback='workspace')} is not empty; use --force to write into it")
     target.mkdir(parents=True, exist_ok=True)
     for rel in ["cards", "worker-packets", "receipts", "worker-results", "reports"]:
         directory = target / rel
@@ -6786,7 +6794,7 @@ def command_init(args: argparse.Namespace) -> int:
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1
-    print(f"Initialized Overkill Factory workspace at {args.out}")
+    print(f"Initialized Overkill Factory workspace at {public_path_ref(args.out, fallback='workspace')}")
     return 0
 
 
@@ -6972,7 +6980,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
-    return int(args.func(args))
+    try:
+        return int(args.func(args))
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(redact_private_text(str(exc)), file=sys.stderr)
+        return 1
 
 
 def main_with_args_for_test(argv: list[str]) -> int:

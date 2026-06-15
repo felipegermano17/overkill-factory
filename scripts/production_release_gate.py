@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -61,9 +62,22 @@ def source_sha256(path: Path = PRODUCT_SOURCE) -> str:
 
 def repo_ref(path: Path) -> str:
     try:
-        return path.relative_to(ROOT).as_posix()
+        return path.resolve().relative_to(ROOT).as_posix()
     except ValueError:
         return f"external:{path.name}"
+
+
+def redact_public_text(text: str) -> str:
+    redacted = text
+    replacements = {
+        str(ROOT): "<repo>",
+        str(ROOT).replace("\\", "/"): "<repo>",
+    }
+    for before, after in replacements.items():
+        redacted = redacted.replace(before, after)
+    redacted = re.sub(r"(?<![A-Za-z])[A-Za-z]:[\\/][^\s\"')<]+", "<redacted-local-path>", redacted)
+    redacted = re.sub(r"/(?:Users|home|srv|tmp)/[^\s\"')<]+", "<redacted-local-path>", redacted)
+    return redacted
 
 
 def run_command(argv: list[str]) -> dict[str, Any]:
@@ -76,10 +90,10 @@ def run_command(argv: list[str]) -> dict[str, Any]:
         timeout=120,
     )
     return {
-        "command": " ".join(argv),
+        "command": redact_public_text(" ".join(argv)),
         "exit_code": completed.returncode,
-        "stdout_tail": completed.stdout[-2000:].replace(str(ROOT), "<repo>"),
-        "stderr_tail": completed.stderr[-2000:].replace(str(ROOT), "<repo>"),
+        "stdout_tail": redact_public_text(completed.stdout[-2000:]),
+        "stderr_tail": redact_public_text(completed.stderr[-2000:]),
     }
 
 
@@ -280,8 +294,14 @@ def main(argv: list[str] | None = None) -> int:
     created_at = utc_now()
     try:
         human_gate = load_human_gate_record(args.human_gate_record)
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"human gate record rejected: {exc}", file=sys.stderr)
+    except OSError:
+        print(f"human gate record rejected: {repo_ref(args.human_gate_record)}", file=sys.stderr)
+        return 1
+    except (ValueError, json.JSONDecodeError) as exc:
+        print(
+            f"human gate record rejected: {repo_ref(args.human_gate_record)}: {redact_public_text(str(exc))}",
+            file=sys.stderr,
+        )
         return 1
     validation = [run_command(command) for command in validation_commands(no_write=args.no_write)]
     release_ops = build_release_ops(

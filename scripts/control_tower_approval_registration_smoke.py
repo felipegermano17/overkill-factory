@@ -147,6 +147,13 @@ def assert_public_safe(payload: dict[str, Any]) -> None:
         raise AssertionError(f"private-looking text in public smoke: {match.group(0)}")
 
 
+def public_path_ref(path: Path, fallback: str = "artifact") -> str:
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except (OSError, ValueError):
+        return f"external:{path.name or fallback}"
+
+
 def build_receipt(created_at: str | None = None) -> dict[str, Any]:
     timestamp = created_at or utc_now()
     approval = pending_approval(timestamp)
@@ -276,9 +283,10 @@ def main() -> int:
     args = parser.parse_args()
 
     receipt = build_receipt()
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {args.out.relative_to(ROOT).as_posix()}")
+    out_path = args.out if args.out.is_absolute() else ROOT / args.out
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote {public_path_ref(out_path)}")
     return 0
 
 
