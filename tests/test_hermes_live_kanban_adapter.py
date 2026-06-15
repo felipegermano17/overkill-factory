@@ -333,6 +333,33 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             )
         )
 
+    def test_unblock_task_requires_readback_markers_when_provided(self) -> None:
+        fake = FakeHermes()
+        task_id = "t_" + "marker01"
+        fake.tasks[task_id] = {"status": "blocked", "events": []}
+
+        with self.assertRaisesRegex(RuntimeError, "not durably unblocked"):
+            adapter.unblock_task(
+                hermes_bin="hermes",
+                board=TEST_BOARD,
+                task_id=task_id,
+                reason="unblock without required marker",
+                required_readback_markers=["route_id=recovery:card:worker"],
+                runner=fake,
+            )
+
+        fake.tasks[task_id] = {"status": "blocked", "events": []}
+        adapter.unblock_task(
+            hermes_bin="hermes",
+            board=TEST_BOARD,
+            task_id=task_id,
+            reason="factory_recovery_attempt route_id=recovery:card:worker",
+            required_readback_markers=["factory_recovery_attempt", "route_id=recovery:card:worker"],
+            runner=fake,
+        )
+
+        self.assertEqual(fake.tasks[task_id]["status"], "ready")
+
     def test_dispatch_reports_tasks_that_entered_running_even_when_native_spawned_is_empty(self) -> None:
         fake = FakeDispatchHermes(native_spawned=False)
         args = adapter.build_parser().parse_args(["dispatch", "--board", TEST_BOARD])
@@ -979,6 +1006,9 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             any(
                 call[5] == qa_task["runtime_refs"]["hermes_task_ref"]
                 and "Fresh PASS review authorized exact downstream worker" in call[6]
+                and "authorized_worker_id=qa-verification-worker" in call[6]
+                and f"requirement_id={requirement['requirement_id']}" in call[6]
+                and "review_evidence_ref=receipt:review" in call[6]
                 for call in unblock_calls
             )
         )
