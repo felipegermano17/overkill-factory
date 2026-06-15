@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -33,6 +34,33 @@ Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 RECOVERY_ATTEMPT_MARKER = "factory_recovery_attempt"
 ACTIVE_OR_TERMINAL_STATUSES = {"ready", "running", "done", "complete", "completed"}
 HISTORY_SOURCE_KEYS = ("events", "history", "timeline", "comments", "runs")
+CONTRACT_DIGEST_ALGORITHM = "sha256"
+IDEMPOTENCY_DIGEST_LENGTH = 16
+VOLATILE_CONTRACT_KEYS = {
+    "checked_at",
+    "created_at",
+    "generated_at",
+    "last_checked_at",
+    "timestamp",
+    "updated_at",
+}
+CANONICALIZATION_VERSION = "v1"
+IDEMPOTENCY_LINEAGE_POLICY = "base_identity_is_logical_lineage_contract_key_is_runtime_identity"
+WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
+    "task_type",
+    "worker_id",
+    "gate_timing_class",
+    "queue_class",
+    "runtime_authority",
+    "local_state_authority",
+    "required_before",
+    "expected_receipt_field",
+    "status",
+    "dependency_authorization_state",
+    "review_task_authorizations",
+    "recovery_route_refs",
+    "packet",
+)
 
 
 def default_runner(argv: list[str]) -> subprocess.CompletedProcess[str]:
@@ -64,6 +92,55 @@ def parse_json_output(output: str, *, command: str) -> Any:
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def stable_contract_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): stable_contract_value(item)
+            for key, item in sorted(value.items(), key=lambda entry: str(entry[0]))
+            if str(key) not in VOLATILE_CONTRACT_KEYS
+        }
+    if isinstance(value, list):
+        return [stable_contract_value(item) for item in value]
+    return value
+
+
+def contract_digest(value: Any) -> str:
+    stable_value = stable_contract_value(value)
+    if isinstance(stable_value, str):
+        payload = stable_value
+    else:
+        payload = json.dumps(stable_value, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def idempotency_digest_fragment(digest: str) -> str:
+    return digest[:IDEMPOTENCY_DIGEST_LENGTH]
+
+
+def main_base_idempotency_key(card_id: str) -> str:
+    return f"overkill:{card_id}:main"
+
+
+def worker_base_idempotency_key(card_id: str, worker_id: str) -> str:
+    return f"overkill:{card_id}:{worker_id}"
+
+
+def main_task_idempotency_key(card_id: str, card_body: str) -> str:
+    return f"{main_base_idempotency_key(card_id)}:{idempotency_digest_fragment(contract_digest(card_body))}"
+
+
+def worker_materialization_contract(task: dict[str, Any]) -> dict[str, Any]:
+    return {field: task[field] for field in WORKER_MATERIALIZATION_CONTRACT_FIELDS if field in task}
+
+
+def worker_task_idempotency_key(card_id: str, worker_id: str, task_contract: dict[str, Any]) -> str:
+    return f"{worker_base_idempotency_key(card_id, worker_id)}:{idempotency_digest_fragment(contract_digest(task_contract))}"
+
+
+def recovery_route_digest(route: dict[str, Any]) -> str:
+    return f"{CONTRACT_DIGEST_ALGORITHM}:{contract_digest(route)}"
 
 
 def parse_task_id(output: str) -> str:
@@ -337,14 +414,15 @@ def has_history_source(payload: dict[str, Any]) -> bool:
     return any(isinstance(payload.get(key), list) for key in HISTORY_SOURCE_KEYS)
 
 
-def recovery_attempt_history_refs(payload: dict[str, Any], route_id: str) -> list[str]:
+def recovery_attempt_history_refs(payload: dict[str, Any], route_id: str, route_digest: str) -> list[str]:
     route = route_id.strip().lower()
-    if not route:
+    digest = route_digest.strip().lower()
+    if not route or not digest:
         return []
     refs: list[str] = []
     for key, index, item in history_items(payload):
         text = json.dumps(item, ensure_ascii=True, sort_keys=True).lower() if isinstance(item, dict) else str(item).lower()
-        if route in text and RECOVERY_ATTEMPT_MARKER in text:
+        if route in text and digest in text and RECOVERY_ATTEMPT_MARKER in text:
             refs.append(f"{key}:{index}")
     return refs
 
@@ -403,6 +481,7 @@ def record_live_binding(
     board: str,
     main_task_id: str,
     worker_task_ids: dict[str, str],
+    idempotency_contract: dict[str, Any] | None = None,
 ) -> None:
     ledger = load_json(ledger_path)
     tasks = ledger.setdefault("tasks", {})
@@ -422,6 +501,7 @@ def record_live_binding(
         task["local_record_role"] = "idempotency_projection"
     bindings = ledger.setdefault("live_bindings", {})
     bindings[card_id] = {
+        "card_id": card_id,
         "binding_role": "hermes_ref_projection",
         "runtime_authority": "hermes_kanban",
         "local_state_authority": False,
@@ -429,6 +509,8 @@ def record_live_binding(
         "main_task_id": main_task_id,
         "worker_task_ids": worker_task_ids,
     }
+    if idempotency_contract:
+        bindings[card_id]["idempotency_contract"] = idempotency_contract
     write_json(ledger_path, ledger)
 
 
@@ -584,13 +666,41 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
     if readiness_blockers:
         raise RuntimeError("pre-dispatch route readiness blocked live materialization: " + "; ".join(readiness_blockers))
 
+    card_body = card_path.read_text(encoding="utf-8")
+    main_contract_digest = contract_digest(card_body)
+    idempotency_contract: dict[str, Any] = {
+        "digest_algorithm": CONTRACT_DIGEST_ALGORITHM,
+        "canonicalization_version": CANONICALIZATION_VERSION,
+        "volatile_fields_ignored": sorted(VOLATILE_CONTRACT_KEYS),
+        "digest_scope": "main_card_body_and_stable_worker_packet_contract",
+        "lineage_policy": IDEMPOTENCY_LINEAGE_POLICY,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "main_task": {
+            "idempotency_identity": {
+                "card_id": card_id,
+                "task_role": "main",
+                "base_idempotency_key": main_base_idempotency_key(card_id),
+            },
+            "contract_digest": main_contract_digest,
+            "idempotency_key": main_task_idempotency_key(card_id, card_body),
+            "runtime_history_query_keys": [
+                main_base_idempotency_key(card_id),
+                main_task_idempotency_key(card_id, card_body),
+            ],
+            "previous_runtime_task_refs": [],
+            "supersedes_idempotency_keys": [],
+        },
+        "worker_tasks": {},
+    }
+
     main_task_id = create_task(
         hermes_bin=args.hermes_bin,
         board=args.board,
         title=f"OF {card_id} main gate",
-        body=card_path.read_text(encoding="utf-8"),
+        body=card_body,
         assignee=args.main_assignee,
-        idempotency_key=f"overkill:{card_id}:main",
+        idempotency_key=idempotency_contract["main_task"]["idempotency_key"],
         created_by="overkill-factory",
         workspace=f"dir:{ROOT}",
         blocked=True,
@@ -608,13 +718,33 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         if not worker_id or task.get("status") == "not_required_by_current_card":
             continue
         packet = task.get("packet") or {}
+        worker_task_contract = worker_materialization_contract(task)
+        worker_idempotency_key = worker_task_idempotency_key(card_id, worker_id, worker_task_contract)
+        worker_contract_digest = contract_digest(worker_task_contract)
+        idempotency_contract["worker_tasks"][worker_id] = {
+            "idempotency_identity": {
+                "card_id": card_id,
+                "worker_id": worker_id,
+                "task_role": "worker",
+                "base_idempotency_key": worker_base_idempotency_key(card_id, worker_id),
+            },
+            "contract_scope": "worker_task_materialization_contract",
+            "contract_digest": worker_contract_digest,
+            "idempotency_key": worker_idempotency_key,
+            "runtime_history_query_keys": [
+                worker_base_idempotency_key(card_id, worker_id),
+                worker_idempotency_key,
+            ],
+            "previous_runtime_task_refs": [],
+            "supersedes_idempotency_keys": [],
+        }
         task_id = create_task(
             hermes_bin=args.hermes_bin,
             board=args.board,
             title=str(task.get("title") or f"OF {card_id} {worker_id}"),
             body=json.dumps(packet, indent=2, ensure_ascii=True),
             assignee=args.worker_assignee_prefix + worker_id,
-            idempotency_key=f"overkill:{card_id}:{worker_id}",
+            idempotency_key=worker_idempotency_key,
             created_by="overkill-factory",
             workspace=f"dir:{ROOT}",
             blocked=not args.worker_ready,
@@ -656,6 +786,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         if recovery_authorized and not args.worker_ready:
             route = authorized_recovery_routes[0]
             route_id = str(route.get("recovery_route_id") or "factory-recovery-route")
+            route_digest = recovery_route_digest(route)
             fresh_review_ref = str(route.get("fresh_review_result_ref") or "fresh-review-required")
             shown_task = show_task(
                 hermes_bin=args.hermes_bin,
@@ -664,12 +795,13 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
                 runner=runner,
             )
             task_status_value = task_status(shown_task)
-            history_refs = recovery_attempt_history_refs(shown_task, route_id)
+            history_refs = recovery_attempt_history_refs(shown_task, route_id, route_digest)
             previous_attempts = len(history_refs)
             attempt_number = previous_attempts + 1
             max_attempts = retry_policy_max_attempts(route)
             recovery_attempts[worker_id] = {
                 "recovery_route_id": route_id,
+                "recovery_route_digest": route_digest,
                 "worker_id": worker_id,
                 "hermes_task_ref": task_id,
                 "previous_attempts": previous_attempts,
@@ -702,6 +834,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
                 task_id=task_id,
                 reason=(
                     f"{RECOVERY_ATTEMPT_MARKER} route_id={route_id} "
+                    f"route_digest={route_digest} "
                     f"attempt_number={attempt_number} max_attempts={max_attempts}; "
                     "Factory-owned recovery route authorized repair task; downstream remains gated until "
                     f"{fresh_review_ref} passes."
@@ -745,6 +878,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         board=args.board,
         main_task_id=main_task_id,
         worker_task_ids=worker_task_ids,
+        idempotency_contract=idempotency_contract,
     )
 
     envelope = {
@@ -760,6 +894,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         "recovery_retry_blocked_worker_task_ids": recovery_retry_blocked_worker_task_ids,
         "recovery_attempts": recovery_attempts,
         "downstream_promoted_worker_task_ids": downstream_promoted_worker_task_ids,
+        "idempotency_contract": idempotency_contract,
         "hook": result,
     }
     public_envelope = sanitize_public_refs(envelope)
