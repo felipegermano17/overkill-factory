@@ -1,17 +1,29 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import subprocess
 import sys
+import tomllib
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PUBLIC_JSON_VALIDATOR_PATH = ROOT / "scripts" / "validate_public_json_artifacts.py"
 
 
 def read_text(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
+
+
+def load_public_json_validator():
+    spec = importlib.util.spec_from_file_location("validate_public_json_artifacts", PUBLIC_JSON_VALIDATOR_PATH)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 class OpenSourceDocsTest(unittest.TestCase):
@@ -239,6 +251,12 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("not production approval", products)
         self.assertIn("No private product material", products)
 
+    def test_public_json_validator_scans_public_product_artifacts(self) -> None:
+        validator = load_public_json_validator()
+        scan_dirs = {path.relative_to(ROOT).as_posix() for path in validator.SCAN_DIRS}
+
+        self.assertIn("products", scan_dirs)
+
     def test_public_codex_skill_covers_open_source_stewardship(self) -> None:
         skill = read_text("skills/codex/overkill-factory/SKILL.md")
         open_source_ref = ROOT / "skills" / "codex" / "overkill-factory" / "references" / "open-source-github.md"
@@ -427,6 +445,21 @@ class OpenSourceDocsTest(unittest.TestCase):
         ]:
             with self.subTest(expected=expected):
                 self.assertIn(expected, workflow)
+
+    def test_release_cli_smoke_runs_for_packaged_asset_changes(self) -> None:
+        pyproject = tomllib.loads(read_text("pyproject.toml"))
+        workflow = read_text(".github/workflows/release-cli-smoke.yml")
+        data_files = pyproject["tool"]["setuptools"]["data-files"]
+        packaged_roots = {
+            pattern.split("/", 1)[0]
+            for patterns in data_files.values()
+            for pattern in patterns
+            if "/" in pattern
+        }
+
+        for root in sorted(packaged_roots):
+            with self.subTest(root=root):
+                self.assertIn(f'- "{root}/**"', workflow)
 
     def test_package_metadata_includes_cli_runtime_assets(self) -> None:
         pyproject = read_text("pyproject.toml")

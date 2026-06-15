@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -104,6 +105,69 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
         self.assertEqual(receipt["counts"]["generated_status_entries"], 4)
         self.assertEqual(receipt["counts"]["unintegrated_release_entries"], 0)
         self.assertEqual(receipt["attention_items"], [])
+
+    def test_missing_preflight_evidence_is_not_reported_as_existing_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = {
+                "inventory": root / "missing-inventory.json",
+                "worktree": root / "missing-worktree.json",
+                "head": root / "missing-head.json",
+                "origin": root / "missing-origin.json",
+            }
+
+            receipt = preflight.build_preflight(
+                inventory_path=paths["inventory"],
+                public_worktree_path=paths["worktree"],
+                public_head_path=paths["head"],
+                public_origin_path=paths["origin"],
+                branch_name="codex/release",
+                status_entries=0,
+                generated_status_entries=0,
+                created_at="2026-06-10T00:00:00Z",
+            )
+
+        self.assertEqual(receipt["evidence_refs"], [])
+        self.assertEqual(len(receipt["missing_evidence_refs"]), 4)
+        self.assertIn("preflight_evidence_refs_exist", receipt["blocking_items"])
+        self.assertIn(
+            "materialize missing preflight evidence summaries before release review",
+            receipt["next_required_actions"],
+        )
+
+    def test_materializer_creates_all_preflight_input_receipts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = {
+                "inventory": root / "inventory.json",
+                "worktree": root / "worktree.json",
+                "head": root / "head.json",
+                "origin": root / "origin.json",
+            }
+
+            def fake_runner(command, **_kwargs):
+                if "--out" in command:
+                    out = Path(command[command.index("--out") + 1])
+                    payload = {"result": "ATTENTION", "cleanup_policy": {}}
+                else:
+                    out = Path(command[command.index("--summary-json") + 1])
+                    payload = {"result": "PASS"}
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_text(json.dumps(payload), encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0)
+
+            missing = preflight.materialize_preflight_inputs(
+                inventory_path=paths["inventory"],
+                public_worktree_path=paths["worktree"],
+                public_head_path=paths["head"],
+                public_origin_path=paths["origin"],
+                runner=fake_runner,
+            )
+
+            self.assertEqual(missing, [])
+            for path in paths.values():
+                with self.subTest(path=path.name):
+                    self.assertTrue(path.is_file())
 
     def _fixtures(
         self,

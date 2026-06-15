@@ -25,6 +25,7 @@ SCAN_DIRS = [
     ROOT / "templates",
     ROOT / "docs",
     ROOT / "planning-bundles",
+    ROOT / "products",
 ]
 
 SCHEMA_OPTIONAL = {
@@ -126,8 +127,76 @@ def type_matches(expected: str | list[str], value: Any) -> bool:
     return False
 
 
-def validate_node(schema: dict[str, Any], value: Any, at: str) -> list[str]:
+def resolve_json_pointer(document: dict[str, Any], pointer: str) -> dict[str, Any] | None:
+    if not pointer.startswith("#/"):
+        return None
+    current: Any = document
+    for raw_part in pointer[2:].split("/"):
+        part = raw_part.replace("~1", "/").replace("~0", "~")
+        if not isinstance(current, dict) or part not in current:
+            return None
+        current = current[part]
+    return current if isinstance(current, dict) else None
+
+
+def resolve_ref(ref: str, schemas: dict[str, dict[str, Any]] | None, root_schema: dict[str, Any]) -> dict[str, Any] | None:
+    if ref.startswith("#/"):
+        return resolve_json_pointer(root_schema, ref)
+    if "#" in ref:
+        schema_ref, pointer = ref.split("#", 1)
+        target = schemas.get(schema_name(schema_ref)) if schemas else None
+        if target is not None and pointer.startswith("/"):
+            return resolve_json_pointer(target, f"#{pointer}")
+        return target
+    return schemas.get(schema_name(ref)) if schemas else None
+
+
+def schema_matches(
+    schema: dict[str, Any],
+    value: Any,
+    at: str,
+    schemas: dict[str, dict[str, Any]] | None = None,
+    root_schema: dict[str, Any] | None = None,
+    seen_refs: set[str] | None = None,
+) -> bool:
+    return not validate_node(schema, value, at, schemas=schemas, root_schema=root_schema, seen_refs=seen_refs)
+
+
+def validate_node(
+    schema: dict[str, Any],
+    value: Any,
+    at: str,
+    *,
+    schemas: dict[str, dict[str, Any]] | None = None,
+    root_schema: dict[str, Any] | None = None,
+    seen_refs: set[str] | None = None,
+) -> list[str]:
     errors: list[str] = []
+    root = root_schema or schema
+    seen = seen_refs or set()
+    ref = schema.get("$ref")
+    if isinstance(ref, str):
+        if ref in seen:
+            errors.append(f"{at}: recursive $ref {ref!r} is not supported")
+            return errors
+        target = resolve_ref(ref, schemas, root)
+        if target is None:
+            errors.append(f"{at}: unresolved $ref {ref!r}")
+            return errors
+        errors.extend(validate_node(target, value, at, schemas=schemas, root_schema=target, seen_refs=seen | {ref}))
+    if isinstance(schema.get("allOf"), list):
+        for index, subschema in enumerate(schema["allOf"]):
+            if isinstance(subschema, dict):
+                errors.extend(validate_node(subschema, value, f"{at}.allOf[{index}]", schemas=schemas, root_schema=root, seen_refs=seen))
+    if "if" in schema and isinstance(schema["if"], dict):
+        if schema_matches(schema["if"], value, at, schemas=schemas, root_schema=root, seen_refs=seen):
+            then_schema = schema.get("then")
+            if isinstance(then_schema, dict):
+                errors.extend(validate_node(then_schema, value, at, schemas=schemas, root_schema=root, seen_refs=seen))
+        else:
+            else_schema = schema.get("else")
+            if isinstance(else_schema, dict):
+                errors.extend(validate_node(else_schema, value, at, schemas=schemas, root_schema=root, seen_refs=seen))
     if "type" in schema and not type_matches(schema["type"], value):
         errors.append(f"{at}: expected type {schema['type']}")
         return errors
@@ -137,8 +206,26 @@ def validate_node(schema: dict[str, Any], value: Any, at: str) -> list[str]:
         errors.append(f"{at}: value {value!r} not in enum")
     if isinstance(value, str) and "minLength" in schema and len(value) < int(schema["minLength"]):
         errors.append(f"{at}: string shorter than minLength {schema['minLength']}")
+    if isinstance(value, str) and "maxLength" in schema and len(value) > int(schema["maxLength"]):
+        errors.append(f"{at}: string longer than maxLength {schema['maxLength']}")
+    if isinstance(value, str) and "pattern" in schema and not re.search(str(schema["pattern"]), value):
+        errors.append(f"{at}: string does not match pattern {schema['pattern']!r}")
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if "minimum" in schema and value < schema["minimum"]:
+            errors.append(f"{at}: number below minimum {schema['minimum']}")
+        if "maximum" in schema and value > schema["maximum"]:
+            errors.append(f"{at}: number above maximum {schema['maximum']}")
     if isinstance(value, list) and "minItems" in schema and len(value) < int(schema["minItems"]):
         errors.append(f"{at}: array shorter than minItems {schema['minItems']}")
+    if isinstance(value, list) and "maxItems" in schema and len(value) > int(schema["maxItems"]):
+        errors.append(f"{at}: array longer than maxItems {schema['maxItems']}")
+    if isinstance(value, list) and schema.get("uniqueItems") is True:
+        seen: set[str] = set()
+        for index, item in enumerate(value):
+            key = json.dumps(item, sort_keys=True)
+            if key in seen:
+                errors.append(f"{at}[{index}]: duplicate item violates uniqueItems")
+            seen.add(key)
     if isinstance(value, dict) and "minProperties" in schema and len(value) < int(schema["minProperties"]):
         errors.append(f"{at}: object has fewer properties than minProperties {schema['minProperties']}")
 
@@ -150,7 +237,9 @@ def validate_node(schema: dict[str, Any], value: Any, at: str) -> list[str]:
         if isinstance(properties, dict):
             for field, subschema in properties.items():
                 if field in value and isinstance(subschema, dict):
-                    errors.extend(validate_node(subschema, value[field], f"{at}.{field}"))
+                    errors.extend(
+                        validate_node(subschema, value[field], f"{at}.{field}", schemas=schemas, root_schema=root, seen_refs=seen)
+                    )
         additional = schema.get("additionalProperties", True)
         if additional is False and isinstance(properties, dict):
             for field in value:
@@ -159,11 +248,11 @@ def validate_node(schema: dict[str, Any], value: Any, at: str) -> list[str]:
         if isinstance(additional, dict):
             for field, item in value.items():
                 if field not in properties:
-                    errors.extend(validate_node(additional, item, f"{at}.{field}"))
+                    errors.extend(validate_node(additional, item, f"{at}.{field}", schemas=schemas, root_schema=root, seen_refs=seen))
 
     if isinstance(value, list) and isinstance(schema.get("items"), dict):
         for index, item in enumerate(value):
-            errors.extend(validate_node(schema["items"], item, f"{at}[{index}]"))
+            errors.extend(validate_node(schema["items"], item, f"{at}[{index}]", schemas=schemas, root_schema=root, seen_refs=seen))
 
     return errors
 
@@ -391,7 +480,7 @@ def main() -> int:
         if not schema:
             findings.append(f"{path.relative_to(ROOT).as_posix()}: schema not found for {ref}")
             continue
-        for error in validate_node(schema, data, "$"):
+        for error in validate_node(schema, data, "$", schemas=schemas, root_schema=schema):
             findings.append(f"{path.relative_to(ROOT).as_posix()}: {error}")
         for error in validate_domain_rules(data, "$"):
             findings.append(f"{path.relative_to(ROOT).as_posix()}: {error}")

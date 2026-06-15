@@ -833,8 +833,8 @@
   },
   "product_face_packet": {
     "$schema": "https://overkill-factory.dev/schemas/product-face-packet.schema.json",
-    "surface": "software_product",
-    "mode": "planning",
+    "surface": "web_app",
+    "mode": "greenfield",
     "user": "target user or operator",
     "job_to_be_done": "Use the produced surface or workflow with clear status, states and evidence.",
     "main_flows": ["primary product flow"],

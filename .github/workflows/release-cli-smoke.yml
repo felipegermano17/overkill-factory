@@ -5,9 +5,14 @@ on:
     paths:
       - "README.md"
       - "pyproject.toml"
+      - "adapters/**"
+      - "agents/**"
+      - "docs/**"
+      - "examples/**"
+      - "schemas/**"
       - "scripts/**"
-      - "docs/getting-started/**"
-      - "docs/reference/cli.md"
+      - "skills/**"
+      - "templates/**"
       - ".github/workflows/release-cli-smoke.yml"
   push:
     branches:

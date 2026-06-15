@@ -208,5 +208,44 @@
       "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["executing", "review", "release_candidate", "production", "closed"]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "execution_started": { "const": true }
+        },
+        "required": ["execution_started"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "projection_freshness": { "const": "runtime_fresh" }
+        },
+        "required": ["projection_freshness"]
+      },
+      "then": {
+        "properties": {
+          "truth_source_available": { "const": true },
+          "source_of_truth": {
+            "type": "object",
+            "properties": {
+              "freshness": { "const": "runtime_fresh" }
+            },
+            "required": ["freshness"]
+          }
+        },
+        "required": ["truth_source_available", "source_of_truth"]
+      }
+    }
+  ],
   "additionalProperties": true
 }

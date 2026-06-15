@@ -1,5 +1,6 @@
 import importlib.util
 from pathlib import Path
+import tempfile
 import unittest
 
 
@@ -28,6 +29,27 @@ class SecretSafetyScanTest(unittest.TestCase):
 
         self.assertTrue(any(pattern.search(line) for pattern in scanner.SECRET_PATTERNS))
         self.assertIsNotNone(scanner.ASSIGNMENT_RE.search(line))
+
+    def test_disappeared_scan_path_does_not_crash(self):
+        scanner = load_scanner()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            clean = root / "clean.txt"
+            clean.write_text("public docs only\n", encoding="utf-8")
+            vanished = root / "vanished.txt"
+
+            original_root = scanner.ROOT
+            original_iter_scan_paths = scanner.iter_scan_paths
+            scanner.ROOT = root
+            scanner.iter_scan_paths = lambda _root: iter([vanished, clean])
+            try:
+                findings = scanner.scan()
+            finally:
+                scanner.ROOT = original_root
+                scanner.iter_scan_paths = original_iter_scan_paths
+
+        self.assertEqual([], findings)
 
 
 if __name__ == "__main__":
