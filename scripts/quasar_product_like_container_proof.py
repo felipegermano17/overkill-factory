@@ -17,6 +17,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 QUASAR_SOURCE = "github:blueshift-gg/quasar"
 QUASAR_SOURCE_HEAD = "a89a9329f05740a20520607608b2b3b78c74f7c4"
+PUBLIC_QVG_SOURCE_DIR = ROOT / "products" / "qvg-public-validation-product" / "onchain" / "quasar" / "src"
 PROJECT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{2,63}$")
 
 
@@ -172,12 +173,12 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run product-like Quasar build/test proof in Docker.")
     parser.add_argument(
         "--source-dir",
         type=Path,
-        default=ROOT / "pilots" / "quasar-vault-guard-test" / "onchain" / "qvg-product-like" / "src",
+        default=PUBLIC_QVG_SOURCE_DIR,
     )
     parser.add_argument(
         "--out",
@@ -185,7 +186,7 @@ def parse_args() -> argparse.Namespace:
         default=ROOT / ".tmp" / "factory-runs" / "quasar-product-like-proof" / "qvg-quasar-runtime-proof.json",
     )
     parser.add_argument("--timeout-seconds", type=int, default=900)
-    parser.add_argument("--project-name", default="qvg-product-like")
+    parser.add_argument("--project-name", default="qvg-public-validation-product")
     parser.add_argument("--proof-kind", default="containerized_product_like_quasar_build_test")
     parser.add_argument(
         "--evidence-boundary",
@@ -198,11 +199,11 @@ def parse_args() -> argparse.Namespace:
         "--policy-decision",
         default="Use this product-like proof as stronger Auditor input than generated-minimal Quasar proof, while keeping production promotion gated.",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     source_dir = args.source_dir if args.source_dir.is_absolute() else ROOT / args.source_dir
     source_dir = source_dir.resolve()
     if not source_dir.exists():

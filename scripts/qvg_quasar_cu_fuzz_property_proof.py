@@ -12,6 +12,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PUBLIC_QVG_SOURCE_DIR = ROOT / "products" / "qvg-public-validation-product" / "onchain" / "quasar" / "src"
 
 
 def utc_now() -> str:
@@ -220,12 +221,12 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create QVG product-like CU/fuzz/property proof.")
     parser.add_argument(
         "--source-dir",
         type=Path,
-        default=ROOT / "pilots" / "quasar-vault-guard-test" / "onchain" / "qvg-product-like" / "src",
+        default=PUBLIC_QVG_SOURCE_DIR,
     )
     parser.add_argument(
         "--runtime-proof",
@@ -237,11 +238,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=ROOT / ".tmp" / "factory-runs" / "quasar-product-like-proof" / "qvg-quasar-cu-fuzz-property-proof.json",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     source_dir = args.source_dir if args.source_dir.is_absolute() else ROOT / args.source_dir
     runtime_proof = args.runtime_proof if args.runtime_proof.is_absolute() else ROOT / args.runtime_proof
     out = args.out if args.out.is_absolute() else ROOT / args.out
