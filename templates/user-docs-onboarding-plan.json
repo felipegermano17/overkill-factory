@@ -1,5 +1,6 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
+  "gate_enforcement": "strict",
   "audience": "new user",
   "first_success_path": "user completes the first useful task without external help",
   "tasks_covered": ["setup", "first action", "troubleshooting"],

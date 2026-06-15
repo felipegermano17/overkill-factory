@@ -617,6 +617,50 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(factoryctl.validate_card(card), [])
 
+    def test_data_metrics_plan_rejects_prose_only_or_empty_delivery_proof(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["data_metrics_plan"] = {
+            "$schema": "https://overkill-factory.dev/schemas/data-metrics-plan.schema.json",
+            "gate_enforcement": "strict",
+            "success_metrics": [],
+            "events": ["looks good"],
+            "owners": [],
+            "privacy_limits": [],
+            "risk_metrics": [],
+            "logs": [],
+            "alerts": [],
+            "personal_data": [],
+            "visibility": [],
+            "instrumentation_proof": ["nice dashboard someday"],
+            "dashboards": [],
+            "evidence_refs": [],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("data_metrics_plan.success_metrics must be a non-empty array", errors)
+        self.assertIn("data_metrics_plan.events[0] must be a stable event id, not prose", errors)
+        self.assertIn("data_metrics_plan.dashboards must be a non-empty array", errors)
+        self.assertIn("data_metrics_plan.evidence_refs must be a non-empty array", errors)
+
+    def test_user_docs_onboarding_plan_rejects_missing_first_success_and_proof(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["user_docs_onboarding_plan"] = {
+            "$schema": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
+            "gate_enforcement": "strict",
+            "audience": "",
+            "tasks_covered": [],
+            "proof_required": ["someone reads it eventually"],
+            "evidence_refs": [],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("user_docs_onboarding_plan.audience is required", errors)
+        self.assertIn("user_docs_onboarding_plan.first_success_path is required", errors)
+        self.assertIn("user_docs_onboarding_plan.tasks_covered must be a non-empty array", errors)
+        self.assertIn("user_docs_onboarding_plan.evidence_refs must be a non-empty array", errors)
+
     def test_product_face_completion_requires_visual_result(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
         card["product_face_result_required"] = True

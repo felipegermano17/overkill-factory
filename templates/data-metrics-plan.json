@@ -1,5 +1,6 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/data-metrics-plan.schema.json",
+  "gate_enforcement": "strict",
   "success_metrics": [
     "activation rate",
     "task completion"
