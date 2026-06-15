@@ -1134,6 +1134,10 @@ def source_card_ref(source_path: Path) -> str:
 
 
 def public_path_ref(path: Path, fallback: str = "artifact") -> str:
+    raw = str(path)
+    windows_path = PureWindowsPath(raw)
+    if windows_path.is_absolute() or (len(raw) >= 2 and raw[1] == ":"):
+        return f"external:{windows_path.name or fallback}"
     try:
         return path.resolve().relative_to(ROOT).as_posix()
     except (OSError, ValueError):

@@ -10,7 +10,7 @@ import json
 import re
 import urllib.parse
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 
@@ -108,8 +108,11 @@ def validate_endpoint(endpoint: str) -> urllib.parse.ParseResult:
 
 
 def public_path_ref(path: Path, fallback: str = "artifact") -> str:
-    name = path.name or fallback
-    return f"external:{name}"
+    raw = str(path)
+    windows_path = PureWindowsPath(raw)
+    if windows_path.is_absolute() or (len(raw) >= 2 and raw[1] == ":"):
+        return f"external:{windows_path.name or fallback}"
+    return f"external:{path.name or fallback}"
 
 
 def redact(value: Any, *, include_private_content: bool = True) -> Any:

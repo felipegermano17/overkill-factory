@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any, Protocol
 
 
@@ -812,6 +812,10 @@ def write_json(path: Path | None, data: dict[str, Any]) -> None:
 
 
 def public_path_ref(path: Path, fallback: str = "artifact") -> str:
+    raw = str(path)
+    windows_path = PureWindowsPath(raw)
+    if windows_path.is_absolute() or (len(raw) >= 2 and raw[1] == ":"):
+        return f"external:{windows_path.name or fallback}"
     try:
         return path.resolve().relative_to(ROOT).as_posix()
     except (OSError, ValueError):
