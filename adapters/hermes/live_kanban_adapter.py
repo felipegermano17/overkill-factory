@@ -339,12 +339,18 @@ def task_has_blocked_event(payload: dict[str, Any]) -> bool:
     return False
 
 
-def task_has_unblocked_event(payload: dict[str, Any]) -> bool:
+def task_has_unblocked_event(payload: dict[str, Any], required_markers: list[str] | None = None) -> bool:
     if str(payload.get("status") or "").strip().lower() == "blocked":
         return False
+    markers = [marker.strip().lower() for marker in (required_markers or []) if marker.strip()]
     events = payload.get("events") or payload.get("history") or payload.get("timeline") or []
     if isinstance(events, list):
-        return any("unblock" in str(event).lower() for event in events)
+        for event in events:
+            text = str(event).lower()
+            if "unblock" not in text:
+                continue
+            if all(marker in text for marker in markers):
+                return True
     return False
 
 
@@ -462,6 +468,7 @@ def unblock_task(
     board: str,
     task_id: str,
     reason: str,
+    required_readback_markers: list[str] | None = None,
     runner: Runner = default_runner,
 ) -> None:
     run_checked(hermes_kanban(hermes_bin, board, "unblock", task_id, reason), runner)
@@ -470,7 +477,7 @@ def unblock_task(
         payload = json.loads(shown.stdout or "{}")
     except json.JSONDecodeError as exc:
         raise RuntimeError("Hermes show --json did not return JSON while verifying unblock event") from exc
-    if not isinstance(payload, dict) or not task_has_unblocked_event(payload):
+    if not isinstance(payload, dict) or not task_has_unblocked_event(payload, required_readback_markers):
         raise RuntimeError(f"Hermes task {task_id} is not durably unblocked after unblock command")
 
 
@@ -839,6 +846,13 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
                     "Factory-owned recovery route authorized repair task; downstream remains gated until "
                     f"{fresh_review_ref} passes."
                 ),
+                required_readback_markers=[
+                    RECOVERY_ATTEMPT_MARKER,
+                    f"route_id={route_id}",
+                    f"route_digest={route_digest}",
+                    f"attempt_number={attempt_number}",
+                    f"max_attempts={max_attempts}",
+                ],
                 runner=runner,
             )
             recovery_promoted_worker_task_ids[worker_id] = task_id
@@ -859,6 +873,11 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
                 for auth in auths
                 if str(auth.get("review_evidence_ref") or "").strip()
             ]
+            readback_markers = [
+                f"authorized_worker_id={worker_id}",
+                *[f"requirement_id={requirement_id}" for requirement_id in requirement_ids],
+                *[f"review_evidence_ref={review_ref}" for review_ref in review_refs],
+            ]
             unblock_task(
                 hermes_bin=args.hermes_bin,
                 board=args.board,
@@ -866,8 +885,11 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
                 reason=(
                     "Fresh PASS review authorized exact downstream worker "
                     f"{worker_id}; requirement(s): {', '.join(requirement_ids)}; "
-                    f"review ref(s): {', '.join(review_refs)}; main gate remains blocked."
+                    f"review ref(s): {', '.join(review_refs)}; "
+                    f"readback_markers: {' '.join(readback_markers)}; "
+                    "main gate remains blocked."
                 ),
+                required_readback_markers=readback_markers,
                 runner=runner,
             )
             downstream_promoted_worker_task_ids[worker_id] = task_id
