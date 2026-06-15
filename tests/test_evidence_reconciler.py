@@ -232,6 +232,25 @@ class EvidenceReconcilerTest(unittest.TestCase):
         )
         self.assertEqual(no_status_draft["kanban_transition_event"]["from_status"], "receipt-five")
 
+    def test_ready_receipt_draft_passes_completion_validation(self) -> None:
+        card = closure_card()
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            results_dir = Path(tmp)
+            write_results(card, results_dir)
+            index = evidence_reconciler.reconcile(card, results_dir)
+
+        draft = evidence_reconciler.build_receipt_draft(
+            card,
+            "reports/index.json",
+            "reports/evidence-reconciler-result.json",
+            index,
+        )
+
+        self.assertTrue(index["receipt_five_ready"])
+        self.assertFalse(draft["receipt_five"]["reviewer_required"])
+        self.assertIn("independent_review_result", draft["worker_result_refs"])
+        self.assertEqual(factoryctl.validate_completion(card, draft), [])
+
 
 if __name__ == "__main__":
     unittest.main()
