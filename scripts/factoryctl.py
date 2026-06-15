@@ -292,7 +292,13 @@ AUDITOR_PROGRAM_CHECKLIST_PREFIXES = ("01", "02", "03", "04", "05", "06", "07")
 AUDITOR_MIN_KNOWN_VECTORS = 100
 QUASAR_TOOLCHAIN_PROOF_REQUIRED = (
     "install_source",
+    "source_ref",
+    "source_head_expected",
     "source_head",
+    "source_head_matches",
+    "container_image",
+    "solana_release",
+    "solana_install_url",
     "rustc",
     "cargo",
     "solana",
@@ -2868,10 +2874,29 @@ def validate_quasar_toolchain_proof(proof: object) -> list[str]:
         errors.append("auditor_result quasar_toolchain_proof missing " + ", ".join(missing))
     install_source = str(proof.get("install_source") or "").lower()
     source_head = str(proof.get("source_head") or "").strip()
+    source_head_expected = str(proof.get("source_head_expected") or "").strip()
+    container_image = str(proof.get("container_image") or "").strip()
+    solana_install_url = str(proof.get("solana_install_url") or "").strip().lower()
     if "crates.io" in install_source and not source_head:
         errors.append("auditor_result quasar_toolchain_proof cannot rely on crates.io quasar-cli without a source_head pin")
     if source_head and len(source_head) < 7:
         errors.append("auditor_result quasar_toolchain_proof source_head must be a commit-like pin")
+    if source_head_expected and len(source_head_expected) < 7:
+        errors.append("auditor_result quasar_toolchain_proof source_head_expected must be a commit-like pin")
+    if source_head and source_head_expected and source_head != source_head_expected:
+        errors.append("auditor_result quasar_toolchain_proof source_head must match source_head_expected")
+    if proof.get("source_head_matches") is not True:
+        errors.append("auditor_result quasar_toolchain_proof source_head_matches must be true")
+    if container_image:
+        if ":latest" in container_image:
+            errors.append("auditor_result quasar_toolchain_proof container_image must not use latest")
+        if "@sha256:" not in container_image:
+            errors.append("auditor_result quasar_toolchain_proof container_image must be digest-pinned")
+    if solana_install_url:
+        if "/stable/" in solana_install_url:
+            errors.append("auditor_result quasar_toolchain_proof solana_install_url must not use stable")
+        if not re.search(r"/v\d+\.\d+\.\d+(?:[-._a-z0-9]+)?/install$", solana_install_url):
+            errors.append("auditor_result quasar_toolchain_proof solana_install_url must use an explicit release")
     if proof.get("build_status") not in (None, "") and not _status_is_pass(proof.get("build_status")):
         errors.append("auditor_result quasar_toolchain_proof build_status must be PASS")
     if proof.get("test_status") not in (None, "") and not _status_is_pass(proof.get("test_status")):

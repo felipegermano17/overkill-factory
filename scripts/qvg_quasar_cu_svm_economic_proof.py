@@ -15,6 +15,13 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+QUASAR_SOURCE = "github:blueshift-gg/quasar"
+QUASAR_SOURCE_REPOSITORY = "https://github.com/blueshift-gg/quasar.git"
+QUASAR_SOURCE_HEAD = "a89a9329f05740a20520607608b2b3b78c74f7c4"
+QUASAR_SOURCE_REF = QUASAR_SOURCE_HEAD
+RUST_CONTAINER_IMAGE = "rust:1.91.0-bookworm@sha256:e187887ec511b3d93e45c0231d2f0fd59f1347526c58aa86343aa83c74f3e1a9"
+SOLANA_RELEASE = "v4.0.2"
+SOLANA_INSTALL_URL = f"https://release.anza.xyz/{SOLANA_RELEASE}/install"
 PROJECT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{2,63}$")
 CU_LINE_RE = re.compile(r"^OF_SVM_CU\s+(?P<name>[a-z0-9_]+)\s+(?P<cu>\d+)\s*$")
 FLOW_LINE_RE = re.compile(r"^OF_SVM_FLOW\s+(?P<name>[a-z0-9_]+)\s+(?P<status>PASS|FAIL)\s*$")
@@ -324,6 +331,10 @@ def docker_script(project_name: str, compute_budget: int) -> str:
     test_module = svm_test_module(project_name, compute_budget)
     return f"""set -euxo pipefail
 export DEBIAN_FRONTEND=noninteractive
+readonly SOLANA_INSTALL_URL="{SOLANA_INSTALL_URL}"
+readonly QUASAR_SOURCE_REPOSITORY="{QUASAR_SOURCE_REPOSITORY}"
+readonly QUASAR_SOURCE_REF="{QUASAR_SOURCE_REF}"
+readonly QUASAR_SOURCE_HEAD="{QUASAR_SOURCE_HEAD}"
 retry() {{
   local attempts="$1"
   shift
@@ -339,12 +350,19 @@ retry() {{
 apt-get update
 apt-get install -y --no-install-recommends git ca-certificates curl pkg-config libssl-dev perl make clang llvm-dev libclang-dev protobuf-compiler
 cd /tmp
-curl -sSfL https://release.anza.xyz/stable/install | sh
+curl -sSfL "$SOLANA_INSTALL_URL" | sh
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 solana --version | tee /out/solana.txt
-git clone --depth 1 https://github.com/blueshift-gg/quasar.git /tmp/quasar
+git init /tmp/quasar
 cd /tmp/quasar
-git rev-parse HEAD | tee /out/quasar_head.txt
+git remote add origin "$QUASAR_SOURCE_REPOSITORY"
+git fetch --depth 1 origin "$QUASAR_SOURCE_REF"
+git checkout --detach FETCH_HEAD
+resolved_quasar_head="$(git rev-parse HEAD)"
+printf '%s\\n' "$QUASAR_SOURCE_REF" | tee /out/quasar_ref.txt
+printf '%s\\n' "$QUASAR_SOURCE_HEAD" | tee /out/quasar_expected_head.txt
+printf '%s\\n' "$resolved_quasar_head" | tee /out/quasar_head.txt
+test "$resolved_quasar_head" = "$QUASAR_SOURCE_HEAD"
 cargo install --path cli --locked
 cd /tmp
 quasar init {project_name} --yes --toolchain solana --test-language rust --rust-framework quasar-svm --template minimal --no-git --verbose
@@ -388,7 +406,7 @@ def run_container(source_dir: Path, work_dir: Path, timeout: int, project_name: 
         f"{source_dir.resolve()}:/repo-src:ro",
         "-v",
         f"{work_dir.resolve()}:/out",
-        "rust:latest",
+        RUST_CONTAINER_IMAGE,
         "bash",
         "/out/run-quasar-svm-proof.sh",
     ]
@@ -463,11 +481,15 @@ def build_result(
     source_economic_surface_pass = not any(source_surface.values())
     build_status = read_marker(work_dir, "build_status.txt")
     svm_test_status = read_marker(work_dir, "svm_test_status.txt")
+    quasar_source_head = read_marker(work_dir, "quasar_head.txt")
+    source_head_matches = quasar_source_head == QUASAR_SOURCE_HEAD
     prior_runtime_source_matches = str(runtime_proof.get("source_sha256") or "") == source_hash
     result = (
         completed.returncode == 0
         and build_status == "PASS"
         and svm_test_status == "PASS"
+        and source_head_matches
+        and prior_runtime_source_matches
         and marker_summary["required_markers_present"]
         and marker_summary["all_cu_within_budget"]
         and all_negative_cases_pass
@@ -493,10 +515,10 @@ def build_result(
             "runtime_source_sha256": str(runtime_proof.get("source_sha256") or ""),
             "current_source_sha256": source_hash,
             "matches": prior_runtime_source_matches,
-            "blocking_for_this_proof": False,
-            "why_non_blocking": (
-                "This CU/SVM/economic proof runs a fresh Quasar build and SVM test in the same container. "
-                "The prior runtime proof is retained as a historical reference, not as the current-pass authority."
+            "blocking_for_this_proof": True,
+            "why_blocking": (
+                "The CU/SVM/economic proof references the runtime proof as evidence. "
+                "Both proofs must describe the same product source hash before this lane can pass."
             ),
         },
         "product_target": {
@@ -511,9 +533,14 @@ def build_result(
             ),
         },
         "toolchain_proof": {
-            "container_image": "rust:latest",
-            "install_source": "github:blueshift-gg/quasar",
-            "source_head": read_marker(work_dir, "quasar_head.txt"),
+            "container_image": RUST_CONTAINER_IMAGE,
+            "solana_release": SOLANA_RELEASE,
+            "solana_install_url": SOLANA_INSTALL_URL,
+            "install_source": QUASAR_SOURCE,
+            "source_ref": read_marker(work_dir, "quasar_ref.txt") or QUASAR_SOURCE_REF,
+            "source_head_expected": QUASAR_SOURCE_HEAD,
+            "source_head": quasar_source_head,
+            "source_head_matches": source_head_matches,
             "rustc": read_marker(work_dir, "rustc.txt"),
             "cargo": read_marker(work_dir, "cargo.txt"),
             "solana": read_marker(work_dir, "solana.txt"),

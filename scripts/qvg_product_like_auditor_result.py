@@ -108,7 +108,13 @@ def checklist_coverage(auditor_dir: Path) -> dict[str, Any]:
 def build_quasar_toolchain_proof(runtime_proof: dict[str, Any], runtime_ref: str) -> dict[str, Any]:
     return {
         "install_source": runtime_proof.get("install_source"),
+        "source_ref": runtime_proof.get("source_ref"),
+        "source_head_expected": runtime_proof.get("source_head_expected"),
         "source_head": runtime_proof.get("source_head"),
+        "source_head_matches": runtime_proof.get("source_head_matches"),
+        "container_image": runtime_proof.get("container_image"),
+        "solana_release": runtime_proof.get("solana_release"),
+        "solana_install_url": runtime_proof.get("solana_install_url"),
         "rustc": runtime_proof.get("rustc"),
         "cargo": runtime_proof.get("cargo"),
         "solana": runtime_proof.get("solana"),
@@ -166,6 +172,8 @@ def validate_reusable_product_scope(
         raise ValueError("reusable production Auditor evidence requires a 64-char source_sha256")
     if toolchain.get("build_status") != "PASS" or toolchain.get("test_status") != "PASS":
         raise ValueError("reusable production Auditor evidence requires PASS Quasar build and test status")
+    if toolchain.get("source_head_matches") is not True:
+        raise ValueError("reusable production Auditor evidence requires matching pinned Quasar source head")
     coverage = result.get("known_vectors_coverage") or {}
     if int(coverage.get("total") or 0) < 100:
         raise ValueError("reusable production Auditor evidence requires at least 100 known vectors")
@@ -271,6 +279,7 @@ def build_result(
     total_known_vectors = max(100, len(known_vector_files))
     property_result = str((property_proof or {}).get("result") or "")
     property_passed = property_proof is None or property_result == "PASS"
+    runtime_passed = runtime_proof.get("result") == "PASS" and runtime_proof.get("source_head_matches") is True
     result = {
         "$schema": "https://overkill-factory.dev/schemas/auditor-result.schema.json",
         "record_type": "auditor_result",
@@ -281,8 +290,8 @@ def build_result(
             "factory_phase": "F7/F13",
         },
         "card_ref": load_card_ref(card_path),
-        "result": "PASS" if runtime_proof.get("result") == "PASS" and property_passed else "FAIL",
-        "blocking_findings": runtime_proof.get("result") != "PASS" or not property_passed,
+        "result": "PASS" if runtime_passed and property_passed else "FAIL",
+        "blocking_findings": not runtime_passed or not property_passed,
         "findings_summary": "QVG Quasar target built/tested, deterministic property/fuzz coverage was applied, and Auditor corpus checklist coverage found no blocking issue.",
         "tool_or_profile": "solanabr/Auditor corpus plus Quasar product-like build/test proof",
         "executed_by": "solana-quasar-auditor",
