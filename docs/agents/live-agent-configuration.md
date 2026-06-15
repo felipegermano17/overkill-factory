@@ -134,14 +134,16 @@ Only a fresh sanitized ledger row with `readiness_state=current_profile_ready`,
 treated as current profile readiness. Stale, missing or wrong-profile rows stay
 blocked or degraded.
 
-## Queue Rule
+## Gate Timing Rule
 
-The binding carries `dispatch_queue_policy`, but it is not a second runtime
-queue source. The executable queue is computed by
-`factoryctl.worker_queue_class` and exposed as `worker_task.queue_class`.
+The binding carries `factory_gate_timing_policy`, but it is not a second
+runtime queue source. Gate timing is computed by
+`factoryctl.worker_gate_timing_class` and exposed as
+`worker_task.gate_timing_class` for semantic materialization.
 
-That is better for Hermes because phase/risk can change the queue. A static
-binding queue would let the adapter and transition plan disagree.
+That is better for Hermes because phase/risk can change the required timing.
+A static binding queue would let the adapter and transition plan disagree.
+Hermes still owns dispatch, dependencies, worker lifecycle and durable state.
 
 ## Result Schema Rule
 

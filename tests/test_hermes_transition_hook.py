@@ -46,7 +46,15 @@ class HermesTransitionHookTest(unittest.TestCase):
         self.assertGreater(first["ledger"]["created"], [])
         self.assertEqual(second["ledger"]["created"], [])
         self.assertEqual(first["ledger"]["task_count"], second["ledger"]["task_count"])
+        self.assertEqual(ledger_data["ledger_scope"], "projection_idempotency_only")
+        self.assertEqual(ledger_data["runtime_authority"], "hermes_kanban")
+        self.assertFalse(ledger_data["local_state_authority"])
         self.assertEqual(len(ledger_data["tasks"]), first["ledger"]["task_count"])
+        task = next(iter(ledger_data["tasks"].values()))
+        self.assertEqual(task["materialization_state"], "pending_hermes_materialization")
+        self.assertEqual(task["local_record_role"], "idempotency_projection")
+        self.assertIn("runtime_refs", task)
+        self.assertIn("hermes_task_ref", task["runtime_refs"])
 
     def test_done_hook_blocks_missing_worker_results(self) -> None:
         card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"

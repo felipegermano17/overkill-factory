@@ -146,6 +146,9 @@ def record_live_binding(
     ledger = load_json(ledger_path)
     bindings = ledger.setdefault("live_bindings", {})
     bindings[card_id] = {
+        "binding_role": "hermes_ref_projection",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
         "board": board,
         "main_task_id": main_task_id,
         "worker_task_ids": worker_task_ids,

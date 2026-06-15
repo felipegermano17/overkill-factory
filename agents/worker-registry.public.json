@@ -63,7 +63,7 @@
         "autonomy readiness packet",
         "ready gate verdict"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "never unblock R3/R4 without required gates"
       ],
       "promotion_rule": "hybrid worker remains supervised; closed subflows only after repeated success",
@@ -111,7 +111,7 @@
         "promoted claims",
         "rejected claims"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "Product SOT waits for source resolution"
       ],
       "promotion_rule": "stays open while source shapes remain unpredictable",
@@ -159,7 +159,7 @@
         "discovery notes",
         "assumption ledger"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "architecture waits for SOT candidate and open risk list"
       ],
       "promotion_rule": "closed only for repeatable SOT normalization after evals",
@@ -207,7 +207,7 @@
         "security architecture route",
         "architecture decision record"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "no decomposition before architecture gate"
       ],
       "promotion_rule": "stays open for judgment-heavy design",
@@ -251,7 +251,7 @@
         "a11y notes",
         "journey proof"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "product-facing done waits for Product Face evidence"
       ],
       "promotion_rule": "closed for repeatable screenshot/a11y runner after fixture coverage",
@@ -294,7 +294,7 @@
         "PDA/signers/CPI/CU checks",
         "waiver if not run"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "R3/R4 onchain waits for Auditor evidence or structured waiver"
       ],
       "promotion_rule": "hybrid until real Quasar implementation pilots pass",
@@ -339,7 +339,7 @@
         "findings",
         "evidence refs"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "done waits for security_scan_result when scan is required"
       ],
       "promotion_rule": "closed only for repeatable scan execution, not risk judgment",
@@ -383,7 +383,7 @@
         "test refs",
         "risk residuals"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "AppSec-sensitive done waits for AppSec result or waiver"
       ],
       "promotion_rule": "hybrid; checklists can become closed after repeated fixtures",
@@ -427,7 +427,7 @@
         "tool allowlist",
         "memory trust tier"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "agentic surfaces wait for tool-boundary evidence"
       ],
       "promotion_rule": "hybrid because judgment and adversarial reasoning remain necessary",
@@ -466,7 +466,7 @@
         "finding status",
         "follow-up action"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "pre-landing code work waits for AutoReview when required"
       ],
       "promotion_rule": "closed because input and output are repeatable",
@@ -511,7 +511,7 @@
         "cleanup",
         "cost note"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "remote proof evidence attaches before promotion"
       ],
       "promotion_rule": "closed because command/proof shape is repeatable",
@@ -552,7 +552,7 @@
         "artifact refs",
         "next action"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "handoff required for R2+ worker transfer"
       ],
       "promotion_rule": "closed because packet shape is repeatable",
@@ -593,7 +593,7 @@
         "residual risk",
         "reviewer-selection ref"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "R2+ waits for independent review before done"
       ],
       "promotion_rule": "hybrid; closed only for narrow repeatable review checklists",
@@ -652,7 +652,7 @@
         "closure summary",
         "completion audit verdict"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "runs after required worker artifacts exist",
         "runs before QA, AutoReview and done promotion",
         "blocks done when current evidence cannot satisfy Receipt Five"
@@ -708,7 +708,7 @@
         "decision actor role",
         "durable runtime event"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "architecture and R4 promotion wait for real human decision"
       ],
       "promotion_rule": "always human-controlled",
@@ -747,7 +747,7 @@
         "contract refs",
         "doc-shape routing"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "decomposition waits for durable docs"
       ],
       "promotion_rule": "hybrid; templated docs can become closed after evals",
@@ -799,7 +799,7 @@
         "Loop Plan",
         "lane/worktree isolation notes"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "cards without required contracts are rejected"
       ],
       "promotion_rule": "closed for narrow card normalization after regression suite",
@@ -839,7 +839,7 @@
         "tests",
         "receipt"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "use specialist builders first; fallback only for unknown or legacy code surfaces"
       ],
       "promotion_rule": "demote by default when a surface-specific builder exists",
@@ -883,7 +883,7 @@
         "component/test refs",
         "desktop/mobile evidence request"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "frontend work waits for Product Face packet and later Product Face validation"
       ],
       "promotion_rule": "closed only for repeatable component implementation with visual regression fixtures",
@@ -926,7 +926,7 @@
         "API test refs",
         "contract refs"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "API/auth work waits for AppSec and security evidence when sensitive"
       ],
       "promotion_rule": "closed only for repeatable endpoint/service patterns with contract tests",
@@ -970,7 +970,7 @@
         "schema test refs",
         "rollback notes"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "data work waits for rollback and security review when sensitive"
       ],
       "promotion_rule": "closed only for repeatable schema changes with rollback fixtures",
@@ -1014,7 +1014,7 @@
         "Quasar build/test refs",
         "PDA/signer map"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "onchain work waits for Solana QA, Auditor, security and human gates when required"
       ],
       "promotion_rule": "closed only after repeated Quasar fixtures and Auditor-reviewed patterns",
@@ -1057,7 +1057,7 @@
         "devnet/local refs",
         "negative test matrix"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "onchain done waits for QA, Auditor and security evidence"
       ],
       "promotion_rule": "closed only for stable Quasar test harnesses and replayable fixtures",
@@ -1100,7 +1100,7 @@
         "transaction-state tests",
         "signer boundary notes"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "wallet/funds work waits for crypto/key, AppSec and Product Face evidence"
       ],
       "promotion_rule": "closed only for repeated wallet-state components with safe fixtures",
@@ -1143,7 +1143,7 @@
         "runtime refs",
         "handoff gaps"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "integration waits for builder outputs and feeds QA verification"
       ],
       "promotion_rule": "closed only for repeatable glue patterns with stable E2E fixtures",
@@ -1188,7 +1188,7 @@
         "run logs",
         "coverage/gap notes"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "high-repeat work should become tests or evals before learning loop"
       ],
       "promotion_rule": "closed only when fixtures are stable and held-out cases pass",
@@ -1233,7 +1233,7 @@
         "smoke refs",
         "rollback notes"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "infra work waits for cloud/security/release gates when promotion-like"
       ],
       "promotion_rule": "closed only for repeatable environment setup with rollback fixtures",
@@ -1280,7 +1280,7 @@
         "safety review handoff",
         "agent eval plan"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "agent runtime work waits for agentic AI security, public safety and profile validation"
       ],
       "promotion_rule": "closed only for repeatable adapter/profile changes with regression tests",
@@ -1325,7 +1325,7 @@
         "pass/fail",
         "QA mode coverage"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "done waits for objective verification"
       ],
       "promotion_rule": "hybrid; closed only for deterministic fixtures",
@@ -1379,7 +1379,7 @@
         "specialist routing rationale",
         "required security gates"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "security-sensitive done waits for routed controls"
       ],
       "promotion_rule": "hybrid because security judgment stays adversarial",
@@ -1423,7 +1423,7 @@
         "rollback proof",
         "logs/monitoring plan"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "infra/release waits for cloud security evidence"
       ],
       "promotion_rule": "hybrid; closed only for deterministic policy checks",
@@ -1467,7 +1467,7 @@
         "custody model",
         "waivers"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "key/funds surfaces wait for crypto/key review"
       ],
       "promotion_rule": "hybrid because custody risk needs human oversight",
@@ -1520,7 +1520,7 @@
         "rollback proof",
         "production smoke"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "R4 release waits for human gate and rollback evidence"
       ],
       "promotion_rule": "hybrid; dry-run substeps can become closed",
@@ -1562,7 +1562,7 @@
         "source refs",
         "poisoning controls"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "memory updates wait for source and trust tier"
       ],
       "promotion_rule": "hybrid because memory quality depends on context",
@@ -1616,7 +1616,7 @@
         "factory maturity scorecard",
         "missing coverage register"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "closed specialists need eval-backed promotion"
       ],
       "promotion_rule": "closed only after repeated predictable success",
@@ -1658,7 +1658,7 @@
         "result",
         "redaction notes"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "public artifacts wait for public-safety pass"
       ],
       "promotion_rule": "closed because scan shape is deterministic",
@@ -1705,7 +1705,7 @@
         "workflow permissions",
         "SBOM or waiver"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "code/release work waits for supply-chain gate"
       ],
       "promotion_rule": "hybrid; scanners closed, risk judgment supervised",
@@ -1763,7 +1763,7 @@
         "dashboard or health evidence",
         "privacy visibility notes"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "production promotion waits for monitoring evidence"
       ],
       "promotion_rule": "hybrid because runtime signals are product-specific",
@@ -1805,7 +1805,7 @@
         "runtime state ref",
         "staleness note"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "when the owner Control Tower is active, material execution waits for a fresh projection"
       ],
       "promotion_rule": "closed because projection rendering is deterministic from runtime state once the mapping contract exists",
@@ -1849,7 +1849,7 @@
         "bridge health proof",
         "negative approval test"
       ],
-      "kanban_transition_rules": [
+      "factory_gate_transition_policy": [
         "Discord responses are advisory until the runtime records a valid structured event",
         "the bridge never marks ready, done, released or approved by itself"
       ],

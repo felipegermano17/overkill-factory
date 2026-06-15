@@ -54,7 +54,7 @@ needed.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `factory-orchestrator` | hybrid | F0-F18 | Maintains phase, risk, routing, Method Contract, capability coverage, readiness, blockers and Kanban state. It does not approve product, security or R3/R4 gates. |
+| `factory-orchestrator` | hybrid | F0-F18 | Maintains phase, risk, routing, Method Contract, capability coverage, readiness and blockers, then emits semantic transition/recovery intent for Hermes. It does not own Kanban runtime state or approve product, security or R3/R4 gates. |
 | `source-ledger-worker` | open | F0-F1 | Separates source, inference, decision, conflict, stale material and gap before any SOT claim is promoted. |
 | `product-sot-planner` | open | F2-F3 | Owns Outcome/Discovery and turns source ledger plus answers into a Product SOT candidate. Candidate is not approval. |
 | `product-architect` | open | F4-F6 | Creates architecture candidate, boundaries, tradeoffs, trust boundaries and risk map from the SOT. |

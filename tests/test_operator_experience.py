@@ -21,17 +21,36 @@ def run_factoryctl(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def run_factoryctl_blocking_ok(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "scripts/factoryctl.py", *args],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def write_card_without_security_packet(tmp: Path) -> Path:
+    source = (ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md").read_text(encoding="utf-8")
+    data = json.loads(source[source.find("{") : source.rfind("}") + 1])
+    data.pop("security_scan_packet", None)
+    path = tmp / "blocked-card.json"
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 class OperatorExperienceTest(unittest.TestCase):
     def test_factoryctl_exposes_single_operator_entrypoint(self) -> None:
         help_text = run_factoryctl("--help").stdout
         run_help = run_factoryctl("run", "--help").stdout
 
-        for command in ["doctor", "init", "run", "unblock-plan", "help-next"]:
+        for command in ["doctor", "init", "run", "unblock-plan", "recovery-plan", "help-next"]:
             with self.subTest(command=command):
                 self.assertIn(command, help_text)
         self.assertIn("minimal", run_help)
 
-    def test_unblock_plan_is_read_only_operator_guidance(self) -> None:
+    def test_unblock_plan_emits_semantic_recovery_contract(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             out = Path(tmpdir) / "unblock-plan.json"
             run_factoryctl(
@@ -43,9 +62,37 @@ class OperatorExperienceTest(unittest.TestCase):
             )
             payload = json.loads(out.read_text(encoding="utf-8"))
 
-        self.assertEqual(payload["record_type"], "operator_unblock_plan")
+        self.assertEqual(payload["record_type"], "factory_recovery_plan")
         self.assertIn("next_safe_actions", payload)
+        self.assertIn("recovery_routes", payload)
+        self.assertEqual(payload["gate_predicate_result"], "PASS")
+        self.assertEqual(payload["recovery_routes"], [])
+        self.assertEqual(payload["hermes_runtime_boundary"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(payload["hermes_runtime_boundary"]["local_state_authority"])
+        self.assertTrue(payload["hermes_runtime_boundary"]["no_shadow_dispatcher"])
         self.assertTrue(any("does not execute workers" in item for item in payload["limits"]))
+
+    def test_recovery_plan_names_hermes_native_materialization(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            card = write_card_without_security_packet(tmp)
+            out = tmp / "recovery-plan.json"
+            result = run_factoryctl_blocking_ok(
+                "recovery-plan",
+                "--card",
+                str(card),
+                "--out",
+                str(out),
+            )
+            payload = json.loads(out.read_text(encoding="utf-8"))
+
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(payload["$schema"], "https://overkill-factory.dev/schemas/factory-recovery-plan.schema.json")
+        self.assertGreater(len(payload["recovery_routes"]), 0)
+        route = payload["recovery_routes"][0]
+        self.assertEqual(route["hermes_materialization"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(route["hermes_materialization"]["local_state_authority"])
+        self.assertIn("kanban_task", route["hermes_materialization"]["native_primitives"])
 
     def test_doctor_reports_public_install_health_without_real_hermes_e2e(self) -> None:
         result = run_factoryctl("doctor", "--json")

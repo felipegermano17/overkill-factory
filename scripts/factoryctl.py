@@ -1239,6 +1239,96 @@ def worker_blocker_economics(worker_id: str, status: str, reason: str) -> dict[s
     )
 
 
+def blocker_type_for_worker(worker_id: str) -> str:
+    if worker_id == "human-gate-clerk":
+        return "human_gate"
+    if worker_id in {
+        "codex-security",
+        "solana-quasar-auditor",
+        "security-orchestrator",
+        "appsec-owasp-specialist",
+        "agentic-ai-security-specialist",
+        "cloud-infra-security-specialist",
+        "crypto-key-management-specialist",
+        "public-safety-gate",
+        "supply-chain-gate",
+        "detection-monitoring-worker",
+    }:
+        return "security"
+    if worker_id in {"source-ledger-worker", "product-sot-planner"}:
+        return "source"
+    if worker_id in {"factory-orchestrator", "evidence-reconciler", "independent-reviewer", "autoreview-gate"}:
+        return "orchestration"
+    if worker_id in {"agent-runtime-builder", "infra-devops-builder", "remote-proof-runner"}:
+        return "runtime"
+    return "dependency"
+
+
+def recovery_runtime_boundary() -> dict[str, Any]:
+    return {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": True,
+        "native_primitives": [
+            "kanban_task",
+            "parent_link",
+            "blocked_state",
+            "comment_metadata",
+            "run_history",
+            "reclaim_reassign",
+        ],
+        "local_state_authority": False,
+    }
+
+
+def recovery_recommendation_for_worker(
+    *,
+    worker_id: str,
+    card: dict[str, Any],
+    reason: str,
+    attempt_number: int = 1,
+) -> dict[str, Any]:
+    card_id = sanitize_slug(card.get("card_id") or "factory-card", fallback="factory-card")
+    blocker_type = blocker_type_for_worker(worker_id)
+    human_gate_required = blocker_type == "human_gate"
+    route_id = f"recovery:{card_id}:{sanitize_slug(worker_id, fallback='worker')}"
+    output_field = WORKERS.get(worker_id, WORKERS["factory-orchestrator"]).output_field
+    return {
+        "blocker_type": blocker_type,
+        "factory_owned_repair_allowed": not human_gate_required,
+        "human_gate_required": human_gate_required,
+        "recovery_route_id": route_id,
+        "repair_owner_worker": worker_id,
+        "repair_task_ref": f"hermes:intent:{route_id}",
+        "repair_inputs": [reason or f"{worker_id} blocked"],
+        "expected_repair_outputs": [output_field],
+        "commands_or_worker_routes": [f"route {worker_id} through Hermes Kanban"],
+        "invalidates_refs": [f"worker-result:{output_field}:blocking-or-stale"],
+        "supersedes_refs": [f"worker-result:{output_field}:fresh-pass-required"],
+        "dependency_edge_patch": {
+            "old_edges": [f"blocked:{output_field}"],
+            "new_edges": [f"fresh-review:{output_field}"],
+            "patch_authority": "fresh review PASS recorded in Hermes before unblock",
+        },
+        "downstream_freeze_scope": ["next worker", "done promotion", "Receipt Five closure"],
+        "fresh_review_required": not human_gate_required,
+        "fresh_review_result_ref": f"worker-result:{output_field}:fresh-review",
+        "unblock_authority_ref": "Hermes blocked event plus fresh review PASS" if not human_gate_required else "human_gate_record",
+        "retry_policy": {
+            "max_attempts": 10,
+            "attempt_number": attempt_number,
+            "stop_classes": [
+                "human_gate",
+                "secret_or_access_required",
+                "external_mutation_required",
+                "ambiguous_product_decision",
+                "repeated_failed_recovery",
+            ],
+            "escalation_reason": "Escalate only when the blocker leaves factory-owned safe repair scope.",
+        },
+        "hermes_runtime_boundary": recovery_runtime_boundary(),
+    }
+
+
 def scan_result_passed(value: Any) -> bool:
     if value is True:
         return True
@@ -3416,8 +3506,8 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
         packet["profile_binding"] = {
             "profile_id": profile_binding.get("profile_id"),
             "hermes_profile_name": profile_binding.get("hermes_profile_name"),
-            "dispatch_queue_policy": profile_binding.get("dispatch_queue_policy"),
-            "queue_class_source": "worker_task.queue_class",
+            "factory_gate_timing_policy": profile_binding.get("factory_gate_timing_policy"),
+            "gate_timing_source": "worker_task.gate_timing_class",
             "skill_refs": profile_binding.get("skill_refs", []),
             "result_schema": profile_binding.get("result_schema"),
             "receipt_field": profile_binding.get("receipt_field"),
@@ -3522,6 +3612,134 @@ def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def recovery_route_from_action(card: dict[str, Any], action: dict[str, Any], index: int) -> dict[str, Any]:
+    worker_id = str(action.get("worker_id") or "factory-orchestrator").strip() or "factory-orchestrator"
+    worker = WORKERS.get(worker_id, WORKERS["factory-orchestrator"])
+    card_id = sanitize_slug(card.get("card_id") or "factory-card", fallback="factory-card")
+    blocker_type = blocker_type_for_worker(worker_id)
+    human_gate_required = blocker_type == "human_gate"
+    route_id = f"recovery:{card_id}:{index}:{sanitize_slug(worker_id, fallback='worker')}"
+    action_text = str(action.get("action") or "run required worker and attach evidence").strip()
+    field = str(action.get("field") or worker.output_field).strip()
+    return {
+        "recovery_route_id": route_id,
+        "blocker_type": blocker_type,
+        "factory_owned_repair_allowed": not human_gate_required,
+        "human_gate_required": human_gate_required,
+        "repair_owner_worker": worker_id,
+        "repair_task_ref": f"hermes:intent:{route_id}",
+        "repair_inputs": [
+            f"card:{card_id}",
+            f"blocked-field:{field}",
+            action_text,
+        ],
+        "expected_repair_outputs": [field],
+        "commands_or_worker_routes": [f"route {worker_id} through Hermes Kanban"],
+        "invalidates_refs": [f"worker-result:{field}:blocking-or-stale"],
+        "supersedes_refs": [f"worker-result:{field}:fresh-pass-required"],
+        "dependency_edge_patch": {
+            "old_edges": [f"blocked:{field}"],
+            "new_edges": [f"fresh-review:{field}"],
+            "patch_authority": "fresh review PASS recorded in Hermes before unblock",
+        },
+        "downstream_freeze_scope": [
+            "next worker",
+            "done promotion",
+            "Receipt Five closure",
+        ],
+        "fresh_review_required": not human_gate_required,
+        "fresh_review_result_ref": f"worker-result:{field}:fresh-review",
+        "unblock_authority_ref": "Hermes blocked event plus fresh review PASS" if not human_gate_required else "human_gate_record",
+        "retry_policy": {
+            "max_attempts": 10,
+            "attempt_number": 1,
+            "stop_classes": [
+                "human_gate",
+                "secret_or_access_required",
+                "external_mutation_required",
+                "ambiguous_product_decision",
+                "repeated_failed_recovery",
+            ],
+            "escalation_reason": "Escalate only when the blocker leaves factory-owned safe repair scope.",
+        },
+        "audit_trail_refs": [
+            "factoryctl:gate-report",
+            f"worker:{worker_id}",
+        ],
+        "hermes_materialization": {
+            "runtime_authority": "hermes_kanban",
+            "native_primitives": [
+                "kanban_task",
+                "parent_link",
+                "blocked_state",
+                "comment_metadata",
+                "run_history",
+                "reclaim_reassign",
+            ],
+            "task_intent": "Create or route a Hermes repair task; do not mutate a local task lifecycle.",
+            "parent_link_policy": "Repair task remains linked to the blocked parent and downstream work stays blocked until fresh review passes.",
+            "comments_metadata_policy": "Store blocker type, invalidation refs, retry attempt and unblock authority in Hermes comments/metadata.",
+            "local_state_authority": False,
+        },
+    }
+
+
+def recovery_route_from_validation_error(card: dict[str, Any], error: str, index: int) -> dict[str, Any]:
+    return recovery_route_from_action(
+        card,
+        {
+            "worker_id": "factory-orchestrator",
+            "field": "card_contract",
+            "action": error,
+            "authority": "factory-orchestrator emits a repaired card contract; Hermes records the repair task and review.",
+        },
+        index,
+    )
+
+
+def build_factory_recovery_plan(card: dict[str, Any]) -> dict[str, Any]:
+    report = build_gate_report(card)
+    routes: list[dict[str, Any]] = []
+    route_index = 1
+    if report.get("gate_predicate_result") == "BLOCK":
+        for error in report.get("card_validation_errors", []):
+            routes.append(recovery_route_from_validation_error(card, str(error), route_index))
+            route_index += 1
+        for action in report.get("next_safe_actions", []):
+            if not isinstance(action, dict):
+                continue
+            routes.append(recovery_route_from_action(card, action, route_index))
+            route_index += 1
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-recovery-plan.schema.json",
+        "record_type": "factory_recovery_plan",
+        "created_at": utc_now(),
+        "card_id": report.get("card_id"),
+        "gate_predicate_result": report.get("gate_predicate_result"),
+        "blocked_workers": report.get("blocked_workers", []),
+        "next_safe_actions": report.get("next_safe_actions", []),
+        "recovery_routes": routes,
+        "hermes_runtime_boundary": {
+            "runtime_authority": "hermes_kanban",
+            "factory_output": "semantic_recovery_contract",
+            "no_shadow_scheduler": True,
+            "no_shadow_dispatcher": True,
+            "no_shadow_dependency_engine": True,
+            "local_state_authority": False,
+        },
+        "public_private_boundary": {
+            "no_raw_logs": True,
+            "no_private_paths": True,
+            "no_private_ids": True,
+        },
+        "limits": [
+            "This plan does not execute workers, approve gates, unblock Hermes tasks, or bypass missing evidence.",
+            "Recovery routes are semantic contracts; Hermes Kanban remains the runtime authority for tasks, links, block/unblock, comments, runs and audit history.",
+            "Human/security/release/deployment/GitHub/funds/secrets/mainnet approval is never implied by a recovery route.",
+        ],
+    }
+
+
 BEFORE_READY_WORKERS = {
     "factory-orchestrator",
     "source-ledger-worker",
@@ -3566,7 +3784,7 @@ BEFORE_DONE_WORKERS = {
 }
 
 
-def worker_queue_class(worker_id: str, card: dict[str, Any]) -> str:
+def worker_gate_timing_class(worker_id: str, card: dict[str, Any]) -> str:
     phase = str(card.get("phase", "")).upper()
     effective_risk = risk(card)
     if worker_id == "human-gate-clerk" and phase in {"F4", "F9"}:
@@ -3580,6 +3798,11 @@ def worker_queue_class(worker_id: str, card: dict[str, Any]) -> str:
     if worker_id == "handoff-packer" and effective_risk in REVIEW_RISK:
         return "blocking-before-done"
     return "advisory-review"
+
+
+def worker_queue_class(worker_id: str, card: dict[str, Any]) -> str:
+    """Compatibility alias: this is gate timing policy, not runtime queue authority."""
+    return worker_gate_timing_class(worker_id, card)
 
 
 def string_list(value: Any) -> list[str]:
@@ -3756,6 +3979,20 @@ def validate_worker_result_record(
         result = str(data.get("result") or "").strip()
         if result not in {"PASS", "WAIVED"}:
             errors.append("result must be PASS or WAIVED to satisfy a required worker")
+        if result == "BLOCKED":
+            recovery = data.get("recovery_recommendation")
+            if not isinstance(recovery, dict):
+                errors.append("BLOCKED worker result requires recovery_recommendation")
+            else:
+                boundary = recovery.get("hermes_runtime_boundary") if isinstance(recovery.get("hermes_runtime_boundary"), dict) else {}
+                if boundary.get("runtime_authority") != "hermes_kanban":
+                    errors.append("recovery_recommendation.hermes_runtime_boundary.runtime_authority must be hermes_kanban")
+                if boundary.get("local_state_authority") is not False:
+                    errors.append("recovery_recommendation must not claim local runtime state authority")
+                if not str(recovery.get("recovery_route_id") or "").strip():
+                    errors.append("recovery_recommendation.recovery_route_id is required")
+                if not isinstance(recovery.get("retry_policy"), dict):
+                    errors.append("recovery_recommendation.retry_policy is required")
         if data.get("blocking_findings") is not False:
             errors.append("blocking_findings must be false")
         for field in ("worker", "card_ref", "findings_summary", "tool_or_profile", "executed_by", "next_action"):
@@ -3890,7 +4127,10 @@ def build_worker_task(worker_id: str, card: dict[str, Any], source_path: Path) -
         "task_type": "worker_subtask",
         "worker_id": worker_id,
         "title": f"{worker.worker_name}: {card.get('card_id') or 'factory-card'}",
+        "gate_timing_class": queue_class,
         "queue_class": queue_class,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
         "required_before": "ready" if queue_class == "blocking-before-ready" else "done",
         "packet": packet,
         "profile_binding": packet.get("profile_binding"),
@@ -4123,6 +4363,12 @@ def build_worker_result(
             "active": True,
         },
     }
+    if result == "BLOCKED":
+        payload["recovery_recommendation"] = recovery_recommendation_for_worker(
+            worker_id=worker_id,
+            card=card,
+            reason=findings_summary or next_action or "blocked worker result",
+        )
     if worker_id == "codex-security":
         scan_packet = card.get("security_scan_packet", {}) if isinstance(card.get("security_scan_packet"), dict) else {}
         scope = scan_packet.get("scan_scope") or card.get("surfaces", [])
@@ -5383,22 +5629,15 @@ def command_gate_report(args: argparse.Namespace) -> int:
 
 
 def command_unblock_plan(args: argparse.Namespace) -> int:
-    report = build_gate_report(load_json_like(args.card))
-    plan = {
-        "$schema": "https://overkill-factory.dev/schemas/unblock-plan.schema.json",
-        "record_type": "operator_unblock_plan",
-        "created_at": utc_now(),
-        "card_id": report.get("card_id"),
-        "gate_predicate_result": report.get("gate_predicate_result"),
-        "blocked_workers": report.get("blocked_workers", []),
-        "next_safe_actions": report.get("next_safe_actions", []),
-        "limits": [
-            "This plan does not execute workers, approve gates, or bypass missing evidence.",
-            "Human/security/review evidence must be produced by the assigned authority.",
-        ],
-    }
+    plan = build_factory_recovery_plan(load_json_like(args.card))
     write_json(args.out, plan)
-    return 1 if report.get("gate_predicate_result") == "BLOCK" else 0
+    return 1 if plan.get("gate_predicate_result") == "BLOCK" else 0
+
+
+def command_recovery_plan(args: argparse.Namespace) -> int:
+    plan = build_factory_recovery_plan(load_json_like(args.card))
+    write_json(args.out, plan)
+    return 1 if plan.get("gate_predicate_result") == "BLOCK" else 0
 
 
 def command_help_next(args: argparse.Namespace) -> int:
@@ -5668,6 +5907,11 @@ def build_parser() -> argparse.ArgumentParser:
     unblock_plan_parser.add_argument("--card", type=Path, required=True)
     unblock_plan_parser.add_argument("--out", type=Path)
     unblock_plan_parser.set_defaults(func=command_unblock_plan)
+
+    recovery_plan_parser = sub.add_parser("recovery-plan", help="Emit semantic recovery routes without replacing Hermes runtime state.")
+    recovery_plan_parser.add_argument("--card", type=Path, required=True)
+    recovery_plan_parser.add_argument("--out", type=Path)
+    recovery_plan_parser.set_defaults(func=command_recovery_plan)
 
     help_next_parser = sub.add_parser("help-next", help="Show the next safe action without making the user operate internal factory machinery.")
     help_next_parser.add_argument("--card", type=Path, required=True)

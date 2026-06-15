@@ -15,8 +15,10 @@
       "receipt_field": "orchestration_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; state mutation is owned by the adapter.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready"
@@ -48,8 +50,10 @@
       "receipt_field": "source_ledger_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Raw source refs stay private; public refs must be redacted or repo-relative.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready"
@@ -76,8 +80,10 @@
       "receipt_field": "product_sot_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use Product SOT artifact refs; do not publish raw private paper extracts.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready"
@@ -104,8 +110,10 @@
       "receipt_field": "architecture_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Architecture evidence must reference packets, tradeoffs and review requirements.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready"
@@ -133,8 +141,10 @@
       "receipt_field": "product_face_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Screenshots, console notes and state matrices must be redacted and repo-relative.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -163,8 +173,10 @@
       "receipt_field": "auditor_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Auditor evidence must include scope and coverage; no keys, funds or authority-bearing refs.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -194,8 +206,10 @@
       "receipt_field": "security_scan_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Security findings must be scoped and redacted before public use.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -225,8 +239,10 @@
       "receipt_field": "appsec_owasp_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use generic endpoint refs and redact exploit-ready detail.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -255,8 +271,10 @@
       "receipt_field": "agentic_ai_security_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Tool-boundary and memory-trust refs must be public-safe and non-secret.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -286,8 +304,10 @@
       "receipt_field": "autoreview_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Review reports must name diff scope and finding status without private paths.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -315,8 +335,10 @@
       "receipt_field": "remote_proof_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Remote proof artifacts require transcript, cleanup and public-safe artifact refs.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -344,8 +366,10 @@
       "receipt_field": "handoff_packet_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Handoff refs must be replayable and never depend on chat memory alone.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "advisory-review",
         "allowed_effective_queues": [
           "blocking-before-done",
@@ -375,8 +399,10 @@
       "receipt_field": "independent_review_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Review evidence must identify executor, reviewer and inspected refs.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -404,8 +430,10 @@
       "receipt_field": "receipt_five_reconciliation_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Reconciliation indexes must use repo-relative refs and record superseded stale results explicitly.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -435,8 +463,10 @@
       "receipt_field": "human_gate_record",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Human records must use role names, explicit scope and public-safe evidence refs.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready",
@@ -467,8 +497,10 @@
       "receipt_field": "documentation_os_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Docs refs must trace to SOT and architecture without private source dumps.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready"
@@ -496,8 +528,10 @@
       "receipt_field": "decomposition_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Card graph evidence must include worker packets, dependencies and gate mapping.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready"
@@ -525,8 +559,10 @@
       "receipt_field": "implementation_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Fallback implementation must include fallback rationale plus repo-relative diff/test refs.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -554,8 +590,10 @@
       "receipt_field": "qa_verification_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Verification refs must include commands, outputs and artifacts.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -583,8 +621,10 @@
       "receipt_field": "security_orchestration_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Specialist matrix evidence must be scoped and public-safe.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready"
@@ -615,8 +655,10 @@
       "receipt_field": "cloud_infra_security_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Cloud evidence must omit account ids, tokens and private endpoints.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -645,8 +687,10 @@
       "receipt_field": "crypto_key_management_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Key and custody evidence must never contain real key material.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -675,8 +719,10 @@
       "receipt_field": "release_ops_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Release evidence must include smoke, rollback and monitoring refs.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -704,8 +750,10 @@
       "receipt_field": "memory_steward_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Memory evidence must include trust tier and source refs, never raw private memory.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready",
@@ -735,8 +783,10 @@
       "receipt_field": "skill_eval_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Skill eval refs must include held-out evals and before/after evidence.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "advisory-review",
         "allowed_effective_queues": [
           "advisory-review"
@@ -764,8 +814,10 @@
       "receipt_field": "public_safety_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Public safety evidence must include scan commands and redaction notes.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -793,8 +845,10 @@
       "receipt_field": "supply_chain_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Supply-chain refs must include scans without exposing secrets.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready"
@@ -825,8 +879,10 @@
       "receipt_field": "detection_monitoring_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Monitoring refs must avoid private dashboard URLs and raw logs.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -856,8 +912,10 @@
       "receipt_field": "frontend_build_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -886,8 +944,10 @@
       "receipt_field": "backend_api_build_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -916,8 +976,10 @@
       "receipt_field": "data_persistence_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -947,8 +1009,10 @@
       "receipt_field": "solana_quasar_build_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -978,8 +1042,10 @@
       "receipt_field": "solana_quasar_qa_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -1009,8 +1075,10 @@
       "receipt_field": "wallet_transaction_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -1040,8 +1108,10 @@
       "receipt_field": "integration_build_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -1070,8 +1140,10 @@
       "receipt_field": "test_automation_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -1100,8 +1172,10 @@
       "receipt_field": "infra_devops_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -1130,8 +1204,10 @@
       "receipt_field": "agent_runtime_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Use repo-relative refs or explicit external refs; never include private paths, secrets or raw source extraction.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-done",
         "allowed_effective_queues": [
           "blocking-before-done"
@@ -1159,8 +1235,10 @@
       "receipt_field": "project_projection_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Projection evidence must use repo-relative or redacted refs; raw runtime and Discord identifiers stay private.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready",
@@ -1190,8 +1268,10 @@
       "receipt_field": "control_tower_bridge_result",
       "can_mutate_card_state": false,
       "evidence_path_policy": "Bridge evidence must use redacted or external refs; raw Discord ids, URLs, tokens, logs and runtime ids stay private.",
-      "dispatch_queue_policy": {
-        "source_of_truth": "factoryctl.worker_queue_class",
+      "factory_gate_timing_policy": {
+        "policy_kind": "factory_gate_timing_policy",
+        "policy_basis": "factoryctl.worker_gate_timing_class",
+        "runtime_authority": "hermes_kanban",
         "default_queue": "blocking-before-ready",
         "allowed_effective_queues": [
           "blocking-before-ready",

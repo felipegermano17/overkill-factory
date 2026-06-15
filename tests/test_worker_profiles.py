@@ -159,8 +159,12 @@ class WorkerProfilesTest(unittest.TestCase):
 
         self.assertEqual(packet["profile_binding"]["profile_id"], "product-face.profile.v1")
         self.assertEqual(packet["profile_binding"]["hermes_profile_name"], "product-face")
-        self.assertEqual(packet["profile_binding"]["queue_class_source"], "worker_task.queue_class")
-        self.assertEqual(packet["profile_binding"]["dispatch_queue_policy"]["source_of_truth"], "factoryctl.worker_queue_class")
+        self.assertEqual(packet["profile_binding"]["gate_timing_source"], "worker_task.gate_timing_class")
+        timing_policy = packet["profile_binding"]["factory_gate_timing_policy"]
+        self.assertEqual(timing_policy["policy_kind"], "factory_gate_timing_policy")
+        self.assertEqual(timing_policy["policy_basis"], "factoryctl.worker_gate_timing_class")
+        self.assertEqual(timing_policy["runtime_authority"], "hermes_kanban")
+        self.assertNotIn("source_of_truth", timing_policy)
         self.assertIn("overkill-factory", packet["profile_binding"]["skill_refs"])
         self.assertIn("hermes-kanban", packet["profile_binding"]["skill_refs"])
         self.assertFalse(packet["profile_binding"]["can_mutate_card_state"])
@@ -184,8 +188,11 @@ class WorkerProfilesTest(unittest.TestCase):
 
         self.assertEqual(tasks["solana-quasar-auditor"]["profile_binding"]["profile_id"], "solana-quasar-auditor.profile.v1")
         self.assertEqual(tasks["codex-security"]["profile_binding"]["receipt_field"], "security_scan_result")
+        self.assertEqual(tasks["supply-chain-gate"]["gate_timing_class"], "blocking-before-ready")
         self.assertEqual(tasks["supply-chain-gate"]["queue_class"], "blocking-before-ready")
-        self.assertEqual(tasks["supply-chain-gate"]["profile_binding"]["queue_class_source"], "worker_task.queue_class")
+        self.assertEqual(tasks["supply-chain-gate"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(tasks["supply-chain-gate"]["local_state_authority"])
+        self.assertEqual(tasks["supply-chain-gate"]["profile_binding"]["gate_timing_source"], "worker_task.gate_timing_class")
 
     def test_profile_binding_queue_is_policy_not_second_runtime_source(self) -> None:
         card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
@@ -194,8 +201,13 @@ class WorkerProfilesTest(unittest.TestCase):
         task = factoryctl.build_worker_task("security-orchestrator", card, card_path)
 
         self.assertEqual(task["queue_class"], "blocking-before-ready")
+        self.assertEqual(task["gate_timing_class"], "blocking-before-ready")
         self.assertNotIn("dispatch_queue", task["profile_binding"])
-        self.assertEqual(task["profile_binding"]["dispatch_queue_policy"]["source_of_truth"], "factoryctl.worker_queue_class")
+        self.assertNotIn("dispatch_queue_policy", task["profile_binding"])
+        timing_policy = task["profile_binding"]["factory_gate_timing_policy"]
+        self.assertEqual(timing_policy["policy_basis"], "factoryctl.worker_gate_timing_class")
+        self.assertEqual(timing_policy["runtime_authority"], "hermes_kanban")
+        self.assertNotIn("source_of_truth", timing_policy)
 
 
 if __name__ == "__main__":

@@ -47,5 +47,11 @@
   "drift_check": "Refresh this plan when Product SOT, method, architecture, capability packs or landed slices change.",
   "stop_conditions": ["missing Product SOT coverage", "missing promotion ladder for production intent", "stale product context"],
   "reconciliation_policy": "Mark work units todo, ready, blocked, done, rejected, superseded or needs_refresh; never treat a done slice as whole-product completion.",
+  "runtime_boundary": {
+    "state_role": "planning_only",
+    "runtime_authority": "hermes_kanban",
+    "local_state_authority": false,
+    "materialized_hermes_task_refs": []
+  },
   "evidence_refs": ["templates/full-product-sot-scope-coverage.json"]
 }

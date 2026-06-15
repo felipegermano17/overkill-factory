@@ -66,6 +66,12 @@
   "residual_risks": [
     "No write lane was integrated from this example contract."
   ],
+  "runtime_boundary": {
+    "state_role": "projection_only",
+    "runtime_authority": "hermes_kanban",
+    "local_state_authority": false,
+    "materialized_hermes_task_refs": []
+  },
   "public_safety_boundary": {
     "no_private_product_names": true,
     "no_local_absolute_paths": true,

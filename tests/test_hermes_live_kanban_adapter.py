@@ -109,9 +109,14 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 ]
             )
             result = adapter.materialize(args, runner=fake)
+            ledger_data = json.loads((Path(tmp) / "ledger.json").read_text(encoding="utf-8"))
 
         self.assertEqual(result["main_task_id"], MAIN_TASK_ID)
         self.assertIn("codex-security", result["worker_task_ids"])
+        binding = ledger_data["live_bindings"]["KFP-V35-POS-ONCHAIN-AUDITOR"]
+        self.assertEqual(binding["binding_role"], "hermes_ref_projection")
+        self.assertEqual(binding["runtime_authority"], "hermes_kanban")
+        self.assertFalse(binding["local_state_authority"])
         link_calls = [call for call in fake.calls if len(call) >= 7 and call[4] == "link"]
         self.assertTrue(link_calls)
         for call in link_calls:

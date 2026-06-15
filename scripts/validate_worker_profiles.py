@@ -275,16 +275,24 @@ def validate(
                 findings.append(f"{worker_id}: binding must include hermes-kanban skill")
             if binding.get("can_mutate_card_state") is not False:
                 findings.append(f"{worker_id}: worker profile must not directly mutate card state")
-            policy = binding.get("dispatch_queue_policy")
+            if "dispatch_queue_policy" in binding:
+                findings.append(f"{worker_id}: binding must use factory_gate_timing_policy, not dispatch_queue_policy")
+            policy = binding.get("factory_gate_timing_policy")
             if not isinstance(policy, dict):
-                findings.append(f"{worker_id}: binding missing dispatch_queue_policy")
+                findings.append(f"{worker_id}: binding missing factory_gate_timing_policy")
             else:
-                if policy.get("source_of_truth") != "factoryctl.worker_queue_class":
-                    findings.append(f"{worker_id}: dispatch queue source must be factoryctl.worker_queue_class")
+                if "source_of_truth" in policy:
+                    findings.append(f"{worker_id}: factory_gate_timing_policy must not claim source_of_truth")
+                if policy.get("policy_kind") != "factory_gate_timing_policy":
+                    findings.append(f"{worker_id}: factory_gate_timing_policy.policy_kind must be factory_gate_timing_policy")
+                if policy.get("policy_basis") != "factoryctl.worker_gate_timing_class":
+                    findings.append(f"{worker_id}: gate timing policy basis must be factoryctl.worker_gate_timing_class")
+                if policy.get("runtime_authority") != "hermes_kanban":
+                    findings.append(f"{worker_id}: gate timing runtime authority must be hermes_kanban")
                 if not policy.get("default_queue"):
-                    findings.append(f"{worker_id}: dispatch_queue_policy missing default_queue")
+                    findings.append(f"{worker_id}: factory_gate_timing_policy missing default_queue")
                 if not policy.get("allowed_effective_queues"):
-                    findings.append(f"{worker_id}: dispatch_queue_policy missing allowed_effective_queues")
+                    findings.append(f"{worker_id}: factory_gate_timing_policy missing allowed_effective_queues")
             for field in (
                 "profile_manifest_ref",
                 "profile_description_ref",
