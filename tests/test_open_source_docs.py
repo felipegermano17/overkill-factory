@@ -305,6 +305,49 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Maintainer internals", repo_surface)
         self.assertIn("Generated output", repo_surface)
 
+    def test_public_surface_manifest_covers_core_operator_docs(self) -> None:
+        manifest = json.loads(read_text("docs/public-surface.manifest.json"))
+        by_path = {surface["path"]: surface for surface in manifest["surfaces"]}
+        core_docs = [
+            "docs/getting-started/quickstart-hermes.md",
+            "docs/reference/cli.md",
+            "docs/operations/validation-and-release.md",
+        ]
+
+        for rel in core_docs:
+            with self.subTest(rel=rel):
+                self.assertIn(rel, manifest["canonical_sources"])
+                self.assertIn(rel, by_path)
+                self.assertIn("source_refs_exist", by_path[rel]["claim_checks"])
+                self.assertIn("source_of_truth_disclaimer", by_path[rel]["claim_checks"])
+                self.assertIn("no_runtime_proof_claim", by_path[rel]["claim_checks"])
+
+    def test_mkdocs_public_surface_build_is_ci_covered(self) -> None:
+        pyproject = read_text("pyproject.toml")
+        ci = read_text(".github/workflows/ci.yml")
+        gitignore = read_text(".gitignore")
+        mkdocs = read_text("mkdocs.yml")
+
+        self.assertIn("[project.optional-dependencies]", pyproject)
+        self.assertIn('docs = ["mkdocs>=1.6,<2"]', pyproject)
+        self.assertIn('python -m pip install ".[docs]"', ci)
+        self.assertIn('python -m mkdocs build --strict --site-dir "$RUNNER_TEMP/overkill-mkdocs-site"', ci)
+        self.assertIn("site/", gitignore)
+        self.assertIn("exclude_docs:", mkdocs)
+        self.assertIn("not_in_nav:", mkdocs)
+
+    def test_published_surface_sync_has_manual_scheduled_workflow(self) -> None:
+        workflow = read_text(".github/workflows/public-surface-published-sync.yml")
+
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("schedule:", workflow)
+        self.assertNotIn("pull_request:", workflow)
+        self.assertNotIn("push:", workflow)
+        self.assertIn("permissions:", workflow)
+        self.assertIn("contents: read", workflow)
+        self.assertIn("python -B scripts/validate_public_surface_sync.py --check-published", workflow)
+        self.assertNotIn("upload-artifact", workflow)
+
     def test_release_security_and_example_gallery_are_professional_surfaces(self) -> None:
         changelog = read_text("CHANGELOG.md")
         release_policy = read_text("docs/operations/release-policy.md")

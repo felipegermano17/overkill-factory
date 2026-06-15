@@ -31,6 +31,9 @@ Issues = "https://github.com/felipegermano17/overkill-factory/issues"
 factoryctl = "scripts.factoryctl:main"
 overkill-quickstart = "scripts.quickstart_smoke:main"
 
+[project.optional-dependencies]
+docs = ["mkdocs>=1.6,<2"]
+
 [tool.setuptools]
 py-modules = []
 include-package-data = true
