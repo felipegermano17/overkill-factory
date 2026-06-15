@@ -208,6 +208,69 @@ class HermesTransitionHookTest(unittest.TestCase):
         self.assertEqual(task["dependency_authorization_state"], "review_ready")
         self.assertEqual(task["review_task_authorizations"][0]["authorized_scope"], ["review"])
 
+    def test_hook_persists_recovery_routes_from_blocked_review_results(self) -> None:
+        factoryctl = transition_hook.load_factoryctl()
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card_data = factoryctl.load_json_like(card)
+        card_data["source_refs"] = [*card_data.get("source_refs", []), "synthetic validation fixture"]
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card_data,
+            result="PASS",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Handoff packet declares an independent review gate.",
+            next_action="independent review required before implementation consumption",
+            reviewer_required=True,
+            reviewer_result="PENDING",
+        )
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            tmp_path = Path(tmp)
+            results_dir = tmp_path / "worker-results"
+            results_dir.mkdir()
+            handoff_path = results_dir / "handoff.json"
+            review_path = results_dir / "review.json"
+            ledger = tmp_path / "worker-ledger.json"
+            handoff_path.write_text(json.dumps(handoff), encoding="utf-8")
+            requirement = factoryctl.declared_graph_requirements(
+                "handoff_packet_result",
+                handoff,
+                evidence_ref=factoryctl.source_card_ref(handoff_path),
+            )[0]
+            blocked_review = factoryctl.build_worker_result(
+                "independent-reviewer",
+                card_data,
+                result="BLOCKED",
+                tool_or_profile="independent-review-smoke",
+                executed_by="independent-reviewer",
+                evidence_refs=["README.md"],
+                blocking_findings=True,
+                findings_summary="Review found the handoff packet incomplete.",
+                next_action="repair handoff packet and rerun independent review",
+                reusable_for_product=False,
+            )
+            blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
+            review_path.write_text(json.dumps(blocked_review), encoding="utf-8")
+
+            result = transition_hook.build_hook_result(
+                card_path=card,
+                from_status="draft",
+                to_status="ready",
+                receipt_path=None,
+                worker_results_dir=results_dir,
+                ledger_path=ledger,
+            )
+            ledger_data = json.loads(ledger.read_text(encoding="utf-8"))
+
+        self.assertTrue(result["plan"]["recovery_routes"])
+        route_id = result["plan"]["recovery_routes"][0]["recovery_route_id"]
+        task = next(task for task in ledger_data["tasks"].values() if task["worker_id"] == "handoff-packer")
+        self.assertIn(route_id, task["recovery_route_refs"])
+        self.assertIn(route_id, task["packet"]["input_contract"]["recovery_route_refs"])
+
     def test_cli_is_fail_closed_for_before_ready_blocks(self) -> None:
         card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:

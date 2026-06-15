@@ -130,6 +130,7 @@ def persist_worker_tasks(plan: dict[str, Any], ledger_path: Path) -> dict[str, A
             "status": task.get("status"),
             "packet": task.get("packet"),
             "graph_requirement_refs": task.get("graph_requirement_refs", []),
+            "recovery_route_refs": task.get("recovery_route_refs", []),
             "dependency_authorization_state": task.get("dependency_authorization_state"),
             "review_task_authorizations": task.get("review_task_authorizations", []),
         }

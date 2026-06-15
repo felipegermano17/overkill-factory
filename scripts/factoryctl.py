@@ -3706,7 +3706,202 @@ def recovery_route_from_validation_error(card: dict[str, Any], error: str, index
     )
 
 
-def build_factory_recovery_plan(card: dict[str, Any]) -> dict[str, Any]:
+def recovery_materialization_contract(route_id: str) -> dict[str, Any]:
+    return {
+        "runtime_authority": "hermes_kanban",
+        "native_primitives": [
+            "kanban_task",
+            "parent_link",
+            "blocked_state",
+            "comment_metadata",
+            "run_history",
+            "reclaim_reassign",
+        ],
+        "task_intent": "Create or route a Hermes repair task; do not mutate a local task lifecycle.",
+        "parent_link_policy": (
+            "Repair task remains linked to the blocked parent and downstream work stays blocked until fresh review passes."
+        ),
+        "comments_metadata_policy": (
+            "Store blocker type, invalidation refs, retry attempt and unblock authority in Hermes comments/metadata."
+        ),
+        "local_state_authority": False,
+        "semantic_route_ref": route_id,
+    }
+
+
+def recovery_route_from_recommendation(
+    card: dict[str, Any],
+    *,
+    worker_id: str,
+    field: str,
+    evidence_ref: str | None,
+    recommendation: dict[str, Any],
+    index: int,
+) -> dict[str, Any]:
+    worker = WORKERS.get(worker_id, WORKERS["factory-orchestrator"])
+    card_id = sanitize_slug(card.get("card_id") or "factory-card", fallback="factory-card")
+    route_id = str(recommendation.get("recovery_route_id") or "").strip()
+    if not route_id:
+        route_id = f"recovery:{card_id}:{index}:{sanitize_slug(worker.worker_id, fallback='worker')}"
+    human_gate_required = recommendation.get("human_gate_required") is True
+    blocker_type = str(recommendation.get("blocker_type") or blocker_type_for_worker(worker.worker_id)).strip()
+    audit_refs = ["factoryctl:worker-result-recovery", f"worker:{worker.worker_id}"]
+    if evidence_ref:
+        audit_refs.append(evidence_ref)
+    return {
+        "recovery_route_id": route_id,
+        "blocker_type": blocker_type,
+        "factory_owned_repair_allowed": recommendation.get("factory_owned_repair_allowed") is not False,
+        "human_gate_required": human_gate_required,
+        "repair_owner_worker": str(recommendation.get("repair_owner_worker") or worker.worker_id),
+        "repair_task_ref": str(recommendation.get("repair_task_ref") or f"hermes:intent:{route_id}"),
+        "repair_inputs": string_list(recommendation.get("repair_inputs"))
+        or [
+            f"card:{card_id}",
+            f"blocked-field:{field}",
+            "blocked worker result requires factory-owned repair",
+        ],
+        "expected_repair_outputs": string_list(recommendation.get("expected_repair_outputs")) or [field],
+        "commands_or_worker_routes": string_list(recommendation.get("commands_or_worker_routes"))
+        or [f"route {worker.worker_id} through Hermes Kanban"],
+        "invalidates_refs": string_list(recommendation.get("invalidates_refs"))
+        or [f"worker-result:{field}:blocking-or-stale"],
+        "supersedes_refs": string_list(recommendation.get("supersedes_refs"))
+        or [f"worker-result:{field}:fresh-pass-required"],
+        "dependency_edge_patch": recommendation.get("dependency_edge_patch")
+        if isinstance(recommendation.get("dependency_edge_patch"), dict)
+        else {
+            "old_edges": [f"blocked:{field}"],
+            "new_edges": [f"fresh-review:{field}"],
+            "patch_authority": "fresh review PASS recorded in Hermes before unblock",
+        },
+        "downstream_freeze_scope": string_list(recommendation.get("downstream_freeze_scope"))
+        or ["next worker", "done promotion", "Receipt Five closure"],
+        "fresh_review_required": recommendation.get("fresh_review_required") is not False and not human_gate_required,
+        "fresh_review_result_ref": str(recommendation.get("fresh_review_result_ref") or f"worker-result:{field}:fresh-review"),
+        "unblock_authority_ref": str(
+            recommendation.get("unblock_authority_ref")
+            or ("human_gate_record" if human_gate_required else "Hermes blocked event plus fresh review PASS")
+        ),
+        "retry_policy": recommendation.get("retry_policy")
+        if isinstance(recommendation.get("retry_policy"), dict)
+        else {
+            "max_attempts": 10,
+            "attempt_number": 1,
+            "stop_classes": ["human_gate", "repeated_failed_recovery"],
+        },
+        "audit_trail_refs": audit_refs,
+        "hermes_materialization": recovery_materialization_contract(route_id),
+    }
+
+
+def recovery_routes_from_worker_records(
+    card: dict[str, Any],
+    worker_records: dict[str, dict[str, Any]],
+    *,
+    start_index: int = 1,
+) -> list[dict[str, Any]]:
+    routes: list[dict[str, Any]] = []
+    route_index = start_index
+    requirements_by_id: dict[str, dict[str, Any]] = {}
+    for record in worker_records.values():
+        for requirement in record.get("graph_requirements", []):
+            requirement_id = str(requirement.get("requirement_id") or "").strip()
+            if requirement_id:
+                requirements_by_id[requirement_id] = requirement
+    for field, record in sorted(worker_records.items()):
+        if str(record.get("result") or "").strip().upper() != "BLOCKED":
+            continue
+        recovery = record.get("recovery_recommendation")
+        if not isinstance(recovery, dict):
+            continue
+        matched_requirements = [
+            requirements_by_id[ref]
+            for ref in (
+                string_list(record.get("graph_requirement_refs"))
+                + string_list(record.get("review_requirement_refs"))
+                + string_list(record.get("reviewed_requirement_refs"))
+            )
+            if ref in requirements_by_id
+        ]
+        review_block_routed = False
+        for requirement in matched_requirements:
+            if str(requirement.get("required_review_field") or "") != field:
+                continue
+            producer_field = str(requirement.get("producer_field") or "").strip()
+            producer_worker = _worker_id_for_output_field(producer_field)
+            if not producer_field or not producer_worker:
+                continue
+            requirement_id = str(requirement.get("requirement_id") or "").strip()
+            producer_ref = str(requirement.get("producer_ref") or f"worker-result:{producer_field}").strip()
+            route_id = (
+                f"recovery:{sanitize_slug(card.get('card_id') or 'factory-card', fallback='factory-card')}:"
+                f"review-block:{sanitize_slug(requirement_id, fallback=producer_field)}"
+            )
+            recommendation_override = {
+                **recovery,
+                "blocker_type": blocker_type_for_worker(producer_worker),
+                "factory_owned_repair_allowed": recovery.get("factory_owned_repair_allowed") is not False,
+                "human_gate_required": False,
+                "recovery_route_id": route_id,
+                "repair_owner_worker": producer_worker,
+                "repair_task_ref": f"hermes:intent:{route_id}",
+                "repair_inputs": [
+                    producer_ref,
+                    record.get("evidence_ref") or f"worker-result:{field}:blocked-review",
+                    requirement_id,
+                    str(record.get("findings_summary") or record.get("next_action") or "review blocked the producer handoff"),
+                ],
+                "expected_repair_outputs": [producer_field, field],
+                "invalidates_refs": [producer_ref, f"worker-result:{field}:blocked-review"],
+                "supersedes_refs": [
+                    f"worker-result:{producer_field}:fresh-repair",
+                    f"worker-result:{field}:fresh-review-pass",
+                ],
+                "dependency_edge_patch": {
+                    "old_edges": [requirement_id, f"blocked-review:{field}"],
+                    "new_edges": [f"fresh-repair:{producer_field}", f"fresh-review:{field}:PASS"],
+                    "patch_authority": "fresh reviewer PASS linked to the original graph requirement before downstream unblock",
+                },
+                "downstream_freeze_scope": ["producer consumption", "next worker", "done promotion", "Receipt Five closure"],
+                "fresh_review_required": True,
+                "fresh_review_result_ref": f"worker-result:{field}:fresh-review-pass",
+                "unblock_authority_ref": f"graph-requirement:{requirement_id}:fresh-review-pass",
+            }
+            routes.append(
+                recovery_route_from_recommendation(
+                    card,
+                    worker_id=producer_worker,
+                    field=producer_field,
+                    evidence_ref=producer_ref,
+                    recommendation=recommendation_override,
+                    index=route_index,
+                )
+            )
+            route_index += 1
+            review_block_routed = True
+        if review_block_routed:
+            continue
+        worker_id = _worker_id_for_output_field(field) or str(recovery.get("repair_owner_worker") or "factory-orchestrator")
+        routes.append(
+            recovery_route_from_recommendation(
+                card,
+                worker_id=worker_id,
+                field=field,
+                evidence_ref=record.get("evidence_ref"),
+                recommendation=recovery,
+                index=route_index,
+            )
+        )
+        route_index += 1
+    return routes
+
+
+def build_factory_recovery_plan(
+    card: dict[str, Any],
+    worker_results_dir: Path | None = None,
+    receipt: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     report = build_gate_report(card)
     routes: list[dict[str, Any]] = []
     route_index = 1
@@ -3719,13 +3914,26 @@ def build_factory_recovery_plan(card: dict[str, Any]) -> dict[str, Any]:
                 continue
             routes.append(recovery_route_from_action(card, action, route_index))
             route_index += 1
+    worker_completion = (
+        build_worker_closure(card, receipt or {}, worker_results_dir)
+        if worker_results_dir is not None or receipt is not None
+        else None
+    )
+    worker_routes = list(worker_completion.get("recovery_routes", [])) if worker_completion else []
+    routes.extend(worker_routes)
+    blocked_worker_ids = list(report.get("blocked_workers", []))
+    for route in worker_routes:
+        worker_id = str(route.get("repair_owner_worker") or "").strip()
+        if worker_id and worker_id not in blocked_worker_ids:
+            blocked_worker_ids.append(worker_id)
+    gate_predicate_result = "BLOCK" if routes else report.get("gate_predicate_result")
     return {
         "$schema": "https://overkill-factory.dev/schemas/factory-recovery-plan.schema.json",
         "record_type": "factory_recovery_plan",
         "created_at": utc_now(),
         "card_id": report.get("card_id"),
-        "gate_predicate_result": report.get("gate_predicate_result"),
-        "blocked_workers": report.get("blocked_workers", []),
+        "gate_predicate_result": gate_predicate_result,
+        "blocked_workers": blocked_worker_ids,
         "next_safe_actions": report.get("next_safe_actions", []),
         "recovery_routes": routes,
         "hermes_runtime_boundary": {
@@ -4098,6 +4306,8 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             "evidence_ref": evidence_ref,
             "created_at": data.get("created_at") or data.get("decision_at"),
             "result": data.get("result") or data.get("decision"),
+            "findings_summary": data.get("findings_summary"),
+            "next_action": data.get("next_action"),
             "active": authority.get("active", data.get("active", True)) is not False and not data.get("superseded_by"),
             "valid": not errors,
             "consumable": not errors,
@@ -4111,6 +4321,9 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             "review_task_authorizations": [
                 item for item in data.get("review_task_authorizations", []) if isinstance(item, dict)
             ],
+            "recovery_recommendation": data.get("recovery_recommendation")
+            if isinstance(data.get("recovery_recommendation"), dict)
+            else None,
             "validation_errors": errors,
         }
         apply_record_consumption_state(record)
@@ -4156,6 +4369,8 @@ def receipt_result_fields(
             record = {
                 "evidence_ref": None,
                 "result": value.get("result") or value.get("decision"),
+                "findings_summary": value.get("findings_summary"),
+                "next_action": value.get("next_action"),
                 "valid": not errors,
                 "consumable": not errors,
                 "review_declared": review_declared,
@@ -4168,6 +4383,9 @@ def receipt_result_fields(
                 "review_task_authorizations": [
                     item for item in value.get("review_task_authorizations", []) if isinstance(item, dict)
                 ],
+                "recovery_recommendation": value.get("recovery_recommendation")
+                if isinstance(value.get("recovery_recommendation"), dict)
+                else None,
                 "validation_errors": errors,
             }
             apply_record_consumption_state(record)
@@ -4455,6 +4673,39 @@ def attach_graph_requirement_tasks(
         tasks_by_worker[worker_id] = task
 
 
+def attach_recovery_routes_to_tasks(
+    worker_tasks: list[dict[str, Any]],
+    recovery_routes: list[dict[str, Any]],
+    card: dict[str, Any],
+    source_path: Path,
+) -> None:
+    tasks_by_worker = {str(task.get("worker_id") or ""): task for task in worker_tasks}
+    for route in recovery_routes:
+        worker_id = str(route.get("repair_owner_worker") or "").strip()
+        if worker_id not in WORKERS:
+            continue
+        task = tasks_by_worker.get(worker_id)
+        if task is None:
+            task = build_worker_task(worker_id, card, source_path)
+            worker_tasks.append(task)
+            tasks_by_worker[worker_id] = task
+        route_id = str(route.get("recovery_route_id") or "").strip()
+        refs = list(task.get("recovery_route_refs") or [])
+        if route_id and route_id not in refs:
+            refs.append(route_id)
+        task["recovery_route_refs"] = refs
+        packet = task.get("packet") if isinstance(task.get("packet"), dict) else {}
+        packet["recovery_route_refs"] = refs
+        input_contract = dict(packet.get("input_contract") or {})
+        route_payloads = [item for item in input_contract.get("recovery_routes", []) if isinstance(item, dict)]
+        if route not in route_payloads:
+            route_payloads.append(route)
+        input_contract["recovery_routes"] = route_payloads
+        input_contract["recovery_route_refs"] = refs
+        packet["input_contract"] = input_contract
+        task["packet"] = packet
+
+
 def _worker_record_sort_key(record: dict[str, Any]) -> tuple[str, str]:
     return (
         str(record.get("created_at") or ""),
@@ -4532,6 +4783,7 @@ def build_worker_closure(
     unsatisfied_graph_requirements = [
         requirement for requirement in graph_requirements if requirement.get("status") != "satisfied"
     ]
+    recovery_routes = recovery_routes_from_worker_records(card, present_fields)
 
     return {
         "closure_type": "worker_result_reconciliation",
@@ -4541,6 +4793,7 @@ def build_worker_closure(
         "unconsumable_blocking_workers": unconsumable_blocking,
         "graph_requirements": graph_requirements,
         "unsatisfied_graph_requirements": unsatisfied_graph_requirements,
+        "recovery_routes": recovery_routes,
         "workers": rows,
     }
 
@@ -4593,6 +4846,7 @@ def build_transition_plan(
     unsatisfied_graph_requirements = (
         graph_completion.get("unsatisfied_graph_requirements", []) if graph_completion else []
     )
+    recovery_routes = graph_completion.get("recovery_routes", []) if graph_completion else []
     review_ready_handoffs: list[dict[str, Any]] = []
     review_task_authorizations: list[dict[str, Any]] = []
     if graph_completion:
@@ -4615,6 +4869,8 @@ def build_transition_plan(
             review_task_authorizations.extend(row_authorizations)
     if graph_requirements:
         attach_graph_requirement_tasks(worker_tasks, graph_requirements, card, source_path)
+    if recovery_routes:
+        attach_recovery_routes_to_tasks(worker_tasks, recovery_routes, card, source_path)
 
     def append_unsatisfied_graph_requirement_blocks() -> None:
         for requirement in unsatisfied_graph_requirements:
@@ -4730,6 +4986,7 @@ def build_transition_plan(
         "gate_report": gate,
         "worker_tasks": worker_tasks,
         "graph_requirements": graph_requirements,
+        "recovery_routes": recovery_routes,
         "review_ready_handoffs": review_ready_handoffs,
         "review_task_authorizations": review_task_authorizations,
         "completion_reconciliation": completion,
@@ -6123,13 +6380,15 @@ def command_gate_report(args: argparse.Namespace) -> int:
 
 
 def command_unblock_plan(args: argparse.Namespace) -> int:
-    plan = build_factory_recovery_plan(load_json_like(args.card))
+    receipt = load_json_like(args.receipt) if args.receipt else None
+    plan = build_factory_recovery_plan(load_json_like(args.card), worker_results_dir=args.worker_results_dir, receipt=receipt)
     write_json(args.out, plan)
     return 1 if plan.get("gate_predicate_result") == "BLOCK" else 0
 
 
 def command_recovery_plan(args: argparse.Namespace) -> int:
-    plan = build_factory_recovery_plan(load_json_like(args.card))
+    receipt = load_json_like(args.receipt) if args.receipt else None
+    plan = build_factory_recovery_plan(load_json_like(args.card), worker_results_dir=args.worker_results_dir, receipt=receipt)
     write_json(args.out, plan)
     return 1 if plan.get("gate_predicate_result") == "BLOCK" else 0
 
@@ -6402,11 +6661,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     unblock_plan_parser = sub.add_parser("unblock-plan")
     unblock_plan_parser.add_argument("--card", type=Path, required=True)
+    unblock_plan_parser.add_argument("--receipt", type=Path)
+    unblock_plan_parser.add_argument("--worker-results-dir", type=Path)
     unblock_plan_parser.add_argument("--out", type=Path)
     unblock_plan_parser.set_defaults(func=command_unblock_plan)
 
     recovery_plan_parser = sub.add_parser("recovery-plan", help="Emit semantic recovery routes without replacing Hermes runtime state.")
     recovery_plan_parser.add_argument("--card", type=Path, required=True)
+    recovery_plan_parser.add_argument("--receipt", type=Path)
+    recovery_plan_parser.add_argument("--worker-results-dir", type=Path)
     recovery_plan_parser.add_argument("--out", type=Path)
     recovery_plan_parser.set_defaults(func=command_recovery_plan)
 

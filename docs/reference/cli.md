@@ -41,7 +41,7 @@ factoryctl init --out ../my-product-factory --project-name my-product
 factoryctl validate-card examples/minimal-hermes-project/card.md
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
-factoryctl recovery-plan --card examples/minimal-hermes-project/card.md
+factoryctl recovery-plan --card examples/minimal-hermes-project/card.md --receipt .tmp/receipt.json --worker-results-dir .tmp/worker-results
 factoryctl help-next --card examples/minimal-hermes-project/card.md --out .tmp/factory-help.json
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 factoryctl transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready
@@ -58,9 +58,10 @@ does not replace Hermes, card contracts, gate reports or Receipt Five as the
 source of truth.
 
 `recovery-plan` emits machine-readable recovery routes for blocked factory
-work. It does not execute workers or unblock cards. Recovery work must be
-materialized as native Hermes Kanban tasks, links, comments, runs and
-block/unblock events.
+work. With `--receipt` or `--worker-results-dir`, it also turns `BLOCKED`
+worker/review results into semantic repair routes. It does not execute workers
+or unblock cards. Recovery work must be materialized as native Hermes Kanban
+tasks, links, comments, runs and block/unblock events.
 
 ## Evidence And Truth Commands
 

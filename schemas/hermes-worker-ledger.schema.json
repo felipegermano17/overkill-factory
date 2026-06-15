@@ -61,6 +61,10 @@
           "review_task_authorizations": {
             "type": "array",
             "items": { "type": "object", "additionalProperties": true }
+          },
+          "recovery_route_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
           }
         },
         "additionalProperties": true
