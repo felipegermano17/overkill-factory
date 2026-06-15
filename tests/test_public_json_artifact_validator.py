@@ -89,6 +89,14 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         self.assertEqual(errors, [])
 
+    def test_public_schema_discovery_includes_agent_contract_schema(self) -> None:
+        validator = load_validator()
+        schema_paths = {path.relative_to(ROOT).as_posix() for path in validator.iter_schema_files()}
+        schemas = validator.load_schemas()
+
+        self.assertIn("agents/worker-contract.schema.json", schema_paths)
+        self.assertIn("worker-contract.schema.json", schemas)
+
     def test_factory_card_schema_rejects_absurd_required_field_shapes(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()

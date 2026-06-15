@@ -24,6 +24,15 @@ if str(SCRIPT_DIR) not in sys.path:
 from public_refs import contains_private_kanban_task_marker  # noqa: E402
 
 SCHEMA_DIR = ROOT / "schemas"
+PUBLIC_SCHEMA_DIRS = [
+    SCHEMA_DIR,
+    ROOT / "agents",
+    ROOT / "docs",
+    ROOT / "examples",
+    ROOT / "planning-bundles",
+    ROOT / "products",
+    ROOT / "templates",
+]
 SCAN_DIRS = [
     ROOT / "examples",
     ROOT / ".tmp" / "factory-runs",
@@ -142,9 +151,21 @@ def schema_name(schema_ref: str) -> str:
     return schema_ref.rsplit("/", 1)[-1]
 
 
+def iter_schema_files() -> list[Path]:
+    paths: set[Path] = set()
+    for directory in PUBLIC_SCHEMA_DIRS:
+        if not directory.exists():
+            continue
+        if directory == SCHEMA_DIR:
+            paths.update(directory.glob("*.json"))
+        else:
+            paths.update(directory.rglob("*.schema.json"))
+    return sorted(paths)
+
+
 def load_schemas() -> dict[str, dict[str, Any]]:
     schemas: dict[str, dict[str, Any]] = {}
-    for path in sorted(SCHEMA_DIR.glob("*.json")):
+    for path in iter_schema_files():
         schema = load_json(path)
         schema_id = str(schema.get("$id") or "")
         schemas[path.name] = schema
@@ -565,11 +586,11 @@ def iter_public_json() -> list[Path]:
 def main() -> int:
     schemas = load_schemas()
     findings: list[str] = []
-    for schema_path_ref, schema in sorted(schemas.items()):
-        if not schema_path_ref.endswith(".json"):
-            continue
+    for schema_path_ref in iter_schema_files():
+        schema = load_json(schema_path_ref)
+        rel = schema_path_ref.relative_to(ROOT).as_posix()
         for error in validate_schema_keywords(schema):
-            findings.append(f"schemas/{schema_path_ref}: {error}")
+            findings.append(f"{rel}: {error}")
     for path in iter_public_json():
         try:
             data = load_json(path)
