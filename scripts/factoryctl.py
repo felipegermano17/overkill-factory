@@ -1675,6 +1675,35 @@ def _has_ref_or_object(data: dict[str, Any], field: str) -> bool:
     return _has_contract(data, field)
 
 
+def _repo_local_json_ref_path(ref: Any) -> Path | None:
+    if not _non_empty_text(ref):
+        return None
+    value = str(ref).strip().split("#", 1)[0].strip()
+    if not value:
+        return None
+    normalized = value.replace("\\", "/")
+    if normalized.startswith(("external:", "repo://", "http://", "https://", "file://")):
+        return None
+    if Path(value).is_absolute() or ":" in normalized.split("/", 1)[0]:
+        return None
+    candidate = (ROOT / normalized).resolve()
+    try:
+        candidate.relative_to(ROOT.resolve())
+    except ValueError:
+        return None
+    return candidate
+
+
+def _load_repo_local_json_ref(ref: Any) -> dict[str, Any]:
+    path = _repo_local_json_ref_path(ref)
+    if path is None or not path.is_file():
+        return {}
+    try:
+        return load_json_like(path)
+    except Exception:
+        return {}
+
+
 def _product_planning_required(card: dict[str, Any]) -> bool:
     request_type = str(card.get("request_type") or "").strip()
     scope_intent = str(card.get("scope_intent") or "").strip()
@@ -1838,6 +1867,7 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
                         errors.append(f"product_creation_plan.work_units[{index}].{field} must be non-empty")
                 if not _non_empty_text(unit.get("expected_result")):
                     errors.append(f"product_creation_plan.work_units[{index}].expected_result is required")
+    errors.extend(_product_delivery_quality_profile_ref_errors(card))
     profile = _product_delivery_quality_profile(card)
     if profile:
         errors.extend(validate_product_delivery_quality_profile(profile))
@@ -2368,12 +2398,65 @@ def validate_product_delivery_quality_profile(profile: dict[str, Any]) -> list[s
 
 
 def _product_delivery_quality_profile(card: dict[str, Any]) -> dict[str, Any]:
-    profile = card.get("product_delivery_quality_profile")
-    if isinstance(profile, dict):
-        return profile
-    plan = card.get("product_creation_plan") if isinstance(card.get("product_creation_plan"), dict) else {}
-    profile = plan.get("product_delivery_quality_profile")
-    return profile if isinstance(profile, dict) else {}
+    containers: list[dict[str, Any]] = [card]
+    for field in (
+        "product_creation_plan",
+        "product_implementation_readiness",
+        "product_experience_plan",
+        "product_face_packet",
+    ):
+        value = card.get(field)
+        if isinstance(value, dict):
+            containers.append(value)
+    for container in containers:
+        profile = container.get("product_delivery_quality_profile")
+        if isinstance(profile, dict):
+            return profile
+    for container in containers:
+        profile = _load_repo_local_json_ref(container.get("product_delivery_quality_profile_ref"))
+        if profile:
+            return profile
+    return {}
+
+
+def _product_delivery_quality_profile_ref_errors(card: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    refs: list[tuple[str, str]] = []
+    containers: list[tuple[str, dict[str, Any]]] = [("card", card)]
+    for field in (
+        "product_creation_plan",
+        "product_implementation_readiness",
+        "product_experience_plan",
+        "product_face_packet",
+    ):
+        value = card.get(field)
+        if isinstance(value, dict):
+            containers.append((field, value))
+    for label, container in containers:
+        ref = container.get("product_delivery_quality_profile_ref")
+        if _non_empty_text(ref):
+            refs.append((label, str(ref).strip()))
+
+    seen: set[str] = set()
+    for label, ref in refs:
+        if ref in seen:
+            continue
+        seen.add(ref)
+        path = _repo_local_json_ref_path(ref)
+        if path is None:
+            continue
+        if not path.is_file():
+            errors.append(f"{label}.product_delivery_quality_profile_ref does not resolve to a repo-local file: {ref}")
+            continue
+        try:
+            profile = load_json_like(path)
+        except Exception as exc:
+            errors.append(
+                f"{label}.product_delivery_quality_profile_ref could not be loaded as JSON object: {type(exc).__name__}"
+            )
+            continue
+        errors.extend(validate_product_delivery_quality_profile(profile))
+    return errors
 
 
 def _delivery_profile_required_proof_ids(profile: dict[str, Any], phase: str) -> list[str]:
@@ -2985,6 +3068,7 @@ def _required_product_proofs(card: dict[str, Any]) -> list[str]:
 
 def validate_product_face_result_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
     errors = validate_product_face_result(result)
+    errors.extend(_product_delivery_quality_profile_ref_errors(card))
     if str(result.get("result") or "").upper() != "PASS":
         return errors
 

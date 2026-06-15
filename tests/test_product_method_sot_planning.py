@@ -128,6 +128,32 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
             factoryctl.validate_card(card),
         )
 
+    def test_product_delivery_quality_profile_ref_requires_readiness_proof_coverage(self) -> None:
+        card = self.vfinal_card()
+        card["product_creation_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+        card["product_implementation_readiness"] = factoryctl.load_json_like(
+            ROOT / "templates" / "product-implementation-readiness.json"
+        )
+        card["product_implementation_readiness"].pop("delivery_profile_proof_coverage")
+
+        self.assertIn(
+            "product_implementation_readiness.delivery_profile_proof_coverage missing product delivery proof coverage for required proof ids: generic.scope-fit",
+            factoryctl.validate_card(card),
+        )
+
+    def test_missing_repo_local_product_delivery_quality_profile_ref_fails_closed(self) -> None:
+        card = self.vfinal_card()
+        card["product_delivery_quality_profile_ref"] = "templates/missing-product-delivery-quality-profile.json"
+        card["product_creation_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+        card["product_implementation_readiness"] = factoryctl.load_json_like(
+            ROOT / "templates" / "product-implementation-readiness.json"
+        )
+
+        self.assertIn(
+            "card.product_delivery_quality_profile_ref does not resolve to a repo-local file: templates/missing-product-delivery-quality-profile.json",
+            factoryctl.validate_card(card),
+        )
+
     def test_worker_packet_carries_product_context_and_research_refs(self) -> None:
         card = self.vfinal_card()
 

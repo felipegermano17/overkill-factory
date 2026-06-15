@@ -645,6 +645,28 @@ class FactoryCtlTest(unittest.TestCase):
             errors,
         )
 
+    def test_product_face_completion_resolves_profile_ref_for_domain_proof_coverage(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile_ref"] = "templates/product-delivery-quality-profile.json"
+
+        errors = factoryctl.validate_product_face_result_against_card(product_face_result_fixture(), card)
+
+        self.assertIn(
+            "product_face_result.domain_proof_coverage missing product delivery proof coverage for required proof ids: generic.operator-usability",
+            errors,
+        )
+
+    def test_product_face_completion_fails_closed_for_missing_profile_ref(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile_ref"] = "templates/missing-product-delivery-quality-profile.json"
+
+        errors = factoryctl.validate_product_face_result_against_card(product_face_result_fixture(), card)
+
+        self.assertIn(
+            "card.product_delivery_quality_profile_ref does not resolve to a repo-local file: templates/missing-product-delivery-quality-profile.json",
+            errors,
+        )
+
     def test_product_face_completion_accepts_required_domain_proof_coverage(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
         card["product_delivery_quality_profile"] = product_delivery_quality_profile_fixture()
