@@ -163,6 +163,38 @@
         "additionalProperties": true
       }
     },
+    "downstream_task_authorizations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "authorization_type",
+          "authorization_state",
+          "requirement_id",
+          "review_evidence_ref",
+          "authorized_worker_ids",
+          "forbidden_worker_ids",
+          "runtime_authority",
+          "local_state_authority"
+        ],
+        "properties": {
+          "authorization_type": { "const": "fresh_review_downstream_task" },
+          "authorization_state": { "const": "worker_task_ready" },
+          "authorized_worker_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "forbidden_worker_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false }
+        },
+        "additionalProperties": true
+      }
+    },
     "recovery_routes": {
       "type": "array",
       "items": {
