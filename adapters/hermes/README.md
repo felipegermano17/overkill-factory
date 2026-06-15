@@ -32,11 +32,14 @@ This patch adds:
   cannot bypass the same Factory gate.
 - Dashboard/API `done` failures return HTTP 409 with the gate reason.
 - Worker CLI `done` failures return non-zero with the gate reason.
+- Dispatch JSON reports spawned workers with task refs, run refs and worker PID
+  when Hermes exposes them.
 - Regression tests.
 
-The patch was validated against official Hermes commit
-`56236b16e383cc656bb8c88429902f4de83f1faf`: `git apply --check` passed and
-the focused regression suite reported `119 passed, 1 warning`.
+The base patch line was validated against official Hermes commit
+`56236b16e383cc656bb8c88429902f4de83f1faf`. For current checkouts, run
+`adapters/hermes/compatibility-check.py`; it verifies the patch is parseable and
+that the required gate and dispatch-reporting markers are still present.
 
 ## Worker Automation Hook
 
@@ -125,6 +128,24 @@ Expected behavior:
 The done transition is therefore a reconciliation gate. A worker packet is not
 evidence. A PASS result without artifact refs is not enough. A human gate
 without a real decision record is not approval.
+
+## Dispatch Reporting
+
+Hermes owns dispatch. The adapter does not schedule workers itself, but it can
+wrap the native dispatch command and reconcile the immediate board state:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py dispatch \
+  --board overkill-factory-live
+```
+
+The response includes:
+
+- `spawned_by_this_command`: workers reported by native Hermes dispatch;
+- `already_running_after_dispatch`: workers that were ready before dispatch and
+  running after dispatch, even if the native response reported `spawned: []`;
+- `run_id` and `worker_pid` when Hermes exposes them;
+- redacted workspace refs, never local absolute paths.
 
 ## Generated Transition Examples
 

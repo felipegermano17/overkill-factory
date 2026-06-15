@@ -42,6 +42,13 @@ def run_checked(argv: list[str], runner: Runner = default_runner) -> subprocess.
     return completed
 
 
+def parse_json_output(output: str, *, command: str) -> Any:
+    try:
+        return json.loads(output or "{}")
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"{command} did not return JSON") from exc
+
+
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -66,6 +73,106 @@ def parse_task_id(output: str) -> str:
 
 def hermes_kanban(hermes_bin: str, board: str, *args: str) -> list[str]:
     return [hermes_bin, "kanban", "--board", board, *args]
+
+
+def public_safe_workspace_ref(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    normalized = text.replace("\\", "/")
+    if normalized.lower().startswith("dir:"):
+        normalized = normalized[4:]
+    if re.match(r"^[A-Za-z]:/", normalized) or normalized.startswith("/"):
+        return "redacted:absolute-hermes-workspace"
+    return text
+
+
+def normalize_task_record(record: dict[str, Any]) -> dict[str, Any]:
+    task_id = str(record.get("task_id") or record.get("id") or "")
+    normalized: dict[str, Any] = {"task_id": task_id}
+    assignee = record.get("assignee") or record.get("profile")
+    if assignee:
+        normalized["assignee"] = str(assignee)
+    workspace = record.get("workspace") or record.get("workspace_path")
+    if workspace:
+        normalized["workspace"] = public_safe_workspace_ref(workspace)
+    for source_key, target_key in (
+        ("current_run_id", "run_id"),
+        ("run_id", "run_id"),
+        ("worker_pid", "worker_pid"),
+        ("pid", "worker_pid"),
+    ):
+        value = record.get(source_key)
+        if value is not None and target_key not in normalized:
+            normalized[target_key] = value
+    return normalized
+
+
+def list_tasks_by_status(
+    *,
+    hermes_bin: str,
+    board: str,
+    status: str,
+    runner: Runner = default_runner,
+) -> list[dict[str, Any]]:
+    completed = run_checked(hermes_kanban(hermes_bin, board, "list", "--status", status, "--json"), runner)
+    payload = parse_json_output(completed.stdout, command=f"hermes kanban list --status {status} --json")
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    if isinstance(payload, dict):
+        for key in ("tasks", "items", status):
+            items = payload.get(key)
+            if isinstance(items, list):
+                return [item for item in items if isinstance(item, dict)]
+    return []
+
+
+def show_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    runner: Runner = default_runner,
+) -> dict[str, Any]:
+    completed = run_checked(hermes_kanban(hermes_bin, board, "show", task_id, "--json"), runner)
+    payload = parse_json_output(completed.stdout, command="hermes kanban show --json")
+    return payload if isinstance(payload, dict) else {}
+
+
+def enrich_dispatch_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    record: dict[str, Any],
+    after_running_by_id: dict[str, dict[str, Any]],
+    runner: Runner = default_runner,
+) -> dict[str, Any]:
+    task_id = str(record.get("task_id") or record.get("id") or "")
+    merged: dict[str, Any] = {}
+    if task_id:
+        merged.update(after_running_by_id.get(task_id) or {})
+    merged.update(record)
+    normalized = normalize_task_record(merged)
+    if task_id and ("run_id" not in normalized or "worker_pid" not in normalized):
+        shown = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+        shown_normalized = normalize_task_record(shown)
+        for key in ("run_id", "worker_pid", "assignee", "workspace"):
+            if key not in normalized and key in shown_normalized:
+                normalized[key] = shown_normalized[key]
+    return normalized
+
+
+def normalize_native_spawned(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    records = payload.get("spawned")
+    if not isinstance(records, list):
+        return []
+    normalized: list[dict[str, Any]] = []
+    for item in records:
+        if isinstance(item, dict):
+            record = normalize_task_record(item)
+            if record.get("task_id"):
+                normalized.append(record)
+    return normalized
 
 
 def route_readiness_blockers(path: Path | None, required_worker_ids: list[str]) -> list[str]:
@@ -471,6 +578,112 @@ def enforce_done(args: argparse.Namespace, runner: Runner = default_runner) -> d
     return envelope
 
 
+def dispatch(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    before_ready = list_tasks_by_status(
+        hermes_bin=args.hermes_bin,
+        board=args.board,
+        status="ready",
+        runner=runner,
+    )
+    before_running = list_tasks_by_status(
+        hermes_bin=args.hermes_bin,
+        board=args.board,
+        status="running",
+        runner=runner,
+    )
+    before_ready_ids = {
+        str(task.get("task_id") or task.get("id") or "")
+        for task in before_ready
+        if str(task.get("task_id") or task.get("id") or "").strip()
+    }
+    before_running_ids = {
+        str(task.get("task_id") or task.get("id") or "")
+        for task in before_running
+        if str(task.get("task_id") or task.get("id") or "").strip()
+    }
+
+    dispatch_args = ["dispatch", "--json"]
+    if args.dry_run:
+        dispatch_args.append("--dry-run")
+    if args.max is not None:
+        dispatch_args.extend(["--max", str(args.max)])
+    if args.failure_limit is not None:
+        dispatch_args.extend(["--failure-limit", str(args.failure_limit)])
+    completed = run_checked(hermes_kanban(args.hermes_bin, args.board, *dispatch_args), runner)
+    native_payload = parse_json_output(completed.stdout, command="hermes kanban dispatch --json")
+    if not isinstance(native_payload, dict):
+        raise RuntimeError("hermes kanban dispatch --json returned a non-object payload")
+
+    after_running = [] if args.dry_run else list_tasks_by_status(
+        hermes_bin=args.hermes_bin,
+        board=args.board,
+        status="running",
+        runner=runner,
+    )
+    after_running_by_id = {
+        str(task.get("task_id") or task.get("id") or ""): task
+        for task in after_running
+        if str(task.get("task_id") or task.get("id") or "").strip()
+    }
+
+    spawned_by_this_command = [
+        enrich_dispatch_task(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            record=record,
+            after_running_by_id=after_running_by_id,
+            runner=runner,
+        )
+        for record in normalize_native_spawned(native_payload)
+    ]
+    spawned_ids = {record["task_id"] for record in spawned_by_this_command if record.get("task_id")}
+    observed_ids = sorted((set(after_running_by_id) - before_running_ids) & before_ready_ids)
+    already_running_after_dispatch = [
+        enrich_dispatch_task(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            record={"task_id": task_id, "observed_source": "ready_before_running_after_dispatch"},
+            after_running_by_id=after_running_by_id,
+            runner=runner,
+        )
+        for task_id in observed_ids
+        if task_id not in spawned_ids
+    ]
+    for record in spawned_by_this_command:
+        record["dispatch_observation"] = "native_dispatch_spawned"
+    for record in already_running_after_dispatch:
+        record["dispatch_observation"] = "already_running_after_native_dispatch"
+
+    combined_spawned = [*spawned_by_this_command, *already_running_after_dispatch]
+    native_sanitized = dict(native_payload)
+    native_sanitized["spawned"] = normalize_native_spawned(native_payload)
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "dispatch",
+        "dry_run": bool(args.dry_run),
+        "board": args.board,
+        "spawned": combined_spawned,
+        "spawned_by_this_command": spawned_by_this_command,
+        "already_running_after_dispatch": already_running_after_dispatch,
+        "native_dispatch": native_sanitized,
+        "dispatch_observed_state": {
+            "ready_before_count": len(before_ready_ids),
+            "running_before_count": len(before_running_ids),
+            "running_after_count": len(after_running_by_id),
+        },
+        "hook": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "no_shadow_dispatcher": True,
+            "reporting_policy": "Hermes dispatch remains authoritative; this adapter only enriches the returned report from Hermes state.",
+        },
+    }
+    if args.out:
+        write_json(args.out, envelope)
+    return envelope
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Operate Overkill Factory gates on Hermes Kanban.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -506,13 +719,26 @@ def build_parser() -> argparse.ArgumentParser:
     p_done.add_argument("--result", default="Overkill Factory gate satisfied.")
     p_done.add_argument("--summary", default="Worker evidence reconciled by Overkill Factory.")
     p_done.add_argument("--out", type=Path)
+
+    p_dispatch = sub.add_parser("dispatch", help="Run native Hermes dispatch and enrich the public-safe result.")
+    p_dispatch.add_argument("--board", required=True)
+    p_dispatch.add_argument("--hermes-bin", default="hermes")
+    p_dispatch.add_argument("--dry-run", action="store_true")
+    p_dispatch.add_argument("--max", type=int)
+    p_dispatch.add_argument("--failure-limit", type=int)
+    p_dispatch.add_argument("--out", type=Path)
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
     try:
-        envelope = materialize(args) if args.command == "materialize" else enforce_done(args)
+        if args.command == "materialize":
+            envelope = materialize(args)
+        elif args.command == "enforce-done":
+            envelope = enforce_done(args)
+        else:
+            envelope = dispatch(args)
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
         return 2

@@ -61,6 +61,102 @@ class FakeHermes:
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
 
 
+def private_windows_workspace_ref() -> str:
+    return "dir:" + "C" + ":" + "\\private-workspace"
+
+
+class FakeDispatchHermes:
+    def __init__(self, *, native_spawned: bool = False) -> None:
+        self.calls: list[list[str]] = []
+        self.native_spawned = native_spawned
+        self.running_list_calls = 0
+
+    def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
+        self.calls.append(argv)
+        if len(argv) >= 8 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "list":
+            status = argv[argv.index("--status") + 1]
+            if status == "ready":
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    stdout=json.dumps(
+                        [
+                            {
+                                "id": "t_ready0001",
+                                "assignee": "implementation-worker",
+                                "workspace": private_windows_workspace_ref(),
+                            }
+                        ]
+                    ),
+                    stderr="",
+                )
+            if status == "running":
+                self.running_list_calls += 1
+                if self.running_list_calls == 1:
+                    return subprocess.CompletedProcess(argv, 0, stdout="[]", stderr="")
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    stdout=json.dumps(
+                        [
+                            {
+                                "id": "t_ready0001",
+                                "assignee": "implementation-worker",
+                                "current_run_id": 42,
+                                "worker_pid": 12345,
+                                "workspace": private_windows_workspace_ref(),
+                            }
+                        ]
+                    ),
+                    stderr="",
+                )
+        if len(argv) >= 6 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "dispatch":
+            spawned = (
+                [
+                    {
+                        "task_id": "t_ready0001",
+                        "assignee": "implementation-worker",
+                        "workspace": private_windows_workspace_ref(),
+                    }
+                ]
+                if self.native_spawned
+                else []
+            )
+            return subprocess.CompletedProcess(
+                argv,
+                0,
+                stdout=json.dumps(
+                    {
+                        "reclaimed": 0,
+                        "crashed": [],
+                        "timed_out": [],
+                        "stale": [],
+                        "auto_blocked": [],
+                        "promoted": 0,
+                        "spawned": spawned,
+                    }
+                ),
+                stderr="",
+            )
+        if len(argv) >= 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
+            return subprocess.CompletedProcess(
+                argv,
+                0,
+                stdout=json.dumps(
+                    {
+                        "id": argv[5],
+                        "status": "running",
+                        "assignee": "implementation-worker",
+                        "current_run_id": 42,
+                        "worker_pid": 12345,
+                        "workspace": private_windows_workspace_ref(),
+                    }
+                ),
+                stderr="",
+            )
+        return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
+
+
 def write_route_readiness(path: Path) -> None:
     workers = [
         "codex-security",
@@ -111,6 +207,42 @@ def write_route_readiness(path: Path) -> None:
 
 
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
+    def test_dispatch_reports_tasks_that_entered_running_even_when_native_spawned_is_empty(self) -> None:
+        fake = FakeDispatchHermes(native_spawned=False)
+        args = adapter.build_parser().parse_args(["dispatch", "--board", TEST_BOARD])
+
+        result = adapter.dispatch(args, runner=fake)
+
+        self.assertEqual(result["mode"], "dispatch")
+        self.assertEqual(result["spawned"][0]["task_id"], "t_ready0001")
+        self.assertEqual(result["spawned"][0]["run_id"], 42)
+        self.assertEqual(result["spawned"][0]["worker_pid"], 12345)
+        self.assertEqual(result["spawned"][0]["workspace"], "redacted:absolute-hermes-workspace")
+        self.assertEqual(
+            result["spawned"][0]["dispatch_observation"],
+            "already_running_after_native_dispatch",
+        )
+        self.assertEqual(result["spawned_by_this_command"], [])
+        self.assertEqual(len(result["already_running_after_dispatch"]), 1)
+        self.assertEqual(result["native_dispatch"]["spawned"], [])
+        self.assertTrue(result["hook"]["no_shadow_dispatcher"])
+        self.assertFalse(result["hook"]["local_state_authority"])
+
+    def test_dispatch_enriches_native_spawned_with_run_id_and_pid(self) -> None:
+        fake = FakeDispatchHermes(native_spawned=True)
+        args = adapter.build_parser().parse_args(["dispatch", "--board", TEST_BOARD])
+
+        result = adapter.dispatch(args, runner=fake)
+
+        self.assertEqual(len(result["spawned_by_this_command"]), 1)
+        spawned = result["spawned_by_this_command"][0]
+        self.assertEqual(spawned["task_id"], "t_ready0001")
+        self.assertEqual(spawned["run_id"], 42)
+        self.assertEqual(spawned["worker_pid"], 12345)
+        self.assertEqual(spawned["dispatch_observation"], "native_dispatch_spawned")
+        self.assertEqual(spawned["workspace"], "redacted:absolute-hermes-workspace")
+        self.assertEqual(result["already_running_after_dispatch"], [])
+
     def test_materialize_creates_workers_as_parents_of_main_card(self) -> None:
         fake = FakeHermes()
         card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"

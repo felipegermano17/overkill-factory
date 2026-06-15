@@ -32,6 +32,8 @@ REQUIRED_PATCH_MARKERS = {
         "security_scan_result",
         "auditor_result.audit_mode=code_audit",
         "human_gate_record",
+        "spawned_by_this_command",
+        "worker_pid",
         "cannot complete {tid}: {exc}",
         "HTTPException(status_code=409",
         "test_overkill_ready_gate_blocks_missing_product_face_packet",

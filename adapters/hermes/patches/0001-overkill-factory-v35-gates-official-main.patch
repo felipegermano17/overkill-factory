@@ -35,6 +35,38 @@ index 31c4bf6..f062e57 100644
              else:
                  print(f"Completed {tid}")
      return 0 if not failed else 1
+@@ -2140,6 +2149,18 @@ def _cmd_dispatch(args: argparse.Namespace) -> int:
+             default_assignee=default_assignee,
+             max_in_progress_per_profile=max_in_progress_per_profile,
+         )
++        spawned_details = []
++        for tid, who, ws in res.spawned:
++            task = kb.get_task(conn, tid)
++            detail = {
++                "task_id": tid,
++                "assignee": who,
++                "workspace": ws,
++            }
++            if task is not None:
++                detail["run_id"] = task.current_run_id
++                detail["worker_pid"] = task.worker_pid
++            spawned_details.append(detail)
+     if getattr(args, "json", False):
+         print(json.dumps({
+             "reclaimed": res.reclaimed,
+@@ -2155,10 +2179,8 @@ def _cmd_dispatch(args: argparse.Namespace) -> int:
+             "auto_blocked": res.auto_blocked,
+             "promoted": res.promoted,
+-            "spawned": [
+-                {"task_id": tid, "assignee": who, "workspace": ws}
+-                for (tid, who, ws) in res.spawned
+-            ],
++            "spawned": spawned_details,
++            "spawned_by_this_command": spawned_details,
+             "skipped_unassigned": res.skipped_unassigned,
+             "skipped_nonspawnable": res.skipped_nonspawnable,
+             "skipped_per_profile_capped": [
+                 {"task_id": tid, "assignee": who, "current": current}
 diff --git a/hermes_cli/kanban_db.py b/hermes_cli/kanban_db.py
 index c8c53db..ec7f2ba 100644
 --- a/hermes_cli/kanban_db.py

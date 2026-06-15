@@ -28,6 +28,8 @@ adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
 - `security_scan_result`
 - `auditor_result.audit_mode=code_audit`
 - `human_gate_record`
+- `spawned_by_this_command`
+- `worker_pid`
 
 ## Required Surfaces
 
@@ -45,6 +47,9 @@ adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
   production use.
 - Worker CLI completion must surface gate failures as non-zero operational
   errors.
+- Dispatch reporting must distinguish workers spawned by the command from
+  workers already running after the dispatch interval and include run/PID refs
+  when Hermes exposes them.
 
 ## Incompatible Signs
 
@@ -58,6 +63,8 @@ adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
 - Product-facing or onchain cards can close with Receipt Five but without the
   required worker result records.
 - Auditor preflight can be represented as a real onchain code-audit PASS.
+- Dispatch JSON can return `spawned: []` while board state moved ready tasks to
+  `running` without an explicit `already_running_after_dispatch` report.
 
 ## Required Local Checks
 

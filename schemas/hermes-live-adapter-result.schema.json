@@ -8,7 +8,7 @@
       "const": "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json"
     },
     "mode": {
-      "enum": ["materialize", "enforce-done"]
+      "enum": ["materialize", "enforce-done", "dispatch"]
     },
     "dry_run": {
       "type": "boolean"
@@ -27,6 +27,24 @@
       "type": ["string", "null"]
     },
     "worker_task_ids": {
+      "type": "object"
+    },
+    "spawned": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "spawned_by_this_command": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "already_running_after_dispatch": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "native_dispatch": {
+      "type": "object"
+    },
+    "dispatch_observed_state": {
       "type": "object"
     },
     "review_promoted_worker_task_ids": {
