@@ -232,6 +232,26 @@ def validate_node(
             if key in seen:
                 errors.append(f"{at}[{index}]: duplicate item violates uniqueItems")
             seen.add(key)
+    if isinstance(value, list) and isinstance(schema.get("contains"), dict):
+        contains_schema = schema["contains"]
+        matched_count = sum(
+            1
+            for index, item in enumerate(value)
+            if schema_matches(
+                contains_schema,
+                item,
+                f"{at}[{index}]",
+                schemas=schemas,
+                root_schema=root,
+                seen_refs=seen,
+            )
+        )
+        min_contains = int(schema.get("minContains", 1))
+        max_contains = schema.get("maxContains")
+        if matched_count < min_contains:
+            errors.append(f"{at}: array does not contain at least {min_contains} matching item(s)")
+        if max_contains is not None and matched_count > int(max_contains):
+            errors.append(f"{at}: array contains more than {int(max_contains)} matching item(s)")
     if isinstance(value, dict) and "minProperties" in schema and len(value) < int(schema["minProperties"]):
         errors.append(f"{at}: object has fewer properties than minProperties {schema['minProperties']}")
 
