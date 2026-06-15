@@ -95,6 +95,18 @@ class SupplyChainProofTests(unittest.TestCase):
             json.dumps(result)
             json.dumps(sbom)
 
+    def test_source_inventory_excludes_tmp_runtime_artifacts(self):
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / ".tmp" / "factory-runs").mkdir(parents=True)
+            (root / ".tmp" / "factory-runs" / "transient.json").write_text("{}", encoding="utf-8")
+            (root / "public.txt").write_text("public\n", encoding="utf-8")
+
+            with mock.patch.object(proof, "ROOT", root):
+                refs = [proof.repo_ref(path) for path in proof.iter_repo_files()]
+
+        self.assertEqual(refs, ["public.txt"])
+
     def test_dependency_manifest_requires_followup(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

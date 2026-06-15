@@ -18,14 +18,19 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "remote-proof" / "managed-testbox-result.json"
 DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "remote-proof" / "managed-testbox-result.md"
 PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
-DEFAULT_COMMAND = (
-    "python3 --version && "
-    "python3 scripts/validate_public_json_artifacts.py && "
-    "python3 scripts/secret_safety_scan.py && "
-    "python3 scripts/public_safety_scan.py && "
-    "python3 scripts/full_product_worker_graph.py --require-pass"
+MARKER_PREFIX = "OF_REMOTE_PROOF_CHECK"
+REQUIRED_PROOF_CHECKS = (
+    ("public_json_artifacts", "python3 scripts/validate_public_json_artifacts.py"),
+    ("secret_safety", "python3 scripts/secret_safety_scan.py"),
+    ("public_safety", "python3 scripts/public_safety_scan.py"),
+    ("supply_chain", "python3 scripts/supply_chain_proof.py --check --no-write"),
+    ("full_product_worker_graph", "python3 scripts/full_product_worker_graph.py --require-pass"),
+)
+DEFAULT_COMMAND = "python3 --version && " + " && ".join(
+    f"{command} && echo {MARKER_PREFIX} {name} PASS" for name, command in REQUIRED_PROOF_CHECKS
 )
 TIMING_RE = re.compile(r"\{.*\"provider\"\s*:\s*\"local-container\".*\}")
+CHECK_MARKER_RE = re.compile(rf"^{MARKER_PREFIX}\s+(?P<name>[a-z0-9_]+)\s+(?P<result>PASS|FAIL)\s*$")
 
 
 def utc_now() -> str:
@@ -79,19 +84,43 @@ def parse_timing_json(stdout: str, stderr: str) -> dict[str, Any]:
     raise ValueError("Crabbox timing JSON line was not found")
 
 
-def command_passed(stdout: str, timing: dict[str, Any], command: str) -> bool:
-    required = [
-        "python3 scripts/validate_public_json_artifacts.py",
-        "python3 scripts/secret_safety_scan.py",
-        "python3 scripts/public_safety_scan.py",
-        "python3 scripts/full_product_worker_graph.py --require-pass",
-    ]
-    return (
-        timing.get("exitCode") == 0
-        and stdout.count("OK") >= 3
-        and "PASS" in stdout
-        and all(item in command for item in required)
-    )
+def parse_check_markers(stdout: str, stderr: str = "") -> dict[str, str]:
+    markers: dict[str, str] = {}
+    for line in (stdout + "\n" + stderr).splitlines():
+        match = CHECK_MARKER_RE.match(line.strip())
+        if match:
+            markers[match.group("name")] = match.group("result")
+    return markers
+
+
+def proof_check_status(stdout: str, stderr: str, command: str) -> dict[str, Any]:
+    markers = parse_check_markers(stdout, stderr)
+    required_names = [name for name, _ in REQUIRED_PROOF_CHECKS]
+    missing_markers = [name for name in required_names if name not in markers]
+    failed_markers = [name for name, result in sorted(markers.items()) if result != "PASS"]
+    missing_commands = [check_command for _, check_command in REQUIRED_PROOF_CHECKS if check_command not in command]
+    return {
+        "required_markers": required_names,
+        "observed_markers": markers,
+        "missing_markers": missing_markers,
+        "failed_markers": failed_markers,
+        "missing_commands": missing_commands,
+        "all_required_passed": all(markers.get(name) == "PASS" for name in required_names)
+        and not failed_markers
+        and not missing_commands,
+    }
+
+
+def cleanup_status(timing: dict[str, Any], active_leases_after: int | None) -> dict[str, Any]:
+    lease_stopped = timing.get("leaseStopped") is True
+    active_lease_count_known = isinstance(active_leases_after, int)
+    no_active_leases_after = active_leases_after == 0
+    return {
+        "lease_stopped": lease_stopped,
+        "active_lease_count_known": active_lease_count_known,
+        "no_active_local_container_leases_after": no_active_leases_after,
+        "all_cleanup_confirmed": lease_stopped and active_lease_count_known and no_active_leases_after,
+    }
 
 
 def active_local_container_leases(crabbox_bin: str, env: dict[str, str]) -> tuple[int | None, str]:
@@ -120,11 +149,13 @@ def build_result(
     active_leases_after: int | None,
     lease_list_output: str,
 ) -> dict[str, Any]:
+    checks = proof_check_status(completed.stdout, completed.stderr, command)
+    cleanup = cleanup_status(timing, active_leases_after)
     pass_status = (
         completed.returncode == 0
-        and command_passed(completed.stdout, timing, command)
-        and timing.get("leaseStopped") is True
-        and active_leases_after in (0, None)
+        and timing.get("exitCode") == 0
+        and checks["all_required_passed"]
+        and cleanup["all_cleanup_confirmed"]
     )
     return {
         "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
@@ -174,19 +205,15 @@ def build_result(
             "stderr_tail": tail(completed.stderr),
         },
         "timing": timing,
+        "proof_checks": checks,
         "cleanup_evidence": {
-            "lease_stopped": timing.get("leaseStopped") is True,
+            **cleanup,
             "lease_id": timing.get("leaseId"),
             "slug": timing.get("slug"),
             "active_local_container_leases_after": active_leases_after,
             "lease_list_output_tail": lease_list_output,
         },
-        "checks_executed": [
-            "python3 scripts/validate_public_json_artifacts.py",
-            "python3 scripts/secret_safety_scan.py",
-            "python3 scripts/public_safety_scan.py",
-            "python3 scripts/full_product_worker_graph.py --require-pass",
-        ],
+        "checks_executed": [command for _, command in REQUIRED_PROOF_CHECKS],
         "evidence_refs": [
             ".tmp/factory-runs/production/remote-proof/managed-testbox-result.md",
             ".tmp/factory-runs/product-specific/qvg-full-product-worker-graph.json",
