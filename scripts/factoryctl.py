@@ -941,11 +941,11 @@ WORKERS: dict[str, WorkerDefinition] = {
     "skill-eval-distiller": WorkerDefinition(
         worker_id="skill-eval-distiller",
         worker_name="Skill Eval Distiller",
-        factory_phase="F18",
+        factory_phase="F8/F18/F26/F27",
         output_field="skill_eval_result",
         tool_required="skill compactness, eval and held-out regression workflow",
-        timing="after repeated workflow failures or successful repetition",
-        blocking_policy="A closed specialist or skill update needs repetition, predictable input and verifiable output.",
+        timing="after repeated workflow failures, successful repetition, learnback or factory maturity audit",
+        blocking_policy="Learnback, maturity audit, closed specialist or skill update needs repetition, predictable input and verifiable output.",
         required_inputs=("evidence_expected", "done_definition", "source_refs", "agent_eval_plan"),
     ),
     "public-safety-gate": WorkerDefinition(
@@ -4044,8 +4044,25 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "memory/source/learning-loop surface detected" if required else "no memory stewardship trigger"
         return required, reason
     if worker_id == "skill-eval-distiller":
-        required = phase == "F18" or "skill" in surfaces or "eval" in surfaces
-        reason = "skill/eval/learning loop detected" if required else "no skill evolution trigger"
+        learning_surfaces = {
+            "skill",
+            "eval",
+            "learning",
+            "learning-loop",
+            "learnback",
+            "factory-maturity",
+            "maturity",
+            "maturity-audit",
+            "factory-mechanic",
+            "factory-radar",
+            "agent-quality",
+            "agent-eval-plan",
+            "agent-coverage",
+            "methodology-audit",
+            "blind-spot",
+        }
+        required = phase in {"F18", "F26", "F27"} or bool(surfaces & learning_surfaces)
+        reason = "skill/eval/learnback/maturity loop detected" if required else "no skill evolution trigger"
         return required, reason
     if worker_id == "public-safety-gate":
         public_surfaces = {"public", "opensource", "open-source", "repo-public", "release", "docs"}

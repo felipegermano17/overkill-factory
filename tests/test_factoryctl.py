@@ -526,6 +526,48 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("release-ops-worker", next_action_workers)
         self.assertNotIn("product-face", next_action_workers)
 
+    def test_learnback_and_maturity_phases_route_to_skill_eval_distiller(self) -> None:
+        for phase, surface in (("F26", "learnback"), ("F27", "factory-maturity")):
+            with self.subTest(phase=phase):
+                card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+                card["phase"] = phase
+                card["surfaces"] = [surface]
+                card["evidence_expected"] = ["learnback and maturity audit record"]
+
+                required, reason = factoryctl.worker_required("skill-eval-distiller", card)
+                packet = factoryctl.build_worker_packet("skill-eval-distiller", card, Path("<memory>"))
+
+                self.assertTrue(required, reason)
+                self.assertIn("learnback/maturity", reason)
+                self.assertTrue(packet["trigger"]["required"])
+                self.assertEqual(packet["worker"]["factory_phase"], "F8/F18/F26/F27")
+                self.assertEqual(packet["status"], "requires_execution")
+
+    def test_learnback_without_agent_eval_plan_blocks_instead_of_passing_as_status_text(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["phase"] = "F26"
+        card["surfaces"] = ["learnback"]
+        card["evidence_expected"] = ["blocked recovery loop learnback"]
+        card.pop("agent_eval_plan", None)
+
+        report = factoryctl.build_gate_report(card)
+
+        self.assertIn("skill-eval-distiller", report["required_workers"])
+        self.assertEqual(report["workers"]["skill-eval-distiller"]["status"], "blocked_missing_inputs")
+        self.assertIn("skill-eval-distiller", report["blocked_workers"])
+        self.assertEqual(report["gate_status"], "blocked")
+
+    def test_learnback_surface_routes_to_skill_eval_distiller_before_phase_is_updated(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["phase"] = "F12"
+        card["surfaces"] = ["learnback"]
+        card["evidence_expected"] = ["blocked recovery loop learnback"]
+
+        required, reason = factoryctl.worker_required("skill-eval-distiller", card)
+
+        self.assertTrue(required, reason)
+        self.assertIn("learnback/maturity", reason)
+
     def test_security_scan_packet_can_require_codex_security_on_r2_product_face(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
 

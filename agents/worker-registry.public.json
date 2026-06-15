@@ -1573,15 +1573,19 @@
       "mode": "hybrid",
       "phase": [
         "F18",
-        "F8"
+        "F8",
+        "F26",
+        "F27"
       ],
       "triggers": [
         "skill",
         "eval",
         "repeated workflow",
         "learning loop",
+        "learnback",
         "agent quality plan",
         "factory maturity audit",
+        "maturity audit",
         "blind spot",
         "methodology audit",
         "agent eval plan",
@@ -1617,7 +1621,8 @@
         "missing coverage register"
       ],
       "factory_gate_transition_policy": [
-        "closed specialists need eval-backed promotion"
+        "closed specialists need eval-backed promotion",
+        "learnback and maturity audit cannot close as passive status text"
       ],
       "promotion_rule": "closed only after repeated predictable success",
       "public_safety_notes": "Skill examples must be public-safe."

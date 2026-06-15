@@ -4182,17 +4182,22 @@
       "activation": {
         "phases": [
           "F18",
-          "F8"
+          "F8",
+          "F26",
+          "F27"
         ],
         "surfaces": [
           "skill",
           "eval",
           "learning",
+          "learning-loop",
+          "learnback",
           "repeatable workflow",
           "agent promotion",
           "domain pack",
           "agent-quality",
           "factory-maturity",
+          "maturity-audit",
           "blind-spot",
           "methodology-audit",
           "agent-eval-plan",
@@ -4203,12 +4208,14 @@
           "skill",
           "eval",
           "learning",
+          "learnback",
           "distill",
           "repeat",
           "agent design",
           "domain pack",
           "agent quality plan",
           "factory maturity audit",
+          "maturity audit",
           "blind spot",
           "methodology audit",
           "agent eval plan",
