@@ -1022,6 +1022,10 @@ def _activated_capability_pack_ids(contract: Any) -> set[str]:
     return ids
 
 
+def _pack_structured_proof_ids(pack: dict[str, Any]) -> list[str]:
+    return sorted({item for item in _list_items(pack.get("structured_proofs_required")) if item})
+
+
 def validate_activated_capability_contract(
     contract: Any,
     *,
@@ -1040,6 +1044,7 @@ def validate_activated_capability_contract(
     activation_refs = _list_items(contract.get("activation_evidence_refs"))
     tool_refs = _list_items(contract.get("tool_refs"))
     missing_capabilities = _list_items(contract.get("missing_capabilities"))
+    contract_structured_proofs = _list_items(contract.get("structured_proofs_required"))
 
     if status not in CAPABILITY_ACTIVATED_STATES:
         errors.append("capability_pack_contract.status must be ready or activated")
@@ -1064,6 +1069,19 @@ def validate_activated_capability_contract(
         errors.append("capability_pack_contract.tool_refs must name the activated tools or commands")
     if missing_capabilities:
         errors.append("capability_pack_contract.missing_capabilities must be empty before material execution")
+    packs = load_capability_packs()
+    required_pack_proofs: set[str] = set()
+    for pack_id in contract_pack_ids.intersection(candidate_pack_ids):
+        required_pack_proofs.update(_pack_structured_proof_ids(packs.get(pack_id, {})))
+    if required_pack_proofs:
+        if not contract_structured_proofs:
+            errors.append("capability_pack_contract.structured_proofs_required must mirror activated registry proof ids")
+        missing_proofs = sorted(required_pack_proofs - set(contract_structured_proofs))
+        if missing_proofs:
+            errors.append(
+                "capability_pack_contract.structured_proofs_required missing registry proof ids: "
+                + ", ".join(missing_proofs)
+            )
 
     profile_binding_refs = contract.get("profile_binding_refs")
     if not isinstance(profile_binding_refs, dict) or not profile_binding_refs:
@@ -1912,15 +1930,24 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
             errors.append("product_implementation_readiness.artifact_alignment_result blocks material implementation")
         if result == "PASS" and not _non_empty_string_list(readiness.get("ready_work_units")):
             errors.append("product_implementation_readiness PASS requires ready_work_units")
-        if profile:
+        required_readiness_proofs = _required_domain_proof_ids(card, "before_implementation")
+        if required_readiness_proofs:
+            proof_profile = profile or {
+                "waiver_policy": {
+                    "allowed": True,
+                    "requires_owner": True,
+                    "requires_reason": True,
+                    "cannot_claim_full_acceptance": True,
+                }
+            }
             if not _non_empty_string_list(readiness.get("product_delivery_quality_profile_trace")):
                 errors.append("product_implementation_readiness.product_delivery_quality_profile_trace must be non-empty")
             errors.extend(
                 _validate_delivery_profile_proof_coverage(
                     readiness.get("delivery_profile_proof_coverage"),
-                    _delivery_profile_required_proof_ids(profile, "before_implementation"),
+                    required_readiness_proofs,
                     at="product_implementation_readiness.delivery_profile_proof_coverage",
-                    profile=profile,
+                    profile=proof_profile,
                     full_acceptance=False,
                 )
             )
@@ -2509,11 +2536,27 @@ def _delivery_profile_required_proof_ids(profile: dict[str, Any], phase: str) ->
     return sorted(set(proof_ids))
 
 
+def _activated_capability_pack_structured_proof_ids(card: dict[str, Any]) -> list[str]:
+    contract = card.get("capability_pack_contract")
+    if not isinstance(contract, dict):
+        return []
+    if str(contract.get("status") or "").strip().lower() != "activated":
+        return []
+
+    proof_ids: set[str] = set(_list_items(contract.get("structured_proofs_required")))
+    packs = load_capability_packs()
+    for pack_id in _activated_capability_pack_ids(contract):
+        proof_ids.update(_pack_structured_proof_ids(packs.get(pack_id, {})))
+    return sorted(proof_id for proof_id in proof_ids if proof_id)
+
+
 def _required_domain_proof_ids(card: dict[str, Any], phase: str) -> list[str]:
     proof_ids: list[str] = []
     profile = _product_delivery_quality_profile(card)
     if profile:
         proof_ids.extend(_delivery_profile_required_proof_ids(profile, phase))
+    if phase in {"before_implementation", "before_completion", "before_promotion"}:
+        proof_ids.extend(_activated_capability_pack_structured_proof_ids(card))
     plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
     packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
     if phase == "before_completion":
@@ -3875,6 +3918,8 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
                 if isinstance(card.get("product_implementation_readiness"), dict)
                 else None
             ),
+            "required_structured_proofs": _activated_capability_pack_structured_proof_ids(card),
+            "required_completion_proofs": _required_domain_proof_ids(card, "before_completion"),
             "specialist_research_plan_ref": card.get("specialist_research_plan_ref")
             or ("card.specialist_research_plan" if isinstance(card.get("specialist_research_plan"), dict) else None),
             "specialist_decision_packet_ref": card.get("specialist_decision_packet_ref")

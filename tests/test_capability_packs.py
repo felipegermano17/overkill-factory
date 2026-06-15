@@ -43,6 +43,13 @@ def activated_game_contract() -> dict:
         "permission_class": "bounded-worker",
         "missing_capabilities": [],
         "execution_rule": "Game execution is allowed only after playable smoke, performance budget and game QA proof exist.",
+        "structured_proofs_required": [
+            "game.design-packet",
+            "game.performance-budget",
+            "game.playable-smoke",
+            "game.playtest-review",
+            "game.runtime-choice",
+        ],
         "worker_mapping": {
             "runtime": ["game-runtime-builder"],
             "design": ["game-design-specialist"],
@@ -179,6 +186,22 @@ class CapabilityPacksTest(unittest.TestCase):
         self.assertIn("capability_pack_contract.profile_binding_refs must map each specialist worker to a profile binding ref", errors)
         self.assertIn("capability_pack_contract.smoke_evidence_ref is required for activated packs", errors)
         self.assertIn("capability_pack_contract.eval_path is required for activated packs", errors)
+
+    def test_activated_pack_requires_registry_structured_proofs(self) -> None:
+        card = base_card()
+        card["surfaces"] = ["game", "3d", "asset-pipeline"]
+        card["capability_pack_contract"] = activated_game_contract()
+        card["capability_pack_contract"]["structured_proofs_required"] = [
+            "game.design-packet",
+            "game.playable-smoke",
+        ]
+
+        errors = factoryctl.validate_capability_coverage(card)
+
+        self.assertIn(
+            "capability_pack_contract.structured_proofs_required missing registry proof ids: game.performance-budget, game.playtest-review, game.runtime-choice",
+            errors,
+        )
 
     def test_activation_example_stays_blocked_until_real_evidence_replaces_placeholders(self) -> None:
         example = json.loads((ROOT / "templates" / "capability-pack-activation-example.json").read_text(encoding="utf-8"))

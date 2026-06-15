@@ -86,6 +86,7 @@ A template pack becomes executable only when the card includes a
 - eval path;
 - activation evidence refs;
 - smoke and eval evidence refs;
+- structured proof ids required by the registry pack;
 - missing capabilities, if any;
 - an execution rule.
 
@@ -103,7 +104,11 @@ public-safe smoke and eval refs replace the placeholders.
    smoke and eval evidence.
 4. Keep `missing_capabilities` non-empty and `lifecycle_state` below
    `activated` until smoke and eval evidence exist.
-5. Run `factoryctl validate-card`. Material execution may start only after the
+5. Mirror every `structured_proofs_required` id from the registry pack into the
+   activation contract. Once activated, those proof ids become required
+   delivery proof: readiness must cover or waive them, and Product Face/product
+   completion must pass them before full acceptance.
+6. Run `factoryctl validate-card`. Material execution may start only after the
    contract is activated, complete and every requested surface is covered.
 
 ## Important Boundary
