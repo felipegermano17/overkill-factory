@@ -260,6 +260,43 @@ def product_delivery_quality_profile_fixture() -> dict:
     }
 
 
+def activated_game_contract_fixture() -> dict:
+    return {
+        "record_type": "capability_pack_contract",
+        "pack_id": "game-product-pack",
+        "status": "activated",
+        "lifecycle_state": "activated",
+        "covered_surfaces": ["game", "3d", "asset-pipeline"],
+        "specialist_workers": ["game-runtime-builder", "game-design-specialist", "game-qa-specialist"],
+        "activation_evidence_refs": ["external:game-pack-activation"],
+        "tool_refs": ["external:game-runtime-tool"],
+        "local_smoke_path": "external:playable-game-smoke-command",
+        "eval_path": "external:game-eval-command",
+        "smoke_evidence_ref": "external:playable-game-smoke",
+        "eval_evidence_ref": "external:game-eval",
+        "profile_binding_refs": {
+            "game-runtime-builder": "external:game-runtime-profile-binding",
+            "game-design-specialist": "external:game-design-profile-binding",
+            "game-qa-specialist": "external:game-qa-profile-binding",
+        },
+        "permission_class": "bounded-worker",
+        "missing_capabilities": [],
+        "execution_rule": "Game execution is allowed only after playable smoke, performance budget and game QA proof exist.",
+        "structured_proofs_required": [
+            "game.design-packet",
+            "game.performance-budget",
+            "game.playable-smoke",
+            "game.playtest-review",
+            "game.runtime-choice",
+        ],
+        "worker_mapping": {
+            "runtime": ["game-runtime-builder"],
+            "design": ["game-design-specialist"],
+            "qa": ["game-qa-specialist"],
+        },
+    }
+
+
 def product_face_result_fixture(**overrides: object) -> dict:
     result = {
         "result": "PASS",
@@ -399,6 +436,25 @@ class FactoryCtlTest(unittest.TestCase):
                 factoryctl.build_worker_packet("codex-security", card, card_path)
         finally:
             factoryctl.PROFILE_BINDINGS_PATH = original_path
+
+    def test_worker_packet_carries_activated_pack_structured_proofs(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+        card["surfaces"] = ["game", "3d", "asset-pipeline"]
+        card["capability_pack_contract"] = activated_game_contract_fixture()
+
+        packet = factoryctl.build_worker_packet("implementation-worker", card, card_path)
+
+        self.assertEqual(
+            packet["input_contract"]["required_structured_proofs"],
+            [
+                "game.design-packet",
+                "game.performance-budget",
+                "game.playable-smoke",
+                "game.playtest-review",
+                "game.runtime-choice",
+            ],
+        )
 
     def test_worker_packet_schema_allows_every_registered_worker(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))
@@ -668,6 +724,35 @@ class FactoryCtlTest(unittest.TestCase):
             "product_face_result.domain_proof_coverage missing product delivery proof coverage for required proof ids: game.playable-smoke",
             errors,
         )
+
+    def test_product_face_completion_requires_activated_pack_domain_proofs(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["capability_pack_contract"] = activated_game_contract_fixture()
+
+        errors = factoryctl.validate_product_face_result_against_card(product_face_result_fixture(), card)
+
+        self.assertIn(
+            "product_face_result.domain_proof_coverage missing product delivery proof coverage for required proof ids: game.design-packet, game.performance-budget, game.playable-smoke, game.playtest-review, game.runtime-choice",
+            errors,
+        )
+
+    def test_product_face_completion_accepts_activated_pack_domain_proofs(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["capability_pack_contract"] = activated_game_contract_fixture()
+        result = product_face_result_fixture(
+            domain_proof_coverage=[
+                {
+                    "proof_id": proof_id,
+                    "status": "PASS",
+                    "evidence_refs": [f"reports/domain-proof/{proof_id}.json"],
+                    "reviewer": "domain-proof-reviewer",
+                    "basis": f"{proof_id} passed with structured evidence.",
+                }
+                for proof_id in card["capability_pack_contract"]["structured_proofs_required"]
+            ]
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
 
     def test_product_face_completion_resolves_profile_ref_for_domain_proof_coverage(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
