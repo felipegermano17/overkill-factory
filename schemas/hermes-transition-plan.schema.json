@@ -219,6 +219,14 @@
             "type": "array",
             "items": { "type": "string", "minLength": 3 }
           },
+          "recovery_route_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "recovery_route_digests": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+          },
           "runtime_authority": { "const": "hermes_kanban" },
           "local_state_authority": { "const": false }
         },

@@ -10,6 +10,7 @@ specialist worker still has to run and attach real evidence.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import re
@@ -76,6 +77,15 @@ PRIVATE_RUNTIME_REF_RE = re.compile(
     r"((?<![A-Za-z])[A-Za-z]:[\\/]|\\\\|/home/|/Users/|/srv/|/var/|discord(app)?\.com|webhook|token|secret|guild[_-]?id|channel[_-]?id|message[_-]?id)",
     re.IGNORECASE,
 )
+CONTRACT_DIGEST_ALGORITHM = "sha256"
+VOLATILE_CONTRACT_KEYS = {
+    "checked_at",
+    "created_at",
+    "generated_at",
+    "last_checked_at",
+    "timestamp",
+    "updated_at",
+}
 
 CARD_REQUIRED = {
     "factory_method_version",
@@ -4090,6 +4100,40 @@ def string_list(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str) and item.strip()]
 
 
+def stable_contract_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): stable_contract_value(item)
+            for key, item in sorted(value.items(), key=lambda entry: str(entry[0]))
+            if str(key) not in VOLATILE_CONTRACT_KEYS
+        }
+    if isinstance(value, list):
+        return [stable_contract_value(item) for item in value]
+    return value
+
+
+def contract_digest(value: Any) -> str:
+    stable_value = stable_contract_value(value)
+    if isinstance(stable_value, str):
+        payload = stable_value
+    else:
+        payload = json.dumps(stable_value, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def recovery_route_digest(route: dict[str, Any]) -> str:
+    return f"{CONTRACT_DIGEST_ALGORITHM}:{contract_digest(route)}"
+
+
+def recovery_route_digest_list(value: Any) -> list[str]:
+    digests: list[str] = []
+    for item in string_list(value):
+        digest = item.strip()
+        if re.fullmatch(r"sha256:[0-9a-f]{64}", digest) and digest not in digests:
+            digests.append(digest)
+    return digests
+
+
 def _worker_id_for_output_field(output_field: str) -> str | None:
     for worker_id, worker in WORKERS.items():
         if worker.output_field == output_field:
@@ -4412,6 +4456,14 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             "reviewed_requirement_refs": string_list(data.get("reviewed_requirement_refs")),
             "reviewed_producer_refs": string_list(data.get("reviewed_producer_refs")),
             "producer_refs_reviewed": string_list(data.get("producer_refs_reviewed")),
+            "recovery_route_refs": string_list(data.get("recovery_route_refs")),
+            "recovery_route_digests": recovery_route_digest_list(data.get("recovery_route_digests")),
+            "reviewed_recovery_route_refs": string_list(
+                data.get("reviewed_recovery_route_refs") or data.get("recovery_route_refs_reviewed")
+            ),
+            "reviewed_recovery_route_digests": recovery_route_digest_list(
+                data.get("reviewed_recovery_route_digests") or data.get("recovery_route_digests_reviewed")
+            ),
             "authorized_downstream_worker_ids": registered_nonhuman_worker_ids(
                 data.get("authorized_downstream_worker_ids")
                 or data.get("authorized_next_worker_ids")
@@ -4482,6 +4534,14 @@ def receipt_result_fields(
                 "reviewed_requirement_refs": string_list(value.get("reviewed_requirement_refs")),
                 "reviewed_producer_refs": string_list(value.get("reviewed_producer_refs")),
                 "producer_refs_reviewed": string_list(value.get("producer_refs_reviewed")),
+                "recovery_route_refs": string_list(value.get("recovery_route_refs")),
+                "recovery_route_digests": recovery_route_digest_list(value.get("recovery_route_digests")),
+                "reviewed_recovery_route_refs": string_list(
+                    value.get("reviewed_recovery_route_refs") or value.get("recovery_route_refs_reviewed")
+                ),
+                "reviewed_recovery_route_digests": recovery_route_digest_list(
+                    value.get("reviewed_recovery_route_digests") or value.get("recovery_route_digests_reviewed")
+                ),
                 "authorized_downstream_worker_ids": registered_nonhuman_worker_ids(
                     value.get("authorized_downstream_worker_ids")
                     or value.get("authorized_next_worker_ids")
@@ -4551,28 +4611,35 @@ def declared_graph_requirements(record_type: str, data: dict[str, Any], *, evide
     reviewer_result = str(data.get("reviewer_result") or "").strip().upper()
     status = "satisfied" if reviewer_result == "PASS" else "pending"
     requirement_ref = evidence_ref or f"external:{record_type}"
+    recovery_route_refs = string_list(data.get("recovery_route_refs"))
+    recovery_route_digests = recovery_route_digest_list(data.get("recovery_route_digests"))
+    requirement = {
+        "requirement_type": "review_before_consumption",
+        "requirement_id": (
+            f"review-before-consumption:{sanitize_slug(record_type, fallback='record')}:"
+            f"{sanitize_slug(requirement_ref, fallback='evidence')}"
+        ),
+        "producer_field": record_type,
+        "producer_ref": requirement_ref,
+        "review_worker_id": review_worker_id,
+        "required_review_field": required_review_field,
+        "required_result": "PASS",
+        "status": status,
+        "reviewer_result": reviewer_result or "missing",
+        "downstream_scope": ["implementation", "done", "release"],
+        "review_authorized_scope": ["review"],
+        "producer_handoff_state": "implementation_ready_for_review"
+        if status == "pending"
+        else "review_satisfied",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+    }
+    if recovery_route_refs:
+        requirement["recovery_route_refs"] = recovery_route_refs
+    if recovery_route_digests:
+        requirement["recovery_route_digests"] = recovery_route_digests
     return [
-        {
-            "requirement_type": "review_before_consumption",
-            "requirement_id": (
-                f"review-before-consumption:{sanitize_slug(record_type, fallback='record')}:"
-                f"{sanitize_slug(requirement_ref, fallback='evidence')}"
-            ),
-            "producer_field": record_type,
-            "producer_ref": requirement_ref,
-            "review_worker_id": review_worker_id,
-            "required_review_field": required_review_field,
-            "required_result": "PASS",
-            "status": status,
-            "reviewer_result": reviewer_result or "missing",
-            "downstream_scope": ["implementation", "done", "release"],
-            "review_authorized_scope": ["review"],
-            "producer_handoff_state": "implementation_ready_for_review"
-            if status == "pending"
-            else "review_satisfied",
-            "runtime_authority": "hermes_kanban",
-            "local_state_authority": False,
-        }
+        requirement
     ]
 
 
@@ -4601,6 +4668,22 @@ def review_task_authorization(requirement: dict[str, Any]) -> dict[str, Any]:
 def review_record_matches_requirement(review_record: dict[str, Any], requirement: dict[str, Any]) -> bool:
     requirement_id = str(requirement.get("requirement_id") or "").strip()
     producer_ref = str(requirement.get("producer_ref") or "").strip()
+    required_route_refs = set(string_list(requirement.get("recovery_route_refs")))
+    required_route_digests = set(recovery_route_digest_list(requirement.get("recovery_route_digests")))
+    if required_route_refs:
+        reviewed_route_refs = set(
+            string_list(review_record.get("reviewed_recovery_route_refs"))
+            + string_list(review_record.get("recovery_route_refs_reviewed"))
+        )
+        if not required_route_refs.issubset(reviewed_route_refs):
+            return False
+    if required_route_digests:
+        reviewed_route_digests = set(
+            recovery_route_digest_list(review_record.get("reviewed_recovery_route_digests"))
+            + recovery_route_digest_list(review_record.get("recovery_route_digests_reviewed"))
+        )
+        if not required_route_digests.issubset(reviewed_route_digests):
+            return False
     explicit_refs = set(string_list(review_record.get("graph_requirement_refs")))
     explicit_refs.update(string_list(review_record.get("review_requirement_refs")))
     explicit_refs.update(string_list(review_record.get("reviewed_requirement_refs")))
@@ -4737,7 +4820,9 @@ def downstream_task_authorization(requirement: dict[str, Any], worker_tasks: lis
     if not authorized_worker_ids:
         return None
     requirement_id = str(requirement.get("requirement_id") or "").strip()
-    return {
+    recovery_route_refs = string_list(requirement.get("recovery_route_refs"))
+    recovery_route_digests = recovery_route_digest_list(requirement.get("recovery_route_digests"))
+    authorization = {
         "authorization_type": "fresh_review_downstream_task",
         "authorization_state": "worker_task_ready",
         "requirement_id": requirement_id,
@@ -4753,6 +4838,11 @@ def downstream_task_authorization(requirement: dict[str, Any], worker_tasks: lis
         "runtime_authority": "hermes_kanban",
         "local_state_authority": False,
     }
+    if recovery_route_refs:
+        authorization["recovery_route_refs"] = recovery_route_refs
+    if recovery_route_digests:
+        authorization["recovery_route_digests"] = recovery_route_digests
+    return authorization
 
 
 def downstream_task_authorizations(

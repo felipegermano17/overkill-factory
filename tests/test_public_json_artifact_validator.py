@@ -37,6 +37,15 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         self.assertEqual(validator.validate_node(schema, "a" * 64, "$"), [])
         self.assertTrue(any("does not match pattern" in error for error in validator.validate_node(schema, "not-a-sha", "$")))
 
+    def test_worker_result_schema_types_recovery_route_digests(self) -> None:
+        validator = load_validator()
+        schema = validator.load_schemas()["worker-result.schema.json"]["properties"]["reviewed_recovery_route_digests"]
+
+        self.assertEqual(validator.validate_node(schema, ["sha256:" + ("a" * 64)], "$"), [])
+        self.assertTrue(
+            any("does not match pattern" in error for error in validator.validate_node(schema, ["not-a-sha"], "$"))
+        )
+
     def test_enforces_conditional_required_fields_used_by_worker_result_schema(self) -> None:
         validator = load_validator()
         schema = {
