@@ -156,7 +156,7 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 out.write_text(json.dumps(payload), encoding="utf-8")
                 return subprocess.CompletedProcess(command, 0)
 
-            missing = preflight.materialize_preflight_inputs(
+            materialization = preflight.materialize_preflight_inputs(
                 inventory_path=paths["inventory"],
                 public_worktree_path=paths["worktree"],
                 public_head_path=paths["head"],
@@ -164,10 +164,67 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 runner=fake_runner,
             )
 
-            self.assertEqual(missing, [])
+            self.assertEqual(materialization["missing_evidence_refs"], [])
+            self.assertEqual(materialization["failed_materializers"], [])
+            self.assertTrue(materialization["all_materializers_passed"])
             for path in paths.values():
                 with self.subTest(path=path.name):
                     self.assertTrue(path.is_file())
+
+    def test_materializer_failure_blocks_even_when_stale_pass_file_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = self._fixtures(root, worktree="PASS", head="PASS", origin="PASS", release_candidate_entries=0)
+            for path in paths.values():
+                path.write_text(
+                    json.dumps(
+                        {
+                            "result": "PASS",
+                            "cleanup_policy": {
+                                "release_candidate_entries": 0,
+                                "generated_receipt_entries": 0,
+                                "needs_human_review_entries": 0,
+                                "safe_cleanup_candidates": 0,
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+            def failing_runner(command, **_kwargs):
+                return subprocess.CompletedProcess(
+                    command,
+                    7,
+                    stdout="old PASS output should not count\n",
+                    stderr=f"failed under {root}\n",
+                )
+
+            materialization = preflight.materialize_preflight_inputs(
+                inventory_path=paths["inventory"],
+                public_worktree_path=paths["worktree"],
+                public_head_path=paths["head"],
+                public_origin_path=paths["origin"],
+                runner=failing_runner,
+            )
+            receipt = preflight.build_preflight(
+                inventory_path=paths["inventory"],
+                public_worktree_path=paths["worktree"],
+                public_head_path=paths["head"],
+                public_origin_path=paths["origin"],
+                branch_name="codex/release",
+                status_entries=0,
+                generated_status_entries=0,
+                created_at="2026-06-10T00:00:00Z",
+                materialization=materialization,
+            )
+
+        self.assertEqual(receipt["result"], "BLOCKED")
+        self.assertIn("preflight_materializers_passed", receipt["blocking_items"])
+        self.assertIn("preflight_evidence_refs_exist", receipt["blocking_items"])
+        self.assertFalse(receipt["materialization"]["all_materializers_passed"])
+        self.assertEqual(len(receipt["materialization"]["failed_materializers"]), 4)
+        self.assertEqual(len(receipt["missing_evidence_refs"]), 4)
+        self.assertNotIn(str(root), json.dumps(receipt))
 
     def _fixtures(
         self,

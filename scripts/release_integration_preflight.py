@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -26,6 +28,12 @@ GENERATED_RECEIPT_PATHS = {
     ".tmp/factory-runs/release/release-integration-preflight.json",
     ".tmp/factory-runs/release/worktree-release-inventory.json",
 }
+LOCAL_PATH_PATTERNS = (
+    re.compile(r"[A-Za-z]:\\Users\\[^\\\s\"']+(?:\\[^\\\s\"']+)*"),
+    re.compile(r"/home/[^/\s\"']+(?:/[^/\s\"']+)*"),
+    re.compile(r"/" + r"tmp/[^/\s\"']+(?:/[^/\s\"']+)*"),
+    re.compile(r"/srv/" + r"hermes(?:/[^/\s\"']+)*"),
+)
 
 
 def utc_now() -> str:
@@ -48,6 +56,30 @@ def load_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def safe_tail(text: str, limit: int = 2000) -> str:
+    redacted = text
+    for raw in {str(ROOT), str(ROOT).replace("\\", "/"), str(Path.home()), os.environ.get("USERPROFILE", "")}:
+        if raw:
+            redacted = redacted.replace(raw, "<local-path>")
+    for pattern in LOCAL_PATH_PATTERNS:
+        redacted = pattern.sub("<local-path>", redacted)
+    return redacted[-limit:]
+
+
+def public_command(command: list[str]) -> list[str]:
+    public: list[str] = []
+    for item in command:
+        if item == sys.executable:
+            public.append("python")
+            continue
+        path = Path(item)
+        if path.is_absolute():
+            public.append(repo_ref(path))
+            continue
+        public.append(item)
+    return public
+
+
 def materialize_preflight_inputs(
     *,
     inventory_path: Path = DEFAULT_INVENTORY,
@@ -55,34 +87,82 @@ def materialize_preflight_inputs(
     public_head_path: Path = DEFAULT_PUBLIC_HEAD,
     public_origin_path: Path = DEFAULT_PUBLIC_ORIGIN,
     runner: Callable[..., subprocess.CompletedProcess[Any]] = subprocess.run,
-) -> list[Path]:
+) -> dict[str, Any]:
     commands = [
-        [sys.executable, "scripts/worktree_release_inventory.py", "--out", str(inventory_path)],
-        [sys.executable, "scripts/public_safety_scan.py", "--summary-json", str(public_worktree_path)],
-        [
-            sys.executable,
-            "scripts/public_safety_scan.py",
-            "--git-ref",
-            "HEAD",
-            "--summary-json",
-            str(public_head_path),
-        ],
-        [
-            sys.executable,
-            "scripts/public_safety_scan.py",
-            "--git-ref",
-            "origin/main",
-            "--summary-json",
-            str(public_origin_path),
-        ],
+        {
+            "name": "worktree_release_inventory",
+            "output": inventory_path,
+            "command": [sys.executable, "scripts/worktree_release_inventory.py", "--out", str(inventory_path)],
+        },
+        {
+            "name": "public_safety_worktree",
+            "output": public_worktree_path,
+            "command": [sys.executable, "scripts/public_safety_scan.py", "--summary-json", str(public_worktree_path)],
+        },
+        {
+            "name": "public_safety_head",
+            "output": public_head_path,
+            "command": [
+                sys.executable,
+                "scripts/public_safety_scan.py",
+                "--git-ref",
+                "HEAD",
+                "--summary-json",
+                str(public_head_path),
+            ],
+        },
+        {
+            "name": "public_safety_origin_main",
+            "output": public_origin_path,
+            "command": [
+                sys.executable,
+                "scripts/public_safety_scan.py",
+                "--git-ref",
+                "origin/main",
+                "--summary-json",
+                str(public_origin_path),
+            ],
+        },
     ]
-    for command in commands:
-        runner(command, cwd=ROOT, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    return [
-        path
+    runs: list[dict[str, Any]] = []
+    for spec in commands:
+        output_path = spec["output"]
+        if output_path.exists():
+            output_path.unlink()
+        completed = runner(
+            spec["command"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        output_exists = output_path.is_file()
+        runs.append(
+            {
+                "name": spec["name"],
+                "command": public_command(spec["command"]),
+                "output_ref": repo_ref(output_path),
+                "returncode": int(completed.returncode),
+                "stdout_tail": safe_tail(str(completed.stdout or "")),
+                "stderr_tail": safe_tail(str(completed.stderr or "")),
+                "output_exists": output_exists,
+                "result": "PASS" if completed.returncode == 0 and output_exists else "FAIL",
+            }
+        )
+    missing = [
+        repo_ref(path)
         for path in (inventory_path, public_worktree_path, public_head_path, public_origin_path)
         if not path.is_file()
     ]
+    failed = [run["name"] for run in runs if run["result"] != "PASS"]
+    return {
+        "record_type": "release_preflight_materialization",
+        "all_materializers_passed": not failed,
+        "failed_materializers": failed,
+        "missing_evidence_refs": missing,
+        "runs": runs,
+    }
 
 
 def git_text(*args: str) -> str:
@@ -135,6 +215,7 @@ def build_preflight(
     branch_name: str | None = None,
     status_entries: int | None = None,
     generated_status_entries: int | None = None,
+    materialization: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     inventory = load_json(inventory_path)
     public_worktree = load_json(public_worktree_path)
@@ -158,8 +239,14 @@ def build_preflight(
     needs_human_review_entries = int(cleanup_policy.get("needs_human_review_entries") or 0)
     safe_cleanup_candidates = int(cleanup_policy.get("safe_cleanup_candidates") or 0)
     unintegrated_release_entries = max(entries - generated_from_status, 0)
+    materializers_passed = True
+    failed_materializers: list[str] = []
+    if materialization is not None:
+        materializers_passed = materialization.get("all_materializers_passed") is True
+        failed_materializers = [str(item) for item in materialization.get("failed_materializers") or []]
 
     checks = {
+        "preflight_materializers_passed": materializers_passed,
         "worktree_public_safety_passed": public_worktree.get("result") == "PASS",
         "head_public_safety_passed": public_head.get("result") == "PASS",
         "origin_main_public_safety_passed": public_origin.get("result") == "PASS",
@@ -196,6 +283,8 @@ def build_preflight(
         next_required_actions.append("integrate the public-safe worktree into the target release ref")
     if not checks["preflight_evidence_refs_exist"]:
         next_required_actions.append("materialize missing preflight evidence summaries before release review")
+    if not checks["preflight_materializers_passed"]:
+        next_required_actions.append("rerun failing preflight materializers before release review")
     if not checks["head_public_safety_passed"] or not checks["origin_main_public_safety_passed"]:
         next_required_actions.append("rerun exact public-safety scans after the release ref is updated")
     if not next_required_actions:
@@ -243,6 +332,13 @@ def build_preflight(
         },
         "blocking_items": sorted(blocking_items),
         "attention_items": sorted(attention_items),
+        "materialization": materialization
+        or {
+            "record_type": "release_preflight_materialization",
+            "all_materializers_passed": None,
+            "failed_materializers": failed_materializers,
+            "runs": [],
+        },
         "evidence_refs": evidence_refs,
         "missing_evidence_refs": missing_evidence_refs,
         "next_required_actions": next_required_actions,
@@ -262,8 +358,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    materialize_preflight_inputs()
-    receipt = build_preflight()
+    materialization = materialize_preflight_inputs()
+    receipt = build_preflight(materialization=materialization)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"result": receipt["result"], "out": repo_ref(args.out)}))
