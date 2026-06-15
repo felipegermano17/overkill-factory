@@ -115,7 +115,7 @@ the card.
 | `release-ops-worker` | closed/hybrid | F16-F17 | Handles release channel, production operations, promotion packet, smoke, canary, rollback readiness and monitoring. |
 | `public-safety-gate` | closed | F16-F17 | Blocks public artifacts containing private paths, internal names, raw source extraction or private links. |
 | `memory-steward` | hybrid | F0/F1/F18 | Treats memory as a risk surface with source, trust tier, freshness and poisoning controls. |
-| `skill-eval-distiller` | hybrid | F8/F18 | Owns Agent Quality, Learnback and Factory Maturity audits, then turns repeated success/failure into compact skills, evals, templates, checklists or pack/worker changes. |
+| `skill-eval-distiller` | hybrid | F8/F18/F26/F27 | Owns Agent Quality, Learnback and Factory Maturity audits, then turns repeated success/failure into compact skills, evals, templates, checklists or pack/worker changes. |
 
 ## Control Tower
 
