@@ -65,6 +65,7 @@
         "type": "object",
         "required": [
           "recovery_route_id",
+          "recovery_route_digest",
           "worker_id",
           "hermes_task_ref",
           "previous_attempts",
@@ -81,6 +82,7 @@
         ],
         "properties": {
           "recovery_route_id": { "type": "string", "minLength": 3 },
+          "recovery_route_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
           "worker_id": { "type": "string", "minLength": 1 },
           "hermes_task_ref": { "type": "string", "minLength": 3 },
           "previous_attempts": { "type": "integer", "minimum": 0 },
@@ -112,9 +114,134 @@
       "type": "object",
       "additionalProperties": { "type": "string", "minLength": 3 }
     },
+    "idempotency_contract": {
+      "type": "object",
+      "required": [
+        "digest_algorithm",
+        "canonicalization_version",
+        "volatile_fields_ignored",
+        "digest_scope",
+        "lineage_policy",
+        "runtime_authority",
+        "local_state_authority",
+        "main_task",
+        "worker_tasks"
+      ],
+      "properties": {
+        "digest_algorithm": { "const": "sha256" },
+        "canonicalization_version": { "const": "v1" },
+        "volatile_fields_ignored": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "digest_scope": { "const": "main_card_body_and_stable_worker_packet_contract" },
+        "lineage_policy": { "const": "base_identity_is_logical_lineage_contract_key_is_runtime_identity" },
+        "runtime_authority": { "const": "hermes_kanban" },
+        "local_state_authority": { "const": false },
+        "main_task": {
+          "type": "object",
+          "required": [
+            "idempotency_identity",
+            "contract_digest",
+            "idempotency_key",
+            "runtime_history_query_keys",
+            "previous_runtime_task_refs",
+            "supersedes_idempotency_keys"
+          ],
+          "properties": {
+            "idempotency_identity": {
+              "type": "object",
+              "required": ["card_id", "task_role", "base_idempotency_key"],
+              "properties": {
+                "card_id": { "type": "string", "minLength": 1 },
+                "task_role": { "const": "main" },
+                "base_idempotency_key": { "type": "string", "pattern": "^overkill:.+:main$" }
+              },
+              "additionalProperties": false
+            },
+            "contract_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "idempotency_key": { "type": "string", "pattern": "^overkill:.+:main:[0-9a-f]{16}$" },
+            "runtime_history_query_keys": {
+              "type": "array",
+              "minItems": 2,
+              "items": { "type": "string", "minLength": 3 }
+            },
+            "previous_runtime_task_refs": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 3 }
+            },
+            "supersedes_idempotency_keys": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 3 }
+            }
+          },
+          "additionalProperties": false
+        },
+        "worker_tasks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "idempotency_identity",
+              "contract_scope",
+              "contract_digest",
+              "idempotency_key",
+              "runtime_history_query_keys",
+              "previous_runtime_task_refs",
+              "supersedes_idempotency_keys"
+            ],
+            "properties": {
+              "idempotency_identity": {
+                "type": "object",
+                "required": ["card_id", "worker_id", "task_role", "base_idempotency_key"],
+                "properties": {
+                  "card_id": { "type": "string", "minLength": 1 },
+                  "worker_id": { "type": "string", "minLength": 1 },
+                  "task_role": { "const": "worker" },
+                  "base_idempotency_key": { "type": "string", "pattern": "^overkill:.+:.+$" }
+                },
+                "additionalProperties": false
+              },
+              "contract_scope": { "const": "worker_task_materialization_contract" },
+              "contract_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "idempotency_key": { "type": "string", "pattern": "^overkill:.+:.+:[0-9a-f]{16}$" },
+              "runtime_history_query_keys": {
+                "type": "array",
+                "minItems": 2,
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "previous_runtime_task_refs": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "supersedes_idempotency_keys": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 3 }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "hook": {
       "type": "object"
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": { "const": "materialize" },
+          "dry_run": { "const": false }
+        },
+        "required": ["mode", "dry_run"]
+      },
+      "then": {
+        "required": ["idempotency_contract"]
+      }
+    }
+  ],
   "additionalProperties": true
 }

@@ -234,8 +234,49 @@ def assert_live_adapter_result_schema(testcase: unittest.TestCase, result: dict[
 
 
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
+    def test_worker_idempotency_key_is_contract_bound_and_ignores_volatile_metadata(self) -> None:
+        task_contract = {
+            "worker_id": "codex-security",
+            "queue_class": "blocking-before-done",
+            "gate_timing_class": "blocking-before-done",
+            "required_before": "done",
+            "expected_receipt_field": "security_scan_result",
+            "packet": {
+                "created_at": "2026-06-15T00:00:00Z",
+                "worker": {"id": "codex-security"},
+                "input_contract": {"required_fields": ["security_scan_packet"]},
+            },
+        }
+        same_contract = {
+            **task_contract,
+            "packet": {
+                **task_contract["packet"],
+                "created_at": "2026-06-16T00:00:00Z",
+                "checked_at": "2026-06-16T01:00:00Z",
+            },
+        }
+        changed_contract = {
+            **task_contract,
+            "queue_class": "blocking-before-ready",
+        }
+
+        key = adapter.worker_task_idempotency_key("CARD-1", "codex-security", task_contract)
+
+        self.assertEqual(key, adapter.worker_task_idempotency_key("CARD-1", "codex-security", same_contract))
+        self.assertNotEqual(key, adapter.worker_task_idempotency_key("CARD-1", "codex-security", changed_contract))
+        self.assertRegex(key, r"^overkill:CARD-1:codex-security:[0-9a-f]{16}$")
+
     def test_recovery_attempt_count_requires_stable_marker(self) -> None:
         route_id = "recovery:card-001:handoff-packer"
+        route_digest = adapter.recovery_route_digest(
+            {
+                "recovery_route_id": route_id,
+                "retry_policy": {"max_attempts": 10},
+                "fresh_review_result_ref": "worker-result:independent-reviewer:fresh-review",
+                "factory_owned_repair_allowed": True,
+                "human_gate_required": False,
+            }
+        )
 
         refs = adapter.recovery_attempt_history_refs(
             {
@@ -245,7 +286,16 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                         "type": "unblocked",
                         "reason": (
                             "factory_recovery_attempt "
-                            f"route_id={route_id} attempt_number=1 max_attempts=10"
+                            f"route_id={route_id} route_digest=sha256:0000 "
+                            "attempt_number=1 max_attempts=10"
+                        ),
+                    },
+                    {
+                        "type": "unblocked",
+                        "reason": (
+                            "factory_recovery_attempt "
+                            f"route_id={route_id} route_digest={route_digest} "
+                            "attempt_number=1 max_attempts=10"
                         ),
                     },
                 ],
@@ -253,15 +303,17 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     {
                         "body": (
                             "factory_recovery_attempt "
-                            f"route_id={route_id} attempt_number=2 max_attempts=10"
+                            f"route_id={route_id} route_digest={route_digest} "
+                            "attempt_number=2 max_attempts=10"
                         )
                     }
                 ],
             },
             route_id,
+            route_digest,
         )
 
-        self.assertEqual(refs, ["events:1", "comments:0"])
+        self.assertEqual(refs, ["events:2", "comments:0"])
 
     def test_blocked_event_detection_does_not_treat_unblocked_as_blocked(self) -> None:
         self.assertFalse(
@@ -348,6 +400,24 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(binding["binding_role"], "hermes_ref_projection")
         self.assertEqual(binding["runtime_authority"], "hermes_kanban")
         self.assertFalse(binding["local_state_authority"])
+        self.assertEqual(binding["idempotency_contract"], result["idempotency_contract"])
+        self.assertEqual(result["idempotency_contract"]["digest_algorithm"], "sha256")
+        self.assertEqual(result["idempotency_contract"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(result["idempotency_contract"]["local_state_authority"])
+        self.assertRegex(result["idempotency_contract"]["main_task"]["contract_digest"], r"^[0-9a-f]{64}$")
+        self.assertRegex(
+            result["idempotency_contract"]["main_task"]["idempotency_key"],
+            rf"^overkill:{binding['card_id']}:main:[0-9a-f]{{16}}$",
+        )
+        self.assertRegex(
+            result["idempotency_contract"]["worker_tasks"]["codex-security"]["idempotency_key"],
+            rf"^overkill:{binding['card_id']}:codex-security:[0-9a-f]{{16}}$",
+        )
+        create_keys = [call[call.index("--idempotency-key") + 1] for call in fake.calls if "--idempotency-key" in call]
+        self.assertIn(result["idempotency_contract"]["main_task"]["idempotency_key"], create_keys)
+        self.assertIn(result["idempotency_contract"]["worker_tasks"]["codex-security"]["idempotency_key"], create_keys)
+        self.assertNotIn(f"overkill:{binding['card_id']}:main", create_keys)
+        self.assertNotIn(f"overkill:{binding['card_id']}:codex-security", create_keys)
         materialized_tasks = [
             task for task in ledger_data["tasks"].values()
             if task["worker_id"] == "codex-security" and task["materialization_state"] == "materialized_in_hermes"
@@ -598,16 +668,25 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             )
             blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
             review_path.write_text(json.dumps(blocked_review), encoding="utf-8")
-            route = factoryctl.build_transition_plan(
+            plan = factoryctl.build_transition_plan(
                 card_data,
                 card,
                 from_status="blocked",
                 to_status="ready",
                 worker_results_dir=worker_results,
-            )["recovery_routes"][0]
+            )
+            route = plan["recovery_routes"][0]
             route_id = route["recovery_route_id"]
+            route_digest = adapter.recovery_route_digest(route)
+            handoff_task = next(task for task in plan["worker_tasks"] if task["worker_id"] == "handoff-packer")
             existing_task_id = "t_" + "retry0001"
-            fake.idempotent_task_ids[f"overkill:{card_data['card_id']}:handoff-packer"] = existing_task_id
+            fake.idempotent_task_ids[
+                adapter.worker_task_idempotency_key(
+                    card_data["card_id"],
+                    "handoff-packer",
+                    adapter.worker_materialization_contract(handoff_task),
+                )
+            ] = existing_task_id
             fake.tasks[existing_task_id] = {
                 "status": "blocked",
                 "events": [
@@ -620,7 +699,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                             "type": "unblocked",
                             "reason": (
                                 "factory_recovery_attempt "
-                                f"route_id={route_id} attempt_number={index} max_attempts=10"
+                                f"route_id={route_id} route_digest={route_digest} "
+                                f"attempt_number={index} max_attempts=10"
                             ),
                         }
                         for index in range(1, 11)
@@ -703,16 +783,25 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             )
             blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
             review_path.write_text(json.dumps(blocked_review), encoding="utf-8")
-            route = factoryctl.build_transition_plan(
+            plan = factoryctl.build_transition_plan(
                 card_data,
                 card,
                 from_status="blocked",
                 to_status="ready",
                 worker_results_dir=worker_results,
-            )["recovery_routes"][0]
+            )
+            route = plan["recovery_routes"][0]
             route_id = route["recovery_route_id"]
+            route_digest = adapter.recovery_route_digest(route)
+            handoff_task = next(task for task in plan["worker_tasks"] if task["worker_id"] == "handoff-packer")
             existing_task_id = "t_" + "ready1111"
-            fake.idempotent_task_ids[f"overkill:{card_data['card_id']}:handoff-packer"] = existing_task_id
+            fake.idempotent_task_ids[
+                adapter.worker_task_idempotency_key(
+                    card_data["card_id"],
+                    "handoff-packer",
+                    adapter.worker_materialization_contract(handoff_task),
+                )
+            ] = existing_task_id
             fake.tasks[existing_task_id] = {
                 "status": "ready",
                 "events": [
@@ -720,7 +809,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                         "type": "unblocked",
                         "reason": (
                             "factory_recovery_attempt "
-                            f"route_id={route_id} attempt_number=1 max_attempts=10"
+                            f"route_id={route_id} route_digest={route_digest} "
+                            "attempt_number=1 max_attempts=10"
                         ),
                     }
                 ],
