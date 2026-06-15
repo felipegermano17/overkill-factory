@@ -83,18 +83,101 @@ class FactoryCompletionAuditTests(unittest.TestCase):
             "cleanup_evidence": {
                 "lease_stopped": True,
                 "active_local_container_leases_after": 0,
+                "active_lease_count_known": True,
+                "no_active_local_container_leases_after": True,
+                "all_cleanup_confirmed": True,
             },
             "remote_command": {"exit_code": 0},
             "checks_executed": [
                 "python3 scripts/validate_public_json_artifacts.py",
                 "python3 scripts/secret_safety_scan.py",
                 "python3 scripts/public_safety_scan.py",
+                "python3 scripts/supply_chain_proof.py --check --no-write",
                 "python3 scripts/full_product_worker_graph.py --require-pass",
             ],
+            "proof_checks": {
+                "required_markers": [
+                    "public_json_artifacts",
+                    "secret_safety",
+                    "public_safety",
+                    "supply_chain",
+                    "full_product_worker_graph",
+                ],
+                "observed_markers": {
+                    "public_json_artifacts": "PASS",
+                    "secret_safety": "PASS",
+                    "public_safety": "PASS",
+                    "supply_chain": "PASS",
+                    "full_product_worker_graph": "PASS",
+                },
+                "missing_markers": [],
+                "failed_markers": [],
+                "missing_commands": [],
+                "all_required_passed": True,
+            },
         }
 
         self.assertTrue(audit.remote_proof_scope_is_valid(proof))
         proof["cleanup_evidence"]["lease_stopped"] = False
+        self.assertFalse(audit.remote_proof_scope_is_valid(proof))
+        proof["cleanup_evidence"]["lease_stopped"] = True
+        proof["cleanup_evidence"]["active_local_container_leases_after"] = None
+        proof["cleanup_evidence"]["active_lease_count_known"] = False
+        proof["cleanup_evidence"]["no_active_local_container_leases_after"] = False
+        proof["cleanup_evidence"]["all_cleanup_confirmed"] = False
+        self.assertFalse(audit.remote_proof_scope_is_valid(proof))
+
+    def test_remote_proof_scope_requires_named_markers(self):
+        proof = {
+            "record_type": "remote_proof_result",
+            "result": "PASS",
+            "evidence_kind": "real",
+            "reusable_for_product": True,
+            "tool_or_profile": "crabbox local-container",
+            "managed_by_crabbox": True,
+            "provider_kind": "crabbox_ephemeral_container",
+            "product_target": {
+                "product_id": "qvg-public-validation-product",
+                "source_ref": "products/qvg-public-validation-product",
+                "source_sha256": "a" * 64,
+                "approval_scope": "Reusable only for the public validation product.",
+            },
+            "cleanup_evidence": {
+                "lease_stopped": True,
+                "active_local_container_leases_after": 0,
+                "active_lease_count_known": True,
+                "no_active_local_container_leases_after": True,
+                "all_cleanup_confirmed": True,
+            },
+            "remote_command": {"exit_code": 0},
+            "checks_executed": [
+                "python3 scripts/validate_public_json_artifacts.py",
+                "python3 scripts/secret_safety_scan.py",
+                "python3 scripts/public_safety_scan.py",
+                "python3 scripts/supply_chain_proof.py --check --no-write",
+                "python3 scripts/full_product_worker_graph.py --require-pass",
+            ],
+            "proof_checks": {
+                "required_markers": [
+                    "public_json_artifacts",
+                    "secret_safety",
+                    "public_safety",
+                    "supply_chain",
+                    "full_product_worker_graph",
+                ],
+                "observed_markers": {
+                    "public_json_artifacts": "PASS",
+                    "secret_safety": "PASS",
+                    "public_safety": "PASS",
+                    "full_product_worker_graph": "PASS",
+                },
+                "missing_markers": ["supply_chain"],
+                "failed_markers": [],
+                "missing_commands": [],
+                "all_required_passed": False,
+            },
+        }
+
         self.assertFalse(audit.remote_proof_scope_is_valid(proof))
 
     def test_shallow_auditor_result_cannot_clear_production_scope(self):

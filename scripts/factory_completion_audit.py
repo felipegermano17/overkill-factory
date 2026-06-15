@@ -141,7 +141,13 @@ def remote_proof_scope_is_valid(data: dict[str, Any]) -> bool:
     if cleanup.get("lease_stopped") is not True:
         return False
     active = cleanup.get("active_local_container_leases_after")
-    if active not in (0, None):
+    if active != 0:
+        return False
+    if cleanup.get("active_lease_count_known") is not True:
+        return False
+    if cleanup.get("no_active_local_container_leases_after") is not True:
+        return False
+    if cleanup.get("all_cleanup_confirmed") is not True:
         return False
 
     command = data.get("remote_command")
@@ -152,10 +158,25 @@ def remote_proof_scope_is_valid(data: dict[str, Any]) -> bool:
         "python3 scripts/validate_public_json_artifacts.py",
         "python3 scripts/secret_safety_scan.py",
         "python3 scripts/public_safety_scan.py",
+        "python3 scripts/supply_chain_proof.py --check --no-write",
         "python3 scripts/full_product_worker_graph.py --require-pass",
     }
     checks = {str(item) for item in data.get("checks_executed") or []}
     if not required_checks.issubset(checks):
+        return False
+    proof_checks = data.get("proof_checks")
+    if not isinstance(proof_checks, dict):
+        return False
+    if proof_checks.get("all_required_passed") is not True:
+        return False
+    if proof_checks.get("missing_markers") or proof_checks.get("failed_markers") or proof_checks.get("missing_commands"):
+        return False
+    observed_markers = proof_checks.get("observed_markers")
+    if not isinstance(observed_markers, dict):
+        return False
+    required_marker_names = {"public_json_artifacts", "secret_safety", "public_safety", "supply_chain", "full_product_worker_graph"}
+    passed_marker_names = {name for name, result in observed_markers.items() if result == "PASS"}
+    if not required_marker_names.issubset(passed_marker_names):
         return False
 
     provider_kind = str(data.get("provider_kind") or "")

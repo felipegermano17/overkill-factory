@@ -23,7 +23,7 @@ PINNED_ACTION_RE = re.compile(
 )
 USES_RE = re.compile(r"uses:\s*(\S+)")
 
-SKIP_PARTS = {".git", "__pycache__", ".mypy_cache", ".pytest_cache"}
+SKIP_PARTS = {".git", ".tmp", "__pycache__", ".mypy_cache", ".pytest_cache"}
 SKIP_OUTPUT_PARTS = {".tmp/factory-runs/supply-chain"}
 NON_RUNTIME_OPTIONAL_DEPENDENCY_GROUPS = {"ci", "dev", "doc", "docs", "test", "tests"}
 
