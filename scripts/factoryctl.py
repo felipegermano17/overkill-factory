@@ -4306,6 +4306,16 @@ def validate_worker_result_record(
     return errors
 
 
+def worker_result_is_active(data: dict[str, Any]) -> bool:
+    authority = data.get("promotion_authority") if isinstance(data.get("promotion_authority"), dict) else {}
+    return (
+        data.get("active", True) is not False
+        and authority.get("active", True) is not False
+        and not data.get("superseded_by")
+        and not authority.get("superseded_by")
+    )
+
+
 def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None) -> dict[str, dict[str, Any]]:
     if results_dir is None or not results_dir.exists():
         return {}
@@ -4326,7 +4336,6 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             card=card,
             evidence_root=ROOT,
         )
-        authority = data.get("promotion_authority") if isinstance(data.get("promotion_authority"), dict) else {}
         evidence_ref = source_card_ref(path)
         review_declared = worker_result_declares_review(data)
         graph_requirements = declared_graph_requirements(record_type, data, evidence_ref=evidence_ref) if not errors else []
@@ -4336,7 +4345,7 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             "result": data.get("result") or data.get("decision"),
             "findings_summary": data.get("findings_summary"),
             "next_action": data.get("next_action"),
-            "active": authority.get("active", data.get("active", True)) is not False and not data.get("superseded_by"),
+            "active": worker_result_is_active(data),
             "valid": not errors,
             "consumable": not errors,
             "review_declared": review_declared,
@@ -4404,6 +4413,7 @@ def receipt_result_fields(
                 "result": value.get("result") or value.get("decision"),
                 "findings_summary": value.get("findings_summary"),
                 "next_action": value.get("next_action"),
+                "active": worker_result_is_active(value),
                 "valid": not errors,
                 "consumable": not errors,
                 "review_declared": review_declared,
@@ -4862,13 +4872,15 @@ def build_worker_closure(
         queue_class = worker_queue_class(worker_id, card)
         required_for_done = queue_class == "blocking-before-done"
         record = present_fields.get(worker.output_field)
+        active = bool(record and record.get("active", True))
         valid = bool(record and record.get("valid"))
         consumable = bool(record and record.get("consumable", True))
-        satisfied = bool(valid and consumable)
+        satisfied = bool(active and valid and consumable)
         rows[worker_id] = {
             "queue_class": queue_class,
             "required_for_done": required_for_done,
             "output_field": worker.output_field,
+            "active": active,
             "valid": valid,
             "consumable": consumable,
             "satisfied": satisfied,
@@ -4883,7 +4895,9 @@ def build_worker_closure(
             "validation_errors": record.get("validation_errors", []) if record else [],
         }
         if required_for_done and not satisfied:
-            if record and valid:
+            if record and not active:
+                unconsumable_blocking.append(worker_id)
+            elif record and valid:
                 unconsumable_blocking.append(worker_id)
             elif record:
                 invalid_blocking.append(worker_id)

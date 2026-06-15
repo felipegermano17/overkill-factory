@@ -43,9 +43,6 @@ def result_entry(card: dict[str, Any], path: Path, data: dict[str, Any]) -> dict
         evidence_root=ROOT,
     )
     authority = data.get("promotion_authority") if isinstance(data.get("promotion_authority"), dict) else {}
-    active = authority.get("active")
-    if active is None:
-        active = data.get("active", True)
     superseded_by = data.get("superseded_by") or authority.get("superseded_by")
     evidence_ref = factoryctl.source_card_ref(path)
     review_declared = factoryctl.worker_result_declares_review(data)
@@ -61,7 +58,7 @@ def result_entry(card: dict[str, Any], path: Path, data: dict[str, Any]) -> dict
         "blocking_findings": data.get("blocking_findings"),
         "created_at": data.get("created_at") or data.get("decision_at"),
         "evidence_ref": evidence_ref,
-        "active": bool(active) and not bool(superseded_by),
+        "active": factoryctl.worker_result_is_active(data),
         "supersession_key": data.get("supersession_key") or record_type,
         "supersedes": data.get("supersedes") or authority.get("supersedes"),
         "superseded_by": superseded_by,

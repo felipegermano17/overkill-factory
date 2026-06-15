@@ -1112,6 +1112,25 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertTrue(records["security_scan_result"]["valid"])
         self.assertEqual(records["security_scan_result"]["result"], "PASS")
 
+    def test_worker_closure_rejects_inactive_inline_worker_result(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        inactive_result = worker_result("security_scan_result", source_card=card)
+        inactive_result["active"] = False
+
+        closure = factoryctl.build_worker_closure(
+            card,
+            {"security_scan_result": inactive_result},
+            None,
+        )
+
+        security_row = closure["workers"]["codex-security"]
+        self.assertFalse(security_row["active"])
+        self.assertTrue(security_row["valid"])
+        self.assertTrue(security_row["consumable"])
+        self.assertFalse(security_row["satisfied"])
+        self.assertIn("codex-security", closure["unconsumable_blocking_workers"])
+
     def test_inline_worker_result_requires_existing_evidence_ref_for_done(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         receipt = {

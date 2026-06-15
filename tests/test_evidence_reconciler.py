@@ -139,6 +139,27 @@ class EvidenceReconcilerTest(unittest.TestCase):
             {item["record_type"] for item in index["superseded_results"]},
         )
 
+    def test_top_level_inactive_result_does_not_satisfy_receipt_five(self) -> None:
+        card = closure_card()
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            results_dir = Path(tmp)
+            write_results(card, results_dir)
+            inactive_security = result_for("codex-security", card, "2026-06-06T00:50:00+00:00")
+            inactive_security["active"] = False
+            results_dir.joinpath("codex-security.json").write_text(
+                factoryctl.json.dumps(inactive_security, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            index = evidence_reconciler.reconcile(card, results_dir)
+
+        self.assertFalse(index["receipt_five_ready"])
+        self.assertIn("security_scan_result", index["missing_required_fields"])
+        self.assertIn(
+            "security_scan_result",
+            {item["record_type"] for item in index["superseded_results"]},
+        )
+
     def test_missing_required_result_blocks_receipt_five(self) -> None:
         card = closure_card()
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
