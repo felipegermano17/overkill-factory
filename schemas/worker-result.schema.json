@@ -359,10 +359,24 @@
         "unblock_authority_ref": { "type": "string", "minLength": 3 },
         "retry_policy": {
           "type": "object",
-          "required": ["max_attempts", "attempt_number", "stop_classes"],
+          "required": [
+            "max_attempts",
+            "attempt_number",
+            "attempt_number_role",
+            "runtime_attempt_source",
+            "runtime_attempt_marker",
+            "runtime_authority",
+            "local_state_authority",
+            "stop_classes"
+          ],
           "properties": {
             "max_attempts": { "type": "integer", "minimum": 1 },
             "attempt_number": { "type": "integer", "minimum": 1 },
+            "attempt_number_role": { "const": "planner_seed_not_runtime_counter" },
+            "runtime_attempt_source": { "const": "hermes_task_history" },
+            "runtime_attempt_marker": { "const": "factory_recovery_attempt" },
+            "runtime_authority": { "const": "hermes_kanban" },
+            "local_state_authority": { "const": false },
             "stop_classes": {
               "type": "array",
               "minItems": 1,
@@ -387,7 +401,37 @@
           "additionalProperties": true
         }
       },
-      "additionalProperties": true
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "blocker_type": { "const": "human_gate" } },
+            "required": ["blocker_type"]
+          },
+          "then": {
+            "properties": {
+              "factory_owned_repair_allowed": { "const": false },
+              "human_gate_required": { "const": true },
+              "fresh_review_required": { "const": false },
+              "unblock_authority_ref": { "const": "human_gate_record" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "repair_owner_worker": { "const": "human-gate-clerk" } },
+            "required": ["repair_owner_worker"]
+          },
+          "then": {
+            "properties": {
+              "factory_owned_repair_allowed": { "const": false },
+              "human_gate_required": { "const": true },
+              "fresh_review_required": { "const": false },
+              "unblock_authority_ref": { "const": "human_gate_record" }
+            }
+          }
+        }
+      ]
     }
   },
   "allOf": [
