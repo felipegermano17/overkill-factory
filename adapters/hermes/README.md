@@ -129,6 +129,26 @@ The done transition is therefore a reconciliation gate. A worker packet is not
 evidence. A PASS result without artifact refs is not enough. A human gate
 without a real decision record is not approval.
 
+## Live Materialization
+
+The live adapter can materialize the transition plan into Hermes tasks:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py materialize \
+  --card path/to/card.md \
+  --board overkill-factory-live \
+  --ledger path/to/worker-ledger.json \
+  --receipt path/to/receipt-five.json \
+  --worker-results-dir path/to/worker-results \
+  --route-readiness path/to/route-readiness.json
+```
+
+When a `BLOCKED` review produces a factory-owned `recovery_route`, the adapter
+unblocks only the repair worker task authorized by that route. Downstream work
+stays blocked until a fresh review result provides the stated unblock
+authority. The adapter verifies Hermes readback after block/unblock operations;
+it does not keep a parallel lifecycle state.
+
 ## Dispatch Reporting
 
 Hermes owns dispatch. The adapter does not schedule workers itself, but it can
