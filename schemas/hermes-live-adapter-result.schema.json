@@ -55,6 +55,59 @@
       "type": "object",
       "additionalProperties": { "type": "string", "minLength": 3 }
     },
+    "recovery_retry_blocked_worker_task_ids": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 3 }
+    },
+    "recovery_attempts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "recovery_route_id",
+          "worker_id",
+          "hermes_task_ref",
+          "previous_attempts",
+          "attempt_number",
+          "max_attempts",
+          "attempt_source",
+          "history_refs",
+          "history_ref_count",
+          "task_status",
+          "status",
+          "runtime_authority",
+          "local_state_authority",
+          "attempted_this_run"
+        ],
+        "properties": {
+          "recovery_route_id": { "type": "string", "minLength": 3 },
+          "worker_id": { "type": "string", "minLength": 1 },
+          "hermes_task_ref": { "type": "string", "minLength": 3 },
+          "previous_attempts": { "type": "integer", "minimum": 0 },
+          "attempt_number": { "type": "integer", "minimum": 0 },
+          "max_attempts": { "type": "integer", "minimum": 1 },
+          "attempt_source": { "const": "hermes_task_history" },
+          "history_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "history_ref_count": { "type": "integer", "minimum": 0 },
+          "task_status": { "type": "string", "minLength": 3 },
+          "status": {
+            "enum": [
+              "attempt_authorized",
+              "retry_limit_exceeded",
+              "already_active_no_new_attempt",
+              "history_unavailable"
+            ]
+          },
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false },
+          "attempted_this_run": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
     "downstream_promoted_worker_task_ids": {
       "type": "object",
       "additionalProperties": { "type": "string", "minLength": 3 }

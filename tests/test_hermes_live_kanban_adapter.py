@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ADAPTER_DIR = ROOT / "adapters" / "hermes"
 MODULE_PATH = ADAPTER_DIR / "live_kanban_adapter.py"
 FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
+VALIDATOR_PATH = ROOT / "scripts" / "validate_public_json_artifacts.py"
 TEST_BOARD = "overkill-" + "factory-live-smoke"
 MAIN_TASK_ID = "t_" + "00000001"
 READY_TASK_ID = "t_" + "ready0001"
@@ -29,6 +30,12 @@ factoryctl = importlib.util.module_from_spec(FACTORYCTL_SPEC)
 assert FACTORYCTL_SPEC.loader is not None
 sys.modules["factoryctl_live_test"] = factoryctl
 FACTORYCTL_SPEC.loader.exec_module(factoryctl)
+VALIDATOR_SPEC = importlib.util.spec_from_file_location("public_json_validator_live_test", VALIDATOR_PATH)
+assert VALIDATOR_SPEC is not None
+validator = importlib.util.module_from_spec(VALIDATOR_SPEC)
+assert VALIDATOR_SPEC.loader is not None
+sys.modules["public_json_validator_live_test"] = validator
+VALIDATOR_SPEC.loader.exec_module(validator)
 
 
 class FakeHermes:
@@ -36,6 +43,7 @@ class FakeHermes:
         self.calls: list[list[str]] = []
         self.counter = 0
         self.tasks: dict[str, dict[str, object]] = {}
+        self.idempotent_task_ids: dict[str, str] = {}
 
     def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
         self.calls.append(argv)
@@ -44,10 +52,17 @@ class FakeHermes:
         if argv[:4] == ["hermes", "kanban", "boards", "create"]:
             return subprocess.CompletedProcess(argv, 0, stdout="created", stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "create":
+            idempotency_key = argv[argv.index("--idempotency-key") + 1] if "--idempotency-key" in argv else ""
+            if idempotency_key and idempotency_key in self.idempotent_task_ids:
+                task_id = self.idempotent_task_ids[idempotency_key]
+                self.tasks.setdefault(task_id, {"status": "blocked", "events": []})
+                return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
             self.counter += 1
             task_id = "t_" + f"{self.counter:08x}"
             initial_status = "blocked" if "--initial-status" in argv and "blocked" in argv else "ready"
             self.tasks[task_id] = {"status": initial_status, "events": []}
+            if idempotency_key:
+                self.idempotent_task_ids[idempotency_key] = task_id
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
         if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
             task = self.tasks.setdefault(argv[5], {"status": "ready", "events": []})
@@ -212,7 +227,60 @@ def write_route_readiness(path: Path) -> None:
     )
 
 
+def assert_live_adapter_result_schema(testcase: unittest.TestCase, result: dict[str, object]) -> None:
+    schema = json.loads((ROOT / "schemas" / "hermes-live-adapter-result.schema.json").read_text(encoding="utf-8"))
+    errors = validator.validate_node(schema, result, "$", schemas={"hermes-live-adapter-result.schema.json": schema}, root_schema=schema)
+    testcase.assertEqual(errors, [])
+
+
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
+    def test_recovery_attempt_count_requires_stable_marker(self) -> None:
+        route_id = "recovery:card-001:handoff-packer"
+
+        refs = adapter.recovery_attempt_history_refs(
+            {
+                "events": [
+                    {"type": "comment", "reason": f"{route_id} recovery attempt wording only"},
+                    {
+                        "type": "unblocked",
+                        "reason": (
+                            "factory_recovery_attempt "
+                            f"route_id={route_id} attempt_number=1 max_attempts=10"
+                        ),
+                    },
+                ],
+                "comments": [
+                    {
+                        "body": (
+                            "factory_recovery_attempt "
+                            f"route_id={route_id} attempt_number=2 max_attempts=10"
+                        )
+                    }
+                ],
+            },
+            route_id,
+        )
+
+        self.assertEqual(refs, ["events:1", "comments:0"])
+
+    def test_blocked_event_detection_does_not_treat_unblocked_as_blocked(self) -> None:
+        self.assertFalse(
+            adapter.task_has_blocked_event(
+                {
+                    "status": "blocked",
+                    "events": [{"type": "unblocked", "reason": "previous unblock"}],
+                }
+            )
+        )
+        self.assertTrue(
+            adapter.task_has_blocked_event(
+                {
+                    "status": "blocked",
+                    "events": [{"type": "blocked", "reason": "current gate"}],
+                }
+            )
+        )
+
     def test_dispatch_reports_tasks_that_entered_running_even_when_native_spawned_is_empty(self) -> None:
         fake = FakeDispatchHermes(native_spawned=False)
         args = adapter.build_parser().parse_args(["dispatch", "--board", TEST_BOARD])
@@ -468,6 +536,12 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         self.assertEqual(result["recovery_promoted_worker_task_ids"], {"handoff-packer": adapter.PUBLIC_SAFE_KANBAN_REF})
         self.assertEqual(result["review_promoted_worker_task_ids"], {"independent-reviewer": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["attempt_number"], 1)
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["attempt_source"], "hermes_task_history")
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["history_ref_count"], 0)
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["status"], "attempt_authorized")
+        self.assertTrue(result["recovery_attempts"]["handoff-packer"]["attempted_this_run"])
+        assert_live_adapter_result_schema(self, result)
         handoff_task = next(task for task in ledger_data["tasks"].values() if task["worker_id"] == "handoff-packer")
         handoff_task_id = handoff_task["runtime_refs"]["hermes_task_ref"]
         self.assertTrue(handoff_task["recovery_route_refs"])
@@ -475,6 +549,210 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(fake.tasks[MAIN_TASK_ID]["status"], "blocked")
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertTrue(any(call[5] == handoff_task_id and "downstream remains gated" in call[6] for call in unblock_calls))
+        self.assertTrue(any(call[5] == handoff_task_id and "factory_recovery_attempt" in call[6] for call in unblock_calls))
+        self.assertTrue(any(call[5] == handoff_task_id and "attempt_number=1 max_attempts=10" in call[6] for call in unblock_calls))
+
+    def test_materialize_keeps_recovery_task_blocked_after_retry_limit(self) -> None:
+        fake = FakeHermes()
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card_data = factoryctl.load_json_like(card)
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card_data,
+            result="PASS",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Handoff packet declares an independent review gate.",
+            next_action="continue after review",
+            reviewer_required=True,
+            reviewer_result="PENDING",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            readiness = tmp_path / "route-readiness.json"
+            worker_results = tmp_path / "worker-results"
+            worker_results.mkdir()
+            ledger = tmp_path / "ledger.json"
+            handoff_path = worker_results / "handoff.json"
+            review_path = worker_results / "review.json"
+            write_route_readiness(readiness)
+            handoff_path.write_text(json.dumps(handoff), encoding="utf-8")
+            requirement = factoryctl.declared_graph_requirements(
+                "handoff_packet_result",
+                handoff,
+                evidence_ref=factoryctl.source_card_ref(handoff_path),
+            )[0]
+            blocked_review = factoryctl.build_worker_result(
+                "independent-reviewer",
+                card_data,
+                result="BLOCKED",
+                tool_or_profile="independent-review-smoke",
+                executed_by="independent-reviewer",
+                evidence_refs=["README.md"],
+                blocking_findings=True,
+                findings_summary="Review found the handoff packet incomplete.",
+                next_action="repair handoff packet and rerun independent review",
+                reusable_for_product=False,
+            )
+            blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
+            review_path.write_text(json.dumps(blocked_review), encoding="utf-8")
+            route = factoryctl.build_transition_plan(
+                card_data,
+                card,
+                from_status="blocked",
+                to_status="ready",
+                worker_results_dir=worker_results,
+            )["recovery_routes"][0]
+            route_id = route["recovery_route_id"]
+            existing_task_id = "t_" + "retry0001"
+            fake.idempotent_task_ids[f"overkill:{card_data['card_id']}:handoff-packer"] = existing_task_id
+            fake.tasks[existing_task_id] = {
+                "status": "blocked",
+                "events": [
+                    {
+                        "type": "comment",
+                        "reason": f"{route_id} mentions recovery but is not a stable attempt marker",
+                    },
+                    *[
+                        {
+                            "type": "unblocked",
+                            "reason": (
+                                "factory_recovery_attempt "
+                                f"route_id={route_id} attempt_number={index} max_attempts=10"
+                            ),
+                        }
+                        for index in range(1, 11)
+                    ],
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--ledger",
+                    str(ledger),
+                    "--worker-results-dir",
+                    str(worker_results),
+                    "--route-readiness",
+                    str(readiness),
+                ]
+            )
+            result = adapter.materialize(args, runner=fake)
+
+        self.assertEqual(result["recovery_promoted_worker_task_ids"], {})
+        self.assertEqual(result["recovery_retry_blocked_worker_task_ids"], {"handoff-packer": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["previous_attempts"], 10)
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["attempt_number"], 11)
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["max_attempts"], 10)
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["history_ref_count"], 10)
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["status"], "retry_limit_exceeded")
+        self.assertFalse(result["recovery_attempts"]["handoff-packer"]["attempted_this_run"])
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(fake.tasks[existing_task_id]["status"], "blocked")
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertFalse(any(call[5] == existing_task_id for call in unblock_calls))
+
+    def test_materialize_does_not_reblock_or_unblock_active_recovery_task_on_rerun(self) -> None:
+        fake = FakeHermes()
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card_data = factoryctl.load_json_like(card)
+        handoff = factoryctl.build_worker_result(
+            "handoff-packer",
+            card_data,
+            result="PASS",
+            tool_or_profile="handoff-pack-smoke",
+            executed_by="handoff-packer",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Handoff packet declares an independent review gate.",
+            next_action="continue after review",
+            reviewer_required=True,
+            reviewer_result="PENDING",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            readiness = tmp_path / "route-readiness.json"
+            worker_results = tmp_path / "worker-results"
+            worker_results.mkdir()
+            ledger = tmp_path / "ledger.json"
+            handoff_path = worker_results / "handoff.json"
+            review_path = worker_results / "review.json"
+            write_route_readiness(readiness)
+            handoff_path.write_text(json.dumps(handoff), encoding="utf-8")
+            requirement = factoryctl.declared_graph_requirements(
+                "handoff_packet_result",
+                handoff,
+                evidence_ref=factoryctl.source_card_ref(handoff_path),
+            )[0]
+            blocked_review = factoryctl.build_worker_result(
+                "independent-reviewer",
+                card_data,
+                result="BLOCKED",
+                tool_or_profile="independent-review-smoke",
+                executed_by="independent-reviewer",
+                evidence_refs=["README.md"],
+                blocking_findings=True,
+                findings_summary="Review found the handoff packet incomplete.",
+                next_action="repair handoff packet and rerun independent review",
+                reusable_for_product=False,
+            )
+            blocked_review["graph_requirement_refs"] = [requirement["requirement_id"]]
+            review_path.write_text(json.dumps(blocked_review), encoding="utf-8")
+            route = factoryctl.build_transition_plan(
+                card_data,
+                card,
+                from_status="blocked",
+                to_status="ready",
+                worker_results_dir=worker_results,
+            )["recovery_routes"][0]
+            route_id = route["recovery_route_id"]
+            existing_task_id = "t_" + "ready1111"
+            fake.idempotent_task_ids[f"overkill:{card_data['card_id']}:handoff-packer"] = existing_task_id
+            fake.tasks[existing_task_id] = {
+                "status": "ready",
+                "events": [
+                    {
+                        "type": "unblocked",
+                        "reason": (
+                            "factory_recovery_attempt "
+                            f"route_id={route_id} attempt_number=1 max_attempts=10"
+                        ),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--ledger",
+                    str(ledger),
+                    "--worker-results-dir",
+                    str(worker_results),
+                    "--route-readiness",
+                    str(readiness),
+                ]
+            )
+            result = adapter.materialize(args, runner=fake)
+
+        self.assertEqual(result["recovery_promoted_worker_task_ids"], {})
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["previous_attempts"], 1)
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["attempt_number"], 2)
+        self.assertEqual(result["recovery_attempts"]["handoff-packer"]["status"], "already_active_no_new_attempt")
+        self.assertFalse(result["recovery_attempts"]["handoff-packer"]["attempted_this_run"])
+        assert_live_adapter_result_schema(self, result)
+        block_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "block"]
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertFalse(any(call[5] == existing_task_id for call in block_calls))
+        self.assertFalse(any(call[5] == existing_task_id for call in unblock_calls))
+        self.assertEqual(fake.tasks[existing_task_id]["status"], "ready")
 
     def test_materialize_promotes_downstream_workers_after_fresh_review_pass(self) -> None:
         fake = FakeHermes()
