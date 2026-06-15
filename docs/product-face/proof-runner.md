@@ -5,13 +5,18 @@ backend or architecture.
 
 ## When It Runs
 
-Run for any card with surfaces:
+Run for any vFinal card with Product Experience surfaces, including:
 
-- `ux`
-- `frontend`
-- `mobile`
-- `wallet-ui`
-- `product-face`
+- web/app UI: `ux`, `frontend`, `web_app`, `website`, `screen`,
+  `component`;
+- device/app UI: `mobile`, `desktop`, `extension`, `browser-extension`;
+- product interaction surfaces: `wallet-ui`, `ai_interface`,
+  `agentic_interface`, `design_system`;
+- product support surfaces: `docs`, `documentation`, `onboarding`;
+- game-like surfaces: `game`, `gameplay`, `2d`, `3d`.
+
+Legacy cards keep their existing narrower Product Face triggers unless they
+explicitly set `product_face_result_required=true`.
 
 ## Required Evidence
 

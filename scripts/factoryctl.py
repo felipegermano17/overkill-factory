@@ -227,6 +227,37 @@ V2_APPROVAL_KEYS = [
 ]
 
 PRODUCT_FACE_SURFACES = {"ux", "frontend", "mobile", "wallet-ui", "product-face"}
+PRODUCT_EXPERIENCE_SURFACES = PRODUCT_FACE_SURFACES | {
+    "web",
+    "web-app",
+    "web_app",
+    "website",
+    "site",
+    "landing",
+    "landing-page",
+    "screen",
+    "component",
+    "desktop",
+    "desktop-app",
+    "cli",
+    "tui",
+    "extension",
+    "browser-extension",
+    "ai-interface",
+    "ai_interface",
+    "chat-ui",
+    "agentic-interface",
+    "agentic_interface",
+    "design-system",
+    "design_system",
+    "docs",
+    "documentation",
+    "onboarding",
+    "game",
+    "gameplay",
+    "2d",
+    "3d",
+}
 FRONTEND_BUILD_SURFACES = {"frontend", "mobile", "wallet-ui", "ux", "product-face", "screen", "component", "browser"}
 BACKEND_BUILD_SURFACES = {"backend", "api", "auth", "server", "service", "session"}
 DATA_BUILD_SURFACES = {"data", "database", "schema", "migration", "storage", "rls", "persistence"}
@@ -2281,6 +2312,15 @@ def strict_product_experience_required(card: dict[str, Any]) -> bool:
     return card.get("factory_method_version") == "OVERKILL_VFINAL" or isinstance(card.get("product_experience_plan"), dict)
 
 
+def product_experience_surface_required(card: dict[str, Any]) -> bool:
+    surfaces = normalized_surfaces(card)
+    if surfaces & PRODUCT_FACE_SURFACES:
+        return True
+    if card.get("factory_method_version") == "OVERKILL_VFINAL" and surfaces & PRODUCT_EXPERIENCE_SURFACES:
+        return True
+    return card.get("product_face_result_required") is True
+
+
 def validate_product_face_packet(packet: dict[str, Any], *, strict: bool) -> list[str]:
     errors: list[str] = []
     if not strict:
@@ -2890,7 +2930,7 @@ def validate_card(data: dict[str, Any]) -> list[str]:
         errors.extend(validate_parallel_lane_contract(lane, at=f"parallel_lane_contracts[{index}]"))
     if data.get("executor_identity") == data.get("reviewer_identity"):
         errors.append("executor_identity and reviewer_identity must differ")
-    product_facing = bool(surfaces & PRODUCT_FACE_SURFACES)
+    product_facing = product_experience_surface_required(data)
     strict_experience = product_facing and strict_product_experience_required(data)
     if product_facing and not isinstance(data.get("product_face_packet"), dict):
         errors.append("product_face_packet required for product-facing surfaces")
@@ -2919,7 +2959,7 @@ def validate_card(data: dict[str, Any]) -> list[str]:
             else:
                 errors.extend(validate_professional_design_process(data["professional_design_process"]))
     phase = str(data.get("phase", "")).upper()
-    if surfaces & PRODUCT_FACE_SURFACES and phase in {"F11", "F16", "F17"}:
+    if product_experience_surface_required(data) and phase in {"F11", "F16", "F17"}:
         if not isinstance(data.get("product_face_result"), dict) and not str(data.get("product_face_result_ref") or "").strip():
             errors.append("product_face_result or product_face_result_ref required before decomposition/release")
     runtime_contract = data.get("runtime_contract", {}) if isinstance(data.get("runtime_contract"), dict) else {}
@@ -3250,9 +3290,8 @@ def validate_auditor_result(result: dict[str, Any]) -> list[str]:
 
 
 def product_face_result_required(card: dict[str, Any]) -> bool:
-    surfaces = normalized_surfaces(card)
     phase = str(card.get("phase", "")).upper()
-    return bool(surfaces & PRODUCT_FACE_SURFACES) and (
+    return product_experience_surface_required(card) and (
         phase in PRODUCT_FACE_RESULT_PHASES or card.get("product_face_result_required") is True
     )
 
@@ -3501,7 +3540,7 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "onchain/Solana/Quasar surface detected" if required else "no onchain surface detected"
         return required, reason
     if worker_id == "product-face":
-        required = bool(surfaces & PRODUCT_FACE_SURFACES)
+        required = product_experience_surface_required(card)
         reason = "visible product surface detected" if required else "no visible product surface detected"
         return required, reason
     if worker_id == "independent-reviewer":
