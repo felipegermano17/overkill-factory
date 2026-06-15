@@ -1289,6 +1289,33 @@ def recovery_runtime_boundary() -> dict[str, Any]:
     }
 
 
+def recovery_retry_policy(*, attempt_number: int = 1, base: dict[str, Any] | None = None) -> dict[str, Any]:
+    policy = dict(base or {})
+    policy.setdefault("max_attempts", 10)
+    policy.setdefault("attempt_number", attempt_number)
+    policy.setdefault(
+        "stop_classes",
+        [
+            "human_gate",
+            "secret_or_access_required",
+            "external_mutation_required",
+            "ambiguous_product_decision",
+            "repeated_failed_recovery",
+        ],
+    )
+    policy.setdefault("escalation_reason", "Escalate only when the blocker leaves factory-owned safe repair scope.")
+    policy["attempt_number_role"] = "planner_seed_not_runtime_counter"
+    policy["runtime_attempt_source"] = "hermes_task_history"
+    policy["runtime_attempt_marker"] = "factory_recovery_attempt"
+    policy["runtime_authority"] = "hermes_kanban"
+    policy["local_state_authority"] = False
+    return policy
+
+
+def is_human_gate_recovery(*, blocker_type: str, repair_owner_worker: str) -> bool:
+    return blocker_type == "human_gate" or repair_owner_worker == "human-gate-clerk"
+
+
 def recovery_recommendation_for_worker(
     *,
     worker_id: str,
@@ -1322,18 +1349,7 @@ def recovery_recommendation_for_worker(
         "fresh_review_required": not human_gate_required,
         "fresh_review_result_ref": f"worker-result:{output_field}:fresh-review",
         "unblock_authority_ref": "Hermes blocked event plus fresh review PASS" if not human_gate_required else "human_gate_record",
-        "retry_policy": {
-            "max_attempts": 10,
-            "attempt_number": attempt_number,
-            "stop_classes": [
-                "human_gate",
-                "secret_or_access_required",
-                "external_mutation_required",
-                "ambiguous_product_decision",
-                "repeated_failed_recovery",
-            ],
-            "escalation_reason": "Escalate only when the blocker leaves factory-owned safe repair scope.",
-        },
+        "retry_policy": recovery_retry_policy(attempt_number=attempt_number),
         "hermes_runtime_boundary": recovery_runtime_boundary(),
     }
 
@@ -3659,18 +3675,7 @@ def recovery_route_from_action(card: dict[str, Any], action: dict[str, Any], ind
         "fresh_review_required": not human_gate_required,
         "fresh_review_result_ref": f"worker-result:{field}:fresh-review",
         "unblock_authority_ref": "Hermes blocked event plus fresh review PASS" if not human_gate_required else "human_gate_record",
-        "retry_policy": {
-            "max_attempts": 10,
-            "attempt_number": 1,
-            "stop_classes": [
-                "human_gate",
-                "secret_or_access_required",
-                "external_mutation_required",
-                "ambiguous_product_decision",
-                "repeated_failed_recovery",
-            ],
-            "escalation_reason": "Escalate only when the blocker leaves factory-owned safe repair scope.",
-        },
+        "retry_policy": recovery_retry_policy(),
         "audit_trail_refs": [
             "factoryctl:gate-report",
             f"worker:{worker_id}",
@@ -3743,17 +3748,21 @@ def recovery_route_from_recommendation(
     route_id = str(recommendation.get("recovery_route_id") or "").strip()
     if not route_id:
         route_id = f"recovery:{card_id}:{index}:{sanitize_slug(worker.worker_id, fallback='worker')}"
-    human_gate_required = recommendation.get("human_gate_required") is True
     blocker_type = str(recommendation.get("blocker_type") or blocker_type_for_worker(worker.worker_id)).strip()
+    repair_owner_worker = str(recommendation.get("repair_owner_worker") or worker.worker_id)
+    human_gate_required = recommendation.get("human_gate_required") is True or is_human_gate_recovery(
+        blocker_type=blocker_type,
+        repair_owner_worker=repair_owner_worker,
+    )
     audit_refs = ["factoryctl:worker-result-recovery", f"worker:{worker.worker_id}"]
     if evidence_ref:
         audit_refs.append(evidence_ref)
     return {
         "recovery_route_id": route_id,
         "blocker_type": blocker_type,
-        "factory_owned_repair_allowed": recommendation.get("factory_owned_repair_allowed") is not False,
+        "factory_owned_repair_allowed": False if human_gate_required else recommendation.get("factory_owned_repair_allowed") is not False,
         "human_gate_required": human_gate_required,
-        "repair_owner_worker": str(recommendation.get("repair_owner_worker") or worker.worker_id),
+        "repair_owner_worker": repair_owner_worker,
         "repair_task_ref": str(recommendation.get("repair_task_ref") or f"hermes:intent:{route_id}"),
         "repair_inputs": string_list(recommendation.get("repair_inputs"))
         or [
@@ -3780,16 +3789,12 @@ def recovery_route_from_recommendation(
         "fresh_review_required": recommendation.get("fresh_review_required") is not False and not human_gate_required,
         "fresh_review_result_ref": str(recommendation.get("fresh_review_result_ref") or f"worker-result:{field}:fresh-review"),
         "unblock_authority_ref": str(
-            recommendation.get("unblock_authority_ref")
+            "human_gate_record" if human_gate_required else recommendation.get("unblock_authority_ref")
             or ("human_gate_record" if human_gate_required else "Hermes blocked event plus fresh review PASS")
         ),
-        "retry_policy": recommendation.get("retry_policy")
-        if isinstance(recommendation.get("retry_policy"), dict)
-        else {
-            "max_attempts": 10,
-            "attempt_number": 1,
-            "stop_classes": ["human_gate", "repeated_failed_recovery"],
-        },
+        "retry_policy": recovery_retry_policy(
+            base=recommendation.get("retry_policy") if isinstance(recommendation.get("retry_policy"), dict) else None
+        ),
         "audit_trail_refs": audit_refs,
         "hermes_materialization": recovery_materialization_contract(route_id),
     }
@@ -4208,8 +4213,31 @@ def validate_worker_result_record(
                     errors.append("recovery_recommendation must not claim local runtime state authority")
                 if not str(recovery.get("recovery_route_id") or "").strip():
                     errors.append("recovery_recommendation.recovery_route_id is required")
-                if not isinstance(recovery.get("retry_policy"), dict):
+                blocker_type = str(recovery.get("blocker_type") or "").strip()
+                repair_owner_worker = str(recovery.get("repair_owner_worker") or "").strip()
+                if is_human_gate_recovery(blocker_type=blocker_type, repair_owner_worker=repair_owner_worker):
+                    if recovery.get("human_gate_required") is not True:
+                        errors.append("human_gate recovery requires human_gate_required=true")
+                    if recovery.get("factory_owned_repair_allowed") is not False:
+                        errors.append("human_gate recovery must not allow factory-owned repair")
+                    if recovery.get("fresh_review_required") is not False:
+                        errors.append("human_gate recovery must not route through fresh review")
+                    if recovery.get("unblock_authority_ref") != "human_gate_record":
+                        errors.append("human_gate recovery unblock_authority_ref must be human_gate_record")
+                retry_policy = recovery.get("retry_policy") if isinstance(recovery.get("retry_policy"), dict) else None
+                if not isinstance(retry_policy, dict):
                     errors.append("recovery_recommendation.retry_policy is required")
+                else:
+                    if retry_policy.get("attempt_number_role") != "planner_seed_not_runtime_counter":
+                        errors.append("recovery_recommendation.retry_policy.attempt_number_role must be planner_seed_not_runtime_counter")
+                    if retry_policy.get("runtime_attempt_source") != "hermes_task_history":
+                        errors.append("recovery_recommendation.retry_policy.runtime_attempt_source must be hermes_task_history")
+                    if retry_policy.get("runtime_attempt_marker") != "factory_recovery_attempt":
+                        errors.append("recovery_recommendation.retry_policy.runtime_attempt_marker must be factory_recovery_attempt")
+                    if retry_policy.get("runtime_authority") != "hermes_kanban":
+                        errors.append("recovery_recommendation.retry_policy.runtime_authority must be hermes_kanban")
+                    if retry_policy.get("local_state_authority") is not False:
+                        errors.append("recovery_recommendation.retry_policy must not claim local runtime state authority")
         if data.get("blocking_findings") is not False:
             errors.append("blocking_findings must be false")
         for field in ("worker", "card_ref", "findings_summary", "tool_or_profile", "executed_by", "next_action"):

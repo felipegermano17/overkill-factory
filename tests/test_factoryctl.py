@@ -19,6 +19,14 @@ assert SPEC.loader is not None
 sys.modules["factoryctl"] = factoryctl
 SPEC.loader.exec_module(factoryctl)
 
+VALIDATOR_PATH = ROOT / "scripts" / "validate_public_json_artifacts.py"
+VALIDATOR_SPEC = importlib.util.spec_from_file_location("validate_public_json_artifacts", VALIDATOR_PATH)
+assert VALIDATOR_SPEC is not None
+public_json_validator = importlib.util.module_from_spec(VALIDATOR_SPEC)
+assert VALIDATOR_SPEC.loader is not None
+sys.modules["validate_public_json_artifacts"] = public_json_validator
+VALIDATOR_SPEC.loader.exec_module(public_json_validator)
+
 
 def load_card(name: str) -> dict:
     return factoryctl.load_json_like(ROOT / "examples" / "cards" / name)
@@ -924,6 +932,12 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertTrue(recovery["factory_owned_repair_allowed"])
         self.assertEqual(recovery["hermes_runtime_boundary"]["runtime_authority"], "hermes_kanban")
         self.assertFalse(recovery["hermes_runtime_boundary"]["local_state_authority"])
+        self.assertEqual(recovery["retry_policy"]["attempt_number"], 1)
+        self.assertEqual(recovery["retry_policy"]["attempt_number_role"], "planner_seed_not_runtime_counter")
+        self.assertEqual(recovery["retry_policy"]["runtime_attempt_source"], "hermes_task_history")
+        self.assertEqual(recovery["retry_policy"]["runtime_attempt_marker"], "factory_recovery_attempt")
+        self.assertEqual(recovery["retry_policy"]["runtime_authority"], "hermes_kanban")
+        self.assertFalse(recovery["retry_policy"]["local_state_authority"])
         errors = factoryctl.validate_worker_result_record(
             result,
             expected_field="security_scan_result",
@@ -933,6 +947,77 @@ class FactoryCtlTest(unittest.TestCase):
         )
         self.assertIn("result must be PASS or WAIVED to satisfy a required worker", errors)
         self.assertNotIn("BLOCKED worker result requires recovery_recommendation", errors)
+
+    def test_blocked_worker_result_rejects_local_retry_authority(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        result = factoryctl.build_worker_result(
+            "codex-security",
+            card,
+            result="BLOCKED",
+            tool_or_profile="codex-security:security-scan",
+            executed_by="security-runner",
+            evidence_refs=["reports/security.md"],
+            blocking_findings=True,
+            findings_summary="Security finding blocks continuation.",
+            next_action="repair finding and rerun security scan",
+        )
+        bad = json.loads(json.dumps(result))
+        bad["recovery_recommendation"]["retry_policy"].pop("runtime_attempt_source")
+        bad["recovery_recommendation"]["retry_policy"]["local_state_authority"] = True
+
+        errors = factoryctl.validate_worker_result_record(
+            bad,
+            expected_field="security_scan_result",
+            expected_worker_id="codex-security",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn("recovery_recommendation.retry_policy.runtime_attempt_source must be hermes_task_history", errors)
+        self.assertIn("recovery_recommendation.retry_policy must not claim local runtime state authority", errors)
+
+    def test_human_gate_recovery_cannot_be_factory_owned_repair(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        recovery = factoryctl.recovery_recommendation_for_worker(
+            worker_id="human-gate-clerk",
+            card=card,
+            reason="Human approval is required before continuation.",
+        )
+        result = worker_result("blocked_worker_result", result="BLOCKED", source_card=card)
+        result.update(
+            {
+                "$schema": factoryctl.worker_result_schema_url("human-gate-clerk"),
+                "worker": {"id": "human-gate-clerk", "name": "Human Gate Clerk", "factory_phase": "F15"},
+                "tool_or_profile": "human-gate-routing-check",
+                "executed_by": "human-gate-clerk",
+                "blocking_findings": True,
+                "findings_summary": "Human approval is required before continuation.",
+                "next_action": "wait for explicit human gate record",
+                "recovery_recommendation": recovery,
+            }
+        )
+
+        self.assertEqual(recovery["blocker_type"], "human_gate")
+        self.assertTrue(recovery["human_gate_required"])
+        self.assertFalse(recovery["factory_owned_repair_allowed"])
+        self.assertFalse(recovery["fresh_review_required"])
+        self.assertEqual(recovery["unblock_authority_ref"], "human_gate_record")
+
+        bad = json.loads(json.dumps(result))
+        bad["recovery_recommendation"]["factory_owned_repair_allowed"] = True
+        bad["recovery_recommendation"]["fresh_review_required"] = True
+        bad["recovery_recommendation"]["unblock_authority_ref"] = "Hermes blocked event plus fresh review PASS"
+
+        errors = factoryctl.validate_worker_result_record(
+            bad,
+            expected_worker_id="human-gate-clerk",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn("human_gate recovery must not allow factory-owned repair", errors)
+        self.assertIn("human_gate recovery must not route through fresh review", errors)
+        self.assertIn("human_gate recovery unblock_authority_ref must be human_gate_record", errors)
 
     def test_worker_result_public_card_ref_redacts_raw_kanban_task_markers(self) -> None:
         card = dict(load_card("v35_valid_security_with_scan.md"))
@@ -1196,6 +1281,9 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("repair_task_ref", route)
         self.assertIn("downstream_freeze_scope", route)
         self.assertIn("unblock_authority_ref", route)
+        self.assertEqual(route["retry_policy"]["attempt_number_role"], "planner_seed_not_runtime_counter")
+        self.assertEqual(route["retry_policy"]["runtime_attempt_source"], "hermes_task_history")
+        self.assertFalse(route["retry_policy"]["local_state_authority"])
         self.assertEqual(route["hermes_materialization"]["runtime_authority"], "hermes_kanban")
         self.assertFalse(route["hermes_materialization"]["local_state_authority"])
         self.assertTrue(plan["hermes_runtime_boundary"]["no_shadow_scheduler"])
@@ -1240,6 +1328,8 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(route["repair_owner_worker"], "handoff-packer")
         self.assertEqual(route["blocker_type"], "dependency")
         self.assertTrue(route["fresh_review_required"])
+        self.assertEqual(route["retry_policy"]["attempt_number_role"], "planner_seed_not_runtime_counter")
+        self.assertEqual(route["retry_policy"]["runtime_attempt_marker"], "factory_recovery_attempt")
         self.assertIn("handoff_packet_result", route["expected_repair_outputs"])
         self.assertIn("independent_review_result", route["expected_repair_outputs"])
         self.assertIn(requirement["requirement_id"], route["dependency_edge_patch"]["old_edges"])
@@ -1361,6 +1451,46 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn(action, transition_plan_schema["properties"]["transition_action"]["enum"])
         self.assertIn(action, transition_hook_schema["properties"]["transition_action"]["enum"])
         self.assertIn(action, worker_ledger_schema["properties"]["last_action"]["enum"])
+
+    def test_hermes_transition_schema_rejects_factory_owned_human_gate_recovery(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "hermes-transition-plan.schema.json").read_text(encoding="utf-8"))
+        plan = {
+            "plan_type": "hermes_kanban_transition_plan",
+            "created_at": "2026-06-15T00:00:00+00:00",
+            "source_card_path": "examples/cards/v35_valid_onchain_auditor_scan.md",
+            "event": {"from_status": "review", "to_status": "done", "card_id": "KFP-V35-POS-ONCHAIN-AUDITOR"},
+            "transition_action": "block_transition",
+            "blocked_reasons": ["human gate required"],
+            "gate_report": {},
+            "worker_tasks": [],
+            "recovery_routes": [
+                {
+                    "recovery_route_id": "recovery:human-gate",
+                    "blocker_type": "human_gate",
+                    "factory_owned_repair_allowed": True,
+                    "human_gate_required": False,
+                    "repair_owner_worker": "human-gate-clerk",
+                    "repair_task_ref": "hermes:intent:human-gate",
+                    "invalidates_refs": [],
+                    "supersedes_refs": [],
+                    "fresh_review_required": True,
+                    "unblock_authority_ref": "Hermes blocked event plus fresh review PASS",
+                    "retry_policy": factoryctl.recovery_retry_policy(),
+                    "hermes_materialization": {
+                        "runtime_authority": "hermes_kanban",
+                        "local_state_authority": False,
+                    },
+                }
+            ],
+        }
+
+        errors = public_json_validator.validate_node(schema, plan, "$", schemas={"hermes-transition-plan.schema.json": schema}, root_schema=schema)
+
+        joined = "\n".join(errors)
+        self.assertIn("factory_owned_repair_allowed", joined)
+        self.assertIn("human_gate_required", joined)
+        self.assertIn("fresh_review_required", joined)
+        self.assertIn("unblock_authority_ref", joined)
 
     def test_transition_plan_enforce_blocks_before_ready_action(self) -> None:
         args = Namespace(
