@@ -85,6 +85,34 @@
         "additionalProperties": true
       }
     },
+    "graph_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "requirement_type",
+          "requirement_id",
+          "producer_field",
+          "producer_ref",
+          "review_worker_id",
+          "required_review_field",
+          "required_result",
+          "status",
+          "runtime_authority",
+          "local_state_authority"
+        ],
+        "properties": {
+          "requirement_type": { "const": "review_before_consumption" },
+          "required_result": { "const": "PASS" },
+          "status": {
+            "enum": ["pending", "satisfied"]
+          },
+          "runtime_authority": { "const": "hermes_kanban" },
+          "local_state_authority": { "const": false }
+        },
+        "additionalProperties": true
+      }
+    },
     "completion_reconciliation": {
       "type": ["object", "null"],
       "additionalProperties": true
