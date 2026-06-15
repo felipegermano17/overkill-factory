@@ -2,9 +2,9 @@
 """Validate public JSON artifacts against bundled lightweight schemas.
 
 This intentionally avoids third-party dependencies so CI can run on a clean
-Python install. It supports the schema features used by this repository:
-required fields, type, const, enum, properties, minProperties,
-additionalProperties and arrays.
+Python install. It supports the schema features used by this repository and
+fails closed when a public schema introduces a validation keyword this local
+validator cannot enforce.
 """
 
 from __future__ import annotations
@@ -93,6 +93,46 @@ RAW_RESEARCH_FIELDS = {
     "private_capture_path",
 }
 
+ANNOTATION_SCHEMA_KEYWORDS = {
+    "$comment",
+    "$id",
+    "$schema",
+    "default",
+    "description",
+    "examples",
+    "title",
+}
+SUPPORTED_SCHEMA_KEYWORDS = ANNOTATION_SCHEMA_KEYWORDS | {
+    "$defs",
+    "$ref",
+    "additionalProperties",
+    "allOf",
+    "const",
+    "contains",
+    "else",
+    "enum",
+    "if",
+    "items",
+    "maxContains",
+    "maximum",
+    "maxItems",
+    "maxLength",
+    "minContains",
+    "minimum",
+    "minItems",
+    "minLength",
+    "minProperties",
+    "pattern",
+    "properties",
+    "required",
+    "then",
+    "type",
+    "uniqueItems",
+}
+SCHEMA_MAP_CHILDREN = {"$defs", "properties"}
+SCHEMA_OBJECT_CHILDREN = {"additionalProperties", "contains", "else", "if", "items", "then"}
+SCHEMA_ARRAY_CHILDREN = {"allOf"}
+
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -111,6 +151,30 @@ def load_schemas() -> dict[str, dict[str, Any]]:
         if schema_id:
             schemas[schema_name(schema_id)] = schema
     return schemas
+
+
+def schema_path(parent: str, key: str | int) -> str:
+    return f"{parent}/{str(key).replace('~', '~0').replace('/', '~1')}"
+
+
+def validate_schema_keywords(schema: dict[str, Any], at: str = "$") -> list[str]:
+    errors: list[str] = []
+    for key, value in schema.items():
+        if key not in SUPPORTED_SCHEMA_KEYWORDS:
+            errors.append(f"{at}: unsupported JSON Schema keyword {key!r}")
+            continue
+        if key in SCHEMA_MAP_CHILDREN and isinstance(value, dict):
+            for child_key, child_schema in value.items():
+                if isinstance(child_schema, dict):
+                    child_path = schema_path(schema_path(at, key), child_key)
+                    errors.extend(validate_schema_keywords(child_schema, child_path))
+        elif key in SCHEMA_OBJECT_CHILDREN and isinstance(value, dict):
+            errors.extend(validate_schema_keywords(value, schema_path(at, key)))
+        elif key in SCHEMA_ARRAY_CHILDREN and isinstance(value, list):
+            for index, child_schema in enumerate(value):
+                if isinstance(child_schema, dict):
+                    errors.extend(validate_schema_keywords(child_schema, schema_path(schema_path(at, key), index)))
+    return errors
 
 
 def type_matches(expected: str | list[str], value: Any) -> bool:
@@ -501,6 +565,11 @@ def iter_public_json() -> list[Path]:
 def main() -> int:
     schemas = load_schemas()
     findings: list[str] = []
+    for schema_path_ref, schema in sorted(schemas.items()):
+        if not schema_path_ref.endswith(".json"):
+            continue
+        for error in validate_schema_keywords(schema):
+            findings.append(f"schemas/{schema_path_ref}: {error}")
     for path in iter_public_json():
         try:
             data = load_json(path)
