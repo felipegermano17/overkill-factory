@@ -28,6 +28,7 @@ class CanonicalStageImplementationCoverageTest(unittest.TestCase):
         required_paths = [
             "schemas/product-sot.schema.json",
             "schemas/spec-graph.schema.json",
+            "schemas/product-delivery-quality-profile.schema.json",
             "schemas/product-experience-plan.schema.json",
             "schemas/product-face-packet.schema.json",
             "schemas/product-face-result.schema.json",

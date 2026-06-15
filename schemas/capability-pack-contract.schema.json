@@ -161,6 +161,14 @@
         "type": "string"
       }
     },
+    "structured_proofs_required": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      },
+      "uniqueItems": true
+    },
     "worker_mapping": {
       "type": "object",
       "additionalProperties": {

@@ -4,6 +4,21 @@
   "product_sot_ref": "templates/product-sot.json",
   "method_contract_ref": "templates/method-contract.json",
   "product_creation_plan_ref": "templates/product-creation-plan.json",
+  "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+  "product_delivery_quality_profile_trace": [
+    "templates/product-delivery-quality-profile.json#generic-software-product-v1",
+    "generic.scope-fit is required before implementation"
+  ],
+  "delivery_profile_proof_coverage": [
+    {
+      "proof_id": "generic.scope-fit",
+      "status": "PASS",
+      "evidence_refs": ["templates/full-product-sot-scope-coverage.json"],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "basis": "The ready work unit maps to Product SOT scope and does not redefine complete-product scope."
+    }
+  ],
   "artifact_alignment_result": "CONCERNS",
   "requirements_trace": [
     {

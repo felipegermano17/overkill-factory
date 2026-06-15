@@ -65,6 +65,13 @@
             "minItems": 1,
             "items": { "type": "string", "minLength": 3 }
           },
+          "delivery_quality_profile_ref": { "type": "string", "minLength": 3 },
+          "structured_proofs_required": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
           "input_contract": {
             "type": "array",
             "minItems": 1,

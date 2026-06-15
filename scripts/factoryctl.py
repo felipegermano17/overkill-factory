@@ -390,6 +390,16 @@ PROFESSIONAL_DESIGN_PROCESS_REQUIRED_FIELDS = (
     "comparative_review_gate",
     "handoff_requirements",
 )
+PRODUCT_DELIVERY_QUALITY_PROFILE_REQUIRED_FIELDS = (
+    "record_type",
+    "profile_id",
+    "archetype",
+    "applies_to_surfaces",
+    "quality_dimensions",
+    "required_proofs",
+    "waiver_policy",
+    "evidence_refs",
+)
 REASONING_POLICY_REQUIRED_FIELDS = (
     "record_type",
     "reasoning_class",
@@ -409,6 +419,7 @@ PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS = (
     "reference_quality_comparison",
 )
 VISUAL_QUALITY_ALLOWED_RESULTS = {"PASS", "PASS_WITH_RESIDUALS", "BLOCK"}
+DOMAIN_PROOF_ALLOWED_STATUSES = {"PASS", "WARN", "FAIL", "WAIVED"}
 REFERENCE_RESEARCH_SOURCE_TYPES = {
     "component_registry",
     "design_library",
@@ -1808,6 +1819,10 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
     if plan:
         if plan.get("complete_product_required") is not True:
             errors.append("product_creation_plan.complete_product_required must be true for complete-product planning")
+        if not _non_empty_text(plan.get("product_delivery_quality_profile_ref")) and not isinstance(
+            plan.get("product_delivery_quality_profile"), dict
+        ):
+            errors.append("product_creation_plan.product_delivery_quality_profile_ref is required")
         if not _non_empty_string_list(plan.get("complete_product_scope")):
             errors.append("product_creation_plan.complete_product_scope is required")
         if not _non_empty_string_list(plan.get("release_promotion_ladder_refs")):
@@ -1823,6 +1838,9 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
                         errors.append(f"product_creation_plan.work_units[{index}].{field} must be non-empty")
                 if not _non_empty_text(unit.get("expected_result")):
                     errors.append(f"product_creation_plan.work_units[{index}].expected_result is required")
+    profile = _product_delivery_quality_profile(card)
+    if profile:
+        errors.extend(validate_product_delivery_quality_profile(profile))
     context = card.get("product_context_packet") if isinstance(card.get("product_context_packet"), dict) else {}
     if context and context.get("stale") is True:
         errors.append("product_context_packet is stale and must be refreshed before implementation")
@@ -1833,6 +1851,18 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
             errors.append("product_implementation_readiness.artifact_alignment_result blocks material implementation")
         if result == "PASS" and not _non_empty_string_list(readiness.get("ready_work_units")):
             errors.append("product_implementation_readiness PASS requires ready_work_units")
+        if profile:
+            if not _non_empty_string_list(readiness.get("product_delivery_quality_profile_trace")):
+                errors.append("product_implementation_readiness.product_delivery_quality_profile_trace must be non-empty")
+            errors.extend(
+                _validate_delivery_profile_proof_coverage(
+                    readiness.get("delivery_profile_proof_coverage"),
+                    _delivery_profile_required_proof_ids(profile, "before_implementation"),
+                    at="product_implementation_readiness.delivery_profile_proof_coverage",
+                    profile=profile,
+                    full_acceptance=False,
+                )
+            )
     return errors
 
 
@@ -2279,6 +2309,144 @@ def validate_product_experience_plan(plan: dict[str, Any]) -> list[str]:
         if human_gate.get("required") is True and not _non_empty_text(human_gate.get("approver")):
             errors.append("product_experience_plan.human_gate.approver is required when human gate is required")
 
+    return errors
+
+
+def validate_product_delivery_quality_profile(profile: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for field in PRODUCT_DELIVERY_QUALITY_PROFILE_REQUIRED_FIELDS:
+        value = profile.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"product_delivery_quality_profile.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"product_delivery_quality_profile.{field} must be a non-empty object")
+        elif not _non_empty_text(value):
+            errors.append(f"product_delivery_quality_profile.{field} is required")
+
+    if profile.get("record_type") not in (None, "product_delivery_quality_profile"):
+        errors.append("product_delivery_quality_profile.record_type must be product_delivery_quality_profile")
+
+    seen_proofs: set[str] = set()
+    for index, proof in enumerate(profile.get("required_proofs", []) if isinstance(profile.get("required_proofs"), list) else []):
+        if not isinstance(proof, dict):
+            errors.append(f"product_delivery_quality_profile.required_proofs[{index}] must be an object")
+            continue
+        proof_id = str(proof.get("proof_id") or "").strip()
+        if not proof_id:
+            errors.append(f"product_delivery_quality_profile.required_proofs[{index}].proof_id is required")
+        elif proof_id in seen_proofs:
+            errors.append(f"product_delivery_quality_profile.required_proofs[{index}].proof_id duplicates {proof_id!r}")
+        seen_proofs.add(proof_id)
+        for field in ("name", "owner_worker", "reviewer_role", "evidence_kind"):
+            if not _non_empty_text(proof.get(field)):
+                errors.append(f"product_delivery_quality_profile.required_proofs[{index}].{field} is required")
+        required_at = _list_items(proof.get("required_at"))
+        if not required_at:
+            errors.append(f"product_delivery_quality_profile.required_proofs[{index}].required_at must be non-empty")
+        for phase in required_at:
+            if phase not in {"before_implementation", "before_completion", "before_promotion"}:
+                errors.append(f"product_delivery_quality_profile.required_proofs[{index}].required_at has unknown phase {phase!r}")
+
+    for index, dimension in enumerate(profile.get("quality_dimensions", []) if isinstance(profile.get("quality_dimensions"), list) else []):
+        if not isinstance(dimension, dict):
+            errors.append(f"product_delivery_quality_profile.quality_dimensions[{index}] must be an object")
+            continue
+        for field in ("dimension_id", "bar"):
+            if not _non_empty_text(dimension.get(field)):
+                errors.append(f"product_delivery_quality_profile.quality_dimensions[{index}].{field} is required")
+        if not _non_empty_string_list(dimension.get("block_when")):
+            errors.append(f"product_delivery_quality_profile.quality_dimensions[{index}].block_when must be non-empty")
+
+    waiver = profile.get("waiver_policy") if isinstance(profile.get("waiver_policy"), dict) else {}
+    if waiver:
+        for field in ("allowed", "requires_owner", "requires_reason", "cannot_claim_full_acceptance"):
+            if field not in waiver:
+                errors.append(f"product_delivery_quality_profile.waiver_policy.{field} is required")
+    return errors
+
+
+def _product_delivery_quality_profile(card: dict[str, Any]) -> dict[str, Any]:
+    profile = card.get("product_delivery_quality_profile")
+    if isinstance(profile, dict):
+        return profile
+    plan = card.get("product_creation_plan") if isinstance(card.get("product_creation_plan"), dict) else {}
+    profile = plan.get("product_delivery_quality_profile")
+    return profile if isinstance(profile, dict) else {}
+
+
+def _delivery_profile_required_proof_ids(profile: dict[str, Any], phase: str) -> list[str]:
+    proof_ids: list[str] = []
+    for proof in profile.get("required_proofs", []) if isinstance(profile.get("required_proofs"), list) else []:
+        if not isinstance(proof, dict):
+            continue
+        if phase in _list_items(proof.get("required_at")) and _non_empty_text(proof.get("proof_id")):
+            proof_ids.append(str(proof["proof_id"]).strip())
+    return sorted(set(proof_ids))
+
+
+def _required_domain_proof_ids(card: dict[str, Any], phase: str) -> list[str]:
+    proof_ids: list[str] = []
+    profile = _product_delivery_quality_profile(card)
+    if profile:
+        proof_ids.extend(_delivery_profile_required_proof_ids(profile, phase))
+    plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
+    packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
+    if phase == "before_completion":
+        proof_ids.extend(_list_items(plan.get("domain_proof_required")))
+        proof_ids.extend(_list_items(packet.get("domain_proof_required")))
+    return sorted({proof_id for proof_id in proof_ids if proof_id})
+
+
+def _validate_delivery_profile_proof_coverage(
+    coverage: Any,
+    required_proof_ids: list[str],
+    *,
+    at: str,
+    profile: dict[str, Any],
+    full_acceptance: bool,
+) -> list[str]:
+    errors: list[str] = []
+    if not required_proof_ids:
+        return errors
+    if not isinstance(coverage, list) or not coverage:
+        errors.append(f"{at} missing product delivery proof coverage for required proof ids: " + ", ".join(required_proof_ids))
+        return errors
+
+    by_id: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(coverage):
+        if not isinstance(item, dict):
+            errors.append(f"{at}[{index}] must be an object")
+            continue
+        proof_id = str(item.get("proof_id") or "").strip()
+        if not proof_id:
+            errors.append(f"{at}[{index}].proof_id is required")
+            continue
+        by_id[proof_id] = item
+        status = str(item.get("status") or "").strip().upper()
+        if status not in DOMAIN_PROOF_ALLOWED_STATUSES:
+            errors.append(f"{at}[{index}].status must be PASS, WARN, FAIL or WAIVED")
+        if not _non_empty_string_list(item.get("evidence_refs")):
+            errors.append(f"{at}[{index}].evidence_refs must be non-empty")
+        if not _non_empty_text(item.get("basis")):
+            errors.append(f"{at}[{index}].basis is required")
+        if status == "WAIVED":
+            waiver = profile.get("waiver_policy") if isinstance(profile.get("waiver_policy"), dict) else {}
+            if waiver.get("allowed") is not True:
+                errors.append(f"{at}[{index}] cannot waive proof {proof_id!r}; profile waiver_policy.allowed is not true")
+            if waiver.get("requires_owner") is True and not _non_empty_text(item.get("waiver_owner")):
+                errors.append(f"{at}[{index}].waiver_owner is required for WAIVED proof")
+            if waiver.get("requires_reason") is True and not _non_empty_text(item.get("waiver_reason")):
+                errors.append(f"{at}[{index}].waiver_reason is required for WAIVED proof")
+            if full_acceptance and waiver.get("cannot_claim_full_acceptance") is True:
+                errors.append(f"{at}[{index}] WAIVED proof cannot support full product acceptance")
+        elif status != "PASS":
+            errors.append(f"{at}[{index}] required proof {proof_id!r} must PASS before this gate")
+
+    missing = [proof_id for proof_id in required_proof_ids if proof_id not in by_id]
+    if missing:
+        errors.append(f"{at} missing required product delivery proof ids: " + ", ".join(missing))
     return errors
 
 
@@ -2846,6 +3014,26 @@ def validate_product_face_result_against_card(result: dict[str, Any], card: dict
     professional_ref = str(result.get("professional_design_process_ref") or "").strip()
     if strict_product_experience_required(card) and not professional_ref:
         errors.append("product_face_result.professional_design_process_ref is required for vFinal product-facing completion")
+
+    required_domain_proofs = _required_domain_proof_ids(card, "before_completion")
+    if required_domain_proofs:
+        profile = _product_delivery_quality_profile(card) or {
+            "waiver_policy": {
+                "allowed": True,
+                "requires_owner": True,
+                "requires_reason": True,
+                "cannot_claim_full_acceptance": True,
+            }
+        }
+        errors.extend(
+            _validate_delivery_profile_proof_coverage(
+                result.get("domain_proof_coverage"),
+                required_domain_proofs,
+                at="product_face_result.domain_proof_coverage",
+                profile=profile,
+                full_acceptance=True,
+            )
+        )
 
     return errors
 

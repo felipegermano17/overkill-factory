@@ -27,6 +27,15 @@
     "mode": {
       "enum": ["greenfield", "brownfield", "redesign", "qa_only", "prototype", "migration"]
     },
+    "product_delivery_quality_profile_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "domain_proof_required": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
     "user": {
       "type": "string",
       "minLength": 3

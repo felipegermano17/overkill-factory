@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-delivery-quality-profile.schema.json",
+  "title": "Overkill Factory Product Delivery Quality Profile",
+  "type": "object",
+  "required": [
+    "record_type",
+    "profile_id",
+    "archetype",
+    "applies_to_surfaces",
+    "quality_dimensions",
+    "required_proofs",
+    "waiver_policy",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/product-delivery-quality-profile.schema.json" },
+    "record_type": { "const": "product_delivery_quality_profile" },
+    "profile_id": { "type": "string", "minLength": 3 },
+    "archetype": { "type": "string", "minLength": 3 },
+    "applies_to_surfaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 },
+      "uniqueItems": true
+    },
+    "quality_dimensions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["dimension_id", "bar", "block_when"],
+        "properties": {
+          "dimension_id": { "type": "string", "minLength": 3 },
+          "bar": { "type": "string", "minLength": 8 },
+          "block_when": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "required_proofs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["proof_id", "name", "required_at", "owner_worker", "reviewer_role", "evidence_kind"],
+        "properties": {
+          "proof_id": { "type": "string", "minLength": 3 },
+          "name": { "type": "string", "minLength": 3 },
+          "required_at": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "enum": ["before_implementation", "before_completion", "before_promotion"] },
+            "uniqueItems": true
+          },
+          "owner_worker": { "type": "string", "minLength": 3 },
+          "reviewer_role": { "type": "string", "minLength": 3 },
+          "evidence_kind": { "enum": ["contract", "runtime", "review", "domain", "human_gate"] },
+          "human_gate_required": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "waiver_policy": {
+      "type": "object",
+      "required": ["allowed", "requires_owner", "requires_reason", "cannot_claim_full_acceptance"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "requires_owner": { "type": "boolean" },
+        "requires_reason": { "type": "boolean" },
+        "cannot_claim_full_acceptance": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": true
+}

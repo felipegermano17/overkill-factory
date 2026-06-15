@@ -152,6 +152,8 @@
     "software_development_plan": { "type": "object" },
     "product_creation_plan": { "type": "object" },
     "product_creation_plan_ref": { "type": "string" },
+    "product_delivery_quality_profile": { "$ref": "product-delivery-quality-profile.schema.json" },
+    "product_delivery_quality_profile_ref": { "type": "string" },
     "product_context_packet": { "type": "object" },
     "product_context_packet_ref": { "type": "string" },
     "product_implementation_readiness": { "type": "object" },

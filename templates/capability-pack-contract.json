@@ -50,6 +50,11 @@
     "capability coverage report",
     "worker packet coverage"
   ],
+  "structured_proofs_required": [
+    "generic.scope-fit",
+    "generic.operator-usability",
+    "web.runtime-smoke"
+  ],
   "worker_mapping": {
     "product-experience": [
       "product-face",
