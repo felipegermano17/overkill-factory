@@ -4672,6 +4672,8 @@ def validate_factory_readiness_scorecard(scorecard: dict[str, Any]) -> list[str]
     autonomy = scorecard.get("autonomy_boundary") if isinstance(scorecard.get("autonomy_boundary"), dict) else {}
     allowed_scope = str(autonomy.get("allowed_scope") or "").strip()
     autonomy_allowed = autonomy.get("autonomous_execution_allowed") is True
+    bounded_remediation_allowed = autonomy.get("bounded_remediation_allowed") is True
+    material_autonomy_allowed = autonomy.get("material_autonomous_execution_allowed") is True
     remediation_required = remediation_loop.get("required") is True
 
     if non_pass_statuses and not remediation_required:
@@ -4690,6 +4692,8 @@ def validate_factory_readiness_scorecard(scorecard: dict[str, Any]) -> list[str]
             errors.append("factory_readiness_scorecard ready_for_autonomy requires all dimensions PASS")
         if not autonomy_allowed:
             errors.append("factory_readiness_scorecard ready_for_autonomy requires autonomous_execution_allowed=true")
+        if not material_autonomy_allowed:
+            errors.append("factory_readiness_scorecard ready_for_autonomy requires material_autonomous_execution_allowed=true")
         if allowed_scope != "material_execution":
             errors.append("factory_readiness_scorecard ready_for_autonomy requires allowed_scope=material_execution")
     if verdict == "ready_with_bounds":
@@ -4699,6 +4703,19 @@ def validate_factory_readiness_scorecard(scorecard: dict[str, Any]) -> list[str]
             errors.append("factory_readiness_scorecard ready_with_bounds requires autonomous_execution_allowed=true")
         if allowed_scope == "none":
             errors.append("factory_readiness_scorecard ready_with_bounds requires a non-none allowed_scope")
+        if remediation_dimensions:
+            if material_autonomy_allowed:
+                errors.append(
+                    "factory_readiness_scorecard ready_with_bounds with remediation cannot allow material autonomous execution"
+                )
+            if allowed_scope == "material_execution":
+                errors.append(
+                    "factory_readiness_scorecard ready_with_bounds with remediation cannot use allowed_scope=material_execution"
+                )
+            if not bounded_remediation_allowed:
+                errors.append(
+                    "factory_readiness_scorecard ready_with_bounds with remediation requires bounded_remediation_allowed=true"
+                )
     if verdict == "remediation_required":
         if not remediation_required:
             errors.append("factory_readiness_scorecard remediation_required requires remediation_loop.required=true")
@@ -4706,6 +4723,8 @@ def validate_factory_readiness_scorecard(scorecard: dict[str, Any]) -> list[str]
             errors.append("factory_readiness_scorecard remediation_required requires at least one non-PASS dimension")
         if allowed_scope == "material_execution":
             errors.append("factory_readiness_scorecard remediation_required cannot allow material_execution")
+        if material_autonomy_allowed:
+            errors.append("factory_readiness_scorecard remediation_required cannot allow material autonomous execution")
 
     public_boundary = (
         scorecard.get("public_private_boundary") if isinstance(scorecard.get("public_private_boundary"), dict) else {}
