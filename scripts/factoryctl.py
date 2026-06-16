@@ -3418,6 +3418,16 @@ def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
     rejected_references = (
         research.get("rejected_references") if isinstance(research.get("rejected_references"), list) else []
     )
+    source_ids = {
+        str(source.get("source_id")).strip()
+        for source in sources
+        if isinstance(source, dict) and _non_empty_text(source.get("source_id"))
+    }
+    rejected_reference_ids = {
+        str(rejected.get("source_id")).strip()
+        for rejected in rejected_references
+        if isinstance(rejected, dict) and _non_empty_text(rejected.get("source_id"))
+    }
     if len(sources) < 3:
         errors.append("professional_design_process.reference_research.sources requires at least 3 sources")
     if len(_list_items(research.get("registry_refs"))) < 2:
@@ -3450,6 +3460,21 @@ def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
             errors.append(
                 f"professional_design_process.reference_research.library_searches[{index}].rejected_candidate_ids is required"
             )
+        for field, declared_ids, target_name in (
+            ("selected_source_ids", source_ids, "reference_research.sources"),
+            ("rejected_candidate_ids", rejected_reference_ids, "reference_research.rejected_references"),
+        ):
+            seen: set[str] = set()
+            for item_index, item_id in enumerate(_list_items(search.get(field))):
+                if item_id in seen:
+                    errors.append(
+                        f"professional_design_process.reference_research.library_searches[{index}].{field} contains duplicate id: {item_id}"
+                    )
+                seen.add(item_id)
+                if item_id not in declared_ids:
+                    errors.append(
+                        f"professional_design_process.reference_research.library_searches[{index}].{field}[{item_index}] does not resolve to {target_name}: {item_id}"
+                    )
 
     source_types: set[str] = set()
     for index, source in enumerate(sources):

@@ -657,9 +657,19 @@
           "rejection_reason": "Rejected because decorative metrics and large cards do not prove gate, evidence or next-action clarity."
         },
         {
+          "source_id": "oversized-hero-block",
+          "source_url_or_ref": "external:oversized-hero-block",
+          "rejection_reason": "Rejected because hero-style presentation blocks are not suitable for dense product-operation surfaces."
+        },
+        {
           "source_id": "marketing-dashboard-gallery",
           "source_url_or_ref": "external:marketing-dashboard-gallery",
           "rejection_reason": "Rejected because the surface optimizes for presentation, not repeated operator decisions and recovery states."
+        },
+        {
+          "source_id": "single-screenshot-flow",
+          "source_url_or_ref": "external:single-screenshot-flow",
+          "rejection_reason": "Rejected because a single static screenshot cannot prove state transitions, recovery paths or interaction quality."
         },
         {
           "source_id": "happy-path-only-flow",

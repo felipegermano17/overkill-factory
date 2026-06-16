@@ -906,6 +906,16 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         rejected_references = research.get("rejected_references") if isinstance(research.get("rejected_references"), list) else []
         pattern_synthesis = research.get("pattern_synthesis") if isinstance(research.get("pattern_synthesis"), dict) else {}
         evidence_policy = research.get("reference_evidence_policy") if isinstance(research.get("reference_evidence_policy"), dict) else {}
+        source_ids = {
+            str(source.get("source_id")).strip()
+            for source in sources
+            if isinstance(source, dict) and str(source.get("source_id") or "").strip()
+        }
+        rejected_reference_ids = {
+            str(rejected.get("source_id")).strip()
+            for rejected in rejected_references
+            if isinstance(rejected, dict) and str(rejected.get("source_id") or "").strip()
+        }
         source_types: set[str] = set()
         if len(sources) < 3:
             errors.append(f"{at}: professional_design_process requires at least 3 reference sources")
@@ -926,6 +936,21 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                 errors.append(f"{at}.reference_research.library_searches[{index}]: selected_source_ids is required")
             if not search.get("rejected_candidate_ids"):
                 errors.append(f"{at}.reference_research.library_searches[{index}]: rejected_candidate_ids is required")
+            for field, declared_ids, target_name in (
+                ("selected_source_ids", source_ids, "reference_research.sources"),
+                ("rejected_candidate_ids", rejected_reference_ids, "reference_research.rejected_references"),
+            ):
+                seen: set[str] = set()
+                for item_index, item_id in enumerate(str(item).strip() for item in search.get(field, []) if str(item).strip()):
+                    if item_id in seen:
+                        errors.append(
+                            f"{at}.reference_research.library_searches[{index}].{field}: duplicate id {item_id}"
+                        )
+                    seen.add(item_id)
+                    if item_id not in declared_ids:
+                        errors.append(
+                            f"{at}.reference_research.library_searches[{index}].{field}[{item_index}]: does not resolve to {target_name}: {item_id}"
+                        )
         for index, source in enumerate(sources):
             if not isinstance(source, dict):
                 errors.append(f"{at}.reference_research.sources[{index}]: expected object")
