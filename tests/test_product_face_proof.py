@@ -17,6 +17,13 @@ assert SPEC.loader is not None
 sys.modules["product_face_proof"] = product_face_proof
 SPEC.loader.exec_module(product_face_proof)
 
+FACTORYCTL_SPEC = importlib.util.spec_from_file_location("factoryctl", ROOT / "scripts" / "factoryctl.py")
+assert FACTORYCTL_SPEC is not None
+factoryctl = importlib.util.module_from_spec(FACTORYCTL_SPEC)
+assert FACTORYCTL_SPEC.loader is not None
+sys.modules["factoryctl"] = factoryctl
+FACTORYCTL_SPEC.loader.exec_module(factoryctl)
+
 
 def reference_dimension_basis() -> dict[str, str]:
     return {
@@ -26,6 +33,16 @@ def reference_dimension_basis() -> dict[str, str]:
 
 
 class ProductFaceProofTest(unittest.TestCase):
+    def test_public_product_face_result_template_validates_semantically(self) -> None:
+        result = json.loads((ROOT / "templates" / "product-face-result.json").read_text(encoding="utf-8"))
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(result["record_type"], "product_face_result")
+        self.assertFalse(result["reusable_for_product"])
+        self.assertTrue(result["product_acceptance_boundary"]["cannot_satisfy_product_acceptance"])
+
     def test_parse_viewport_accepts_named_size(self) -> None:
         viewport = product_face_proof.parse_viewport("tablet=768x1024")
 

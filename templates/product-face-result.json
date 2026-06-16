@@ -1,0 +1,204 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-face-result.schema.json",
+  "record_type": "product_face_result",
+  "result": "PASS",
+  "tool_or_profile": "product-face-template-validator",
+  "executed_by": "template-author",
+  "surface_evidence_profile": {
+    "profile_id": "web_visual_ui",
+    "surface": "web_app",
+    "evidence_kind": "visual_ui",
+    "evidence_refs": [
+      "external:sanitized-product-face-desktop.png"
+    ]
+  },
+  "surface_evidence_profiles": [
+    {
+      "profile_id": "web_visual_ui",
+      "surface": "web_app",
+      "evidence_kind": "visual_ui",
+      "evidence_refs": [
+        "external:sanitized-product-face-desktop.png"
+      ]
+    }
+  ],
+  "screenshots": [
+    "external:sanitized-product-face-desktop.png"
+  ],
+  "visual_artifacts": [
+    {
+      "evidence_ref": "external:sanitized-product-face-desktop.png",
+      "target": "external:sanitized-product-face-target",
+      "viewport": "desktop 1440x900",
+      "state": "ready",
+      "captured_at": "2026-06-16T00:00:00+00:00",
+      "freshness_status": "bounded_external",
+      "bounded_acceptance": true,
+      "sanitized": true,
+      "external_package_ref": "external:sanitized-product-face-package",
+      "expires_at": "2099-01-01T00:00:00+00:00",
+      "basis": "Template uses sanitized external refs to demonstrate the required visual artifact shape."
+    }
+  ],
+  "external_visual_artifact_manifests": [
+    {
+      "manifest_ref": "external:sanitized-product-face-package",
+      "target": "external:sanitized-product-face-target",
+      "captured_at": "2026-06-16T00:00:00+00:00",
+      "expires_at": "2099-01-01T00:00:00+00:00",
+      "bounded_acceptance": true,
+      "sanitized": true,
+      "owner": "template-author",
+      "reviewer": "product-face-reviewer",
+      "artifacts": [
+        {
+          "evidence_ref": "external:sanitized-product-face-desktop.png",
+          "viewport": "desktop 1440x900",
+          "state": "ready",
+          "captured_at": "2026-06-16T00:00:00+00:00"
+        }
+      ]
+    }
+  ],
+  "viewports": [
+    "desktop 1440x900"
+  ],
+  "checked_states": [
+    "ready"
+  ],
+  "declared_states": [
+    "ready"
+  ],
+  "captured_states": [
+    "ready"
+  ],
+  "uncaptured_states": [],
+  "user_journeys_checked": [
+    "inspect product face result"
+  ],
+  "declared_journeys": [
+    "inspect product face result"
+  ],
+  "captured_journeys": [
+    "inspect product face result"
+  ],
+  "uncaptured_journeys": [],
+  "state_capture_policy": {
+    "mode": "template-boundary",
+    "cannot_claim_uncaptured_states": true,
+    "basis": "The template demonstrates shape only and cannot claim product acceptance."
+  },
+  "usage_evidence_matrix": [
+    {
+      "journey": "inspect product face result",
+      "state": "ready",
+      "viewport": "desktop 1440x900",
+      "data_condition": "template synthetic data",
+      "evidence_refs": [
+        "external:sanitized-product-face-desktop.png"
+      ],
+      "a11y_status": "pass",
+      "performance_status": "pass",
+      "reviewer": "product-face-reviewer",
+      "basis": "Template matrix binds journey, state, viewport and evidence ref."
+    }
+  ],
+  "a11y": {
+    "status": "pass",
+    "basis": "Template records the required accessibility verdict shape."
+  },
+  "overlap_check": {
+    "status": "pass",
+    "basis": "Template records the required overlap verdict shape."
+  },
+  "console": {
+    "status": "pass",
+    "basis": "Template records the required console verdict shape."
+  },
+  "performance_note": "Template demonstrates where the Product Face performance note is recorded.",
+  "packet_ref": "templates/product-face-packet.json",
+  "packet_comparison": {
+    "status": "pass",
+    "basis": "Template result is explicitly aligned to the public Product Face packet template."
+  },
+  "source_promise_coverage": {
+    "status": "pass",
+    "basis": "Template names the coverage verdict field without claiming a real product promise."
+  },
+  "design_fit_review": {
+    "status": "pass",
+    "basis": "Template includes design-fit review shape for Product Face completion."
+  },
+  "professional_design_process_ref": "templates/professional-design-process.json",
+  "professional_design_process_comparison": {
+    "status": "pass",
+    "basis": "Template demonstrates comparison against the public professional design process template."
+  },
+  "reference_quality_comparison": {
+    "status": "pass",
+    "basis": "Template demonstrates bounded comparison against selected professional references.",
+    "reference_set_ref": "templates/professional-design-process.json#reference_research",
+    "compared_source_ids": [
+      "21st-dev-components",
+      "mobbin-workflow-patterns",
+      "pageflows-review-approval"
+    ],
+    "reviewer_independent_from_implementation": true,
+    "comparison_artifacts": [
+      {
+        "artifact_ref": "external:sanitized-reference-comparison",
+        "artifact_type": "bounded_equivalent",
+        "compared_source_ids": [
+          "21st-dev-components",
+          "mobbin-workflow-patterns",
+          "pageflows-review-approval"
+        ],
+        "basis": "Template supplies a sanitized bounded comparison artifact reference.",
+        "bounded_acceptance": true,
+        "sanitized": true
+      }
+    ],
+    "dimensions": {
+      "layout_hierarchy": {
+        "status": "pass",
+        "basis": "Template shows how layout hierarchy comparison is recorded."
+      },
+      "interaction_model": {
+        "status": "pass",
+        "basis": "Template shows how interaction model comparison is recorded."
+      },
+      "state_coverage": {
+        "status": "pass",
+        "basis": "Template shows how state coverage comparison is recorded."
+      },
+      "visual_language": {
+        "status": "pass",
+        "basis": "Template shows how visual language comparison is recorded."
+      },
+      "density_spacing": {
+        "status": "pass",
+        "basis": "Template shows how density and spacing comparison is recorded."
+      }
+    }
+  },
+  "visual_quality_result": {
+    "status": "PASS",
+    "reviewer": "product-face-reviewer",
+    "basis": "Template includes the visual quality verdict shape and reviewer boundary.",
+    "reference_quality_bar_checked": true,
+    "ai_generic_symptoms": []
+  },
+  "blocking_findings": false,
+  "evidence_refs": [
+    "templates/product-face-result.json",
+    "schemas/product-face-result.schema.json"
+  ],
+  "evidence_kind": "synthetic",
+  "reusable_for_product": false,
+  "product_acceptance_boundary": {
+    "boundary": "Template validates the Product Face Result shape only.",
+    "cannot_satisfy_product_acceptance": true,
+    "next_required_action": "Replace all template refs with real Product Face evidence before product completion."
+  },
+  "next_action": "Use this template as a public-safe starting shape, then attach real Product Face evidence."
+}
