@@ -23,6 +23,12 @@ or "check frontend." The factory needs a narrower contract:
 This is better than generic assignment text because Hermes can inspect the
 packet before execution and refuse weak cards before agents start improvising.
 
+For material vFinal autonomous execution, the worker packet also carries
+`sdlc_feedback_loop_ref` inside `input_contract`. That ref is the thread that
+connects the worker's execution, evidence and learnback to the SDLC feedback
+loop. Hermes should preserve it on the worker subtask instead of letting the
+loop stay only on the source card.
+
 ## Worker Profiles
 
 Worker packets now include `profile_binding`.

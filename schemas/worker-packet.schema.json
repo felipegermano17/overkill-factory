@@ -103,6 +103,15 @@
         "authority_max",
         "forbidden_actions"
       ],
+      "properties": {
+        "sdlc_feedback_loop_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 3
+        }
+      },
       "additionalProperties": true
     },
     "output_contract": {
