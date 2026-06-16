@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -250,6 +251,51 @@ class EvidenceReconcilerTest(unittest.TestCase):
         self.assertFalse(draft["receipt_five"]["reviewer_required"])
         self.assertIn("independent_review_result", draft["worker_result_refs"])
         self.assertEqual(factoryctl.validate_completion(card, draft), [])
+
+    def test_reconciler_preserves_sdlc_feedback_loop_refs(self) -> None:
+        card = closure_card()
+        card["sdlc_feedback_loop_ref"] = "templates/factory-sdlc-feedback-loop.json"
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            results_dir = Path(tmp)
+            write_results(card, results_dir)
+            index = evidence_reconciler.reconcile(card, results_dir)
+            result = evidence_reconciler.build_reconciler_result(
+                card,
+                "reports/index.json",
+                index,
+            )
+
+        draft = evidence_reconciler.build_receipt_draft(
+            card,
+            "reports/index.json",
+            "reports/evidence-reconciler-result.json",
+            index,
+        )
+
+        self.assertEqual(index["sdlc_feedback_loop_refs"], ["templates/factory-sdlc-feedback-loop.json"])
+        self.assertEqual(result["sdlc_feedback_loop_refs"], ["templates/factory-sdlc-feedback-loop.json"])
+        self.assertEqual(draft["sdlc_feedback_loop_refs"], ["templates/factory-sdlc-feedback-loop.json"])
+        self.assertEqual(
+            draft["receipt_five_reconciliation_result"]["sdlc_feedback_loop_refs"],
+            ["templates/factory-sdlc-feedback-loop.json"],
+        )
+        self.assertEqual(
+            draft["receipt_five"]["sdlc_feedback_loop_refs"],
+            ["templates/factory-sdlc-feedback-loop.json"],
+        )
+
+    def test_receipt_five_schema_declares_sdlc_feedback_loop_refs(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "receipt-five.schema.json").read_text(encoding="utf-8"))
+
+        self.assertIn("sdlc_feedback_loop_refs", schema["properties"])
+        self.assertIn(
+            "sdlc_feedback_loop_refs",
+            schema["properties"]["receipt_five"]["properties"],
+        )
+        self.assertIn(
+            "sdlc_feedback_loop_refs",
+            schema["properties"]["receipt_five_reconciliation_result"]["properties"],
+        )
 
 
 if __name__ == "__main__":

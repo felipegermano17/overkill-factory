@@ -3440,11 +3440,7 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
 
     execution_mode = _execution_mode(data)
     authority = str(data.get("authority_max") or "").strip()
-    material_feedback_required = (
-        data.get("material_execution") is True
-        or execution_mode in HARDENING_REQUIRED_EXECUTION_MODES
-        or authority in HARDENING_REQUIRED_EXECUTION_MODES
-    )
+    material_feedback_required = material_sdlc_feedback_loop_required(data)
     feedback_ref = str(data.get("sdlc_feedback_loop_ref") or "").strip()
     if material_feedback_required and not feedback_ref:
         errors.append("sdlc_feedback_loop_ref required for material vFinal autonomous execution")
@@ -3600,6 +3596,25 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     if effective_risk == "R4" and not isinstance(data.get("r4_gate"), dict):
         errors.append("r4_gate required for R4 work")
     return errors
+
+
+def material_sdlc_feedback_loop_required(card: dict[str, Any] | None) -> bool:
+    if not isinstance(card, dict) or card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return False
+    execution_mode = _execution_mode(card)
+    authority = str(card.get("authority_max") or "").strip()
+    return (
+        card.get("material_execution") is True
+        or execution_mode in HARDENING_REQUIRED_EXECUTION_MODES
+        or authority in HARDENING_REQUIRED_EXECUTION_MODES
+    )
+
+
+def card_sdlc_feedback_loop_ref(card: dict[str, Any] | None) -> str | None:
+    if not isinstance(card, dict):
+        return None
+    ref = str(card.get("sdlc_feedback_loop_ref") or "").strip()
+    return ref or None
 
 
 def validate_reference_quality_comparison(comparison: Any, *, is_pass: bool) -> list[str]:
@@ -6595,6 +6610,16 @@ def validate_worker_result_record(
         errors.append("private artifact_contract cannot be reusable_for_product=true")
     errors.extend(_field_mismatch_errors(data, card))
 
+    result_feedback_ref = str(data.get("sdlc_feedback_loop_ref") or "").strip()
+    if result_feedback_ref:
+        _validate_public_ref(result_feedback_ref, "sdlc_feedback_loop_ref", errors)
+    expected_feedback_ref = card_sdlc_feedback_loop_ref(card) if material_sdlc_feedback_loop_required(card) else None
+    if expected_feedback_ref:
+        if not result_feedback_ref:
+            errors.append("sdlc_feedback_loop_ref is required for material vFinal worker results")
+        elif result_feedback_ref != expected_feedback_ref:
+            errors.append("sdlc_feedback_loop_ref must match current material vFinal card")
+
     evidence_kind = str(data.get("evidence_kind") or "").strip()
     if evidence_kind not in {"real", "synthetic", "waiver"}:
         errors.append("evidence_kind must be real, synthetic or waiver")
@@ -6679,6 +6704,8 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             "review_task_authorizations": [
                 item for item in data.get("review_task_authorizations", []) if isinstance(item, dict)
             ],
+            "sdlc_feedback_loop_ref": data.get("sdlc_feedback_loop_ref"),
+            "factory_sdlc_lifecycle_refs": string_list(data.get("factory_sdlc_lifecycle_refs")),
             "recovery_recommendation": data.get("recovery_recommendation")
             if isinstance(data.get("recovery_recommendation"), dict)
             else None,
@@ -7560,6 +7587,7 @@ def build_worker_result(
     positive_authority = result in PROMOTION_PASS_RESULTS and blocking_findings is False
     review_worker = review_worker_id if review_worker_id in WORKERS else "independent-reviewer"
     allowed_transition_scopes = ["review"] if reviewer_required and positive_authority else ["done"] if positive_authority else []
+    feedback_ref = card_sdlc_feedback_loop_ref(card)
     payload = {
         "$schema": worker_result_schema_url(worker_id),
         "record_type": worker.output_field,
@@ -7580,6 +7608,8 @@ def build_worker_result(
         "artifact_classifications": artifact_contract["classifications"],
         "evidence_kind": evidence_kind,
         "reusable_for_product": reusable_for_product,
+        "sdlc_feedback_loop_ref": feedback_ref,
+        "factory_sdlc_lifecycle_refs": [feedback_ref] if feedback_ref else [],
         "next_action": next_action,
         "promotion_authority": {
             "result": "PASS" if positive_authority else "BLOCK",
@@ -8556,6 +8586,8 @@ def build_evidence_graph(
                     "review_ready": review_ready,
                     "authorized_downstream_scope": closure_row.get("authorized_downstream_scope", []),
                     "graph_requirements": closure_row.get("graph_requirements", []),
+                    "sdlc_feedback_loop_ref": result.get("sdlc_feedback_loop_ref"),
+                    "factory_sdlc_lifecycle_refs": result.get("factory_sdlc_lifecycle_refs", []),
                     "evidence_level": "worker_result",
                     "staleness": "stale" if stale else "current",
                     "validation_errors": safe_validation_errors,

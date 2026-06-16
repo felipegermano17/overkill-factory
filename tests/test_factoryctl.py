@@ -113,6 +113,12 @@ def worker_result(
         "artifact_classifications": factoryctl.artifact_contract_for_refs(["README.md"])["classifications"],
         "evidence_kind": "synthetic",
         "reusable_for_product": False,
+        "sdlc_feedback_loop_ref": (source_card or {}).get("sdlc_feedback_loop_ref"),
+        "factory_sdlc_lifecycle_refs": (
+            [(source_card or {}).get("sdlc_feedback_loop_ref")]
+            if (source_card or {}).get("sdlc_feedback_loop_ref")
+            else []
+        ),
         "next_action": "none",
         "promotion_authority": {
             "result": "PASS" if result in {"PASS", "WAIVED"} else "BLOCK",
@@ -738,6 +744,69 @@ class FactoryCtlTest(unittest.TestCase):
             "sdlc_feedback_loop_ref",
             schema["properties"]["input_contract"]["properties"],
         )
+
+    def test_worker_result_carries_sdlc_feedback_loop_ref(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+
+        result = factoryctl.build_worker_result(
+            "implementation-worker",
+            card,
+            result="PASS",
+            tool_or_profile="fixture",
+            executed_by="implementation-worker",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Fixture PASS.",
+            next_action="prepare review",
+        )
+
+        self.assertEqual(result["sdlc_feedback_loop_ref"], card["sdlc_feedback_loop_ref"])
+        self.assertIn(card["sdlc_feedback_loop_ref"], result["factory_sdlc_lifecycle_refs"])
+
+    def test_material_vfinal_worker_result_requires_matching_sdlc_feedback_loop_ref(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        result = factoryctl.build_worker_result(
+            "implementation-worker",
+            card,
+            result="PASS",
+            tool_or_profile="fixture",
+            executed_by="implementation-worker",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Fixture PASS.",
+            next_action="prepare review",
+        )
+
+        missing = dict(result)
+        missing.pop("sdlc_feedback_loop_ref", None)
+        wrong = dict(result)
+        wrong["sdlc_feedback_loop_ref"] = "templates/other-feedback-loop.json"
+
+        self.assertIn(
+            "sdlc_feedback_loop_ref is required for material vFinal worker results",
+            factoryctl.validate_worker_result_record(
+                missing,
+                expected_field="implementation_result",
+                expected_worker_id="implementation-worker",
+                card=card,
+                evidence_root=ROOT,
+            ),
+        )
+        self.assertIn(
+            "sdlc_feedback_loop_ref must match current material vFinal card",
+            factoryctl.validate_worker_result_record(
+                wrong,
+                expected_field="implementation_result",
+                expected_worker_id="implementation-worker",
+                card=card,
+                evidence_root=ROOT,
+            ),
+        )
+
+    def test_worker_result_schema_declares_sdlc_feedback_loop_ref(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "worker-result.schema.json").read_text(encoding="utf-8"))
+
+        self.assertIn("sdlc_feedback_loop_ref", schema["properties"])
 
     def test_worker_packet_schema_allows_every_registered_worker(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))

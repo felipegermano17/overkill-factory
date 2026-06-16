@@ -160,6 +160,13 @@
         "minLength": 3
       }
     },
+    "sdlc_feedback_loop_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 3
+    },
     "evidence_kind": {
       "enum": [
         "real",

@@ -29,6 +29,11 @@ connects the worker's execution, evidence and learnback to the SDLC feedback
 loop. Hermes should preserve it on the worker subtask instead of letting the
 loop stay only on the source card.
 
+Worker results for those material cards must carry the same
+`sdlc_feedback_loop_ref`. The evidence reconciler preserves it in the Receipt
+Five reconciliation index and draft receipt so execution evidence can feed the
+same SDLC learnback loop instead of becoming an isolated pass/fail artifact.
+
 ## Worker Profiles
 
 Worker packets now include `profile_binding`.
