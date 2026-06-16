@@ -16,6 +16,8 @@
       "evidence_refs": ["templates/full-product-sot-scope-coverage.json"],
       "owner": "factory-orchestrator",
       "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
       "basis": "The ready work unit maps to Product SOT scope and does not redefine complete-product scope."
     }
   ],

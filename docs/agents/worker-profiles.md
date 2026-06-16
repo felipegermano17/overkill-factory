@@ -57,6 +57,7 @@ Ready packs:
 | Pack | Coverage |
 | --- | --- |
 | `web-saas-core` | ordinary web, SaaS, API, data, auth, integration, tests, docs, release and monitoring work. |
+| `cli-tui-product-pack` | CLI/TUI command products, terminal UX, transcripts, install/run and package/release proof. |
 | `cloud-native-core` | CI/CD, runtime, cloud, monitoring, rollback and production operations boundaries. |
 | `agent-runtime-core` | Hermes, Factory, profiles, skills, memory, tools, MCP and autonomous workflow changes. |
 | `solana-quasar-core` | Quasar-first Solana/onchain program work, wallet transaction boundaries and onchain QA. |

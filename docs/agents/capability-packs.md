@@ -47,6 +47,7 @@ These packs are ready in the public Factory:
 | Pack | Covers |
 | --- | --- |
 | `web-saas-core` | Web apps, SaaS, APIs, persistence, auth, integrations, tests, docs, release and monitoring. |
+| `cli-tui-product-pack` | Executable CLI/TUI products with command contracts, terminal transcripts, help UX and package/release proof. |
 | `cloud-native-core` | CI/CD, runtime, deploy wiring, cloud security, observability and rollback planning. |
 | `agent-runtime-core` | Hermes, Factory adapter, profiles, skills, tools, memory, MCP and agentic workflow changes. |
 | `solana-quasar-core` | Quasar-first Solana/onchain program work, wallet transactions, signer boundaries and onchain QA. |
@@ -94,6 +95,14 @@ The template lives at `templates/capability-pack-contract.json`.
 `templates/capability-pack-activation-example.json` shows a complete
 non-core pack activation shape, but it is deliberately blocked until real
 public-safe smoke and eval refs replace the placeholders.
+
+Core packs can still require surface-specific proof through
+`templates/product-delivery-quality-profile.json`. API/data surfaces must prove
+contract, auth, error semantics, migrations, fixtures, retention and operational
+data safety. CLI/TUI surfaces must prove command transcripts, help output,
+error states, install/run and shell behavior. A user-facing agentic product must
+be classified as `user_facing_agentic_product`; internal `agent-runtime-core`
+readiness does not satisfy that product proof by itself.
 
 ## Activation Flow
 

@@ -521,6 +521,13 @@ PRODUCT_DELIVERY_QUALITY_PROFILE_REQUIRED_FIELDS = (
     "waiver_policy",
     "evidence_refs",
 )
+PRODUCT_CLASSIFICATIONS = {
+    "generic_software_product",
+    "api_data_product",
+    "cli_tui_product",
+    "agent_runtime_infrastructure",
+    "user_facing_agentic_product",
+}
 REASONING_POLICY_REQUIRED_FIELDS = (
     "record_type",
     "reasoning_class",
@@ -2842,6 +2849,26 @@ def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_product_classification_contract(card: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    classifications = _card_product_classifications(card)
+    unknown = sorted(classifications - PRODUCT_CLASSIFICATIONS)
+    if unknown:
+        errors.append("product_classification contains unknown values: " + ", ".join(unknown))
+
+    expected_profiles = set(_expected_surface_evidence_profiles(card))
+    if "agentic_interface" in expected_profiles:
+        if "user_facing_agentic_product" not in classifications:
+            errors.append(
+                "product_classification must include user_facing_agentic_product for agentic_interface surfaces"
+            )
+        if classifications == {"agent_runtime_infrastructure"}:
+            errors.append(
+                "agent_runtime_infrastructure alone cannot classify a user-facing agentic product surface"
+            )
+    return errors
+
+
 def _status_value(value: Any) -> str:
     if isinstance(value, dict):
         return str(value.get("status") or "").strip().lower()
@@ -3327,6 +3354,29 @@ def _expected_surface_evidence_profiles(card: dict[str, Any]) -> list[str]:
     return sorted(profiles)
 
 
+def _card_product_classifications(card: dict[str, Any]) -> set[str]:
+    containers: list[dict[str, Any]] = [card]
+    for field in (
+        "product_creation_plan",
+        "product_context_packet",
+        "product_experience_plan",
+        "product_face_packet",
+    ):
+        value = card.get(field)
+        if isinstance(value, dict):
+            containers.append(value)
+
+    classifications: set[str] = set()
+    for container in containers:
+        for field in ("product_classification", "product_classifications"):
+            value = container.get(field)
+            if isinstance(value, list):
+                classifications.update(_normalized_contract_token(item) for item in value)
+            elif _non_empty_text(value):
+                classifications.add(_normalized_contract_token(value))
+    return {item for item in classifications if item}
+
+
 def risk(card: dict[str, Any]) -> str:
     return str(card.get("risk_effective", "")).strip().upper()
 
@@ -3467,6 +3517,16 @@ def validate_product_delivery_quality_profile(profile: dict[str, Any]) -> list[s
         for phase in required_at:
             if phase not in {"before_implementation", "before_completion", "before_promotion"}:
                 errors.append(f"product_delivery_quality_profile.required_proofs[{index}].required_at has unknown phase {phase!r}")
+        for field in ("applies_to_surfaces", "applies_to_surface_evidence_profiles", "applies_to_product_classifications"):
+            value = proof.get(field)
+            if value is not None and not _non_empty_string_list(value):
+                errors.append(f"product_delivery_quality_profile.required_proofs[{index}].{field} must be a non-empty array")
+        for classification in _list_items(proof.get("applies_to_product_classifications")):
+            if _normalized_contract_token(classification) not in PRODUCT_CLASSIFICATIONS:
+                errors.append(
+                    f"product_delivery_quality_profile.required_proofs[{index}].applies_to_product_classifications "
+                    f"has unknown classification {classification!r}"
+                )
 
     for index, dimension in enumerate(profile.get("quality_dimensions", []) if isinstance(profile.get("quality_dimensions"), list) else []):
         if not isinstance(dimension, dict):
@@ -3548,10 +3608,43 @@ def _product_delivery_quality_profile_ref_errors(card: dict[str, Any]) -> list[s
     return errors
 
 
-def _delivery_profile_required_proof_ids(profile: dict[str, Any], phase: str) -> list[str]:
+def _proof_applies_to_card(proof: dict[str, Any], card: dict[str, Any] | None) -> bool:
+    if card is None:
+        return True
+    card_surfaces = {_normalized_contract_token(surface) for surface in normalized_surfaces(card)}
+    card_surfaces.update(_surface_profile_tokens(card))
+    card_profiles = set(_expected_surface_evidence_profiles(card))
+    card_classifications = _card_product_classifications(card)
+
+    surface_filter = {_normalized_contract_token(item) for item in _list_items(proof.get("applies_to_surfaces"))}
+    if surface_filter and not (surface_filter & card_surfaces):
+        return False
+
+    profile_filter = set(_list_items(proof.get("applies_to_surface_evidence_profiles")))
+    if profile_filter and not (profile_filter & card_profiles):
+        return False
+
+    classification_filter = {
+        _normalized_contract_token(item)
+        for item in _list_items(proof.get("applies_to_product_classifications"))
+    }
+    if classification_filter and not (classification_filter & card_classifications):
+        return False
+
+    return True
+
+
+def _delivery_profile_required_proof_ids(
+    profile: dict[str, Any],
+    phase: str,
+    *,
+    card: dict[str, Any] | None = None,
+) -> list[str]:
     proof_ids: list[str] = []
     for proof in profile.get("required_proofs", []) if isinstance(profile.get("required_proofs"), list) else []:
         if not isinstance(proof, dict):
+            continue
+        if not _proof_applies_to_card(proof, card):
             continue
         if phase in _list_items(proof.get("required_at")) and _non_empty_text(proof.get("proof_id")):
             proof_ids.append(str(proof["proof_id"]).strip())
@@ -3576,7 +3669,7 @@ def _required_domain_proof_ids(card: dict[str, Any], phase: str) -> list[str]:
     proof_ids: list[str] = []
     profile = _product_delivery_quality_profile(card)
     if profile:
-        proof_ids.extend(_delivery_profile_required_proof_ids(profile, phase))
+        proof_ids.extend(_delivery_profile_required_proof_ids(profile, phase, card=card))
     if phase in {"before_implementation", "before_completion", "before_promotion"}:
         proof_ids.extend(_activated_capability_pack_structured_proof_ids(card))
     plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
@@ -3591,7 +3684,7 @@ def _required_delivery_profile_proof_ids(card: dict[str, Any], phase: str) -> li
     profile = _product_delivery_quality_profile(card)
     if not profile:
         return []
-    return _delivery_profile_required_proof_ids(profile, phase)
+    return _delivery_profile_required_proof_ids(profile, phase, card=card)
 
 
 def _validate_delivery_profile_proof_coverage(
@@ -4205,6 +4298,7 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_scale_slo_readiness_contract(data))
     errors.extend(validate_production_promotion_ladder_contract(data))
     errors.extend(validate_user_facing_autonomy_contract(data))
+    errors.extend(validate_product_classification_contract(data))
     errors.extend(validate_material_autonomy_routing_contract(data))
     errors.extend(
         _validate_vfinal_schema_backed_plan_gate(
@@ -5809,6 +5903,7 @@ def validate_usage_evidence_matrix_against_card(result: dict[str, Any], card: di
 def validate_product_face_result_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
     errors = validate_product_face_result(result)
     errors.extend(_surface_evidence_profile_route_errors_for_card(card))
+    errors.extend(validate_product_classification_contract(card))
     errors.extend(_product_delivery_quality_profile_ref_errors(card))
     result_status = str(result.get("result") or "").upper()
     if result_status == "WAIVED":

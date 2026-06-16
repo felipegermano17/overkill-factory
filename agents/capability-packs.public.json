@@ -67,8 +67,45 @@
       "required_before_execution": true,
       "activation_rule": "Available by default for ordinary web/product software when no specialized template-only surface is present.",
       "evidence_required": ["factoryctl gate report", "worker packets", "Receipt Five"],
-      "structured_proofs_required": ["generic.scope-fit", "generic.operator-usability", "web.runtime-smoke"],
+      "delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+      "structured_proofs_required": [
+        "generic.scope-fit",
+        "generic.operator-usability",
+        "web.runtime-smoke",
+        "api.contract-schema",
+        "api.auth-permission-boundary",
+        "api.error-semantics",
+        "api.compatibility-versioning",
+        "data.migration-rollback",
+        "data.seed-fixture-behavior",
+        "data.retention-privacy-boundary",
+        "data.operational-safety"
+      ],
       "reference_sources": ["ring dev-team", "gstack qa/review/ship", "aiox-core development agents"]
+    },
+    "cli-tui-product-pack": {
+      "pack_id": "cli-tui-product-pack",
+      "status": "core_ready",
+      "plain_purpose": "Covers executable CLI and TUI products with command contracts, terminal UX, transcripts, packaging and release proof.",
+      "covers_surfaces": ["cli", "tui", "terminal", "console", "command_line", "command-line"],
+      "existing_workers": ["docs-os-worker", "test-automation-builder", "qa-verification-worker", "release-ops-worker"],
+      "missing_worker_templates": [],
+      "required_before_execution": true,
+      "activation_rule": "Available by default for CLI/TUI products after Product Face routes the surface to cli_tui and proof coverage is required through the delivery quality profile.",
+      "evidence_required": ["install/run smoke", "help output", "golden transcript", "error-state transcript", "cross-platform terminal proof", "package/release readiness"],
+      "delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+      "structured_proofs_required": [
+        "cli.install-run-smoke",
+        "cli.help-output",
+        "cli.golden-transcript",
+        "cli.error-state-transcript",
+        "cli.cross-platform-shell",
+        "cli.package-release-readiness"
+      ],
+      "input_contract": ["command contract", "install/run path", "target shells and platforms", "expected success and error states"],
+      "output_contract": ["validated command transcript", "documented help UX", "terminal error-state proof", "package/release readiness evidence"],
+      "local_smoke_path": "python scripts/factoryctl.py validate-card templates/vfinal-factory-card.json",
+      "reference_sources": ["docs/product-face/proof-runner.md", "templates/product-delivery-quality-profile.json"]
     },
     "cloud-native-core": {
       "pack_id": "cloud-native-core",
@@ -93,6 +130,7 @@
       "required_before_execution": true,
       "activation_rule": "Available by default after agent_eval_plan, permission class and reviewer separation exist.",
       "evidence_required": ["agent eval plan", "permission class", "security handoff", "profile/binding refs"],
+      "delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
       "structured_proofs_required": ["agent.eval-plan", "agent.permission-boundary", "agent.profile-binding"],
       "reference_sources": ["ring prompt-reviewer", "mattpocock/skills", "orca workflow/review"]
     },
