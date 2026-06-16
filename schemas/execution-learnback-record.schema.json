@@ -8,6 +8,11 @@
     "record_type": { "const": "execution_learnback_record" },
     "project_ref": { "type": "string", "minLength": 3 },
     "method_version": { "type": "string", "minLength": 3 },
+    "sdlc_feedback_loop_ref": { "type": "string", "minLength": 3 },
+    "sdlc_feedback_loop_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
     "attempted_transitions": { "type": "array", "items": { "type": "string" } },
     "workers_required": { "type": "array", "items": { "type": "string" } },
     "workers_executed": { "type": "array", "items": { "type": "string" } },

@@ -4,6 +4,9 @@
   "source_evidence_refs": [
     "external:execution-learnback-record"
   ],
+  "sdlc_feedback_loop_refs": [
+    "templates/factory-sdlc-feedback-loop.json"
+  ],
   "source_trust": "internal_structured",
   "classification": "skill",
   "proposed_artifact_type": "skill",
