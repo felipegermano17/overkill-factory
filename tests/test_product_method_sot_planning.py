@@ -107,6 +107,43 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
             errors,
         )
 
+    def test_product_sot_requires_typed_requirement_graph(self) -> None:
+        card = self.vfinal_card()
+        card["product_sot"].pop("requirement_graph")
+
+        self.assertIn(
+            "product_sot.requirement_graph must be non-empty with stable requirement ids",
+            factoryctl.validate_card(card),
+        )
+
+    def test_product_creation_plan_ref_is_loaded_and_validated(self) -> None:
+        card = self.vfinal_card()
+        card["product_creation_plan_ref"] = "templates/work-unit-contract.json"
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("product_creation_plan.complete_product_required must be true for complete-product planning", errors)
+        self.assertIn("product_creation_plan.work_units must be non-empty", errors)
+
+    def test_product_creation_work_units_require_typed_proof_graph(self) -> None:
+        card = self.vfinal_card()
+        card.pop("product_creation_plan_ref")
+        card["product_creation_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+        unit = card["product_creation_plan"]["work_units"][0]
+        unit.pop("proof_ids_required")
+        unit.pop("owner_worker")
+        unit.pop("reviewer_role")
+        unit["status"] = "blocked"
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("product_creation_plan.work_units[0].proof_ids_required must be non-empty", errors)
+        self.assertIn("product_creation_plan.work_units[0].owner_worker is required", errors)
+        self.assertIn("product_creation_plan.work_units[0].reviewer_role is required", errors)
+        self.assertIn("product_creation_plan.work_units[0].blocker_id is required when status is blocked", errors)
+        self.assertIn("product_creation_plan.work_units[0].blocker_owner is required when status is blocked", errors)
+        self.assertIn("product_creation_plan.work_units[0].next_action is required when status is blocked", errors)
+
     def test_slice_plan_cannot_replace_full_product_plan(self) -> None:
         card = self.vfinal_card()
         card["software_development_plan"].pop("full_product_plan")
