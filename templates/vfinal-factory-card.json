@@ -1090,20 +1090,100 @@
   },
   "production_readiness_plan": {
     "$schema": "https://overkill-factory.dev/schemas/production-readiness-plan.schema.json",
-    "release_path": "staged release with explicit gate",
-    "rollback_path": "revert bounded slice or run the approved mitigation",
-    "monitoring": ["incident/support plan"],
+    "gate_enforcement": "production",
+    "release_owner": "release-ops-worker",
+    "release_path": {
+      "release_channel": "staged-public-release",
+      "release_artifact_ref": "templates/vfinal-factory-card.json#production_readiness_plan",
+      "pre_release_smoke_ref": "scripts/release_integration_preflight.py",
+      "approval_rule_ref": "templates/production-promotion-ladder.json"
+    },
+    "rollback_path": {
+      "rollback_owner": "release-ops-worker",
+      "rollback_trigger": "Any blocking regression in validation, safety or support readiness.",
+      "rollback_procedure_ref": "docs/operations/validation-and-release.md",
+      "rollback_validation_ref": "scripts/release_integration_preflight.py",
+      "max_time_to_restore": "bounded to the release owner runbook"
+    },
+    "health_checks": [
+      {
+        "check_id": "release-smoke",
+        "signal_ref": "scripts/release_integration_preflight.py",
+        "pass_condition": "preflight result is PASS",
+        "owner": "release-ops-worker",
+        "cadence": "before release"
+      }
+    ],
+    "monitoring_signals": [
+      {
+        "signal_id": "public-safety",
+        "source_ref": "scripts/public_safety_scan.py",
+        "alert_condition": "public safety scan fails",
+        "owner": "release-ops-worker",
+        "evidence_ref": "scripts/public_safety_scan.py"
+      }
+    ],
+    "release_approval_rule": {
+      "authority": "human-gate-clerk",
+      "required_before": "production_release",
+      "human_gate_required": true,
+      "evidence_ref": "templates/human-gate-record.json"
+    },
+    "support_handoff": {
+      "support_owner": "release-ops-worker",
+      "support_channel_ref": "external:operator-support-route",
+      "escalation_policy_ref": "templates/incident-support-plan.json",
+      "response_slo": "owner acknowledges blocking release incidents before promotion continues",
+      "handoff_evidence_ref": "templates/incident-support-plan.json"
+    },
     "incident_owner": "release-ops-worker",
-    "support_path": "documented support channel and escalation",
     "production_promotion_ladder_ref": "templates/production-promotion-ladder.json",
-    "evidence_refs": ["templates/production-promotion-ladder.json"]
+    "evidence_refs": ["templates/vfinal-factory-card.json#production_readiness_plan", "templates/production-promotion-ladder.json"]
   },
   "incident_support_plan": {
     "$schema": "https://overkill-factory.dev/schemas/incident-support-plan.schema.json",
-    "support_owner": "release-ops-worker",
-    "incident_triggers": ["release failure", "gate bypass", "private leak"],
-    "triage_steps": ["block release", "capture evidence", "create learnback"],
-    "escalation": ["human gate when material risk exists"],
+    "gate_enforcement": "production",
+    "incident_triggers": [
+      {
+        "trigger_id": "release-failure",
+        "signal_ref": "scripts/release_integration_preflight.py",
+        "condition": "release preflight or post-release smoke blocks",
+        "owner": "release-ops-worker"
+      }
+    ],
+    "severity_model": [
+      {
+        "severity": "SEV-3",
+        "impact": "release is blocked or degraded before customer-impacting production claim",
+        "response_slo": "owner triages before release continues",
+        "escalation_owner": "human-gate-clerk"
+      }
+    ],
+    "owner": "release-ops-worker",
+    "escalation_path": [
+      {
+        "step": "block-release",
+        "owner": "release-ops-worker",
+        "condition": "validation, safety or support evidence is missing or failing",
+        "handoff_ref": "templates/human-gate-record.json"
+      }
+    ],
+    "communication_boundary": {
+      "public_status_allowed": true,
+      "private_details_forbidden": true,
+      "communication_channel_ref": "external:operator-support-route",
+      "update_cadence": "on every blocking state change"
+    },
+    "recovery_actions": [
+      {
+        "action_id": "rollback-release",
+        "action_type": "rollback",
+        "owner": "release-ops-worker",
+        "procedure_ref": "docs/operations/validation-and-release.md",
+        "validation_ref": "scripts/release_integration_preflight.py"
+      }
+    ],
+    "evidence_refs": ["templates/vfinal-factory-card.json#incident_support_plan"],
     "learnback_target": "factory_maturity_scorecard"
   },
   "user_docs_onboarding_plan": {
