@@ -2872,6 +2872,12 @@ def _validate_delivery_profile_proof_coverage(
         errors.append(f"{at} missing product delivery proof coverage for required proof ids: " + ", ".join(required_proof_ids))
         return errors
 
+    required_set = set(required_proof_ids)
+    required_by_id = {
+        str(proof.get("proof_id") or "").strip(): proof
+        for proof in profile.get("required_proofs", [])
+        if isinstance(proof, dict) and str(proof.get("proof_id") or "").strip() in required_set
+    }
     by_id: dict[str, dict[str, Any]] = {}
     for index, item in enumerate(coverage):
         if not isinstance(item, dict):
@@ -2889,6 +2895,28 @@ def _validate_delivery_profile_proof_coverage(
             errors.append(f"{at}[{index}].evidence_refs must be non-empty")
         if not _non_empty_text(item.get("basis")):
             errors.append(f"{at}[{index}].basis is required")
+        proof_requirement = required_by_id.get(proof_id)
+        if proof_requirement and status == "PASS":
+            expected_reviewer_role = str(proof_requirement.get("reviewer_role") or "").strip()
+            actual_reviewer_role = str(item.get("reviewer_role") or item.get("reviewer") or "").strip()
+            if expected_reviewer_role and actual_reviewer_role != expected_reviewer_role:
+                errors.append(f"{at}[{index}].reviewer_role must match required proof reviewer_role {expected_reviewer_role!r}")
+            expected_evidence_kind = str(proof_requirement.get("evidence_kind") or "").strip()
+            actual_evidence_kind = str(item.get("evidence_kind") or "").strip()
+            if expected_evidence_kind and actual_evidence_kind != expected_evidence_kind:
+                errors.append(f"{at}[{index}].evidence_kind must match required proof evidence_kind {expected_evidence_kind!r}")
+            if proof_requirement.get("human_gate_required") is True:
+                human_gate_ref = str(item.get("human_gate_ref") or "").strip()
+                if not human_gate_ref:
+                    errors.append(f"{at}[{index}].human_gate_ref is required when required proof declares human_gate_required=true")
+                else:
+                    ref_errors = _evidence_ref_errors([human_gate_ref], ROOT)
+                    errors.extend(f"{at}[{index}].human_gate_ref: {error}" for error in ref_errors)
+                    if _is_explicit_external_ref(human_gate_ref):
+                        if item.get("human_gate_bounded_acceptance") is not True:
+                            errors.append(f"{at}[{index}].human_gate_bounded_acceptance=true is required for external human gate refs")
+                        if item.get("human_gate_sanitized") is not True:
+                            errors.append(f"{at}[{index}].human_gate_sanitized=true is required for external human gate refs")
         if status == "WAIVED":
             waiver = profile.get("waiver_policy") if isinstance(profile.get("waiver_policy"), dict) else {}
             if waiver.get("allowed") is not True:

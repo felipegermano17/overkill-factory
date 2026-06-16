@@ -262,6 +262,40 @@ def product_delivery_quality_profile_fixture() -> dict:
     }
 
 
+def human_gated_product_delivery_quality_profile_fixture() -> dict:
+    return {
+        "record_type": "product_delivery_quality_profile",
+        "profile_id": "human-gated-product-v1",
+        "archetype": "human-gated product",
+        "applies_to_surfaces": ["frontend"],
+        "quality_dimensions": [
+            {
+                "dimension_id": "human-accepted-operator-usability",
+                "bar": "Operator usability proof is accepted by the declared human reviewer.",
+                "block_when": ["Proof is reviewed by the wrong role or lacks a human gate record."]
+            }
+        ],
+        "required_proofs": [
+            {
+                "proof_id": "generic.operator-usability",
+                "name": "Human accepted operator usability proof",
+                "required_at": ["before_completion"],
+                "owner_worker": "qa-verification-worker",
+                "reviewer_role": "human-product-owner",
+                "evidence_kind": "human_gate",
+                "human_gate_required": True,
+            }
+        ],
+        "waiver_policy": {
+            "allowed": False,
+            "requires_owner": True,
+            "requires_reason": True,
+            "cannot_claim_full_acceptance": True,
+        },
+        "evidence_refs": ["templates/product-delivery-quality-profile.json"],
+    }
+
+
 def activated_game_contract_fixture() -> dict:
     return {
         "record_type": "capability_pack_contract",
@@ -442,6 +476,8 @@ def product_face_result_fixture(**overrides: object) -> dict:
                 "status": "PASS",
                 "evidence_refs": ["reports/product-face/operator-usability.json"],
                 "reviewer": "product-face-reviewer",
+                "reviewer_role": "independent-reviewer",
+                "evidence_kind": "review",
                 "basis": "Operator can understand current state, evidence and next action.",
             }
         ],
@@ -1467,6 +1503,8 @@ class FactoryCtlTest(unittest.TestCase):
                     "status": "PASS",
                     "evidence_refs": ["reports/domain-proof/generic.operator-usability.json"],
                     "reviewer": "domain-proof-reviewer",
+                    "reviewer_role": "independent-reviewer",
+                    "evidence_kind": "review",
                     "basis": "Operator usability proof passed with structured evidence.",
                 }
             ]
@@ -1519,7 +1557,105 @@ class FactoryCtlTest(unittest.TestCase):
                     "status": "PASS",
                     "evidence_refs": ["reports/game/playable-smoke.md"],
                     "reviewer": "game-qa-specialist",
+                    "reviewer_role": "game-qa-specialist",
+                    "evidence_kind": "runtime",
                     "basis": "Playable smoke covered input, feedback and completion feedback.",
+                }
+            ]
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
+    def test_product_face_completion_rejects_domain_proof_wrong_reviewer_role(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile"] = human_gated_product_delivery_quality_profile_fixture()
+        result = product_face_result_fixture(
+            domain_proof_coverage=[
+                {
+                    "proof_id": "generic.operator-usability",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/domain-proof/operator-usability.json"],
+                    "reviewer_role": "domain-proof-reviewer",
+                    "evidence_kind": "human_gate",
+                    "human_gate_ref": "external:product-owner-approval",
+                    "human_gate_bounded_acceptance": True,
+                    "human_gate_sanitized": True,
+                    "basis": "Wrong reviewer role should not satisfy the human-gated profile.",
+                }
+            ]
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.domain_proof_coverage[0].reviewer_role must match required proof reviewer_role 'human-product-owner'",
+            errors,
+        )
+
+    def test_product_face_completion_rejects_domain_proof_wrong_evidence_kind(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile"] = human_gated_product_delivery_quality_profile_fixture()
+        result = product_face_result_fixture(
+            domain_proof_coverage=[
+                {
+                    "proof_id": "generic.operator-usability",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/domain-proof/operator-usability.json"],
+                    "reviewer_role": "human-product-owner",
+                    "evidence_kind": "review",
+                    "human_gate_ref": "external:product-owner-approval",
+                    "human_gate_bounded_acceptance": True,
+                    "human_gate_sanitized": True,
+                    "basis": "Wrong evidence kind should not satisfy the human-gated profile.",
+                }
+            ]
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.domain_proof_coverage[0].evidence_kind must match required proof evidence_kind 'human_gate'",
+            errors,
+        )
+
+    def test_product_face_completion_requires_human_gate_ref_for_human_gated_domain_proof(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile"] = human_gated_product_delivery_quality_profile_fixture()
+        result = product_face_result_fixture(
+            domain_proof_coverage=[
+                {
+                    "proof_id": "generic.operator-usability",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/domain-proof/operator-usability.json"],
+                    "reviewer_role": "human-product-owner",
+                    "evidence_kind": "human_gate",
+                    "basis": "Missing human gate ref should fail closed.",
+                }
+            ]
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.domain_proof_coverage[0].human_gate_ref is required when required proof declares human_gate_required=true",
+            errors,
+        )
+
+    def test_product_face_completion_accepts_human_gated_domain_proof_binding(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_delivery_quality_profile"] = human_gated_product_delivery_quality_profile_fixture()
+        result = product_face_result_fixture(
+            domain_proof_coverage=[
+                {
+                    "proof_id": "generic.operator-usability",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/domain-proof/operator-usability.json"],
+                    "reviewer_role": "human-product-owner",
+                    "evidence_kind": "human_gate",
+                    "human_gate_ref": "external:product-owner-approval",
+                    "human_gate_bounded_acceptance": True,
+                    "human_gate_sanitized": True,
+                    "basis": "Human product owner approved the operator usability proof.",
                 }
             ]
         )
