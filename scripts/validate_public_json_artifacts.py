@@ -686,6 +686,18 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             errors.append(f"{at}: customer_readiness_gate WAIVED must set cannot_claim_customer_ready=true")
         if decision == "PASS" and waiver:
             errors.append(f"{at}: customer_readiness_gate PASS must not carry a waiver")
+    if data.get("record_type") == "scale_slo_readiness_gate":
+        add_public_ref_errors(data.get("evidence_refs"), f"{at}.evidence_refs", errors)
+        waiver = data.get("waiver") if isinstance(data.get("waiver"), dict) else {}
+        add_public_ref_errors(waiver.get("evidence_refs"), f"{at}.waiver.evidence_refs", errors)
+        decision = str(data.get("decision") or "").strip().upper()
+        proof_result = str(data.get("proof_result") or "").strip().upper()
+        if decision == "WAIVED" and waiver.get("cannot_claim_scale_ready") is not True:
+            errors.append(f"{at}: scale_slo_readiness_gate WAIVED must set cannot_claim_scale_ready=true")
+        if decision == "PASS" and waiver:
+            errors.append(f"{at}: scale_slo_readiness_gate PASS must not carry a waiver")
+        if decision == "PASS" and proof_result != "PASS":
+            errors.append(f"{at}: scale_slo_readiness_gate PASS requires proof_result PASS")
     if data.get("record_type") == "factory_sdlc_lifecycle_state":
         refs = data.get("evidence_refs") if isinstance(data.get("evidence_refs"), list) else []
         for index, ref in enumerate(refs):

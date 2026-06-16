@@ -160,6 +160,8 @@
     "product_implementation_readiness_ref": { "type": "string" },
     "customer_readiness_gate": { "$ref": "customer-readiness-gate.schema.json" },
     "customer_readiness_gate_ref": { "type": "string" },
+    "scale_slo_readiness_gate": { "$ref": "scale-slo-readiness-gate.schema.json" },
+    "scale_slo_readiness_gate_ref": { "type": "string" },
     "sdlc_feedback_loop_ref": { "type": "string", "minLength": 3 },
     "autonomy_mode": {
       "enum": [

@@ -213,6 +213,57 @@ def human_gate_record(source_card: dict | None = None) -> dict:
     }
 
 
+def valid_customer_readiness_gate_fixture() -> dict:
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/customer-readiness-gate.schema.json",
+        "record_type": "customer_readiness_gate",
+        "decision": "PASS",
+        "target_user_or_customer": "External operator using the product for real work.",
+        "first_success_path": "Operator completes the primary outcome without factory assistance.",
+        "onboarding_handoff": "docs/quickstart.md",
+        "support_path": "public support route with owner and response policy",
+        "terms_compliance_boundary": "public terms and authority boundary reviewed for this product",
+        "data_privacy_boundary": "no private customer data embedded in public evidence",
+        "limits_of_use": ["Customer readiness covers this declared product scope only."],
+        "acceptance_owner": "customer-readiness-owner",
+        "evidence_refs": ["templates/customer-readiness-gate.json"],
+    }
+
+
+def valid_scale_slo_gate_fixture(proof_result: str = "PASS") -> dict:
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/scale-slo-readiness-gate.schema.json",
+        "record_type": "scale_slo_readiness_gate",
+        "decision": "PASS",
+        "proof_result": proof_result,
+        "target_load": {
+            "basis": "Product SOT expected customer load.",
+            "steady_state": "100 requests per minute",
+            "peak": "500 requests per minute",
+            "unit": "requests per minute",
+        },
+        "concurrency_envelope": {
+            "steady_concurrency": "25 concurrent users",
+            "peak_concurrency": "100 concurrent users",
+            "queue_policy": "Backpressure returns bounded retry guidance before saturation.",
+        },
+        "latency_slo": {
+            "primary_path": "primary customer success path",
+            "p95": "500ms",
+            "p99": "1200ms",
+        },
+        "availability_slo": "99.5 percent for the declared operating window.",
+        "error_budget": "0.5 percent failed primary-path requests per operating window.",
+        "saturation_behavior": "Reject excess work with bounded retry guidance before shared resources saturate.",
+        "degradation_policy": "Disable non-critical enrichment before the primary path fails.",
+        "rate_limit_boundary": "Public API and worker queues enforce declared per-tenant quotas.",
+        "cost_capacity_boundary": "Projected peak stays inside the product-specific cost budget.",
+        "monitoring_signals": ["latency", "error_rate", "saturation", "cost_or_quota"],
+        "acceptance_owner": "scale-slo-readiness-owner",
+        "evidence_refs": ["templates/scale-slo-readiness-gate.json"],
+    }
+
+
 def reference_quality_comparison_fixture() -> dict:
     compared_source_ids = [
         "21st-dev-components",
@@ -774,6 +825,17 @@ class FactoryCtlTest(unittest.TestCase):
             card["customer_readiness_gate_ref"],
         )
 
+    def test_worker_packet_carries_scale_slo_readiness_gate_ref(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+
+        packet = factoryctl.build_worker_packet("implementation-worker", card, card_path)
+
+        self.assertEqual(
+            packet["input_contract"]["scale_slo_readiness_gate_ref"],
+            card["scale_slo_readiness_gate_ref"],
+        )
+
     def test_worker_packet_schema_declares_sdlc_feedback_loop_ref(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))
 
@@ -792,6 +854,8 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("model_routing_decision", input_properties)
         self.assertIn("customer_readiness_gate_ref", input_properties)
         self.assertIn("customer_readiness_gate", input_properties)
+        self.assertIn("scale_slo_readiness_gate_ref", input_properties)
+        self.assertIn("scale_slo_readiness_gate", input_properties)
 
     def test_worker_result_carries_sdlc_feedback_loop_ref(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
@@ -1030,6 +1094,72 @@ class FactoryCtlTest(unittest.TestCase):
             "customer_readiness_gate or customer_readiness_gate_ref is required for complete product/customer-ready planning",
             errors,
         )
+
+    def test_vfinal_complete_product_requires_scale_slo_readiness_gate(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("scale_slo_readiness_gate_ref", None)
+        card.pop("scale_slo_readiness_gate", None)
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            "scale_slo_readiness_gate or scale_slo_readiness_gate_ref is required for customer-ready or production-scale products",
+            errors,
+        )
+
+    def test_vfinal_scale_slo_gate_blocks_prose_only_capacity(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("scale_slo_readiness_gate_ref", None)
+        card["scale_slo_readiness_gate"] = {
+            "$schema": "https://overkill-factory.dev/schemas/scale-slo-readiness-gate.schema.json",
+            "record_type": "scale_slo_readiness_gate",
+            "decision": "PASS",
+            "proof_result": "PASS",
+            "evidence_refs": ["templates/scale-slo-readiness-gate.json"],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("target_load" in error for error in errors), errors)
+        self.assertTrue(any("concurrency_envelope" in error for error in errors), errors)
+        self.assertTrue(any("latency_slo" in error for error in errors), errors)
+
+    def test_vfinal_degraded_scale_slo_proof_cannot_claim_customer_ready(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("scale_slo_readiness_gate_ref", None)
+        card["scale_slo_readiness_gate"] = valid_scale_slo_gate_fixture(proof_result="DEGRADED")
+        card["factory_sdlc_lifecycle_state"] = {
+            "lifecycle_acceptance": {
+                "customer_ready_claimed": True,
+                "scope_completion_state": "customer_ready",
+                "proof_level": "customer_validated",
+            }
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("scale_slo_readiness_gate PASS requires proof_result PASS", errors)
+        self.assertIn("scale_slo_readiness_gate degraded or failed proof cannot pass scale/SLO readiness", errors)
+        self.assertIn("scale/SLO ready claim requires scale_slo_readiness_gate proof_result PASS", errors)
+
+    def test_vfinal_pass_scale_slo_gate_allows_customer_ready_claim(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("customer_readiness_gate_ref", None)
+        card.pop("scale_slo_readiness_gate_ref", None)
+        card["customer_readiness_gate"] = valid_customer_readiness_gate_fixture()
+        card["scale_slo_readiness_gate"] = valid_scale_slo_gate_fixture()
+        card["factory_sdlc_lifecycle_state"] = {
+            "lifecycle_acceptance": {
+                "customer_ready_claimed": True,
+                "scope_completion_state": "customer_ready",
+                "proof_level": "customer_validated",
+            }
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertNotIn("scale/SLO ready claim requires scale_slo_readiness_gate decision PASS", errors)
+        self.assertNotIn("scale/SLO ready claim requires scale_slo_readiness_gate proof_result PASS", errors)
 
     def test_vfinal_customer_readiness_gate_blocks_prose_only_acceptance(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")

@@ -149,6 +149,19 @@
             "object",
             "null"
           ]
+        },
+        "scale_slo_readiness_gate_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 3
+        },
+        "scale_slo_readiness_gate": {
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "additionalProperties": true
