@@ -1,0 +1,156 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-readiness-scorecard.schema.json",
+  "record_type": "factory_readiness_scorecard",
+  "scorecard_id": "factory-readiness-scorecard-public-template",
+  "created_at": "2026-06-16T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "target": {
+    "target_type": "repo",
+    "target_ref": "external:public-overkill-factory-repo",
+    "scope": "public-safe factory autonomy readiness template",
+    "owner": "factory-orchestrator"
+  },
+  "verdict": "ready_with_bounds",
+  "maturity_level": {
+    "level": 3,
+    "basis": "Template demonstrates standardized readiness with bounded remediation before material autonomy."
+  },
+  "dimensions": [
+    {
+      "dimension_id": "build_install_health",
+      "status": "PASS",
+      "owner": "platform-devex-worker",
+      "severity": "none",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["templates/platform-devex-plan.json"],
+      "smallest_safe_remediation": "Keep install and build commands explicit.",
+      "remediation_target_ref": "not_required"
+    },
+    {
+      "dimension_id": "test_coverage_determinism",
+      "status": "PASS",
+      "owner": "qa-verification-worker",
+      "severity": "none",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["tests/README.md"],
+      "smallest_safe_remediation": "Keep deterministic local test command documented.",
+      "remediation_target_ref": "not_required"
+    },
+    {
+      "dimension_id": "lint_static_checks",
+      "status": "PASS",
+      "owner": "test-automation-builder",
+      "severity": "none",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["scripts/validate_public_json_artifacts.py"],
+      "smallest_safe_remediation": "Keep schema and static checks in the preflight set.",
+      "remediation_target_ref": "not_required"
+    },
+    {
+      "dimension_id": "docs_onboarding_first_run",
+      "status": "PASS",
+      "owner": "docs-os-worker",
+      "severity": "none",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["docs/getting-started/quickstart-hermes.md"],
+      "smallest_safe_remediation": "Keep first-run instructions public-safe and current.",
+      "remediation_target_ref": "not_required"
+    },
+    {
+      "dimension_id": "task_discovery_issue_quality",
+      "status": "BOUNDED",
+      "owner": "factory-orchestrator",
+      "severity": "low",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["templates/owner-issue-intake-config.json"],
+      "smallest_safe_remediation": "Use issue intake before starting long autonomous work.",
+      "remediation_target_ref": "templates/owner-issue-intake-config.json"
+    },
+    {
+      "dimension_id": "worker_profile_capability_readiness",
+      "status": "BOUNDED",
+      "owner": "agent-runtime-builder",
+      "severity": "medium",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["agents/worker-profile-readiness.public.json"],
+      "smallest_safe_remediation": "Refresh profile smoke and eval evidence before treating profiles as current runtime readiness.",
+      "remediation_target_ref": "agents/worker-profile-readiness.public.json"
+    },
+    {
+      "dimension_id": "evidence_public_private_hygiene",
+      "status": "PASS",
+      "owner": "public-safety-gate",
+      "severity": "none",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["scripts/public_safety_scan.py"],
+      "smallest_safe_remediation": "Run public and secret safety scans before publishing artifacts.",
+      "remediation_target_ref": "not_required"
+    },
+    {
+      "dimension_id": "observability_incident_rollback",
+      "status": "REMEDIATION_REQUIRED",
+      "owner": "detection-monitoring-worker",
+      "severity": "medium",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["templates/incident-support-plan.json"],
+      "smallest_safe_remediation": "Attach concrete monitoring, incident and rollback evidence before production-like autonomy.",
+      "remediation_target_ref": "templates/incident-support-plan.json"
+    },
+    {
+      "dimension_id": "security_secrets_supply_chain",
+      "status": "PASS",
+      "owner": "supply-chain-gate",
+      "severity": "none",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["docs/security/oss-security.md"],
+      "smallest_safe_remediation": "Keep secret and supply-chain checks in the gate set.",
+      "remediation_target_ref": "not_required"
+    },
+    {
+      "dimension_id": "product_analytics_success_signals",
+      "status": "BOUNDED",
+      "owner": "data-metrics-worker",
+      "severity": "low",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["templates/data-metrics-plan.json"],
+      "smallest_safe_remediation": "Require success and risk signals when user/customer outcomes are claimed.",
+      "remediation_target_ref": "templates/data-metrics-plan.json"
+    },
+    {
+      "dimension_id": "autonomy_risk_human_gates",
+      "status": "BOUNDED",
+      "owner": "human-gate-clerk",
+      "severity": "medium",
+      "blocks_autonomous_execution": false,
+      "evidence_refs": ["templates/autonomy-readiness-packet.json"],
+      "smallest_safe_remediation": "Keep human, security and release gates explicit before material execution.",
+      "remediation_target_ref": "templates/autonomy-readiness-packet.json"
+    }
+  ],
+  "remediation_loop": {
+    "required": true,
+    "loop_ref": "templates/factory-sdlc-feedback-loop.json",
+    "rerun_required_before_unblock": true,
+    "unblock_requires_evidence": true,
+    "auto_approve_human_gates": false
+  },
+  "autonomy_boundary": {
+    "autonomous_execution_allowed": true,
+    "allowed_scope": "bounded_remediation",
+    "requires_human_gate_for": [
+      "security",
+      "customer_acceptance",
+      "release",
+      "deployment"
+    ],
+    "not_product_acceptance": true,
+    "not_release_approval": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_runtime_evidence_stays_local": true
+  },
+  "linked_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
+  "next_safe_action": "Use this scorecard before starting long autonomous execution, then remediate gaps and rerun."
+}

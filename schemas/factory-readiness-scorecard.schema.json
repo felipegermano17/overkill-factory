@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-readiness-scorecard.schema.json",
+  "title": "Overkill Factory Readiness Scorecard",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "scorecard_id",
+    "created_at",
+    "factory_method_version",
+    "target",
+    "verdict",
+    "maturity_level",
+    "dimensions",
+    "remediation_loop",
+    "autonomy_boundary",
+    "public_private_boundary",
+    "next_safe_action"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-readiness-scorecard.schema.json"
+    },
+    "record_type": {
+      "const": "factory_readiness_scorecard"
+    },
+    "scorecard_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "target_type",
+        "target_ref",
+        "scope",
+        "owner"
+      ],
+      "properties": {
+        "target_type": {
+          "enum": [
+            "repo",
+            "product",
+            "runtime",
+            "factory_issue",
+            "mixed"
+          ]
+        },
+        "target_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 3
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "verdict": {
+      "enum": [
+        "ready_for_autonomy",
+        "ready_with_bounds",
+        "remediation_required",
+        "blocked"
+      ]
+    },
+    "maturity_level": {
+      "type": "object",
+      "required": [
+        "level",
+        "basis"
+      ],
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 6
+        }
+      },
+      "additionalProperties": false
+    },
+    "dimensions": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "required": [
+          "dimension_id",
+          "status",
+          "owner",
+          "severity",
+          "blocks_autonomous_execution",
+          "evidence_refs",
+          "smallest_safe_remediation",
+          "remediation_target_ref"
+        ],
+        "properties": {
+          "dimension_id": {
+            "enum": [
+              "build_install_health",
+              "test_coverage_determinism",
+              "lint_static_checks",
+              "docs_onboarding_first_run",
+              "task_discovery_issue_quality",
+              "worker_profile_capability_readiness",
+              "evidence_public_private_hygiene",
+              "observability_incident_rollback",
+              "security_secrets_supply_chain",
+              "product_analytics_success_signals",
+              "autonomy_risk_human_gates"
+            ]
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "BOUNDED",
+              "REMEDIATION_REQUIRED",
+              "BLOCKED"
+            ]
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 3
+          },
+          "severity": {
+            "enum": [
+              "none",
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "blocks_autonomous_execution": {
+            "type": "boolean"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "smallest_safe_remediation": {
+            "type": "string",
+            "minLength": 3
+          },
+          "remediation_target_ref": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "remediation_loop": {
+      "type": "object",
+      "required": [
+        "required",
+        "loop_ref",
+        "rerun_required_before_unblock",
+        "unblock_requires_evidence",
+        "auto_approve_human_gates"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "loop_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "rerun_required_before_unblock": {
+          "const": true
+        },
+        "unblock_requires_evidence": {
+          "const": true
+        },
+        "auto_approve_human_gates": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "autonomy_boundary": {
+      "type": "object",
+      "required": [
+        "autonomous_execution_allowed",
+        "allowed_scope",
+        "requires_human_gate_for",
+        "not_product_acceptance",
+        "not_release_approval"
+      ],
+      "properties": {
+        "autonomous_execution_allowed": {
+          "type": "boolean"
+        },
+        "allowed_scope": {
+          "enum": [
+            "none",
+            "read_only",
+            "bounded_remediation",
+            "material_execution"
+          ]
+        },
+        "requires_human_gate_for": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "not_product_acceptance": {
+          "const": true
+        },
+        "not_release_approval": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_runtime_evidence_stays_local"
+      ],
+      "properties": {
+        "public_safe_refs_only": {
+          "const": true
+        },
+        "raw_private_evidence_embedded": {
+          "const": false
+        },
+        "private_runtime_evidence_stays_local": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "linked_feedback_loop_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "next_safe_action": {
+      "type": "string",
+      "minLength": 6
+    }
+  },
+  "additionalProperties": false
+}
