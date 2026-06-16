@@ -82,6 +82,29 @@ def result_for(worker_id: str, card: dict, created_at: str) -> dict:
     return payload
 
 
+def mark_background_subagent(
+    payload: dict,
+    *,
+    status: str = "completed",
+    reconciliation_state: str = "pending",
+    accepted: bool = False,
+) -> dict:
+    payload["tool_or_profile"] = "hermes_delegate_task_background"
+    payload["executed_by"] = "background-subagent"
+    payload["async_subagent"] = {
+        "runtime": "hermes_delegate_task_background",
+        "delegation_id": "external:delegation-fixture",
+        "parent_card_id": "TEST-CLOSURE-R2",
+        "parent_worker_id": payload["worker"]["id"],
+        "status": status,
+        "reconciliation_state": reconciliation_state,
+        "reconciliation_owner": "factory-orchestrator",
+        "candidate_evidence_refs": ["external:background-subagent-summary"],
+        "accepted_by_worker_result_ref": "external:accepted-worker-result" if accepted else "",
+    }
+    return payload
+
+
 def write_results(card: dict, results_dir: Path, *, skip_worker: str | None = None) -> None:
     for index, worker_id in enumerate(required_before_done_workers(card), start=1):
         if worker_id == skip_worker:
@@ -107,6 +130,79 @@ class EvidenceReconcilerTest(unittest.TestCase):
         self.assertEqual(index["blocking_current_results"], [])
         self.assertIn("security_scan_result", index["effective_results"])
         self.assertIn("independent_review_result", index["effective_results"])
+
+    def test_unreconciled_background_subagent_result_does_not_satisfy_receipt_five(self) -> None:
+        card = closure_card()
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            results_dir = Path(tmp)
+            write_results(card, results_dir)
+            async_security = mark_background_subagent(
+                result_for("codex-security", card, "2026-06-06T00:50:00+00:00"),
+                status="completed",
+                reconciliation_state="pending",
+                accepted=False,
+            )
+            results_dir.joinpath("codex-security.json").write_text(
+                factoryctl.json.dumps(async_security, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            index = evidence_reconciler.reconcile(card, results_dir)
+
+        self.assertFalse(index["receipt_five_ready"])
+        self.assertIn(
+            "security_scan_result",
+            {item["record_type"] for item in index["blocking_current_results"]},
+        )
+        security = index["effective_results"]["security_scan_result"]
+        self.assertFalse(security["valid_for_closure"])
+        self.assertIn(
+            "Hermes background subagent output must set reconciliation_state=reconciled before closure",
+            security["validation_errors"],
+        )
+
+    def test_reconciled_background_subagent_result_can_be_consumed(self) -> None:
+        card = closure_card()
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            results_dir = Path(tmp)
+            write_results(card, results_dir)
+            async_security = mark_background_subagent(
+                result_for("codex-security", card, "2026-06-06T00:50:00+00:00"),
+                status="reconciled",
+                reconciliation_state="reconciled",
+                accepted=True,
+            )
+            results_dir.joinpath("codex-security.json").write_text(
+                factoryctl.json.dumps(async_security, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            index = evidence_reconciler.reconcile(card, results_dir)
+
+        self.assertTrue(index["receipt_five_ready"])
+        self.assertTrue(index["effective_results"]["security_scan_result"]["valid_for_closure"])
+
+    def test_stale_background_subagent_result_blocks_receipt_five_even_with_acceptance_ref(self) -> None:
+        card = closure_card()
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            results_dir = Path(tmp)
+            write_results(card, results_dir)
+            async_security = mark_background_subagent(
+                result_for("codex-security", card, "2026-06-06T00:50:00+00:00"),
+                status="stale",
+                reconciliation_state="reconciled",
+                accepted=True,
+            )
+            results_dir.joinpath("codex-security.json").write_text(
+                factoryctl.json.dumps(async_security, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            index = evidence_reconciler.reconcile(card, results_dir)
+
+        self.assertFalse(index["receipt_five_ready"])
+        security = index["effective_results"]["security_scan_result"]
+        self.assertIn("terminal Hermes background subagent output cannot satisfy Receipt Five", security["validation_errors"])
 
     def test_newer_pass_supersedes_older_fail_for_same_receipt_field(self) -> None:
         card = closure_card()
