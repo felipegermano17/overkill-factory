@@ -18,6 +18,28 @@ SPEC.loader.exec_module(module)
 
 
 class ProductionFullProductWorkerGraphTest(unittest.TestCase):
+    def generic_contract(self, tmpdir: str, lanes: list[dict]) -> dict:
+        source_dir = Path(tmpdir) / "generic-api-product"
+        source_dir.mkdir()
+        (source_dir / "README.md").write_text("Generic API product source.\n", encoding="utf-8")
+        return {
+            "$schema": "https://overkill-factory.dev/schemas/production-full-product-graph-contract.schema.json",
+            "record_type": "production_full_product_graph_contract",
+            "product_id": "generic-api-product",
+            "product_name": "Generic API product",
+            "source_ref": source_dir.relative_to(ROOT).as_posix(),
+            "product_sot_ref": "external:generic-api-product-sot",
+            "selected_capability_pack_refs": ["capability-packs/api-data.json"],
+            "product_delivery_quality_profile_ref": "quality-profiles/api-production.json",
+            "risk_class": "R2",
+            "promotion_ladder_ref": "promotion-ladders/api-production.json",
+            "approval_scope": "Reusable full-product graph for a generic API product.",
+            "environment_class": "production-readiness",
+            "graph_kind": "production_full_product_worker_graph",
+            "release_gate_upstream_excluded_lanes": ["human_gate", "release_ops"],
+            "lanes": lanes,
+        }
+
     def test_graph_blocks_missing_strict_lane_from_explicit_fixture(self) -> None:
         lane = {
             "lane_id": "remote_proof",
@@ -143,6 +165,73 @@ class ProductionFullProductWorkerGraphTest(unittest.TestCase):
         self.assertNotIn(human_gate_lane["path"], upstream_graph["evidence_refs"])
         self.assertNotIn(release_lane["path"], upstream_graph["evidence_refs"])
         self.assertEqual(upstream_graph["blocking_summary"], [])
+
+    def test_generic_non_qvg_contract_can_build_pass_graph(self) -> None:
+        tmp_root = ROOT / ".tmp"
+        tmp_root.mkdir(exist_ok=True)
+        with TemporaryDirectory(dir=tmp_root) as tmpdir:
+            proof = Path(tmpdir) / "api-proof.json"
+            proof.write_text(
+                (
+                    '{"record_type":"remote_proof_result","result":"PASS","evidence_kind":"real",'
+                    '"reusable_for_product":true,"product_target":{"product_id":"generic-api-product"},'
+                    '"evidence_refs":["external:api-proof"]}'
+                ),
+                encoding="utf-8",
+            )
+            lanes = [
+                {
+                    "lane_id": "api_proof",
+                    "worker_id": "backend-api-builder",
+                    "path": proof.relative_to(ROOT).as_posix(),
+                    "record_type": "remote_proof_result",
+                    "scope": "product",
+                    "reusable_policy": "strict",
+                }
+            ]
+            contract = self.generic_contract(tmpdir, lanes)
+
+            result = module.build_graph(contract=contract)
+
+        self.assertEqual(result["result"], "PASS")
+        self.assertEqual(result["product_id"], "generic-api-product")
+        self.assertEqual(result["product_target"]["product_id"], "generic-api-product")
+        self.assertEqual(result["selected_capability_pack_refs"], ["capability-packs/api-data.json"])
+        self.assertEqual(result["risk_class"], "R2")
+        self.assertEqual(result["lanes_total"], 1)
+        self.assertEqual(result["blocking_summary"], [])
+
+    def test_generic_contract_rejects_strict_lane_for_wrong_product(self) -> None:
+        tmp_root = ROOT / ".tmp"
+        tmp_root.mkdir(exist_ok=True)
+        with TemporaryDirectory(dir=tmp_root) as tmpdir:
+            proof = Path(tmpdir) / "api-proof.json"
+            proof.write_text(
+                (
+                    '{"record_type":"remote_proof_result","result":"PASS","evidence_kind":"real",'
+                    '"reusable_for_product":true,"product_target":{"product_id":"wrong-product"},'
+                    '"evidence_refs":["external:api-proof"]}'
+                ),
+                encoding="utf-8",
+            )
+            lane = {
+                "lane_id": "api_proof",
+                "worker_id": "backend-api-builder",
+                "path": proof.relative_to(ROOT).as_posix(),
+                "record_type": "remote_proof_result",
+                "scope": "product",
+                "reusable_policy": "strict",
+            }
+            contract = self.generic_contract(tmpdir, [lane])
+
+            result = module.validate_lane(lane, contract)
+
+        self.assertEqual(result["status"], "FAIL")
+        self.assertIn("strict lane product_id does not match", result["validation_errors"])
+
+    def test_explicit_missing_graph_contract_does_not_fallback_to_qvg(self) -> None:
+        with self.assertRaises(FileNotFoundError):
+            module.load_graph_contract(ROOT / ".tmp" / "missing-production-graph-contract.json")
 
 
 if __name__ == "__main__":

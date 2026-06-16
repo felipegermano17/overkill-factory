@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the production-scoped worker graph for the public validation product."""
+"""Build a production-scoped full-product worker graph from a product contract."""
 
 from __future__ import annotations
 
@@ -14,8 +14,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "full-product-worker-graph.json"
 DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "full-product-worker-graph.md"
-PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
-RELEASE_GATE_UPSTREAM_EXCLUDED_LANES = {"human_gate", "release_ops"}
+DEFAULT_GRAPH_CONTRACT = ROOT / "templates" / "production-full-product-graph-qvg.contract.json"
+DEFAULT_PRODUCT_ID = "qvg-public-validation-product"
+DEFAULT_PRODUCT_SOURCE_REF = "products/qvg-public-validation-product"
+DEFAULT_RELEASE_GATE_UPSTREAM_EXCLUDED_LANES = {"human_gate", "release_ops"}
 
 
 LANES: tuple[dict[str, Any], ...] = (
@@ -95,11 +97,37 @@ LANES: tuple[dict[str, Any], ...] = (
 )
 
 
+def default_contract() -> dict[str, Any]:
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/production-full-product-graph-contract.schema.json",
+        "record_type": "production_full_product_graph_contract",
+        "product_id": DEFAULT_PRODUCT_ID,
+        "product_name": "Quasar Vault Guard public validation product",
+        "source_ref": DEFAULT_PRODUCT_SOURCE_REF,
+        "product_sot_ref": "products/qvg-public-validation-product/README.md",
+        "selected_capability_pack_refs": [
+            "capability-packs/product-face.json",
+            "capability-packs/solana-quasar.json",
+            "capability-packs/production-release.json",
+        ],
+        "product_delivery_quality_profile_ref": "quality-profiles/production-public-validation.json",
+        "risk_class": "R4",
+        "promotion_ladder_ref": "promotion-ladders/public-repository-production.json",
+        "approval_scope": "Full reusable worker graph for the public Quasar Vault Guard validation product.",
+        "environment_class": "public-production-validation-graph",
+        "graph_kind": "production_full_product_worker_graph",
+        "release_gate_upstream_excluded_lanes": sorted(DEFAULT_RELEASE_GATE_UPSTREAM_EXCLUDED_LANES),
+        "lanes": [dict(lane) for lane in LANES],
+    }
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
-def source_sha256(path: Path = PRODUCT_SOURCE) -> str:
+def source_sha256(path: Path) -> str | None:
+    if not path.exists() or not path.is_dir():
+        return None
     digest = hashlib.sha256()
     for item in sorted(path.rglob("*")):
         if item.is_file():
@@ -127,17 +155,92 @@ def load_json(rel_path: str) -> dict[str, Any]:
     return json.loads((ROOT / rel_path).read_text(encoding="utf-8"))
 
 
-def product_target() -> dict[str, str]:
+def load_graph_contract(path: Path | None = None) -> dict[str, Any]:
+    if path is None:
+        path = DEFAULT_GRAPH_CONTRACT
+    if path.exists():
+        contract = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(contract, dict):
+            raise ValueError("production graph contract must be a JSON object")
+        return contract
+    if path.resolve() != DEFAULT_GRAPH_CONTRACT.resolve():
+        raise FileNotFoundError(f"production graph contract not found: {repo_ref(path)}")
+    return default_contract()
+
+
+def validate_graph_contract(contract: dict[str, Any]) -> None:
+    if contract.get("record_type") != "production_full_product_graph_contract":
+        raise ValueError("production graph contract record_type must be production_full_product_graph_contract")
+    required = (
+        "product_id",
+        "product_name",
+        "source_ref",
+        "product_sot_ref",
+        "selected_capability_pack_refs",
+        "product_delivery_quality_profile_ref",
+        "risk_class",
+        "promotion_ladder_ref",
+        "approval_scope",
+        "environment_class",
+        "lanes",
+    )
+    for field in required:
+        if contract.get(field) in (None, "", [], {}):
+            raise ValueError(f"production graph contract requires {field}")
+    if not isinstance(contract.get("lanes"), list) or not contract["lanes"]:
+        raise ValueError("production graph contract requires at least one lane")
+
+
+def contract_source_sha256(contract: dict[str, Any]) -> str | None:
+    source_ref = str(contract.get("source_ref") or "").strip()
+    if not source_ref or source_ref.startswith(("external:", "http://", "https://")):
+        return None
+    return source_sha256(ROOT / source_ref)
+
+
+def product_target(contract: dict[str, Any]) -> dict[str, Any]:
+    target: dict[str, Any] = {
+        "product_id": str(contract["product_id"]),
+        "source_ref": str(contract["source_ref"]),
+        "approval_scope": str(contract["approval_scope"]),
+        "environment_class": str(contract["environment_class"]),
+    }
+    source_hash = contract_source_sha256(contract)
+    if source_hash:
+        target["source_sha256"] = source_hash
+    return target
+
+
+def graph_lanes(contract: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    return tuple(dict(lane) for lane in contract.get("lanes", []))
+
+
+def release_gate_excluded_lanes(contract: dict[str, Any]) -> set[str]:
+    values = contract.get("release_gate_upstream_excluded_lanes", sorted(DEFAULT_RELEASE_GATE_UPSTREAM_EXCLUDED_LANES))
+    if not isinstance(values, list):
+        return set(DEFAULT_RELEASE_GATE_UPSTREAM_EXCLUDED_LANES)
+    return {str(value) for value in values if str(value).strip()}
+
+
+def contract_ref(path: Path | None) -> str:
+    if path is None:
+        return repo_ref(DEFAULT_GRAPH_CONTRACT) if DEFAULT_GRAPH_CONTRACT.exists() else "builtin:qvg-production-graph-contract"
+    return repo_ref(path)
+
+
+def legacy_product_target() -> dict[str, Any]:
     return {
-        "product_id": "qvg-public-validation-product",
-        "source_ref": "products/qvg-public-validation-product",
-        "source_sha256": source_sha256(),
+        "product_id": DEFAULT_PRODUCT_ID,
+        "source_ref": DEFAULT_PRODUCT_SOURCE_REF,
+        "source_sha256": source_sha256(ROOT / DEFAULT_PRODUCT_SOURCE_REF),
         "approval_scope": "Full reusable worker graph for the public Quasar Vault Guard validation product.",
         "environment_class": "public-production-validation-graph",
     }
 
 
-def validate_lane(lane: dict[str, Any]) -> dict[str, Any]:
+def validate_lane(lane: dict[str, Any], contract: dict[str, Any] | None = None) -> dict[str, Any]:
+    contract = contract or default_contract()
+    expected_product_id = str(contract["product_id"])
     rel_path = str(lane["path"])
     path = ROOT / rel_path
     errors: list[str] = []
@@ -173,7 +276,7 @@ def validate_lane(lane: dict[str, Any]) -> dict[str, Any]:
         if lane.get("reusable_policy") == "strict":
             if not isinstance(target, dict):
                 errors.append("strict lane product_target is missing")
-            elif target.get("product_id") != "qvg-public-validation-product":
+            elif target.get("product_id") != expected_product_id:
                 errors.append("strict lane product_id does not match")
     provenance: dict[str, Any] = {
         "ref": rel_path,
@@ -207,17 +310,31 @@ def validate_lane(lane: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def filter_lanes_for_mode(lanes: tuple[dict[str, Any], ...], graph_mode: str) -> tuple[tuple[dict[str, Any], ...], list[str]]:
+def filter_lanes_for_mode(
+    lanes: tuple[dict[str, Any], ...],
+    graph_mode: str,
+    excluded_lanes: set[str] | None = None,
+) -> tuple[tuple[dict[str, Any], ...], list[str]]:
     if graph_mode != "release_gate_upstream":
         return lanes, []
-    selected = tuple(lane for lane in lanes if lane["lane_id"] not in RELEASE_GATE_UPSTREAM_EXCLUDED_LANES)
-    omitted = [lane["lane_id"] for lane in lanes if lane["lane_id"] in RELEASE_GATE_UPSTREAM_EXCLUDED_LANES]
+    excluded_lanes = excluded_lanes or DEFAULT_RELEASE_GATE_UPSTREAM_EXCLUDED_LANES
+    selected = tuple(lane for lane in lanes if lane["lane_id"] not in excluded_lanes)
+    omitted = [lane["lane_id"] for lane in lanes if lane["lane_id"] in excluded_lanes]
     return selected, omitted
 
 
-def build_graph(lanes: tuple[dict[str, Any], ...] = LANES, *, graph_mode: str = "full_product") -> dict[str, Any]:
-    selected_lanes, omitted_lanes = filter_lanes_for_mode(lanes, graph_mode)
-    lane_results = [validate_lane(lane) for lane in selected_lanes]
+def build_graph(
+    lanes: tuple[dict[str, Any], ...] | None = None,
+    *,
+    contract: dict[str, Any] | None = None,
+    graph_mode: str = "full_product",
+    contract_path: Path | None = None,
+) -> dict[str, Any]:
+    contract = contract or default_contract()
+    validate_graph_contract(contract)
+    lanes = lanes or graph_lanes(contract)
+    selected_lanes, omitted_lanes = filter_lanes_for_mode(lanes, graph_mode, release_gate_excluded_lanes(contract))
+    lane_results = [validate_lane(lane, contract) for lane in selected_lanes]
     blocking = [
         f"{lane['lane_id']}: " + "; ".join(lane["validation_errors"])
         for lane in lane_results
@@ -228,11 +345,19 @@ def build_graph(lanes: tuple[dict[str, Any], ...] = LANES, *, graph_mode: str = 
         "$schema": "https://overkill-factory.dev/schemas/full-product-worker-graph.schema.json",
         "record_type": "full_product_worker_graph",
         "created_at": utc_now(),
-        "graph_kind": "production_public_validation_product_graph",
+        "graph_kind": str(contract.get("graph_kind") or "production_full_product_worker_graph"),
         "graph_mode": graph_mode,
-        "product_id": "qvg-public-validation-product",
-        "product_name": "Quasar Vault Guard public validation product",
-        "product_target": product_target(),
+        "contract_ref": contract_ref(contract_path),
+        "product_id": str(contract["product_id"]),
+        "product_name": str(contract["product_name"]),
+        "product_target": product_target(contract),
+        "product_sot_ref": str(contract["product_sot_ref"]),
+        "selected_capability_pack_refs": [str(ref) for ref in contract["selected_capability_pack_refs"]],
+        "product_delivery_quality_profile_ref": str(contract["product_delivery_quality_profile_ref"]),
+        "risk_class": str(contract["risk_class"]),
+        "promotion_ladder_ref": str(contract["promotion_ladder_ref"]),
+        "environment_class": str(contract["environment_class"]),
+        "approval_scope": str(contract["approval_scope"]),
         "result": "PASS" if passed else "FAIL",
         "blocking_findings": not passed,
         "evidence_kind": "real",
@@ -249,7 +374,7 @@ def build_graph(lanes: tuple[dict[str, Any], ...] = LANES, *, graph_mode: str = 
         "production_blockers": blocking or ["none"],
         "evidence_refs": [str(lane["path"]) for lane in selected_lanes],
         "policy_decision": (
-            "The public validation product has a reconciled production-scoped worker graph."
+            f"{contract['product_id']} has a reconciled production-scoped worker graph."
             if passed and not omitted_lanes
             else "The release gate upstream graph is reusable for release validation; run the full graph after release-ops evidence is written."
             if passed
@@ -291,10 +416,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-write", action="store_true")
     parser.add_argument("--require-pass", action="store_true")
     parser.add_argument("--release-gate-upstream", action="store_true")
+    parser.add_argument("--graph-contract", type=Path, default=DEFAULT_GRAPH_CONTRACT)
     args = parser.parse_args(argv)
 
     graph_mode = "release_gate_upstream" if args.release_gate_upstream else "full_product"
-    graph = build_graph(graph_mode=graph_mode)
+    contract = load_graph_contract(args.graph_contract)
+    graph = build_graph(contract=contract, graph_mode=graph_mode, contract_path=args.graph_contract)
     if not args.no_write:
         write_json(args.out, graph)
         write_markdown(args.md_out, graph)

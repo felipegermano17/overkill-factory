@@ -62,6 +62,28 @@ map to the published public object. Run it only after the public object has been
 published or refreshed; before publication it may correctly report the remote
 map as out of sync.
 
+## Full Product Worker Graph
+
+Production completion uses a product-scoped worker graph. The default contract
+is the public QVG validation product:
+
+```bash
+python scripts/production_full_product_worker_graph.py --no-write
+```
+
+For another product, provide a graph contract instead of editing the script:
+
+```bash
+python scripts/production_full_product_worker_graph.py \
+  --graph-contract path/to/production-full-product-graph.contract.json \
+  --out .tmp/factory-runs/production/full-product-worker-graph.json
+```
+
+The contract binds the graph to Product SOT, selected capability packs, delivery
+quality profile, risk class, promotion ladder, environment class and evidence
+lanes. Strict lanes must prove the same `product_id` as the contract; a PASS for
+one product cannot be reused for another product by changing prose.
+
 ## Full Validation Battery
 
 For a stronger local pass:

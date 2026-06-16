@@ -111,3 +111,18 @@ python scripts/factory_self_improvement.py governance-audit --out .tmp/ai-codeba
 
 These commands do not dispatch Hermes, activate workers, post GitHub comments or
 approve gates. They prepare public-safe plans and candidates for review.
+
+### `scripts/production_full_product_worker_graph.py`
+
+Builds a production-scoped worker graph from a product contract. Use the default
+QVG contract for the public validation product, or pass `--graph-contract` for a
+different Product SOT/capability-pack set.
+
+```bash
+python scripts/production_full_product_worker_graph.py --no-write
+python scripts/production_full_product_worker_graph.py --graph-contract path/to/production-full-product-graph.contract.json
+```
+
+The script validates evidence lanes. It does not create missing worker evidence,
+approve human gates, release production, or make Product Face proof reusable by
+declaration alone.
