@@ -3438,6 +3438,19 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
         if field in data and not _non_empty_dict(data.get(field)):
             errors.append(f"OVERKILL_VFINAL {field} must be a non-empty object")
 
+    execution_mode = _execution_mode(data)
+    authority = str(data.get("authority_max") or "").strip()
+    material_feedback_required = (
+        data.get("material_execution") is True
+        or execution_mode in HARDENING_REQUIRED_EXECUTION_MODES
+        or authority in HARDENING_REQUIRED_EXECUTION_MODES
+    )
+    feedback_ref = str(data.get("sdlc_feedback_loop_ref") or "").strip()
+    if material_feedback_required and not feedback_ref:
+        errors.append("sdlc_feedback_loop_ref required for material vFinal autonomous execution")
+    if feedback_ref:
+        _validate_public_ref(feedback_ref, "sdlc_feedback_loop_ref", errors)
+
     method_contract = data.get("method_contract") if isinstance(data.get("method_contract"), dict) else {}
     required_plans = method_contract.get("required_plans") if isinstance(method_contract, dict) else []
     if isinstance(required_plans, list):
