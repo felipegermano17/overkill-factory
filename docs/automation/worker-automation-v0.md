@@ -214,9 +214,19 @@ At `done`, Hermes should:
 - run `scripts/evidence_reconciler.py` to produce the current evidence index,
   supersession ledger and `receipt_five_reconciliation_result`;
 - reconcile each result against its expected Receipt Five field;
+- reject Hermes background subagent output unless a worker result explicitly
+  marks it `reconciliation_state=reconciled`;
 - reject missing, failed, unsupported or preflight-only results;
 - reject Receipt Five without required evidence refs and transition metadata;
 - allow done only when worker results and Receipt Five agree.
+
+Hermes `delegate_task` is not the same thing as a worker result. Synchronous
+delegation can help a worker think. `delegate_task(background=true)` can run a
+bounded lane for candidate research, review or repair proposals. The durable
+factory state remains the Hermes Kanban card plus validated worker results. A
+background subagent summary cannot approve a human gate, mutate canonical Kanban
+state, publish public artifacts, or satisfy Receipt Five until a responsible
+worker accepts it through the async reconciliation contract.
 
 Hermes should reject a transition when:
 

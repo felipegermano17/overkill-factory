@@ -177,6 +177,35 @@
     "reusable_for_product": {
       "type": "boolean"
     },
+    "async_subagent": {
+      "type": "object",
+      "required": [
+        "runtime",
+        "delegation_id",
+        "status",
+        "reconciliation_state",
+        "reconciliation_owner",
+        "accepted_by_worker_result_ref"
+      ],
+      "properties": {
+        "runtime": { "const": "hermes_delegate_task_background" },
+        "delegation_id": { "type": "string", "minLength": 3 },
+        "parent_card_id": { "type": "string", "minLength": 3 },
+        "parent_worker_id": { "type": "string", "minLength": 3 },
+        "status": {
+          "enum": ["dispatched", "running", "completed", "failed", "cancelled", "stale", "superseded", "rejected", "reconciled"]
+        },
+        "reconciliation_state": { "enum": ["pending", "rejected", "superseded", "reconciled"] },
+        "reconciliation_owner": { "type": "string", "minLength": 3 },
+        "accepted_by_worker_result_ref": { "type": "string", "minLength": 3 },
+        "rejected_reason": { "type": "string" },
+        "candidate_evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
     "handoff_state": {
       "enum": [
         "consumable",

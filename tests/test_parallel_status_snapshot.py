@@ -53,6 +53,40 @@ class ParallelStatusSnapshotTest(unittest.TestCase):
 
         self.assertIn("parallel_lane_contract.worktree_ref must differ from base_ref for editing lanes", errors)
 
+    def test_background_subagent_lane_template_is_reconciled_candidate_only(self) -> None:
+        lane = load_lane_template()
+
+        errors = factoryctl.validate_parallel_lane_contract(lane)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(lane["lane_kind"], "background_subagent_lane")
+        self.assertEqual(lane["runtime"], "hermes_delegate_task_background")
+        self.assertEqual(lane["delegation_status"], "reconciled")
+        self.assertFalse(lane["direct_completion_authority"])
+        self.assertFalse(lane["human_gate_authority"])
+        self.assertFalse(lane["canonical_state_mutation_authority"])
+        self.assertTrue(lane["accepted_by_worker_result_ref"])
+
+    def test_background_subagent_lane_requires_delegation_identity(self) -> None:
+        lane = load_lane_template()
+        lane["delegation_id"] = ""
+
+        errors = factoryctl.validate_parallel_lane_contract(lane)
+
+        self.assertIn("parallel_lane_contract.delegation_id is required", errors)
+
+    def test_unreconciled_background_subagent_lane_cannot_be_ready(self) -> None:
+        lane = load_lane_template()
+        lane["delegation_status"] = "completed"
+        lane["accepted_by_worker_result_ref"] = ""
+
+        errors = factoryctl.validate_parallel_lane_contract(lane)
+
+        self.assertIn(
+            "parallel_lane_contract.unreconciled async background lane cannot be ready_for_integration or integrated",
+            errors,
+        )
+
     def test_gate_report_warns_on_overlapping_parallel_write_scope(self) -> None:
         card = load_minimal_card()
         first = load_lane_template()

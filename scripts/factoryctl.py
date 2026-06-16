@@ -233,6 +233,15 @@ TOOL_USING_SURFACES = {
 WIDE_FILESYSTEM_SCOPES = {"workspace_wide", "external_mount"}
 WIDE_NETWORK_SCOPES = {"unrestricted"}
 PARALLEL_EDIT_LANE_KINDS = {"write", "execution"}
+ASYNC_BACKGROUND_LANE_KIND = "background_subagent_lane"
+ASYNC_BACKGROUND_RUNTIME = "hermes_delegate_task_background"
+ASYNC_BACKGROUND_TERMINAL_BLOCKING_STATUSES = {"failed", "cancelled", "stale", "superseded", "rejected"}
+ASYNC_BACKGROUND_NON_RECONCILED_STATUSES = {
+    "dispatched",
+    "running",
+    "completed",
+    *ASYNC_BACKGROUND_TERMINAL_BLOCKING_STATUSES,
+}
 V2_APPROVAL_KEYS = [
     "qa",
     "independent_review",
@@ -2586,6 +2595,85 @@ def _lane_is_editing(lane: dict[str, Any]) -> bool:
     return lane_kind in PARALLEL_EDIT_LANE_KINDS or any(item not in {"none", "read-only", "readonly"} for item in write_scope)
 
 
+def _validate_background_subagent_lane(lane: dict[str, Any], *, at: str) -> list[str]:
+    errors: list[str] = []
+    required_fields = [
+        "runtime",
+        "delegation_id",
+        "parent_card_id",
+        "parent_worker_id",
+        "goal",
+        "context_summary_public_safe",
+        "toolsets",
+        "delegation_status",
+        "expected_output_contract",
+        "candidate_evidence_refs",
+        "private_evidence_redaction_policy",
+        "reconciliation_owner",
+        "retry_attempt",
+        "retry_policy",
+        "next_safe_action",
+    ]
+    for field in required_fields:
+        value = lane.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"{at}.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"{at}.{field} must be a non-empty object")
+        elif field == "retry_attempt":
+            if not isinstance(value, int) or value < 0:
+                errors.append(f"{at}.retry_attempt must be a non-negative integer")
+        elif not _non_empty_text(value):
+            errors.append(f"{at}.{field} is required")
+
+    if lane.get("runtime") != ASYNC_BACKGROUND_RUNTIME:
+        errors.append(f"{at}.runtime must be {ASYNC_BACKGROUND_RUNTIME}")
+
+    delegation_status = str(lane.get("delegation_status") or "").strip()
+    allowed_statuses = ASYNC_BACKGROUND_NON_RECONCILED_STATUSES | {"reconciled"}
+    if delegation_status not in allowed_statuses:
+        errors.append(f"{at}.delegation_status must be one of {', '.join(sorted(allowed_statuses))}")
+
+    if lane.get("direct_completion_authority") is not False:
+        errors.append(f"{at}.direct_completion_authority must be false")
+    if lane.get("human_gate_authority") is not False:
+        errors.append(f"{at}.human_gate_authority must be false")
+    if lane.get("canonical_state_mutation_authority") is not False:
+        errors.append(f"{at}.canonical_state_mutation_authority must be false")
+
+    accepted_ref = str(lane.get("accepted_by_worker_result_ref") or "").strip()
+    if delegation_status == "reconciled":
+        if not accepted_ref:
+            errors.append(f"{at}.accepted_by_worker_result_ref is required when delegation_status=reconciled")
+        elif accepted_ref.startswith("external:"):
+            pass
+        else:
+            errors.extend(f"{at}.accepted_by_worker_result_ref: {error}" for error in _evidence_ref_errors([accepted_ref], ROOT))
+    elif accepted_ref:
+        errors.append(f"{at}.accepted_by_worker_result_ref must be empty until delegation_status=reconciled")
+
+    candidate_refs = string_list(lane.get("candidate_evidence_refs"))
+    if candidate_refs:
+        errors.extend(f"{at}.candidate_evidence_refs: {error}" for error in _evidence_ref_errors(candidate_refs, ROOT))
+
+    retry_policy = lane.get("retry_policy") if isinstance(lane.get("retry_policy"), dict) else {}
+    if retry_policy:
+        if not isinstance(retry_policy.get("max_attempts"), int) or retry_policy.get("max_attempts", 0) <= 0:
+            errors.append(f"{at}.retry_policy.max_attempts must be a positive integer")
+        if retry_policy.get("supersede_previous_attempt") is not True:
+            errors.append(f"{at}.retry_policy.supersede_previous_attempt must be true")
+        if not _list_items(retry_policy.get("stop_classes")):
+            errors.append(f"{at}.retry_policy.stop_classes must be a non-empty array")
+
+    if delegation_status in ASYNC_BACKGROUND_TERMINAL_BLOCKING_STATUSES and lane.get("validation_result") == "PASS":
+        errors.append(f"{at}.terminal async background lane cannot have validation_result=PASS")
+    if delegation_status != "reconciled" and str(lane.get("status") or "").strip() in {"ready_for_integration", "integrated"}:
+        errors.append(f"{at}.unreconciled async background lane cannot be ready_for_integration or integrated")
+    return errors
+
+
 def validate_parallel_lane_contract(lane: dict[str, Any], *, at: str = "parallel_lane_contract") -> list[str]:
     errors: list[str] = []
     required_fields = [
@@ -2639,6 +2727,9 @@ def validate_parallel_lane_contract(lane: dict[str, Any], *, at: str = "parallel
         errors.append(f"{at}.merge_reconciliation_policy.no_self_promotion must be true")
     if merge_policy and not _non_empty_text(merge_policy.get("synthesizer")):
         errors.append(f"{at}.merge_reconciliation_policy.synthesizer is required")
+
+    if str(lane.get("lane_kind") or "").strip().lower() == ASYNC_BACKGROUND_LANE_KIND:
+        errors.extend(_validate_background_subagent_lane(lane, at=at))
 
     return errors
 
@@ -6541,6 +6632,66 @@ def _evidence_ref_errors(refs: list[str], evidence_root: Path | None) -> list[st
     return errors
 
 
+def _async_background_signal(data: dict[str, Any]) -> bool:
+    text_fields = " ".join(
+        str(data.get(field) or "").strip().lower()
+        for field in ("tool_or_profile", "executed_by", "runtime", "delegation_id")
+    )
+    if ASYNC_BACKGROUND_RUNTIME in text_fields:
+        return True
+    if "background-subagent" in text_fields or "background_subagent" in text_fields:
+        return True
+    if isinstance(data.get("async_subagent"), dict):
+        return True
+    provenance = data.get("evidence_provenance")
+    if isinstance(provenance, dict):
+        return provenance.get("runtime") == ASYNC_BACKGROUND_RUNTIME or bool(provenance.get("delegation_id"))
+    if isinstance(provenance, list):
+        return any(
+            isinstance(item, dict) and (item.get("runtime") == ASYNC_BACKGROUND_RUNTIME or item.get("delegation_id"))
+            for item in provenance
+        )
+    return False
+
+
+def async_background_reconciliation_errors(data: dict[str, Any], *, record_type: str) -> list[str]:
+    if not _async_background_signal(data):
+        return []
+    if record_type == "human_gate_record":
+        return ["human_gate_record cannot be produced or satisfied by Hermes background subagent output"]
+
+    errors: list[str] = []
+    async_ref = data.get("async_subagent") if isinstance(data.get("async_subagent"), dict) else {}
+    if not async_ref:
+        errors.append("async_subagent object is required for Hermes background subagent output")
+        async_ref = {}
+
+    runtime = str(async_ref.get("runtime") or data.get("runtime") or data.get("tool_or_profile") or "").strip()
+    if runtime != ASYNC_BACKGROUND_RUNTIME:
+        errors.append(f"async_subagent.runtime must be {ASYNC_BACKGROUND_RUNTIME}")
+
+    delegation_id = str(async_ref.get("delegation_id") or data.get("delegation_id") or "").strip()
+    if not delegation_id:
+        errors.append("async_subagent.delegation_id is required")
+
+    status = str(async_ref.get("status") or async_ref.get("delegation_status") or data.get("delegation_status") or "").strip()
+    reconciliation_state = str(async_ref.get("reconciliation_state") or data.get("reconciliation_state") or "").strip()
+    accepted_ref = str(async_ref.get("accepted_by_worker_result_ref") or data.get("accepted_by_worker_result_ref") or "").strip()
+    owner = str(async_ref.get("reconciliation_owner") or data.get("reconciliation_owner") or "").strip()
+
+    if status in ASYNC_BACKGROUND_TERMINAL_BLOCKING_STATUSES:
+        errors.append("terminal Hermes background subagent output cannot satisfy Receipt Five")
+    if reconciliation_state != "reconciled":
+        errors.append("Hermes background subagent output must set reconciliation_state=reconciled before closure")
+    if not accepted_ref:
+        errors.append("Hermes background subagent output requires accepted_by_worker_result_ref before closure")
+    if not owner:
+        errors.append("Hermes background subagent output requires reconciliation_owner before closure")
+    if accepted_ref and not accepted_ref.startswith("external:"):
+        errors.extend(f"accepted_by_worker_result_ref: {error}" for error in _evidence_ref_errors([accepted_ref], ROOT))
+    return errors
+
+
 def _waiver_errors(data: dict[str, Any]) -> list[str]:
     if str(data.get("result") or "").strip() != "WAIVED":
         return []
@@ -6629,6 +6780,7 @@ def validate_worker_result_record(
         errors.append(f"record_type must be {expected_field}")
     if not record_type:
         errors.append("record_type is required")
+    errors.extend(async_background_reconciliation_errors(data, record_type=record_type))
 
     if record_type == "human_gate_record":
         if data.get("decision") != "approved":

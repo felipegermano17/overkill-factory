@@ -827,6 +827,31 @@ class FactoryCtlTest(unittest.TestCase):
         schema = json.loads((ROOT / "schemas" / "worker-result.schema.json").read_text(encoding="utf-8"))
 
         self.assertIn("sdlc_feedback_loop_ref", schema["properties"])
+        self.assertIn("async_subagent", schema["properties"])
+
+    def test_async_background_subagent_cannot_satisfy_human_gate_record(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        record = human_gate_record(source_card=card)
+        record["tool_or_profile"] = "hermes_delegate_task_background"
+        record["executed_by"] = "background-subagent"
+        record["async_subagent"] = {
+            "runtime": "hermes_delegate_task_background",
+            "delegation_id": "external:delegation-fixture",
+            "status": "reconciled",
+            "reconciliation_state": "reconciled",
+            "reconciliation_owner": "factory-orchestrator",
+            "accepted_by_worker_result_ref": "external:accepted-worker-result",
+        }
+
+        errors = factoryctl.validate_worker_result_record(
+            record,
+            expected_field="human_gate_record",
+            expected_worker_id="human-gate-clerk",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn("human_gate_record cannot be produced or satisfied by Hermes background subagent output", errors)
 
     def test_worker_packet_schema_allows_every_registered_worker(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))

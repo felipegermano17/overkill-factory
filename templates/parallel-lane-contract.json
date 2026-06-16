@@ -1,9 +1,9 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/parallel-lane-contract.schema.json",
   "record_type": "parallel_lane_contract",
-  "lane_id": "example-readonly-audit",
-  "lane_kind": "read_only",
-  "objective": "Audit the public factory flow without writing to the repository.",
+  "lane_id": "example-hermes-background-research",
+  "lane_kind": "background_subagent_lane",
+  "objective": "Run a Hermes background subagent lane as candidate research only, then reconcile it through a worker result before it can affect Receipt Five.",
   "read_scope": [
     "docs/concepts/factory-flow.md",
     "scripts/factoryctl.py"
@@ -11,7 +11,7 @@
   "write_scope": [
     "none"
   ],
-  "owner_agent": "external:subagent",
+  "owner_agent": "external:hermes-background-subagent",
   "reviewer_or_synthesizer": "main-agent",
   "status": "ready_for_integration",
   "base_ref": "main",
@@ -29,9 +29,11 @@
   ],
   "changed_paths": [],
   "expected_outputs": [
-    "read-only audit summary"
+    "candidate research summary",
+    "public-safe evidence references",
+    "reconciliation recommendation"
   ],
-  "expected_artifact": "external:subagent-summary",
+  "expected_artifact": "external:hermes-background-subagent-summary",
   "timeout": {
     "limit": 45,
     "unit": "minutes"
@@ -45,13 +47,13 @@
   "conflict_risk": "low",
   "merge_reconciliation_policy": {
     "synthesizer": "main-agent",
-    "decision_rule": "Read-only findings must be reconciled against canonical card/source refs before they affect Receipt Five.",
+    "decision_rule": "Background subagent findings are candidate-only until an owning worker result explicitly accepts or rejects them.",
     "no_self_promotion": true
   },
   "cleanup_policy": {
     "owner": "main-agent",
     "when": "after synthesis",
-    "stale_or_failed_lane_action": "mark superseded or blocked and keep only public-safe summary refs"
+    "stale_or_failed_lane_action": "mark stale, failed, cancelled, rejected or superseded and keep only public-safe summary refs"
   },
   "validation_commands": [
     "python scripts/public_safety_scan.py",
@@ -59,7 +61,8 @@
   ],
   "validation_result": "PASS",
   "evidence_refs": [
-    "external:subagent-summary"
+    "external:hermes-background-subagent-summary",
+    "external:accepted-worker-result-after-reconciliation"
   ],
   "cleanup_status": "not_needed",
   "integration_owner": "main-agent",
@@ -72,6 +75,45 @@
     "local_state_authority": false,
     "materialized_hermes_task_refs": []
   },
+  "runtime": "hermes_delegate_task_background",
+  "delegation_id": "external:hermes-delegation-id",
+  "parent_card_id": "external:factory-card-id",
+  "parent_worker_id": "factory-orchestrator",
+  "goal": "Produce bounded candidate research for the parent factory card.",
+  "context_summary_public_safe": "Public-safe context summary only; no raw private prompt, local path, private customer data or credential material.",
+  "toolsets": [
+    "read_only",
+    "research"
+  ],
+  "model_profile": {
+    "selection_policy": "inherited_or_router_selected",
+    "cost_speed_quality_basis": "operator policy"
+  },
+  "delegation_status": "reconciled",
+  "max_async_children_observed": 1,
+  "expected_output_contract": "Candidate summary plus public-safe evidence refs; never direct completion, human gate approval or canonical Kanban mutation.",
+  "candidate_evidence_refs": [
+    "external:hermes-background-subagent-summary"
+  ],
+  "private_evidence_redaction_policy": "Only sanitized public-safe refs may enter the public repo; raw logs, local paths, prompts and private source extracts stay outside.",
+  "reconciliation_owner": "factory-orchestrator",
+  "accepted_by_worker_result_ref": "external:accepted-worker-result-after-reconciliation",
+  "rejected_reason": "",
+  "retry_attempt": 0,
+  "retry_policy": {
+    "max_attempts": 2,
+    "supersede_previous_attempt": true,
+    "stop_classes": [
+      "human_gate",
+      "security_gate",
+      "budget_exhausted"
+    ]
+  },
+  "supersedes_lane_id": "",
+  "next_safe_action": "Use the accepted worker result as the only consumable Receipt Five input.",
+  "direct_completion_authority": false,
+  "human_gate_authority": false,
+  "canonical_state_mutation_authority": false,
   "public_safety_boundary": {
     "no_private_product_names": true,
     "no_local_absolute_paths": true,

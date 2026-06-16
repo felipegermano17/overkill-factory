@@ -41,6 +41,31 @@ Editing lanes need a worktree or branch ref different from the base ref. Read-on
 lanes may use the base ref, but their output still requires synthesis before it
 changes canonical state.
 
+## Hermes Delegation Modes
+
+Hermes Kanban tasks are the durable factory lanes. Hermes `delegate_task`
+subagents are auxiliary execution lanes: useful for bounded research, review,
+candidate repair plans or parallel analysis, but not authoritative state.
+
+Use the modes this way:
+
+- `delegate_task` synchronous: bounded helper work inside the parent turn. The
+  parent still reconciles the answer before card, Receipt Five or release state
+  changes.
+- `delegate_task(background=true)`: a `background_subagent_lane`. It needs
+  `delegation_id`, parent card/worker ids, toolsets, public-safe context,
+  retry/supersession policy, candidate evidence refs and a named reconciliation
+  owner.
+- Hermes Kanban card/task: durable work that can block, retry, receive worker
+  packets, produce worker results and participate in Receipt Five.
+
+A background subagent lane is candidate-only until `delegation_status=reconciled`
+and `accepted_by_worker_result_ref` points to the worker result that accepted it.
+`completed` is not enough. `failed`, `cancelled`, `stale`, `superseded` and
+`rejected` cannot unblock anything. Background output cannot approve human gates,
+move canonical Kanban state, publish public artifacts, or directly satisfy
+Receipt Five.
+
 ## Cascade Operating Protocol
 
 Use a named-lane sweep:
