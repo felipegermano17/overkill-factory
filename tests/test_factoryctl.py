@@ -2396,6 +2396,57 @@ class FactoryCtlTest(unittest.TestCase):
             errors,
         )
 
+    def test_docs_surface_maps_to_docs_onboarding_profile(self) -> None:
+        card = product_surface_card_fixture("docs", "docs_onboarding")
+        result = product_face_result_fixture(
+            surface_evidence_profile=surface_profile("docs_onboarding", "docs"),
+            surface_evidence_profiles=[surface_profile("docs_onboarding", "docs")],
+            docs_onboarding_evidence={
+                "first_success_replay_refs": ["reports/docs/first-success.md"],
+                "tasks_covered": ["install and run the first value path"],
+                "stale_link_check_refs": ["reports/docs/link-check.txt"],
+                "public_safety_check_refs": ["reports/docs/public-safety.txt"],
+                "reader_success_criteria": ["reader reaches first useful factory output"],
+            },
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
+    def test_mobile_surface_cannot_fallback_to_web_visual_profile(self) -> None:
+        card = product_surface_card_fixture("mobile", "web_visual_ui")
+        result = product_face_result_fixture()
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertTrue(
+            any(
+                "product_experience_surface.surfaces 'mobile' is blocked in Product Experience OS taxonomy"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_surface_taxonomy_blocks_mismatched_or_template_only_profiles(self) -> None:
+        plan = factoryctl.load_json_like(ROOT / "templates" / "product-experience-plan.json")
+        plan["surface_type"] = "docs"
+        plan["surface_evidence_profile"] = "web_visual_ui"
+        self.assertIn(
+            "product_experience_plan.surface_type 'docs' requires surface_evidence_profile docs_onboarding",
+            factoryctl.validate_product_experience_plan(plan),
+        )
+
+        packet = factoryctl.load_json_like(ROOT / "templates" / "product-face-packet.json")
+        packet["surface"] = "mobile"
+        packet["surface_evidence_profile"] = "web_visual_ui"
+        self.assertTrue(
+            any(
+                "product_face_packet.surface 'mobile' is blocked in Product Experience OS taxonomy"
+                in error
+                for error in factoryctl.validate_product_face_packet(packet, strict=True)
+            )
+        )
+
     def test_agentic_surface_requires_task_state_control_and_recovery_evidence(self) -> None:
         card = product_surface_card_fixture("agentic_interface", "agentic_interface")
         result = product_face_result_fixture(
