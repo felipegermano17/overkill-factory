@@ -4324,6 +4324,212 @@ def validate_factory_sdlc_lifecycle_state(state: dict[str, Any]) -> list[str]:
     return errors
 
 
+AUTOMATION_GITHUB_AUTHORITIES = {"github_pr", "release_candidate", "production_operation"}
+AUTOMATION_REPO_BOUND_AUTHORITIES = {"bounded_edit", "local_commit", "github_pr", "release_candidate", "production_operation"}
+AUTOMATION_REPO_BOUND_TARGETS = {"repo", "factory_issue", "release"}
+AUTOMATION_REQUIRED_SAFETY_CHECKS = {"public_safety_scan", "secret_safety_scan"}
+AUTOMATION_RAW_RESEARCH_FIELDS = {
+    "raw_notes",
+    "paper_dump",
+    "source_dump",
+    "screenshot_path",
+    "conversation_history",
+    "local_capture_path",
+    "private_capture_path",
+}
+
+
+def _validate_automation_ref(ref: Any, at: str, errors: list[str]) -> None:
+    _, redaction = sanitize_public_ref(ref)
+    if redaction is not None:
+        errors.append(f"{at} must be public-safe")
+
+
+def _normalized_check_ids(items: Any) -> set[str]:
+    return {item.strip().lower() for item in _list_items(items)}
+
+
+def _passed_check_ids(checks: Any, *, phase: str | None = None) -> set[str]:
+    if not isinstance(checks, list):
+        return set()
+    passed: set[str] = set()
+    for check in checks:
+        if not isinstance(check, dict):
+            continue
+        if phase is not None and str(check.get("phase") or "").strip().lower() != phase:
+            continue
+        if str(check.get("status") or "").strip().upper() == "PASS":
+            passed.add(str(check.get("check_id") or "").strip().lower())
+    return passed
+
+
+def _validate_automation_public_policy(policy: Any, at: str, errors: list[str]) -> None:
+    if not isinstance(policy, dict):
+        errors.append(f"{at} is required")
+        return
+    if policy.get("public_safe_refs_only") is not True:
+        errors.append(f"{at}.public_safe_refs_only must be true")
+    if policy.get("raw_private_evidence_embedded") is not False:
+        errors.append(f"{at}.raw_private_evidence_embedded must be false")
+    if policy.get("no_raw_screenshots_or_logs") is not True:
+        errors.append(f"{at}.no_raw_screenshots_or_logs must be true")
+
+
+def validate_factory_automation_run_target(target: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-automation-run-target.schema.json")
+    if not schema:
+        return ["factory_automation_run_target schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            target,
+            "factory_automation_run_target",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    trigger = target.get("trigger") if isinstance(target.get("trigger"), dict) else {}
+    target_obj = target.get("target") if isinstance(target.get("target"), dict) else {}
+    _validate_automation_ref(
+        trigger.get("trigger_ref_public_safe"),
+        "factory_automation_run_target.trigger.trigger_ref_public_safe",
+        errors,
+    )
+    _validate_automation_ref(target_obj.get("target_ref"), "factory_automation_run_target.target.target_ref", errors)
+    _validate_automation_ref(target.get("runtime_target_ref"), "factory_automation_run_target.runtime_target_ref", errors)
+    _validate_automation_ref(target.get("profile_binding_ref"), "factory_automation_run_target.profile_binding_ref", errors)
+
+    authority = str(target.get("authority_level") or "").strip()
+    preflight = _normalized_check_ids(target.get("required_preflight_checks"))
+    post = _normalized_check_ids(target.get("required_post_checks"))
+    if authority in AUTOMATION_GITHUB_AUTHORITIES:
+        missing_preflight = sorted(AUTOMATION_REQUIRED_SAFETY_CHECKS - preflight)
+        missing_post = sorted(AUTOMATION_REQUIRED_SAFETY_CHECKS - post)
+        if missing_preflight:
+            errors.append(
+                "factory_automation_run_target GitHub authority requires preflight checks: "
+                + ", ".join(missing_preflight)
+            )
+        if missing_post:
+            errors.append(
+                "factory_automation_run_target GitHub authority requires post checks: "
+                + ", ".join(missing_post)
+            )
+        if not _list_items(target.get("human_gate_triggers")):
+            errors.append("factory_automation_run_target GitHub authority requires human_gate_triggers")
+
+    if authority == "production_operation" and "production_human_gate" not in _normalized_check_ids(target.get("human_gate_triggers")):
+        errors.append("factory_automation_run_target production_operation requires production_human_gate trigger")
+
+    allowed = _normalized_check_ids(target.get("allowed_actions"))
+    forbidden = _normalized_check_ids(target.get("forbidden_actions"))
+    if allowed & forbidden:
+        errors.append("factory_automation_run_target allowed_actions and forbidden_actions overlap")
+
+    if target_obj.get("target_kind") == "external_research_track":
+        forbidden_text = " ".join(_list_items(target.get("forbidden_actions"))).lower()
+        if "raw" not in forbidden_text or "private" not in forbidden_text:
+            errors.append("factory_automation_run_target external research must forbid raw/private evidence publication")
+
+    _validate_automation_public_policy(target.get("public_artifact_policy"), "factory_automation_run_target.public_artifact_policy", errors)
+    return errors
+
+
+def validate_factory_automation_run_record(record: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-automation-run-record.schema.json")
+    if not schema:
+        return ["factory_automation_run_record schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            record,
+            "factory_automation_run_record",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    trigger = record.get("trigger_observed") if isinstance(record.get("trigger_observed"), dict) else {}
+    target_obj = record.get("target_resolved") if isinstance(record.get("target_resolved"), dict) else {}
+    _validate_automation_ref(
+        trigger.get("trigger_ref_public_safe"),
+        "factory_automation_run_record.trigger_observed.trigger_ref_public_safe",
+        errors,
+    )
+    _validate_automation_ref(target_obj.get("target_ref"), "factory_automation_run_record.target_resolved.target_ref", errors)
+    for index, ref in enumerate(_list_items(record.get("evidence_refs_public_safe"))):
+        _validate_automation_ref(ref, f"factory_automation_run_record.evidence_refs_public_safe[{index}]", errors)
+    for index, issue_ref in enumerate(_list_items(record.get("issues_created_or_updated"))):
+        _validate_automation_ref(issue_ref, f"factory_automation_run_record.issues_created_or_updated[{index}]", errors)
+    for index, pr_ref in enumerate(_list_items(record.get("prs_created_or_updated"))):
+        _validate_automation_ref(pr_ref, f"factory_automation_run_record.prs_created_or_updated[{index}]", errors)
+    checks = record.get("checks_run") if isinstance(record.get("checks_run"), list) else []
+    for index, check in enumerate(checks):
+        if not isinstance(check, dict):
+            continue
+        _validate_automation_ref(check.get("evidence_ref"), f"factory_automation_run_record.checks_run[{index}].evidence_ref", errors)
+
+    authority = str(record.get("authority_level") or "").strip()
+    status = str(record.get("status") or "").strip().lower()
+    target_kind = str(target_obj.get("target_kind") or "").strip()
+    repo_bound = authority in AUTOMATION_REPO_BOUND_AUTHORITIES or target_kind in AUTOMATION_REPO_BOUND_TARGETS
+    if repo_bound:
+        git_state = record.get("git_state") if isinstance(record.get("git_state"), dict) else None
+        if git_state is None:
+            errors.append("factory_automation_run_record repo-bound run requires git_state")
+        elif not _non_empty_text(git_state.get("publication_state")):
+            errors.append("factory_automation_run_record git_state must distinguish local work from GitHub publication")
+
+    if status == "completed":
+        if not _non_empty_text(record.get("completed_at")):
+            errors.append("factory_automation_run_record completed status requires completed_at")
+        if not _list_items(record.get("checks_run")):
+            errors.append("factory_automation_run_record completed status requires checks_run")
+        if not _list_items(record.get("evidence_refs_public_safe")):
+            errors.append("factory_automation_run_record completed status requires evidence_refs_public_safe")
+        missing_post = sorted(_normalized_check_ids(record.get("required_post_checks")) - _passed_check_ids(checks, phase="post"))
+        if missing_post:
+            errors.append("factory_automation_run_record completed status requires passed post checks: " + ", ".join(missing_post))
+        if record.get("allowed_actions_executed") is not True:
+            errors.append("factory_automation_run_record completed status requires allowed_actions_executed=true")
+
+    if status in {"blocked", "failed"} and not _non_empty_text(record.get("blocked_reason")):
+        errors.append(f"factory_automation_run_record {status} status requires blocked_reason")
+
+    if authority in AUTOMATION_GITHUB_AUTHORITIES:
+        passed = _passed_check_ids(checks)
+        missing = sorted(AUTOMATION_REQUIRED_SAFETY_CHECKS - passed)
+        if missing:
+            errors.append("factory_automation_run_record GitHub authority requires passed safety checks: " + ", ".join(missing))
+
+    if target_kind == "external_research_track":
+        sources = record.get("external_research_sources") if isinstance(record.get("external_research_sources"), list) else []
+        if not sources:
+            errors.append("factory_automation_run_record external research requires external_research_sources")
+        serialized = json.dumps(record, sort_keys=True)
+        for field in AUTOMATION_RAW_RESEARCH_FIELDS:
+            if f'"{field}"' in serialized:
+                errors.append(f"factory_automation_run_record external research must not contain raw dump field {field}")
+        for index, source in enumerate(sources):
+            if not isinstance(source, dict):
+                continue
+            source_url = str(source.get("source_url") or "").strip()
+            if not source_url.startswith(("https://", "http://")):
+                errors.append(f"factory_automation_run_record.external_research_sources[{index}].source_url must be a public URL")
+            if source.get("raw_capture_embedded") is not False:
+                errors.append(f"factory_automation_run_record.external_research_sources[{index}].raw_capture_embedded must be false")
+            if not public_safe_text(source.get("public_safe_synthesis")):
+                errors.append(f"factory_automation_run_record.external_research_sources[{index}].public_safe_synthesis must be public-safe")
+
+    _validate_automation_public_policy(record.get("public_artifact_policy"), "factory_automation_run_record.public_artifact_policy", errors)
+    return errors
+
+
 def _required_product_states(card: dict[str, Any]) -> list[str]:
     plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
     packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
@@ -8543,6 +8749,26 @@ def command_validate_sdlc_lifecycle(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_automation_target(args: argparse.Namespace) -> int:
+    errors = validate_factory_automation_run_target(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_validate_automation_record(args: argparse.Namespace) -> int:
+    errors = validate_factory_automation_run_record(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_worker_packet(args: argparse.Namespace) -> int:
     card = load_json_like(args.card)
     if args.required_only and args.worker != "all":
@@ -8851,6 +9077,22 @@ def build_parser() -> argparse.ArgumentParser:
     validate_lifecycle_parser = sub.add_parser("validate-lifecycle")
     validate_lifecycle_parser.add_argument("path", type=Path)
     validate_lifecycle_parser.set_defaults(func=command_validate_sdlc_lifecycle)
+
+    validate_automation_target_parser = sub.add_parser("validate-automation-target")
+    validate_automation_target_parser.add_argument("path", type=Path)
+    validate_automation_target_parser.set_defaults(func=command_validate_automation_target)
+
+    validate_automation_run_target_parser = sub.add_parser("validate-automation-run-target")
+    validate_automation_run_target_parser.add_argument("path", type=Path)
+    validate_automation_run_target_parser.set_defaults(func=command_validate_automation_target)
+
+    validate_automation_record_parser = sub.add_parser("validate-automation-record")
+    validate_automation_record_parser.add_argument("path", type=Path)
+    validate_automation_record_parser.set_defaults(func=command_validate_automation_record)
+
+    validate_automation_run_record_parser = sub.add_parser("validate-automation-run-record")
+    validate_automation_run_record_parser.add_argument("path", type=Path)
+    validate_automation_run_record_parser.set_defaults(func=command_validate_automation_record)
 
     worker_packet_parser = sub.add_parser("worker-packet")
     worker_packet_parser.add_argument("--worker", choices=[*WORKERS.keys(), "all"], required=True)

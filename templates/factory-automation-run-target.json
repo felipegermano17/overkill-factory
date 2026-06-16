@@ -1,0 +1,67 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-automation-run-target.schema.json",
+  "record_type": "factory_automation_run_target",
+  "automation_id": "automation-public-readiness-audit",
+  "created_at": "2026-06-16T00:00:00+00:00",
+  "trigger": {
+    "trigger_type": "heartbeat",
+    "trigger_ref_public_safe": "external:public-recurring-audit-trigger",
+    "trigger_contract": "Recurring audit trigger must name the bounded target before any work starts."
+  },
+  "target": {
+    "target_kind": "repo",
+    "target_ref": "external:public-overkill-factory-repo",
+    "scope_summary": "Audit public repository contracts and open issues without private runtime evidence."
+  },
+  "owner_worker": "factory-mechanic",
+  "runtime_target_ref": "external:public-hermes-runtime-or-equivalent",
+  "profile_binding_ref": "agents/hermes-profile-bindings.public.json",
+  "authority_level": "read_only",
+  "allowed_actions": [
+    "inspect_public_repo",
+    "validate_public_contracts",
+    "prepare_public_safe_recommendation"
+  ],
+  "forbidden_actions": [
+    "publish_private_evidence",
+    "claim_completion_without_checks",
+    "mutate_github_without_explicit_authority"
+  ],
+  "required_preflight_checks": [
+    "git_state_probe",
+    "public_safety_scan"
+  ],
+  "required_post_checks": [
+    "public_json_artifact_validation",
+    "public_safety_scan"
+  ],
+  "human_gate_triggers": [
+    "authority_escalates_to_github_pr",
+    "private_evidence_needed_for_claim"
+  ],
+  "public_artifact_policy": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "no_raw_screenshots_or_logs": true,
+    "allowed_ref_classes": [
+      "repo_relative",
+      "external_sanitized_ref",
+      "github_public_ref"
+    ]
+  },
+  "retry_policy": {
+    "max_attempts": 3,
+    "retry_when": [
+      "non_human_block",
+      "validator_failure_after_repair"
+    ],
+    "stop_condition": "Stop when the target is complete, superseded, or requires a real human gate."
+  },
+  "stop_condition": "Stop when the bounded audit has a validated run record and next safe action.",
+  "cleanup_policy": {
+    "temporary_artifacts_policy": "Keep raw run outputs outside the public repo.",
+    "branch_cleanup_required": false,
+    "private_evidence_cleanup_required": true
+  },
+  "next_safe_action": "Run factoryctl validate-automation-target before scheduling this automation."
+}

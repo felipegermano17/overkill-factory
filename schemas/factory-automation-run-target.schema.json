@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-automation-run-target.schema.json",
+  "title": "Overkill Factory Automation Run Target",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "automation_id",
+    "created_at",
+    "trigger",
+    "target",
+    "owner_worker",
+    "runtime_target_ref",
+    "profile_binding_ref",
+    "authority_level",
+    "allowed_actions",
+    "forbidden_actions",
+    "required_preflight_checks",
+    "required_post_checks",
+    "human_gate_triggers",
+    "public_artifact_policy",
+    "retry_policy",
+    "stop_condition",
+    "cleanup_policy",
+    "next_safe_action"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-automation-run-target.schema.json"
+    },
+    "record_type": {
+      "const": "factory_automation_run_target"
+    },
+    "automation_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "trigger": {
+      "type": "object",
+      "required": [
+        "trigger_type",
+        "trigger_ref_public_safe",
+        "trigger_contract"
+      ],
+      "properties": {
+        "trigger_type": {
+          "enum": [
+            "schedule",
+            "heartbeat",
+            "github_event",
+            "hermes_event",
+            "manual_request",
+            "status_change",
+            "incident",
+            "learnback",
+            "external_signal"
+          ]
+        },
+        "trigger_ref_public_safe": {
+          "type": "string",
+          "minLength": 3
+        },
+        "trigger_contract": {
+          "type": "string",
+          "minLength": 6
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "target_kind",
+        "target_ref",
+        "scope_summary"
+      ],
+      "properties": {
+        "target_kind": {
+          "enum": [
+            "repo",
+            "card",
+            "project",
+            "product",
+            "worker_profile",
+            "capability_pack",
+            "release",
+            "external_research_track",
+            "factory_issue"
+          ]
+        },
+        "target_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "scope_summary": {
+          "type": "string",
+          "minLength": 12
+        }
+      },
+      "additionalProperties": false
+    },
+    "owner_worker": {
+      "type": "string",
+      "minLength": 3
+    },
+    "runtime_target_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "profile_binding_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "authority_level": {
+      "enum": [
+        "read_only",
+        "planning_only",
+        "bounded_edit",
+        "local_commit",
+        "github_pr",
+        "release_candidate",
+        "production_operation"
+      ]
+    },
+    "allowed_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "forbidden_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "required_preflight_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "required_post_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "human_gate_triggers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "public_artifact_policy": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "no_raw_screenshots_or_logs",
+        "allowed_ref_classes"
+      ],
+      "properties": {
+        "public_safe_refs_only": {
+          "const": true
+        },
+        "raw_private_evidence_embedded": {
+          "const": false
+        },
+        "no_raw_screenshots_or_logs": {
+          "const": true
+        },
+        "allowed_ref_classes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "repo_relative",
+              "external_public_url",
+              "external_sanitized_ref",
+              "github_public_ref"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "retry_policy": {
+      "type": "object",
+      "required": [
+        "max_attempts",
+        "retry_when",
+        "stop_condition"
+      ],
+      "properties": {
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "retry_when": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "stop_condition": {
+          "type": "string",
+          "minLength": 6
+        }
+      },
+      "additionalProperties": false
+    },
+    "stop_condition": {
+      "type": "string",
+      "minLength": 6
+    },
+    "cleanup_policy": {
+      "type": "object",
+      "required": [
+        "temporary_artifacts_policy",
+        "branch_cleanup_required",
+        "private_evidence_cleanup_required"
+      ],
+      "properties": {
+        "temporary_artifacts_policy": {
+          "type": "string",
+          "minLength": 6
+        },
+        "branch_cleanup_required": {
+          "type": "boolean"
+        },
+        "private_evidence_cleanup_required": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "next_safe_action": {
+      "type": "string",
+      "minLength": 6
+    }
+  },
+  "additionalProperties": false
+}
