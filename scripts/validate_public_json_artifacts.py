@@ -549,6 +549,65 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             errors.append(f"{at}: production readiness requires production_strict or customer_validated proof")
         if acceptance.get("customer_ready_claimed") is True and proof_level != "customer_validated":
             errors.append(f"{at}: customer readiness requires customer_validated proof")
+    if data.get("record_type") == "factory_sdlc_feedback_loop":
+        linked_lifecycle = str(data.get("linked_lifecycle_state_ref") or "").strip()
+        if linked_lifecycle:
+            reason = public_artifact_ref_error(linked_lifecycle)
+            if reason:
+                errors.append(f"{at}.linked_lifecycle_state_ref: {reason}")
+        source = data.get("source_signal") if isinstance(data.get("source_signal"), dict) else {}
+        source_ref = str(source.get("signal_ref_public_safe") or "").strip()
+        reason = public_artifact_ref_error(source_ref)
+        if reason:
+            errors.append(f"{at}.source_signal.signal_ref_public_safe: {reason}")
+        if source.get("sensitivity_class") == "secret":
+            errors.append(f"{at}: factory_sdlc_feedback_loop cannot publish secret-class signals")
+        triage = data.get("triage_decision") if isinstance(data.get("triage_decision"), dict) else {}
+        route_ref = str(triage.get("route_ref") or "").strip()
+        reason = public_artifact_ref_error(route_ref)
+        if reason:
+            errors.append(f"{at}.triage_decision.route_ref: {reason}")
+        routing = data.get("routing_decision") if isinstance(data.get("routing_decision"), dict) else {}
+        router_ref = str(routing.get("router_ref") or "").strip()
+        reason = public_artifact_ref_error(router_ref)
+        if reason:
+            errors.append(f"{at}.routing_decision.router_ref: {reason}")
+        if routing.get("model_independence_preserved") is not True:
+            errors.append(f"{at}: factory_sdlc_feedback_loop routing must preserve model independence")
+        if routing.get("single_provider_assumption") is not False:
+            errors.append(f"{at}: factory_sdlc_feedback_loop routing must not assume a single provider")
+        evidence = data.get("execution_evidence") if isinstance(data.get("execution_evidence"), dict) else {}
+        for field in ("evidence_refs", "validation_refs"):
+            refs = evidence.get(field) if isinstance(evidence.get(field), list) else []
+            for index, ref in enumerate(refs):
+                reason = public_artifact_ref_error(ref)
+                if reason:
+                    errors.append(f"{at}.execution_evidence.{field}[{index}]: {reason}")
+        if evidence.get("failed_outputs_consumable_as_success") is not False:
+            errors.append(f"{at}: factory_sdlc_feedback_loop failed outputs cannot be consumed as success")
+        learnback = data.get("learnback_decision") if isinstance(data.get("learnback_decision"), dict) else {}
+        for field in ("source_evidence_refs", "validation_refs"):
+            refs = learnback.get(field) if isinstance(learnback.get(field), list) else []
+            for index, ref in enumerate(refs):
+                reason = public_artifact_ref_error(ref)
+                if reason:
+                    errors.append(f"{at}.learnback_decision.{field}[{index}]: {reason}")
+        classification = str(learnback.get("classification") or "").strip()
+        target_artifact = str(learnback.get("target_artifact_type") or "").strip()
+        promotion_boundary = str(learnback.get("promotion_boundary") or "").strip()
+        if classification != "reject" and target_artifact == "none":
+            errors.append(f"{at}: factory_sdlc_feedback_loop learnback requires an actionable target artifact")
+        if classification == "reject" and target_artifact != "none":
+            errors.append(f"{at}: factory_sdlc_feedback_loop rejected learnback must use target_artifact_type=none")
+        if classification != "reject" and promotion_boundary == "rejected":
+            errors.append(f"{at}: factory_sdlc_feedback_loop non-rejected learnback cannot use rejected promotion boundary")
+        sovereignty = data.get("sovereignty_boundary") if isinstance(data.get("sovereignty_boundary"), dict) else {}
+        if sovereignty.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: factory_sdlc_feedback_loop requires public_safe_refs_only=true")
+        if sovereignty.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: factory_sdlc_feedback_loop must not embed raw private evidence")
+        if sovereignty.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: factory_sdlc_feedback_loop private context must stay outside the public repo")
     if data.get("record_type") == "factory_automation_run_target":
         trigger = data.get("trigger") if isinstance(data.get("trigger"), dict) else {}
         target = data.get("target") if isinstance(data.get("target"), dict) else {}

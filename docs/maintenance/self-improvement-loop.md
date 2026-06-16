@@ -17,6 +17,7 @@ intake and governance checks into structured artifacts.
 
 - `schemas/missing-capability-completion-plan.schema.json`
 - `schemas/execution-learnback-record.schema.json`
+- `schemas/factory-sdlc-feedback-loop.schema.json`
 - `schemas/factory-learning-proposal.schema.json`
 - `schemas/factory-improvement-issue-candidate.schema.json`
 - `schemas/owner-issue-intake-config.schema.json`
@@ -58,6 +59,29 @@ python scripts/factory_self_improvement.py learnback-issues \
 Public issue candidates must be generalized and redacted. Raw private logs,
 local paths, private board ids, Discord ids and screenshots do not belong in
 public issue bodies.
+
+## SDLC Feedback Loop
+
+Use `factory_sdlc_feedback_loop` when a signal needs to stay connected across
+the full factory loop:
+
+```text
+signal -> triage -> model/profile route -> evidence -> learnback
+```
+
+The loop record does not replace lifecycle state, worker results, evidence
+bundles or learning proposals. It binds them so a signal cannot disappear into
+chat-only state, a model/profile choice cannot become implicit, and learnback
+cannot claim improvement without a target, validation path and promotion
+boundary.
+
+```bash
+python scripts/factoryctl.py validate-sdlc-feedback-loop \
+  templates/factory-sdlc-feedback-loop.json
+```
+
+Use this before converting external research, incidents, review findings,
+runtime gaps or product quality findings into durable factory changes.
 
 ## Learning Proposals
 

@@ -53,7 +53,7 @@ operator surface, maintainer internals or generated output.
 
 Use `maintenance/self-improvement-loop.md` for learnback issue candidates,
 missing-capability completion plans, owner issue intake, reasoning policy,
-reference quality packets and governance audit artifacts.
+SDLC feedback loops, reference quality packets and governance audit artifacts.
 
 Use `maintenance/factory-learning-skill-evolution-os.md` when repeated
 execution findings should become validated skills, rules, gates, tests, workers,

@@ -1,0 +1,390 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-sdlc-feedback-loop.schema.json",
+  "title": "Overkill Factory SDLC Feedback Loop",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "loop_id",
+    "created_at",
+    "factory_method_version",
+    "source_signal",
+    "triage_decision",
+    "routing_decision",
+    "execution_evidence",
+    "learnback_decision",
+    "sovereignty_boundary",
+    "next_safe_action"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-sdlc-feedback-loop.schema.json"
+    },
+    "record_type": {
+      "const": "factory_sdlc_feedback_loop"
+    },
+    "loop_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "linked_lifecycle_state_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "source_signal": {
+      "type": "object",
+      "required": [
+        "signal_type",
+        "source_class",
+        "sensitivity_class",
+        "freshness",
+        "owner",
+        "target_surface",
+        "signal_ref_public_safe",
+        "raw_private_embedded"
+      ],
+      "properties": {
+        "signal_type": {
+          "enum": [
+            "bug_report",
+            "customer_feedback",
+            "internal_request",
+            "business_requirement",
+            "monitoring_alert",
+            "incident",
+            "security_finding",
+            "code_review_finding",
+            "docs_gap",
+            "product_quality_gap",
+            "dependency_or_runtime_change",
+            "external_research_signal"
+          ]
+        },
+        "source_class": {
+          "enum": [
+            "internal_structured",
+            "external_untrusted",
+            "operator_supplied",
+            "runtime_observed",
+            "mixed"
+          ]
+        },
+        "sensitivity_class": {
+          "enum": [
+            "public_safe",
+            "redacted_private",
+            "private_runtime",
+            "customer_sensitive",
+            "secret"
+          ]
+        },
+        "freshness": {
+          "enum": [
+            "fresh",
+            "bounded",
+            "stale",
+            "unknown"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 3
+        },
+        "target_surface": {
+          "type": "string",
+          "minLength": 3
+        },
+        "signal_ref_public_safe": {
+          "type": "string",
+          "minLength": 3
+        },
+        "raw_private_embedded": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "triage_decision": {
+      "type": "object",
+      "required": [
+        "decision",
+        "route_ref",
+        "rationale",
+        "human_gate_required",
+        "rejects_chat_only_state"
+      ],
+      "properties": {
+        "decision": {
+          "enum": [
+            "product_sot_delta",
+            "work_unit",
+            "blocker",
+            "risk_gate",
+            "docs_task",
+            "incident_response",
+            "learnback_only",
+            "reject_with_rationale"
+          ]
+        },
+        "route_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 6
+        },
+        "human_gate_required": {
+          "type": "boolean"
+        },
+        "rejects_chat_only_state": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "routing_decision": {
+      "type": "object",
+      "required": [
+        "router_ref",
+        "selected_profile",
+        "selected_model_class",
+        "selection_basis",
+        "model_independence_preserved",
+        "single_provider_assumption"
+      ],
+      "properties": {
+        "router_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "selected_profile": {
+          "type": "string",
+          "minLength": 3
+        },
+        "selected_model_class": {
+          "enum": [
+            "small_fast",
+            "balanced",
+            "frontier_reasoning",
+            "specialist_tooling",
+            "human_only",
+            "deferred"
+          ]
+        },
+        "selection_basis": {
+          "type": "object",
+          "required": [
+            "cost",
+            "speed",
+            "quality",
+            "context_need",
+            "data_sensitivity",
+            "tool_requirements",
+            "expected_horizon",
+            "fallback_route"
+          ],
+          "properties": {
+            "cost": {
+              "type": "string",
+              "minLength": 3
+            },
+            "speed": {
+              "type": "string",
+              "minLength": 3
+            },
+            "quality": {
+              "type": "string",
+              "minLength": 3
+            },
+            "context_need": {
+              "type": "string",
+              "minLength": 3
+            },
+            "data_sensitivity": {
+              "type": "string",
+              "minLength": 3
+            },
+            "tool_requirements": {
+              "type": "string",
+              "minLength": 3
+            },
+            "expected_horizon": {
+              "type": "string",
+              "minLength": 3
+            },
+            "fallback_route": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "additionalProperties": false
+        },
+        "model_independence_preserved": {
+          "const": true
+        },
+        "single_provider_assumption": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "execution_evidence": {
+      "type": "object",
+      "required": [
+        "status",
+        "evidence_refs",
+        "failed_outputs_consumable_as_success",
+        "validation_refs"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "PENDING",
+            "PASS",
+            "BLOCKED",
+            "REJECTED",
+            "SUPERSEDED"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "failed_outputs_consumable_as_success": {
+          "const": false
+        },
+        "validation_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "learnback_decision": {
+      "type": "object",
+      "required": [
+        "classification",
+        "target_artifact_type",
+        "source_evidence_refs",
+        "validation_refs",
+        "promotion_boundary",
+        "rejection_rationale"
+      ],
+      "properties": {
+        "classification": {
+          "enum": [
+            "gate_update",
+            "template_update",
+            "schema_update",
+            "worker_packet_update",
+            "routing_rule_update",
+            "checklist_update",
+            "docs_update",
+            "test_or_eval_update",
+            "public_issue",
+            "reject"
+          ]
+        },
+        "target_artifact_type": {
+          "enum": [
+            "gate",
+            "template",
+            "schema",
+            "worker_packet",
+            "routing_rule",
+            "checklist",
+            "doc",
+            "test_or_eval",
+            "issue",
+            "none"
+          ]
+        },
+        "source_evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "validation_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "promotion_boundary": {
+          "enum": [
+            "inactive_candidate",
+            "public_issue_only",
+            "requires_independent_review",
+            "requires_human_gate",
+            "rejected"
+          ]
+        },
+        "rejection_rationale": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "sovereignty_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo",
+        "reusable_across_products",
+        "memory_owner"
+      ],
+      "properties": {
+        "public_safe_refs_only": {
+          "const": true
+        },
+        "raw_private_evidence_embedded": {
+          "const": false
+        },
+        "private_context_retained_outside_public_repo": {
+          "const": true
+        },
+        "reusable_across_products": {
+          "enum": [
+            "yes",
+            "no",
+            "bounded"
+          ]
+        },
+        "memory_owner": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "next_safe_action": {
+      "type": "string",
+      "minLength": 6
+    }
+  },
+  "additionalProperties": false
+}
