@@ -13,6 +13,7 @@
       "minItems": 1,
       "items": { "type": "string", "minLength": 8 }
     },
+    "activation_ledger_ref": { "type": "string", "minLength": 3 },
     "packs": {
       "type": "object",
       "minProperties": 1,

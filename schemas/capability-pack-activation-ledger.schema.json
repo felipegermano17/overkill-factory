@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/capability-pack-activation-ledger.schema.json",
+  "title": "Overkill Factory Capability Pack Activation Ledger",
+  "type": "object",
+  "required": ["$schema", "record_type", "version", "activation_entries"],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/capability-pack-activation-ledger.schema.json"
+    },
+    "record_type": { "const": "capability_pack_activation_ledger" },
+    "version": { "type": "string", "minLength": 3 },
+    "activation_entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "pack_id",
+          "registry_status",
+          "activation_state",
+          "material_execution_allowed_by_default",
+          "activation_contract_required",
+          "smoke_path_required",
+          "eval_path_required",
+          "profile_binding_refs_required",
+          "structured_proofs_required",
+          "human_activation_gate_required",
+          "allowed_activation_scope",
+          "blocked_when",
+          "next_activation_evidence"
+        ],
+        "properties": {
+          "pack_id": { "type": "string", "minLength": 3 },
+          "registry_status": {
+            "enum": ["pack_template", "blocked_until_installed", "pack_ready", "core_ready"]
+          },
+          "activation_state": {
+            "enum": ["activated", "blocked_until_installed", "template_only"]
+          },
+          "material_execution_allowed_by_default": { "type": "boolean" },
+          "activation_contract_required": { "type": "boolean" },
+          "smoke_path_required": { "type": "boolean" },
+          "eval_path_required": { "type": "boolean" },
+          "profile_binding_refs_required": { "type": "boolean" },
+          "structured_proofs_required": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "human_activation_gate_required": { "type": "boolean" },
+          "allowed_activation_scope": { "type": "string", "minLength": 3 },
+          "blocked_when": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "next_activation_evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,189 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/capability-pack-activation-ledger.schema.json",
+  "record_type": "capability_pack_activation_ledger",
+  "version": "factory-v1-preflight-2026-06-16",
+  "activation_entries": [
+    {
+      "pack_id": "mobile-app-pack",
+      "registry_status": "pack_template",
+      "activation_state": "template_only",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "mobile.architecture-packet",
+        "mobile.device-smoke",
+        "mobile.lifecycle-permissions",
+        "mobile.product-face-result"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only the exact approved mobile runtime, device matrix and store/release boundary.",
+      "blocked_when": ["No activated mobile builder and mobile QA profile bindings exist."],
+      "next_activation_evidence": ["mobile profile bindings", "simulator/device smoke", "mobile QA eval", "human activation gate"]
+    },
+    {
+      "pack_id": "desktop-app-pack",
+      "registry_status": "pack_template",
+      "activation_state": "template_only",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "desktop.runtime-decision",
+        "desktop.packaging-proof",
+        "desktop.update-rollback-proof",
+        "desktop.qa-proof"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only the approved desktop runtime, operating-system target and packaging/update path.",
+      "blocked_when": ["No activated desktop runtime/package worker binding exists."],
+      "next_activation_evidence": ["desktop profile binding", "installer smoke", "update/rollback eval", "human activation gate"]
+    },
+    {
+      "pack_id": "game-product-pack",
+      "registry_status": "pack_template",
+      "activation_state": "template_only",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "game.design-packet",
+        "game.runtime-choice",
+        "game.playable-smoke",
+        "game.performance-budget",
+        "game.playtest-review"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only the approved game runtime, asset pipeline and playtest proof boundary.",
+      "blocked_when": ["No activated game runtime, design and QA worker profile bindings exist."],
+      "next_activation_evidence": ["game runtime profile", "playable smoke", "performance proof", "playtest eval", "human activation gate"]
+    },
+    {
+      "pack_id": "ai-ml-product-pack",
+      "registry_status": "pack_template",
+      "activation_state": "template_only",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "ai.model-contract",
+        "ai.eval-plan",
+        "ai.data-policy",
+        "ai.safety-review",
+        "ai.regression-eval"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only the approved model/data/eval boundary with explicit safety limits.",
+      "blocked_when": ["No activated AI/ML product builder or model-eval binding exists."],
+      "next_activation_evidence": ["model/data contract", "eval harness", "safety review", "regression eval", "human activation gate"]
+    },
+    {
+      "pack_id": "fintech-payments-pack",
+      "registry_status": "pack_template",
+      "activation_state": "template_only",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "fintech.ledger-model",
+        "fintech.idempotency-proof",
+        "fintech.reconciliation-proof",
+        "fintech.risk-matrix",
+        "fintech.human-gate"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only the approved ledger, reconciliation and money-movement boundary.",
+      "blocked_when": ["No payments ledger profile, risk specialist and human money-movement gate exist."],
+      "next_activation_evidence": ["ledger invariant tests", "idempotency proof", "reconciliation proof", "risk review", "human activation gate"]
+    },
+    {
+      "pack_id": "regulated-domain-pack",
+      "registry_status": "pack_template",
+      "activation_state": "template_only",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "regulated.domain-risk-packet",
+        "regulated.compliance-owner",
+        "regulated.scope-boundary",
+        "regulated.human-gate"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only the approved jurisdiction, product class and compliance boundary.",
+      "blocked_when": ["No domain compliance specialist and jurisdiction-specific human gate exist."],
+      "next_activation_evidence": ["jurisdiction packet", "compliance owner", "scope boundary", "human activation gate"]
+    },
+    {
+      "pack_id": "data-analytics-pack",
+      "registry_status": "pack_template",
+      "activation_state": "template_only",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "analytics.metric-definitions",
+        "analytics.data-quality",
+        "analytics.lineage",
+        "analytics.dashboard-proof"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only the approved metric, lineage, data-quality and dashboard correctness boundary.",
+      "blocked_when": ["No activated analytics builder and data-quality eval binding exists."],
+      "next_activation_evidence": ["metric contract", "data-quality checks", "lineage proof", "dashboard proof", "human activation gate"]
+    },
+    {
+      "pack_id": "browser-extension-pack",
+      "registry_status": "pack_template",
+      "activation_state": "template_only",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "extension.permission-review",
+        "extension.browser-smoke",
+        "extension.service-worker-content-script",
+        "extension.packaging-proof"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only the approved browser, permission model and extension-store packaging boundary.",
+      "blocked_when": ["No browser extension builder binding and permission/package proof exist."],
+      "next_activation_evidence": ["permission review", "browser smoke", "service-worker/content-script proof", "packaging proof", "human activation gate"]
+    },
+    {
+      "pack_id": "hardware-iot-pack",
+      "registry_status": "blocked_until_installed",
+      "activation_state": "blocked_until_installed",
+      "material_execution_allowed_by_default": false,
+      "activation_contract_required": true,
+      "smoke_path_required": true,
+      "eval_path_required": true,
+      "profile_binding_refs_required": true,
+      "structured_proofs_required": [
+        "hardware.safety-packet",
+        "hardware.device-test-plan",
+        "hardware.domain-expert-review"
+      ],
+      "human_activation_gate_required": true,
+      "allowed_activation_scope": "Only after a named hardware/IoT specialist, physical test bench and safety owner exist.",
+      "blocked_when": ["No physical-device specialist, safety test bench or recovery model exists."],
+      "next_activation_evidence": ["hardware specialist profile", "device test plan", "safety proof", "domain expert review", "human activation gate"]
+    }
+  ]
+}

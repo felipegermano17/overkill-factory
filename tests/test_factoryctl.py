@@ -386,6 +386,10 @@ def activated_game_contract_fixture() -> dict:
         "permission_class": "bounded-worker",
         "missing_capabilities": [],
         "execution_rule": "Game execution is allowed only after playable smoke, performance budget and game QA proof exist.",
+        "activation_ledger_ref": "agents/capability-pack-activation-ledger.public.json",
+        "human_activation_gate_ref": "external:game-pack-human-activation-gate",
+        "activation_scope": "Bounded activation for this test game runtime, asset pipeline and QA surface only.",
+        "activation_rationale": "Human-approved activation path supplies smoke, eval, profile bindings and structured proof coverage.",
         "structured_proofs_required": [
             "game.design-packet",
             "game.performance-budget",

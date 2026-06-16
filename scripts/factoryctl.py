@@ -63,6 +63,8 @@ PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 PROFILE_READINESS_PATH = ROOT / "agents" / "worker-profile-readiness.public.json"
 PROFILE_READINESS_REF = "agents/worker-profile-readiness.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
+CAPABILITY_PACK_ACTIVATION_LEDGER_REF = "agents/capability-pack-activation-ledger.public.json"
+CAPABILITY_PACK_ACTIVATION_LEDGER_PATH = ROOT / CAPABILITY_PACK_ACTIVATION_LEDGER_REF
 DEFAULT_WORKFLOW_CATALOG = ROOT / "docs" / "factory-workflow.catalog.json"
 CANONICAL_RUNTIME_ENFORCEMENT_PATH = CODE_ROOT / "scripts" / "canonical_runtime_enforcement.py"
 DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
@@ -1277,6 +1279,20 @@ def load_capability_packs() -> dict[str, dict[str, Any]]:
     return {str(pack_id): pack for pack_id, pack in packs.items() if isinstance(pack, dict)}
 
 
+def load_capability_pack_activation_ledger() -> dict[str, dict[str, Any]]:
+    if not CAPABILITY_PACK_ACTIVATION_LEDGER_PATH.exists():
+        return {}
+    data = json.loads(CAPABILITY_PACK_ACTIVATION_LEDGER_PATH.read_text(encoding="utf-8"))
+    entries = data.get("activation_entries", [])
+    if not isinstance(entries, list):
+        raise ValueError("capability pack activation ledger must contain activation_entries")
+    return {
+        str(entry.get("pack_id")): entry
+        for entry in entries
+        if isinstance(entry, dict) and str(entry.get("pack_id") or "").strip()
+    }
+
+
 def _activated_capability_pack_ids(contract: Any) -> set[str]:
     if not isinstance(contract, dict):
         return set()
@@ -1339,9 +1355,35 @@ def validate_activated_capability_contract(
     if missing_capabilities:
         errors.append("capability_pack_contract.missing_capabilities must be empty before material execution")
     packs = load_capability_packs()
+    activation_ledger = load_capability_pack_activation_ledger()
     required_pack_proofs: set[str] = set()
     for pack_id in contract_pack_ids.intersection(candidate_pack_ids):
-        required_pack_proofs.update(_pack_structured_proof_ids(packs.get(pack_id, {})))
+        pack = packs.get(pack_id, {})
+        required_pack_proofs.update(_pack_structured_proof_ids(pack))
+        registry_status = str(pack.get("status") or "").strip()
+        if registry_status not in CAPABILITY_READY_STATES:
+            ledger_entry = activation_ledger.get(pack_id)
+            if not ledger_entry:
+                errors.append(f"capability_pack_contract activation ledger entry missing for non-core pack {pack_id!r}")
+                continue
+            if str(contract.get("activation_ledger_ref") or "").strip() != CAPABILITY_PACK_ACTIVATION_LEDGER_REF:
+                errors.append(
+                    "capability_pack_contract.activation_ledger_ref must be "
+                    f"{CAPABILITY_PACK_ACTIVATION_LEDGER_REF} for non-core pack activation"
+                )
+            ledger_proofs = set(_list_items(ledger_entry.get("structured_proofs_required")))
+            missing_ledger_proofs = sorted(ledger_proofs - set(contract_structured_proofs))
+            if missing_ledger_proofs:
+                errors.append(
+                    "capability_pack_contract.structured_proofs_required missing activation ledger proof ids: "
+                    + ", ".join(missing_ledger_proofs)
+                )
+            if str(ledger_entry.get("activation_state") or "").strip() != "activated":
+                for field in ("human_activation_gate_ref", "activation_scope", "activation_rationale"):
+                    if not _non_empty_text(contract.get(field)):
+                        errors.append(
+                            f"capability_pack_contract.{field} is required when activation ledger state is not activated"
+                        )
     if required_pack_proofs:
         if not contract_structured_proofs:
             errors.append("capability_pack_contract.structured_proofs_required must mirror activated registry proof ids")

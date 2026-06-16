@@ -74,6 +74,7 @@ Open the JSON files after that, when you need exact contracts.
 | `agents/hermes-profile-bindings.public.json` | Hermes profile name, queue policy, skill refs, result schema, receipt field and adapter binding. |
 | `agents/worker-permission-classes.public.json` | Permission class and authority boundary for every worker. |
 | `agents/capability-packs.public.json` | Product-type coverage and whether a requested surface can execute. |
+| `agents/capability-pack-activation-ledger.public.json` | Current activation state and proof requirements for non-core capability packs. |
 | `agents/worker-contract.schema.json` | Schema for the worker contract shape. |
 
 These files are not narrative documentation. They are public-safe contracts

@@ -43,6 +43,10 @@ def activated_game_contract() -> dict:
         "permission_class": "bounded-worker",
         "missing_capabilities": [],
         "execution_rule": "Game execution is allowed only after playable smoke, performance budget and game QA proof exist.",
+        "activation_ledger_ref": "agents/capability-pack-activation-ledger.public.json",
+        "human_activation_gate_ref": "external:game-pack-human-activation-gate",
+        "activation_scope": "Bounded activation for this test game runtime, asset pipeline and QA surface only.",
+        "activation_rationale": "Human-approved activation path supplies smoke, eval, profile bindings and structured proof coverage.",
         "structured_proofs_required": [
             "game.design-packet",
             "game.performance-budget",
@@ -172,6 +176,61 @@ class CapabilityPacksTest(unittest.TestCase):
         errors = factoryctl.validate_capability_coverage(card)
 
         self.assertEqual(errors, [])
+
+    def test_activation_ledger_covers_non_core_template_packs(self) -> None:
+        packs = json.loads((ROOT / "agents" / "capability-packs.public.json").read_text(encoding="utf-8"))["packs"]
+        ledger = json.loads((ROOT / "agents" / "capability-pack-activation-ledger.public.json").read_text(encoding="utf-8"))
+        entries = {entry["pack_id"]: entry for entry in ledger["activation_entries"]}
+        non_core_pack_ids = [
+            pack_id
+            for pack_id, pack in packs.items()
+            if pack["status"] in {"pack_template", "blocked_until_installed"}
+        ]
+
+        self.assertTrue(non_core_pack_ids)
+        for pack_id in non_core_pack_ids:
+            with self.subTest(pack_id=pack_id):
+                self.assertIn(pack_id, entries)
+                self.assertEqual(entries[pack_id]["registry_status"], packs[pack_id]["status"])
+                self.assertFalse(entries[pack_id]["material_execution_allowed_by_default"])
+                self.assertTrue(entries[pack_id]["activation_contract_required"])
+                self.assertTrue(entries[pack_id]["smoke_path_required"])
+                self.assertTrue(entries[pack_id]["eval_path_required"])
+                self.assertTrue(entries[pack_id]["profile_binding_refs_required"])
+                self.assertTrue(entries[pack_id]["allowed_activation_scope"])
+                self.assertEqual(
+                    set(entries[pack_id]["structured_proofs_required"]),
+                    set(packs[pack_id]["structured_proofs_required"]),
+                )
+
+    def test_template_pack_activation_requires_ledger_and_human_activation_gate(self) -> None:
+        card = base_card()
+        card["surfaces"] = ["game", "3d", "asset-pipeline"]
+        contract = activated_game_contract()
+        contract.pop("activation_ledger_ref")
+        contract.pop("human_activation_gate_ref")
+        contract.pop("activation_scope")
+        contract.pop("activation_rationale")
+        card["capability_pack_contract"] = contract
+
+        errors = factoryctl.validate_capability_coverage(card)
+
+        self.assertIn(
+            "capability_pack_contract.activation_ledger_ref must be agents/capability-pack-activation-ledger.public.json for non-core pack activation",
+            errors,
+        )
+        self.assertIn(
+            "capability_pack_contract.human_activation_gate_ref is required when activation ledger state is not activated",
+            errors,
+        )
+        self.assertIn(
+            "capability_pack_contract.activation_scope is required when activation ledger state is not activated",
+            errors,
+        )
+        self.assertIn(
+            "capability_pack_contract.activation_rationale is required when activation ledger state is not activated",
+            errors,
+        )
 
     def test_activated_pack_rejects_partial_surface_coverage(self) -> None:
         card = base_card()
