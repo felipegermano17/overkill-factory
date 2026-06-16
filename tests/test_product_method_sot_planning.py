@@ -206,6 +206,81 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
             factoryctl.validate_card(card),
         )
 
+    def test_product_delivery_before_promotion_proofs_block_done_promotion_when_missing(self) -> None:
+        card = self.vfinal_card()
+        profile = factoryctl.load_json_like(ROOT / "templates" / "product-delivery-quality-profile.json")
+        profile["required_proofs"].append(
+            {
+                "proof_id": "generic.release-readiness",
+                "name": "Release readiness proof",
+                "required_at": ["before_promotion"],
+                "owner_worker": "release-ops-worker",
+                "reviewer_role": "independent-reviewer",
+                "evidence_kind": "review",
+                "human_gate_required": False,
+            }
+        )
+        card["product_delivery_quality_profile"] = profile
+        metadata = {
+            "kanban_transition_event": {
+                "allowed": True,
+                "from_status": "review",
+                "to_status": "done",
+            },
+            "receipt_five_reconciliation_result": {
+                "result": "PASS",
+                "valid": True,
+                "promotion_authority": {"result": "PASS"},
+            },
+        }
+
+        errors = factoryctl.done_promotion_errors(metadata, card=card)
+
+        self.assertIn(
+            "product_delivery_promotion_proof_coverage missing product delivery proof coverage for required proof ids: generic.release-readiness",
+            errors,
+        )
+
+    def test_product_delivery_before_promotion_proofs_accept_valid_coverage(self) -> None:
+        card = self.vfinal_card()
+        profile = factoryctl.load_json_like(ROOT / "templates" / "product-delivery-quality-profile.json")
+        profile["required_proofs"].append(
+            {
+                "proof_id": "generic.release-readiness",
+                "name": "Release readiness proof",
+                "required_at": ["before_promotion"],
+                "owner_worker": "release-ops-worker",
+                "reviewer_role": "independent-reviewer",
+                "evidence_kind": "review",
+                "human_gate_required": False,
+            }
+        )
+        card["product_delivery_quality_profile"] = profile
+        metadata = {
+            "kanban_transition_event": {
+                "allowed": True,
+                "from_status": "review",
+                "to_status": "done",
+            },
+            "receipt_five_reconciliation_result": {
+                "result": "PASS",
+                "valid": True,
+                "promotion_authority": {"result": "PASS"},
+            },
+            "product_delivery_promotion_proof_coverage": [
+                {
+                    "proof_id": "generic.release-readiness",
+                    "status": "PASS",
+                    "evidence_refs": ["external:release-readiness-review"],
+                    "basis": "Independent release readiness review passed.",
+                    "reviewer_role": "independent-reviewer",
+                    "evidence_kind": "review",
+                }
+            ],
+        }
+
+        self.assertEqual(factoryctl.done_promotion_errors(metadata, card=card), [])
+
     def test_missing_repo_local_product_delivery_quality_profile_ref_fails_closed(self) -> None:
         card = self.vfinal_card()
         card["product_delivery_quality_profile_ref"] = "templates/missing-product-delivery-quality-profile.json"
