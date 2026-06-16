@@ -3,10 +3,15 @@
   "$id": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
   "title": "Overkill Factory User Docs Onboarding Plan",
   "type": "object",
-  "required": ["audience", "first_success_path", "tasks_covered", "proof_required"],
+  "required": ["gate_enforcement", "audience", "first_success_path", "tasks_covered", "proof_required", "evidence_refs"],
   "properties": {
     "gate_enforcement": { "enum": ["strict", "production", "advisory"] },
-    "audience": { "type": "string", "minLength": 3 },
+    "audience": {
+      "oneOf": [
+        { "type": "string", "minLength": 3 },
+        { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      ]
+    },
     "first_success_path": { "type": "string", "minLength": 3 },
     "tasks_covered": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
     "proof_required": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
