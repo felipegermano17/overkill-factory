@@ -4214,6 +4214,12 @@ def _validate_lifecycle_refs(refs: list[str], at: str, errors: list[str]) -> Non
             errors.append(f"{at}[{index}] must be public-safe")
 
 
+def _validate_public_ref(ref: str, at: str, errors: list[str]) -> None:
+    _, redaction = sanitize_public_ref(ref)
+    if redaction is not None:
+        errors.append(f"{at} must be public-safe")
+
+
 def validate_factory_sdlc_lifecycle_state(state: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     schemas = bundled_schemas()
@@ -4320,6 +4326,97 @@ def validate_factory_sdlc_lifecycle_state(state: dict[str, Any]) -> list[str]:
         errors.append("factory_sdlc_lifecycle_state cockpit must not be source of truth")
     if projection.get("dashboard_visibility_is_evidence") is not False:
         errors.append("factory_sdlc_lifecycle_state dashboard visibility must not be evidence")
+
+    return errors
+
+
+def validate_factory_sdlc_feedback_loop(loop: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-sdlc-feedback-loop.schema.json")
+    if not schema:
+        return ["factory_sdlc_feedback_loop schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            loop,
+            "factory_sdlc_feedback_loop",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    linked_lifecycle = str(loop.get("linked_lifecycle_state_ref") or "").strip()
+    if linked_lifecycle:
+        _validate_public_ref(linked_lifecycle, "factory_sdlc_feedback_loop.linked_lifecycle_state_ref", errors)
+
+    source = loop.get("source_signal") if isinstance(loop.get("source_signal"), dict) else {}
+    source_ref = str(source.get("signal_ref_public_safe") or "").strip()
+    if source_ref:
+        _validate_public_ref(source_ref, "factory_sdlc_feedback_loop.source_signal.signal_ref_public_safe", errors)
+    if source.get("sensitivity_class") == "secret":
+        errors.append("factory_sdlc_feedback_loop cannot publish secret-class signals")
+    if source.get("raw_private_embedded") is not False:
+        errors.append("factory_sdlc_feedback_loop source signal must not embed raw private evidence")
+
+    triage = loop.get("triage_decision") if isinstance(loop.get("triage_decision"), dict) else {}
+    route_ref = str(triage.get("route_ref") or "").strip()
+    if route_ref:
+        _validate_public_ref(route_ref, "factory_sdlc_feedback_loop.triage_decision.route_ref", errors)
+    if triage.get("rejects_chat_only_state") is not True:
+        errors.append("factory_sdlc_feedback_loop triage must reject chat-only state")
+
+    routing = loop.get("routing_decision") if isinstance(loop.get("routing_decision"), dict) else {}
+    router_ref = str(routing.get("router_ref") or "").strip()
+    if router_ref:
+        _validate_public_ref(router_ref, "factory_sdlc_feedback_loop.routing_decision.router_ref", errors)
+    if routing.get("model_independence_preserved") is not True:
+        errors.append("factory_sdlc_feedback_loop routing must preserve model independence")
+    if routing.get("single_provider_assumption") is not False:
+        errors.append("factory_sdlc_feedback_loop routing must not assume a single provider")
+
+    evidence = loop.get("execution_evidence") if isinstance(loop.get("execution_evidence"), dict) else {}
+    _validate_lifecycle_refs(
+        _list_items(evidence.get("evidence_refs")),
+        "factory_sdlc_feedback_loop.execution_evidence.evidence_refs",
+        errors,
+    )
+    _validate_lifecycle_refs(
+        _list_items(evidence.get("validation_refs")),
+        "factory_sdlc_feedback_loop.execution_evidence.validation_refs",
+        errors,
+    )
+    if evidence.get("failed_outputs_consumable_as_success") is not False:
+        errors.append("factory_sdlc_feedback_loop failed outputs cannot be consumed as success")
+
+    learnback = loop.get("learnback_decision") if isinstance(loop.get("learnback_decision"), dict) else {}
+    _validate_lifecycle_refs(
+        _list_items(learnback.get("source_evidence_refs")),
+        "factory_sdlc_feedback_loop.learnback_decision.source_evidence_refs",
+        errors,
+    )
+    _validate_lifecycle_refs(
+        _list_items(learnback.get("validation_refs")),
+        "factory_sdlc_feedback_loop.learnback_decision.validation_refs",
+        errors,
+    )
+    classification = str(learnback.get("classification") or "").strip()
+    target_artifact = str(learnback.get("target_artifact_type") or "").strip()
+    promotion_boundary = str(learnback.get("promotion_boundary") or "").strip()
+    if classification != "reject" and target_artifact == "none":
+        errors.append("factory_sdlc_feedback_loop learnback requires an actionable target artifact")
+    if classification == "reject" and target_artifact != "none":
+        errors.append("factory_sdlc_feedback_loop rejected learnback must use target_artifact_type=none")
+    if classification != "reject" and promotion_boundary == "rejected":
+        errors.append("factory_sdlc_feedback_loop non-rejected learnback cannot use rejected promotion boundary")
+
+    sovereignty = loop.get("sovereignty_boundary") if isinstance(loop.get("sovereignty_boundary"), dict) else {}
+    if sovereignty.get("public_safe_refs_only") is not True:
+        errors.append("factory_sdlc_feedback_loop requires public_safe_refs_only=true")
+    if sovereignty.get("raw_private_evidence_embedded") is not False:
+        errors.append("factory_sdlc_feedback_loop must not embed raw private evidence")
+    if sovereignty.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("factory_sdlc_feedback_loop private context must stay outside the public repo")
 
     return errors
 
@@ -8749,6 +8846,16 @@ def command_validate_sdlc_lifecycle(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_sdlc_feedback_loop(args: argparse.Namespace) -> int:
+    errors = validate_factory_sdlc_feedback_loop(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_automation_target(args: argparse.Namespace) -> int:
     errors = validate_factory_automation_run_target(load_json_like(args.path))
     if errors:
@@ -9077,6 +9184,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_lifecycle_parser = sub.add_parser("validate-lifecycle")
     validate_lifecycle_parser.add_argument("path", type=Path)
     validate_lifecycle_parser.set_defaults(func=command_validate_sdlc_lifecycle)
+
+    validate_sdlc_feedback_parser = sub.add_parser("validate-sdlc-feedback-loop")
+    validate_sdlc_feedback_parser.add_argument("path", type=Path)
+    validate_sdlc_feedback_parser.set_defaults(func=command_validate_sdlc_feedback_loop)
 
     validate_automation_target_parser = sub.add_parser("validate-automation-target")
     validate_automation_target_parser.add_argument("path", type=Path)

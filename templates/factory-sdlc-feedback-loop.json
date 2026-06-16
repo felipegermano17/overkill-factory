@@ -1,0 +1,75 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-sdlc-feedback-loop.schema.json",
+  "record_type": "factory_sdlc_feedback_loop",
+  "loop_id": "sdlc-feedback-loop-public-template",
+  "created_at": "2026-06-16T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "linked_lifecycle_state_ref": "templates/factory-sdlc-lifecycle-state.json",
+  "source_signal": {
+    "signal_type": "external_research_signal",
+    "source_class": "external_untrusted",
+    "sensitivity_class": "public_safe",
+    "freshness": "bounded",
+    "owner": "factory-improvement-radar",
+    "target_surface": "factory-method",
+    "signal_ref_public_safe": "external:public-factory-ai-software-factory-article",
+    "raw_private_embedded": false
+  },
+  "triage_decision": {
+    "decision": "learnback_only",
+    "route_ref": "schemas/factory-learning-proposal.schema.json",
+    "rationale": "Public research signal becomes a bounded learning candidate before changing factory behavior.",
+    "human_gate_required": false,
+    "rejects_chat_only_state": true
+  },
+  "routing_decision": {
+    "router_ref": "templates/method-contract.json",
+    "selected_profile": "skill-eval-distiller",
+    "selected_model_class": "balanced",
+    "selection_basis": {
+      "cost": "bounded schema and template work",
+      "speed": "small public-safe contract update",
+      "quality": "requires validation and independent review before activation",
+      "context_need": "needs factory method and self-improvement context",
+      "data_sensitivity": "public-safe source only",
+      "tool_requirements": "schema, unit test and public artifact validation",
+      "expected_horizon": "single bounded maintenance cycle",
+      "fallback_route": "open public-safe improvement issue if implementation is unsafe"
+    },
+    "model_independence_preserved": true,
+    "single_provider_assumption": false
+  },
+  "execution_evidence": {
+    "status": "PENDING",
+    "evidence_refs": [
+      "schemas/factory-sdlc-feedback-loop.schema.json",
+      "templates/factory-sdlc-feedback-loop.json"
+    ],
+    "failed_outputs_consumable_as_success": false,
+    "validation_refs": [
+      "tests/test_factory_sdlc_feedback_loop.py",
+      "scripts/validate_public_json_artifacts.py"
+    ]
+  },
+  "learnback_decision": {
+    "classification": "schema_update",
+    "target_artifact_type": "schema",
+    "source_evidence_refs": [
+      "external:public-factory-ai-software-factory-article"
+    ],
+    "validation_refs": [
+      "tests/test_factory_sdlc_feedback_loop.py",
+      "scripts/validate_public_json_artifacts.py"
+    ],
+    "promotion_boundary": "requires_independent_review",
+    "rejection_rationale": "not_rejected"
+  },
+  "sovereignty_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "reusable_across_products": "bounded",
+    "memory_owner": "operator-owned-factory-instance"
+  },
+  "next_safe_action": "Validate this loop before using it as learnback input."
+}
