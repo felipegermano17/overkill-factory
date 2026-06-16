@@ -1138,6 +1138,7 @@
     "reviewed": ["independent review required before done"],
     "residual_risk": ["worker execution still required"],
     "decision": "block",
+    "acceptance_decision": "scope_accounted",
     "sot_claim_results": [
       {
         "claim_ref": "product-sot#scope-in-001",

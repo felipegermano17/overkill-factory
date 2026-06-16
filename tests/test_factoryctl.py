@@ -2355,6 +2355,7 @@ class FactoryCtlTest(unittest.TestCase):
         card = load_card("v35_valid_onchain_auditor_scan.md")
         audit = {
             "decision": "done",
+            "acceptance_decision": "scope_accounted",
             "sot_claim_results": [
                 {"claim_ref": "product-sot#scope", "status": "BLOCKED", "owner": "product-owner"}
             ],
@@ -2371,6 +2372,7 @@ class FactoryCtlTest(unittest.TestCase):
         card = load_card("v35_valid_onchain_auditor_scan.md")
         audit = {
             "decision": "done",
+            "acceptance_decision": "scope_accounted",
             "sot_claim_results": [
                 {"claim_ref": "product-sot#scope", "status": "DEFERRED_WITH_OWNER", "owner": "product-owner"}
             ],
@@ -2385,6 +2387,79 @@ class FactoryCtlTest(unittest.TestCase):
             "completion_audit.decision must be done_with_owner when any SOT claim is DEFERRED_WITH_OWNER",
             errors,
         )
+
+    def test_completion_audit_scope_accounted_allows_out_of_scope_without_production_acceptance(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        audit = {
+            "decision": "done",
+            "acceptance_decision": "scope_accounted",
+            "sot_claim_results": [
+                {"claim_ref": "product-sot#core", "status": "DONE", "owner": "product-owner"},
+                {"claim_ref": "product-sot#later", "status": "OUT_OF_SCOPE", "owner": "product-owner"},
+            ],
+            "method_execution_results": [
+                {"method": "security-review", "status": "EXECUTED", "evidence_refs": ["README.md"]}
+            ],
+        }
+
+        self.assertEqual(factoryctl.validate_completion_audit_contract(card, audit), [])
+
+    def test_completion_audit_production_complete_rejects_out_of_scope_without_rebaseline(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        audit = {
+            "decision": "done",
+            "acceptance_decision": "production_complete",
+            "sot_claim_results": [
+                {"claim_ref": "product-sot#later", "status": "OUT_OF_SCOPE", "owner": "product-owner"}
+            ],
+            "method_execution_results": [
+                {"method": "security-review", "status": "EXECUTED", "evidence_refs": ["README.md"]}
+            ],
+        }
+
+        errors = factoryctl.validate_completion_audit_contract(card, audit)
+
+        self.assertIn(
+            "completion_audit production/customer acceptance cannot include OUT_OF_SCOPE without scope_rebaseline",
+            errors,
+        )
+
+    def test_completion_audit_done_with_owner_keeps_deferred_out_of_production_acceptance(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        audit = {
+            "decision": "done_with_owner",
+            "acceptance_decision": "done_with_owner",
+            "sot_claim_results": [
+                {"claim_ref": "product-sot#later", "status": "DEFERRED_WITH_OWNER", "owner": "product-owner"}
+            ],
+            "method_execution_results": [
+                {"method": "security-review", "status": "EXECUTED", "evidence_refs": ["README.md"]}
+            ],
+        }
+
+        self.assertEqual(factoryctl.validate_completion_audit_contract(card, audit), [])
+
+    def test_completion_audit_production_complete_accepts_human_rebaselined_scope(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        audit = {
+            "decision": "done",
+            "acceptance_decision": "production_complete",
+            "scope_rebaseline": {
+                "required": True,
+                "human_gate_ref": "templates/human-gate-record.json",
+                "rebaselined_scope_refs": ["product-sot#later"],
+                "evidence_refs": ["templates/full-product-sot-scope-coverage.json"],
+            },
+            "sot_claim_results": [
+                {"claim_ref": "product-sot#core", "status": "DONE", "owner": "product-owner"},
+                {"claim_ref": "product-sot#later", "status": "OUT_OF_SCOPE", "owner": "product-owner"},
+            ],
+            "method_execution_results": [
+                {"method": "security-review", "status": "EXECUTED", "evidence_refs": ["README.md"]}
+            ],
+        }
+
+        self.assertEqual(factoryctl.validate_completion_audit_contract(card, audit), [])
 
     def test_product_face_completion_rejects_screenshot_without_plan_alignment(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")

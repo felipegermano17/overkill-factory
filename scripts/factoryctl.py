@@ -149,6 +149,8 @@ PRODUCTION_SURFACES = {
 CUSTOMER_READY_SURFACES = {"customers", "customer-ready", "user-facing", "client-facing"}
 COMPLETION_SOT_STATUSES = {"DONE", "BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"}
 COMPLETION_METHOD_STATUSES = {"EXECUTED", "WAIVED", "BLOCKED"}
+COMPLETION_ACCEPTANCE_DECISIONS = {"scope_accounted", "done_with_owner", "production_complete", "customer_ready"}
+PRODUCTION_ACCEPTANCE_DECISIONS = {"production_complete", "customer_ready"}
 USER_QUESTION_CLASSES = {"discoverable", "preference", "authority_required", "access_required", "risk_acceptance", "blocked"}
 ALLOWED_USER_QUESTION_CLASSES = USER_QUESTION_CLASSES - {"discoverable"}
 INTERNAL_COORDINATION_TERMS = {
@@ -5926,11 +5928,39 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _completion_scope_rebaseline_errors(audit: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    rebaseline = audit.get("scope_rebaseline")
+    if not isinstance(rebaseline, dict):
+        return ["completion_audit.scope_rebaseline is required for production/customer acceptance with deferred or out-of-scope SOT claims"]
+    if rebaseline.get("required") is not True:
+        errors.append("completion_audit.scope_rebaseline.required must be true")
+    human_gate_ref = str(rebaseline.get("human_gate_ref") or "").strip()
+    if not human_gate_ref:
+        errors.append("completion_audit.scope_rebaseline.human_gate_ref is required")
+    else:
+        _validate_public_ref(human_gate_ref, "completion_audit.scope_rebaseline.human_gate_ref", errors)
+    scope_refs = rebaseline.get("rebaselined_scope_refs")
+    if not _non_empty_string_list(scope_refs):
+        errors.append("completion_audit.scope_rebaseline.rebaselined_scope_refs is required")
+    evidence_refs = _list_items(rebaseline.get("evidence_refs"))
+    if not evidence_refs:
+        errors.append("completion_audit.scope_rebaseline.evidence_refs is required")
+    else:
+        _validate_lifecycle_refs(evidence_refs, "completion_audit.scope_rebaseline.evidence_refs", errors)
+    return errors
+
+
 def validate_completion_audit_contract(card: dict[str, Any], audit: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     decision = str(audit.get("decision") or "").strip().lower()
     if decision not in {"done", "block", "done_with_owner"}:
         errors.append("completion_audit.decision must be done, block or done_with_owner")
+    acceptance_decision = str(audit.get("acceptance_decision") or "").strip().lower()
+    if acceptance_decision not in COMPLETION_ACCEPTANCE_DECISIONS:
+        errors.append(
+            "completion_audit.acceptance_decision must be scope_accounted, done_with_owner, production_complete or customer_ready"
+        )
     claim_results = audit.get("sot_claim_results")
     sot_statuses: list[str] = []
     if not isinstance(claim_results, list) or not claim_results:
@@ -5948,12 +5978,36 @@ def validate_completion_audit_contract(card: dict[str, Any], audit: dict[str, An
                 )
             if status in {"BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"} and not _non_empty_text(item.get("owner")):
                 errors.append(f"completion_audit.sot_claim_results[{index}].owner is required for non-DONE status")
+        production_acceptance = acceptance_decision in PRODUCTION_ACCEPTANCE_DECISIONS
+        needs_rebaseline = production_acceptance and any(
+            status in {"DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"} for status in sot_statuses
+        )
+        rebaseline_errors = _completion_scope_rebaseline_errors(audit) if needs_rebaseline else []
+        rebaseline_valid = needs_rebaseline and not rebaseline_errors
+        errors.extend(rebaseline_errors)
+        if acceptance_decision == "scope_accounted":
+            if audit.get("production_ready_claimed") is True:
+                errors.append("completion_audit scope_accounted cannot claim production_ready")
+            if audit.get("customer_ready_claimed") is True:
+                errors.append("completion_audit scope_accounted cannot claim customer_ready")
+        if production_acceptance:
+            if "OUT_OF_SCOPE" in sot_statuses and not rebaseline_valid:
+                errors.append("completion_audit production/customer acceptance cannot include OUT_OF_SCOPE without scope_rebaseline")
+            if "DEFERRED_WITH_OWNER" in sot_statuses and not rebaseline_valid:
+                errors.append("completion_audit production/customer acceptance cannot include DEFERRED_WITH_OWNER without scope_rebaseline")
+            if decision == "done_with_owner" and not rebaseline_valid:
+                errors.append("completion_audit production/customer acceptance cannot use done_with_owner without scope_rebaseline")
+        if acceptance_decision == "done_with_owner" and decision != "done_with_owner":
+            errors.append("completion_audit.acceptance_decision=done_with_owner requires decision=done_with_owner")
         if "BLOCKED" in sot_statuses and decision != "block":
             errors.append("completion_audit.decision must be block when any SOT claim is BLOCKED")
-        elif "DEFERRED_WITH_OWNER" in sot_statuses and decision != "done_with_owner":
+        elif "DEFERRED_WITH_OWNER" in sot_statuses and decision != "done_with_owner" and not rebaseline_valid:
             errors.append("completion_audit.decision must be done_with_owner when any SOT claim is DEFERRED_WITH_OWNER")
         elif decision == "done":
-            incomplete = sorted(set(sot_statuses) - {"DONE", "OUT_OF_SCOPE"})
+            allowed_done_statuses = {"DONE", "OUT_OF_SCOPE"}
+            if rebaseline_valid:
+                allowed_done_statuses.add("DEFERRED_WITH_OWNER")
+            incomplete = sorted(set(sot_statuses) - allowed_done_statuses)
             if incomplete:
                 errors.append("completion_audit.decision=done requires SOT claims to be DONE or OUT_OF_SCOPE, found " + ", ".join(incomplete))
 
