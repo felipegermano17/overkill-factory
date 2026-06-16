@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import re
 import shutil
@@ -308,7 +309,7 @@ def usage_evidence_matrix_fixture(
     for journey in journeys:
         for state in states:
             for viewport in viewports:
-                evidence_ref = "reports/product-face/mobile.png" if "mobile" in viewport.lower() else "reports/product-face/desktop.png"
+                evidence_ref = product_face_screenshot_ref(viewport)
                 entries.append(
                     {
                         "journey": journey,
@@ -325,10 +326,64 @@ def usage_evidence_matrix_fixture(
     return entries
 
 
+def product_face_screenshot_ref(viewport: str) -> str:
+    return (
+        "external:product-face-fixture-mobile.png"
+        if "mobile" in viewport.lower()
+        else "external:product-face-fixture-desktop.png"
+    )
+
+
+def visual_artifacts_fixture(
+    *,
+    target: str,
+    viewports: list[str],
+    states: list[str],
+    screenshots: list[str],
+    captured_at: str = "2026-06-16T00:00:00+00:00",
+) -> list[dict]:
+    artifacts: list[dict] = []
+    for viewport, screenshot in zip(viewports, screenshots):
+        for state in states:
+            artifacts.append(
+                {
+                    "evidence_ref": screenshot,
+                    "target": target,
+                    "viewport": viewport,
+                    "state": state,
+                    "captured_at": captured_at,
+                    "freshness_status": "bounded_external",
+                    "bounded_acceptance": True,
+                    "sanitized": True,
+                    "external_package_ref": "external:product-face-fixture-package",
+                    "basis": "Sanitized fixture artifact bound to the declared viewport and state.",
+                }
+            )
+    return artifacts
+
+
 def product_face_result_fixture(**overrides: object) -> dict:
+    overrides = dict(overrides)
     viewports = ["desktop 1440x900", "mobile 390x844"]
     states = ["empty", "loading", "pending", "success", "error"]
     journeys = ["pilot status review", "review evidence inspection"]
+    viewports = list(overrides.pop("viewports", viewports))  # type: ignore[arg-type]
+    states = list(overrides.pop("checked_states", states))  # type: ignore[arg-type]
+    journeys = list(overrides.pop("user_journeys_checked", journeys))  # type: ignore[arg-type]
+    screenshots = list(overrides.pop("screenshots", [product_face_screenshot_ref(viewport) for viewport in viewports]))  # type: ignore[arg-type]
+    usage_matrix = overrides.pop(
+        "usage_evidence_matrix",
+        usage_evidence_matrix_fixture(journeys=journeys, states=states, viewports=viewports),
+    )
+    visual_artifacts = overrides.pop(
+        "visual_artifacts",
+        visual_artifacts_fixture(
+            target="external:product-face-fixture-target",
+            viewports=viewports,
+            states=states,
+            screenshots=screenshots,
+        ),
+    )
     result = {
         "result": "PASS",
         "tool_or_profile": "browser-proof-runner",
@@ -345,11 +400,12 @@ def product_face_result_fixture(**overrides: object) -> dict:
                 "evidence_kind": "visual_ui",
             }
         ],
-        "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
+        "screenshots": screenshots,
         "viewports": viewports,
         "checked_states": states,
         "user_journeys_checked": journeys,
-        "usage_evidence_matrix": usage_evidence_matrix_fixture(journeys=journeys, states=states, viewports=viewports),
+        "usage_evidence_matrix": usage_matrix,
+        "visual_artifacts": visual_artifacts,
         "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
         "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
         "console": {"status": "pass"},
@@ -390,7 +446,7 @@ def product_face_result_fixture(**overrides: object) -> dict:
             }
         ],
         "blocking_findings": False,
-        "evidence_refs": ["reports/product-face.md"],
+        "evidence_refs": ["external:product-face-fixture-report"],
         "next_action": "independent review",
     }
     result.update(overrides)
@@ -457,6 +513,15 @@ class FactoryCtlTest(unittest.TestCase):
         else:
             path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return path.relative_to(ROOT).as_posix()
+
+    def write_temp_visual_artifact(self, name: str = "desktop.png") -> tuple[str, str]:
+        tmp_root = ROOT / ".tmp" / "test-product-face-visual-artifacts"
+        tmp_root.mkdir(parents=True, exist_ok=True)
+        directory = Path(tempfile.mkdtemp(dir=tmp_root))
+        self.addCleanup(shutil.rmtree, directory, ignore_errors=True)
+        path = directory / name
+        path.write_bytes(b"product-face-visual-artifact")
+        return path.relative_to(ROOT).as_posix(), hashlib.sha256(path.read_bytes()).hexdigest()
 
     def test_local_web_cockpit_card_routes_without_discord_bridge(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "local-web-cockpit-factory-slice" / "card.md")
@@ -1157,63 +1222,7 @@ class FactoryCtlTest(unittest.TestCase):
             },
             "independent_review_result": worker_result("independent_review_result", source_card=card),
             "receipt_five_reconciliation_result": worker_result("receipt_five_reconciliation_result", source_card=card),
-            "product_face_result": {
-                "result": "PASS",
-                "tool_or_profile": "browser-proof-runner",
-                "executed_by": "product-face-validator",
-                "surface_evidence_profile": surface_profile("web_visual_ui", "web_app"),
-                "surface_evidence_profiles": [surface_profile("web_visual_ui", "web_app")],
-                "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
-                "viewports": ["desktop 1440x900", "mobile 390x844"],
-                "checked_states": ["empty", "loading", "pending", "success", "error"],
-                "user_journeys_checked": ["pilot status review", "review evidence inspection"],
-                "usage_evidence_matrix": usage_evidence_matrix_fixture(
-                    journeys=["pilot status review", "review evidence inspection"],
-                    states=["empty", "loading", "pending", "success", "error"],
-                    viewports=["desktop 1440x900", "mobile 390x844"],
-                ),
-                "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
-                "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
-                "performance_note": "static validation scenario only",
-                "packet_ref": "examples/cards/v35_valid_product_face.md#product_face_packet",
-                "packet_comparison": {
-                    "status": "pass",
-                    "basis": "All planned screens, states and viewports are covered."
-                },
-                "source_promise_coverage": {
-                    "status": "pass",
-                    "basis": "The result covers the visible SaaS validation promise in the card."
-                },
-                "design_fit_review": {
-                    "status": "pass",
-                    "basis": "The validator confirmed this bounded SaaS surface matches the Product Face packet."
-                },
-                "professional_design_process_ref": "examples/cards/v35_valid_product_face.md#professional_design_process",
-                "professional_design_process_comparison": {
-                    "status": "pass",
-                    "basis": "The validator confirmed the result satisfies the professional design process gates."
-                },
-                "reference_quality_comparison": reference_quality_comparison_fixture(),
-                "visual_quality_result": {
-                    "status": "PASS",
-                    "reviewer": "product-face-reviewer",
-                    "basis": "The surface meets the Product Face packet quality bar and does not show AI-generic UI symptoms.",
-                    "reference_quality_bar_checked": True,
-                    "ai_generic_symptoms": [],
-                },
-                "domain_proof_coverage": [
-                    {
-                        "proof_id": "generic.operator-usability",
-                        "status": "PASS",
-                        "evidence_refs": ["reports/product-face/operator-usability.json"],
-                        "reviewer": "product-face-reviewer",
-                        "basis": "Operator can understand current state, evidence and next action.",
-                    }
-                ],
-                "blocking_findings": False,
-                "evidence_refs": ["reports/product-face.md"],
-                "next_action": "independent review",
-            },
+            "product_face_result": product_face_result_fixture(),
         }
 
         self.assertEqual(factoryctl.validate_completion(card, receipt), [])
@@ -1280,6 +1289,109 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertIn("product_face_result.usage_evidence_matrix is required for PASS", errors)
         self.assertIn("product_face_result.usage_evidence_matrix is required for product-facing completion", errors)
+
+    def test_product_face_pass_requires_visual_artifact_records(self) -> None:
+        result = product_face_result_fixture(visual_artifacts=[])
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn("product_face_result.visual_artifacts is required for PASS", errors)
+
+    def test_product_face_pass_rejects_missing_repo_local_visual_artifact(self) -> None:
+        result = product_face_result_fixture(
+            screenshots=["reports/product-face/missing-desktop.png"],
+            viewports=["desktop 1440x900"],
+            checked_states=["success"],
+            user_journeys_checked=["pilot status review"],
+            usage_evidence_matrix=[
+                {
+                    "journey": "pilot status review",
+                    "state": "success",
+                    "viewport": "desktop 1440x900",
+                    "data_condition": "success fixture",
+                    "evidence_refs": ["reports/product-face/missing-desktop.png"],
+                    "a11y_status": "pass",
+                    "performance_status": "pass",
+                    "reviewer": "product-face-reviewer",
+                    "basis": "Missing artifact should fail closed.",
+                }
+            ],
+            visual_artifacts=[
+                {
+                    "evidence_ref": "reports/product-face/missing-desktop.png",
+                    "target": "examples/cards/v35_valid_product_face.md",
+                    "viewport": "desktop 1440x900",
+                    "state": "success",
+                    "captured_at": "2026-06-16T00:00:00+00:00",
+                    "freshness_status": "fresh",
+                }
+            ],
+        )
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.visual_artifacts[0]: evidence ref does not exist: reports/product-face/missing-desktop.png",
+            errors,
+        )
+
+    def test_product_face_pass_rejects_stale_visual_artifact(self) -> None:
+        result = product_face_result_fixture()
+        result["visual_artifacts"][0]["freshness_status"] = "stale"
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn("product_face_result.visual_artifacts[0].freshness_status must be fresh or bounded_external", errors)
+
+    def test_product_face_pass_rejects_state_viewport_artifact_mismatch(self) -> None:
+        result = product_face_result_fixture()
+        result["visual_artifacts"] = [dict(result["visual_artifacts"][0], state="success")]
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.usage_evidence_matrix[0] lacks visual_artifacts binding for state/viewport",
+            errors,
+        )
+
+    def test_product_face_pass_accepts_resolvable_visual_artifact_with_hash(self) -> None:
+        artifact_ref, artifact_hash = self.write_temp_visual_artifact()
+        viewports = ["desktop 1440x900"]
+        states = ["success"]
+        result = product_face_result_fixture(
+            screenshots=[artifact_ref],
+            viewports=viewports,
+            checked_states=states,
+            user_journeys_checked=["pilot status review"],
+            usage_evidence_matrix=[
+                {
+                    "journey": "pilot status review",
+                    "state": "success",
+                    "viewport": "desktop 1440x900",
+                    "data_condition": "success fixture",
+                    "evidence_refs": [artifact_ref],
+                    "a11y_status": "pass",
+                    "performance_status": "pass",
+                    "reviewer": "product-face-reviewer",
+                    "basis": "Repo-local visual artifact exists and is hash-bound.",
+                }
+            ],
+            visual_artifacts=[
+                {
+                    "evidence_ref": artifact_ref,
+                    "target": "examples/cards/v35_valid_product_face.md",
+                    "viewport": "desktop 1440x900",
+                    "state": "success",
+                    "captured_at": "2026-06-16T00:00:00+00:00",
+                    "freshness_status": "fresh",
+                    "sha256": artifact_hash,
+                }
+            ],
+        )
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertEqual(errors, [])
 
     def test_product_face_completion_requires_usage_matrix_planned_flow_coverage(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")

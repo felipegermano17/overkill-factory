@@ -44,6 +44,38 @@
       "minItems": 1,
       "items": { "type": "string", "minLength": 1 }
     },
+    "visual_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "evidence_ref",
+          "target",
+          "viewport",
+          "state",
+          "captured_at",
+          "freshness_status"
+        ],
+        "properties": {
+          "evidence_ref": { "type": "string", "minLength": 1 },
+          "target": { "type": "string", "minLength": 1 },
+          "viewport": { "type": "string", "minLength": 1 },
+          "state": { "type": "string", "minLength": 1 },
+          "captured_at": { "type": "string", "minLength": 10 },
+          "freshness_status": { "enum": ["fresh", "bounded_external"] },
+          "sha256": {
+            "type": "string",
+            "pattern": "^(sha256:)?[a-fA-F0-9]{64}$"
+          },
+          "bounded_acceptance": { "type": "boolean" },
+          "sanitized": { "type": "boolean" },
+          "external_package_ref": { "type": "string", "minLength": 1 },
+          "expires_at": { "type": "string", "minLength": 10 },
+          "basis": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
     "surface_evidence_profile": {
       "$ref": "#/$defs/surface_evidence_profile"
     },
@@ -412,5 +444,21 @@
       "additionalProperties": true
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result": { "const": "PASS" }
+        },
+        "required": ["result"]
+      },
+      "then": {
+        "required": ["visual_artifacts"],
+        "properties": {
+          "visual_artifacts": { "minItems": 1 }
+        }
+      }
+    }
+  ],
   "additionalProperties": true
 }

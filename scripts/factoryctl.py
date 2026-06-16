@@ -3643,6 +3643,125 @@ def validate_usage_evidence_matrix(result: dict[str, Any], *, is_pass: bool) -> 
     return errors
 
 
+def _is_explicit_external_ref(ref: str) -> bool:
+    normalized = ref.strip().replace("\\", "/")
+    return normalized.startswith(("http://", "https://", "external:", "repo://"))
+
+
+def _parse_artifact_timestamp(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _visual_artifact_records(result: dict[str, Any]) -> list[dict[str, Any]]:
+    records = result.get("visual_artifacts")
+    if not isinstance(records, list):
+        return []
+    return [record for record in records if isinstance(record, dict)]
+
+
+def _repo_local_artifact_path(ref: str) -> Path | None:
+    return _repo_local_json_ref_path(ref)
+
+
+def validate_visual_artifact_records(result: dict[str, Any], *, is_pass: bool) -> list[str]:
+    errors: list[str] = []
+    records_value = result.get("visual_artifacts")
+    records = _visual_artifact_records(result)
+    if is_pass and not records:
+        return ["product_face_result.visual_artifacts is required for PASS"]
+    if records_value is not None and not isinstance(records_value, list):
+        return ["product_face_result.visual_artifacts must be an array"]
+    if not records:
+        return errors
+
+    checked_states = {_normalized_usage_value(state) for state in _list_items(result.get("checked_states"))}
+    viewport_families = {_usage_viewport_family(viewport) for viewport in _list_items(result.get("viewports"))}
+    records_by_ref: dict[str, list[dict[str, Any]]] = {}
+
+    for index, record in enumerate(records):
+        at = f"product_face_result.visual_artifacts[{index}]"
+        for field in ("evidence_ref", "target", "viewport", "state", "captured_at", "freshness_status"):
+            if not _non_empty_text(record.get(field)):
+                errors.append(f"{at}.{field} is required")
+        evidence_ref = str(record.get("evidence_ref") or "").strip()
+        state = _normalized_usage_value(record.get("state"))
+        viewport_family = _usage_viewport_family(record.get("viewport"))
+        if state and checked_states and state not in checked_states:
+            errors.append(f"{at}.state must match checked_states")
+        if viewport_family and viewport_families and viewport_family not in viewport_families:
+            errors.append(f"{at}.viewport must match viewports")
+        captured_at = _parse_artifact_timestamp(record.get("captured_at"))
+        if record.get("captured_at") and captured_at is None:
+            errors.append(f"{at}.captured_at must be an ISO timestamp")
+        freshness_status = str(record.get("freshness_status") or "").strip().lower()
+        if freshness_status and freshness_status not in {"fresh", "bounded_external"}:
+            errors.append(f"{at}.freshness_status must be fresh or bounded_external")
+        expires_at = _parse_artifact_timestamp(record.get("expires_at"))
+        if record.get("expires_at") and expires_at is None:
+            errors.append(f"{at}.expires_at must be an ISO timestamp")
+        elif expires_at is not None and expires_at <= datetime.now(timezone.utc):
+            errors.append(f"{at} is stale; expires_at is in the past")
+
+        if evidence_ref:
+            records_by_ref.setdefault(evidence_ref, []).append(record)
+            if _is_explicit_external_ref(evidence_ref):
+                if record.get("bounded_acceptance") is not True:
+                    errors.append(f"{at}.bounded_acceptance=true is required for external visual evidence")
+                if record.get("sanitized") is not True:
+                    errors.append(f"{at}.sanitized=true is required for external visual evidence")
+                if not _non_empty_text(record.get("external_package_ref")):
+                    errors.append(f"{at}.external_package_ref is required for external visual evidence")
+            else:
+                ref_errors = _evidence_ref_errors([evidence_ref], ROOT)
+                errors.extend(f"{at}: {error}" for error in ref_errors)
+                path = _repo_local_artifact_path(evidence_ref)
+                sha256_value = str(record.get("sha256") or "").strip().removeprefix("sha256:")
+                if path is not None and path.is_file() and sha256_value:
+                    actual = hashlib.sha256(path.read_bytes()).hexdigest()
+                    if actual != sha256_value:
+                        errors.append(f"{at}.sha256 does not match evidence_ref")
+
+    for screenshot in _list_items(result.get("screenshots")):
+        if screenshot and screenshot not in records_by_ref:
+            errors.append(f"product_face_result.screenshots entry lacks visual_artifacts record: {screenshot}")
+
+    matrix = result.get("usage_evidence_matrix")
+    if isinstance(matrix, list):
+        for index, entry in enumerate(matrix):
+            if not isinstance(entry, dict):
+                continue
+            entry_state = _normalized_usage_value(entry.get("state"))
+            entry_viewport = _usage_viewport_family(entry.get("viewport"))
+            entry_refs = _list_items(entry.get("evidence_refs"))
+            has_binding = False
+            for ref in entry_refs:
+                for record in records_by_ref.get(ref, []):
+                    if (
+                        _normalized_usage_value(record.get("state")) == entry_state
+                        and _usage_viewport_family(record.get("viewport")) == entry_viewport
+                    ):
+                        has_binding = True
+                        break
+                if has_binding:
+                    break
+            if not has_binding:
+                errors.append(
+                    f"product_face_result.usage_evidence_matrix[{index}] lacks visual_artifacts binding for state/viewport"
+                )
+    return errors
+
+
 def validate_product_face_result(result: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     errors.extend(_validate_surface_evidence_profile_declarations(result, at="product_face_result"))
@@ -3706,6 +3825,7 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
             errors.append("product_face_result.professional_design_process_comparison.basis is required")
     errors.extend(validate_reference_quality_comparison(result.get("reference_quality_comparison"), is_pass=is_pass))
     errors.extend(validate_usage_evidence_matrix(result, is_pass=is_pass))
+    errors.extend(validate_visual_artifact_records(result, is_pass=is_pass))
     for profile_id in _declared_surface_evidence_profiles(result):
         errors.extend(validate_surface_evidence_profile_result(result, profile_id, is_pass=is_pass))
     return errors
@@ -6535,13 +6655,50 @@ def build_worker_result(
             }
         )
     if worker_id == "product-face":
+        product_face_viewports = ["synthetic-desktop", "synthetic-mobile"] if evidence_kind == "synthetic" else ["desktop 1440x900"]
+        product_face_states = ["default", "empty", "loading", "error", "success"]
+        product_face_journeys = ["open target", "inspect states"]
+        product_face_visual_artifacts = [
+            {
+                "evidence_ref": ref,
+                "target": source_card_ref(Path("<memory>")),
+                "viewport": viewport,
+                "state": state,
+                "captured_at": utc_now(),
+                "freshness_status": "bounded_external" if _is_explicit_external_ref(ref) else "fresh",
+                "bounded_acceptance": True,
+                "sanitized": True,
+                "external_package_ref": "external:product-face-worker-result-package",
+                "basis": "Generated Product Face worker result binds evidence to declared viewport and state.",
+            }
+            for ref in evidence_refs
+            for viewport in product_face_viewports
+            for state in product_face_states
+        ]
         payload.update(
             {
                 "screenshots": evidence_refs,
-                "viewports": ["synthetic-desktop", "synthetic-mobile"] if evidence_kind == "synthetic" else [],
-                "checked_states": ["default", "empty", "loading", "error", "success"],
-                "journeys": ["open target", "inspect states"],
-                "user_journeys_checked": ["open target", "inspect states"],
+                "viewports": product_face_viewports,
+                "checked_states": product_face_states,
+                "journeys": product_face_journeys,
+                "user_journeys_checked": product_face_journeys,
+                "usage_evidence_matrix": [
+                    {
+                        "journey": journey,
+                        "state": state,
+                        "viewport": viewport,
+                        "data_condition": f"{state} fixture",
+                        "evidence_refs": evidence_refs,
+                        "a11y_status": "pass" if not blocking_findings else "fail",
+                        "performance_status": "pass" if not blocking_findings else "fail",
+                        "reviewer": "product-face-validator",
+                        "basis": "Generated Product Face result binds journey, state, viewport and evidence refs.",
+                    }
+                    for journey in product_face_journeys
+                    for state in product_face_states
+                    for viewport in product_face_viewports
+                ],
+                "visual_artifacts": product_face_visual_artifacts,
                 "accessibility": {"checked": True, "mode": evidence_kind},
                 "a11y": {"status": "pass" if not blocking_findings else "fail", "mode": evidence_kind},
                 "overlap": {"checked": True, "mode": evidence_kind},
