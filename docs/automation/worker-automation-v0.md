@@ -29,6 +29,12 @@ connects the worker's execution, evidence and learnback to the SDLC feedback
 loop. Hermes should preserve it on the worker subtask instead of letting the
 loop stay only on the source card.
 
+The same packet carries `autonomy_mode`, `agent_readiness_basis` and the
+model/profile routing decision ref or inline decision. This prevents material
+work from reaching Hermes as a vague "use an agent" request. The worker receives
+the declared autonomy scope, sensitivity/readiness basis and fallback route that
+must govern execution and repair.
+
 Worker results for those material cards must carry the same
 `sdlc_feedback_loop_ref`. The evidence reconciler preserves it in the Receipt
 Five reconciliation index and draft receipt so execution evidence can feed the

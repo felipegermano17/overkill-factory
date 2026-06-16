@@ -17,6 +17,20 @@
   "product_context_packet_ref": "templates/product-context-packet.json",
   "product_implementation_readiness_ref": "templates/product-implementation-readiness.json",
   "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
+  "autonomy_mode": "bounded_execution",
+  "agent_readiness_basis": {
+    "human_guidance_required": "bounded approvals for material scope, access, risk and release decisions",
+    "information_sensitivity": "public-safe template; product instances must classify private/customer/secret data separately",
+    "agent_readiness_level": "ready_with_bounds",
+    "allowed_autonomy_scope": "bounded material execution after ready gate and before human-gated promotion",
+    "fallback_route": "return to blocked or repair loop when a non-human gate fails; request human decision only for authority gates",
+    "evidence_refs": [
+      "templates/autonomy-readiness-packet.json",
+      "templates/agent-runtime-hardening-profile.json",
+      "templates/factory-sdlc-feedback-loop.json"
+    ]
+  },
+  "model_routing_decision_ref": "templates/factory-sdlc-feedback-loop.json#routing_decision",
   "user_facing_autonomy_contract_ref": "templates/user-facing-autonomy-contract.json",
   "source_refs": ["source-ledger.md"],
   "source_state": "promoted",

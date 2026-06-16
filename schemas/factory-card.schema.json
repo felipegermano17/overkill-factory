@@ -159,6 +159,52 @@
     "product_implementation_readiness": { "type": "object" },
     "product_implementation_readiness_ref": { "type": "string" },
     "sdlc_feedback_loop_ref": { "type": "string", "minLength": 3 },
+    "autonomy_mode": {
+      "enum": [
+        "bounded_execution",
+        "material_execution",
+        "production_operation",
+        "human_only",
+        "deferred"
+      ]
+    },
+    "agent_readiness_basis": {
+      "type": "object",
+      "required": [
+        "human_guidance_required",
+        "information_sensitivity",
+        "agent_readiness_level",
+        "allowed_autonomy_scope",
+        "fallback_route",
+        "evidence_refs"
+      ],
+      "properties": {
+        "human_guidance_required": { "type": "string", "minLength": 3 },
+        "information_sensitivity": { "type": "string", "minLength": 3 },
+        "agent_readiness_level": { "type": "string", "minLength": 3 },
+        "allowed_autonomy_scope": { "type": "string", "minLength": 3 },
+        "fallback_route": { "type": "string", "minLength": 3 },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "model_routing_decision_ref": { "type": "string", "minLength": 3 },
+    "model_routing_decision": {
+      "type": "object",
+      "required": [
+        "router_ref",
+        "selected_profile",
+        "selected_model_class",
+        "selection_basis",
+        "model_independence_preserved",
+        "single_provider_assumption"
+      ],
+      "additionalProperties": true
+    },
     "user_facing_autonomy_contract": { "type": "object" },
     "user_facing_autonomy_contract_ref": { "type": "string" },
     "product_experience_plan": { "type": "object" },

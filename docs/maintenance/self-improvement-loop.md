@@ -104,6 +104,14 @@ execution, add `sdlc_feedback_loop_ref`. Planning-only and read-only work can
 stay lighter, but material work must not run without a feedback loop that keeps
 signal, routing, evidence and learnback connected.
 
+Those material cards must also declare `autonomy_mode`,
+`agent_readiness_basis` and either `model_routing_decision_ref` or an inline
+`model_routing_decision`. The feedback loop records the broader signal and
+learning context, while the card records the executable autonomy choice that the
+worker packet must preserve: how much human guidance is required, how sensitive
+the information is, which autonomy scope is allowed, why the model/profile route
+is acceptable, and where the work returns when validation fails.
+
 ## Factory Readiness Scorecard
 
 Use `factory_readiness_scorecard` before long autonomous execution to decide

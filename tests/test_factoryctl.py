@@ -737,6 +737,17 @@ class FactoryCtlTest(unittest.TestCase):
             card["sdlc_feedback_loop_ref"],
         )
 
+    def test_worker_packet_carries_material_autonomy_routing_contract(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+
+        packet = factoryctl.build_worker_packet("implementation-worker", card, card_path)
+        input_contract = packet["input_contract"]
+
+        self.assertEqual(input_contract["autonomy_mode"], card["autonomy_mode"])
+        self.assertEqual(input_contract["agent_readiness_basis"], card["agent_readiness_basis"])
+        self.assertEqual(input_contract["model_routing_decision_ref"], card["model_routing_decision_ref"])
+
     def test_worker_packet_schema_declares_sdlc_feedback_loop_ref(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))
 
@@ -744,6 +755,15 @@ class FactoryCtlTest(unittest.TestCase):
             "sdlc_feedback_loop_ref",
             schema["properties"]["input_contract"]["properties"],
         )
+
+    def test_worker_packet_schema_declares_material_autonomy_routing_contract(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))
+        input_properties = schema["properties"]["input_contract"]["properties"]
+
+        self.assertIn("autonomy_mode", input_properties)
+        self.assertIn("agent_readiness_basis", input_properties)
+        self.assertIn("model_routing_decision_ref", input_properties)
+        self.assertIn("model_routing_decision", input_properties)
 
     def test_worker_result_carries_sdlc_feedback_loop_ref(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
@@ -968,6 +988,45 @@ class FactoryCtlTest(unittest.TestCase):
         errors = factoryctl.validate_card(card)
 
         self.assertIn("sdlc_feedback_loop_ref must be public-safe", errors)
+
+    def test_vfinal_material_execution_requires_autonomy_and_model_routing_decision(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("autonomy_mode", None)
+        card.pop("agent_readiness_basis", None)
+        card.pop("model_routing_decision_ref", None)
+        card.pop("model_routing_decision", None)
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("autonomy_mode required for material vFinal autonomous execution", errors)
+        self.assertIn("agent_readiness_basis required for material vFinal autonomous execution", errors)
+        self.assertIn(
+            "model_routing_decision_ref or model_routing_decision required for material vFinal autonomous execution",
+            errors,
+        )
+
+    def test_vfinal_material_execution_accepts_inline_model_routing_decision(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("model_routing_decision_ref", None)
+        card["model_routing_decision"] = {
+            "router_ref": "templates/method-contract.json",
+            "selected_profile": "implementation-worker",
+            "selected_model_class": "balanced",
+            "selection_basis": {
+                "cost": "bounded local execution",
+                "speed": "single worker cycle",
+                "quality": "requires tests and independent review",
+                "context_need": "factory card and source refs",
+                "data_sensitivity": "public-safe fixtures",
+                "tool_requirements": "repo filesystem and unit tests",
+                "expected_horizon": "bounded implementation task",
+                "fallback_route": "return to repair loop if validation fails",
+            },
+            "model_independence_preserved": True,
+            "single_provider_assumption": False,
+        }
+
+        self.assertEqual(factoryctl.validate_card(card), [])
 
     def test_vfinal_method_contract_requires_named_plan_fields(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
