@@ -42,16 +42,19 @@ factoryctl validate-card examples/minimal-hermes-project/card.md
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
 factoryctl recovery-plan --card examples/minimal-hermes-project/card.md --receipt .tmp/receipt.json --worker-results-dir .tmp/worker-results
-factoryctl help-next --card examples/minimal-hermes-project/card.md --out .tmp/factory-help.json
+factoryctl help-next --card examples/minimal-hermes-project/card.md --worker-results-dir .tmp/worker-results --out .tmp/factory-help.json
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 factoryctl transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready
 factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
 ```
 
 `help-next` reads the card, workflow catalog and gate report, then separates the
-factory's next action from bounded user decisions. It does not dispatch
-workers, approve gates, or make the operator coordinate schemas, worker packets
-or internal evidence machinery.
+factory's next action from bounded user decisions. With `--receipt` or
+`--worker-results-dir`, it also exposes active recovery routes so a recoverable
+non-human block points back into the factory-owned repair path instead of asking
+the operator to infer the next worker from prose. It does not dispatch workers,
+approve gates, or make the operator coordinate schemas, worker packets or
+internal evidence machinery.
 
 `status-snapshot` projects card, gate, lane and evidence state for operators. It
 does not replace Hermes, card contracts, gate reports or Receipt Five as the

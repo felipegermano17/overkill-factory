@@ -9096,6 +9096,52 @@ def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], pha
     }
 
 
+def summarize_recovery_route_for_help(route: dict[str, Any]) -> dict[str, Any]:
+    route_id = str(route.get("recovery_route_id") or "").strip()
+    repair_owner = str(route.get("repair_owner_worker") or "").strip()
+    human_gate_required = route.get("human_gate_required") is True
+    factory_owned = route.get("factory_owned_repair_allowed") is True and not human_gate_required
+    retry_policy = route.get("retry_policy") if isinstance(route.get("retry_policy"), dict) else {}
+    summary = {
+        "recovery_route_id": route_id,
+        "route_digest": recovery_route_digest(route) if route_id else "",
+        "blocker_type": str(route.get("blocker_type") or "unknown"),
+        "factory_owned_repair_allowed": factory_owned,
+        "human_gate_required": human_gate_required,
+        "repair_owner_worker": repair_owner,
+        "unblock_authority_ref": str(route.get("unblock_authority_ref") or ""),
+        "downstream_freeze_scope": _list_items(route.get("downstream_freeze_scope")),
+        "retry_state": {
+            "attempt_number": int(retry_policy.get("attempt_number") or 1),
+            "max_attempts": int(retry_policy.get("max_attempts") or 1),
+            "escalation_reason": str(retry_policy.get("escalation_reason") or ""),
+        },
+        "operator_visible_next_action": (
+            "wait for the real human gate record; the factory must not simulate this approval"
+            if human_gate_required
+            else f"route the bounded repair through {repair_owner or 'the assigned factory worker'} and keep downstream frozen until fresh review passes"
+        ),
+    }
+    return summary
+
+
+def recovery_decisions_for_help(routes: list[dict[str, Any]]) -> list[dict[str, str]]:
+    decisions: list[dict[str, str]] = []
+    for route in routes:
+        if route.get("human_gate_required") is not True:
+            continue
+        route_id = str(route.get("recovery_route_id") or "human-gate-recovery")
+        decisions.append(
+            {
+                "decision_type": "authority_required",
+                "reason": f"Recovery route {route_id} requires a real human gate before the factory can continue.",
+                "user_action": "approve, reject or request changes on the bounded human gate packet",
+                "factory_prepares": "human gate packet with recovery route, frozen scope, evidence and forbidden actions",
+            }
+        )
+    return decisions
+
+
 def user_decisions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -> list[dict[str, str]]:
     decisions: list[dict[str, str]] = []
     contract = card.get("user_facing_autonomy_contract") if isinstance(card.get("user_facing_autonomy_contract"), dict) else {}
@@ -9138,13 +9184,39 @@ def user_decisions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -
     return decisions
 
 
-def build_factory_help(card: dict[str, Any], card_path: Path, *, catalog_path: Path | None = None) -> dict[str, Any]:
+def build_factory_help(
+    card: dict[str, Any],
+    card_path: Path,
+    *,
+    catalog_path: Path | None = None,
+    worker_results_dir: Path | None = None,
+    receipt: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     catalog = load_workflow_catalog(catalog_path)
     phase_row = workflow_phase_for_card(card, catalog)
     gate_report = build_gate_report(card)
+    recovery_plan = build_factory_recovery_plan(card, worker_results_dir=worker_results_dir, receipt=receipt)
+    active_recovery_routes = [
+        summarize_recovery_route_for_help(route)
+        for route in recovery_plan.get("recovery_routes", [])
+        if isinstance(route, dict)
+    ]
     if product_experience_planning_gap(card, _list_items(gate_report.get("card_validation_errors"))):
         phase_row = workflow_phase_by_id(catalog, "F8A") or phase_row
     factory_action = help_action_from_gate(card, gate_report, phase_row)
+    factory_owned_routes = [
+        route
+        for route in active_recovery_routes
+        if route.get("factory_owned_repair_allowed") is True and (worker_results_dir is not None or receipt is not None)
+    ]
+    if factory_owned_routes:
+        route = factory_owned_routes[0]
+        factory_action = {
+            "owner": "factory",
+            "action": f"execute recovery route {route['recovery_route_id']} through {route['repair_owner_worker']}",
+            "why": "A recoverable non-human BLOCK has a known repair route; the operator should not infer the next worker from prose.",
+            "command_refs": ["factoryctl recovery-plan", "factoryctl transition-plan", "factoryctl help-next"],
+        }
     blocked_workers = _list_items(gate_report.get("blocked_workers"))
     validation_errors = _list_items(gate_report.get("card_validation_errors"))
     next_actions: list[str] = []
@@ -9167,7 +9239,8 @@ def build_factory_help(card: dict[str, Any], card_path: Path, *, catalog_path: P
         "gate_status": str(gate_report.get("gate_status") or "not_run"),
         "truth_scope": truth_scope_for_card(card),
         "factory_next_action": factory_action,
-        "user_decision_required": user_decisions_for_card(card, gate_report),
+        "active_recovery_routes": active_recovery_routes,
+        "user_decision_required": user_decisions_for_card(card, gate_report) + recovery_decisions_for_help(active_recovery_routes),
         "blocked_because": validation_errors + [f"{worker_id} is blocked by missing inputs" for worker_id in blocked_workers],
         "blocked_actions": sorted(set(_list_items(phase_row.get("blocked_actions")) + _list_items(card.get("forbidden_actions")))),
         "evidence_needed": next_actions or _list_items(phase_row.get("required_artifacts")) + _list_items(phase_row.get("required_gates")),
@@ -9939,7 +10012,14 @@ def command_recovery_plan(args: argparse.Namespace) -> int:
 
 def command_help_next(args: argparse.Namespace) -> int:
     card = load_json_like(args.card)
-    payload = build_factory_help(card, args.card, catalog_path=args.catalog)
+    receipt = load_json_like(args.receipt) if args.receipt else None
+    payload = build_factory_help(
+        card,
+        args.card,
+        catalog_path=args.catalog,
+        worker_results_dir=args.worker_results_dir,
+        receipt=receipt,
+    )
     write_json(args.out, payload)
     return 0
 
@@ -10264,6 +10344,8 @@ def build_parser() -> argparse.ArgumentParser:
     help_next_parser = sub.add_parser("help-next", help="Show the next safe action without making the user operate internal factory machinery.")
     help_next_parser.add_argument("--card", type=Path, required=True)
     help_next_parser.add_argument("--catalog", type=Path)
+    help_next_parser.add_argument("--receipt", type=Path)
+    help_next_parser.add_argument("--worker-results-dir", type=Path)
     help_next_parser.add_argument("--out", type=Path)
     help_next_parser.set_defaults(func=command_help_next)
 
