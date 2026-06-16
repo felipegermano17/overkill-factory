@@ -1534,6 +1534,48 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(factoryctl.validate_product_face_result(result), [])
 
+    def test_product_face_pass_rejects_synthetic_reusable_product_claim(self) -> None:
+        result = product_face_result_fixture(evidence_kind="synthetic", reusable_for_product=True)
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn("product_face_result synthetic PASS must set reusable_for_product=false", errors)
+
+    def test_product_face_pass_allows_non_reusable_synthetic_smoke_record(self) -> None:
+        result = product_face_result_fixture(
+            evidence_kind="synthetic",
+            reusable_for_product=False,
+            product_acceptance_boundary={
+                "boundary": "synthetic_smoke_only",
+                "cannot_satisfy_product_acceptance": True,
+                "next_required_action": "run real Product Face proof before product-facing completion",
+            },
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result(result), [])
+
+    def test_product_face_completion_rejects_synthetic_pass_even_when_non_reusable(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture(
+            evidence_kind="synthetic",
+            reusable_for_product=False,
+            product_acceptance_boundary={
+                "boundary": "synthetic_smoke_only",
+                "cannot_satisfy_product_acceptance": True,
+                "next_required_action": "run real Product Face proof before product-facing completion",
+            },
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn("product_face_result synthetic evidence cannot satisfy product-facing completion", errors)
+
+    def test_product_face_completion_accepts_real_pass_boundary(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture(evidence_kind="real", reusable_for_product=True)
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
     def test_product_face_pass_rejects_state_viewport_artifact_mismatch(self) -> None:
         result = product_face_result_fixture()
         result["visual_artifacts"] = [dict(result["visual_artifacts"][0], state="success")]
@@ -2661,6 +2703,35 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("user_journeys_checked", product_face_result)
         self.assertIn("a11y", product_face_result)
         self.assertIn("overlap_check", product_face_result)
+        self.assertEqual(product_face_result["product_acceptance_boundary"]["boundary"], "synthetic_smoke_only")
+        self.assertTrue(product_face_result["product_acceptance_boundary"]["cannot_satisfy_product_acceptance"])
+
+    def test_product_face_worker_result_validation_rejects_synthetic_completion(self) -> None:
+        card = load_card("v35_valid_product_face.md")
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        result = factoryctl.build_worker_result(
+            "product-face",
+            card,
+            result="PASS",
+            tool_or_profile="product-face-proof",
+            executed_by="product-face",
+            evidence_refs=["README.md"],
+            blocking_findings=False,
+            findings_summary="Synthetic Product Face smoke.",
+            next_action="run browser proof for real product",
+            evidence_kind="synthetic",
+            reusable_for_product=False,
+        )
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="product_face_result",
+            expected_worker_id="product-face",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn("product_face_result synthetic evidence cannot satisfy product-facing completion", errors)
 
     def test_product_face_worker_result_binds_external_visual_manifest(self) -> None:
         card = load_card("v35_valid_product_face.md")
@@ -2675,7 +2746,7 @@ class FactoryCtlTest(unittest.TestCase):
             blocking_findings=False,
             findings_summary="External visual proof package.",
             next_action="ready for independent review",
-            evidence_kind="browser",
+            evidence_kind="real",
             reusable_for_product=True,
         )
 

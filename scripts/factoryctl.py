@@ -4041,6 +4041,17 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
     if str(result.get("result") or "").upper() not in {"PASS", "WAIVED"}:
         errors.append("product_face_result result must be PASS or WAIVED")
     is_pass = str(result.get("result") or "").upper() == "PASS"
+    evidence_kind = str(result.get("evidence_kind") or "").strip()
+    if evidence_kind and evidence_kind not in {"real", "synthetic", "waiver"}:
+        errors.append("product_face_result.evidence_kind must be real, synthetic or waiver")
+    if is_pass and evidence_kind == "synthetic" and result.get("reusable_for_product") is not False:
+        errors.append("product_face_result synthetic PASS must set reusable_for_product=false")
+    if is_pass and evidence_kind == "synthetic":
+        boundary = result.get("product_acceptance_boundary")
+        if not isinstance(boundary, dict) or not boundary:
+            errors.append("product_face_result synthetic PASS requires product_acceptance_boundary")
+        elif boundary.get("cannot_satisfy_product_acceptance") is not True:
+            errors.append("product_face_result synthetic PASS product_acceptance_boundary.cannot_satisfy_product_acceptance must be true")
     if is_pass and result.get("blocking_findings") is not False:
         errors.append("product_face_result PASS requires blocking_findings=false")
     if is_pass and _list_items(result.get("uncaptured_states")):
@@ -4214,6 +4225,8 @@ def validate_product_face_result_against_card(result: dict[str, Any], card: dict
         return errors
     if result_status != "PASS":
         return errors
+    if str(result.get("evidence_kind") or "").strip() == "synthetic":
+        errors.append("product_face_result synthetic evidence cannot satisfy product-facing completion")
 
     required_profiles = _expected_surface_evidence_profiles(card)
     declared_profiles = set(_declared_surface_evidence_profiles(result))
@@ -7080,6 +7093,12 @@ def build_worker_result(
                 },
             }
         )
+        if evidence_kind == "synthetic":
+            payload["product_acceptance_boundary"] = {
+                "boundary": "synthetic_smoke_only",
+                "cannot_satisfy_product_acceptance": True,
+                "next_required_action": "run real Product Face proof before product-facing completion",
+            }
     if worker_id == "remote-proof-runner":
         payload.update(
             {
