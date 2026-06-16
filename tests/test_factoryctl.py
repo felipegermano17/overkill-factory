@@ -396,11 +396,46 @@ def visual_artifacts_fixture(
     return artifacts
 
 
+def external_visual_artifact_manifest_fixture(
+    *,
+    manifest_ref: str = "external:product-face-fixture-package",
+    target: str,
+    viewports: list[str],
+    states: list[str],
+    screenshots: list[str],
+    captured_at: str = "2026-06-16T00:00:00+00:00",
+    expires_at: str = "2099-01-01T00:00:00+00:00",
+) -> list[dict]:
+    return [
+        {
+            "manifest_ref": manifest_ref,
+            "target": target,
+            "captured_at": captured_at,
+            "expires_at": expires_at,
+            "bounded_acceptance": True,
+            "sanitized": True,
+            "owner": "product-face-fixture-owner",
+            "reviewer": "product-face-fixture-reviewer",
+            "artifacts": [
+                {
+                    "evidence_ref": screenshot,
+                    "viewport": viewport,
+                    "state": state,
+                    "captured_at": captured_at,
+                }
+                for viewport, screenshot in zip(viewports, screenshots)
+                for state in states
+            ],
+        }
+    ]
+
+
 def product_face_result_fixture(**overrides: object) -> dict:
     overrides = dict(overrides)
     viewports = ["desktop 1440x900", "mobile 390x844"]
     states = ["empty", "loading", "pending", "success", "error"]
     journeys = ["pilot status review", "review evidence inspection"]
+    target = "external:product-face-fixture-target"
     viewports = list(overrides.pop("viewports", viewports))  # type: ignore[arg-type]
     states = list(overrides.pop("checked_states", states))  # type: ignore[arg-type]
     journeys = list(overrides.pop("user_journeys_checked", journeys))  # type: ignore[arg-type]
@@ -412,7 +447,16 @@ def product_face_result_fixture(**overrides: object) -> dict:
     visual_artifacts = overrides.pop(
         "visual_artifacts",
         visual_artifacts_fixture(
-            target="external:product-face-fixture-target",
+            target=target,
+            viewports=viewports,
+            states=states,
+            screenshots=screenshots,
+        ),
+    )
+    external_visual_artifact_manifests = overrides.pop(
+        "external_visual_artifact_manifests",
+        external_visual_artifact_manifest_fixture(
+            target=target,
             viewports=viewports,
             states=states,
             screenshots=screenshots,
@@ -440,6 +484,7 @@ def product_face_result_fixture(**overrides: object) -> dict:
         "user_journeys_checked": journeys,
         "usage_evidence_matrix": usage_matrix,
         "visual_artifacts": visual_artifacts,
+        "external_visual_artifact_manifests": external_visual_artifact_manifests,
         "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
         "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
         "console": {"status": "pass"},
@@ -1378,6 +1423,43 @@ class FactoryCtlTest(unittest.TestCase):
         errors = factoryctl.validate_product_face_result(result)
 
         self.assertIn("product_face_result.visual_artifacts[0].freshness_status must be fresh or bounded_external", errors)
+
+    def test_product_face_pass_rejects_external_visual_artifact_without_manifest(self) -> None:
+        result = product_face_result_fixture(external_visual_artifact_manifests=[])
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.visual_artifacts[0].external_package_ref must resolve to external_visual_artifact_manifests entry: external:product-face-fixture-package",
+            errors,
+        )
+
+    def test_product_face_pass_rejects_stale_external_visual_manifest(self) -> None:
+        result = product_face_result_fixture()
+        result["external_visual_artifact_manifests"][0]["expires_at"] = "2026-01-01T00:00:00+00:00"
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertTrue(
+            any("external_manifest[external:product-face-fixture-package] is stale" in error for error in errors),
+            errors,
+        )
+
+    def test_product_face_pass_rejects_external_visual_manifest_state_viewport_mismatch(self) -> None:
+        result = product_face_result_fixture()
+        result["external_visual_artifact_manifests"][0]["artifacts"][0]["state"] = "unrelated-state"
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.visual_artifacts[0].external_manifest[external:product-face-fixture-package].artifacts must include evidence_ref/state/viewport binding for external:product-face-fixture-desktop.png",
+            errors,
+        )
+
+    def test_product_face_pass_accepts_external_visual_manifest_binding(self) -> None:
+        result = product_face_result_fixture()
+
+        self.assertEqual(factoryctl.validate_product_face_result(result), [])
 
     def test_product_face_pass_rejects_state_viewport_artifact_mismatch(self) -> None:
         result = product_face_result_fixture()
@@ -2506,6 +2588,32 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("user_journeys_checked", product_face_result)
         self.assertIn("a11y", product_face_result)
         self.assertIn("overlap_check", product_face_result)
+
+    def test_product_face_worker_result_binds_external_visual_manifest(self) -> None:
+        card = load_card("v35_valid_product_face.md")
+
+        result = factoryctl.build_worker_result(
+            "product-face",
+            card,
+            result="PASS",
+            tool_or_profile="product-face-proof",
+            executed_by="product-face",
+            evidence_refs=["external:product-face-fixture-desktop.png"],
+            blocking_findings=False,
+            findings_summary="External visual proof package.",
+            next_action="ready for independent review",
+            evidence_kind="browser",
+            reusable_for_product=True,
+        )
+
+        manifests = result["external_visual_artifact_manifests"]
+        self.assertEqual(len(manifests), 1)
+        manifest = manifests[0]
+        self.assertEqual(manifest["manifest_ref"], "external:product-face-worker-result-package")
+        self.assertEqual(manifest["bounded_acceptance"], True)
+        self.assertEqual(manifest["sanitized"], True)
+        self.assertNotEqual(manifest["expires_at"], "2099-01-01T00:00:00+00:00")
+        self.assertEqual(factoryctl.validate_product_face_result(result), [])
 
     def test_human_approval_requires_evidence(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
