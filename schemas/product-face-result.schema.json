@@ -207,10 +207,43 @@
       "minItems": 1,
       "items": { "type": "string", "minLength": 1 }
     },
+    "declared_states": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "captured_states": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "uncaptured_states": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
     "user_journeys_checked": {
       "type": "array",
       "minItems": 1,
       "items": { "type": "string", "minLength": 1 }
+    },
+    "declared_journeys": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "captured_journeys": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "uncaptured_journeys": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "state_capture_policy": {
+      "type": "object",
+      "properties": {
+        "mode": { "type": "string", "minLength": 3 },
+        "cannot_claim_uncaptured_states": { "type": "boolean" },
+        "basis": { "type": "string" }
+      },
+      "additionalProperties": true
     },
     "a11y": {
       "type": "object",

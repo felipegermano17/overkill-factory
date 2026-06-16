@@ -167,6 +167,57 @@ class ProductFaceProofTest(unittest.TestCase):
         self.assertEqual(result["evidence_kind"], "real")
         self.assertFalse(result["reusable_for_product"])
 
+    def test_browser_capture_scope_does_not_claim_uncaptured_declared_states(self) -> None:
+        scope = product_face_proof.browser_capture_scope(
+            states=["initial-render", "loading", "error"],
+            journeys=["open target", "checkout happy path"],
+        )
+
+        self.assertEqual(scope["declared_states"], ["initial-render", "loading", "error"])
+        self.assertEqual(scope["captured_states"], ["initial-render"])
+        self.assertEqual(scope["uncaptured_states"], ["loading", "error"])
+        self.assertEqual(scope["captured_journeys"], ["open target"])
+        self.assertEqual(scope["uncaptured_journeys"], ["checkout happy path"])
+
+    def test_capture_scope_turns_declared_overclaim_into_waived_result(self) -> None:
+        scope = product_face_proof.browser_capture_scope(
+            states=["loading", "success"],
+            journeys=["purchase flow"],
+        )
+        result = product_face_proof.base_result(
+            target_ref="examples/minimal-hermes-project",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=scope["captured_states"],
+            journeys=scope["captured_journeys"],
+            tool_or_profile="unit-test",
+        )
+
+        product_face_proof.apply_capture_scope(result, scope)
+
+        self.assertEqual(result["result"], "WAIVED")
+        self.assertTrue(result["blocking_findings"])
+        self.assertEqual(result["checked_states"], ["initial-render"])
+        self.assertEqual(result["user_journeys_checked"], ["open target"])
+        self.assertEqual(result["uncaptured_states"], ["loading", "success"])
+        self.assertEqual(result["uncaptured_journeys"], ["purchase flow"])
+        self.assertIn("state/journey drivers", result["next_action"])
+
+    def test_visual_artifacts_are_emitted_only_for_captured_states(self) -> None:
+        scope = product_face_proof.browser_capture_scope(
+            states=["initial-render", "loading"],
+            journeys=["open target"],
+        )
+
+        artifacts = product_face_proof.build_visual_artifacts(
+            target_ref="examples/minimal-hermes-project",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=scope["captured_states"],
+            screenshot_refs=["external:desktop-proof.png"],
+            captured_at="2026-06-16T00:00:00+00:00",
+        )
+
+        self.assertEqual([artifact["state"] for artifact in artifacts], ["initial-render"])
+
     def test_reusable_for_product_requires_pass_result(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             html_path = Path(tmp) / "prototype.html"
