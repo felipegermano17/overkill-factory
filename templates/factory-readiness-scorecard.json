@@ -137,6 +137,8 @@
   "autonomy_boundary": {
     "autonomous_execution_allowed": true,
     "allowed_scope": "bounded_remediation",
+    "bounded_remediation_allowed": true,
+    "material_autonomous_execution_allowed": false,
     "requires_human_gate_for": [
       "security",
       "customer_acceptance",

@@ -132,6 +132,11 @@ approval or a cockpit status. Non-passing dimensions require a remediation
 loop, and blocking dimensions must keep autonomous execution off until the
 scorecard is rerun with evidence.
 
+`ready_with_bounds` is not the same as material autonomy. When any dimension is
+`REMEDIATION_REQUIRED`, the autonomy boundary may allow only bounded remediation
+and rerun work. It must keep `material_autonomous_execution_allowed=false` until
+the remediation evidence exists and the scorecard is rerun.
+
 ## Learning Proposals
 
 Use `factory_learning_proposal` when a finding should become a durable rule,

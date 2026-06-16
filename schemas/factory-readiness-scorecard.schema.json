@@ -205,6 +205,8 @@
       "required": [
         "autonomous_execution_allowed",
         "allowed_scope",
+        "bounded_remediation_allowed",
+        "material_autonomous_execution_allowed",
         "requires_human_gate_for",
         "not_product_acceptance",
         "not_release_approval"
@@ -220,6 +222,12 @@
             "bounded_remediation",
             "material_execution"
           ]
+        },
+        "bounded_remediation_allowed": {
+          "type": "boolean"
+        },
+        "material_autonomous_execution_allowed": {
+          "type": "boolean"
         },
         "requires_human_gate_for": {
           "type": "array",

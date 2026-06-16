@@ -38,6 +38,8 @@ def make_all_pass(card: dict) -> dict:
     card["remediation_loop"]["required"] = False
     card["autonomy_boundary"]["autonomous_execution_allowed"] = True
     card["autonomy_boundary"]["allowed_scope"] = "material_execution"
+    card["autonomy_boundary"]["bounded_remediation_allowed"] = False
+    card["autonomy_boundary"]["material_autonomous_execution_allowed"] = True
     for dimension in card["dimensions"]:
         dimension["status"] = "PASS"
         dimension["severity"] = "none"
@@ -52,6 +54,8 @@ def make_blocked(card: dict) -> dict:
     card["remediation_loop"]["required"] = True
     card["autonomy_boundary"]["autonomous_execution_allowed"] = False
     card["autonomy_boundary"]["allowed_scope"] = "none"
+    card["autonomy_boundary"]["bounded_remediation_allowed"] = False
+    card["autonomy_boundary"]["material_autonomous_execution_allowed"] = False
     dimension = card["dimensions"][0]
     dimension["status"] = "BLOCKED"
     dimension["severity"] = "high"
@@ -75,6 +79,7 @@ class FactoryReadinessScorecardTest(unittest.TestCase):
         card = scorecard()
         card["verdict"] = "remediation_required"
         card["autonomy_boundary"]["allowed_scope"] = "bounded_remediation"
+        card["autonomy_boundary"]["material_autonomous_execution_allowed"] = False
 
         errors = factoryctl.validate_factory_readiness_scorecard(card)
 
@@ -113,6 +118,7 @@ class FactoryReadinessScorecardTest(unittest.TestCase):
         card = scorecard()
         card["verdict"] = "ready_for_autonomy"
         card["autonomy_boundary"]["allowed_scope"] = "material_execution"
+        card["autonomy_boundary"]["material_autonomous_execution_allowed"] = True
 
         errors = factoryctl.validate_factory_readiness_scorecard(card)
 
@@ -134,6 +140,8 @@ class FactoryReadinessScorecardTest(unittest.TestCase):
         card["verdict"] = "blocked"
         card["autonomy_boundary"]["autonomous_execution_allowed"] = False
         card["autonomy_boundary"]["allowed_scope"] = "none"
+        card["autonomy_boundary"]["bounded_remediation_allowed"] = False
+        card["autonomy_boundary"]["material_autonomous_execution_allowed"] = False
 
         errors = factoryctl.validate_factory_readiness_scorecard(card)
 
@@ -154,6 +162,7 @@ class FactoryReadinessScorecardTest(unittest.TestCase):
         bad = copy.deepcopy(card)
         bad["verdict"] = "ready_for_autonomy"
         bad["autonomy_boundary"]["allowed_scope"] = "material_execution"
+        bad["autonomy_boundary"]["material_autonomous_execution_allowed"] = True
 
         schema_errors = public_json_validator.validate_node(schema, card, "$", schemas=schemas, root_schema=schema)
         domain_errors = public_json_validator.validate_domain_rules(card, "$")
@@ -161,6 +170,27 @@ class FactoryReadinessScorecardTest(unittest.TestCase):
 
         self.assertEqual(schema_errors + domain_errors, [])
         self.assertTrue(any("ready_for_autonomy requires all dimensions PASS" in error for error in bad_domain_errors), bad_domain_errors)
+
+    def test_ready_with_bounds_with_remediation_cannot_allow_material_autonomy(self) -> None:
+        card = scorecard()
+        card["autonomy_boundary"]["allowed_scope"] = "material_execution"
+        card["autonomy_boundary"]["bounded_remediation_allowed"] = False
+        card["autonomy_boundary"]["material_autonomous_execution_allowed"] = True
+
+        errors = factoryctl.validate_factory_readiness_scorecard(card)
+
+        self.assertIn(
+            "factory_readiness_scorecard ready_with_bounds with remediation cannot allow material autonomous execution",
+            errors,
+        )
+        self.assertIn(
+            "factory_readiness_scorecard ready_with_bounds with remediation cannot use allowed_scope=material_execution",
+            errors,
+        )
+        self.assertIn(
+            "factory_readiness_scorecard ready_with_bounds with remediation requires bounded_remediation_allowed=true",
+            errors,
+        )
 
     def test_factoryctl_cli_validates_scorecard(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
