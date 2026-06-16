@@ -107,6 +107,44 @@ def contains_any(text: str, terms: set[str]) -> bool:
     return any(term in normalized for term in terms)
 
 
+def unique_public_refs(values: list[Any]) -> list[str]:
+    refs: list[str] = []
+    for value in values:
+        ref = clean_public_text(value)
+        if ref and ref not in refs:
+            refs.append(ref)
+    return refs
+
+
+def learnback_sdlc_feedback_loop_refs(learnback: dict[str, Any]) -> list[str]:
+    raw_refs: list[Any] = []
+    if learnback.get("sdlc_feedback_loop_ref"):
+        raw_refs.append(learnback.get("sdlc_feedback_loop_ref"))
+    if isinstance(learnback.get("sdlc_feedback_loop_refs"), list):
+        raw_refs.extend(learnback.get("sdlc_feedback_loop_refs", []))
+    return unique_public_refs(raw_refs)
+
+
+def collect_sdlc_feedback_loop_refs(value: Any) -> list[str]:
+    raw_refs: list[Any] = []
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for key, child in node.items():
+                if key == "sdlc_feedback_loop_ref":
+                    raw_refs.append(child)
+                elif key in {"sdlc_feedback_loop_refs", "factory_sdlc_lifecycle_refs"} and isinstance(child, list):
+                    raw_refs.extend(child)
+                else:
+                    walk(child)
+        elif isinstance(node, list):
+            for child in node:
+                walk(child)
+
+    walk(value)
+    return unique_public_refs(raw_refs)
+
+
 def default_reference_source_registry() -> dict[str, Any]:
     return load_json(ROOT / "templates" / "reference-source-registry.json")
 
@@ -186,7 +224,7 @@ def build_missing_capability_plan(gate_report: dict[str, Any]) -> dict[str, Any]
     }
 
 
-def build_issue_candidate(finding: dict[str, Any]) -> dict[str, Any] | None:
+def build_issue_candidate(finding: dict[str, Any], sdlc_feedback_loop_refs: list[str] | None = None) -> dict[str, Any] | None:
     route = str(finding.get("recommended_route") or "").strip()
     if route in {"no_issue", ""}:
         return None
@@ -218,6 +256,7 @@ def build_issue_candidate(finding: dict[str, Any]) -> dict[str, Any] | None:
         "route": route if route != "public_issue" else "public_issue",
         "severity": severity,
         "area": area,
+        "sdlc_feedback_loop_refs": sdlc_feedback_loop_refs or [],
         "public_safe": public_safe,
         "requires_human_gate": requires_human_gate,
         "dedupe_key": slug(f"{area}-{summary}"),
@@ -226,9 +265,10 @@ def build_issue_candidate(finding: dict[str, Any]) -> dict[str, Any] | None:
 
 def build_issue_candidates(learnback: dict[str, Any]) -> dict[str, Any]:
     candidates = []
+    feedback_refs = learnback_sdlc_feedback_loop_refs(learnback)
     for finding in learnback.get("findings", []):
         if isinstance(finding, dict):
-            candidate = build_issue_candidate(finding)
+            candidate = build_issue_candidate(finding, feedback_refs)
             if candidate:
                 candidates.append(candidate)
     return {
@@ -236,8 +276,101 @@ def build_issue_candidates(learnback: dict[str, Any]) -> dict[str, Any]:
         "record_type": "factory_improvement_issue_candidate_list",
         "created_at": utc_now(),
         "source_project_ref": clean_public_text(learnback.get("project_ref")),
+        "sdlc_feedback_loop_refs": feedback_refs,
         "candidates": candidates,
         "issue_count": len(candidates),
+    }
+
+
+def normalize_severity(value: Any) -> str:
+    severity = str(value or "medium").lower()
+    return severity if severity in {"low", "medium", "high", "critical"} else "medium"
+
+
+def build_execution_learnback_record(
+    receipt: dict[str, Any],
+    evidence_graph: dict[str, Any] | None = None,
+    project_ref: str | None = None,
+) -> dict[str, Any]:
+    refs = collect_sdlc_feedback_loop_refs([receipt, evidence_graph or {}])
+    if not refs:
+        raise ValueError("execution learnback requires sdlc_feedback_loop_refs from Receipt Five or Evidence Graph")
+
+    receipt_five = receipt.get("receipt_five") if isinstance(receipt.get("receipt_five"), dict) else {}
+    transition = receipt.get("kanban_transition_event") if isinstance(receipt.get("kanban_transition_event"), dict) else {}
+    reconciliation = receipt.get("receipt_five_reconciliation_result") if isinstance(receipt.get("receipt_five_reconciliation_result"), dict) else {}
+    graph = evidence_graph if isinstance(evidence_graph, dict) else {}
+
+    attempted_transitions = [
+        clean_public_text(transition.get(field))
+        for field in ("from_status", "to_status")
+        if str(transition.get(field) or "").strip()
+    ]
+    workers_required = unique_public_refs(list(reconciliation.get("required_workers") or []))
+    missing_workers = unique_public_refs(list(reconciliation.get("missing_blocking_workers") or []))
+    graph_findings = graph.get("findings") if isinstance(graph.get("findings"), list) else []
+    blockers = [
+        clean_public_text(finding.get("message"))
+        for finding in graph_findings
+        if isinstance(finding, dict) and str(finding.get("message") or "").strip()
+    ]
+    if str(receipt_five.get("verification_result") or "").strip().upper() == "BLOCKED":
+        blockers.append(clean_public_text(receipt_five.get("next_action") or "Receipt Five is blocked."))
+
+    findings: list[dict[str, Any]] = []
+    for finding in graph_findings:
+        if not isinstance(finding, dict):
+            continue
+        message = clean_public_text(finding.get("message"))
+        if not message:
+            continue
+        node_id = clean_public_text(finding.get("node_id") or "evidence-graph")
+        findings.append(
+            {
+                "summary": message,
+                "severity": normalize_severity(finding.get("severity")),
+                "area": node_id,
+                "recommended_route": "eval_or_test",
+                "reproduction_condition": "Evidence Graph reported this finding before learnback.",
+                "acceptance_hint": "Add or update a contract/static/unit check so the same blocker returns to the execution rail.",
+            }
+        )
+    if not findings:
+        result = str(receipt_five.get("verification_result") or graph.get("result") or "PASS").strip().upper()
+        findings.append(
+            {
+                "summary": "Receipt Five evidence completed without a self-improvement finding."
+                if result == "PASS"
+                else clean_public_text(receipt_five.get("next_action") or "Receipt Five evidence is blocked."),
+                "severity": "low" if result == "PASS" else "medium",
+                "area": "receipt-five",
+                "recommended_route": "no_issue" if result == "PASS" else "eval_or_test",
+                "reproduction_condition": "Generated from Receipt Five and Evidence Graph.",
+                "acceptance_hint": "Keep the learnback record attached to the SDLC feedback loop.",
+            }
+        )
+
+    graph_target = graph.get("target") if isinstance(graph.get("target"), dict) else {}
+    resolved_project_ref = project_ref or graph_target.get("card_ref")
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/execution-learnback-record.schema.json",
+        "record_type": "execution_learnback_record",
+        "project_ref": clean_public_text(resolved_project_ref or "external:receipt-five"),
+        "method_version": "OVERKILL_VFINAL",
+        "sdlc_feedback_loop_ref": refs[0],
+        "sdlc_feedback_loop_refs": refs,
+        "source_evidence_refs": ["receipt_five", "evidence_graph"] if evidence_graph else ["receipt_five"],
+        "attempted_transitions": attempted_transitions,
+        "workers_required": workers_required,
+        "workers_executed": [],
+        "blockers": blockers + [f"missing worker: {worker}" for worker in missing_workers],
+        "operator_friction": [],
+        "test_scan_results": [clean_public_text(command) for command in receipt_five.get("verification_commands", [])],
+        "findings": findings,
+        "public_safety_boundary": {
+            "raw_private_evidence_forbidden": True,
+            "public_issue_requires_redaction": True,
+        },
     }
 
 
@@ -257,7 +390,11 @@ def learning_classification_for(finding: dict[str, Any]) -> str:
     return "reject" if route in {"no_issue", "private_followup"} else "issue"
 
 
-def build_learning_proposal(finding: dict[str, Any], source_ref: str) -> dict[str, Any]:
+def build_learning_proposal(
+    finding: dict[str, Any],
+    source_ref: str,
+    sdlc_feedback_loop_refs: list[str] | None = None,
+) -> dict[str, Any]:
     summary = clean_public_text(finding.get("summary"))
     area = clean_public_text(finding.get("area") or "factory")
     classification = learning_classification_for(finding)
@@ -270,6 +407,7 @@ def build_learning_proposal(finding: dict[str, Any], source_ref: str) -> dict[st
         "$schema": "https://overkill-factory.dev/schemas/factory-learning-proposal.schema.json",
         "record_type": "factory_learning_proposal",
         "source_evidence_refs": [evidence_ref],
+        "sdlc_feedback_loop_refs": sdlc_feedback_loop_refs or [],
         "source_trust": "internal_structured",
         "classification": classification,
         "proposed_artifact_type": classification,
@@ -325,8 +463,9 @@ def build_learning_proposal(finding: dict[str, Any], source_ref: str) -> dict[st
 
 def build_learning_proposals(learnback: dict[str, Any]) -> dict[str, Any]:
     source_ref = clean_public_text(learnback.get("project_ref") or "external:learnback-record")
+    feedback_refs = learnback_sdlc_feedback_loop_refs(learnback)
     proposals = [
-        build_learning_proposal(finding, source_ref)
+        build_learning_proposal(finding, source_ref, feedback_refs)
         for finding in learnback.get("findings", [])
         if isinstance(finding, dict)
     ]
@@ -335,6 +474,7 @@ def build_learning_proposals(learnback: dict[str, Any]) -> dict[str, Any]:
         "record_type": "factory_learning_proposal_list",
         "created_at": utc_now(),
         "source_project_ref": source_ref,
+        "sdlc_feedback_loop_refs": feedback_refs,
         "proposals": proposals,
         "proposal_count": len(proposals),
     }
@@ -532,6 +672,16 @@ def command_learnback_issues(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_learnback_record(args: argparse.Namespace) -> int:
+    evidence_graph = load_json(args.evidence_graph) if args.evidence_graph else None
+    try:
+        record = build_execution_learnback_record(load_json(args.receipt), evidence_graph, args.project_ref)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+    write_json(args.out, record)
+    return 0
+
+
 def command_learning_proposals(args: argparse.Namespace) -> int:
     write_json(args.out, build_learning_proposals(load_json(args.record)))
     return 0
@@ -567,6 +717,13 @@ def build_parser() -> argparse.ArgumentParser:
     learnback.add_argument("--record", type=Path, required=True)
     learnback.add_argument("--out", type=Path)
     learnback.set_defaults(func=command_learnback_issues)
+
+    learnback_record = sub.add_parser("learnback-record", help="Build a learnback record from Receipt Five and optional Evidence Graph")
+    learnback_record.add_argument("--receipt", type=Path, required=True)
+    learnback_record.add_argument("--evidence-graph", type=Path)
+    learnback_record.add_argument("--project-ref")
+    learnback_record.add_argument("--out", type=Path)
+    learnback_record.set_defaults(func=command_learnback_record)
 
     learning = sub.add_parser("learning-proposals", help="Turn a learnback record into typed learning proposals")
     learning.add_argument("--record", type=Path, required=True)

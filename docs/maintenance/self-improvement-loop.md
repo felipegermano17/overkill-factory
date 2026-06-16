@@ -48,8 +48,17 @@ mainnet, legal/regulatory, privacy or hardware must not auto-activate.
 
 ## Execution Learnback
 
-After material execution, write an `execution_learnback_record` and generate
-issue candidates:
+After material execution, generate an `execution_learnback_record` from Receipt
+Five and, when available, the Evidence Graph:
+
+```bash
+python scripts/factory_self_improvement.py learnback-record \
+  --receipt .tmp/receipt-five.json \
+  --evidence-graph .tmp/evidence-graph.json \
+  --out .tmp/execution-learnback-record.json
+```
+
+Then generate issue candidates:
 
 ```bash
 python scripts/factory_self_improvement.py learnback-issues \
@@ -60,6 +69,12 @@ python scripts/factory_self_improvement.py learnback-issues \
 Public issue candidates must be generalized and redacted. Raw private logs,
 local paths, private board ids, Discord ids and screenshots do not belong in
 public issue bodies.
+
+For material vFinal execution, the learnback record must carry the same
+`sdlc_feedback_loop_ref` used by the card, worker packet, worker results and
+Receipt Five reconciliation. Issue candidates generated from learnback preserve
+that ref so a public-safe issue can still point to the SDLC loop without
+publishing private evidence.
 
 ## SDLC Feedback Loop
 
@@ -125,6 +140,11 @@ Learning proposals land as inactive candidates. They need validation,
 independent review and explicit activation policy before they can change factory
 behavior. Sensitive artifacts such as workers, gates, hooks, MCPs and install
 profiles must not auto-activate.
+
+Non-rejected learning proposals must also preserve `sdlc_feedback_loop_refs`.
+This keeps durable rules, gates, schemas, tests or docs tied to the execution
+evidence that justified them, instead of letting learnback become chat-only
+memory or an unowned mutation.
 
 See `maintenance/factory-learning-skill-evolution-os.md` for the operating
 rules.

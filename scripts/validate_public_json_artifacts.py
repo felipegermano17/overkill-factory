@@ -973,6 +973,12 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         serialized_refs = "\n".join(str(ref) for ref in data.get("source_evidence_refs", []))
         if PRIVATE_MARKERS.search(serialized_refs):
             errors.append(f"{at}: factory_learning_proposal source_evidence_refs must be public-safe")
+        feedback_refs = data.get("sdlc_feedback_loop_refs") if isinstance(data.get("sdlc_feedback_loop_refs"), list) else []
+        serialized_feedback_refs = "\n".join(str(ref) for ref in feedback_refs)
+        if data.get("classification") != "reject" and not feedback_refs:
+            errors.append(f"{at}: factory_learning_proposal requires sdlc_feedback_loop_refs for non-rejected learnback")
+        if PRIVATE_MARKERS.search(serialized_feedback_refs):
+            errors.append(f"{at}: factory_learning_proposal sdlc_feedback_loop_refs must be public-safe")
         validation = data.get("validation_plan") if isinstance(data.get("validation_plan"), dict) else {}
         if data.get("classification") != "reject" and validation.get("independent_review_required") is not True:
             errors.append(f"{at}: factory_learning_proposal requires independent review before activation")
@@ -996,6 +1002,25 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             errors.append(f"{at}: active tool surfaces require reviewed trust status")
         if required_tools and not str(tools.get("supply_chain_review") or "").strip():
             errors.append(f"{at}: required tools require supply_chain_review")
+    if data.get("record_type") == "execution_learnback_record":
+        feedback_refs = []
+        feedback_ref = str(data.get("sdlc_feedback_loop_ref") or "").strip()
+        if feedback_ref:
+            feedback_refs.append(feedback_ref)
+        if isinstance(data.get("sdlc_feedback_loop_refs"), list):
+            feedback_refs.extend(str(ref) for ref in data.get("sdlc_feedback_loop_refs", []))
+        serialized_feedback_refs = "\n".join(feedback_refs)
+        if data.get("method_version") == "OVERKILL_VFINAL" and not feedback_refs:
+            errors.append(f"{at}: execution_learnback_record requires sdlc_feedback_loop_ref(s) for OVERKILL_VFINAL learnback")
+        if PRIVATE_MARKERS.search(serialized_feedback_refs):
+            errors.append(f"{at}: execution_learnback_record sdlc_feedback_loop_ref(s) must be public-safe")
+    if data.get("record_type") == "factory_improvement_issue_candidate":
+        feedback_refs = data.get("sdlc_feedback_loop_refs") if isinstance(data.get("sdlc_feedback_loop_refs"), list) else []
+        serialized_feedback_refs = "\n".join(str(ref) for ref in feedback_refs)
+        if data.get("route") in {"public_issue", "docs_update", "eval_or_test"} and not feedback_refs:
+            errors.append(f"{at}: factory_improvement_issue_candidate requires sdlc_feedback_loop_refs for public/actionable routes")
+        if PRIVATE_MARKERS.search(serialized_feedback_refs):
+            errors.append(f"{at}: factory_improvement_issue_candidate sdlc_feedback_loop_refs must be public-safe")
     if data.get("record_type") == "discord_control_tower_ux_audit":
         serialized = json.dumps(data, sort_keys=True)
         if "todo" in serialized.lower():

@@ -30,6 +30,10 @@
       "minItems": 1,
       "items": { "type": "string", "minLength": 3 }
     },
+    "sdlc_feedback_loop_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
     "source_trust": {
       "enum": ["internal_structured", "external_untrusted", "mixed"]
     },

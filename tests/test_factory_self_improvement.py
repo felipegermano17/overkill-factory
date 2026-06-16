@@ -292,6 +292,7 @@ class FactorySelfImprovementTest(unittest.TestCase):
             "record_type": "execution_learnback_record",
             "project_ref": "external:factory-run",
             "method_version": "OVERKILL_VFINAL",
+            "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
             "findings": [
                 {
                     "summary": "Repeated review correction should become a reusable skill.",
@@ -318,6 +319,106 @@ class FactorySelfImprovementTest(unittest.TestCase):
         self.assertFalse(proposal["activation_policy"]["auto_activation_allowed"])
         self.assertTrue(proposal["validation_plan"]["independent_review_required"])
         self.assertIn("max_agents", proposal["activation_policy"]["budget"])
+        self.assertEqual(proposal["sdlc_feedback_loop_refs"], ["templates/factory-sdlc-feedback-loop.json"])
+        self.assertEqual(result["sdlc_feedback_loop_refs"], ["templates/factory-sdlc-feedback-loop.json"])
+
+    def test_learnback_issue_candidates_preserve_sdlc_feedback_loop_ref(self) -> None:
+        learnback = {
+            "record_type": "execution_learnback_record",
+            "project_ref": "external:factory-run",
+            "method_version": "OVERKILL_VFINAL",
+            "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
+            "findings": [
+                {
+                    "summary": "Repeated missing worker result should become a public issue.",
+                    "severity": "medium",
+                    "area": "runtime",
+                    "recommended_route": "public_issue",
+                    "reproduction_condition": "Receipt Five reconciliation blocked on missing result.",
+                    "acceptance_hint": "Add fail-closed guidance and tests.",
+                }
+            ],
+            "public_safety_boundary": {
+                "raw_private_evidence_forbidden": True,
+                "public_issue_requires_redaction": True,
+            },
+        }
+
+        result = self_improvement.build_issue_candidates(learnback)
+
+        self.assertEqual(result["sdlc_feedback_loop_refs"], ["templates/factory-sdlc-feedback-loop.json"])
+        self.assertEqual(
+            result["candidates"][0]["sdlc_feedback_loop_refs"],
+            ["templates/factory-sdlc-feedback-loop.json"],
+        )
+
+    def test_execution_learnback_record_from_receipt_preserves_sdlc_refs(self) -> None:
+        receipt = {
+            "receipt_five": {
+                "changed": "runtime gate tightened",
+                "artifact_paths": ["scripts/factoryctl.py"],
+                "verification_commands": ["python -m unittest tests.test_factory_self_improvement -q"],
+                "verification_result": "BLOCKED",
+                "reviewer_required": True,
+                "sdlc_feedback_loop_refs": ["templates/factory-sdlc-feedback-loop.json"],
+                "next_action": "rerun missing worker result",
+            },
+            "kanban_transition_event": {
+                "from_status": "review",
+                "to_status": "blocked",
+                "actor": "factory",
+                "worker": "evidence-reconciler",
+                "receipt_refs": ["receipt_five"],
+                "artifact_refs": ["scripts/factoryctl.py"],
+            },
+            "receipt_five_reconciliation_result": {
+                "required_workers": ["qa-verification-worker"],
+                "missing_blocking_workers": ["qa-verification-worker"],
+                "sdlc_feedback_loop_refs": ["templates/factory-sdlc-feedback-loop.json"],
+            },
+        }
+        evidence_graph = {
+            "record_type": "evidence_graph",
+            "result": "BLOCKED",
+            "target": {"card_ref": "examples/cards/card.md"},
+            "findings": [
+                {
+                    "severity": "high",
+                    "node_id": "worker-result:qa_verification_result",
+                    "message": "qa-verification-worker result is missing",
+                }
+            ],
+        }
+
+        record = self_improvement.build_execution_learnback_record(receipt, evidence_graph)
+
+        self.assertEqual(record["project_ref"], "examples/cards/card.md")
+        self.assertEqual(record["sdlc_feedback_loop_refs"], ["templates/factory-sdlc-feedback-loop.json"])
+        self.assertEqual(record["findings"][0]["recommended_route"], "eval_or_test")
+        self.assertIn("missing worker: qa-verification-worker", record["blockers"])
+
+    def test_execution_learnback_record_requires_receipt_or_graph_sdlc_refs(self) -> None:
+        receipt = {
+            "receipt_five": {
+                "changed": "runtime gate tightened",
+                "artifact_paths": ["scripts/factoryctl.py"],
+                "verification_commands": ["python -m unittest tests.test_factory_self_improvement -q"],
+                "verification_result": "PASS",
+                "reviewer_required": False,
+                "next_action": "continue",
+            },
+            "kanban_transition_event": {
+                "from_status": "review",
+                "to_status": "done",
+                "actor": "factory",
+                "worker": "evidence-reconciler",
+                "receipt_refs": ["receipt_five"],
+                "artifact_refs": ["scripts/factoryctl.py"],
+            },
+        }
+
+        with self.assertRaisesRegex(ValueError, "requires sdlc_feedback_loop_refs"):
+            self_improvement.build_execution_learnback_record(receipt)
 
     def test_learning_proposal_domain_rules_fail_closed(self) -> None:
         validator_spec = importlib.util.spec_from_file_location(
@@ -340,14 +441,81 @@ class FactorySelfImprovementTest(unittest.TestCase):
         proposal["tool_governance"]["third_party_trust_status"] = "unknown"
         proposal["source_trust"] = "external_untrusted"
         proposal["untrusted_input_handling"]["reader_actor_split"] = False
+        proposal["sdlc_feedback_loop_refs"] = []
 
         errors = validator.validate_domain_rules(proposal, "$")
 
         self.assertIn("$: factory_learning_proposal source_evidence_refs must be public-safe", errors)
+        self.assertIn("$: factory_learning_proposal requires sdlc_feedback_loop_refs for non-rejected learnback", errors)
         self.assertIn("$: sensitive factory learning artifacts must not auto-activate", errors)
         self.assertIn("$: factory_learning_proposal must land inactive before activation", errors)
         self.assertIn("$: untrusted learning input requires reader_actor_split", errors)
         self.assertIn("$: active tool surfaces require reviewed trust status", errors)
+
+    def test_execution_learnback_domain_rules_require_public_sdlc_ref(self) -> None:
+        validator_spec = importlib.util.spec_from_file_location(
+            "validate_public_json_artifacts",
+            ROOT / "scripts" / "validate_public_json_artifacts.py",
+        )
+        assert validator_spec is not None
+        validator = importlib.util.module_from_spec(validator_spec)
+        assert validator_spec.loader is not None
+        sys.modules["validate_public_json_artifacts"] = validator
+        validator_spec.loader.exec_module(validator)
+
+        learnback = json.loads((ROOT / "templates" / "execution-learnback-record.json").read_text(encoding="utf-8"))
+        learnback.pop("sdlc_feedback_loop_ref")
+        learnback.pop("sdlc_feedback_loop_refs")
+
+        errors = validator.validate_domain_rules(learnback, "$")
+
+        self.assertIn(
+            "$: execution_learnback_record requires sdlc_feedback_loop_ref(s) for OVERKILL_VFINAL learnback",
+            errors,
+        )
+
+        private_windows_path = "C:" + "\\" + "Users" + "\\owner\\private-run.json"
+        learnback["sdlc_feedback_loop_ref"] = private_windows_path
+
+        errors = validator.validate_domain_rules(learnback, "$")
+
+        self.assertIn("$: execution_learnback_record sdlc_feedback_loop_ref(s) must be public-safe", errors)
+
+    def test_issue_candidate_domain_rules_require_public_sdlc_ref(self) -> None:
+        validator_spec = importlib.util.spec_from_file_location(
+            "validate_public_json_artifacts",
+            ROOT / "scripts" / "validate_public_json_artifacts.py",
+        )
+        assert validator_spec is not None
+        validator = importlib.util.module_from_spec(validator_spec)
+        assert validator_spec.loader is not None
+        sys.modules["validate_public_json_artifacts"] = validator
+        validator_spec.loader.exec_module(validator)
+
+        candidate = self_improvement.build_issue_candidate(
+            {
+                "summary": "Repeated missing worker result should become a public issue.",
+                "severity": "medium",
+                "area": "runtime",
+                "recommended_route": "public_issue",
+            },
+            [],
+        )
+        assert candidate is not None
+
+        errors = validator.validate_domain_rules(candidate, "$")
+
+        self.assertIn(
+            "$: factory_improvement_issue_candidate requires sdlc_feedback_loop_refs for public/actionable routes",
+            errors,
+        )
+
+        private_windows_path = "C:" + "\\" + "Users" + "\\owner\\private-run.json"
+        candidate["sdlc_feedback_loop_refs"] = [private_windows_path]
+
+        errors = validator.validate_domain_rules(candidate, "$")
+
+        self.assertIn("$: factory_improvement_issue_candidate sdlc_feedback_loop_refs must be public-safe", errors)
 
     def test_owner_issue_intake_routes_critical_factory_change_to_human_gate_path(self) -> None:
         config = json.loads((ROOT / "templates" / "owner-issue-intake-config.json").read_text(encoding="utf-8"))

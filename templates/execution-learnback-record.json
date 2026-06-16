@@ -3,6 +3,8 @@
   "record_type": "execution_learnback_record",
   "project_ref": "external:current-product",
   "method_version": "OVERKILL_VFINAL",
+  "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
+  "sdlc_feedback_loop_refs": ["templates/factory-sdlc-feedback-loop.json"],
   "attempted_transitions": ["ready", "done"],
   "workers_required": ["factory-orchestrator", "qa-verification-worker"],
   "workers_executed": ["factory-orchestrator"],
