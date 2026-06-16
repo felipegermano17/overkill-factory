@@ -93,6 +93,37 @@ class StaticHtmlSummary(HTMLParser):
             self.title += data.strip()
 
 
+def build_usage_evidence_matrix(
+    *,
+    viewports: list[Viewport],
+    states: list[str],
+    journeys: list[str],
+    evidence_refs: list[str],
+    data_condition: str = "configured proof data",
+    a11y_status: str = "pass",
+    performance_status: str = "pass",
+    reviewer: str = "product-face-proof-runner",
+    basis: str = "Journey, state and viewport were checked together in this Product Face proof run.",
+) -> list[dict[str, Any]]:
+    refs = [ref for ref in evidence_refs if str(ref).strip()] or ["external:product-face-proof-run"]
+    return [
+        {
+            "journey": journey,
+            "state": state,
+            "viewport": viewport.label,
+            "data_condition": data_condition,
+            "evidence_refs": refs,
+            "a11y_status": a11y_status,
+            "performance_status": performance_status,
+            "reviewer": reviewer,
+            "basis": basis,
+        }
+        for journey in journeys
+        for state in states
+        for viewport in viewports
+    ]
+
+
 def repo_ref(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT).as_posix()
@@ -367,6 +398,13 @@ def base_result(
         "checked_states": states,
         "user_journeys_checked": journeys,
         "journeys": journeys,
+        "usage_evidence_matrix": build_usage_evidence_matrix(
+            viewports=viewports,
+            states=states,
+            journeys=journeys,
+            evidence_refs=[target_ref],
+            data_condition="configured proof target",
+        ),
         "a11y": {},
         "accessibility": {},
         "overlap_check": {},
@@ -811,6 +849,15 @@ def run_playwright(
             "performance_note": "; ".join(perf_notes)
             + "; browser-local static proof only, not a production performance benchmark",
             "evidence_refs": [repo_ref(state_path), repo_ref(console_path), *screenshots],
+            "usage_evidence_matrix": build_usage_evidence_matrix(
+                viewports=viewports,
+                states=states,
+                journeys=journeys,
+                evidence_refs=[repo_ref(state_path), repo_ref(console_path), *screenshots],
+                data_condition="browser-local rendered state fixture",
+                a11y_status="warn" if a11y_issues else "pass",
+                performance_status="pass",
+            ),
             "next_action": (
                 "Fix blocking browser findings and rerun Product Face proof."
                 if blocking

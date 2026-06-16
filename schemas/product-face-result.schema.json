@@ -329,6 +329,39 @@
         "additionalProperties": true
       }
     },
+    "usage_evidence_matrix": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "journey",
+          "state",
+          "viewport",
+          "data_condition",
+          "evidence_refs",
+          "a11y_status",
+          "performance_status",
+          "reviewer",
+          "basis"
+        ],
+        "properties": {
+          "journey": { "type": "string", "minLength": 1 },
+          "state": { "type": "string", "minLength": 1 },
+          "viewport": { "type": "string", "minLength": 1 },
+          "data_condition": { "type": "string", "minLength": 1 },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "a11y_status": { "enum": ["pass", "warn", "fail"] },
+          "performance_status": { "enum": ["pass", "warn", "fail"] },
+          "reviewer": { "type": "string", "minLength": 3 },
+          "basis": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": true
+      }
+    },
     "blocking_findings": {
       "type": "boolean"
     },

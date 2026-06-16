@@ -100,6 +100,7 @@ class ProductFaceProofTest(unittest.TestCase):
             "viewports",
             "checked_states",
             "user_journeys_checked",
+            "usage_evidence_matrix",
             "a11y",
             "overlap_check",
             "performance_note",
@@ -118,6 +119,10 @@ class ProductFaceProofTest(unittest.TestCase):
         self.assertIn(result["result"], {"PASS", "WAIVED"})
         for field in ("screenshots", "viewports", "checked_states", "user_journeys_checked", "evidence_refs"):
             self.assertTrue(result[field])
+        self.assertTrue(result["usage_evidence_matrix"])
+        first_matrix_entry = result["usage_evidence_matrix"][0]
+        for field in ("journey", "state", "viewport", "data_condition", "evidence_refs", "a11y_status", "performance_status"):
+            self.assertIn(field, first_matrix_entry)
         self.assertTrue(result["a11y"])
         self.assertTrue(result["overlap_check"])
         self.assertIn(result["visual_quality_result"]["status"], {"BLOCK", "PASS", "PASS_WITH_RESIDUALS"})

@@ -297,7 +297,37 @@ def activated_game_contract_fixture() -> dict:
     }
 
 
+def usage_evidence_matrix_fixture(
+    *,
+    journeys: list[str],
+    states: list[str],
+    viewports: list[str],
+) -> list[dict]:
+    entries: list[dict] = []
+    for journey in journeys:
+        for state in states:
+            for viewport in viewports:
+                evidence_ref = "reports/product-face/mobile.png" if "mobile" in viewport.lower() else "reports/product-face/desktop.png"
+                entries.append(
+                    {
+                        "journey": journey,
+                        "state": state,
+                        "viewport": viewport,
+                        "data_condition": f"{state} fixture",
+                        "evidence_refs": [evidence_ref],
+                        "a11y_status": "pass",
+                        "performance_status": "pass",
+                        "reviewer": "product-face-reviewer",
+                        "basis": f"{journey} was checked in {state} state on {viewport}.",
+                    }
+                )
+    return entries
+
+
 def product_face_result_fixture(**overrides: object) -> dict:
+    viewports = ["desktop 1440x900", "mobile 390x844"]
+    states = ["empty", "loading", "pending", "success", "error"]
+    journeys = ["pilot status review", "review evidence inspection"]
     result = {
         "result": "PASS",
         "tool_or_profile": "browser-proof-runner",
@@ -315,9 +345,10 @@ def product_face_result_fixture(**overrides: object) -> dict:
             }
         ],
         "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
-        "viewports": ["desktop 1440x900", "mobile 390x844"],
-        "checked_states": ["empty", "loading", "pending", "success", "error"],
-        "user_journeys_checked": ["dashboard to detail", "settings save"],
+        "viewports": viewports,
+        "checked_states": states,
+        "user_journeys_checked": journeys,
+        "usage_evidence_matrix": usage_evidence_matrix_fixture(journeys=journeys, states=states, viewports=viewports),
         "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
         "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
         "console": {"status": "pass"},
@@ -814,9 +845,14 @@ class FactoryCtlTest(unittest.TestCase):
                 "surface_evidence_profile": surface_profile("web_visual_ui", "web_app"),
                 "surface_evidence_profiles": [surface_profile("web_visual_ui", "web_app")],
                 "screenshots": ["reports/product-face/desktop.png", "reports/product-face/mobile.png"],
-                "viewports": ["1440x900", "390x844"],
+                "viewports": ["desktop 1440x900", "mobile 390x844"],
                 "checked_states": ["empty", "loading", "pending", "success", "error"],
-                "user_journeys_checked": ["dashboard to detail", "settings save"],
+                "user_journeys_checked": ["pilot status review", "review evidence inspection"],
+                "usage_evidence_matrix": usage_evidence_matrix_fixture(
+                    journeys=["pilot status review", "review evidence inspection"],
+                    states=["empty", "loading", "pending", "success", "error"],
+                    viewports=["desktop 1440x900", "mobile 390x844"],
+                ),
                 "a11y": {"status": "pass", "keyboard": "pass", "labels": "pass", "contrast": "pass"},
                 "overlap_check": {"status": "pass", "desktop": "pass", "mobile": "pass"},
                 "performance_note": "static validation scenario only",
@@ -916,6 +952,68 @@ class FactoryCtlTest(unittest.TestCase):
             "product_face_result.domain_proof_coverage missing required product delivery proof ids: game.playable-smoke",
             errors,
         )
+
+    def test_product_face_completion_requires_usage_evidence_matrix(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture(usage_evidence_matrix=[])
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn("product_face_result.usage_evidence_matrix is required for PASS", errors)
+        self.assertIn("product_face_result.usage_evidence_matrix is required for product-facing completion", errors)
+
+    def test_product_face_completion_requires_usage_matrix_planned_flow_coverage(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture()
+        result["usage_evidence_matrix"] = [
+            entry for entry in result["usage_evidence_matrix"] if entry["journey"] != "review evidence inspection"
+        ]
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.usage_evidence_matrix missing checked journey coverage: review evidence inspection",
+            errors,
+        )
+        self.assertIn(
+            "product_face_result.usage_evidence_matrix missing planned flow coverage: review evidence inspection",
+            errors,
+        )
+
+    def test_product_face_completion_rejects_disconnected_usage_dimensions(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture()
+        result["usage_evidence_matrix"] = [
+            entry
+            for entry in result["usage_evidence_matrix"]
+            if not (
+                entry["journey"] == "pilot status review"
+                and entry["state"] == "pending"
+                and "mobile" in entry["viewport"]
+            )
+        ]
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.usage_evidence_matrix missing required journey/state/viewport combinations: "
+            "pilot status review/pending/mobile",
+            errors,
+        )
+
+    def test_product_face_completion_requires_usage_matrix_state_and_viewport_coverage(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture()
+        result["usage_evidence_matrix"] = [
+            entry
+            for entry in result["usage_evidence_matrix"]
+            if entry["state"] != "pending" and "mobile" not in entry["viewport"]
+        ]
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn("product_face_result.usage_evidence_matrix missing state coverage: pending", errors)
+        self.assertIn("product_face_result.usage_evidence_matrix missing viewport coverage: mobile", errors)
 
     def test_product_face_completion_requires_activated_pack_domain_proofs(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
