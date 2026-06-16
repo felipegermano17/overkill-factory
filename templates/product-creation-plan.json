@@ -28,6 +28,22 @@
       "scope_out": ["unrelated Product SOT requirements"],
       "verification": ["run the checks named by the work unit"],
       "expected_result": "PASS or explicit BLOCK with owner",
+      "proof_ids_required": ["generic.scope-fit"],
+      "owner_worker": "implementation-worker",
+      "reviewer_role": "independent-reviewer",
+      "capability_profile_refs": ["agents/hermes-profile-bindings.public.json#implementation-worker"],
+      "ready_rules": [
+        "Product SOT requirement refs resolve to the approved Product SOT",
+        "required proof ids are mapped before execution starts"
+      ],
+      "blocked_when": [
+        "required proof cannot be produced",
+        "owner worker or reviewer role is unavailable"
+      ],
+      "done_rules": [
+        "all proof_ids_required have PASS or valid waiver evidence",
+        "reviewer_role has reviewed the work-unit evidence"
+      ],
       "stop_conditions": ["Product SOT drifted", "required context packet is stale"],
       "status": "ready",
       "product_context_packet_ref": "templates/product-context-packet.json"

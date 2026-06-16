@@ -2360,6 +2360,95 @@ def _selected_engineering_methods(method_contract: dict[str, Any]) -> set[str]:
     return methods
 
 
+def _load_required_repo_local_contract(data: dict[str, Any], field: str, errors: list[str]) -> dict[str, Any]:
+    value = data.get(field)
+    if isinstance(value, dict) and value:
+        return value
+    ref_field = f"{field}_ref"
+    ref = data.get(ref_field)
+    if not _non_empty_text(ref):
+        return {}
+    _validate_public_ref(str(ref), f"card.{ref_field}", errors)
+    path = _repo_local_json_ref_path(ref)
+    if path is None or not path.is_file():
+        errors.append(f"card.{ref_field} does not resolve to a repo-local file: {ref}")
+        return {}
+    loaded = _load_repo_local_json_ref(ref)
+    if not loaded:
+        errors.append(f"card.{ref_field} could not be loaded as JSON: {ref}")
+        return {}
+    return loaded
+
+
+def validate_product_sot_requirement_graph(product_sot: dict[str, Any], at: str = "product_sot") -> list[str]:
+    errors: list[str] = []
+    graph = product_sot.get("requirement_graph")
+    if not isinstance(graph, list) or not graph:
+        return [f"{at}.requirement_graph must be non-empty with stable requirement ids"]
+    seen_ids: set[str] = set()
+    for index, requirement in enumerate(graph):
+        requirement = requirement if isinstance(requirement, dict) else {}
+        prefix = f"{at}.requirement_graph[{index}]"
+        requirement_id = str(requirement.get("requirement_id") or "").strip()
+        if not requirement_id:
+            errors.append(f"{prefix}.requirement_id is required")
+        elif requirement_id in seen_ids:
+            errors.append(f"{prefix}.requirement_id must be unique: {requirement_id}")
+        else:
+            seen_ids.add(requirement_id)
+        if not _non_empty_string_list(requirement.get("source_refs")):
+            errors.append(f"{prefix}.source_refs must be non-empty")
+        decision_state = str(requirement.get("decision_state") or "").strip()
+        if decision_state not in {"approved", "blocked", "open_decision", "rejected", "superseded"}:
+            errors.append(f"{prefix}.decision_state must be approved, blocked, open_decision, rejected or superseded")
+        if not _non_empty_text(requirement.get("owner")):
+            errors.append(f"{prefix}.owner is required")
+        if not _non_empty_text(requirement.get("next_action")):
+            errors.append(f"{prefix}.next_action is required")
+        if decision_state in {"blocked", "open_decision"} and not _non_empty_text(requirement.get("blocker_id")):
+            errors.append(f"{prefix}.blocker_id is required when decision_state is {decision_state}")
+    return errors
+
+
+def validate_product_creation_plan_work_unit_graph(plan: dict[str, Any], at: str = "product_creation_plan") -> list[str]:
+    errors: list[str] = []
+    work_units = plan.get("work_units")
+    if not isinstance(work_units, list) or not work_units:
+        return [f"{at}.work_units must be non-empty"]
+    unit_ids: set[str] = set()
+    for index, unit in enumerate(work_units):
+        unit = unit if isinstance(unit, dict) else {}
+        prefix = f"{at}.work_units[{index}]"
+        unit_id = str(unit.get("unit_id") or "").strip()
+        if not unit_id:
+            errors.append(f"{prefix}.unit_id is required")
+        elif unit_id in unit_ids:
+            errors.append(f"{prefix}.unit_id must be unique: {unit_id}")
+        else:
+            unit_ids.add(unit_id)
+        for field in ("product_sot_requirement_refs", "scope_in", "scope_out", "verification", "stop_conditions"):
+            if not _non_empty_string_list(unit.get(field)):
+                errors.append(f"{prefix}.{field} must be non-empty")
+        for field in ("proof_ids_required", "capability_profile_refs", "ready_rules", "blocked_when", "done_rules"):
+            if not _non_empty_string_list(unit.get(field)):
+                errors.append(f"{prefix}.{field} must be non-empty")
+        for field in ("owner_worker", "reviewer_role", "expected_result"):
+            if not _non_empty_text(unit.get(field)):
+                errors.append(f"{prefix}.{field} is required")
+        status = str(unit.get("status") or "").strip()
+        if status == "blocked":
+            for field in ("blocker_id", "blocker_owner", "next_action"):
+                if not _non_empty_text(unit.get(field)):
+                    errors.append(f"{prefix}.{field} is required when status is blocked")
+        if status in {"ready", "done"} and not _non_empty_string_list(unit.get("proof_ids_required")):
+            errors.append(f"{prefix}.proof_ids_required is required before {status} can be claimed")
+    execution_order = _list_items(plan.get("execution_order"))
+    missing_order_refs = [unit_id for unit_id in execution_order if unit_id not in unit_ids]
+    if missing_order_refs:
+        errors.append(f"{at}.execution_order references unknown work_units: " + ", ".join(missing_order_refs))
+    return errors
+
+
 def validate_product_scope_planning_contract(card: dict[str, Any]) -> list[str]:
     if card.get("factory_method_version") != "OVERKILL_VFINAL":
         return []
@@ -2375,6 +2464,8 @@ def validate_product_scope_planning_contract(card: dict[str, Any]) -> list[str]:
         errors.append("full_product_sot_scope_coverage or full_product_sot_scope_coverage_ref is required for complete Product SOT planning")
     if not _non_empty_text(product_sot.get("full_product_sot_scope_coverage_ref")):
         errors.append("product_sot.full_product_sot_scope_coverage_ref is required")
+    if product_sot:
+        errors.extend(validate_product_sot_requirement_graph(product_sot))
     if str(method.get("canonical_scope_source") or "").strip().lower() not in {"approved product sot", "product_sot", "product sot"}:
         errors.append("method_contract.canonical_scope_source must be approved Product SOT")
     if str(method.get("scope_intent") or "").strip() not in PRODUCT_SCOPE_INTENTS:
@@ -2482,7 +2573,7 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
     if not _has_ref_or_object(card, "product_implementation_readiness"):
         errors.append("product_implementation_readiness or product_implementation_readiness_ref is required before material product implementation")
 
-    plan = card.get("product_creation_plan") if isinstance(card.get("product_creation_plan"), dict) else {}
+    plan = _load_required_repo_local_contract(card, "product_creation_plan", errors)
     if plan:
         if plan.get("complete_product_required") is not True:
             errors.append("product_creation_plan.complete_product_required must be true for complete-product planning")
@@ -2494,17 +2585,7 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
             errors.append("product_creation_plan.complete_product_scope is required")
         if not _non_empty_string_list(plan.get("release_promotion_ladder_refs")):
             errors.append("product_creation_plan.release_promotion_ladder_refs is required")
-        work_units = plan.get("work_units")
-        if not isinstance(work_units, list) or not work_units:
-            errors.append("product_creation_plan.work_units must be non-empty")
-        else:
-            for index, unit in enumerate(work_units):
-                unit = unit if isinstance(unit, dict) else {}
-                for field in ("product_sot_requirement_refs", "scope_in", "scope_out", "verification", "stop_conditions"):
-                    if not _non_empty_string_list(unit.get(field)):
-                        errors.append(f"product_creation_plan.work_units[{index}].{field} must be non-empty")
-                if not _non_empty_text(unit.get("expected_result")):
-                    errors.append(f"product_creation_plan.work_units[{index}].expected_result is required")
+        errors.extend(validate_product_creation_plan_work_unit_graph(plan))
     errors.extend(_product_delivery_quality_profile_ref_errors(card))
     profile = _product_delivery_quality_profile(card)
     if profile:

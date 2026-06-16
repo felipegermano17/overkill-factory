@@ -200,6 +200,14 @@ The method uses different units for different parts of the line:
 | Worker Result | Specialist output with evidence. |
 | Receipt Five | Closure record for done. |
 
+Product SOT requirements and Product Creation work units are typed gears, not
+planning prose. A Product SOT requirement needs a stable requirement id, source
+refs, decision state, owner and next action. A Product Creation work unit needs
+SOT requirement refs, required proof ids, owner worker, reviewer role,
+capability/profile refs, ready rules, blocked rules and done rules. If a work
+unit is blocked, it must name the blocker, owner and next action before the
+factory can route repair.
+
 ## Risk Tiers
 
 | Tier | Typical use | Required rigor |

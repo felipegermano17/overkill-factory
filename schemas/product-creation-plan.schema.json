@@ -53,6 +53,13 @@
           "scope_out",
           "verification",
           "expected_result",
+          "proof_ids_required",
+          "owner_worker",
+          "reviewer_role",
+          "capability_profile_refs",
+          "ready_rules",
+          "blocked_when",
+          "done_rules",
           "stop_conditions",
           "status"
         ],
@@ -64,12 +71,51 @@
           "scope_out": { "type": "array", "minItems": 1, "items": { "type": "string" } },
           "verification": { "type": "array", "minItems": 1, "items": { "type": "string" } },
           "expected_result": { "type": "string", "minLength": 3 },
+          "proof_ids_required": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "owner_worker": { "type": "string", "minLength": 3 },
+          "reviewer_role": { "type": "string", "minLength": 3 },
+          "capability_profile_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "ready_rules": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "blocked_when": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "done_rules": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "blocker_id": { "type": "string", "minLength": 3 },
+          "blocker_owner": { "type": "string", "minLength": 3 },
+          "next_action": { "type": "string", "minLength": 3 },
           "stop_conditions": { "type": "array", "minItems": 1, "items": { "type": "string" } },
           "status": {
             "enum": ["todo", "ready", "blocked", "in_progress", "done", "rejected", "superseded", "needs_refresh"]
           },
           "product_context_packet_ref": { "type": "string" }
         },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "status": { "const": "blocked" } },
+              "required": ["status"]
+            },
+            "then": { "required": ["blocker_id", "blocker_owner", "next_action"] }
+          }
+        ],
         "additionalProperties": true
       }
     },
