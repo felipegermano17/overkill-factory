@@ -2879,6 +2879,103 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
 
+    def test_cli_tui_surface_with_delivery_profile_requires_cli_domain_proofs(self) -> None:
+        card = product_surface_card_fixture("cli", "cli_tui")
+        card["product_delivery_quality_profile_ref"] = "templates/product-delivery-quality-profile.json"
+        result = product_face_result_fixture(
+            surface_evidence_profile=surface_profile("cli_tui", "cli"),
+            surface_evidence_profiles=[surface_profile("cli_tui", "cli")],
+            cli_tui_evidence={
+                "golden_path_transcript_refs": ["reports/cli/golden-path.txt"],
+                "help_output_refs": ["reports/cli/help.txt"],
+                "error_state_refs": ["reports/cli/error-state.txt"],
+                "install_run_refs": ["reports/cli/install-run.txt"],
+                "cross_platform_terminal_refs": ["reports/cli/windows.txt", "reports/cli/linux.txt"],
+            },
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.domain_proof_coverage missing required product delivery proof ids: "
+            "cli.cross-platform-shell, cli.error-state-transcript, cli.golden-transcript, "
+            "cli.help-output, cli.install-run-smoke",
+            errors,
+        )
+
+    def test_cli_tui_surface_with_delivery_profile_accepts_cli_domain_proofs(self) -> None:
+        card = product_surface_card_fixture("cli", "cli_tui")
+        card["product_delivery_quality_profile_ref"] = "templates/product-delivery-quality-profile.json"
+        result = product_face_result_fixture(
+            surface_evidence_profile=surface_profile("cli_tui", "cli"),
+            surface_evidence_profiles=[surface_profile("cli_tui", "cli")],
+            cli_tui_evidence={
+                "golden_path_transcript_refs": ["reports/cli/golden-path.txt"],
+                "help_output_refs": ["reports/cli/help.txt"],
+                "error_state_refs": ["reports/cli/error-state.txt"],
+                "install_run_refs": ["reports/cli/install-run.txt"],
+                "cross_platform_terminal_refs": ["reports/cli/windows.txt", "reports/cli/linux.txt"],
+            },
+            domain_proof_coverage=[
+                {
+                    "proof_id": "generic.operator-usability",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/product-face/operator-usability.json"],
+                    "reviewer": "product-face-reviewer",
+                    "reviewer_role": "independent-reviewer",
+                    "evidence_kind": "review",
+                    "basis": "Operator can understand current state, evidence and next action.",
+                },
+                {
+                    "proof_id": "cli.install-run-smoke",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/cli/install-run.txt"],
+                    "reviewer": "independent-reviewer",
+                    "reviewer_role": "independent-reviewer",
+                    "evidence_kind": "runtime",
+                    "basis": "Install and run path passed on the declared terminal target.",
+                },
+                {
+                    "proof_id": "cli.help-output",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/cli/help.txt"],
+                    "reviewer": "independent-reviewer",
+                    "reviewer_role": "independent-reviewer",
+                    "evidence_kind": "review",
+                    "basis": "Help output covers first use and main commands.",
+                },
+                {
+                    "proof_id": "cli.golden-transcript",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/cli/golden-path.txt"],
+                    "reviewer": "qa-verification-worker",
+                    "reviewer_role": "qa-verification-worker",
+                    "evidence_kind": "runtime",
+                    "basis": "Golden transcript proves the primary CLI journey.",
+                },
+                {
+                    "proof_id": "cli.error-state-transcript",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/cli/error-state.txt"],
+                    "reviewer": "qa-verification-worker",
+                    "reviewer_role": "qa-verification-worker",
+                    "evidence_kind": "runtime",
+                    "basis": "Error transcript proves actionable failure behavior.",
+                },
+                {
+                    "proof_id": "cli.cross-platform-shell",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/cli/windows.txt", "reports/cli/linux.txt"],
+                    "reviewer": "independent-reviewer",
+                    "reviewer_role": "independent-reviewer",
+                    "evidence_kind": "runtime",
+                    "basis": "Declared shell targets passed without platform-only assumptions.",
+                },
+            ],
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
     def test_docs_onboarding_surface_cannot_pass_with_prose_only_product_face(self) -> None:
         card = product_surface_card_fixture("docs", "docs_onboarding")
         result = product_face_result_fixture(
@@ -2946,6 +3043,7 @@ class FactoryCtlTest(unittest.TestCase):
 
     def test_agentic_surface_requires_task_state_control_and_recovery_evidence(self) -> None:
         card = product_surface_card_fixture("agentic_interface", "agentic_interface")
+        card["product_classification"] = "user_facing_agentic_product"
         result = product_face_result_fixture(
             surface_evidence_profile=surface_profile("agentic_interface", "agentic_interface"),
             surface_evidence_profiles=[surface_profile("agentic_interface", "agentic_interface")],
@@ -2959,6 +3057,32 @@ class FactoryCtlTest(unittest.TestCase):
         )
 
         self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
+    def test_agentic_surface_rejects_runtime_infrastructure_classification_only(self) -> None:
+        card = product_surface_card_fixture("agentic_interface", "agentic_interface")
+        card["product_classification"] = "agent_runtime_infrastructure"
+        result = product_face_result_fixture(
+            surface_evidence_profile=surface_profile("agentic_interface", "agentic_interface"),
+            surface_evidence_profiles=[surface_profile("agentic_interface", "agentic_interface")],
+            agentic_interface_evidence={
+                "task_transcript_refs": ["reports/agentic/task-transcript.json"],
+                "state_transition_refs": ["reports/agentic/state-transitions.json"],
+                "approval_boundary_refs": ["reports/agentic/approval-boundaries.json"],
+                "user_control_refs": ["reports/agentic/user-control.json"],
+                "recovery_error_refs": ["reports/agentic/recovery-error.json"],
+            },
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_classification must include user_facing_agentic_product for agentic_interface surfaces",
+            errors,
+        )
+        self.assertIn(
+            "agent_runtime_infrastructure alone cannot classify a user-facing agentic product surface",
+            errors,
+        )
 
     def test_auditor_preflight_cannot_claim_pass(self) -> None:
         bad = {

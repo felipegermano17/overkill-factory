@@ -38,6 +38,15 @@ The repo runner in `scripts/product_face_proof.py` is a `web_visual_ui` runner.
 It should not be used to claim CLI/TUI, docs/onboarding or agentic-interface
 PASS without the matching profile evidence.
 
+Surface evidence is only the visible/product-face layer. Product completion
+also consumes `templates/product-delivery-quality-profile.json` for
+surface-specific domain proof. CLI/TUI products need install/run, help, golden
+transcript, error-state and cross-platform shell proof. API/data products need
+contract, auth, error, migration, fixture, retention and operational safety
+proof. User-facing agentic products must be classified separately from internal
+agent runtime infrastructure and carry task, control, permission, memory/data,
+abuse and recovery proof.
+
 ## Surface Taxonomy
 
 Product Experience OS routes surface families before Product Face PASS. The

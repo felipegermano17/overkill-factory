@@ -140,6 +140,28 @@
       "enum": ["full_product", "child_slice", "bug", "release", "incident", "doc", "migration", "integration"]
     },
     "complete_product_required": { "type": "boolean" },
+    "product_classification": {
+      "enum": [
+        "generic_software_product",
+        "api_data_product",
+        "cli_tui_product",
+        "agent_runtime_infrastructure",
+        "user_facing_agentic_product"
+      ]
+    },
+    "product_classifications": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "generic_software_product",
+          "api_data_product",
+          "cli_tui_product",
+          "agent_runtime_infrastructure",
+          "user_facing_agentic_product"
+        ]
+      },
+      "uniqueItems": true
+    },
     "current_execution_slice": { "type": "string" },
     "full_product_sot_scope_coverage": { "type": "object" },
     "full_product_sot_scope_coverage_ref": { "type": "string" },

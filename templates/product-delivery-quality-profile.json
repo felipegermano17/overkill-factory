@@ -3,7 +3,18 @@
   "record_type": "product_delivery_quality_profile",
   "profile_id": "generic-software-product-v1",
   "archetype": "generic software product",
-  "applies_to_surfaces": ["code", "frontend", "backend", "api", "docs"],
+  "applies_to_surfaces": [
+    "code",
+    "frontend",
+    "backend",
+    "api",
+    "data",
+    "database",
+    "docs",
+    "cli",
+    "tui",
+    "agentic_interface"
+  ],
   "quality_dimensions": [
     {
       "dimension_id": "scope-fit",
@@ -14,6 +25,13 @@
       "dimension_id": "operator-usability",
       "bar": "A target user or operator can use the delivered surface, workflow or docs without private context.",
       "block_when": ["The result needs private chat context, hidden assumptions or manual operator assembly."]
+    },
+    {
+      "dimension_id": "surface-specific-proof",
+      "bar": "Each selected product surface has proof for its own usage model instead of inheriting generic code or UI evidence.",
+      "block_when": [
+        "A CLI/TUI, API/data or user-facing agentic product is accepted with only generic tests, screenshots or internal runtime proof."
+      ]
     }
   ],
   "required_proofs": [
@@ -34,6 +52,223 @@
       "reviewer_role": "independent-reviewer",
       "evidence_kind": "review",
       "human_gate_required": false
+    },
+    {
+      "proof_id": "cli.install-run-smoke",
+      "name": "CLI/TUI install and run smoke proof",
+      "required_at": ["before_implementation", "before_completion"],
+      "owner_worker": "qa-verification-worker",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["cli_tui"]
+    },
+    {
+      "proof_id": "cli.help-output",
+      "name": "CLI/TUI help output proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "docs-os-worker",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["cli_tui"]
+    },
+    {
+      "proof_id": "cli.golden-transcript",
+      "name": "CLI/TUI golden path transcript proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "test-automation-builder",
+      "reviewer_role": "qa-verification-worker",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["cli_tui"]
+    },
+    {
+      "proof_id": "cli.error-state-transcript",
+      "name": "CLI/TUI error-state transcript proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "test-automation-builder",
+      "reviewer_role": "qa-verification-worker",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["cli_tui"]
+    },
+    {
+      "proof_id": "cli.cross-platform-shell",
+      "name": "CLI/TUI cross-platform shell behavior proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "qa-verification-worker",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["cli_tui"]
+    },
+    {
+      "proof_id": "cli.package-release-readiness",
+      "name": "CLI/TUI package and release readiness proof",
+      "required_at": ["before_promotion"],
+      "owner_worker": "release-ops-worker",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["cli_tui"]
+    },
+    {
+      "proof_id": "api.contract-schema",
+      "name": "API contract and schema proof",
+      "required_at": ["before_implementation", "before_completion"],
+      "owner_worker": "backend-api-builder",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "human_gate_required": false,
+      "applies_to_surfaces": ["api", "backend", "server", "service"]
+    },
+    {
+      "proof_id": "api.auth-permission-boundary",
+      "name": "API auth and permission boundary proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "backend-api-builder",
+      "reviewer_role": "appsec-owasp-specialist",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surfaces": ["api", "auth", "session", "backend", "service"]
+    },
+    {
+      "proof_id": "api.error-semantics",
+      "name": "API error semantics proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "backend-api-builder",
+      "reviewer_role": "qa-verification-worker",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surfaces": ["api", "backend", "server", "service"]
+    },
+    {
+      "proof_id": "api.compatibility-versioning",
+      "name": "API compatibility and versioning proof",
+      "required_at": ["before_promotion"],
+      "owner_worker": "backend-api-builder",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "human_gate_required": false,
+      "applies_to_surfaces": ["api", "backend", "service"]
+    },
+    {
+      "proof_id": "data.migration-rollback",
+      "name": "Data migration and rollback proof",
+      "required_at": ["before_completion", "before_promotion"],
+      "owner_worker": "data-persistence-builder",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surfaces": ["database", "data", "schema", "migration", "storage", "persistence", "rls"]
+    },
+    {
+      "proof_id": "data.seed-fixture-behavior",
+      "name": "Data seed and fixture behavior proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "data-persistence-builder",
+      "reviewer_role": "qa-verification-worker",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surfaces": ["database", "data", "schema", "storage", "persistence"]
+    },
+    {
+      "proof_id": "data.retention-privacy-boundary",
+      "name": "Data retention and privacy boundary proof",
+      "required_at": ["before_completion", "before_promotion"],
+      "owner_worker": "data-persistence-builder",
+      "reviewer_role": "appsec-owasp-specialist",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surfaces": ["database", "data", "storage", "persistence", "rls"]
+    },
+    {
+      "proof_id": "data.operational-safety",
+      "name": "Operational data safety proof",
+      "required_at": ["before_promotion"],
+      "owner_worker": "detection-monitoring-worker",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surfaces": ["database", "data", "migration", "storage", "persistence"]
+    },
+    {
+      "proof_id": "agentic.task-success",
+      "name": "User-facing agentic task success proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "skill-eval-distiller",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["agentic_interface"],
+      "applies_to_product_classifications": ["user_facing_agentic_product"]
+    },
+    {
+      "proof_id": "agentic.user-control",
+      "name": "User control and stop/resume proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "product-face",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["agentic_interface"],
+      "applies_to_product_classifications": ["user_facing_agentic_product"]
+    },
+    {
+      "proof_id": "agentic.approval-boundary",
+      "name": "User-facing agent approval boundary proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "agentic-ai-security-specialist",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["agentic_interface"],
+      "applies_to_product_classifications": ["user_facing_agentic_product"]
+    },
+    {
+      "proof_id": "agentic.tool-permission-limits",
+      "name": "User-facing agent tool permission limits proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "agentic-ai-security-specialist",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["agentic_interface"],
+      "applies_to_product_classifications": ["user_facing_agentic_product"]
+    },
+    {
+      "proof_id": "agentic.memory-data-boundary",
+      "name": "User-facing agent memory and data boundary proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "memory-steward",
+      "reviewer_role": "agentic-ai-security-specialist",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["agentic_interface"],
+      "applies_to_product_classifications": ["user_facing_agentic_product"]
+    },
+    {
+      "proof_id": "agentic.abuse-safety-handling",
+      "name": "User-facing agent abuse and safety handling proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "agentic-ai-security-specialist",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "review",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["agentic_interface"],
+      "applies_to_product_classifications": ["user_facing_agentic_product"]
+    },
+    {
+      "proof_id": "agentic.recovery-error-behavior",
+      "name": "User-facing agent recovery and error behavior proof",
+      "required_at": ["before_completion"],
+      "owner_worker": "qa-verification-worker",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "runtime",
+      "human_gate_required": false,
+      "applies_to_surface_evidence_profiles": ["agentic_interface"],
+      "applies_to_product_classifications": ["user_facing_agentic_product"]
     }
   ],
   "waiver_policy": {

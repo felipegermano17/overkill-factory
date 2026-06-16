@@ -243,6 +243,48 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
             factoryctl.validate_card(card),
         )
 
+    def test_api_data_surface_requires_api_contract_proof_before_implementation(self) -> None:
+        card = self.vfinal_card()
+        card["surfaces"] = ["api", "database"]
+        card["product_creation_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+        card["product_implementation_readiness"] = factoryctl.load_json_like(
+            ROOT / "templates" / "product-implementation-readiness.json"
+        )
+
+        errors = factoryctl.validate_product_creation_readiness_contract(card)
+
+        self.assertIn(
+            "product_implementation_readiness.delivery_profile_proof_coverage missing required product delivery proof ids: api.contract-schema",
+            errors,
+        )
+
+    def test_api_data_surface_accepts_api_contract_proof_before_implementation(self) -> None:
+        card = self.vfinal_card()
+        card["surfaces"] = ["api", "database"]
+        card["product_creation_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+        card["product_implementation_readiness"] = factoryctl.load_json_like(
+            ROOT / "templates" / "product-implementation-readiness.json"
+        )
+        card["product_implementation_readiness"]["delivery_profile_proof_coverage"].append(
+            {
+                "proof_id": "api.contract-schema",
+                "status": "PASS",
+                "evidence_refs": ["reports/api/contract-schema.json"],
+                "owner": "backend-api-builder",
+                "reviewer": "independent-reviewer",
+                "reviewer_role": "independent-reviewer",
+                "evidence_kind": "contract",
+                "basis": "API contract and schema are defined before material implementation.",
+            }
+        )
+
+        errors = factoryctl.validate_product_creation_readiness_contract(card)
+
+        self.assertNotIn(
+            "product_implementation_readiness.delivery_profile_proof_coverage missing required product delivery proof ids: api.contract-schema",
+            errors,
+        )
+
     def test_product_delivery_before_promotion_proofs_block_done_promotion_when_missing(self) -> None:
         card = self.vfinal_card()
         profile = factoryctl.load_json_like(ROOT / "templates" / "product-delivery-quality-profile.json")

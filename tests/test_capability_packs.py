@@ -64,6 +64,7 @@ class CapabilityPacksTest(unittest.TestCase):
 
         for pack_id in [
             "web-saas-core",
+            "cli-tui-product-pack",
             "operator-onboarding-pack",
             "public-docs-knowledge-pack",
             "local-web-cockpit-pack",
@@ -84,6 +85,7 @@ class CapabilityPacksTest(unittest.TestCase):
 
         for pack_id in [
             "web-saas-core",
+            "cli-tui-product-pack",
             "operator-onboarding-pack",
             "public-docs-knowledge-pack",
             "mobile-app-pack",
@@ -114,6 +116,14 @@ class CapabilityPacksTest(unittest.TestCase):
 
     def test_ready_core_surfaces_pass_capability_coverage(self) -> None:
         card = base_card()
+
+        errors = factoryctl.validate_capability_coverage(card)
+
+        self.assertEqual(errors, [])
+
+    def test_cli_tui_surfaces_pass_with_core_pack(self) -> None:
+        card = base_card()
+        card["surfaces"] = ["cli", "tui"]
 
         errors = factoryctl.validate_capability_coverage(card)
 
