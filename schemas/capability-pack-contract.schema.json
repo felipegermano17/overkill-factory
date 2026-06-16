@@ -161,6 +161,22 @@
         "type": "string"
       }
     },
+    "activation_ledger_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "human_activation_gate_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "activation_scope": {
+      "type": "string",
+      "minLength": 12
+    },
+    "activation_rationale": {
+      "type": "string",
+      "minLength": 12
+    },
     "structured_proofs_required": {
       "type": "array",
       "items": {

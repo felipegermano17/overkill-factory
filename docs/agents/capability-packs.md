@@ -96,6 +96,14 @@ The template lives at `templates/capability-pack-contract.json`.
 non-core pack activation shape, but it is deliberately blocked until real
 public-safe smoke and eval refs replace the placeholders.
 
+`agents/capability-pack-activation-ledger.public.json` is the current activation
+ledger for non-core packs. It states whether each specialized pack is
+`activated`, `template_only` or `blocked_until_installed`, and names the smoke,
+eval, profile-binding and structured-proof requirements that must exist before
+material execution can use the pack. If the ledger does not mark a non-core
+pack as activated, `factoryctl` requires a bounded human activation gate plus
+activation scope/rationale in the `capability_pack_contract`.
+
 Core packs can still require surface-specific proof through
 `templates/product-delivery-quality-profile.json`. API/data surfaces must prove
 contract, auth, error semantics, migrations, fixtures, retention and operational

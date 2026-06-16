@@ -9,6 +9,7 @@
     "Pack templates are not execution approval; they become usable only after specialist workers, permissions, evals, review and Hermes binding are created.",
     "If a surface is unknown and capability_coverage_required=true, the card must block until a pack is created or explicitly waived by a human gate."
   ],
+  "activation_ledger_ref": "agents/capability-pack-activation-ledger.public.json",
   "packs": {
     "web-saas-core": {
       "pack_id": "web-saas-core",
