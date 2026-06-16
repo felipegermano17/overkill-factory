@@ -465,7 +465,7 @@
         },
         "residuals": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "$ref": "#/$defs/visual_quality_residual" }
         }
       },
       "additionalProperties": true
@@ -525,6 +525,7 @@
           },
           "a11y_status": { "enum": ["pass", "warn", "fail"] },
           "performance_status": { "enum": ["pass", "warn", "fail"] },
+          "accepted_residual_ref": { "type": "string", "minLength": 3 },
           "reviewer": { "type": "string", "minLength": 3 },
           "basis": { "type": "string", "minLength": 3 }
         },
@@ -578,6 +579,34 @@
           "type": "array",
           "items": { "type": "string", "minLength": 3 }
         }
+      },
+      "additionalProperties": true
+    },
+    "visual_quality_residual": {
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "severity",
+        "owner",
+        "expires_at",
+        "accepted_scope",
+        "proof_refs",
+        "blocks_full_acceptance"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 3 },
+        "description": { "type": "string", "minLength": 3 },
+        "severity": { "enum": ["low", "medium", "high", "critical"] },
+        "owner": { "type": "string", "minLength": 3 },
+        "expires_at": { "type": "string", "minLength": 10 },
+        "accepted_scope": { "type": "string", "minLength": 10 },
+        "proof_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "blocks_full_acceptance": { "type": "boolean" }
       },
       "additionalProperties": true
     },

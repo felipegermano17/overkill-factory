@@ -548,6 +548,8 @@ USAGE_EVIDENCE_MATRIX_REQUIRED_FIELDS = (
 )
 USAGE_EVIDENCE_ALLOWED_STATUSES = {"pass", "warn", "fail"}
 VISUAL_QUALITY_ALLOWED_RESULTS = {"PASS", "PASS_WITH_RESIDUALS", "BLOCK"}
+VISUAL_QUALITY_RESIDUAL_SEVERITIES = {"low", "medium", "high", "critical"}
+VISUAL_QUALITY_RESIDUAL_BLOCKING_SEVERITIES = {"high", "critical"}
 DOMAIN_PROOF_ALLOWED_STATUSES = {"PASS", "WARN", "FAIL", "WAIVED"}
 REFERENCE_RESEARCH_SOURCE_TYPES = {
     "component_registry",
@@ -4214,6 +4216,91 @@ def validate_usage_evidence_matrix(result: dict[str, Any], *, is_pass: bool) -> 
                 errors.append(f"product_face_result.usage_evidence_matrix[{index}].{field} must be pass, warn or fail")
             if is_pass and status == "fail":
                 errors.append(f"product_face_result PASS cannot include usage_evidence_matrix[{index}].{field}=fail")
+            if is_pass and status == "warn" and not _non_empty_text(entry.get("accepted_residual_ref")):
+                errors.append(
+                    f"product_face_result PASS usage_evidence_matrix[{index}].{field}=warn "
+                    "requires accepted_residual_ref"
+                )
+    return errors
+
+
+def _visual_quality_residual_records(visual_quality: dict[str, Any]) -> list[dict[str, Any]]:
+    residuals = visual_quality.get("residuals")
+    if not isinstance(residuals, list):
+        return []
+    return [residual for residual in residuals if isinstance(residual, dict)]
+
+
+def validate_visual_quality_residuals(
+    result: dict[str, Any],
+    visual_quality: dict[str, Any],
+    *,
+    visual_status: str,
+    is_pass: bool,
+) -> list[str]:
+    errors: list[str] = []
+    residuals_value = visual_quality.get("residuals")
+    if residuals_value is None:
+        residuals_value = []
+    if residuals_value is not None and not isinstance(residuals_value, list):
+        errors.append("product_face_result.visual_quality_result.residuals must be an array")
+        return errors
+
+    residuals = _visual_quality_residual_records(visual_quality)
+    if residuals_value and len(residuals) != len(residuals_value):
+        errors.append("product_face_result.visual_quality_result.residuals entries must be objects")
+
+    residual_ids: set[str] = set()
+    for index, residual in enumerate(residuals):
+        at = f"product_face_result.visual_quality_result.residuals[{index}]"
+        for field in ("id", "description", "severity", "owner", "expires_at", "accepted_scope", "proof_refs"):
+            if field == "proof_refs":
+                if not _non_empty_string_list(residual.get(field)):
+                    errors.append(f"{at}.proof_refs must be a non-empty string array")
+            elif not _non_empty_text(residual.get(field)):
+                errors.append(f"{at}.{field} is required")
+        residual_id = str(residual.get("id") or "").strip()
+        if residual_id:
+            if residual_id in residual_ids:
+                errors.append(f"{at}.id must be unique")
+            residual_ids.add(residual_id)
+        severity = str(residual.get("severity") or "").strip().lower()
+        if severity and severity not in VISUAL_QUALITY_RESIDUAL_SEVERITIES:
+            errors.append(f"{at}.severity must be low, medium, high or critical")
+        expires_at = _parse_artifact_timestamp(residual.get("expires_at"))
+        if residual.get("expires_at") and expires_at is None:
+            errors.append(f"{at}.expires_at must be an ISO timestamp")
+        elif expires_at is not None and expires_at <= datetime.now(timezone.utc):
+            errors.append(f"{at} is stale; expires_at is in the past")
+        if is_pass and residual.get("blocks_full_acceptance") is not False:
+            errors.append(f"{at}.blocks_full_acceptance=false is required for Product Face PASS")
+        if is_pass and severity in VISUAL_QUALITY_RESIDUAL_BLOCKING_SEVERITIES:
+            errors.append(f"{at}.severity cannot be high or critical for Product Face PASS")
+        if residual.get("proof_refs"):
+            errors.extend(f"{at}: {error}" for error in _evidence_ref_errors(_list_items(residual.get("proof_refs")), ROOT))
+
+    if is_pass and visual_status == "PASS_WITH_RESIDUALS" and not residuals:
+        errors.append("product_face_result PASS_WITH_RESIDUALS requires structured residuals")
+
+    matrix = result.get("usage_evidence_matrix")
+    if is_pass and isinstance(matrix, list):
+        for index, entry in enumerate(matrix):
+            if not isinstance(entry, dict):
+                continue
+            has_warning = any(_normalized_usage_value(entry.get(field)) == "warn" for field in ("a11y_status", "performance_status"))
+            if not has_warning:
+                continue
+            residual_ref = str(entry.get("accepted_residual_ref") or "").strip()
+            if residual_ref and residual_ref not in residual_ids:
+                errors.append(
+                    f"product_face_result.usage_evidence_matrix[{index}].accepted_residual_ref "
+                    "must match visual_quality_result.residuals[].id"
+                )
+            if visual_status != "PASS_WITH_RESIDUALS":
+                errors.append(
+                    f"product_face_result PASS usage_evidence_matrix[{index}] warnings require "
+                    "visual_quality_result.status PASS_WITH_RESIDUALS"
+                )
     return errors
 
 
@@ -4477,6 +4564,14 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
             errors.append("product_face_result PASS requires visual_quality_result.status PASS or PASS_WITH_RESIDUALS")
         if is_pass and visual_status == "PASS_WITH_RESIDUALS" and not _list_items(visual_quality.get("residuals")):
             errors.append("product_face_result PASS_WITH_RESIDUALS requires residuals")
+        errors.extend(
+            validate_visual_quality_residuals(
+                result,
+                visual_quality,
+                visual_status=visual_status,
+                is_pass=is_pass,
+            )
+        )
     professional_comparison = result.get("professional_design_process_comparison")
     if is_pass:
         if not _non_empty_text(result.get("professional_design_process_ref")):
