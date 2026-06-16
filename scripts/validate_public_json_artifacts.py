@@ -78,6 +78,9 @@ REFERENCE_COMPARISON_DIMENSIONS = (
     "visual_language",
     "density_spacing",
 )
+PROFESSIONAL_DESIGN_GATE_ALLOWED_STATUSES = {"PASS", "BLOCKED", "NEEDS_REWORK", "PENDING"}
+PROFESSIONAL_DESIGN_GATE_BLOCKING_STATUSES = {"BLOCKED", "NEEDS_REWORK", "PENDING"}
+PROFESSIONAL_DESIGN_BLOCKER_FIELDS = ("blocker_id", "owner", "next_action", "basis")
 PRIVATE_USERS_PATH = "C:" + r"[\\/]+" + "Users"
 PRIVATE_SYNC_ROOT = "One" + "Drive"
 PRIVATE_MARKERS = re.compile(
@@ -514,10 +517,18 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                 errors.append(f"{at}.reference_research.reference_evidence_policy.{field}: must be true")
         for gate_name in ("wireframe_gate", "prototype_gate", "comparative_review_gate"):
             gate = data.get(gate_name) if isinstance(data.get(gate_name), dict) else {}
-            if gate.get("status") != "PASS":
-                errors.append(f"{at}: professional_design_process {gate_name}.status must be PASS")
+            status = str(gate.get("status") or "").strip().upper()
+            if status not in PROFESSIONAL_DESIGN_GATE_ALLOWED_STATUSES:
+                errors.append(f"{at}: professional_design_process {gate_name}.status must be PASS, BLOCKED, NEEDS_REWORK or PENDING")
+            elif status in PROFESSIONAL_DESIGN_GATE_BLOCKING_STATUSES:
+                for field in PROFESSIONAL_DESIGN_BLOCKER_FIELDS:
+                    if not str(gate.get(field) or "").strip():
+                        errors.append(f"{at}: professional_design_process {gate_name}.{field} is required when status is {status}")
+                if not gate.get("proof_refs"):
+                    errors.append(f"{at}: professional_design_process {gate_name}.proof_refs is required when status is {status}")
         reviewer_role = str((data.get("comparative_review_gate") or {}).get("reviewer_role") or "").lower()
-        if "independent" not in reviewer_role:
+        comparative_status = str((data.get("comparative_review_gate") or {}).get("status") or "").strip().upper()
+        if comparative_status == "PASS" and "independent" not in reviewer_role:
             errors.append(f"{at}: professional_design_process comparative_review_gate requires an independent reviewer")
     if data.get("record_type") == "factory_learning_proposal":
         serialized_refs = "\n".join(str(ref) for ref in data.get("source_evidence_refs", []))

@@ -229,6 +229,40 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         errors = validator.validate_node(schema, invalid_packet, "$", schemas=schemas)
         self.assertTrue(any("$.surface" in error and "not in enum" in error for error in errors))
 
+    def test_product_implementation_readiness_schema_requires_concerns(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["product-implementation-readiness.schema.json"]
+        readiness = json.loads((ROOT / "templates" / "product-implementation-readiness.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(validator.validate_node(schema, readiness, "$", schemas=schemas, root_schema=schema), [])
+
+        invalid = json.loads(json.dumps(readiness))
+        invalid.pop("concern_items")
+        errors = validator.validate_node(schema, invalid, "$", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("concern_items" in error for error in errors), errors)
+
+    def test_professional_design_process_schema_accepts_controlled_blocked_gate(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["professional-design-process.schema.json"]
+        process = json.loads((ROOT / "templates" / "professional-design-process.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(validator.validate_node(schema, process, "$", schemas=schemas, root_schema=schema), [])
+
+        invalid = json.loads(json.dumps(process))
+        invalid["wireframe_gate"] = {
+            "status": "BLOCKED",
+            "basis": "Wireframe gate is blocked but lacks a controlled repair route.",
+        }
+        errors = validator.validate_node(schema, invalid, "$", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("$.wireframe_gate" in error and "blocker_id" in error for error in errors), errors)
+        self.assertTrue(any("$.wireframe_gate" in error and "owner" in error for error in errors), errors)
+        self.assertTrue(any("$.wireframe_gate" in error and "next_action" in error for error in errors), errors)
+        self.assertTrue(any("$.wireframe_gate" in error and "proof_refs" in error for error in errors), errors)
+
     def test_resolves_internal_defs_refs(self) -> None:
         validator = load_validator()
         schema = {

@@ -106,6 +106,12 @@ packet comparison, source-promise coverage, design-fit review and
 `visual_quality_result` recorded as acceptable by a reviewer empowered to block
 visually unacceptable UI.
 
+`templates/professional-design-process.json` is a starter contract. Its gates
+are intentionally `PENDING`; copying that template into a card is not
+professional design approval. Product-specific implementation can proceed only
+after the card's Professional Design Process gates are `PASS`, or it remains on
+the controlled blocker path named by the gate.
+
 Reusable product example:
 
 ```bash
