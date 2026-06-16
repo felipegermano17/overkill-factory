@@ -2663,6 +2663,138 @@ def validate_production_promotion_ladder_contract(card: dict[str, Any]) -> list[
     return errors
 
 
+def _validate_named_ref(value: Any, at: str, errors: list[str]) -> None:
+    ref = str(value or "").strip()
+    if not ref:
+        errors.append(f"{at} is required")
+        return
+    _validate_public_ref(ref, at, errors)
+
+
+def validate_production_readiness_plan(plan: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("production-readiness-plan.schema.json")
+    if not schema:
+        return ["production_readiness_plan schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            plan,
+            "production_readiness_plan",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    release_path = plan.get("release_path") if isinstance(plan.get("release_path"), dict) else {}
+    rollback_path = plan.get("rollback_path") if isinstance(plan.get("rollback_path"), dict) else {}
+    approval = plan.get("release_approval_rule") if isinstance(plan.get("release_approval_rule"), dict) else {}
+    support = plan.get("support_handoff") if isinstance(plan.get("support_handoff"), dict) else {}
+
+    if not isinstance(plan.get("release_path"), dict):
+        errors.append("production_readiness_plan.release_path must be structured, not prose")
+    if not isinstance(plan.get("rollback_path"), dict):
+        errors.append("production_readiness_plan.rollback_path must be structured, not prose")
+    if not isinstance(plan.get("support_handoff"), dict):
+        errors.append("production_readiness_plan.support_handoff must be structured, not prose")
+    if not isinstance(plan.get("release_approval_rule"), dict):
+        errors.append("production_readiness_plan.release_approval_rule must be structured, not prose")
+
+    for field in ("release_artifact_ref", "pre_release_smoke_ref", "approval_rule_ref"):
+        _validate_named_ref(release_path.get(field), f"production_readiness_plan.release_path.{field}", errors)
+    for field in ("rollback_procedure_ref", "rollback_validation_ref"):
+        _validate_named_ref(rollback_path.get(field), f"production_readiness_plan.rollback_path.{field}", errors)
+    _validate_named_ref(approval.get("evidence_ref"), "production_readiness_plan.release_approval_rule.evidence_ref", errors)
+    for field in ("support_channel_ref", "escalation_policy_ref", "handoff_evidence_ref"):
+        _validate_named_ref(support.get(field), f"production_readiness_plan.support_handoff.{field}", errors)
+    _validate_named_ref(
+        plan.get("production_promotion_ladder_ref"),
+        "production_readiness_plan.production_promotion_ladder_ref",
+        errors,
+    )
+    _validate_lifecycle_refs(_list_items(plan.get("evidence_refs")), "production_readiness_plan.evidence_refs", errors)
+
+    health_checks = plan.get("health_checks") if isinstance(plan.get("health_checks"), list) else []
+    monitoring_signals = plan.get("monitoring_signals") if isinstance(plan.get("monitoring_signals"), list) else []
+    if not health_checks:
+        errors.append("production_readiness_plan.health_checks must be non-empty")
+    if not monitoring_signals:
+        errors.append("production_readiness_plan.monitoring_signals must be non-empty")
+    for index, check in enumerate(health_checks):
+        if not isinstance(check, dict):
+            errors.append(f"production_readiness_plan.health_checks[{index}] must be structured, not prose")
+            continue
+        _validate_named_ref(check.get("signal_ref"), f"production_readiness_plan.health_checks[{index}].signal_ref", errors)
+    for index, signal in enumerate(monitoring_signals):
+        if not isinstance(signal, dict):
+            errors.append(f"production_readiness_plan.monitoring_signals[{index}] must be structured, not prose")
+            continue
+        _validate_named_ref(signal.get("source_ref"), f"production_readiness_plan.monitoring_signals[{index}].source_ref", errors)
+        _validate_named_ref(signal.get("evidence_ref"), f"production_readiness_plan.monitoring_signals[{index}].evidence_ref", errors)
+    return errors
+
+
+def validate_incident_support_plan(plan: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("incident-support-plan.schema.json")
+    if not schema:
+        return ["incident_support_plan schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            plan,
+            "incident_support_plan",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    triggers = plan.get("incident_triggers") if isinstance(plan.get("incident_triggers"), list) else []
+    severity_model = plan.get("severity_model") if isinstance(plan.get("severity_model"), list) else []
+    escalation_path = plan.get("escalation_path") if isinstance(plan.get("escalation_path"), list) else []
+    recovery_actions = plan.get("recovery_actions") if isinstance(plan.get("recovery_actions"), list) else []
+    communication = plan.get("communication_boundary") if isinstance(plan.get("communication_boundary"), dict) else {}
+
+    if not triggers:
+        errors.append("incident_support_plan.incident_triggers must be non-empty")
+    if not severity_model:
+        errors.append("incident_support_plan.severity_model must be non-empty")
+    if not escalation_path:
+        errors.append("incident_support_plan.escalation_path must be non-empty")
+    if not recovery_actions:
+        errors.append("incident_support_plan.recovery_actions must be non-empty")
+    if not isinstance(plan.get("communication_boundary"), dict):
+        errors.append("incident_support_plan.communication_boundary must be structured, not prose")
+    if communication.get("private_details_forbidden") is not True:
+        errors.append("incident_support_plan.communication_boundary.private_details_forbidden must be true")
+
+    for index, trigger in enumerate(triggers):
+        if not isinstance(trigger, dict):
+            errors.append(f"incident_support_plan.incident_triggers[{index}] must be structured, not prose")
+            continue
+        _validate_named_ref(trigger.get("signal_ref"), f"incident_support_plan.incident_triggers[{index}].signal_ref", errors)
+    for index, step in enumerate(escalation_path):
+        if not isinstance(step, dict):
+            errors.append(f"incident_support_plan.escalation_path[{index}] must be structured, not prose")
+            continue
+        _validate_named_ref(step.get("handoff_ref"), f"incident_support_plan.escalation_path[{index}].handoff_ref", errors)
+    for index, action in enumerate(recovery_actions):
+        if not isinstance(action, dict):
+            errors.append(f"incident_support_plan.recovery_actions[{index}] must be structured, not prose")
+            continue
+        _validate_named_ref(action.get("procedure_ref"), f"incident_support_plan.recovery_actions[{index}].procedure_ref", errors)
+        _validate_named_ref(action.get("validation_ref"), f"incident_support_plan.recovery_actions[{index}].validation_ref", errors)
+    _validate_named_ref(
+        communication.get("communication_channel_ref"),
+        "incident_support_plan.communication_boundary.communication_channel_ref",
+        errors,
+    )
+    _validate_lifecycle_refs(_list_items(plan.get("evidence_refs")), "incident_support_plan.evidence_refs", errors)
+    return errors
+
+
 def _contains_internal_coordination_request(text: Any) -> bool:
     normalized = str(text or "").strip().lower()
     return any(term in normalized for term in INTERNAL_COORDINATION_TERMS)
@@ -3727,6 +3859,8 @@ def _validate_vfinal_schema_backed_plan_gate(
         should_validate = True
     if material_product_context and field == "user_docs_onboarding_plan" and _non_empty_dict(plan):
         should_validate = True
+    if material_product_context and field in {"production_readiness_plan", "incident_support_plan"} and _non_empty_dict(plan):
+        should_validate = True
 
     if should_validate and gate not in {"strict", "production"}:
         errors.append(f"{field}.gate_enforcement must be strict or production for OVERKILL_VFINAL cards")
@@ -4084,6 +4218,20 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
             data,
             "user_docs_onboarding_plan",
             validate_user_docs_onboarding_plan,
+        )
+    )
+    errors.extend(
+        _validate_vfinal_schema_backed_plan_gate(
+            data,
+            "production_readiness_plan",
+            validate_production_readiness_plan,
+        )
+    )
+    errors.extend(
+        _validate_vfinal_schema_backed_plan_gate(
+            data,
+            "incident_support_plan",
+            validate_incident_support_plan,
         )
     )
     return errors

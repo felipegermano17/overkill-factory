@@ -1243,6 +1243,56 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertIn("sdlc_feedback_loop_ref must be public-safe", errors)
 
+    def test_vfinal_production_readiness_plan_rejects_prose_only_ops(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["production_readiness_plan"] = {
+            "$schema": "https://overkill-factory.dev/schemas/production-readiness-plan.schema.json",
+            "gate_enforcement": "production",
+            "release_path": "ship it when tests pass",
+            "rollback_path": "revert if needed",
+            "monitoring": ["watch errors"],
+            "incident_owner": "release-ops-worker",
+            "support_path": "ask the maintainer",
+            "production_promotion_ladder_ref": "templates/production-promotion-ladder.json",
+            "evidence_refs": ["templates/production-readiness-plan.json"],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("production_readiness_plan.release_path" in error for error in errors), errors)
+        self.assertTrue(any("production_readiness_plan.rollback_path" in error for error in errors), errors)
+        self.assertTrue(any("production_readiness_plan.health_checks" in error for error in errors), errors)
+        self.assertTrue(any("production_readiness_plan.monitoring_signals" in error for error in errors), errors)
+        self.assertTrue(any("production_readiness_plan.support_handoff" in error for error in errors), errors)
+
+    def test_vfinal_incident_support_plan_rejects_prose_only_incident_path(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["incident_support_plan"] = {
+            "$schema": "https://overkill-factory.dev/schemas/incident-support-plan.schema.json",
+            "gate_enforcement": "production",
+            "severity": "SEV-3",
+            "owner": "release-ops-worker",
+            "communication_path": "status update",
+            "resolution_or_next_action": "fix or rollback",
+            "evidence_refs": ["templates/incident-support-plan.json"],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("incident_support_plan.incident_triggers" in error for error in errors), errors)
+        self.assertTrue(any("incident_support_plan.severity_model" in error for error in errors), errors)
+        self.assertTrue(any("incident_support_plan.escalation_path" in error for error in errors), errors)
+        self.assertTrue(any("incident_support_plan.recovery_actions" in error for error in errors), errors)
+        self.assertTrue(any("incident_support_plan.communication_boundary" in error for error in errors), errors)
+
+    def test_vfinal_structured_production_and_incident_plans_validate(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertFalse(any("production_readiness_plan." in error for error in errors), errors)
+        self.assertFalse(any("incident_support_plan." in error for error in errors), errors)
+
     def test_vfinal_material_execution_requires_autonomy_and_model_routing_decision(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
         card.pop("autonomy_mode", None)

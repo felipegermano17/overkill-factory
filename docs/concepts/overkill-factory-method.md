@@ -247,6 +247,13 @@ The important gates are:
 | Completion Audit | Required method, gate or evidence is skipped. |
 | Release Gate | Release lacks owner, rollback, monitoring, channel or approval. |
 
+Production and incident readiness are structured gates. A release-ready card
+needs named owners, executable health checks, monitoring signal refs, rollback
+procedure and validation refs, approval authority, support handoff, incident
+triggers, severity model, escalation path, public/private communication boundary,
+recovery actions and evidence refs. Narrative monitoring or rollback text is not
+enough for `OVERKILL_VFINAL` material work.
+
 ## Definition Of Done
 
 Work is done only when the factory can answer:

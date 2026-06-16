@@ -3,13 +3,110 @@
   "$id": "https://overkill-factory.dev/schemas/incident-support-plan.schema.json",
   "title": "Overkill Factory Incident Support Plan",
   "type": "object",
-  "required": ["severity", "owner", "communication_path", "resolution_or_next_action"],
+  "required": [
+    "$schema",
+    "gate_enforcement",
+    "incident_triggers",
+    "severity_model",
+    "owner",
+    "escalation_path",
+    "communication_boundary",
+    "recovery_actions",
+    "evidence_refs",
+    "learnback_target"
+  ],
   "properties": {
-    "severity": { "type": "string", "minLength": 1 },
-    "owner": { "type": "string", "minLength": 3 },
-    "communication_path": { "type": "string", "minLength": 3 },
-    "resolution_or_next_action": { "type": "string", "minLength": 3 },
-    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/incident-support-plan.schema.json"
+    },
+    "gate_enforcement": {
+      "enum": ["strict", "production"]
+    },
+    "incident_triggers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["trigger_id", "signal_ref", "condition", "owner"],
+        "properties": {
+          "trigger_id": { "type": "string", "minLength": 3 },
+          "signal_ref": { "type": "string", "minLength": 3 },
+          "condition": { "type": "string", "minLength": 3 },
+          "owner": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "severity_model": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["severity", "impact", "response_slo", "escalation_owner"],
+        "properties": {
+          "severity": { "type": "string", "minLength": 3 },
+          "impact": { "type": "string", "minLength": 3 },
+          "response_slo": { "type": "string", "minLength": 3 },
+          "escalation_owner": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 3
+    },
+    "escalation_path": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["step", "owner", "condition", "handoff_ref"],
+        "properties": {
+          "step": { "type": "string", "minLength": 3 },
+          "owner": { "type": "string", "minLength": 3 },
+          "condition": { "type": "string", "minLength": 3 },
+          "handoff_ref": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "communication_boundary": {
+      "type": "object",
+      "required": ["public_status_allowed", "private_details_forbidden", "communication_channel_ref", "update_cadence"],
+      "properties": {
+        "public_status_allowed": { "type": "boolean" },
+        "private_details_forbidden": { "const": true },
+        "communication_channel_ref": { "type": "string", "minLength": 3 },
+        "update_cadence": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "recovery_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["action_id", "action_type", "owner", "procedure_ref", "validation_ref"],
+        "properties": {
+          "action_id": { "type": "string", "minLength": 3 },
+          "action_type": { "enum": ["rollback", "disable_feature", "repair_forward", "keep_blocked", "escalate_human_gate"] },
+          "owner": { "type": "string", "minLength": 3 },
+          "procedure_ref": { "type": "string", "minLength": 3 },
+          "validation_ref": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "learnback_target": {
+      "type": "string",
+      "minLength": 3
+    }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }
