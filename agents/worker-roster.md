@@ -58,7 +58,7 @@ needed.
 | `source-ledger-worker` | open | F0-F1 | Separates source, inference, decision, conflict, stale material and gap before any SOT claim is promoted. |
 | `product-sot-planner` | open | F2-F3 | Owns Outcome/Discovery and turns source ledger plus answers into a Product SOT candidate. Candidate is not approval. |
 | `product-architect` | open | F4-F6 | Creates architecture candidate, boundaries, tradeoffs, trust boundaries and risk map from the SOT. |
-| `product-face` | hybrid | F5/F13 | Defines and validates screens, states, mobile, wallet UX, accessibility, performance and visual evidence. |
+| `product-face` | hybrid | F5/F13 | Defines and validates Product Experience Plan, Product Face packet, screens, states, mobile, wallet UX, accessibility, performance and visual evidence. |
 | `docs-os-worker` | closed/hybrid | F10 | Converts approved architecture into specs, ADRs, diagrams, contracts and evidence paths. |
 | `decomposition-planner` | closed | F11 | Produces Spec Graph, Loop Plan, work packages and Hermes card graph with risk, runtime, reviewer, lane/worktree and gate contracts. |
 
@@ -70,7 +70,7 @@ the card.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `frontend-builder` | hybrid | F12-F13 | Builds scoped screens, components, responsive states, wallet-facing UI and browser-testable product surfaces. Product Face still validates the result. |
+| `frontend-builder` | hybrid | F12-F13 | Builds scoped screens, components, responsive states, wallet-facing UI and browser-testable product surfaces from Product Experience and Product Face contracts. Product Face still validates the result. |
 | `backend-api-builder` | hybrid | F12-F13 | Builds scoped API, service, validation, auth/session and server behavior with contract/API test evidence. |
 | `data-persistence-builder` | hybrid | F12-F13 | Builds schema, migration, storage and data-access changes with rollback and data-risk notes. |
 | `solana-quasar-builder` | hybrid | F12-F13 | Builds scoped Solana program work using Quasar. Anchor assumptions, mainnet deploys and real keys are forbidden. |

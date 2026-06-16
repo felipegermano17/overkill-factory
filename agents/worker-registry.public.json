@@ -227,7 +227,9 @@
         "visible product surface"
       ],
       "inputs": [
+        "product_experience_plan",
         "product_face_packet",
+        "professional_design_process",
         "target_repo_paths",
         "acceptance_criteria"
       ],
@@ -860,7 +862,9 @@
         "product-facing implementation"
       ],
       "inputs": [
+        "product_experience_plan",
         "product_face_packet",
+        "professional_design_process",
         "scope_in",
         "scope_out",
         "done_definition"

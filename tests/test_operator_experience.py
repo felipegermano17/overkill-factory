@@ -40,6 +40,20 @@ def write_card_without_security_packet(tmp: Path) -> Path:
     return path
 
 
+def write_product_card_missing_experience(tmp: Path) -> Path:
+    data = json.loads((ROOT / "templates" / "vfinal-factory-card.json").read_text(encoding="utf-8"))
+    data["card_id"] = "TEST-MISSING-PRODUCT-EXPERIENCE"
+    data["phase"] = "F11"
+    data["surfaces"] = ["frontend", "product-face"]
+    data["capability_pack_contract"]["covered_surfaces"] = ["frontend", "product-face"]
+    data.pop("product_experience_plan", None)
+    data.pop("product_face_packet", None)
+    data.pop("professional_design_process", None)
+    path = tmp / "missing-product-experience.json"
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 class OperatorExperienceTest(unittest.TestCase):
     def test_factoryctl_exposes_single_operator_entrypoint(self) -> None:
         help_text = run_factoryctl("--help").stdout
@@ -93,6 +107,22 @@ class OperatorExperienceTest(unittest.TestCase):
         self.assertEqual(route["hermes_materialization"]["runtime_authority"], "hermes_kanban")
         self.assertFalse(route["hermes_materialization"]["local_state_authority"])
         self.assertIn("kanban_task", route["hermes_materialization"]["native_primitives"])
+
+    def test_help_next_routes_missing_product_surface_planning_to_product_experience_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            card = write_product_card_missing_experience(Path(tmpdir))
+            result = run_factoryctl("help-next", "--card", str(card))
+            payload = json.loads(result.stdout)
+
+        self.assertEqual(payload["workflow_phase"]["phase_id"], "F8A")
+        self.assertEqual(payload["workflow_phase"]["phase_name"], "Product Experience And Surface Pack Gate")
+        self.assertIn("Product Experience Plan", payload["factory_next_action"]["action"])
+        self.assertIn("surface pack", payload["factory_next_action"]["why"].lower())
+        self.assertIn("product_experience_plan required for vFinal product-facing surfaces", payload["blocked_because"])
+        self.assertIn(
+            "populate card.product_experience_plan with public-safe contract data or attach the required worker evidence",
+            payload["evidence_needed"],
+        )
 
     def test_doctor_reports_public_install_health_without_real_hermes_e2e(self) -> None:
         result = run_factoryctl("doctor", "--json")

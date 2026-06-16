@@ -17,6 +17,9 @@ class FactoryStageAgentMapTest(unittest.TestCase):
         self.stage_map = (ROOT / "docs" / "agents" / "factory-stage-agent-map.md").read_text(
             encoding="utf-8"
         )
+        self.workflow_catalog = json.loads(
+            (ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8")
+        )
 
     def test_stage_map_names_every_canonical_stage(self) -> None:
         for stage_number in range(1, 33):
@@ -56,6 +59,24 @@ class FactoryStageAgentMapTest(unittest.TestCase):
             with self.subTest(stage=stage):
                 line = next(line for line in self.stage_map.splitlines() if stage in line)
                 self.assertIn(worker, line)
+
+    def test_product_experience_is_first_class_catalog_gate(self) -> None:
+        phases = {row["phase_id"]: row for row in self.workflow_catalog["phases"]}
+        product_experience = phases["F8A"]
+
+        self.assertEqual(product_experience["phase_name"], "Product Experience And Surface Pack Gate")
+        for artifact in [
+            "product_experience_plan",
+            "product_face_packet",
+            "professional_design_process",
+            "surface_evidence_profile",
+            "product_delivery_quality_profile",
+        ]:
+            with self.subTest(artifact=artifact):
+                self.assertIn(artifact, product_experience["required_artifacts"])
+        self.assertIn("product-face", product_experience["required_workers"])
+        self.assertIn("Product Experience Gate", product_experience["required_gates"])
+        self.assertNotIn("product_experience_plan", phases["F11"]["optional_artifacts"])
 
 
 if __name__ == "__main__":
