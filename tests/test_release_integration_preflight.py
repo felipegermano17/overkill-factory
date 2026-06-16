@@ -20,6 +20,21 @@ SPEC.loader.exec_module(preflight)
 
 
 class ReleaseIntegrationPreflightTest(unittest.TestCase):
+    def materialization(self) -> dict:
+        return {
+            "record_type": "release_preflight_materialization",
+            "all_materializers_passed": True,
+            "failed_materializers": [],
+            "missing_evidence_refs": [],
+            "runs": [
+                {
+                    "name": "fresh-fixture",
+                    "result": "PASS",
+                    "output_exists": True,
+                }
+            ],
+        }
+
     def test_dirty_main_blocks_release_integration(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             paths = self._fixtures(Path(tmp), worktree="PASS", head="FAIL", origin="FAIL")
@@ -32,6 +47,7 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 branch_name="main",
                 status_entries=10,
                 created_at="2026-06-10T00:00:00Z",
+                materialization=self.materialization(),
             )
 
         self.assertEqual(receipt["result"], "BLOCKED")
@@ -55,6 +71,7 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 branch_name="codex/release",
                 status_entries=0,
                 created_at="2026-06-10T00:00:00Z",
+                materialization=self.materialization(),
             )
 
         self.assertEqual(receipt["result"], "PASS")
@@ -73,6 +90,7 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 branch_name="main",
                 status_entries=10,
                 created_at="2026-06-10T00:00:00Z",
+                materialization=self.materialization(),
             )
 
         self.assertEqual(receipt["result"], "BLOCKED")
@@ -98,6 +116,7 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 status_entries=4,
                 generated_status_entries=4,
                 created_at="2026-06-10T00:00:00Z",
+                materialization=self.materialization(),
             )
 
         self.assertEqual(receipt["result"], "PASS")
@@ -125,6 +144,7 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 status_entries=0,
                 generated_status_entries=0,
                 created_at="2026-06-10T00:00:00Z",
+                materialization=self.materialization(),
             )
 
         self.assertEqual(receipt["evidence_refs"], [])
@@ -132,6 +152,28 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
         self.assertIn("preflight_evidence_refs_exist", receipt["blocking_items"])
         self.assertIn(
             "materialize missing preflight evidence summaries before release review",
+            receipt["next_required_actions"],
+        )
+
+    def test_build_preflight_without_fresh_materialization_cannot_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = self._fixtures(Path(tmp), worktree="PASS", head="PASS", origin="PASS", release_candidate_entries=0)
+
+            receipt = preflight.build_preflight(
+                inventory_path=paths["inventory"],
+                public_worktree_path=paths["worktree"],
+                public_head_path=paths["head"],
+                public_origin_path=paths["origin"],
+                branch_name="codex/release",
+                status_entries=0,
+                generated_status_entries=0,
+                created_at="2026-06-10T00:00:00Z",
+            )
+
+        self.assertEqual(receipt["result"], "BLOCKED")
+        self.assertIn("fresh_preflight_materialization_provided", receipt["blocking_items"])
+        self.assertIn(
+            "rerun release preflight materializers in the current process before release review",
             receipt["next_required_actions"],
         )
 

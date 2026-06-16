@@ -12,6 +12,7 @@
     "release_candidate_plan",
     "blocking_items",
     "attention_items",
+    "materialization",
     "evidence_refs",
     "next_required_actions",
     "limits"
@@ -80,6 +81,20 @@
     "attention_items": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
+    },
+    "materialization": {
+      "type": "object",
+      "required": ["record_type", "all_materializers_passed", "failed_materializers", "runs"],
+      "properties": {
+        "record_type": { "const": "release_preflight_materialization" },
+        "all_materializers_passed": { "type": ["boolean", "null"] },
+        "failed_materializers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "runs": { "type": "array" }
+      },
+      "additionalProperties": true
     },
     "evidence_refs": {
       "type": "array",

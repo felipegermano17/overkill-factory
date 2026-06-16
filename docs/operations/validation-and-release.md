@@ -53,6 +53,10 @@ python scripts/validate_public_surface_sync.py --check-published
 These commands write local summaries under `.tmp` when an output path is
 provided. Generated summaries must not be committed as release proof.
 
+`release_integration_preflight.py` must run its materializers in the current
+process. Existing `.tmp` summaries are evidence inputs only after fresh
+materialization; stale files cannot support a release `PASS`.
+
 `validate_public_surface_sync.py --check-published` compares the validated local
 map to the published public object. Run it only after the public object has been
 published or refreshed; before publication it may correctly report the remote
@@ -107,5 +111,9 @@ A release claim needs:
 - independent review when required;
 - real human gate records for high-risk or release authority;
 - public-safety pass before public publication.
+
+Release authority cannot be satisfied by a string ref alone. A production or
+R4 release gate must dereference and validate the human gate record before it
+can claim `PASS`.
 
 No single chat answer, dashboard status or worker packet is a release proof.
