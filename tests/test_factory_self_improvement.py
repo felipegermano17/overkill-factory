@@ -28,6 +28,19 @@ def vfinal_card() -> dict:
     return json.loads((ROOT / "templates" / "vfinal-factory-card.json").read_text(encoding="utf-8"))
 
 
+def public_validator_module():
+    validator_spec = importlib.util.spec_from_file_location(
+        "validate_public_json_artifacts",
+        ROOT / "scripts" / "validate_public_json_artifacts.py",
+    )
+    assert validator_spec is not None
+    validator = importlib.util.module_from_spec(validator_spec)
+    assert validator_spec.loader is not None
+    sys.modules["validate_public_json_artifacts"] = validator
+    validator_spec.loader.exec_module(validator)
+    return validator
+
+
 class FactorySelfImprovementTest(unittest.TestCase):
     def test_vfinal_card_requires_reasoning_policy(self) -> None:
         card = vfinal_card()
@@ -583,6 +596,70 @@ class FactorySelfImprovementTest(unittest.TestCase):
         self.assertEqual(candidate["record_type"], "owner_issue_factory_card_candidate")
         self.assertFalse(candidate["activation_policy"]["auto_dispatch_allowed"])
         self.assertTrue(candidate["activation_policy"]["human_gate_required"])
+        self.assertEqual(candidate["sdlc_feedback_loop_ref"], report["decisions"][0]["sdlc_feedback_loop_ref"])
+        self.assertEqual(
+            report["decisions"][0]["sdlc_feedback_loop"]["triage_decision"]["decision"],
+            "risk_gate",
+        )
+        self.assertEqual(
+            report["decisions"][0]["sdlc_feedback_loop"]["routing_decision"]["selected_model_class"],
+            "human_only",
+        )
+        self.assertEqual(factoryctl.validate_factory_sdlc_feedback_loop(report["decisions"][0]["sdlc_feedback_loop"]), [])
+
+    def test_owner_issue_intake_attaches_valid_sdlc_feedback_loop_to_actionable_candidate(self) -> None:
+        config = json.loads((ROOT / "templates" / "owner-issue-intake-config.json").read_text(encoding="utf-8"))
+        issues = [
+            {
+                "number": 102,
+                "title": "Add product proof test",
+                "body": "Create a bounded test for a product proof gap.",
+                "labels": ["factory-improvement"],
+            }
+        ]
+
+        report = self_improvement.build_issue_intake_report(config, issues)
+        decision = report["decisions"][0]
+        loop = decision["sdlc_feedback_loop"]
+        candidate = decision["factory_card_candidate"]
+
+        self.assertEqual(decision["decision"], "implementation_candidate")
+        self.assertEqual(loop["record_type"], "factory_sdlc_feedback_loop")
+        self.assertEqual(loop["loop_id"], decision["sdlc_feedback_loop_ref"])
+        self.assertEqual(candidate["sdlc_feedback_loop_ref"], decision["sdlc_feedback_loop_ref"])
+        self.assertEqual(loop["execution_evidence"]["status"], "PENDING")
+        self.assertFalse(loop["execution_evidence"]["failed_outputs_consumable_as_success"])
+        self.assertEqual(factoryctl.validate_factory_sdlc_feedback_loop(loop), [])
+
+        validator = public_validator_module()
+        schemas = validator.load_schemas()
+        schema = schemas["owner-issue-intake-report.schema.json"]
+
+        schema_errors = validator.validate_node(schema, report, "$", schemas=schemas, root_schema=schema)
+        domain_errors = validator.validate_domain_rules(report, "$")
+
+        self.assertEqual(schema_errors + domain_errors, [])
+
+    def test_owner_issue_intake_domain_rejects_actionable_candidate_without_feedback_loop(self) -> None:
+        config = json.loads((ROOT / "templates" / "owner-issue-intake-config.json").read_text(encoding="utf-8"))
+        issues = [
+            {
+                "number": 103,
+                "title": "Add docs for proof",
+                "body": "Documentation update.",
+                "labels": ["factory-improvement"],
+            }
+        ]
+        report = self_improvement.build_issue_intake_report(config, issues)
+        decision = report["decisions"][0]
+        decision.pop("sdlc_feedback_loop_ref")
+        decision.pop("sdlc_feedback_loop")
+
+        validator = public_validator_module()
+        errors = validator.validate_domain_rules(report, "$")
+
+        self.assertIn("$.decisions[0]: actionable owner issue intake requires sdlc_feedback_loop_ref", errors)
+        self.assertIn("$.decisions[0]: actionable owner issue intake requires sdlc_feedback_loop", errors)
 
     def test_governance_report_declares_mandatory_public_checks(self) -> None:
         report = self_improvement.governance_report()

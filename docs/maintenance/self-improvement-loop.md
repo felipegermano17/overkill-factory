@@ -185,6 +185,11 @@ not an executed card. It is a bounded draft with source issue, risk, required
 gates, done definition and activation policy so the owner instance can hand it
 to the factory without losing auditability.
 
+Every non-ignored intake row also carries a `factory_sdlc_feedback_loop` and a
+matching `sdlc_feedback_loop_ref` on the card candidate. This keeps owner issue
+signals attached to the canonical SDLC thread before any Hermes dispatch,
+GitHub comment, implementation or human gate can happen.
+
 ## Reasoning Policy
 
 `reasoning_policy` makes the reasoning depth, profile class, review intensity

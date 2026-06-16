@@ -1086,6 +1086,34 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             errors.append(f"{at}: factory_improvement_issue_candidate requires sdlc_feedback_loop_refs for public/actionable routes")
         if PRIVATE_MARKERS.search(serialized_feedback_refs):
             errors.append(f"{at}: factory_improvement_issue_candidate sdlc_feedback_loop_refs must be public-safe")
+    if data.get("record_type") == "owner_issue_intake_report":
+        decisions = data.get("decisions") if isinstance(data.get("decisions"), list) else []
+        actionable = {"needs_human_triage", "documentation_only", "implementation_candidate", "critical_factory_change", "private_operator_only"}
+        for index, row in enumerate(decisions):
+            if not isinstance(row, dict):
+                continue
+            decision = str(row.get("decision") or "").strip()
+            if decision not in actionable:
+                continue
+            feedback_ref = str(row.get("sdlc_feedback_loop_ref") or "").strip()
+            if not feedback_ref:
+                errors.append(f"{at}.decisions[{index}]: actionable owner issue intake requires sdlc_feedback_loop_ref")
+            else:
+                reason = public_artifact_ref_error(feedback_ref)
+                if reason:
+                    errors.append(f"{at}.decisions[{index}].sdlc_feedback_loop_ref: {reason}")
+            loop = row.get("sdlc_feedback_loop") if isinstance(row.get("sdlc_feedback_loop"), dict) else {}
+            candidate = row.get("factory_card_candidate") if isinstance(row.get("factory_card_candidate"), dict) else {}
+            if not loop:
+                errors.append(f"{at}.decisions[{index}]: actionable owner issue intake requires sdlc_feedback_loop")
+            else:
+                if loop.get("loop_id") != feedback_ref:
+                    errors.append(f"{at}.decisions[{index}]: sdlc_feedback_loop.loop_id must match sdlc_feedback_loop_ref")
+                errors.extend(validate_domain_rules(loop, f"{at}.decisions[{index}].sdlc_feedback_loop"))
+            if not candidate:
+                errors.append(f"{at}.decisions[{index}]: actionable owner issue intake requires factory_card_candidate")
+            elif candidate.get("sdlc_feedback_loop_ref") != feedback_ref:
+                errors.append(f"{at}.decisions[{index}]: factory_card_candidate.sdlc_feedback_loop_ref must match row sdlc_feedback_loop_ref")
     if data.get("record_type") == "discord_control_tower_ux_audit":
         serialized = json.dumps(data, sort_keys=True)
         if "todo" in serialized.lower():

@@ -501,6 +501,7 @@ def build_factory_card_candidate(
     decision: str,
     labels: set[str],
     default_status: str,
+    sdlc_feedback_loop_ref: str,
 ) -> dict[str, Any]:
     critical = decision == "critical_factory_change"
     documentation = decision == "documentation_only"
@@ -534,11 +535,108 @@ def build_factory_card_candidate(
             "Receipt Five evidence records commands, artifacts and residual risk",
         ],
         "source_refs": [issue_ref],
+        "sdlc_feedback_loop_ref": sdlc_feedback_loop_ref,
         "activation_policy": {
             "auto_dispatch_allowed": False,
             "human_gate_required": critical,
             "public_comment_allowed": False,
         },
+    }
+
+
+def triage_decision_for_issue_intake(decision: str) -> str:
+    if decision == "documentation_only":
+        return "docs_task"
+    if decision == "critical_factory_change":
+        return "risk_gate"
+    if decision == "needs_human_triage":
+        return "blocker"
+    if decision == "private_operator_only":
+        return "reject_with_rationale"
+    return "work_unit"
+
+
+def build_issue_intake_sdlc_feedback_loop(
+    issue_ref: str,
+    title: str,
+    decision: str,
+    reason: str,
+    dedupe_key: str,
+) -> dict[str, Any]:
+    critical = decision == "critical_factory_change"
+    feedback_ref = f"external:operator-sdlc-feedback-loop-{dedupe_key}"
+    source_ref = f"external:operator-owner-issue-{dedupe_key}"
+    selected_profile = "human-gate-clerk" if critical else "factory-mechanic-loop"
+    selected_model_class = "human_only" if decision in {"critical_factory_change", "needs_human_triage"} else "balanced"
+    promotion_boundary = "requires_human_gate" if critical else "public_issue_only"
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-sdlc-feedback-loop.schema.json",
+        "record_type": "factory_sdlc_feedback_loop",
+        "loop_id": feedback_ref,
+        "created_at": utc_now(),
+        "factory_method_version": "OVERKILL_VFINAL",
+        "source_signal": {
+            "signal_type": "internal_request",
+            "source_class": "operator_supplied",
+            "sensitivity_class": "public_safe",
+            "freshness": "bounded",
+            "owner": "operator-owned-factory-instance",
+            "target_surface": "factory-method",
+            "signal_ref_public_safe": source_ref,
+            "raw_private_embedded": False,
+        },
+        "triage_decision": {
+            "decision": triage_decision_for_issue_intake(decision),
+            "route_ref": "schemas/owner-issue-intake-report.schema.json",
+            "rationale": clean_public_text(reason or title),
+            "human_gate_required": critical or decision == "needs_human_triage",
+            "rejects_chat_only_state": True,
+        },
+        "routing_decision": {
+            "router_ref": "templates/owner-issue-intake-config.json",
+            "selected_profile": selected_profile,
+            "selected_model_class": selected_model_class,
+            "selection_basis": {
+                "cost": "bounded public issue intake",
+                "speed": "dry-run candidate creation only",
+                "quality": "requires schema validation and independent review before activation",
+                "context_need": "issue title, body, labels and owner intake config",
+                "data_sensitivity": "public-safe issue fields only",
+                "tool_requirements": "factory_self_improvement issue-intake and public validators",
+                "expected_horizon": "single bounded intake cycle",
+                "fallback_route": "keep blocked for human triage without dispatching workers",
+            },
+            "model_independence_preserved": True,
+            "single_provider_assumption": False,
+        },
+        "execution_evidence": {
+            "status": "PENDING",
+            "evidence_refs": [source_ref, "templates/owner-issue-intake-config.json"],
+            "failed_outputs_consumable_as_success": False,
+            "validation_refs": [
+                "schemas/owner-issue-intake-report.schema.json",
+                "schemas/factory-sdlc-feedback-loop.schema.json",
+            ],
+        },
+        "learnback_decision": {
+            "classification": "public_issue",
+            "target_artifact_type": "issue",
+            "source_evidence_refs": [source_ref],
+            "validation_refs": [
+                "tests/test_factory_self_improvement.py",
+                "scripts/validate_public_json_artifacts.py",
+            ],
+            "promotion_boundary": promotion_boundary,
+            "rejection_rationale": "not_rejected",
+        },
+        "sovereignty_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "reusable_across_products": "bounded",
+            "memory_owner": "operator-owned-factory-instance",
+        },
+        "next_safe_action": "Validate this issue-intake loop before creating or dispatching a factory card.",
     }
 
 
@@ -572,6 +670,16 @@ def build_issue_intake_report(config: dict[str, Any], issues: list[dict[str, Any
             "dedupe_key": slug(f"{issue_ref}-{title}"),
         }
         if decision != "ignore":
+            feedback_loop = build_issue_intake_sdlc_feedback_loop(
+                issue_ref,
+                title,
+                decision,
+                reason,
+                row["dedupe_key"],
+            )
+            feedback_ref = feedback_loop["loop_id"]
+            row["sdlc_feedback_loop_ref"] = feedback_ref
+            row["sdlc_feedback_loop"] = feedback_loop
             row["factory_card_candidate"] = build_factory_card_candidate(
                 issue_ref,
                 title,
@@ -579,6 +687,7 @@ def build_issue_intake_report(config: dict[str, Any], issues: list[dict[str, Any
                 decision,
                 labels,
                 card_status,
+                feedback_ref,
             )
         decisions.append(row)
     return {
