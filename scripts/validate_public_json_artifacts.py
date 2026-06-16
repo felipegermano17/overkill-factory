@@ -108,6 +108,19 @@ AUTOMATION_GITHUB_AUTHORITIES = {"github_pr", "release_candidate", "production_o
 AUTOMATION_REPO_BOUND_AUTHORITIES = {"bounded_edit", "local_commit", "github_pr", "release_candidate", "production_operation"}
 AUTOMATION_REPO_BOUND_TARGETS = {"repo", "factory_issue", "release"}
 AUTOMATION_REQUIRED_SAFETY_CHECKS = {"public_safety_scan", "secret_safety_scan"}
+FACTORY_READINESS_SCORECARD_DIMENSIONS = {
+    "build_install_health",
+    "test_coverage_determinism",
+    "lint_static_checks",
+    "docs_onboarding_first_run",
+    "task_discovery_issue_quality",
+    "worker_profile_capability_readiness",
+    "evidence_public_private_hygiene",
+    "observability_incident_rollback",
+    "security_secrets_supply_chain",
+    "product_analytics_success_signals",
+    "autonomy_risk_human_gates",
+}
 
 
 def public_artifact_ref_error(ref: Any) -> str | None:
@@ -171,6 +184,140 @@ def add_public_ref_errors(refs: Any, at: str, errors: list[str]) -> None:
         reason = public_artifact_ref_error(ref)
         if reason:
             errors.append(f"{at}[{index}]: {reason}")
+
+
+def validate_factory_readiness_scorecard_domain(data: dict[str, Any], at: str) -> list[str]:
+    errors: list[str] = []
+    target = data.get("target") if isinstance(data.get("target"), dict) else {}
+    for field, ref in (
+        ("target.target_ref", target.get("target_ref")),
+        ("linked_feedback_loop_ref", data.get("linked_feedback_loop_ref")),
+    ):
+        if ref:
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.{field}: {reason}")
+
+    remediation_loop = data.get("remediation_loop") if isinstance(data.get("remediation_loop"), dict) else {}
+    if remediation_loop.get("loop_ref"):
+        reason = public_artifact_ref_error(remediation_loop.get("loop_ref"))
+        if reason:
+            errors.append(f"{at}.remediation_loop.loop_ref: {reason}")
+
+    dimensions = data.get("dimensions") if isinstance(data.get("dimensions"), list) else []
+    seen: set[str] = set()
+    duplicate_dimensions: set[str] = set()
+    non_pass_statuses: set[str] = set()
+    blocked_dimensions: set[str] = set()
+    remediation_dimensions: set[str] = set()
+    bounded_dimensions: set[str] = set()
+
+    for dimension_index, dimension in enumerate(dimensions):
+        if not isinstance(dimension, dict):
+            continue
+        dimension_id = str(dimension.get("dimension_id") or "").strip()
+        if dimension_id in seen:
+            duplicate_dimensions.add(dimension_id)
+        seen.add(dimension_id)
+
+        for ref_index, ref in enumerate(text_items(dimension.get("evidence_refs"))):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.dimensions[{dimension_index}].evidence_refs[{ref_index}]: {reason}")
+        remediation_target_ref = str(dimension.get("remediation_target_ref") or "").strip()
+        if remediation_target_ref:
+            reason = public_artifact_ref_error(remediation_target_ref)
+            if reason:
+                errors.append(f"{at}.dimensions[{dimension_index}].remediation_target_ref: {reason}")
+
+        status = str(dimension.get("status") or "").strip().upper()
+        severity = str(dimension.get("severity") or "").strip()
+        blocks = dimension.get("blocks_autonomous_execution") is True
+        if status != "PASS":
+            non_pass_statuses.add(dimension_id)
+        if status == "REMEDIATION_REQUIRED":
+            remediation_dimensions.add(dimension_id)
+        if status == "BOUNDED":
+            bounded_dimensions.add(dimension_id)
+        if status == "BLOCKED" or blocks:
+            blocked_dimensions.add(dimension_id)
+
+        if status == "PASS":
+            if severity != "none":
+                errors.append(f"{at}.dimensions[{dimension_index}]: PASS requires severity=none")
+            if blocks:
+                errors.append(f"{at}.dimensions[{dimension_index}]: PASS cannot block autonomous execution")
+            if remediation_target_ref != "not_required":
+                errors.append(f"{at}.dimensions[{dimension_index}]: PASS requires remediation_target_ref=not_required")
+        elif severity == "none":
+            errors.append(f"{at}.dimensions[{dimension_index}]: non-PASS status requires non-none severity")
+        elif remediation_target_ref == "not_required":
+            errors.append(f"{at}.dimensions[{dimension_index}]: non-PASS status requires remediation target")
+
+        if status == "BLOCKED" and not blocks:
+            errors.append(f"{at}.dimensions[{dimension_index}]: BLOCKED status must block autonomous execution")
+        if blocks and status != "BLOCKED":
+            errors.append(f"{at}.dimensions[{dimension_index}]: blocking dimension must use BLOCKED status")
+
+    for dimension_id in sorted(FACTORY_READINESS_SCORECARD_DIMENSIONS - seen):
+        errors.append(f"{at}: factory_readiness_scorecard missing required dimension {dimension_id}")
+    for dimension_id in sorted(seen - FACTORY_READINESS_SCORECARD_DIMENSIONS):
+        errors.append(f"{at}: factory_readiness_scorecard unknown dimension {dimension_id}")
+    for dimension_id in sorted(duplicate_dimensions):
+        errors.append(f"{at}: factory_readiness_scorecard duplicate dimension {dimension_id}")
+
+    verdict = str(data.get("verdict") or "").strip()
+    autonomy = data.get("autonomy_boundary") if isinstance(data.get("autonomy_boundary"), dict) else {}
+    allowed_scope = str(autonomy.get("allowed_scope") or "").strip()
+    autonomy_allowed = autonomy.get("autonomous_execution_allowed") is True
+    remediation_required = remediation_loop.get("required") is True
+
+    if non_pass_statuses and not remediation_required:
+        errors.append(f"{at}: factory_readiness_scorecard non-PASS dimensions require remediation_loop.required=true")
+    if blocked_dimensions:
+        if verdict != "blocked":
+            errors.append(f"{at}: factory_readiness_scorecard blocking dimensions require verdict=blocked")
+        if autonomy_allowed:
+            errors.append(f"{at}: factory_readiness_scorecard blocked verdict cannot allow autonomous execution")
+        if allowed_scope != "none":
+            errors.append(f"{at}: factory_readiness_scorecard blocked verdict requires allowed_scope=none")
+    if verdict == "blocked" and not blocked_dimensions:
+        errors.append(f"{at}: factory_readiness_scorecard verdict=blocked requires at least one blocking dimension")
+    if verdict == "ready_for_autonomy":
+        if non_pass_statuses:
+            errors.append(f"{at}: factory_readiness_scorecard ready_for_autonomy requires all dimensions PASS")
+        if not autonomy_allowed:
+            errors.append(f"{at}: factory_readiness_scorecard ready_for_autonomy requires autonomous_execution_allowed=true")
+        if allowed_scope != "material_execution":
+            errors.append(f"{at}: factory_readiness_scorecard ready_for_autonomy requires allowed_scope=material_execution")
+    if verdict == "ready_with_bounds":
+        if blocked_dimensions:
+            errors.append(f"{at}: factory_readiness_scorecard ready_with_bounds cannot include blocking dimensions")
+        if not autonomy_allowed:
+            errors.append(f"{at}: factory_readiness_scorecard ready_with_bounds requires autonomous_execution_allowed=true")
+        if allowed_scope == "none":
+            errors.append(f"{at}: factory_readiness_scorecard ready_with_bounds requires a non-none allowed_scope")
+    if verdict == "remediation_required":
+        if not remediation_required:
+            errors.append(f"{at}: factory_readiness_scorecard remediation_required requires remediation_loop.required=true")
+        if not (remediation_dimensions or bounded_dimensions):
+            errors.append(f"{at}: factory_readiness_scorecard remediation_required requires at least one non-PASS dimension")
+        if allowed_scope == "material_execution":
+            errors.append(f"{at}: factory_readiness_scorecard remediation_required cannot allow material_execution")
+
+    public_boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+    if public_boundary.get("public_safe_refs_only") is not True:
+        errors.append(f"{at}: factory_readiness_scorecard requires public_safe_refs_only=true")
+    if public_boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append(f"{at}: factory_readiness_scorecard must not embed raw private evidence")
+    if public_boundary.get("private_runtime_evidence_stays_local") is not True:
+        errors.append(f"{at}: factory_readiness_scorecard private runtime evidence must stay local")
+    if autonomy.get("not_product_acceptance") is not True:
+        errors.append(f"{at}: factory_readiness_scorecard is not product acceptance")
+    if autonomy.get("not_release_approval") is not True:
+        errors.append(f"{at}: factory_readiness_scorecard is not release approval")
+
+    return errors
 
 ANNOTATION_SCHEMA_KEYWORDS = {
     "$comment",
@@ -608,6 +755,8 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             errors.append(f"{at}: factory_sdlc_feedback_loop must not embed raw private evidence")
         if sovereignty.get("private_context_retained_outside_public_repo") is not True:
             errors.append(f"{at}: factory_sdlc_feedback_loop private context must stay outside the public repo")
+    if data.get("record_type") == "factory_readiness_scorecard":
+        errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_automation_run_target":
         trigger = data.get("trigger") if isinstance(data.get("trigger"), dict) else {}
         target = data.get("target") if isinstance(data.get("target"), dict) else {}

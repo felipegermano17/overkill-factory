@@ -18,6 +18,7 @@ intake and governance checks into structured artifacts.
 - `schemas/missing-capability-completion-plan.schema.json`
 - `schemas/execution-learnback-record.schema.json`
 - `schemas/factory-sdlc-feedback-loop.schema.json`
+- `schemas/factory-readiness-scorecard.schema.json`
 - `schemas/factory-learning-proposal.schema.json`
 - `schemas/factory-improvement-issue-candidate.schema.json`
 - `schemas/owner-issue-intake-config.schema.json`
@@ -82,6 +83,26 @@ python scripts/factoryctl.py validate-sdlc-feedback-loop \
 
 Use this before converting external research, incidents, review findings,
 runtime gaps or product quality findings into durable factory changes.
+
+## Factory Readiness Scorecard
+
+Use `factory_readiness_scorecard` before long autonomous execution to decide
+whether the factory can proceed, proceed with bounds, remediate, or block:
+
+```bash
+python scripts/factoryctl.py validate-readiness-scorecard \
+  templates/factory-readiness-scorecard.json
+```
+
+The scorecard checks the execution environment around the work: build/install,
+tests, static checks, docs/first run, task discovery, worker/profile readiness,
+public/private evidence hygiene, observability/incident/rollback, security,
+product success signals and autonomy risk.
+
+It is not product acceptance, customer readiness, release approval, security
+approval or a cockpit status. Non-passing dimensions require a remediation
+loop, and blocking dimensions must keep autonomous execution off until the
+scorecard is rerun with evidence.
 
 ## Learning Proposals
 
