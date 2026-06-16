@@ -3802,6 +3802,10 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
     is_pass = str(result.get("result") or "").upper() == "PASS"
     if is_pass and result.get("blocking_findings") is not False:
         errors.append("product_face_result PASS requires blocking_findings=false")
+    if is_pass and _list_items(result.get("uncaptured_states")):
+        errors.append("product_face_result PASS cannot include uncaptured_states")
+    if is_pass and _list_items(result.get("uncaptured_journeys")):
+        errors.append("product_face_result PASS cannot include uncaptured_journeys")
     for field in ("screenshots", "viewports", "checked_states", "user_journeys_checked", "evidence_refs"):
         if not _non_empty_string_list(result.get(field)):
             errors.append(f"product_face_result {field} must be a non-empty string array")

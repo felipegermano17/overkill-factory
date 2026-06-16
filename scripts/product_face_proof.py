@@ -37,6 +37,16 @@ REFERENCE_COMPARISON_DIMENSIONS = (
     "visual_language",
     "density_spacing",
 )
+BROWSER_CAPTURED_STATE_ALIASES = {
+    "initial-render",
+    "initial render",
+    "initial_render",
+    "initial",
+    "loaded",
+    "page-loaded",
+    "page loaded",
+}
+BROWSER_CAPTURED_JOURNEYS = ("open target", "inspect configured viewports")
 
 
 class PlaywrightUnavailable(RuntimeError):
@@ -157,7 +167,7 @@ def build_visual_artifacts(
                 "state": state,
                 "captured_at": captured_at,
                 "freshness_status": "fresh",
-                "basis": "Screenshot captured by the Product Face proof runner for this target, viewport and declared state.",
+                "basis": "Screenshot captured by the Product Face proof runner for this target, viewport and captured state.",
             }
             path = _repo_ref_path(screenshot_ref)
             if path is not None and path.is_file():
@@ -173,6 +183,89 @@ def build_visual_artifacts(
                 )
             artifacts.append(artifact)
     return artifacts
+
+
+def _unique_non_empty(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    output: list[str] = []
+    for item in items:
+        text = str(item or "").strip()
+        key = text.lower()
+        if text and key not in seen:
+            seen.add(key)
+            output.append(text)
+    return output
+
+
+def _normalized_label(value: str) -> str:
+    return str(value or "").strip().lower().replace("_", " ").replace("-", " ")
+
+
+def browser_capture_scope(*, states: list[str], journeys: list[str]) -> dict[str, Any]:
+    declared_states = _unique_non_empty(states) or ["initial-render"]
+    declared_journeys = _unique_non_empty(journeys) or list(BROWSER_CAPTURED_JOURNEYS)
+    captured_states = [
+        state
+        for state in declared_states
+        if state.strip().lower() in BROWSER_CAPTURED_STATE_ALIASES
+        or _normalized_label(state) in BROWSER_CAPTURED_STATE_ALIASES
+    ]
+    if not captured_states:
+        captured_states = ["initial-render"]
+    captured_journeys = [
+        journey
+        for journey in declared_journeys
+        if _normalized_label(journey) in {_normalized_label(item) for item in BROWSER_CAPTURED_JOURNEYS}
+    ]
+    if not captured_journeys:
+        captured_journeys = ["open target"]
+    captured_state_keys = {_normalized_label(state) for state in captured_states}
+    captured_journey_keys = {_normalized_label(journey) for journey in captured_journeys}
+    return {
+        "mode": "browser_initial_render_only",
+        "declared_states": declared_states,
+        "declared_journeys": declared_journeys,
+        "captured_states": captured_states,
+        "captured_journeys": captured_journeys,
+        "uncaptured_states": [state for state in declared_states if _normalized_label(state) not in captured_state_keys],
+        "uncaptured_journeys": [journey for journey in declared_journeys if _normalized_label(journey) not in captured_journey_keys],
+        "basis": (
+            "The repository Product Face proof runner opens the target and captures rendered viewport evidence. "
+            "It does not drive arbitrary state transitions or user journeys unless a future state driver records them."
+        ),
+    }
+
+
+def apply_capture_scope(result: dict[str, Any], scope: dict[str, Any]) -> None:
+    result["declared_states"] = list(scope.get("declared_states") or [])
+    result["declared_journeys"] = list(scope.get("declared_journeys") or [])
+    result["captured_states"] = list(scope.get("captured_states") or [])
+    result["captured_journeys"] = list(scope.get("captured_journeys") or [])
+    result["uncaptured_states"] = list(scope.get("uncaptured_states") or [])
+    result["uncaptured_journeys"] = list(scope.get("uncaptured_journeys") or [])
+    result["state_capture_policy"] = {
+        "mode": str(scope.get("mode") or "browser_initial_render_only"),
+        "cannot_claim_uncaptured_states": True,
+        "basis": str(scope.get("basis") or ""),
+    }
+    if result["uncaptured_states"] or result["uncaptured_journeys"]:
+        missing_bits = []
+        if result["uncaptured_states"]:
+            missing_bits.append("states: " + ", ".join(result["uncaptured_states"]))
+        if result["uncaptured_journeys"]:
+            missing_bits.append("journeys: " + ", ".join(result["uncaptured_journeys"]))
+        result["result"] = "WAIVED"
+        result["blocking_findings"] = True
+        result["findings_summary"] = (
+            str(result.get("findings_summary") or "Product Face proof captured.")
+            + " Declared Product Face coverage was not executed by this runner: "
+            + "; ".join(missing_bits)
+            + "."
+        )
+        result["next_action"] = (
+            "Provide Product Face state/journey drivers or separate proof artifacts for uncaptured coverage, "
+            "then rerun before product acceptance."
+        )
 
 
 def repo_ref(path: Path) -> str:
@@ -787,6 +880,9 @@ def run_playwright(
     except ImportError as exc:
         raise PlaywrightUnavailable("python Playwright package is not installed") from exc
 
+    capture_scope = browser_capture_scope(states=states, journeys=journeys)
+    captured_states = list(capture_scope["captured_states"])
+    captured_journeys = list(capture_scope["captured_journeys"])
     screenshots: list[str] = []
     console_messages: list[dict[str, str]] = []
     page_errors: list[str] = []
@@ -857,8 +953,8 @@ def run_playwright(
     result = base_result(
         target_ref=target_ref,
         viewports=viewports,
-        states=states,
-        journeys=journeys,
+        states=captured_states,
+        journeys=captured_journeys,
         tool_or_profile="playwright-static-product-face-proof",
         card_ref=card_ref,
     )
@@ -875,7 +971,7 @@ def run_playwright(
             "visual_artifacts": build_visual_artifacts(
                 target_ref=target_ref,
                 viewports=viewports,
-                states=states,
+                states=captured_states,
                 screenshot_refs=screenshots,
                 captured_at=captured_at,
             ),
@@ -910,8 +1006,8 @@ def run_playwright(
             "evidence_refs": [repo_ref(state_path), repo_ref(console_path), *screenshots],
             "usage_evidence_matrix": build_usage_evidence_matrix(
                 viewports=viewports,
-                states=states,
-                journeys=journeys,
+                states=captured_states,
+                journeys=captured_journeys,
                 evidence_refs=[repo_ref(state_path), repo_ref(console_path), *screenshots],
                 data_condition="browser-local rendered state fixture",
                 a11y_status="warn" if a11y_issues else "pass",
@@ -924,6 +1020,7 @@ def run_playwright(
             ),
         }
     )
+    apply_capture_scope(result, capture_scope)
     return result
 
 

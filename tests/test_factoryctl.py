@@ -1390,6 +1390,17 @@ class FactoryCtlTest(unittest.TestCase):
             errors,
         )
 
+    def test_product_face_pass_rejects_uncaptured_state_or_journey_overclaim(self) -> None:
+        result = product_face_result_fixture(
+            uncaptured_states=["loading"],
+            uncaptured_journeys=["checkout happy path"],
+        )
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn("product_face_result PASS cannot include uncaptured_states", errors)
+        self.assertIn("product_face_result PASS cannot include uncaptured_journeys", errors)
+
     def test_product_face_pass_accepts_resolvable_visual_artifact_with_hash(self) -> None:
         artifact_ref, artifact_hash = self.write_temp_visual_artifact()
         viewports = ["desktop 1440x900"]

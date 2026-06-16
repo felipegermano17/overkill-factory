@@ -76,8 +76,10 @@ python scripts/product_face_proof.py \
 Useful options:
 
 - `--viewport desktop=1440x900 --viewport mobile=390x844`
-- `--state loading --state error --state success`
-- `--journey "open target" --journey "inspect mobile viewport"`
+- `--state loading --state error --state success` to declare states that must
+  be proven before product acceptance.
+- `--journey "open target" --journey "inspect mobile viewport"` to declare
+  journeys that must be proven before product acceptance.
 - `--strict` to treat accessibility and overlap warnings as blocking.
 - `--force-fallback` to register bounded static evidence without a browser.
 - `--card` to bind the result to the exact factory card/slice that will later
@@ -97,6 +99,14 @@ performance note. Without Playwright, it writes a `WAIVED` result with
 `blocking_findings=true`, static file metadata, and an explicit note that no
 rendered screenshot, console, layout, accessibility tree or performance claim
 was captured.
+
+The repo runner does not drive arbitrary product states or user journeys by
+itself. It records requested states and journeys as `declared_states` and
+`declared_journeys`, but only the actually captured initial render/default
+browser journey can appear in `checked_states`, `user_journeys_checked`,
+`visual_artifacts` and `usage_evidence_matrix`. If extra states or journeys are
+declared without a state driver or separate proof artifact, the result is
+`WAIVED`, not a reusable Product Face PASS.
 
 For product-facing completion, Receipt Five must include `product_face_result`.
 A Product Face Packet is planning; a Product Face Result is proof. Browser
