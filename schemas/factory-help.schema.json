@@ -13,6 +13,7 @@
     "gate_status",
     "truth_scope",
     "factory_next_action",
+    "active_recovery_routes",
     "user_decision_required",
     "blocked_because",
     "blocked_actions",
@@ -51,6 +52,49 @@
         "command_refs": { "type": "array", "items": { "type": "string" } }
       },
       "additionalProperties": false
+    },
+    "active_recovery_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "recovery_route_id",
+          "route_digest",
+          "blocker_type",
+          "factory_owned_repair_allowed",
+          "human_gate_required",
+          "repair_owner_worker",
+          "unblock_authority_ref",
+          "downstream_freeze_scope",
+          "retry_state",
+          "operator_visible_next_action"
+        ],
+        "properties": {
+          "recovery_route_id": { "type": "string", "minLength": 1 },
+          "route_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "blocker_type": { "type": "string", "minLength": 1 },
+          "factory_owned_repair_allowed": { "type": "boolean" },
+          "human_gate_required": { "type": "boolean" },
+          "repair_owner_worker": { "type": "string", "minLength": 1 },
+          "unblock_authority_ref": { "type": "string", "minLength": 1 },
+          "downstream_freeze_scope": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "retry_state": {
+            "type": "object",
+            "required": ["attempt_number", "max_attempts", "escalation_reason"],
+            "properties": {
+              "attempt_number": { "type": "integer", "minimum": 1 },
+              "max_attempts": { "type": "integer", "minimum": 1 },
+              "escalation_reason": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "operator_visible_next_action": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
     },
     "user_decision_required": {
       "type": "array",

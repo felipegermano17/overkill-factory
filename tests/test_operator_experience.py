@@ -54,6 +54,71 @@ def write_product_card_missing_experience(tmp: Path) -> Path:
     return path
 
 
+def write_blocked_worker_result(tmp: Path, *, human_gate: bool = False) -> Path:
+    worker_id = "human-gate-clerk" if human_gate else "handoff-packer"
+    record_type = "human_gate_record" if human_gate else "handoff_packet_result"
+    blocker_type = "human_gate" if human_gate else "orchestration"
+    route_id = "recovery:test-card:human-gate" if human_gate else "recovery:test-card:handoff-repair"
+    recovery = {
+        "blocker_type": blocker_type,
+        "factory_owned_repair_allowed": not human_gate,
+        "human_gate_required": human_gate,
+        "recovery_route_id": route_id,
+        "repair_owner_worker": worker_id,
+        "repair_task_ref": f"hermes:intent:{route_id}",
+        "invalidates_refs": ["worker-result:stale-output"],
+        "supersedes_refs": ["worker-result:fresh-output"],
+        "fresh_review_required": not human_gate,
+        "fresh_review_result_ref": "worker-result:independent-reviewer:fresh-pass",
+        "unblock_authority_ref": "human_gate_record" if human_gate else "graph-requirement:fresh-review-pass",
+        "retry_policy": {
+            "max_attempts": 3,
+            "attempt_number": 1,
+            "attempt_number_role": "planner_seed_not_runtime_counter",
+            "runtime_attempt_source": "hermes_task_history",
+            "runtime_attempt_marker": "factory_recovery_attempt",
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "stop_classes": ["human_gate_required", "repeated_failure"],
+            "escalation_reason": "only after bounded recovery fails",
+        },
+        "hermes_runtime_boundary": {
+            "runtime_authority": "hermes_kanban",
+            "uses_native_kanban_primitives": True,
+            "local_state_authority": False,
+        },
+        "downstream_freeze_scope": ["next worker", "done promotion"],
+    }
+    if human_gate:
+        recovery["fresh_review_result_ref"] = "human_gate_record"
+    result = {
+        "$schema": "https://overkill-factory.dev/schemas/worker-result.schema.json",
+        "record_type": record_type,
+        "created_at": "2026-06-16T00:00:00+00:00",
+        "worker": {"id": worker_id, "name": "Fixture Worker", "factory_phase": "F13"},
+        "card_ref": {
+            "card_id": "VAL-SOLANA-QUASAR-R3",
+            "slice_id": "VAL_FACTORY_HEAVY_03",
+            "phase": "F13",
+            "risk_effective": "R3",
+            "surfaces": ["solana-quasar"],
+        },
+        "result": "BLOCKED",
+        "blocking_findings": True,
+        "findings_summary": "Synthetic blocked fixture.",
+        "tool_or_profile": "fixture-tool",
+        "executed_by": "fixture-runner",
+        "evidence_refs": ["README.md"],
+        "evidence_kind": "synthetic",
+        "reusable_for_product": False,
+        "next_action": "follow the recovery route",
+        "recovery_recommendation": recovery,
+    }
+    path = tmp / ("human-gate-block.json" if human_gate else "recoverable-block.json")
+    path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 class OperatorExperienceTest(unittest.TestCase):
     def test_factoryctl_exposes_single_operator_entrypoint(self) -> None:
         help_text = run_factoryctl("--help").stdout
@@ -122,6 +187,52 @@ class OperatorExperienceTest(unittest.TestCase):
         self.assertIn(
             "populate card.product_experience_plan with public-safe contract data or attach the required worker evidence",
             payload["evidence_needed"],
+        )
+
+    def test_help_next_exposes_recoverable_block_as_factory_recovery_route(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            write_blocked_worker_result(tmp)
+            result = run_factoryctl(
+                "help-next",
+                "--card",
+                "examples/cards/v35_valid_onchain_auditor_scan.md",
+                "--worker-results-dir",
+                str(tmp),
+            )
+            payload = json.loads(result.stdout)
+
+        self.assertEqual(len(payload["active_recovery_routes"]), 1)
+        route = payload["active_recovery_routes"][0]
+        self.assertEqual(route["recovery_route_id"], "recovery:test-card:handoff-repair")
+        self.assertTrue(route["factory_owned_repair_allowed"])
+        self.assertFalse(route["human_gate_required"])
+        self.assertEqual(route["repair_owner_worker"], "handoff-packer")
+        self.assertIn("next worker", route["downstream_freeze_scope"])
+        self.assertIn("factoryctl recovery-plan", payload["factory_next_action"]["command_refs"])
+        self.assertIn("recovery route recovery:test-card:handoff-repair", payload["factory_next_action"]["action"])
+
+    def test_help_next_keeps_human_gate_recovery_as_user_authority(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            write_blocked_worker_result(tmp, human_gate=True)
+            result = run_factoryctl(
+                "help-next",
+                "--card",
+                "examples/cards/v35_valid_onchain_auditor_scan.md",
+                "--worker-results-dir",
+                str(tmp),
+            )
+            payload = json.loads(result.stdout)
+
+        self.assertEqual(len(payload["active_recovery_routes"]), 1)
+        route = payload["active_recovery_routes"][0]
+        self.assertEqual(route["recovery_route_id"], "recovery:test-card:human-gate")
+        self.assertFalse(route["factory_owned_repair_allowed"])
+        self.assertTrue(route["human_gate_required"])
+        self.assertIn("human gate record", route["operator_visible_next_action"])
+        self.assertTrue(
+            any(decision["decision_type"] == "authority_required" for decision in payload["user_decision_required"])
         )
 
     def test_doctor_reports_public_install_health_without_real_hermes_e2e(self) -> None:
