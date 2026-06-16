@@ -1,0 +1,74 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-automation-run-record.schema.json",
+  "record_type": "factory_automation_run_record",
+  "automation_id": "automation-public-readiness-audit",
+  "run_id": "run-public-readiness-audit-template",
+  "started_at": "2026-06-16T00:00:00+00:00",
+  "completed_at": "2026-06-16T00:10:00+00:00",
+  "trigger_observed": {
+    "trigger_type": "heartbeat",
+    "trigger_ref_public_safe": "external:public-recurring-audit-trigger",
+    "observed_at": "2026-06-16T00:00:00+00:00"
+  },
+  "target_resolved": {
+    "target_kind": "repo",
+    "target_ref": "external:public-overkill-factory-repo",
+    "scope_summary": "Public repository audit record with no private runtime evidence."
+  },
+  "authority_level": "read_only",
+  "status": "completed",
+  "allowed_actions_executed": true,
+  "actions_taken": [
+    "Inspected public-safe repository contracts.",
+    "Validated public JSON artifacts.",
+    "Recorded next safe action without claiming production runtime proof."
+  ],
+  "required_preflight_checks": [
+    "git_state_probe",
+    "public_safety_scan"
+  ],
+  "required_post_checks": [
+    "public_json_artifact_validation",
+    "public_safety_scan"
+  ],
+  "checks_run": [
+    {
+      "check_id": "git_state_probe",
+      "phase": "preflight",
+      "status": "PASS",
+      "evidence_ref": "external:public-git-state-summary"
+    },
+    {
+      "check_id": "public_json_artifact_validation",
+      "phase": "post",
+      "status": "PASS",
+      "evidence_ref": "scripts/validate_public_json_artifacts.py"
+    },
+    {
+      "check_id": "public_safety_scan",
+      "phase": "post",
+      "status": "PASS",
+      "evidence_ref": "scripts/public_safety_scan.py"
+    }
+  ],
+  "evidence_refs_public_safe": [
+    "schemas/factory-automation-run-record.schema.json",
+    "templates/factory-automation-run-record.json"
+  ],
+  "git_state": {
+    "branch": "main",
+    "head_sha": "template-only",
+    "dirty_state": "unknown",
+    "remote_state": "unknown",
+    "publication_state": "no_publication_attempted"
+  },
+  "issues_created_or_updated": [],
+  "prs_created_or_updated": [],
+  "next_safe_action": "Use this record shape only after the real automation run has produced current checks.",
+  "residual_risk": "Template proves only the public contract shape, not any live automation execution.",
+  "public_artifact_policy": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "no_raw_screenshots_or_logs": true
+  }
+}

@@ -104,6 +104,10 @@ RAW_RESEARCH_FIELDS = {
     "local_capture_path",
     "private_capture_path",
 }
+AUTOMATION_GITHUB_AUTHORITIES = {"github_pr", "release_candidate", "production_operation"}
+AUTOMATION_REPO_BOUND_AUTHORITIES = {"bounded_edit", "local_commit", "github_pr", "release_candidate", "production_operation"}
+AUTOMATION_REPO_BOUND_TARGETS = {"repo", "factory_issue", "release"}
+AUTOMATION_REQUIRED_SAFETY_CHECKS = {"public_safety_scan", "secret_safety_scan"}
 
 
 def public_artifact_ref_error(ref: Any) -> str | None:
@@ -134,6 +138,39 @@ def public_artifact_ref_error(ref: Any) -> str | None:
     if normalized.startswith((".tmp/", "tmp/", "reports/private/", "private/", "run-evidence/")) or "/.tmp/" in normalized:
         return "private or transient evidence location"
     return None
+
+
+def text_items(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def normalized_check_ids(value: Any) -> set[str]:
+    return {item.lower() for item in text_items(value)}
+
+
+def passed_check_ids(checks: Any, *, phase: str | None = None) -> set[str]:
+    if not isinstance(checks, list):
+        return set()
+    passed: set[str] = set()
+    for check in checks:
+        if not isinstance(check, dict):
+            continue
+        if phase is not None and str(check.get("phase") or "").strip().lower() != phase:
+            continue
+        if str(check.get("status") or "").strip().upper() == "PASS":
+            passed.add(str(check.get("check_id") or "").strip().lower())
+    return passed
+
+
+def add_public_ref_errors(refs: Any, at: str, errors: list[str]) -> None:
+    for index, ref in enumerate(text_items(refs)):
+        reason = public_artifact_ref_error(ref)
+        if reason:
+            errors.append(f"{at}[{index}]: {reason}")
 
 ANNOTATION_SCHEMA_KEYWORDS = {
     "$comment",
@@ -512,6 +549,109 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             errors.append(f"{at}: production readiness requires production_strict or customer_validated proof")
         if acceptance.get("customer_ready_claimed") is True and proof_level != "customer_validated":
             errors.append(f"{at}: customer readiness requires customer_validated proof")
+    if data.get("record_type") == "factory_automation_run_target":
+        trigger = data.get("trigger") if isinstance(data.get("trigger"), dict) else {}
+        target = data.get("target") if isinstance(data.get("target"), dict) else {}
+        for field, ref in (
+            ("trigger.trigger_ref_public_safe", trigger.get("trigger_ref_public_safe")),
+            ("target.target_ref", target.get("target_ref")),
+            ("runtime_target_ref", data.get("runtime_target_ref")),
+            ("profile_binding_ref", data.get("profile_binding_ref")),
+        ):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.{field}: {reason}")
+        authority = str(data.get("authority_level") or "").strip()
+        if authority in AUTOMATION_GITHUB_AUTHORITIES:
+            preflight_missing = sorted(AUTOMATION_REQUIRED_SAFETY_CHECKS - normalized_check_ids(data.get("required_preflight_checks")))
+            post_missing = sorted(AUTOMATION_REQUIRED_SAFETY_CHECKS - normalized_check_ids(data.get("required_post_checks")))
+            if preflight_missing:
+                errors.append(f"{at}: GitHub authority requires preflight checks: {', '.join(preflight_missing)}")
+            if post_missing:
+                errors.append(f"{at}: GitHub authority requires post checks: {', '.join(post_missing)}")
+            if not text_items(data.get("human_gate_triggers")):
+                errors.append(f"{at}: GitHub authority requires human_gate_triggers")
+        policy = data.get("public_artifact_policy") if isinstance(data.get("public_artifact_policy"), dict) else {}
+        if policy.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}.public_artifact_policy.public_safe_refs_only must be true")
+        if policy.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}.public_artifact_policy.raw_private_evidence_embedded must be false")
+        if policy.get("no_raw_screenshots_or_logs") is not True:
+            errors.append(f"{at}.public_artifact_policy.no_raw_screenshots_or_logs must be true")
+        if target.get("target_kind") == "external_research_track":
+            forbidden_text = " ".join(text_items(data.get("forbidden_actions"))).lower()
+            if "raw" not in forbidden_text or "private" not in forbidden_text:
+                errors.append(f"{at}: external research automation must forbid raw/private evidence publication")
+    if data.get("record_type") == "factory_automation_run_record":
+        trigger = data.get("trigger_observed") if isinstance(data.get("trigger_observed"), dict) else {}
+        target = data.get("target_resolved") if isinstance(data.get("target_resolved"), dict) else {}
+        for field, ref in (
+            ("trigger_observed.trigger_ref_public_safe", trigger.get("trigger_ref_public_safe")),
+            ("target_resolved.target_ref", target.get("target_ref")),
+        ):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.{field}: {reason}")
+        add_public_ref_errors(data.get("evidence_refs_public_safe"), f"{at}.evidence_refs_public_safe", errors)
+        add_public_ref_errors(data.get("issues_created_or_updated"), f"{at}.issues_created_or_updated", errors)
+        add_public_ref_errors(data.get("prs_created_or_updated"), f"{at}.prs_created_or_updated", errors)
+        checks = data.get("checks_run") if isinstance(data.get("checks_run"), list) else []
+        for index, check in enumerate(checks):
+            if not isinstance(check, dict):
+                continue
+            reason = public_artifact_ref_error(check.get("evidence_ref"))
+            if reason:
+                errors.append(f"{at}.checks_run[{index}].evidence_ref: {reason}")
+        authority = str(data.get("authority_level") or "").strip()
+        status = str(data.get("status") or "").strip().lower()
+        target_kind = str(target.get("target_kind") or "").strip()
+        if authority in AUTOMATION_REPO_BOUND_AUTHORITIES or target_kind in AUTOMATION_REPO_BOUND_TARGETS:
+            git_state = data.get("git_state") if isinstance(data.get("git_state"), dict) else None
+            if git_state is None:
+                errors.append(f"{at}: repo-bound automation run requires git_state")
+            elif not str(git_state.get("publication_state") or "").strip():
+                errors.append(f"{at}.git_state: publication_state must distinguish local work from GitHub publication")
+        if status == "completed":
+            missing_post = sorted(normalized_check_ids(data.get("required_post_checks")) - passed_check_ids(checks, phase="post"))
+            if missing_post:
+                errors.append(f"{at}: completed automation run requires passed post checks: {', '.join(missing_post)}")
+            if not data.get("completed_at"):
+                errors.append(f"{at}: completed automation run requires completed_at")
+            if not checks:
+                errors.append(f"{at}: completed automation run requires checks_run")
+            if not text_items(data.get("evidence_refs_public_safe")):
+                errors.append(f"{at}: completed automation run requires evidence_refs_public_safe")
+        if status in {"blocked", "failed"} and not str(data.get("blocked_reason") or "").strip():
+            errors.append(f"{at}: {status} automation run requires blocked_reason")
+        if authority in AUTOMATION_GITHUB_AUTHORITIES:
+            missing = sorted(AUTOMATION_REQUIRED_SAFETY_CHECKS - passed_check_ids(checks))
+            if missing:
+                errors.append(f"{at}: GitHub authority requires passed safety checks: {', '.join(missing)}")
+        if target_kind == "external_research_track":
+            sources = data.get("external_research_sources") if isinstance(data.get("external_research_sources"), list) else []
+            if not sources:
+                errors.append(f"{at}: external research automation run requires external_research_sources")
+            serialized = json.dumps(data, sort_keys=True)
+            present_raw_fields = sorted(field for field in RAW_RESEARCH_FIELDS if f'"{field}"' in serialized)
+            if present_raw_fields:
+                errors.append(f"{at}: external research automation run must not contain raw dump fields: {', '.join(present_raw_fields)}")
+            for index, source in enumerate(sources):
+                if not isinstance(source, dict):
+                    continue
+                source_url = str(source.get("source_url") or "").strip()
+                if not source_url.startswith(("https://", "http://")):
+                    errors.append(f"{at}.external_research_sources[{index}].source_url must be a public URL")
+                if PRIVATE_MARKERS.search(source_url):
+                    errors.append(f"{at}.external_research_sources[{index}].source_url contains private marker")
+                if source.get("raw_capture_embedded") is not False:
+                    errors.append(f"{at}.external_research_sources[{index}].raw_capture_embedded must be false")
+        policy = data.get("public_artifact_policy") if isinstance(data.get("public_artifact_policy"), dict) else {}
+        if policy.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}.public_artifact_policy.public_safe_refs_only must be true")
+        if policy.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}.public_artifact_policy.raw_private_evidence_embedded must be false")
+        if policy.get("no_raw_screenshots_or_logs") is not True:
+            errors.append(f"{at}.public_artifact_policy.no_raw_screenshots_or_logs must be true")
     if data.get("record_type") == "product_face_result" and data.get("reusable_for_product") is True:
         if not str(data.get("packet_ref") or "").strip():
             errors.append(f"{at}: reusable product_face_result requires packet_ref")
