@@ -173,7 +173,8 @@ Intake -> Source Ledger -> Source Resolution -> Outcome & Discovery
 -> Risk/Dependency/Access/Compliance/Budget Gates -> Security Architecture
 -> Software Plan -> Experience Plan -> Data Plan -> Evals Plan when relevant
 -> Spec Graph -> Loop Plan -> Autonomy Readiness -> Ready Gate
--> Runtime execution -> Verification -> Review -> Human Gate when required
+-> Runtime execution -> Verification -> Product Face Result when product-facing
+-> Experience Gate -> Review -> Human Gate when required
 -> Completion Audit -> Production Operations -> Release or Block
 -> Learnback -> Factory Maturity Audit
 ```

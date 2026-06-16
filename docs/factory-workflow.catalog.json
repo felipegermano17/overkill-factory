@@ -178,6 +178,7 @@
         "product_experience_plan exists and names surface_pack",
         "product_face_packet exists and names required states and proof",
         "surface_evidence_profile or surface_evidence_profiles are declared",
+        "product_delivery_quality_profile_ref or product_delivery_quality_profile is declared",
         "professional_design_process exists before product-facing implementation"
       ],
       "operator_visible_summary": "Factory is defining the product surface, states, experience bar and proof before implementation.",
@@ -340,13 +341,16 @@
       "phase_name": "Verification",
       "entry_conditions": ["implementation or proof exists"],
       "required_artifacts": ["verification_plan", "verification_result"],
-      "optional_artifacts": ["qa_verification_plan"],
+      "optional_artifacts": ["qa_verification_plan", "product_face_result"],
       "required_gates": ["Verification Gate"],
       "required_workers": ["qa-verification-worker"],
       "allowed_next_actions": ["run named checks and record outputs"],
       "blocked_actions": ["claim done without command evidence"],
       "output_locations": ["card.verification_plan", "receipt.verification_commands"],
-      "completion_detection": ["verification commands and results are attached"],
+      "completion_detection": [
+        "verification commands and results are attached",
+        "product-facing work has product_face_result with usage_evidence_matrix before completion"
+      ],
       "operator_visible_summary": "Factory is proving the work with checks.",
       "maintainer_visible_details": "Verification is scoped to the card and cannot be implied.",
       "related_schema_refs": ["schemas/qa-verification-plan.schema.json"],
@@ -418,7 +422,10 @@
       "allowed_next_actions": ["reconcile receipt with evidence"],
       "blocked_actions": ["mark done without Receipt Five"],
       "output_locations": ["card.receipt_five", "receipt artifact"],
-      "completion_detection": ["changed, artifacts, commands, review and next action exist"],
+      "completion_detection": [
+        "changed, artifacts, commands, review and next action exist",
+        "product-facing receipts include Product Face result evidence refs"
+      ],
       "operator_visible_summary": "Factory is preparing the done receipt.",
       "maintainer_visible_details": "Receipt Five is the durable proof boundary.",
       "related_schema_refs": ["schemas/receipt-five.schema.json"],

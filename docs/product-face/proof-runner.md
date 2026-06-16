@@ -163,6 +163,8 @@ Full Product Face PASS requires:
 - mobile screenshot;
 - console check;
 - important UI-state coverage;
+- usage evidence matrix tying journey, state, viewport, data condition,
+  accessibility status, performance status and evidence refs together;
 - accessibility basics;
 - overlap/layout check;
 - performance note;

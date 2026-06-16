@@ -470,6 +470,17 @@ PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS = (
     "professional_design_process_comparison",
     "reference_quality_comparison",
 )
+USAGE_EVIDENCE_MATRIX_REQUIRED_FIELDS = (
+    "journey",
+    "state",
+    "viewport",
+    "data_condition",
+    "a11y_status",
+    "performance_status",
+    "reviewer",
+    "basis",
+)
+USAGE_EVIDENCE_ALLOWED_STATUSES = {"pass", "warn", "fail"}
 VISUAL_QUALITY_ALLOWED_RESULTS = {"PASS", "PASS_WITH_RESIDUALS", "BLOCK"}
 DOMAIN_PROOF_ALLOWED_STATUSES = {"PASS", "WARN", "FAIL", "WAIVED"}
 REFERENCE_RESEARCH_SOURCE_TYPES = {
@@ -3364,6 +3375,56 @@ def validate_surface_evidence_profile_result(
     return errors
 
 
+def _usage_evidence_matrix_entries(result: dict[str, Any]) -> list[dict[str, Any]]:
+    matrix = result.get("usage_evidence_matrix")
+    if not isinstance(matrix, list):
+        return []
+    return [entry for entry in matrix if isinstance(entry, dict)]
+
+
+def _normalized_usage_value(value: Any) -> str:
+    return str(value or "").strip().lower()
+
+
+def _usage_viewport_family(value: Any) -> str:
+    text = _normalized_usage_value(value)
+    if "mobile" in text or "390" in text or "375" in text or "360" in text:
+        return "mobile"
+    if "desktop" in text or "1440" in text or "1366" in text:
+        return "desktop"
+    if "tablet" in text or "768" in text:
+        return "tablet"
+    if "laptop" in text or "1280" in text:
+        return "laptop"
+    return text
+
+
+def validate_usage_evidence_matrix(result: dict[str, Any], *, is_pass: bool) -> list[str]:
+    errors: list[str] = []
+    matrix = result.get("usage_evidence_matrix")
+    if is_pass and (not isinstance(matrix, list) or not matrix):
+        return ["product_face_result.usage_evidence_matrix is required for PASS"]
+    if not isinstance(matrix, list):
+        return errors
+
+    for index, entry in enumerate(matrix):
+        if not isinstance(entry, dict):
+            errors.append(f"product_face_result.usage_evidence_matrix[{index}] must be an object")
+            continue
+        for field in USAGE_EVIDENCE_MATRIX_REQUIRED_FIELDS:
+            if not _non_empty_text(entry.get(field)):
+                errors.append(f"product_face_result.usage_evidence_matrix[{index}].{field} is required")
+        if not _non_empty_string_list(entry.get("evidence_refs")):
+            errors.append(f"product_face_result.usage_evidence_matrix[{index}].evidence_refs must be a non-empty string array")
+        for field in ("a11y_status", "performance_status"):
+            status = _normalized_usage_value(entry.get(field))
+            if status and status not in USAGE_EVIDENCE_ALLOWED_STATUSES:
+                errors.append(f"product_face_result.usage_evidence_matrix[{index}].{field} must be pass, warn or fail")
+            if is_pass and status == "fail":
+                errors.append(f"product_face_result PASS cannot include usage_evidence_matrix[{index}].{field}=fail")
+    return errors
+
+
 def validate_product_face_result(result: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     errors.extend(_validate_surface_evidence_profile_declarations(result, at="product_face_result"))
@@ -3426,6 +3487,7 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
         elif not _non_empty_text(professional_comparison.get("basis")):
             errors.append("product_face_result.professional_design_process_comparison.basis is required")
     errors.extend(validate_reference_quality_comparison(result.get("reference_quality_comparison"), is_pass=is_pass))
+    errors.extend(validate_usage_evidence_matrix(result, is_pass=is_pass))
     for profile_id in _declared_surface_evidence_profiles(result):
         errors.extend(validate_surface_evidence_profile_result(result, profile_id, is_pass=is_pass))
     return errors
@@ -3442,6 +3504,14 @@ def _required_product_states(card: dict[str, Any]) -> list[str]:
     return sorted({state.lower() for state in states})
 
 
+def _required_product_journeys(card: dict[str, Any]) -> list[str]:
+    plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
+    packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
+    journeys = _list_items(plan.get("main_flows"))
+    journeys.extend(_list_items(packet.get("main_flows")))
+    return sorted({_normalized_usage_value(journey) for journey in journeys if _normalized_usage_value(journey)})
+
+
 def _required_product_proofs(card: dict[str, Any]) -> list[str]:
     plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
     packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
@@ -3449,6 +3519,79 @@ def _required_product_proofs(card: dict[str, Any]) -> list[str]:
     proofs.extend(_list_items(packet.get("proof_required")))
     proofs.extend(_list_items(packet.get("visual_evidence_plan")))
     return [proof.lower() for proof in proofs]
+
+
+def _format_usage_combinations(combinations: list[tuple[str, str, str]]) -> str:
+    sample = ["/".join(combination) for combination in combinations[:10]]
+    remaining = len(combinations) - len(sample)
+    suffix = f" (+{remaining} more)" if remaining > 0 else ""
+    return ", ".join(sample) + suffix
+
+
+def validate_usage_evidence_matrix_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    entries = _usage_evidence_matrix_entries(result)
+    if not entries:
+        return ["product_face_result.usage_evidence_matrix is required for product-facing completion"]
+
+    covered_journeys = {_normalized_usage_value(entry.get("journey")) for entry in entries}
+    covered_states = {_normalized_usage_value(entry.get("state")) for entry in entries}
+    covered_viewports = {_usage_viewport_family(entry.get("viewport")) for entry in entries}
+    covered_combinations = {
+        (
+            _normalized_usage_value(entry.get("journey")),
+            _normalized_usage_value(entry.get("state")),
+            _usage_viewport_family(entry.get("viewport")),
+        )
+        for entry in entries
+    }
+
+    result_journeys = [_normalized_usage_value(journey) for journey in _list_items(result.get("user_journeys_checked"))]
+    missing_result_journeys = [journey for journey in result_journeys if journey and journey not in covered_journeys]
+    if missing_result_journeys:
+        errors.append(
+            "product_face_result.usage_evidence_matrix missing checked journey coverage: "
+            + ", ".join(missing_result_journeys)
+        )
+
+    missing_planned_journeys = [journey for journey in _required_product_journeys(card) if journey not in covered_journeys]
+    if missing_planned_journeys:
+        errors.append(
+            "product_face_result.usage_evidence_matrix missing planned flow coverage: "
+            + ", ".join(missing_planned_journeys)
+        )
+
+    missing_states = [state for state in _required_product_states(card) if state not in covered_states]
+    if missing_states:
+        errors.append("product_face_result.usage_evidence_matrix missing state coverage: " + ", ".join(missing_states))
+
+    required_viewport_families = sorted(
+        {family for family in (_usage_viewport_family(viewport) for viewport in _list_items(result.get("viewports"))) if family}
+    )
+    missing_viewports = [viewport for viewport in required_viewport_families if viewport not in covered_viewports]
+    if missing_viewports:
+        errors.append(
+            "product_face_result.usage_evidence_matrix missing viewport coverage: "
+            + ", ".join(missing_viewports)
+        )
+
+    required_journeys = sorted({journey for journey in result_journeys if journey} | set(_required_product_journeys(card)))
+    required_states = _required_product_states(card) or [
+        state for state in (_normalized_usage_value(state) for state in _list_items(result.get("checked_states"))) if state
+    ]
+    missing_combinations = [
+        (journey, state, viewport)
+        for journey in required_journeys
+        for state in required_states
+        for viewport in required_viewport_families
+        if (journey, state, viewport) not in covered_combinations
+    ]
+    if missing_combinations:
+        errors.append(
+            "product_face_result.usage_evidence_matrix missing required journey/state/viewport combinations: "
+            + _format_usage_combinations(missing_combinations)
+        )
+    return errors
 
 
 def validate_product_face_result_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
@@ -3483,6 +3626,7 @@ def validate_product_face_result_against_card(result: dict[str, Any], card: dict
     missing_states = [state for state in _required_product_states(card) if state not in checked_states]
     if missing_states:
         errors.append("product_face_result missing states promised by Product Face Packet/Experience Plan: " + ", ".join(missing_states))
+    errors.extend(validate_usage_evidence_matrix_against_card(result, card))
 
     proofs = _required_product_proofs(card)
     viewports = " ".join(_list_items(result.get("viewports"))).lower()
