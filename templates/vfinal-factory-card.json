@@ -871,6 +871,14 @@
     "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
     "done_definition": ["experience evidence exists", "states are checked", "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"],
     "human_gate": {"required": false, "approver": "", "reason": "No material human product decision in this template."},
+    "prototype_decision": "prototype_required_when product uncertainty or interaction risk remains before implementation",
+    "device_or_viewport_scope": ["primary desktop or command viewport", "secondary narrow/mobile viewport when user-facing"],
+    "accessibility_scope": ["labels", "keyboard path or command help", "contrast/readability basics"],
+    "performance_scope": ["basic render or command responsiveness", "no blocking interaction latency in primary flow"],
+    "data_context": "Use realistic empty, loading, success, blocked, error and sensitive-data-safe states.",
+    "docs_onboarding": ["first-success path for the produced surface", "operator/user handoff notes when needed"],
+    "experience_qa": ["state coverage", "viewport/device coverage", "accessibility basics", "performance note"],
+    "product_face_result_required": true,
     "evidence_refs": ["templates/vfinal-factory-card.json"]
   },
   "product_face_packet": {

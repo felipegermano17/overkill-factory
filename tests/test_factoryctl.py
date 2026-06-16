@@ -440,6 +440,10 @@ PRIVATE_PATH_RE = re.compile(
 class FactoryCtlTest(unittest.TestCase):
     def test_local_web_cockpit_card_routes_without_discord_bridge(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "local-web-cockpit-factory-slice" / "card.md")
+        card["product_experience_plan"] = {
+            **factoryctl.load_json_like(ROOT / "templates" / "product-experience-plan.json"),
+            **card["product_experience_plan"],
+        }
         report = factoryctl.build_gate_report(card)
 
         self.assertEqual(report["card_validation_errors"], [])
@@ -741,6 +745,66 @@ class FactoryCtlTest(unittest.TestCase):
         card["product_face_result_ref"] = ".tmp/factory-runs/product-face/product-face-result.json"
 
         self.assertEqual(factoryctl.validate_card(card), [])
+
+    def test_product_experience_runtime_enforces_schema_required_fields(self) -> None:
+        schema = factoryctl.load_json_like(ROOT / "schemas" / "product-experience-plan.schema.json")
+        required_fields = schema["required"]
+
+        for field in required_fields:
+            with self.subTest(field=field):
+                card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+                card["surfaces"] = ["frontend", "product-face"]
+                card["capability_pack_contract"] = dict(card["capability_pack_contract"])
+                card["capability_pack_contract"]["covered_surfaces"] = ["frontend", "product-face"]
+                card["method_contract"] = dict(card["method_contract"])
+                card["method_contract"]["required_plans"] = ["software_development_plan", "product_experience_plan"]
+                card["product_experience_plan"] = factoryctl.load_json_like(
+                    ROOT / "templates" / "product-experience-plan.json"
+                )
+                card["product_experience_plan"].pop(field, None)
+
+                errors = factoryctl.validate_card(card)
+
+                self.assertTrue(
+                    any(error.startswith(f"product_experience_plan.{field}") for error in errors),
+                    errors,
+                )
+
+    def test_product_experience_runtime_enforces_schema_field_shapes(self) -> None:
+        cases = [
+            (
+                "product_face_result_required",
+                lambda plan: plan.__setitem__("product_face_result_required", "true"),
+                "product_experience_plan.product_face_result_required must be boolean",
+            ),
+            (
+                "human_gate_reason",
+                lambda plan: plan.__setitem__("human_gate", {"required": False, "approver": ""}),
+                "product_experience_plan.human_gate.reason is required",
+            ),
+            (
+                "visual_quality_bar_required_fields",
+                lambda plan: plan.__setitem__("visual_quality_bar", {"reference_quality_bar": "Professional bar"}),
+                "product_experience_plan.visual_quality_bar.anti_generic_criteria is required",
+            ),
+        ]
+
+        for name, mutate, expected_error in cases:
+            with self.subTest(name=name):
+                card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+                card["surfaces"] = ["frontend", "product-face"]
+                card["capability_pack_contract"] = dict(card["capability_pack_contract"])
+                card["capability_pack_contract"]["covered_surfaces"] = ["frontend", "product-face"]
+                card["method_contract"] = dict(card["method_contract"])
+                card["method_contract"]["required_plans"] = ["software_development_plan", "product_experience_plan"]
+                card["product_experience_plan"] = factoryctl.load_json_like(
+                    ROOT / "templates" / "product-experience-plan.json"
+                )
+                mutate(card["product_experience_plan"])
+
+                errors = factoryctl.validate_card(card)
+
+                self.assertIn(expected_error, errors)
 
     def test_data_metrics_plan_rejects_prose_only_or_empty_delivery_proof(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")

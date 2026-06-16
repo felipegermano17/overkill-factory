@@ -29,6 +29,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from public_refs import contains_private_kanban_task_marker, public_safe_kanban_ref, sanitize_public_refs  # noqa: E402
+from validate_public_json_artifacts import load_schemas, validate_node  # noqa: E402
 
 
 def installed_asset_root() -> Path | None:
@@ -379,7 +380,17 @@ PRODUCT_EXPERIENCE_REQUIRED_FIELDS = (
     "reviewers_required",
     "done_definition",
     "human_gate",
+    "prototype_decision",
+    "device_or_viewport_scope",
+    "accessibility_scope",
+    "performance_scope",
+    "data_context",
+    "docs_onboarding",
+    "experience_qa",
+    "product_face_result_required",
 )
+PRODUCT_EXPERIENCE_BOOLEAN_FIELDS = {"product_face_result_required"}
+PRODUCT_EXPERIENCE_SCHEMA_NAME = "product-experience-plan.schema.json"
 PRODUCT_FACE_PACKET_REQUIRED_FIELDS = (
     "surface",
     "mode",
@@ -1062,6 +1073,26 @@ def load_json_like(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"{public_path_ref(path)} must contain a JSON object")
     return data
+
+
+_BUNDLED_SCHEMAS: dict[str, dict[str, Any]] | None = None
+
+
+def bundled_schemas() -> dict[str, dict[str, Any]]:
+    global _BUNDLED_SCHEMAS
+    if _BUNDLED_SCHEMAS is None:
+        schemas = load_schemas()
+        schema_dir = ROOT / "schemas"
+        if schema_dir.exists():
+            for path in sorted(schema_dir.glob("*.json")):
+                schema = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(schema, dict):
+                    schemas[path.name] = schema
+                    schema_id = str(schema.get("$id") or "")
+                    if schema_id:
+                        schemas[schema_id.rsplit("/", 1)[-1]] = schema
+        _BUNDLED_SCHEMAS = schemas
+    return _BUNDLED_SCHEMAS
 
 
 def load_profile_bindings() -> dict[str, dict[str, Any]]:
@@ -2616,12 +2647,34 @@ def validate_product_face_packet(packet: dict[str, Any], *, strict: bool) -> lis
     return errors
 
 
+def _format_product_experience_schema_error(error: str) -> str:
+    missing = re.fullmatch(r"(product_experience_plan(?:\.[^:]+)?): missing required field ([A-Za-z0-9_]+)", error)
+    if missing:
+        return f"{missing.group(1)}.{missing.group(2)} is required"
+    expected_type = re.fullmatch(r"(product_experience_plan(?:\.[^:]+)?): expected type ([A-Za-z0-9_]+)", error)
+    if expected_type:
+        return f"{expected_type.group(1)} must be {expected_type.group(2)}"
+    return error
+
+
+def validate_product_experience_plan_schema(plan: dict[str, Any]) -> list[str]:
+    schemas = bundled_schemas()
+    schema = schemas.get(PRODUCT_EXPERIENCE_SCHEMA_NAME)
+    if not isinstance(schema, dict):
+        return [f"{PRODUCT_EXPERIENCE_SCHEMA_NAME} is unavailable for product_experience_plan validation"]
+    errors = validate_node(schema, plan, "product_experience_plan", schemas=schemas, root_schema=schema)
+    return [_format_product_experience_schema_error(error) for error in errors]
+
+
 def validate_product_experience_plan(plan: dict[str, Any]) -> list[str]:
-    errors: list[str] = []
+    errors: list[str] = validate_product_experience_plan_schema(plan)
     errors.extend(_validate_surface_evidence_profile_declarations(plan, at="product_experience_plan"))
     for field in PRODUCT_EXPERIENCE_REQUIRED_FIELDS:
         value = plan.get(field)
-        if isinstance(value, list):
+        if field in PRODUCT_EXPERIENCE_BOOLEAN_FIELDS:
+            if not isinstance(value, bool):
+                errors.append(f"product_experience_plan.{field} must be boolean")
+        elif isinstance(value, list):
             if not _list_items(value):
                 errors.append(f"product_experience_plan.{field} must be a non-empty array")
         elif isinstance(value, dict):
@@ -2643,7 +2696,9 @@ def validate_product_experience_plan(plan: dict[str, Any]) -> list[str]:
         if human_gate.get("required") is True and not _non_empty_text(human_gate.get("approver")):
             errors.append("product_experience_plan.human_gate.approver is required when human gate is required")
 
-    return errors
+    return list(dict.fromkeys(errors))
+
+
 
 
 def validate_product_delivery_quality_profile(profile: dict[str, Any]) -> list[str]:
