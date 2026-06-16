@@ -66,7 +66,11 @@ class ProductionReleaseGateTest(unittest.TestCase):
             {"command": "bad", "exit_code": 1},
         ]
         with mock.patch.object(module, "git_value", return_value="git-value"):
-            result = module.build_release_ops(created_at="2026-06-06T00:00:00+00:00", validation=validation)
+            result = module.build_release_ops(
+                created_at="2026-06-06T00:00:00+00:00",
+                validation=validation,
+                human_gate_record=self.valid_human_gate(),
+            )
 
         self.assertEqual(result["result"], "FAIL")
         self.assertFalse(result["reusable_for_product"])
@@ -74,7 +78,11 @@ class ProductionReleaseGateTest(unittest.TestCase):
     def test_release_ops_passes_with_validation_and_rollback_plan(self) -> None:
         validation = [{"command": "ok", "exit_code": 0}]
         with mock.patch.object(module, "git_value", return_value="git-value"):
-            result = module.build_release_ops(created_at="2026-06-06T00:00:00+00:00", validation=validation)
+            result = module.build_release_ops(
+                created_at="2026-06-06T00:00:00+00:00",
+                validation=validation,
+                human_gate_record=self.valid_human_gate(),
+            )
 
         self.assertEqual(result["result"], "PASS")
         self.assertTrue(result["reusable_for_product"])
@@ -83,6 +91,22 @@ class ProductionReleaseGateTest(unittest.TestCase):
         self.assertIn("product_source_sha256", result["evidence_provenance"]["integrity"])
         self.assertIn(".tmp/factory-runs/production/release/upstream-worker-graph.json", result["evidence_refs"])
         self.assertNotIn(".tmp/factory-runs/production/full-product-worker-graph.json", result["evidence_refs"])
+        self.assertTrue(result["human_gate_validation"]["dereferenced"])
+        self.assertTrue(result["human_gate_validation"]["valid"])
+
+    def test_release_ops_cannot_pass_with_ref_only_human_gate(self) -> None:
+        validation = [{"command": "ok", "exit_code": 0}]
+        with mock.patch.object(module, "git_value", return_value="git-value"):
+            result = module.build_release_ops(
+                created_at="2026-06-06T00:00:00+00:00",
+                validation=validation,
+                human_gate_ref="external:real-approval-but-not-dereferenced",
+            )
+
+        self.assertEqual(result["result"], "FAIL")
+        self.assertFalse(result["reusable_for_product"])
+        self.assertFalse(result["human_gate_validation"]["dereferenced"])
+        self.assertIn("production release ops requires dereferenced human_gate_record", result["human_gate_validation"]["errors"])
 
     def test_release_gate_uses_production_strict_worker_graph(self) -> None:
         commands = [" ".join(command) for command in module.VALIDATION_COMMANDS]

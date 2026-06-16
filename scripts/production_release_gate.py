@@ -173,11 +173,20 @@ def load_human_gate_record(path: Path) -> dict[str, Any]:
     return record
 
 
-def build_release_ops(*, created_at: str, validation: list[dict[str, Any]], human_gate_ref: str = ".tmp/factory-runs/production/release/human-gate-record.json") -> dict[str, Any]:
+def build_release_ops(
+    *,
+    created_at: str,
+    validation: list[dict[str, Any]],
+    human_gate_ref: str = ".tmp/factory-runs/production/release/human-gate-record.json",
+    human_gate_record: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     head = git_value("rev-parse", "HEAD")
     branch = git_value("branch", "--show-current")
     remote_ref = git_value("ls-remote", "origin", branch)
-    validation_passed = all(item["exit_code"] == 0 for item in validation)
+    human_gate_validation_errors = (
+        human_gate_errors(human_gate_record) if isinstance(human_gate_record, dict) else ["production release ops requires dereferenced human_gate_record"]
+    )
+    validation_passed = all(item["exit_code"] == 0 for item in validation) and not human_gate_validation_errors
     evidence_refs = [
         ".tmp/factory-runs/production/release/release-ops-result.md",
         human_gate_ref,
@@ -208,7 +217,7 @@ def build_release_ops(*, created_at: str, validation: list[dict[str, Any]], huma
         "findings_summary": (
             "Release-control validation passed for the public validation product and current public branch state."
             if validation_passed
-            else "Release-control validation failed; see command evidence."
+            else "Release-control validation failed; see command evidence and human gate validation."
         ),
         "tool_or_profile": "Hermes release-ops-worker",
         "executed_by": "release-ops-worker",
@@ -258,6 +267,11 @@ def build_release_ops(*, created_at: str, validation: list[dict[str, Any]], huma
             producer="release-ops-worker",
             artifact_refs=evidence_refs,
         ),
+        "human_gate_validation": {
+            "dereferenced": isinstance(human_gate_record, dict),
+            "valid": not human_gate_validation_errors,
+            "errors": human_gate_validation_errors,
+        },
         "next_action": "Repeat this gate whenever the release target, product source, branch or authority boundary changes.",
     }
 
@@ -308,6 +322,7 @@ def main(argv: list[str] | None = None) -> int:
         created_at=created_at,
         validation=validation,
         human_gate_ref=repo_ref(args.human_gate_record.resolve()),
+        human_gate_record=human_gate,
     )
 
     if not args.no_write:

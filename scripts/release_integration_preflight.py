@@ -241,11 +241,18 @@ def build_preflight(
     unintegrated_release_entries = max(entries - generated_from_status, 0)
     materializers_passed = True
     failed_materializers: list[str] = []
+    fresh_materialization_provided = materialization is not None
     if materialization is not None:
         materializers_passed = materialization.get("all_materializers_passed") is True
         failed_materializers = [str(item) for item in materialization.get("failed_materializers") or []]
+        fresh_materialization_provided = (
+            materialization.get("record_type") == "release_preflight_materialization"
+            and isinstance(materialization.get("runs"), list)
+            and bool(materialization.get("runs"))
+        )
 
     checks = {
+        "fresh_preflight_materialization_provided": fresh_materialization_provided,
         "preflight_materializers_passed": materializers_passed,
         "worktree_public_safety_passed": public_worktree.get("result") == "PASS",
         "head_public_safety_passed": public_head.get("result") == "PASS",
@@ -283,6 +290,8 @@ def build_preflight(
         next_required_actions.append("integrate the public-safe worktree into the target release ref")
     if not checks["preflight_evidence_refs_exist"]:
         next_required_actions.append("materialize missing preflight evidence summaries before release review")
+    if not checks["fresh_preflight_materialization_provided"]:
+        next_required_actions.append("rerun release preflight materializers in the current process before release review")
     if not checks["preflight_materializers_passed"]:
         next_required_actions.append("rerun failing preflight materializers before release review")
     if not checks["head_public_safety_passed"] or not checks["origin_main_public_safety_passed"]:
