@@ -89,6 +89,12 @@ Useful options:
   product approval alignment.
 - `--visual-quality-status`, `--visual-quality-reviewer` and
   `--visual-quality-basis` to record the professional visual quality verdict.
+- `--reference-quality-ref`, `--reference-quality-comparison-basis`,
+  `--compared-reference-id`, `--reference-comparison-dimension` and
+  `--reference-comparison-artifact` to record the material reference/design
+  comparison used by the reviewer. The artifact may be a side-by-side capture,
+  reference snapshot, design-system/component ref, comparison manifest or
+  bounded equivalent.
 - `--reusable-for-product` only after the three alignment fields above are
   recorded as `pass` and `visual_quality_result` is `PASS` or
   `PASS_WITH_RESIDUALS`.
@@ -114,7 +120,9 @@ screenshots, no console errors, no overflow, accessibility basics and state
 coverage are necessary but insufficient. A reusable product approval also needs
 packet comparison, source-promise coverage, design-fit review and
 `visual_quality_result` recorded as acceptable by a reviewer empowered to block
-visually unacceptable UI.
+visually unacceptable UI. Reference/design comparison cannot be prose-only:
+`reference_quality_comparison` must bind the compared source ids to material
+comparison artifacts or to a bounded sanitized comparison manifest.
 
 `templates/professional-design-process.json` is a starter contract. Its gates
 are intentionally `PENDING`; copying that template into a card is not
@@ -137,6 +145,19 @@ python scripts/product_face_proof.py \
   --packet-comparison-basis "Screens, states and viewports match the Product Face Packet." \
   --source-promise-coverage-basis "The checked journey covers the stated product promise." \
   --design-fit-review-basis "The reviewer confirmed fit to the requested product direction." \
+  --professional-design-process-ref examples/minimal-hermes-project/card.md#professional_design_process \
+  --professional-design-process-comparison-basis "The checked surface satisfies the professional design process." \
+  --reference-quality-ref examples/minimal-hermes-project/card.md#professional_design_process.reference_research \
+  --reference-quality-comparison-basis "The reviewer compared the surface against selected professional references." \
+  --compared-reference-id 21st-dev-components \
+  --compared-reference-id mobbin-workflow-patterns \
+  --compared-reference-id pageflows-review-approval \
+  --reference-comparison-dimension layout_hierarchy="Hierarchy matches the selected reference patterns." \
+  --reference-comparison-dimension interaction_model="Interactions match the selected reference patterns." \
+  --reference-comparison-dimension state_coverage="States match the selected reference patterns." \
+  --reference-comparison-dimension visual_language="Visual language matches the selected reference patterns." \
+  --reference-comparison-dimension density_spacing="Density and spacing match the selected reference patterns." \
+  --reference-comparison-artifact side_by_side_capture=external:product-face-reference-comparison \
   --visual-quality-status PASS \
   --visual-quality-reviewer product-face-reviewer \
   --visual-quality-basis "The UI meets the product-specific quality bar and does not show AI-generic symptoms." \
