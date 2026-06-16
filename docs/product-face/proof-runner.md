@@ -38,6 +38,38 @@ The repo runner in `scripts/product_face_proof.py` is a `web_visual_ui` runner.
 It should not be used to claim CLI/TUI, docs/onboarding or agentic-interface
 PASS without the matching profile evidence.
 
+## Surface Taxonomy
+
+Product Experience OS routes surface families before Product Face PASS. The
+taxonomy is separate from capability-pack activation: a pack may exist, but the
+Product Face evidence profile still has to be supported or explicitly blocked.
+
+Supported routes:
+
+- `web`, `web_app`, `website`, `frontend`, `ux`, `screen`, `component`,
+  `browser`, `mobile_web` and local web cockpit/app surfaces route to
+  `web_visual_ui`.
+- `cli`, `tui`, `terminal`, `console` and `command_line` route to `cli_tui`.
+- `docs`, `documentation`, `onboarding`, `quickstart` and `guide` route to
+  `docs_onboarding`.
+- `agentic_interface`, `ai_interface`, `chat_ui`, `assistant` and `copilot`
+  route to `agentic_interface`.
+- `wallet` and `wallet_ui` route to `web_visual_ui`, but still require the
+  separate wallet transaction/signing domain proof before product acceptance.
+
+Fail-closed routes:
+
+- `mobile` is ambiguous. Use `mobile_web` for browser UI, or activate a native
+  mobile evidence profile/pack first.
+- `native_mobile`, `ios`, `android`, `desktop`, `desktop_app`, `extension`,
+  `browser_extension`, `design_system`, `game`, `gameplay`, `2d` and `3d` are
+  template-only or blocked until their dedicated evidence profile and pack are
+  activated.
+
+Unsupported or template-only surfaces must not fall back to `web_visual_ui`.
+The validator reports the blocked reason instead of accepting generic Product
+Face proof.
+
 ## Output
 
 `product_face_result` with:

@@ -639,6 +639,63 @@ VISUAL_UI_SURFACE_TOKENS = PRODUCT_FACE_SURFACES | {
     "design-system",
     "design_system",
 }
+SURFACE_EVIDENCE_PROFILE_ROUTES = {
+    "frontend": ("web_visual_ui", "supported", "Browser/front-end UI is proven through rendered visual evidence."),
+    "product_face": ("web_visual_ui", "supported", "Product Face surfaces are proven through rendered visual evidence."),
+    "product-face": ("web_visual_ui", "supported", "Product Face surfaces are proven through rendered visual evidence."),
+    "ux": ("web_visual_ui", "supported", "UX/browser UI is proven through rendered visual evidence."),
+    "web": ("web_visual_ui", "supported", "Web UI is proven through rendered visual evidence."),
+    "web_app": ("web_visual_ui", "supported", "Web app UI is proven through rendered visual evidence."),
+    "web-app": ("web_visual_ui", "supported", "Web app UI is proven through rendered visual evidence."),
+    "website": ("web_visual_ui", "supported", "Website UI is proven through rendered visual evidence."),
+    "site": ("web_visual_ui", "supported", "Website UI is proven through rendered visual evidence."),
+    "screen": ("web_visual_ui", "supported", "Screen UI is proven through rendered visual evidence."),
+    "component": ("web_visual_ui", "supported", "Component UI is proven through rendered visual evidence."),
+    "browser": ("web_visual_ui", "supported", "Browser UI is proven through rendered visual evidence."),
+    "mobile_web": ("web_visual_ui", "supported", "Mobile web is proven through the web visual profile with mobile viewport evidence."),
+    "mobile-web": ("web_visual_ui", "supported", "Mobile web is proven through the web visual profile with mobile viewport evidence."),
+    "local_web_app": ("web_visual_ui", "supported", "Local web app UI is proven through rendered visual evidence."),
+    "local_web_cockpit": ("web_visual_ui", "supported", "Local web cockpit UI is proven through rendered visual evidence."),
+    "cli": ("cli_tui", "supported", "CLI surfaces are proven through command transcript evidence."),
+    "tui": ("cli_tui", "supported", "TUI surfaces are proven through command transcript evidence."),
+    "terminal": ("cli_tui", "supported", "Terminal surfaces are proven through command transcript evidence."),
+    "console": ("cli_tui", "supported", "Console surfaces are proven through command transcript evidence."),
+    "command_line": ("cli_tui", "supported", "Command-line surfaces are proven through command transcript evidence."),
+    "command-line": ("cli_tui", "supported", "Command-line surfaces are proven through command transcript evidence."),
+    "docs": ("docs_onboarding", "supported", "Docs surfaces are proven through reader/onboarding success evidence."),
+    "documentation": ("docs_onboarding", "supported", "Documentation surfaces are proven through reader/onboarding success evidence."),
+    "onboarding": ("docs_onboarding", "supported", "Onboarding surfaces are proven through reader success evidence."),
+    "quickstart": ("docs_onboarding", "supported", "Quickstart surfaces are proven through reader success evidence."),
+    "guide": ("docs_onboarding", "supported", "Guide surfaces are proven through reader success evidence."),
+    "agentic_interface": ("agentic_interface", "supported", "Agentic interfaces are proven through task, control and recovery evidence."),
+    "agentic-interface": ("agentic_interface", "supported", "Agentic interfaces are proven through task, control and recovery evidence."),
+    "ai_interface": ("agentic_interface", "supported", "AI interfaces are proven through task, control and recovery evidence."),
+    "ai-interface": ("agentic_interface", "supported", "AI interfaces are proven through task, control and recovery evidence."),
+    "chat_ui": ("agentic_interface", "supported", "Chat UI is proven through task, control and recovery evidence."),
+    "chat-ui": ("agentic_interface", "supported", "Chat UI is proven through task, control and recovery evidence."),
+    "assistant": ("agentic_interface", "supported", "Assistant surfaces are proven through task, control and recovery evidence."),
+    "copilot": ("agentic_interface", "supported", "Copilot surfaces are proven through task, control and recovery evidence."),
+    "mobile": ("", "blocked", "Ambiguous mobile surface: use mobile_web for browser UI, or activate a native mobile evidence profile/pack first."),
+    "native_mobile": ("", "template_only", "Native mobile Product Face evidence is not activated in the public core taxonomy yet."),
+    "native-mobile": ("", "template_only", "Native mobile Product Face evidence is not activated in the public core taxonomy yet."),
+    "ios": ("", "template_only", "iOS Product Face evidence is not activated in the public core taxonomy yet."),
+    "android": ("", "template_only", "Android Product Face evidence is not activated in the public core taxonomy yet."),
+    "desktop": ("", "template_only", "Native desktop Product Face evidence is not activated in the public core taxonomy yet."),
+    "desktop_app": ("", "template_only", "Native desktop Product Face evidence is not activated in the public core taxonomy yet."),
+    "desktop-app": ("", "template_only", "Native desktop Product Face evidence is not activated in the public core taxonomy yet."),
+    "extension": ("", "template_only", "Browser extension Product Face evidence is not activated in the public core taxonomy yet."),
+    "browser_extension": ("", "template_only", "Browser extension Product Face evidence is not activated in the public core taxonomy yet."),
+    "browser-extension": ("", "template_only", "Browser extension Product Face evidence is not activated in the public core taxonomy yet."),
+    "design_system": ("", "template_only", "Design-system Product Face evidence needs a dedicated component/variant proof profile before PASS."),
+    "design-system": ("", "template_only", "Design-system Product Face evidence needs a dedicated component/variant proof profile before PASS."),
+    "wallet": ("web_visual_ui", "supported", "Wallet UI uses visual evidence plus separate wallet transaction/signing proof."),
+    "wallet_ui": ("web_visual_ui", "supported", "Wallet UI uses visual evidence plus separate wallet transaction/signing proof."),
+    "wallet-ui": ("web_visual_ui", "supported", "Wallet UI uses visual evidence plus separate wallet transaction/signing proof."),
+    "game": ("", "template_only", "Game Product Face evidence needs an activated game product pack and playable proof profile before PASS."),
+    "gameplay": ("", "template_only", "Game Product Face evidence needs an activated game product pack and playable proof profile before PASS."),
+    "2d": ("", "template_only", "Game Product Face evidence needs an activated game product pack and playable proof profile before PASS."),
+    "3d": ("", "template_only", "Game Product Face evidence needs an activated game product pack and playable proof profile before PASS."),
+}
 
 
 @dataclass(frozen=True)
@@ -1934,6 +1991,74 @@ def _declared_surface_evidence_profiles(data: dict[str, Any]) -> list[str]:
     return sorted({profile_id for profile_id in profile_ids if profile_id})
 
 
+def _surface_family_tokens_from_data(data: dict[str, Any]) -> list[tuple[str, str, str]]:
+    tokens: list[tuple[str, str, str]] = []
+    for field in ("surface", "surface_type"):
+        if _non_empty_text(data.get(field)):
+            raw = str(data.get(field)).strip()
+            surface_key = _normalized_contract_token(raw)
+            if surface_key in SURFACE_EVIDENCE_PROFILE_ROUTES:
+                tokens.append((field, raw, surface_key))
+    return tokens
+
+
+def _surface_family_tokens_from_card(card: dict[str, Any]) -> list[tuple[str, str, str]]:
+    tokens: list[tuple[str, str, str]] = []
+    for surface in normalized_surfaces(card):
+        surface_key = _normalized_contract_token(surface)
+        if surface_key in SURFACE_EVIDENCE_PROFILE_ROUTES:
+            tokens.append(("surfaces", surface, surface_key))
+    packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
+    plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
+    tokens.extend(_surface_family_tokens_from_data(packet))
+    tokens.extend(_surface_family_tokens_from_data(plan))
+    seen: set[tuple[str, str, str]] = set()
+    unique: list[tuple[str, str, str]] = []
+    for entry in tokens:
+        if entry not in seen:
+            unique.append(entry)
+            seen.add(entry)
+    return unique
+
+
+def _surface_evidence_profile_route_errors(data: dict[str, Any], *, at: str) -> list[str]:
+    errors: list[str] = []
+    declared_profiles = set(_declared_surface_evidence_profiles(data))
+    for field, raw, token in _surface_family_tokens_from_data(data):
+        profile_id, route_state, reason = SURFACE_EVIDENCE_PROFILE_ROUTES[token]
+        if route_state != "supported":
+            errors.append(
+                f"{at}.{field} '{raw}' is {route_state} in Product Experience OS taxonomy: {reason}"
+            )
+            continue
+        if declared_profiles and profile_id not in declared_profiles:
+            errors.append(
+                f"{at}.{field} '{raw}' requires surface_evidence_profile {profile_id}"
+            )
+    return errors
+
+
+def _surface_evidence_profile_route_errors_for_card(card: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    declared_profiles: set[str] = set()
+    packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
+    plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
+    for source in (packet, plan):
+        declared_profiles.update(_declared_surface_evidence_profiles(source))
+    for field, raw, token in _surface_family_tokens_from_card(card):
+        profile_id, route_state, reason = SURFACE_EVIDENCE_PROFILE_ROUTES[token]
+        if route_state != "supported":
+            errors.append(
+                f"product_experience_surface.{field} '{raw}' is {route_state} in Product Experience OS taxonomy: {reason}"
+            )
+            continue
+        if declared_profiles and profile_id not in declared_profiles:
+            errors.append(
+                f"product_experience_surface.{field} '{raw}' requires surface_evidence_profile {profile_id}"
+            )
+    return sorted(set(errors))
+
+
 def _validate_surface_evidence_profile_declarations(data: dict[str, Any], *, at: str) -> list[str]:
     errors: list[str] = []
     if "surface_evidence_profile" in data and not _surface_evidence_profile_id(data.get("surface_evidence_profile")):
@@ -1946,6 +2071,7 @@ def _validate_surface_evidence_profile_declarations(data: dict[str, Any], *, at:
     for profile_id in _declared_surface_evidence_profiles(data):
         if profile_id not in SURFACE_EVIDENCE_PROFILES:
             errors.append(f"{at}.surface_evidence_profile must be one of " + ", ".join(sorted(SURFACE_EVIDENCE_PROFILES)))
+    errors.extend(_surface_evidence_profile_route_errors(data, at=at))
     return errors
 
 
@@ -2786,15 +2912,10 @@ def _expected_surface_evidence_profiles(card: dict[str, Any]) -> list[str]:
     if profiles:
         return sorted(profile for profile in profiles if profile in SURFACE_EVIDENCE_PROFILES)
 
-    tokens = _surface_profile_tokens(card)
-    if tokens & {_normalized_contract_token(token) for token in CLI_TUI_SURFACE_TOKENS}:
-        profiles.add("cli_tui")
-    if tokens & {_normalized_contract_token(token) for token in DOCS_ONBOARDING_SURFACE_TOKENS}:
-        profiles.add("docs_onboarding")
-    if tokens & {_normalized_contract_token(token) for token in AGENTIC_INTERFACE_SURFACE_TOKENS}:
-        profiles.add("agentic_interface")
-    if tokens & {_normalized_contract_token(token) for token in VISUAL_UI_SURFACE_TOKENS}:
-        profiles.add("web_visual_ui")
+    for _, _, token in _surface_family_tokens_from_card(card):
+        profile_id, route_state, _reason = SURFACE_EVIDENCE_PROFILE_ROUTES[token]
+        if route_state == "supported" and profile_id:
+            profiles.add(profile_id)
     if not profiles and product_experience_surface_required(card):
         profiles.add("web_visual_ui")
     return sorted(profiles)
@@ -3750,6 +3871,8 @@ def validate_card(data: dict[str, Any]) -> list[str]:
         errors.append("product_face_packet required for product-facing surfaces")
     elif product_facing:
         errors.extend(validate_product_face_packet(data["product_face_packet"], strict=strict_experience))
+    if product_facing:
+        errors.extend(_surface_evidence_profile_route_errors_for_card(data))
     if strict_experience:
         if not isinstance(data.get("product_experience_plan"), dict):
             errors.append("product_experience_plan required for vFinal product-facing surfaces")
@@ -5168,6 +5291,7 @@ def validate_usage_evidence_matrix_against_card(result: dict[str, Any], card: di
 
 def validate_product_face_result_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
     errors = validate_product_face_result(result)
+    errors.extend(_surface_evidence_profile_route_errors_for_card(card))
     errors.extend(_product_delivery_quality_profile_ref_errors(card))
     result_status = str(result.get("result") or "").upper()
     if result_status == "WAIVED":
