@@ -532,6 +532,13 @@ REFERENCE_COMPARISON_DIMENSIONS = (
     "visual_language",
     "density_spacing",
 )
+REFERENCE_COMPARISON_ARTIFACT_TYPES = {
+    "side_by_side_capture",
+    "reference_snapshot",
+    "design_system_component",
+    "comparison_manifest",
+    "bounded_equivalent",
+}
 SURFACE_EVIDENCE_PROFILES = {"web_visual_ui", "cli_tui", "docs_onboarding", "agentic_interface"}
 SURFACE_EVIDENCE_PROFILE_BLOCKS = {
     "cli_tui": (
@@ -3580,7 +3587,8 @@ def validate_reference_quality_comparison(comparison: Any, *, is_pass: bool) -> 
         errors.append("product_face_result.reference_quality_comparison.basis is required")
     if not _non_empty_text(comparison.get("reference_set_ref")):
         errors.append("product_face_result.reference_quality_comparison.reference_set_ref is required")
-    if is_pass and len(_list_items(comparison.get("compared_source_ids"))) < 3:
+    compared_source_ids = _list_items(comparison.get("compared_source_ids"))
+    if is_pass and len(compared_source_ids) < 3:
         errors.append("product_face_result.reference_quality_comparison.compared_source_ids requires at least 3 references")
     if is_pass and comparison.get("reviewer_independent_from_implementation") is not True:
         errors.append("product_face_result.reference_quality_comparison.reviewer_independent_from_implementation must be true")
@@ -3594,6 +3602,164 @@ def validate_reference_quality_comparison(comparison: Any, *, is_pass: bool) -> 
             errors.append(f"product_face_result.reference_quality_comparison.dimensions.{dimension}.status must be pass")
         if not _non_empty_text(verdict.get("basis")):
             errors.append(f"product_face_result.reference_quality_comparison.dimensions.{dimension}.basis is required")
+    if is_pass:
+        errors.extend(_validate_reference_source_resolution(comparison, compared_source_ids))
+        errors.extend(_validate_reference_comparison_artifacts(comparison, compared_source_ids))
+    return errors
+
+
+def _fragment_node(data: Any, fragment: str) -> Any:
+    node = data
+    fragment = fragment.strip().lstrip("#")
+    if not fragment:
+        return node
+    for part in [item for item in fragment.split(".") if item]:
+        if isinstance(node, dict) and part in node:
+            node = node[part]
+            continue
+        if isinstance(node, dict) and isinstance(node.get("sources"), list):
+            match = next(
+                (
+                    source
+                    for source in node["sources"]
+                    if isinstance(source, dict) and str(source.get("source_id") or "").strip() == part
+                ),
+                None,
+            )
+            if match is not None:
+                node = match
+                continue
+        if isinstance(node, list):
+            match = next(
+                (
+                    item
+                    for item in node
+                    if isinstance(item, dict) and str(item.get("source_id") or "").strip() == part
+                ),
+                None,
+            )
+            if match is not None:
+                node = match
+                continue
+        return None
+    return node
+
+
+def _collect_reference_source_ids(node: Any) -> set[str]:
+    ids: set[str] = set()
+    if isinstance(node, dict):
+        source_id = str(node.get("source_id") or "").strip()
+        if source_id:
+            ids.add(source_id)
+        for key in ("sources", "selected_sources", "reference_sources"):
+            ids.update(_collect_reference_source_ids(node.get(key)))
+        ids.update(_collect_reference_source_ids(node.get("reference_research")))
+    elif isinstance(node, list):
+        for item in node:
+            ids.update(_collect_reference_source_ids(item))
+    return ids
+
+
+def _reference_source_manifest_ids(manifest: Any) -> tuple[set[str], list[str]]:
+    errors: list[str] = []
+    if not isinstance(manifest, dict) or not manifest:
+        return set(), errors
+    if not _non_empty_text(manifest.get("manifest_ref")):
+        errors.append("product_face_result.reference_quality_comparison.reference_source_manifest.manifest_ref is required")
+    if manifest.get("bounded_acceptance") is not True:
+        errors.append("product_face_result.reference_quality_comparison.reference_source_manifest.bounded_acceptance=true is required")
+    if manifest.get("sanitized") is not True:
+        errors.append("product_face_result.reference_quality_comparison.reference_source_manifest.sanitized=true is required")
+    sources = manifest.get("sources")
+    if not isinstance(sources, list) or not sources:
+        errors.append("product_face_result.reference_quality_comparison.reference_source_manifest.sources must be a non-empty array")
+        return set(), errors
+    ids: set[str] = set()
+    for index, source in enumerate(sources):
+        if not isinstance(source, dict):
+            errors.append(f"product_face_result.reference_quality_comparison.reference_source_manifest.sources[{index}] must be an object")
+            continue
+        source_id = str(source.get("source_id") or "").strip()
+        if not source_id:
+            errors.append(f"product_face_result.reference_quality_comparison.reference_source_manifest.sources[{index}].source_id is required")
+        else:
+            ids.add(source_id)
+    return ids, errors
+
+
+def _repo_reference_source_ids(reference_set_ref: str) -> set[str]:
+    path = _repo_local_json_ref_path(reference_set_ref)
+    if path is None or not path.is_file():
+        return set()
+    try:
+        data = load_json_like(path)
+    except Exception:
+        return set()
+    fragment = reference_set_ref.split("#", 1)[1] if "#" in reference_set_ref else ""
+    return _collect_reference_source_ids(_fragment_node(data, fragment))
+
+
+def _validate_reference_source_resolution(comparison: dict[str, Any], compared_source_ids: list[str]) -> list[str]:
+    errors: list[str] = []
+    reference_set_ref = str(comparison.get("reference_set_ref") or "").strip()
+    source_ids = _repo_reference_source_ids(reference_set_ref)
+    manifest_ids, manifest_errors = _reference_source_manifest_ids(comparison.get("reference_source_manifest"))
+    errors.extend(manifest_errors)
+    source_ids.update(manifest_ids)
+    if compared_source_ids and not source_ids:
+        errors.append(
+            "product_face_result.reference_quality_comparison.reference_set_ref must resolve to repo-local reference sources "
+            "or reference_source_manifest"
+        )
+        return errors
+    unknown = [source_id for source_id in compared_source_ids if source_id not in source_ids]
+    if unknown:
+        errors.append(
+            "product_face_result.reference_quality_comparison.compared_source_ids not found in reference sources: "
+            + ", ".join(unknown)
+        )
+    return errors
+
+
+def _validate_reference_comparison_artifacts(comparison: dict[str, Any], compared_source_ids: list[str]) -> list[str]:
+    errors: list[str] = []
+    artifacts = comparison.get("comparison_artifacts")
+    at = "product_face_result.reference_quality_comparison.comparison_artifacts"
+    if not isinstance(artifacts, list) or not artifacts:
+        return [f"{at} must include material comparison artifacts for PASS"]
+    compared = set(compared_source_ids)
+    artifact_coverage: set[str] = set()
+    for index, artifact in enumerate(artifacts):
+        item_at = f"{at}[{index}]"
+        if not isinstance(artifact, dict):
+            errors.append(f"{item_at} must be an object")
+            continue
+        artifact_ref = str(artifact.get("artifact_ref") or "").strip()
+        if not artifact_ref:
+            errors.append(f"{item_at}.artifact_ref is required")
+        else:
+            if _is_explicit_external_ref(artifact_ref):
+                if artifact.get("bounded_acceptance") is not True:
+                    errors.append(f"{item_at}.bounded_acceptance=true is required for external comparison artifact")
+                if artifact.get("sanitized") is not True:
+                    errors.append(f"{item_at}.sanitized=true is required for external comparison artifact")
+            else:
+                errors.extend(f"{item_at}: {error}" for error in _evidence_ref_errors([artifact_ref], ROOT))
+        artifact_type = str(artifact.get("artifact_type") or "").strip()
+        if artifact_type not in REFERENCE_COMPARISON_ARTIFACT_TYPES:
+            errors.append(f"{item_at}.artifact_type must be one of " + ", ".join(sorted(REFERENCE_COMPARISON_ARTIFACT_TYPES)))
+        if not _non_empty_text(artifact.get("basis")):
+            errors.append(f"{item_at}.basis is required")
+        artifact_source_ids = set(_list_items(artifact.get("compared_source_ids")))
+        if not artifact_source_ids:
+            errors.append(f"{item_at}.compared_source_ids must be a non-empty string array")
+        extra_ids = sorted(artifact_source_ids - compared)
+        if extra_ids:
+            errors.append(f"{item_at}.compared_source_ids contains ids not declared in compared_source_ids: " + ", ".join(extra_ids))
+        artifact_coverage.update(artifact_source_ids & compared)
+    missing = [source_id for source_id in compared_source_ids if source_id not in artifact_coverage]
+    if missing:
+        errors.append(f"{at} missing material artifact coverage for compared_source_ids: " + ", ".join(missing))
     return errors
 
 
@@ -6868,6 +7034,30 @@ def build_worker_result(
                     "reference_set_ref": "card.professional_design_process.reference_research",
                     "compared_source_ids": ["design-library-reference", "component-registry-reference", "product-flow-reference"],
                     "reviewer_independent_from_implementation": not blocking_findings,
+                    "reference_source_manifest": {
+                        "manifest_ref": "external:product-face-worker-reference-source-manifest",
+                        "bounded_acceptance": True,
+                        "sanitized": True,
+                        "sources": [
+                            {"source_id": "design-library-reference"},
+                            {"source_id": "component-registry-reference"},
+                            {"source_id": "product-flow-reference"},
+                        ],
+                    },
+                    "comparison_artifacts": [
+                        {
+                            "artifact_ref": "external:product-face-worker-reference-comparison",
+                            "artifact_type": "bounded_equivalent",
+                            "compared_source_ids": [
+                                "design-library-reference",
+                                "component-registry-reference",
+                                "product-flow-reference",
+                            ],
+                            "basis": "Bounded worker-result package records sanitized material comparison across the selected references.",
+                            "bounded_acceptance": True,
+                            "sanitized": True,
+                        }
+                    ],
                     "dimensions": {
                         dimension: {
                             "status": "pass" if not blocking_findings else "fail",

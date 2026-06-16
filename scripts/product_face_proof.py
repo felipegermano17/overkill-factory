@@ -37,6 +37,13 @@ REFERENCE_COMPARISON_DIMENSIONS = (
     "visual_language",
     "density_spacing",
 )
+REFERENCE_COMPARISON_ARTIFACT_TYPES = {
+    "side_by_side_capture",
+    "reference_snapshot",
+    "design_system_component",
+    "comparison_manifest",
+    "bounded_equivalent",
+}
 BROWSER_CAPTURED_STATE_ALIASES = {
     "initial-render",
     "initial render",
@@ -302,6 +309,30 @@ def parse_reference_dimension(raw: str) -> tuple[str, str]:
     if not basis:
         raise ValueError("--reference-comparison-dimension basis must be non-empty")
     return dimension, basis
+
+
+def parse_reference_comparison_artifact(raw: str, compared_source_ids: list[str]) -> dict[str, Any]:
+    if "=" in raw:
+        artifact_type, artifact_ref = raw.split("=", 1)
+    else:
+        artifact_type, artifact_ref = "side_by_side_capture", raw
+    artifact_type = artifact_type.strip()
+    artifact_ref = artifact_ref.strip()
+    if artifact_type not in REFERENCE_COMPARISON_ARTIFACT_TYPES:
+        allowed = ", ".join(sorted(REFERENCE_COMPARISON_ARTIFACT_TYPES))
+        raise ValueError(f"--reference-comparison-artifact type must be one of: {allowed}")
+    if not artifact_ref:
+        raise ValueError("--reference-comparison-artifact artifact ref must be non-empty")
+    artifact = {
+        "artifact_ref": artifact_ref,
+        "artifact_type": artifact_type,
+        "compared_source_ids": compared_source_ids,
+        "basis": "Material comparison artifact supplied with Product Face reference-quality review.",
+    }
+    if artifact_ref.startswith(("http://", "https://", "external:", "repo://")):
+        artifact["bounded_acceptance"] = True
+        artifact["sanitized"] = True
+    return artifact
 
 
 def resolve_target(target: str, *, allow_external_file: bool = False) -> tuple[str, Path | None]:
@@ -690,6 +721,33 @@ def reference_quality_passes(result: dict[str, Any]) -> bool:
             return False
         if not str(verdict.get("basis") or "").strip():
             return False
+    compared_source_ids = {str(item).strip() for item in comparison.get("compared_source_ids") or [] if str(item).strip()}
+    artifact_coverage: set[str] = set()
+    artifacts = comparison.get("comparison_artifacts")
+    if not isinstance(artifacts, list) or not artifacts:
+        return False
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            return False
+        artifact_ref = str(artifact.get("artifact_ref") or "").strip()
+        if not artifact_ref:
+            return False
+        if artifact.get("artifact_type") not in REFERENCE_COMPARISON_ARTIFACT_TYPES:
+            return False
+        if not str(artifact.get("basis") or "").strip():
+            return False
+        if artifact_ref.startswith(("http://", "https://", "external:", "repo://")) and (
+            artifact.get("bounded_acceptance") is not True or artifact.get("sanitized") is not True
+        ):
+            return False
+        artifact_source_ids = {str(item).strip() for item in artifact.get("compared_source_ids") or [] if str(item).strip()}
+        if not artifact_source_ids:
+            return False
+        if artifact_source_ids - compared_source_ids:
+            return False
+        artifact_coverage.update(artifact_source_ids)
+    if compared_source_ids - artifact_coverage:
+        return False
     return True
 
 
@@ -706,6 +764,7 @@ def apply_product_alignment(
     reference_quality_comparison_basis: str | None,
     compared_reference_ids: list[str] | None,
     reference_quality_dimensions: dict[str, str] | None,
+    reference_comparison_artifacts: list[dict[str, Any]] | None = None,
 ) -> None:
     values = {
         "packet_ref": packet_ref,
@@ -722,6 +781,8 @@ def apply_product_alignment(
         supplied.add("compared_reference_ids")
     if reference_quality_dimensions:
         supplied.add("reference_quality_dimensions")
+    if reference_comparison_artifacts:
+        supplied.add("reference_comparison_artifacts")
     if not supplied:
         return
     missing = [field for field, value in values.items() if not str(value or "").strip()]
@@ -734,6 +795,8 @@ def apply_product_alignment(
     ]
     if missing_dimensions:
         missing.extend(f"reference_comparison_dimension:{dimension}" for dimension in missing_dimensions)
+    if not reference_comparison_artifacts:
+        missing.append("reference_comparison_artifacts")
     if missing:
         raise ValueError("Product Face alignment is incomplete: missing " + ", ".join(missing))
     result["packet_ref"] = str(packet_ref).strip()
@@ -760,6 +823,7 @@ def apply_product_alignment(
         "reference_set_ref": str(reference_quality_ref).strip(),
         "compared_source_ids": [str(item).strip() for item in compared_reference_ids or [] if str(item).strip()],
         "reviewer_independent_from_implementation": True,
+        "comparison_artifacts": reference_comparison_artifacts or [],
         "dimensions": {
             dimension: {
                 "status": "pass",
@@ -1156,6 +1220,7 @@ def build_product_face_proof(
     reference_quality_comparison_basis: str | None = None,
     compared_reference_ids: list[str] | None = None,
     reference_quality_dimensions: dict[str, str] | None = None,
+    reference_comparison_artifacts: list[dict[str, Any]] | None = None,
     visual_quality_status: str | None = None,
     visual_quality_reviewer: str | None = None,
     visual_quality_basis: str | None = None,
@@ -1224,6 +1289,7 @@ def build_product_face_proof(
         reference_quality_comparison_basis=reference_quality_comparison_basis,
         compared_reference_ids=compared_reference_ids,
         reference_quality_dimensions=reference_quality_dimensions,
+        reference_comparison_artifacts=reference_comparison_artifacts,
     )
     apply_visual_quality_review(
         result=result,
@@ -1289,6 +1355,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="append",
         help="Dimension comparison as DIMENSION=BASIS. Required dimensions: layout_hierarchy, interaction_model, state_coverage, visual_language, density_spacing.",
     )
+    parser.add_argument(
+        "--reference-comparison-artifact",
+        action="append",
+        help="Material comparison artifact as TYPE=REF. TYPE can be side_by_side_capture, reference_snapshot, design_system_component, comparison_manifest or bounded_equivalent.",
+    )
     parser.add_argument("--visual-quality-status", choices=["PASS", "BLOCK", "PASS_WITH_RESIDUALS"], help="Professional visual quality verdict.")
     parser.add_argument("--visual-quality-reviewer", help="Reviewer empowered to block visually unacceptable UI.")
     parser.add_argument("--visual-quality-basis", help="Why the surface meets or fails the product-specific quality bar.")
@@ -1306,6 +1377,11 @@ def main(argv: list[str] | None = None) -> int:
                 parse_reference_dimension(raw) for raw in args.reference_comparison_dimension or []
             )
         }
+        compared_ids = [str(item).strip() for item in args.compared_reference_id or [] if str(item).strip()]
+        reference_artifacts = [
+            parse_reference_comparison_artifact(raw, compared_ids)
+            for raw in args.reference_comparison_artifact or []
+        ]
         result = build_product_face_proof(
             target=args.target,
             out=Path(args.out),
@@ -1330,6 +1406,7 @@ def main(argv: list[str] | None = None) -> int:
             reference_quality_comparison_basis=args.reference_quality_comparison_basis,
             compared_reference_ids=args.compared_reference_id,
             reference_quality_dimensions=reference_dimensions,
+            reference_comparison_artifacts=reference_artifacts,
             visual_quality_status=args.visual_quality_status,
             visual_quality_reviewer=args.visual_quality_reviewer,
             visual_quality_basis=args.visual_quality_basis,

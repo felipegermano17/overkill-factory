@@ -262,6 +262,20 @@ class ProductFaceProofTest(unittest.TestCase):
                     "pageflows-review-approval",
                 ],
                 reference_quality_dimensions=reference_dimension_basis(),
+                reference_comparison_artifacts=[
+                    {
+                        "artifact_ref": "external:unit-reference-comparison",
+                        "artifact_type": "side_by_side_capture",
+                        "compared_source_ids": [
+                            "21st-dev-components",
+                            "mobbin-workflow-patterns",
+                            "pageflows-review-approval",
+                        ],
+                        "basis": "Unit fixture supplies a bounded material comparison artifact.",
+                        "bounded_acceptance": True,
+                        "sanitized": True,
+                    }
+                ],
             )
             product_face_proof.apply_visual_quality_review(
                 result=result,
@@ -284,6 +298,34 @@ class ProductFaceProofTest(unittest.TestCase):
         self.assertEqual(result["product_target"]["environment_class"], "production-like-static-artifact")
         self.assertEqual(result["product_target"]["target_sha256"], expected_sha256)
         self.assertIn("Product Face lane", result["product_target"]["approval_scope"])
+
+    def test_product_alignment_requires_reference_comparison_artifact(self) -> None:
+        result = product_face_proof.base_result(
+            target_ref="examples/minimal-hermes-project",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=["initial-render"],
+            journeys=["open target"],
+            tool_or_profile="unit-test",
+        )
+
+        with self.assertRaisesRegex(ValueError, "reference_comparison_artifacts"):
+            product_face_proof.apply_product_alignment(
+                result=result,
+                packet_ref="templates/product-face-packet.json",
+                packet_comparison_basis="Unit proof is explicitly matched to the packet.",
+                source_promise_coverage_basis="Unit proof covers the named product promise.",
+                design_fit_review_basis="Unit proof includes an explicit design-fit review.",
+                professional_design_process_ref="templates/professional-design-process.json",
+                professional_design_process_comparison_basis="Unit proof satisfies the professional design process gates.",
+                reference_quality_ref="templates/professional-design-process.json#reference_research",
+                reference_quality_comparison_basis="Unit proof compares against selected professional design references.",
+                compared_reference_ids=[
+                    "21st-dev-components",
+                    "mobbin-workflow-patterns",
+                    "pageflows-review-approval",
+                ],
+                reference_quality_dimensions=reference_dimension_basis(),
+            )
 
     def test_reusable_for_product_requires_packet_alignment(self) -> None:
         result = product_face_proof.base_result(

@@ -208,16 +208,27 @@ def human_gate_record(source_card: dict | None = None) -> dict:
 
 
 def reference_quality_comparison_fixture() -> dict:
+    compared_source_ids = [
+        "21st-dev-components",
+        "mobbin-workflow-patterns",
+        "pageflows-review-approval",
+    ]
     return {
         "status": "pass",
         "basis": "Independent reviewer compared the Product Face result against selected professional references.",
         "reference_set_ref": "examples/cards/v35_valid_product_face.md#professional_design_process.reference_research",
-        "compared_source_ids": [
-            "21st-dev-components",
-            "mobbin-workflow-patterns",
-            "pageflows-review-approval",
-        ],
+        "compared_source_ids": compared_source_ids,
         "reviewer_independent_from_implementation": True,
+        "comparison_artifacts": [
+            {
+                "artifact_ref": "external:product-face-fixture-reference-comparison",
+                "artifact_type": "side_by_side_capture",
+                "compared_source_ids": compared_source_ids,
+                "basis": "Sanitized side-by-side comparison covers all selected references.",
+                "bounded_acceptance": True,
+                "sanitized": True,
+            }
+        ],
         "dimensions": {
             dimension: {
                 "status": "pass",
@@ -1458,6 +1469,68 @@ class FactoryCtlTest(unittest.TestCase):
 
     def test_product_face_pass_accepts_external_visual_manifest_binding(self) -> None:
         result = product_face_result_fixture()
+
+        self.assertEqual(factoryctl.validate_product_face_result(result), [])
+
+    def test_product_face_pass_rejects_reference_quality_prose_only_comparison(self) -> None:
+        result = product_face_result_fixture()
+        result["reference_quality_comparison"].pop("comparison_artifacts")
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.reference_quality_comparison.comparison_artifacts must include material comparison artifacts for PASS",
+            errors,
+        )
+
+    def test_product_face_pass_rejects_unknown_compared_reference_id(self) -> None:
+        result = product_face_result_fixture()
+        result["reference_quality_comparison"]["compared_source_ids"] = [
+            "21st-dev-components",
+            "mobbin-workflow-patterns",
+            "unknown-design-reference",
+        ]
+        result["reference_quality_comparison"]["comparison_artifacts"][0]["compared_source_ids"] = [
+            "21st-dev-components",
+            "mobbin-workflow-patterns",
+            "unknown-design-reference",
+        ]
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.reference_quality_comparison.compared_source_ids not found in reference sources: unknown-design-reference",
+            errors,
+        )
+
+    def test_product_face_pass_rejects_missing_reference_comparison_artifact(self) -> None:
+        result = product_face_result_fixture()
+        result["reference_quality_comparison"]["comparison_artifacts"] = [
+            {
+                "artifact_ref": "reports/product-face/missing-reference-comparison.png",
+                "artifact_type": "side_by_side_capture",
+                "compared_source_ids": result["reference_quality_comparison"]["compared_source_ids"],
+                "basis": "Missing repo-local comparison artifact must fail closed.",
+            }
+        ]
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.reference_quality_comparison.comparison_artifacts[0]: evidence ref does not exist: reports/product-face/missing-reference-comparison.png",
+            errors,
+        )
+
+    def test_product_face_pass_accepts_external_reference_source_manifest(self) -> None:
+        result = product_face_result_fixture()
+        compared_source_ids = result["reference_quality_comparison"]["compared_source_ids"]
+        result["reference_quality_comparison"]["reference_set_ref"] = "external:product-face-reference-source-manifest"
+        result["reference_quality_comparison"]["reference_source_manifest"] = {
+            "manifest_ref": "external:product-face-reference-source-manifest",
+            "bounded_acceptance": True,
+            "sanitized": True,
+            "sources": [{"source_id": source_id} for source_id in compared_source_ids],
+        }
 
         self.assertEqual(factoryctl.validate_product_face_result(result), [])
 
