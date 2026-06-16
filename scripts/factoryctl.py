@@ -3441,7 +3441,11 @@ def _required_product_proofs(card: dict[str, Any]) -> list[str]:
 def validate_product_face_result_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
     errors = validate_product_face_result(result)
     errors.extend(_product_delivery_quality_profile_ref_errors(card))
-    if str(result.get("result") or "").upper() != "PASS":
+    result_status = str(result.get("result") or "").upper()
+    if result_status == "WAIVED":
+        errors.append("product_face_result WAIVED cannot satisfy required Product Face completion")
+        return errors
+    if result_status != "PASS":
         return errors
 
     required_profiles = _expected_surface_evidence_profiles(card)

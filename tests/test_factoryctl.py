@@ -845,6 +845,49 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(factoryctl.validate_completion(card, receipt), [])
 
+    def test_product_face_completion_rejects_waived_visual_result(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_face_result_required"] = True
+        waived_result = product_face_result_fixture(
+            result="WAIVED",
+            blocking_findings=True,
+            visual_quality_result={
+                "status": "BLOCK",
+                "reviewer": "product-face-reviewer",
+                "basis": "Fallback proof did not establish reusable product quality.",
+                "reference_quality_bar_checked": False,
+                "ai_generic_symptoms": ["fallback evidence only"],
+            },
+            next_action="rerun Product Face proof with real rendered evidence",
+        )
+        receipt = {
+            "receipt_five": {
+                "changed": "attempted visible SaaS scenario proof",
+                "artifact_paths": ["examples/cards/v35_valid_product_face.md"],
+                "verification_commands": ["python scripts/factoryctl.py validate-card examples/cards/v35_valid_product_face.md"],
+                "verification_result": "PASS",
+                "reviewer_required": True,
+                "reviewer_result": "PASS",
+                "next_action": "rerun Product Face proof",
+            },
+            "kanban_transition_event": {
+                "from_status": "review",
+                "to_status": "done",
+                "actor": "qa-verification-worker",
+                "worker": "product-face",
+                "receipt_refs": ["receipt_five", "product_face_result"],
+                "artifact_refs": ["examples/cards/v35_valid_product_face.md", "reports/product-face.md"],
+                "allowed": True,
+            },
+            "independent_review_result": worker_result("independent_review_result", source_card=card),
+            "receipt_five_reconciliation_result": worker_result("receipt_five_reconciliation_result", source_card=card),
+            "product_face_result": waived_result,
+        }
+
+        errors = factoryctl.validate_completion(card, receipt)
+
+        self.assertIn("product_face_result WAIVED cannot satisfy required Product Face completion", errors)
+
     def test_product_face_completion_requires_domain_proof_coverage_when_profile_declares_it(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
         card["product_delivery_quality_profile"] = product_delivery_quality_profile_fixture()
