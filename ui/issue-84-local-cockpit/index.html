@@ -1,39 +1,51 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Issue 84 Local Cockpit</title>
+    <title>Overkill Factory Cockpit</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <a class="skip-link" href="#cockpit-main">Skip to cockpit</a>
+    <a class="skip-link" href="#cockpit-main">Ir para o cockpit</a>
     <header class="topbar" role="banner">
       <div class="brand-lockup">
-        <span class="brand-mark" aria-hidden="true">OF</span>
+        <span class="brand-mark" aria-hidden="true">X</span>
         <div>
-          <h1>Issue 84 Local Cockpit</h1>
-          <p>Local-first factory projection</p>
+          <h1>Overkill Factory</h1>
+          <p>Cockpit local</p>
         </div>
       </div>
-      <div class="top-actions" aria-label="Cockpit mode">
-        <span class="mode-chip">Projection only</span>
-        <span class="mode-chip">Loopback</span>
-        <span class="mode-chip">Public-safe refs</span>
+      <div class="command-bar" role="search">
+        <span aria-hidden="true">⌕</span>
+        <input id="globalSearch" type="search" placeholder="Buscar frente, gate ou evidência" aria-label="Buscar frente, gate ou evidência" />
+        <kbd>/</kbd>
+      </div>
+      <div class="top-actions" aria-label="Ações do cockpit">
+        <span class="mode-chip">Local</span>
+        <span class="mode-chip">Refs públicas</span>
+        <button id="themeToggle" type="button" aria-label="Alternar tema">Tema</button>
       </div>
     </header>
 
     <main id="cockpit-main" data-cockpit-root class="cockpit" aria-live="polite" aria-busy="true">
-      <section class="loading-panel" aria-label="Loading local cockpit data">
-        <p class="eyebrow">Loading snapshot</p>
-        <h2>Reading local StatusSnapshot projections</h2>
-        <p>No success metrics are inferred until the local JSON bundle is parsed.</p>
+      <section class="loading-panel" aria-label="Carregando dados locais">
+        <p class="eyebrow">Carregando</p>
+        <h2>Lendo snapshots locais</h2>
+        <p>Nenhum estado é aprovado enquanto o JSON público não for validado.</p>
       </section>
     </main>
 
+    <nav class="mobile-dock" aria-label="Navegação rápida">
+      <button type="button" data-dock-target="queue">Fila</button>
+      <button type="button" data-dock-target="inspector">Detalhe</button>
+      <button type="button" data-dock-target="reports">Prova</button>
+      <button type="button" data-dock-target="commands">Ações</button>
+    </nav>
+
     <noscript>
-      <section class="noscript" aria-label="No JavaScript fallback">
-        This local cockpit needs JavaScript to render the fixture-backed inspection panels. It has no mutation routes.
+      <section class="noscript" aria-label="Sem JavaScript">
+        Este cockpit local precisa de JavaScript para renderizar os snapshots públicos.
       </section>
     </noscript>
     <script src="app.js" defer></script>

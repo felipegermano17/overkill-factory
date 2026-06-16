@@ -1,6 +1,8 @@
 # Local-First Factory Web Cockpit
 
-A local, read-only cockpit for inspecting Overkill Factory work from public-safe StatusSnapshot data. It does not mutate Hermes, approve gates, close issues, deploy, or claim production readiness.
+A local cockpit for operating the Overkill Factory from public-safe StatusSnapshot data. It can filter work, inspect gates/evidence, record local operator actions and download local receipts.
+
+It does not mutate Hermes, approve gates, close issues, deploy, push to GitHub, or claim production readiness. External effects stay outside this static local surface.
 
 Build the bundled fixture-only dataset:
 
