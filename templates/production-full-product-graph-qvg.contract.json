@@ -1,0 +1,95 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/production-full-product-graph-contract.schema.json",
+  "record_type": "production_full_product_graph_contract",
+  "product_id": "qvg-public-validation-product",
+  "product_name": "Quasar Vault Guard public validation product",
+  "source_ref": "products/qvg-public-validation-product",
+  "product_sot_ref": "products/qvg-public-validation-product/README.md",
+  "selected_capability_pack_refs": [
+    "capability-packs/product-face.json",
+    "capability-packs/solana-quasar.json",
+    "capability-packs/production-release.json"
+  ],
+  "product_delivery_quality_profile_ref": "quality-profiles/production-public-validation.json",
+  "risk_class": "R4",
+  "promotion_ladder_ref": "promotion-ladders/public-repository-production.json",
+  "approval_scope": "Full reusable worker graph for the public Quasar Vault Guard validation product.",
+  "environment_class": "public-production-validation-graph",
+  "graph_kind": "production_full_product_worker_graph",
+  "release_gate_upstream_excluded_lanes": ["human_gate", "release_ops"],
+  "lanes": [
+    {
+      "lane_id": "hermes_orchestration",
+      "worker_id": "factory-orchestrator",
+      "path": ".tmp/factory-runs/hermes-live/multi-profile-dispatch-summary.md",
+      "kind": "file",
+      "scope": "supporting",
+      "reusable_policy": "supporting"
+    },
+    {
+      "lane_id": "product_face",
+      "worker_id": "product-face",
+      "path": ".tmp/factory-runs/production/product-face/product-face-result.json",
+      "record_type": "product_face_result",
+      "scope": "product",
+      "reusable_policy": "strict"
+    },
+    {
+      "lane_id": "security",
+      "worker_id": "codex-security",
+      "path": ".tmp/factory-runs/security/codex-security-full-scan-2026-06-06.md",
+      "kind": "file",
+      "scope": "supporting",
+      "reusable_policy": "supporting"
+    },
+    {
+      "lane_id": "quasar_auditor",
+      "worker_id": "solana-quasar-auditor",
+      "path": ".tmp/factory-runs/production/quasar/auditor-result.json",
+      "record_type": "auditor_result",
+      "scope": "product",
+      "reusable_policy": "strict"
+    },
+    {
+      "lane_id": "cu_svm_economic",
+      "worker_id": "solana-quasar-auditor",
+      "path": ".tmp/factory-runs/production/quasar/cu-svm-economic-proof.json",
+      "record_type": "cu_svm_economic_proof",
+      "proof_kind": "production_quasar_cu_svm_economic",
+      "scope": "product",
+      "reusable_policy": "strict"
+    },
+    {
+      "lane_id": "remote_proof",
+      "worker_id": "remote-proof-runner",
+      "path": ".tmp/factory-runs/production/remote-proof/managed-testbox-result.json",
+      "record_type": "remote_proof_result",
+      "scope": "supporting",
+      "reusable_policy": "strict"
+    },
+    {
+      "lane_id": "human_gate",
+      "worker_id": "human-gate-clerk",
+      "path": ".tmp/factory-runs/production/release/human-gate-record.json",
+      "record_type": "human_gate_record",
+      "scope": "supporting",
+      "reusable_policy": "strict"
+    },
+    {
+      "lane_id": "release_ops",
+      "worker_id": "release-ops-worker",
+      "path": ".tmp/factory-runs/production/release/release-ops-result.json",
+      "record_type": "release_ops_result",
+      "scope": "supporting",
+      "reusable_policy": "strict"
+    },
+    {
+      "lane_id": "supply_chain",
+      "worker_id": "supply-chain-gate",
+      "path": ".tmp/factory-runs/supply-chain/supply-chain-proof.json",
+      "record_type": "supply_chain_result",
+      "scope": "supporting",
+      "reusable_policy": "supporting"
+    }
+  ]
+}

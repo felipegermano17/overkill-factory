@@ -9,6 +9,7 @@
     "graph_kind",
     "graph_mode",
     "product_id",
+    "product_target",
     "result",
     "blocking_findings",
     "evidence_kind",
@@ -50,8 +51,43 @@
     "product_name": {
       "type": "string"
     },
+    "contract_ref": {
+      "type": "string",
+      "minLength": 3
+    },
     "product_target": {
       "type": "object"
+    },
+    "product_sot_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "selected_capability_pack_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "product_delivery_quality_profile_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "risk_class": {
+      "type": "string",
+      "minLength": 2
+    },
+    "promotion_ladder_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "environment_class": {
+      "type": "string",
+      "minLength": 3
+    },
+    "approval_scope": {
+      "type": "string",
+      "minLength": 3
     },
     "result": {
       "enum": ["PASS", "FAIL"]
