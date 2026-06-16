@@ -21,6 +21,35 @@
           "reason": { "type": "string", "minLength": 3 },
           "card_status": { "enum": ["blocked", "planning", "not_created"] },
           "dedupe_key": { "type": "string", "minLength": 1 },
+          "sdlc_feedback_loop_ref": { "type": "string", "minLength": 3 },
+          "sdlc_feedback_loop": {
+            "type": "object",
+            "required": ["record_type", "loop_id", "execution_evidence", "sovereignty_boundary"],
+            "properties": {
+              "record_type": { "const": "factory_sdlc_feedback_loop" },
+              "loop_id": { "type": "string", "minLength": 3 },
+              "execution_evidence": {
+                "type": "object",
+                "required": ["status", "failed_outputs_consumable_as_success"],
+                "properties": {
+                  "status": { "enum": ["PENDING", "PASS", "BLOCKED", "REJECTED", "SUPERSEDED"] },
+                  "failed_outputs_consumable_as_success": { "const": false }
+                },
+                "additionalProperties": true
+              },
+              "sovereignty_boundary": {
+                "type": "object",
+                "required": ["public_safe_refs_only", "raw_private_evidence_embedded", "private_context_retained_outside_public_repo"],
+                "properties": {
+                  "public_safe_refs_only": { "const": true },
+                  "raw_private_evidence_embedded": { "const": false },
+                  "private_context_retained_outside_public_repo": { "const": true }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          },
           "factory_card_candidate": {
             "type": "object",
             "required": [
@@ -33,6 +62,7 @@
               "risk_effective",
               "required_gates",
               "done_definition",
+              "sdlc_feedback_loop_ref",
               "activation_policy"
             ],
             "properties": {
@@ -45,6 +75,7 @@
               "risk_effective": { "type": "string", "minLength": 2 },
               "required_gates": { "type": "array", "minItems": 1, "items": { "type": "string" } },
               "done_definition": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+              "sdlc_feedback_loop_ref": { "type": "string", "minLength": 3 },
               "activation_policy": {
                 "type": "object",
                 "required": ["auto_dispatch_allowed", "human_gate_required", "public_comment_allowed"],
@@ -59,7 +90,22 @@
             "additionalProperties": true
           }
         },
-        "additionalProperties": true
+        "additionalProperties": true,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "decision": {
+                  "enum": ["needs_human_triage", "documentation_only", "implementation_candidate", "critical_factory_change", "private_operator_only"]
+                }
+              },
+              "required": ["decision"]
+            },
+            "then": {
+              "required": ["sdlc_feedback_loop_ref", "sdlc_feedback_loop", "factory_card_candidate"]
+            }
+          }
+        ]
       }
     }
   },
