@@ -1,0 +1,28 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/customer-readiness-gate.schema.json",
+  "record_type": "customer_readiness_gate",
+  "decision": "WAIVED",
+  "target_user_or_customer": "Primary customer or real target user named by the Product SOT.",
+  "first_success_path": "The first user-visible success path is named, but this template is not customer acceptance proof.",
+  "onboarding_handoff": "Public-safe onboarding handoff path for a real user or customer.",
+  "support_path": "Support owner, channel and response route required before customer-ready claim.",
+  "terms_compliance_boundary": "Terms, compliance and authority boundary for the delivered product.",
+  "data_privacy_boundary": "Data, privacy and retention boundary for the delivered product.",
+  "limits_of_use": [
+    "This template cannot claim customer readiness by itself."
+  ],
+  "acceptance_owner": "customer-readiness-owner",
+  "evidence_refs": [
+    "templates/customer-readiness-gate.json"
+  ],
+  "waiver": {
+    "owner": "customer-readiness-owner",
+    "reason": "Template only; a product-specific real-user acceptance proof has not been recorded.",
+    "expires_at": "2099-01-01T00:00:00+00:00",
+    "cannot_claim_customer_ready": true,
+    "next_required_action": "Replace this template with product-specific customer acceptance evidence before claiming customer readiness.",
+    "evidence_refs": [
+      "templates/customer-readiness-gate.json"
+    ]
+  }
+}

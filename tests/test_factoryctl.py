@@ -763,6 +763,17 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(input_contract["agent_readiness_basis"], card["agent_readiness_basis"])
         self.assertEqual(input_contract["model_routing_decision_ref"], card["model_routing_decision_ref"])
 
+    def test_worker_packet_carries_customer_readiness_gate_ref(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+
+        packet = factoryctl.build_worker_packet("implementation-worker", card, card_path)
+
+        self.assertEqual(
+            packet["input_contract"]["customer_readiness_gate_ref"],
+            card["customer_readiness_gate_ref"],
+        )
+
     def test_worker_packet_schema_declares_sdlc_feedback_loop_ref(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))
 
@@ -779,6 +790,8 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("agent_readiness_basis", input_properties)
         self.assertIn("model_routing_decision_ref", input_properties)
         self.assertIn("model_routing_decision", input_properties)
+        self.assertIn("customer_readiness_gate_ref", input_properties)
+        self.assertIn("customer_readiness_gate", input_properties)
 
     def test_worker_result_carries_sdlc_feedback_loop_ref(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
@@ -1005,6 +1018,77 @@ class FactoryCtlTest(unittest.TestCase):
         errors = factoryctl.validate_card(card)
 
         self.assertIn("sdlc_feedback_loop_ref required for material vFinal autonomous execution", errors)
+
+    def test_vfinal_complete_product_requires_customer_readiness_gate(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("customer_readiness_gate_ref", None)
+        card.pop("customer_readiness_gate", None)
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            "customer_readiness_gate or customer_readiness_gate_ref is required for complete product/customer-ready planning",
+            errors,
+        )
+
+    def test_vfinal_customer_readiness_gate_blocks_prose_only_acceptance(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("customer_readiness_gate_ref", None)
+        card["customer_readiness_gate"] = {
+            "$schema": "https://overkill-factory.dev/schemas/customer-readiness-gate.schema.json",
+            "record_type": "customer_readiness_gate",
+            "decision": "PASS",
+            "evidence_refs": ["templates/customer-readiness-gate.json"],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("target_user_or_customer" in error for error in errors), errors)
+        self.assertTrue(any("first_success_path" in error for error in errors), errors)
+        self.assertTrue(any("support_path" in error for error in errors), errors)
+
+    def test_vfinal_waived_customer_readiness_gate_cannot_claim_customer_ready(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["factory_sdlc_lifecycle_state"] = {
+            "lifecycle_acceptance": {
+                "customer_ready_claimed": True,
+                "scope_completion_state": "customer_ready",
+                "proof_level": "customer_validated",
+            }
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("customer_ready claim requires customer_readiness_gate decision PASS", errors)
+
+    def test_vfinal_pass_customer_readiness_gate_allows_customer_ready_claim(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("customer_readiness_gate_ref", None)
+        card["customer_readiness_gate"] = {
+            "$schema": "https://overkill-factory.dev/schemas/customer-readiness-gate.schema.json",
+            "record_type": "customer_readiness_gate",
+            "decision": "PASS",
+            "target_user_or_customer": "External operator using the product for real work.",
+            "first_success_path": "Operator completes the primary outcome without factory assistance.",
+            "onboarding_handoff": "docs/quickstart.md",
+            "support_path": "public support route with owner and response policy",
+            "terms_compliance_boundary": "public terms and authority boundary reviewed for this product",
+            "data_privacy_boundary": "no private customer data embedded in public evidence",
+            "limits_of_use": ["Customer readiness covers this declared product scope only."],
+            "acceptance_owner": "customer-readiness-owner",
+            "evidence_refs": ["templates/customer-readiness-gate.json"],
+        }
+        card["factory_sdlc_lifecycle_state"] = {
+            "lifecycle_acceptance": {
+                "customer_ready_claimed": True,
+                "scope_completion_state": "customer_ready",
+                "proof_level": "customer_validated",
+            }
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertNotIn("customer_ready claim requires customer_readiness_gate decision PASS", errors)
 
     def test_vfinal_planning_only_does_not_require_sdlc_feedback_loop_ref(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")

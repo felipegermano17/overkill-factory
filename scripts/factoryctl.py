@@ -146,6 +146,7 @@ PRODUCTION_SURFACES = {
     "monitoring",
     "rollback",
 }
+CUSTOMER_READY_SURFACES = {"customers", "customer-ready", "user-facing", "client-facing"}
 COMPLETION_SOT_STATUSES = {"DONE", "BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCOPE"}
 COMPLETION_METHOD_STATUSES = {"EXECUTED", "WAIVED", "BLOCKED"}
 USER_QUESTION_CLASSES = {"discoverable", "preference", "authority_required", "access_required", "risk_acceptance", "blocked"}
@@ -2151,6 +2152,90 @@ def _production_ladder_required(card: dict[str, Any]) -> bool:
     )
 
 
+def _customer_readiness_gate_required(card: dict[str, Any]) -> bool:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return False
+    if not _product_planning_required(card):
+        return False
+    if card.get("complete_product_required") is True or str(card.get("request_type") or "").strip() == "product_new":
+        return True
+    if normalized_surfaces(card) & CUSTOMER_READY_SURFACES:
+        return True
+    plan = card.get("product_creation_plan") if isinstance(card.get("product_creation_plan"), dict) else {}
+    scope_text = json.dumps(plan.get("production_readiness_scope", []), sort_keys=True).lower()
+    return any(token in scope_text for token in ("customer", "client", "real-user", "real user", "support", "onboarding"))
+
+
+def _customer_ready_claimed(card: dict[str, Any]) -> bool:
+    if card.get("customer_ready_claimed") is True:
+        return True
+    lifecycle = card.get("factory_sdlc_lifecycle_state")
+    if not isinstance(lifecycle, dict):
+        return False
+    acceptance = lifecycle.get("lifecycle_acceptance") if isinstance(lifecycle.get("lifecycle_acceptance"), dict) else {}
+    scope_state = str(acceptance.get("scope_completion_state") or "").strip()
+    delivery_state = str(lifecycle.get("delivery_state") or "").strip()
+    return (
+        acceptance.get("customer_ready_claimed") is True
+        or scope_state in {"customer_ready", "released", "operational"}
+        or delivery_state in {"released_to_customers", "customer_ready"}
+    )
+
+
+def validate_customer_readiness_gate(gate: dict[str, Any], *, at: str = "customer_readiness_gate") -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("customer-readiness-gate.schema.json")
+    if not schema:
+        return ["customer_readiness_gate schema is not bundled"]
+    errors.extend(validate_node(schema, gate, at, schemas=schemas, root_schema=schema))
+    _validate_lifecycle_refs(_list_items(gate.get("evidence_refs")), f"{at}.evidence_refs", errors)
+
+    decision = str(gate.get("decision") or "").strip().upper()
+    waiver = gate.get("waiver") if isinstance(gate.get("waiver"), dict) else {}
+    if waiver:
+        _validate_lifecycle_refs(_list_items(waiver.get("evidence_refs")), f"{at}.waiver.evidence_refs", errors)
+        expires_at = str(waiver.get("expires_at") or "").strip()
+        if expires_at:
+            try:
+                parsed = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            except ValueError:
+                errors.append(f"{at}.waiver.expires_at must be ISO-8601")
+            else:
+                if parsed.tzinfo is None:
+                    parsed = parsed.replace(tzinfo=timezone.utc)
+                if parsed <= datetime.now(timezone.utc):
+                    errors.append(f"{at}.waiver.expires_at must be in the future")
+    if decision == "PASS" and waiver:
+        errors.append(f"{at} PASS must not carry a waiver")
+    return errors
+
+
+def validate_customer_readiness_contract(card: dict[str, Any]) -> list[str]:
+    if not _customer_readiness_gate_required(card):
+        return []
+    errors: list[str] = []
+    has_gate = isinstance(card.get("customer_readiness_gate"), dict)
+    gate_ref = str(card.get("customer_readiness_gate_ref") or "").strip()
+    if not has_gate and not gate_ref:
+        errors.append("customer_readiness_gate or customer_readiness_gate_ref is required for complete product/customer-ready planning")
+        return errors
+    if gate_ref:
+        _validate_public_ref(gate_ref, "customer_readiness_gate_ref", errors)
+
+    gate = card.get("customer_readiness_gate") if has_gate else _load_repo_local_json_ref(gate_ref)
+    if isinstance(gate, dict) and gate:
+        errors.extend(validate_customer_readiness_gate(gate))
+    elif _customer_ready_claimed(card):
+        errors.append("customer_ready claim requires resolvable customer_readiness_gate")
+
+    if _customer_ready_claimed(card):
+        decision = str(gate.get("decision") or "").strip().upper() if isinstance(gate, dict) else ""
+        if decision != "PASS":
+            errors.append("customer_ready claim requires customer_readiness_gate decision PASS")
+    return errors
+
+
 def _research_required(card: dict[str, Any]) -> bool:
     outcome = card.get("outcome_contract") if isinstance(card.get("outcome_contract"), dict) else {}
     if outcome.get("discovery_depth") == "research_required":
@@ -3795,6 +3880,7 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_product_scope_planning_contract(data))
     errors.extend(validate_specialist_research_contract(data))
     errors.extend(validate_product_creation_readiness_contract(data))
+    errors.extend(validate_customer_readiness_contract(data))
     errors.extend(validate_production_promotion_ladder_contract(data))
     errors.extend(validate_user_facing_autonomy_contract(data))
     errors.extend(validate_material_autonomy_routing_contract(data))
@@ -6241,6 +6327,9 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
                 if isinstance(card.get("product_implementation_readiness"), dict)
                 else None
             ),
+            "customer_readiness_gate_ref": card.get("customer_readiness_gate_ref")
+            or ("card.customer_readiness_gate" if isinstance(card.get("customer_readiness_gate"), dict) else None),
+            "customer_readiness_gate": card.get("customer_readiness_gate"),
             "required_structured_proofs": _activated_capability_pack_structured_proof_ids(card),
             "required_completion_proofs": _required_domain_proof_ids(card, "before_completion"),
             "specialist_research_plan_ref": card.get("specialist_research_plan_ref")
