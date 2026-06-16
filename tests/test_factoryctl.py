@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import re
+import shutil
 import sys
 import tempfile
 import unittest
@@ -438,6 +439,25 @@ PRIVATE_PATH_RE = re.compile(
 
 
 class FactoryCtlTest(unittest.TestCase):
+    def terminal_product_face_ref_card(self) -> dict:
+        card = dict(factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md"))
+        card["phase"] = "F16"
+        card["product_face_result_required"] = True
+        card.pop("product_face_result", None)
+        return card
+
+    def write_temp_product_face_result(self, payload: object, name: str = "product-face-result.json") -> str:
+        tmp_root = ROOT / ".tmp" / "test-product-face-result-refs"
+        tmp_root.mkdir(parents=True, exist_ok=True)
+        directory = Path(tempfile.mkdtemp(dir=tmp_root))
+        self.addCleanup(shutil.rmtree, directory, ignore_errors=True)
+        path = directory / name
+        if isinstance(payload, str):
+            path.write_text(payload, encoding="utf-8")
+        else:
+            path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return path.relative_to(ROOT).as_posix()
+
     def test_local_web_cockpit_card_routes_without_discord_bridge(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "local-web-cockpit-factory-slice" / "card.md")
         card["product_experience_plan"] = {
@@ -695,6 +715,86 @@ class FactoryCtlTest(unittest.TestCase):
             factoryctl.validate_card(card),
         )
 
+    def test_terminal_product_face_result_ref_missing_fails_closed(self) -> None:
+        card = self.terminal_product_face_ref_card()
+        card["product_face_result_ref"] = "reports/product-face/missing-result.json"
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("product_face_result_ref does not exist: reports/product-face/missing-result.json", errors)
+
+    def test_terminal_product_face_empty_inline_result_fails_closed(self) -> None:
+        card = self.terminal_product_face_ref_card()
+        card["product_face_result"] = {}
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("product_face_result missing result, tool_or_profile, executed_by, performance_note, next_action", errors)
+
+    def test_terminal_product_face_result_ref_missing_fails_in_all_result_phases(self) -> None:
+        card = self.terminal_product_face_ref_card()
+        card["phase"] = "F13"
+        card["product_face_result_ref"] = "reports/product-face/missing-result.json"
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("product_face_result_ref does not exist: reports/product-face/missing-result.json", errors)
+
+    def test_terminal_product_face_result_ref_malformed_json_fails_closed(self) -> None:
+        card = self.terminal_product_face_ref_card()
+        ref = self.write_temp_product_face_result("{not valid json")
+        card["product_face_result_ref"] = ref
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(
+            any(error.startswith(f"product_face_result_ref is not valid JSON: {ref}:") for error in errors),
+            errors,
+        )
+
+    def test_terminal_product_face_result_ref_weak_pass_fails_closed(self) -> None:
+        card = self.terminal_product_face_ref_card()
+        weak_result = product_face_result_fixture(screenshots=["not-captured: fake"])
+        ref = self.write_temp_product_face_result(weak_result)
+        card["product_face_result_ref"] = ref
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            f"product_face_result_ref {ref}: product_face_result screenshots must reference captured artifacts",
+            errors,
+        )
+
+    def test_terminal_product_face_result_ref_stale_result_fails_closed(self) -> None:
+        card = self.terminal_product_face_ref_card()
+        stale_result = product_face_result_fixture(active=False, superseded_by="new-product-face-result.json")
+        ref = self.write_temp_product_face_result(stale_result)
+        card["product_face_result_ref"] = ref
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            f"product_face_result_ref {ref}: referenced product_face_result is inactive or superseded",
+            errors,
+        )
+
+    def test_terminal_product_face_result_ref_valid_result_passes(self) -> None:
+        card = self.terminal_product_face_ref_card()
+        ref = self.write_temp_product_face_result(product_face_result_fixture())
+        card["product_face_result_ref"] = ref
+
+        self.assertEqual(factoryctl.validate_card(card), [])
+
+    def test_terminal_product_face_result_ref_external_cannot_claim_full_acceptance(self) -> None:
+        card = self.terminal_product_face_ref_card()
+        card["product_face_result_ref"] = "external:operator-owned-product-face-result"
+
+        self.assertIn(
+            "product_face_result_ref external refs cannot satisfy full product acceptance "
+            "without an inline or validated local/sanitized product_face_result package",
+            factoryctl.validate_card(card),
+        )
+
     def test_vfinal_product_surface_requires_product_experience_os_contract(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
         card["surfaces"] = ["frontend", "product-face"]
@@ -742,7 +842,20 @@ class FactoryCtlTest(unittest.TestCase):
         card["method_contract"]["required_plans"] = ["software_development_plan", "product_experience_plan"]
         card["product_experience_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-experience-plan.json")
         card["product_face_packet"] = factoryctl.load_json_like(ROOT / "templates" / "product-face-packet.json")
-        card["product_face_result_ref"] = ".tmp/factory-runs/product-face/product-face-result.json"
+        journeys = ["primary happy path", "empty/loading/error path", "primary user flow", "blocked/error recovery flow"]
+        states = ["empty", "loading", "success", "error"]
+        viewports = ["desktop 1440x900", "mobile 390x844"]
+        card["product_face_result_ref"] = self.write_temp_product_face_result(
+            product_face_result_fixture(
+                checked_states=states,
+                user_journeys_checked=journeys,
+                usage_evidence_matrix=usage_evidence_matrix_fixture(
+                    journeys=journeys,
+                    states=states,
+                    viewports=viewports,
+                ),
+            )
+        )
 
         self.assertEqual(factoryctl.validate_card(card), [])
 
