@@ -95,6 +95,8 @@ flow, `factoryctl help-next` and the workflow catalog compress them into:
 | Surface Pack | Rules for a visible or operational surface such as web, mobile, CLI, docs or onboarding. |
 | Method Router | The decision step that chooses the process weight and required gates. |
 | Method Contract | The recorded router decision: canonical SOT scope, factory route, engineering methods, evidence and blockers. |
+| SDLC Feedback Loop | The signal thread that connects source signal, triage, model/profile route, execution evidence and learnback. Material autonomous work must not lose this thread. |
+| Material Autonomy Routing | The executable autonomy decision on a material card: autonomy mode, agent readiness basis, model/profile routing decision and fallback route. |
 | Product Creation Plan | The complete product decomposition from Product SOT into work units, slices, proof, stop rules and reconciliation. |
 | Product Context Packet | The compact product-specific rules that implementation and review workers load instead of relying on chat memory. |
 | Product Implementation Readiness | The alignment gate across SOT, method, research, architecture, experience, work units, packs, access and proof. |
@@ -157,22 +159,23 @@ record why a step is omitted.
 19. Loop Plan
 20. Product Context Packet
 21. Product Implementation Readiness
-22. Autonomy Readiness Packet
-23. Ready Gate
-24. Operator Projection
-25. Runtime execution
-26. Worker Results
-27. Verification
-28. Independent Review
-29. Human Gate when required
-30. Closure Summary
-31. Receipt Five
-32. Completion Audit
-33. Production Promotion Ladder and Operations
-34. Release or Block
-35. Monitoring, Incident and Support when needed
-36. Learnback
-37. Factory Maturity Audit
+22. SDLC Feedback Loop for material autonomous work
+23. Autonomy Readiness Packet and material autonomy routing
+24. Ready Gate
+25. Operator Projection
+26. Runtime execution
+27. Worker Results
+28. Verification
+29. Independent Review
+30. Human Gate when required
+31. Closure Summary
+32. Receipt Five
+33. Completion Audit
+34. Production Promotion Ladder and Operations
+35. Release or Block
+36. Monitoring, Incident and Support when needed
+37. Learnback
+38. Factory Maturity Audit
 ```
 
 ## Work Units

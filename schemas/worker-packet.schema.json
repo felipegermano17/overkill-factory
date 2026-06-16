@@ -110,6 +110,32 @@
             "null"
           ],
           "minLength": 3
+        },
+        "autonomy_mode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 3
+        },
+        "agent_readiness_basis": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "model_routing_decision_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 3
+        },
+        "model_routing_decision": {
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "additionalProperties": true

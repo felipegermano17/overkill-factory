@@ -202,6 +202,21 @@ SECRET_POLICY_FORBIDDEN_KEYS = {
     "local_secret_path",
 }
 HARDENING_REQUIRED_EXECUTION_MODES = {"bounded_execution", "material_execution", "production_operation"}
+MATERIAL_AUTONOMY_MODES = {
+    "bounded_execution",
+    "material_execution",
+    "production_operation",
+    "human_only",
+    "deferred",
+}
+MODEL_ROUTING_MODEL_CLASSES = {
+    "small_fast",
+    "balanced",
+    "frontier_reasoning",
+    "specialist_tooling",
+    "human_only",
+    "deferred",
+}
 TOOL_USING_SURFACES = {
     "shell",
     "browser",
@@ -2308,6 +2323,82 @@ def _execution_mode(card: dict[str, Any]) -> str:
     return ""
 
 
+def _model_routing_decision_errors(decision: Any, *, at: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(decision, dict):
+        return [f"{at} must be an object"]
+    for field in ("router_ref", "selected_profile", "selected_model_class", "selection_basis"):
+        if field == "selection_basis":
+            if not isinstance(decision.get(field), dict):
+                errors.append(f"{at}.{field} must be a non-empty object")
+        elif not _non_empty_text(decision.get(field)):
+            errors.append(f"{at}.{field} is required")
+    selected_model_class = str(decision.get("selected_model_class") or "").strip()
+    if selected_model_class and selected_model_class not in MODEL_ROUTING_MODEL_CLASSES:
+        errors.append(f"{at}.selected_model_class must be one of " + ", ".join(sorted(MODEL_ROUTING_MODEL_CLASSES)))
+    basis = decision.get("selection_basis") if isinstance(decision.get("selection_basis"), dict) else {}
+    for field in (
+        "cost",
+        "speed",
+        "quality",
+        "context_need",
+        "data_sensitivity",
+        "tool_requirements",
+        "expected_horizon",
+        "fallback_route",
+    ):
+        if not _non_empty_text(basis.get(field)):
+            errors.append(f"{at}.selection_basis.{field} is required")
+    if decision.get("model_independence_preserved") is not True:
+        errors.append(f"{at}.model_independence_preserved must be true")
+    if decision.get("single_provider_assumption") is not False:
+        errors.append(f"{at}.single_provider_assumption must be false")
+    return errors
+
+
+def validate_material_autonomy_routing_contract(card: dict[str, Any]) -> list[str]:
+    if not material_sdlc_feedback_loop_required(card):
+        return []
+    errors: list[str] = []
+    autonomy_mode = str(card.get("autonomy_mode") or "").strip()
+    execution_mode = _execution_mode(card)
+    if not autonomy_mode:
+        errors.append("autonomy_mode required for material vFinal autonomous execution")
+    elif autonomy_mode not in MATERIAL_AUTONOMY_MODES:
+        errors.append("autonomy_mode must be one of " + ", ".join(sorted(MATERIAL_AUTONOMY_MODES)))
+    elif execution_mode and autonomy_mode != execution_mode:
+        errors.append("autonomy_mode must match autonomy readiness execution_mode")
+
+    basis = card.get("agent_readiness_basis")
+    if not isinstance(basis, dict) or not basis:
+        errors.append("agent_readiness_basis required for material vFinal autonomous execution")
+    else:
+        for field in (
+            "human_guidance_required",
+            "information_sensitivity",
+            "agent_readiness_level",
+            "allowed_autonomy_scope",
+            "fallback_route",
+        ):
+            if not _non_empty_text(basis.get(field)):
+                errors.append(f"agent_readiness_basis.{field} is required")
+        evidence_refs = _list_items(basis.get("evidence_refs"))
+        if not evidence_refs:
+            errors.append("agent_readiness_basis.evidence_refs must be a non-empty array")
+        else:
+            errors.extend(_evidence_ref_errors(evidence_refs, ROOT))
+
+    routing_ref = str(card.get("model_routing_decision_ref") or "").strip()
+    routing_decision = card.get("model_routing_decision")
+    if routing_ref:
+        _validate_public_ref(routing_ref, "model_routing_decision_ref", errors)
+    if routing_decision is not None:
+        errors.extend(_model_routing_decision_errors(routing_decision, at="model_routing_decision"))
+    if not routing_ref and routing_decision is None:
+        errors.append("model_routing_decision_ref or model_routing_decision required for material vFinal autonomous execution")
+    return errors
+
+
 def _tool_surfaces_from(card: dict[str, Any]) -> set[str]:
     surfaces: set[str] = set()
     for source_name in ("agent_runtime_hardening_profile", "runtime_contract"):
@@ -3467,6 +3558,7 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_product_creation_readiness_contract(data))
     errors.extend(validate_production_promotion_ladder_contract(data))
     errors.extend(validate_user_facing_autonomy_contract(data))
+    errors.extend(validate_material_autonomy_routing_contract(data))
     errors.extend(
         _validate_vfinal_schema_backed_plan_gate(
             data,
@@ -5780,6 +5872,10 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "professional_design_process": card.get("professional_design_process"),
             "learning_proposal_refs": card.get("learning_proposal_refs", []),
             "sdlc_feedback_loop_ref": card.get("sdlc_feedback_loop_ref"),
+            "autonomy_mode": card.get("autonomy_mode"),
+            "agent_readiness_basis": card.get("agent_readiness_basis"),
+            "model_routing_decision_ref": card.get("model_routing_decision_ref"),
+            "model_routing_decision": card.get("model_routing_decision"),
             "canonical_product_sot_ref": card.get("canonical_product_sot_ref") or "card.product_sot",
             "product_creation_plan_ref": card.get("product_creation_plan_ref")
             or ("card.product_creation_plan" if isinstance(card.get("product_creation_plan"), dict) else None),
