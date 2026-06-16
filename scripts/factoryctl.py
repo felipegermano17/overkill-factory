@@ -18,7 +18,7 @@ import subprocess
 import sys
 import sysconfig
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
 from typing import Any, Callable
 
@@ -3702,6 +3702,66 @@ def _repo_local_artifact_path(ref: str) -> Path | None:
     return _repo_local_json_ref_path(ref)
 
 
+def _external_visual_artifact_manifests(result: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    manifests = result.get("external_visual_artifact_manifests")
+    if not isinstance(manifests, list):
+        return {}
+    by_ref: dict[str, dict[str, Any]] = {}
+    for manifest in manifests:
+        if not isinstance(manifest, dict):
+            continue
+        manifest_ref = str(manifest.get("manifest_ref") or "").strip()
+        if manifest_ref:
+            by_ref[manifest_ref] = manifest
+    return by_ref
+
+
+def _validate_external_visual_artifact_manifest(
+    manifest: dict[str, Any],
+    *,
+    package_ref: str,
+    record: dict[str, Any],
+    at: str,
+) -> list[str]:
+    errors: list[str] = []
+    manifest_at = f"{at}.external_manifest[{package_ref}]"
+    for field in ("manifest_ref", "target", "captured_at", "expires_at"):
+        if not _non_empty_text(manifest.get(field)):
+            errors.append(f"{manifest_at}.{field} is required")
+    if manifest.get("bounded_acceptance") is not True:
+        errors.append(f"{manifest_at}.bounded_acceptance=true is required")
+    if manifest.get("sanitized") is not True:
+        errors.append(f"{manifest_at}.sanitized=true is required")
+    if _non_empty_text(manifest.get("target")) and _non_empty_text(record.get("target")) and manifest.get("target") != record.get("target"):
+        errors.append(f"{manifest_at}.target must match visual_artifacts target")
+    captured_at = _parse_artifact_timestamp(manifest.get("captured_at"))
+    if manifest.get("captured_at") and captured_at is None:
+        errors.append(f"{manifest_at}.captured_at must be an ISO timestamp")
+    expires_at = _parse_artifact_timestamp(manifest.get("expires_at"))
+    if manifest.get("expires_at") and expires_at is None:
+        errors.append(f"{manifest_at}.expires_at must be an ISO timestamp")
+    elif expires_at is not None and expires_at <= datetime.now(timezone.utc):
+        errors.append(f"{manifest_at} is stale; expires_at is in the past")
+    artifacts = manifest.get("artifacts")
+    if not isinstance(artifacts, list) or not artifacts:
+        errors.append(f"{manifest_at}.artifacts must be a non-empty array")
+        return errors
+    evidence_ref = str(record.get("evidence_ref") or "").strip()
+    state = _normalized_usage_value(record.get("state"))
+    viewport_family = _usage_viewport_family(record.get("viewport"))
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        if (
+            str(artifact.get("evidence_ref") or "").strip() == evidence_ref
+            and _normalized_usage_value(artifact.get("state")) == state
+            and _usage_viewport_family(artifact.get("viewport")) == viewport_family
+        ):
+            return errors
+    errors.append(f"{manifest_at}.artifacts must include evidence_ref/state/viewport binding for {evidence_ref}")
+    return errors
+
+
 def validate_visual_artifact_records(result: dict[str, Any], *, is_pass: bool) -> list[str]:
     errors: list[str] = []
     records_value = result.get("visual_artifacts")
@@ -3716,6 +3776,7 @@ def validate_visual_artifact_records(result: dict[str, Any], *, is_pass: bool) -
     checked_states = {_normalized_usage_value(state) for state in _list_items(result.get("checked_states"))}
     viewport_families = {_usage_viewport_family(viewport) for viewport in _list_items(result.get("viewports"))}
     records_by_ref: dict[str, list[dict[str, Any]]] = {}
+    external_manifests = _external_visual_artifact_manifests(result)
 
     for index, record in enumerate(records):
         at = f"product_face_result.visual_artifacts[{index}]"
@@ -3750,6 +3811,20 @@ def validate_visual_artifact_records(result: dict[str, Any], *, is_pass: bool) -
                     errors.append(f"{at}.sanitized=true is required for external visual evidence")
                 if not _non_empty_text(record.get("external_package_ref")):
                     errors.append(f"{at}.external_package_ref is required for external visual evidence")
+                package_ref = str(record.get("external_package_ref") or "").strip()
+                if is_pass and package_ref:
+                    manifest = external_manifests.get(package_ref)
+                    if not isinstance(manifest, dict):
+                        errors.append(f"{at}.external_package_ref must resolve to external_visual_artifact_manifests entry: {package_ref}")
+                    else:
+                        errors.extend(
+                            _validate_external_visual_artifact_manifest(
+                                manifest,
+                                package_ref=package_ref,
+                                record=record,
+                                at=at,
+                            )
+                        )
             else:
                 ref_errors = _evidence_ref_errors([evidence_ref], ROOT)
                 errors.extend(f"{at}: {error}" for error in ref_errors)
@@ -6690,13 +6765,16 @@ def build_worker_result(
         product_face_viewports = ["synthetic-desktop", "synthetic-mobile"] if evidence_kind == "synthetic" else ["desktop 1440x900"]
         product_face_states = ["default", "empty", "loading", "error", "success"]
         product_face_journeys = ["open target", "inspect states"]
+        product_face_target = source_card_ref(Path("<memory>"))
+        product_face_captured_at = utc_now()
+        product_face_external_refs = [ref for ref in evidence_refs if _is_explicit_external_ref(ref)]
         product_face_visual_artifacts = [
             {
                 "evidence_ref": ref,
-                "target": source_card_ref(Path("<memory>")),
+                "target": product_face_target,
                 "viewport": viewport,
                 "state": state,
-                "captured_at": utc_now(),
+                "captured_at": product_face_captured_at,
                 "freshness_status": "bounded_external" if _is_explicit_external_ref(ref) else "fresh",
                 "bounded_acceptance": True,
                 "sanitized": True,
@@ -6707,6 +6785,34 @@ def build_worker_result(
             for viewport in product_face_viewports
             for state in product_face_states
         ]
+        product_face_external_manifests = []
+        if product_face_external_refs:
+            product_face_external_expires_at = (
+                datetime.now(timezone.utc) + timedelta(days=14)
+            ).isoformat(timespec="seconds")
+            product_face_external_manifests.append(
+                {
+                    "manifest_ref": "external:product-face-worker-result-package",
+                    "target": product_face_target,
+                    "captured_at": product_face_captured_at,
+                    "expires_at": product_face_external_expires_at,
+                    "bounded_acceptance": True,
+                    "sanitized": True,
+                    "owner": "product-face-validator",
+                    "reviewer": "product-face-validator",
+                    "artifacts": [
+                        {
+                            "evidence_ref": ref,
+                            "viewport": viewport,
+                            "state": state,
+                            "captured_at": product_face_captured_at,
+                        }
+                        for ref in product_face_external_refs
+                        for viewport in product_face_viewports
+                        for state in product_face_states
+                    ],
+                }
+            )
         payload.update(
             {
                 "screenshots": evidence_refs,
@@ -6731,6 +6837,7 @@ def build_worker_result(
                     for viewport in product_face_viewports
                 ],
                 "visual_artifacts": product_face_visual_artifacts,
+                "external_visual_artifact_manifests": product_face_external_manifests,
                 "accessibility": {"checked": True, "mode": evidence_kind},
                 "a11y": {"status": "pass" if not blocking_findings else "fail", "mode": evidence_kind},
                 "overlap": {"checked": True, "mode": evidence_kind},
