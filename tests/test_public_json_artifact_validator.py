@@ -61,6 +61,15 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         errors = validator.validate_node(schema, {"result": "BLOCKED"}, "$")
         self.assertTrue(any("recovery_recommendation" in error for error in errors))
 
+    def test_product_face_result_schema_requires_visual_artifacts_for_pass(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["product-face-result.schema.json"]
+
+        errors = validator.validate_node(schema, {"result": "PASS"}, "$", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("visual_artifacts" in error for error in errors), errors)
+
     def test_quasar_runtime_schema_requires_pinned_head_only_for_pass(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()

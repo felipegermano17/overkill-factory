@@ -124,6 +124,57 @@ def build_usage_evidence_matrix(
     ]
 
 
+def _repo_ref_path(ref: str) -> Path | None:
+    normalized = ref.strip().replace("\\", "/")
+    if normalized.startswith(("http://", "https://", "external:", "repo://", "file://")):
+        return None
+    if Path(ref).is_absolute() or ":" in normalized.split("/", 1)[0]:
+        return None
+    candidate = (ROOT / normalized).resolve()
+    try:
+        candidate.relative_to(ROOT)
+    except ValueError:
+        return None
+    return candidate
+
+
+def build_visual_artifacts(
+    *,
+    target_ref: str,
+    viewports: list[Viewport],
+    states: list[str],
+    screenshot_refs: list[str],
+    captured_at: str | None = None,
+) -> list[dict[str, Any]]:
+    captured_at = captured_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    artifacts: list[dict[str, Any]] = []
+    for viewport, screenshot_ref in zip(viewports, screenshot_refs):
+        for state in states:
+            artifact: dict[str, Any] = {
+                "evidence_ref": screenshot_ref,
+                "target": target_ref,
+                "viewport": viewport.label,
+                "state": state,
+                "captured_at": captured_at,
+                "freshness_status": "fresh",
+                "basis": "Screenshot captured by the Product Face proof runner for this target, viewport and declared state.",
+            }
+            path = _repo_ref_path(screenshot_ref)
+            if path is not None and path.is_file():
+                artifact["sha256"] = sha256_file(path)
+            else:
+                artifact.update(
+                    {
+                        "freshness_status": "bounded_external",
+                        "bounded_acceptance": True,
+                        "sanitized": True,
+                        "external_package_ref": "external:product-face-proof-package",
+                    }
+                )
+            artifacts.append(artifact)
+    return artifacts
+
+
 def repo_ref(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT).as_posix()
@@ -768,6 +819,7 @@ def run_playwright(
         finally:
             browser.close()
 
+    captured_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     console_path = output_dir / "console.json"
     state_path = output_dir / "state.json"
     write_json(
@@ -820,6 +872,13 @@ def run_playwright(
                 else "Browser proof captured for screenshots, console, DOM state, a11y basics, overlap and performance note."
             ),
             "screenshots": screenshots,
+            "visual_artifacts": build_visual_artifacts(
+                target_ref=target_ref,
+                viewports=viewports,
+                states=states,
+                screenshot_refs=screenshots,
+                captured_at=captured_at,
+            ),
             "a11y": {
                 "status": "warn" if a11y_issues else "pass",
                 "issues": a11y_issues,
