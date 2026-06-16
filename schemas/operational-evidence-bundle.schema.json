@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operational-evidence-bundle.schema.json",
+  "title": "Overkill Factory Operational Evidence Bundle",
+  "type": "object",
+  "required": [
+    "record_type",
+    "bundle_id",
+    "claim_id",
+    "claim_text",
+    "claim_scope",
+    "materiality",
+    "verification_method",
+    "steps_executed",
+    "expected_result",
+    "observed_result",
+    "artifacts",
+    "verdict",
+    "evidence_kind",
+    "confidence_boundary",
+    "freshness",
+    "private_evidence_policy",
+    "reusable_for_product",
+    "next_safe_action"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 3
+    },
+    "record_type": {
+      "const": "operational_evidence_bundle"
+    },
+    "bundle_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "claim_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "claim_text": {
+      "type": "string",
+      "minLength": 12
+    },
+    "claim_scope": {
+      "enum": [
+        "product",
+        "work_unit",
+        "gate",
+        "runtime",
+        "security",
+        "release",
+        "ux",
+        "data",
+        "docs",
+        "research",
+        "external_source"
+      ]
+    },
+    "materiality": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "verification_method": {
+      "enum": [
+        "static_check",
+        "schema_validation",
+        "unit_test",
+        "integration_test",
+        "browser_check",
+        "visual_review",
+        "manual_review",
+        "runtime_probe",
+        "external_research",
+        "security_scan",
+        "performance_probe",
+        "other"
+      ]
+    },
+    "steps_executed": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 4
+      }
+    },
+    "expected_result": {
+      "type": "string",
+      "minLength": 6
+    },
+    "observed_result": {
+      "type": "string",
+      "minLength": 6
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_ref",
+          "artifact_type",
+          "public_safe",
+          "basis"
+        ],
+        "properties": {
+          "artifact_ref": {
+            "type": "string",
+            "minLength": 3
+          },
+          "artifact_type": {
+            "enum": [
+              "repo_file",
+              "schema_validation",
+              "test_output_ref",
+              "receipt_ref",
+              "report_ref",
+              "screenshot_ref",
+              "text_snapshot",
+              "external_ref",
+              "other"
+            ]
+          },
+          "public_safe": {
+            "const": true
+          },
+          "basis": {
+            "type": "string",
+            "minLength": 6
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "verdict": {
+      "enum": [
+        "CONFIRMED",
+        "REFUTED",
+        "INCONCLUSIVE",
+        "BLOCKED",
+        "WAIVED"
+      ]
+    },
+    "evidence_kind": {
+      "enum": [
+        "real",
+        "synthetic",
+        "waiver"
+      ]
+    },
+    "confidence_boundary": {
+      "type": "string",
+      "minLength": 12
+    },
+    "freshness": {
+      "type": "object",
+      "required": [
+        "checked_at",
+        "source_ref"
+      ],
+      "properties": {
+        "checked_at": {
+          "type": "string",
+          "minLength": 10
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": true
+    },
+    "private_evidence_policy": {
+      "type": "object",
+      "required": [
+        "contains_private_evidence",
+        "raw_private_evidence_embedded",
+        "public_safe_refs_only",
+        "redaction_policy"
+      ],
+      "properties": {
+        "contains_private_evidence": {
+          "type": "boolean"
+        },
+        "raw_private_evidence_embedded": {
+          "const": false
+        },
+        "public_safe_refs_only": {
+          "const": true
+        },
+        "redaction_policy": {
+          "type": "string",
+          "minLength": 6
+        }
+      },
+      "additionalProperties": false
+    },
+    "reusable_for_product": {
+      "type": "boolean"
+    },
+    "accepted_by": {
+      "type": "string",
+      "minLength": 3
+    },
+    "reviewer_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "next_safe_action": {
+      "type": "string",
+      "minLength": 6
+    },
+    "cannot_satisfy": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 6
+      }
+    },
+    "waiver": {
+      "type": "object",
+      "required": [
+        "owner",
+        "reason",
+        "expires_at",
+        "reviewer_or_human_gate_ref",
+        "compensating_controls",
+        "evidence_refs"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 2
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 6
+        },
+        "expires_at": {
+          "type": "string",
+          "minLength": 10
+        },
+        "reviewer_or_human_gate_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "compensating_controls": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "WAIVED"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "required": [
+          "waiver"
+        ],
+        "properties": {
+          "evidence_kind": {
+            "const": "waiver"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evidence_kind": {
+            "const": "synthetic"
+          }
+        },
+        "required": [
+          "evidence_kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "cannot_satisfy"
+        ],
+        "properties": {
+          "reusable_for_product": {
+            "const": false
+          },
+          "cannot_satisfy": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "enum": [
+              "INCONCLUSIVE",
+              "BLOCKED"
+            ]
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "next_safe_action": {
+            "type": "string",
+            "minLength": 12
+          }
+        }
+      }
+    }
+  ]
+}

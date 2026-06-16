@@ -4115,6 +4115,90 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_operational_evidence_bundle(bundle: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("operational-evidence-bundle.schema.json")
+    if not schema:
+        return ["operational_evidence_bundle schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            bundle,
+            "operational_evidence_bundle",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    verdict = str(bundle.get("verdict") or "").strip().upper()
+    evidence_kind = str(bundle.get("evidence_kind") or "").strip().lower()
+    artifacts = bundle.get("artifacts") if isinstance(bundle.get("artifacts"), list) else []
+    artifact_refs: list[str] = []
+    for index, artifact in enumerate(artifacts):
+        if not isinstance(artifact, dict):
+            continue
+        artifact_ref = str(artifact.get("artifact_ref") or "").strip()
+        artifact_refs.append(artifact_ref)
+        sanitized_ref, redaction = sanitize_public_ref(artifact_ref)
+        if redaction is not None:
+            errors.append(
+                "operational_evidence_bundle.artifacts"
+                f"[{index}].artifact_ref must be public-safe; got {sanitized_ref}"
+            )
+        if artifact.get("public_safe") is not True:
+            errors.append(f"operational_evidence_bundle.artifacts[{index}].public_safe must be true")
+
+    if verdict == "CONFIRMED":
+        for field in ("verification_method", "expected_result", "observed_result", "confidence_boundary"):
+            if not _non_empty_text(bundle.get(field)):
+                errors.append(f"operational_evidence_bundle CONFIRMED requires {field}")
+        if not _list_items(bundle.get("steps_executed")):
+            errors.append("operational_evidence_bundle CONFIRMED requires steps_executed")
+        if not artifact_refs:
+            errors.append("operational_evidence_bundle CONFIRMED requires artifact refs")
+
+    if verdict in {"INCONCLUSIVE", "BLOCKED"} and len(str(bundle.get("next_safe_action") or "").strip()) < 12:
+        errors.append(f"operational_evidence_bundle {verdict} requires the smallest safe next action")
+
+    waiver = bundle.get("waiver")
+    if verdict == "WAIVED":
+        if evidence_kind != "waiver":
+            errors.append("operational_evidence_bundle WAIVED requires evidence_kind=waiver")
+        if not isinstance(waiver, dict):
+            errors.append("operational_evidence_bundle WAIVED requires waiver object")
+        else:
+            for field in ("owner", "reason", "expires_at", "reviewer_or_human_gate_ref"):
+                if not _non_empty_text(waiver.get(field)):
+                    errors.append(f"operational_evidence_bundle.waiver missing {field}")
+            for index, ref in enumerate(_list_items(waiver.get("evidence_refs"))):
+                _, redaction = sanitize_public_ref(ref)
+                if redaction is not None:
+                    errors.append(
+                        "operational_evidence_bundle.waiver.evidence_refs"
+                        f"[{index}] must be public-safe"
+                    )
+    elif isinstance(waiver, dict):
+        errors.append("operational_evidence_bundle waiver object requires verdict=WAIVED")
+
+    if evidence_kind == "waiver" and verdict != "WAIVED":
+        errors.append("operational_evidence_bundle evidence_kind=waiver requires verdict=WAIVED")
+
+    if evidence_kind == "synthetic":
+        if bundle.get("reusable_for_product") is not False:
+            errors.append("operational_evidence_bundle synthetic evidence requires reusable_for_product=false")
+        if not _list_items(bundle.get("cannot_satisfy")):
+            errors.append("operational_evidence_bundle synthetic evidence requires cannot_satisfy")
+
+    policy = bundle.get("private_evidence_policy") if isinstance(bundle.get("private_evidence_policy"), dict) else {}
+    if policy.get("raw_private_evidence_embedded") is not False:
+        errors.append("operational_evidence_bundle must not embed raw private evidence")
+    if policy.get("public_safe_refs_only") is not True:
+        errors.append("operational_evidence_bundle requires public_safe_refs_only=true")
+
+    return errors
+
+
 def _required_product_states(card: dict[str, Any]) -> list[str]:
     plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
     packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
@@ -8314,6 +8398,16 @@ def command_validate_completion(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_evidence_bundle(args: argparse.Namespace) -> int:
+    errors = validate_operational_evidence_bundle(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_worker_packet(args: argparse.Namespace) -> int:
     card = load_json_like(args.card)
     if args.required_only and args.worker != "all":
@@ -8606,6 +8700,14 @@ def build_parser() -> argparse.ArgumentParser:
     validate_completion_parser.add_argument("--card", type=Path, required=True)
     validate_completion_parser.add_argument("--receipt", type=Path, required=True)
     validate_completion_parser.set_defaults(func=command_validate_completion)
+
+    validate_evidence_bundle_parser = sub.add_parser("validate-evidence-bundle")
+    validate_evidence_bundle_parser.add_argument("path", type=Path)
+    validate_evidence_bundle_parser.set_defaults(func=command_validate_evidence_bundle)
+
+    validate_bundle_parser = sub.add_parser("validate-bundle")
+    validate_bundle_parser.add_argument("path", type=Path)
+    validate_bundle_parser.set_defaults(func=command_validate_evidence_bundle)
 
     worker_packet_parser = sub.add_parser("worker-packet")
     worker_packet_parser.add_argument("--worker", choices=[*WORKERS.keys(), "all"], required=True)

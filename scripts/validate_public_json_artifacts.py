@@ -105,6 +105,36 @@ RAW_RESEARCH_FIELDS = {
     "private_capture_path",
 }
 
+
+def public_artifact_ref_error(ref: Any) -> str | None:
+    value = str(ref or "").strip()
+    normalized = value.replace("\\", "/")
+    if not value:
+        return "empty artifact ref"
+    if contains_private_kanban_task_marker(value):
+        return "raw Hermes Kanban task id"
+    if PRIVATE_MARKERS.search(value):
+        return "private local or runtime marker"
+    if value.startswith("external:"):
+        trusted_prefixes = (
+            "external:sanitized",
+            "external:operator",
+            "external:public",
+            "external:maintainer",
+            "external:source-card",
+            "external:memory",
+        )
+        if value.startswith(trusted_prefixes):
+            return None
+        return "untrusted external ref"
+    if value.startswith(("http://", "https://", "file://")):
+        return "absolute, URL, or private runtime ref"
+    if Path(value).is_absolute() or ":" in normalized.split("/", 1)[0]:
+        return "absolute, URL, or private runtime ref"
+    if normalized.startswith((".tmp/", "tmp/", "reports/private/", "private/", "run-evidence/")) or "/.tmp/" in normalized:
+        return "private or transient evidence location"
+    return None
+
 ANNOTATION_SCHEMA_KEYWORDS = {
     "$comment",
     "$id",
@@ -421,6 +451,29 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                         errors.append(f"{at}.waiver.{field}: expected non-empty array")
         if data.get("evidence_kind") == "waiver" and data.get("result") != "WAIVED":
             errors.append(f"{at}: evidence_kind=waiver requires result=WAIVED")
+    if data.get("record_type") == "operational_evidence_bundle":
+        artifacts = data.get("artifacts") if isinstance(data.get("artifacts"), list) else []
+        for index, artifact in enumerate(artifacts):
+            if not isinstance(artifact, dict):
+                continue
+            reason = public_artifact_ref_error(artifact.get("artifact_ref"))
+            if reason:
+                errors.append(f"{at}.artifacts[{index}].artifact_ref: {reason}")
+        waiver = data.get("waiver") if isinstance(data.get("waiver"), dict) else {}
+        waiver_refs = waiver.get("evidence_refs") if isinstance(waiver.get("evidence_refs"), list) else []
+        for index, ref in enumerate(waiver_refs):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.waiver.evidence_refs[{index}]: {reason}")
+        if data.get("verdict") == "WAIVED" and data.get("evidence_kind") != "waiver":
+            errors.append(f"{at}: WAIVED operational_evidence_bundle requires evidence_kind=waiver")
+        if data.get("evidence_kind") == "waiver" and data.get("verdict") != "WAIVED":
+            errors.append(f"{at}: evidence_kind=waiver requires verdict=WAIVED")
+        if data.get("evidence_kind") == "synthetic":
+            if data.get("reusable_for_product") is not False:
+                errors.append(f"{at}: synthetic operational_evidence_bundle requires reusable_for_product=false")
+            if not data.get("cannot_satisfy"):
+                errors.append(f"{at}: synthetic operational_evidence_bundle requires cannot_satisfy")
     if data.get("record_type") == "product_face_result" and data.get("reusable_for_product") is True:
         if not str(data.get("packet_ref") or "").strip():
             errors.append(f"{at}: reusable product_face_result requires packet_ref")
