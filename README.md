@@ -178,14 +178,17 @@ as a place to add files.
 
 ## Current Status
 
-The public repository has validated schemas, worker profiles, Hermes profile
-bindings, adapter hooks, safety scans, a packaged CLI and a runnable public
-example. The adapter patch and transition hook are public, and the local
-validation suite is the required first check before publication or release work.
+Factory v1 is the public kernel release. The repository has validated schemas,
+worker profiles, Hermes profile bindings, adapter hooks, safety scans, a
+packaged CLI, a runnable public example, Product Face proof drivers,
+capability-pack activation checks, production worker graph contracts and public
+surface synchronization checks.
 
-The project is still not a hosted service and not a production launch. A user
-must connect it to their own Hermes runtime, configure any real tools they want
-workers to use, and provide real approval records for high-risk work.
+The project is still not a hosted service and not a production launch for a
+user's product. A user must connect it to their own Hermes runtime, configure
+any real tools they want workers to use, and provide real approval records for
+high-risk work. Private runtime or cockpit production readiness evidence stays
+outside the public repo.
 
 ## Documentation Authority
 
