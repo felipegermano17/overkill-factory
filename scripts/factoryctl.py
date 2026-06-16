@@ -3501,8 +3501,13 @@ def validate_card(data: dict[str, Any]) -> list[str]:
                 errors.extend(validate_professional_design_process(data["professional_design_process"]))
                 errors.extend(professional_design_process_gate_blockers(data["professional_design_process"]))
     phase = str(data.get("phase", "")).upper()
-    if product_experience_surface_required(data) and phase in {"F11", "F16", "F17"}:
-        if not isinstance(data.get("product_face_result"), dict) and not str(data.get("product_face_result_ref") or "").strip():
+    if product_face_result_required(data):
+        product_face_result = data.get("product_face_result")
+        if isinstance(product_face_result, dict):
+            errors.extend(validate_product_face_result_against_card(product_face_result, data))
+        elif str(data.get("product_face_result_ref") or "").strip():
+            errors.extend(validate_product_face_result_ref(data, str(data.get("product_face_result_ref") or "")))
+        else:
             errors.append("product_face_result or product_face_result_ref required before decomposition/release")
     runtime_contract = data.get("runtime_contract", {}) if isinstance(data.get("runtime_contract"), dict) else {}
     if runtime_contract.get("remote_proof_required") is True:
@@ -3877,6 +3882,53 @@ def validate_product_face_result_against_card(result: dict[str, Any], card: dict
         )
 
     return errors
+
+
+def _terminal_product_face_result_path_errors(ref: str) -> tuple[Path | None, list[str]]:
+    normalized = ref.strip().replace("\\", "/")
+    if normalized.startswith(("http://", "https://", "external:", "repo://")):
+        return (
+            None,
+            [
+                "product_face_result_ref external refs cannot satisfy full product acceptance "
+                "without an inline or validated local/sanitized product_face_result package"
+            ],
+        )
+    if normalized.startswith("file://") or Path(ref).is_absolute() or ":" in normalized.split("/", 1)[0]:
+        return None, [f"product_face_result_ref must be repo-relative or explicit bounded external ref: {ref}"]
+
+    candidate = (ROOT / normalized).resolve()
+    try:
+        candidate.relative_to(ROOT.resolve())
+    except ValueError:
+        return None, [f"product_face_result_ref escapes repo root: {ref}"]
+    if not candidate.exists():
+        return None, [f"product_face_result_ref does not exist: {ref}"]
+    if not candidate.is_file():
+        return None, [f"product_face_result_ref must point to a file: {ref}"]
+    return candidate, []
+
+
+def validate_product_face_result_ref(card: dict[str, Any], ref: str) -> list[str]:
+    ref = ref.strip()
+    if not ref:
+        return ["product_face_result_ref is required"]
+    path, errors = _terminal_product_face_result_path_errors(ref)
+    if errors:
+        return errors
+    assert path is not None
+    try:
+        result = load_json_like(path)
+    except json.JSONDecodeError as exc:
+        return [f"product_face_result_ref is not valid JSON: {ref}: {exc.msg}"]
+    except ValueError as exc:
+        return [f"product_face_result_ref must contain a JSON object: {ref}: {exc}"]
+
+    if not worker_result_is_active(result):
+        return [f"product_face_result_ref {ref}: referenced product_face_result is inactive or superseded"]
+
+    result_errors = validate_product_face_result_against_card(result, card)
+    return [f"product_face_result_ref {ref}: {error}" for error in result_errors]
 
 
 def _coverage_keys(coverage: object) -> list[str]:
