@@ -1282,6 +1282,32 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(factoryctl.validate_card(card), [])
 
+    def test_vfinal_material_execution_resolves_model_routing_decision_ref(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("model_routing_decision", None)
+
+        self.assertEqual(factoryctl.validate_card(card), [])
+
+    def test_vfinal_material_execution_rejects_unresolved_model_routing_decision_ref(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["model_routing_decision_ref"] = "templates/missing-routing-decision.json#routing_decision"
+        card.pop("model_routing_decision", None)
+
+        self.assertIn(
+            "model_routing_decision_ref must resolve to a repo-local routing decision object",
+            factoryctl.validate_card(card),
+        )
+
+    def test_vfinal_material_execution_rejects_invalid_resolved_model_routing_decision_ref(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["model_routing_decision_ref"] = "templates/factory-sdlc-feedback-loop.json#triage_decision"
+        card.pop("model_routing_decision", None)
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("model_routing_decision_ref.router_ref is required", errors)
+        self.assertIn("model_routing_decision_ref.selected_profile is required", errors)
+
     def test_vfinal_method_contract_requires_named_plan_fields(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
         card["method_contract"] = dict(card["method_contract"])

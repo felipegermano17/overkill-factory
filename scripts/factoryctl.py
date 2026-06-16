@@ -2120,6 +2120,16 @@ def _load_repo_local_json_ref(ref: Any) -> dict[str, Any]:
         return {}
 
 
+def _load_repo_local_json_ref_node(ref: Any) -> Any:
+    data = _load_repo_local_json_ref(ref)
+    if not data:
+        return None
+    fragment = str(ref).split("#", 1)[1] if "#" in str(ref) else ""
+    if not fragment:
+        return data
+    return _fragment_node(data, fragment)
+
+
 def _product_planning_required(card: dict[str, Any]) -> bool:
     request_type = str(card.get("request_type") or "").strip()
     scope_intent = str(card.get("scope_intent") or "").strip()
@@ -2705,6 +2715,11 @@ def validate_material_autonomy_routing_contract(card: dict[str, Any]) -> list[st
     routing_decision = card.get("model_routing_decision")
     if routing_ref:
         _validate_public_ref(routing_ref, "model_routing_decision_ref", errors)
+        resolved_routing_decision = _load_repo_local_json_ref_node(routing_ref)
+        if not isinstance(resolved_routing_decision, dict):
+            errors.append("model_routing_decision_ref must resolve to a repo-local routing decision object")
+        else:
+            errors.extend(_model_routing_decision_errors(resolved_routing_decision, at="model_routing_decision_ref"))
     if routing_decision is not None:
         errors.extend(_model_routing_decision_errors(routing_decision, at="model_routing_decision"))
     if not routing_ref and routing_decision is None:
