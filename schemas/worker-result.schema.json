@@ -153,6 +153,13 @@
         "$ref": "operational-evidence-bundle.schema.json"
       }
     },
+    "factory_sdlc_lifecycle_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
     "evidence_kind": {
       "enum": [
         "real",

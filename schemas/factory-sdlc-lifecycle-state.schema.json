@@ -1,0 +1,429 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-sdlc-lifecycle-state.schema.json",
+  "title": "Overkill Factory SDLC Lifecycle State",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "lifecycle_id",
+    "created_at",
+    "factory_method_version",
+    "workflow_catalog_ref",
+    "subject",
+    "active_phase_id",
+    "delivery_state",
+    "phase_states",
+    "current_owner_worker",
+    "gate_predicate",
+    "evidence_refs",
+    "next_safe_action",
+    "lifecycle_acceptance",
+    "public_private_boundary",
+    "projection_policy"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-sdlc-lifecycle-state.schema.json"
+    },
+    "record_type": {
+      "const": "factory_sdlc_lifecycle_state"
+    },
+    "lifecycle_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "workflow_catalog_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "subject_type",
+        "subject_id",
+        "scope_type",
+        "source_ref"
+      ],
+      "properties": {
+        "subject_type": {
+          "enum": [
+            "product",
+            "run",
+            "slice",
+            "work_unit",
+            "release",
+            "factory_improvement"
+          ]
+        },
+        "subject_id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "scope_type": {
+          "enum": [
+            "factory_execution",
+            "generated_product",
+            "mixed_with_explicit_boundary"
+          ]
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "active_phase_id": {
+      "type": "string",
+      "minLength": 2
+    },
+    "delivery_state": {
+      "enum": [
+        "local_only",
+        "committed",
+        "pr_open",
+        "merged_main",
+        "release_candidate",
+        "deployed",
+        "operational",
+        "blocked"
+      ]
+    },
+    "phase_states": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "phase_id",
+          "phase_name",
+          "status",
+          "owner_worker",
+          "gate_predicate",
+          "evidence_refs",
+          "next_safe_action",
+          "human_gate",
+          "recovery_route"
+        ],
+        "properties": {
+          "phase_id": {
+            "type": "string",
+            "minLength": 2
+          },
+          "phase_name": {
+            "type": "string",
+            "minLength": 3
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "ACTIVE",
+              "PASSED",
+              "BLOCKED",
+              "WAIVED",
+              "STALE",
+              "SUPERSEDED",
+              "SKIPPED"
+            ]
+          },
+          "owner_worker": {
+            "type": "string",
+            "minLength": 3
+          },
+          "gate_predicate": {
+            "type": "object",
+            "required": [
+              "gate_id",
+              "result",
+              "predicate",
+              "evidence_refs"
+            ],
+            "properties": {
+              "gate_id": {
+                "type": "string",
+                "minLength": 3
+              },
+              "result": {
+                "enum": [
+                  "PASS",
+                  "BLOCK",
+                  "PENDING",
+                  "WAIVED",
+                  "STALE",
+                  "SUPERSEDED"
+                ]
+              },
+              "predicate": {
+                "type": "string",
+                "minLength": 6
+              },
+              "evidence_refs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 3
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "next_safe_action": {
+            "type": "string",
+            "minLength": 6
+          },
+          "human_gate": {
+            "type": "object",
+            "required": [
+              "required",
+              "classification",
+              "authority_ref",
+              "factory_may_simulate"
+            ],
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "classification": {
+                "enum": [
+                  "not_required",
+                  "required_real_human_gate"
+                ]
+              },
+              "authority_ref": {
+                "type": "string",
+                "minLength": 3
+              },
+              "factory_may_simulate": {
+                "const": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "recovery_route": {
+            "type": "object",
+            "required": [
+              "required",
+              "route_ref",
+              "factory_owned_repair_allowed",
+              "retry_policy"
+            ],
+            "properties": {
+              "required": {
+                "type": "boolean"
+              },
+              "route_ref": {
+                "type": "string",
+                "minLength": 3
+              },
+              "factory_owned_repair_allowed": {
+                "type": "boolean"
+              },
+              "retry_policy": {
+                "type": "object",
+                "required": [
+                  "max_attempts",
+                  "attempt_number",
+                  "stop_condition"
+                ],
+                "properties": {
+                  "max_attempts": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "attempt_number": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "stop_condition": {
+                    "type": "string",
+                    "minLength": 6
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "current_owner_worker": {
+      "type": "string",
+      "minLength": 3
+    },
+    "gate_predicate": {
+      "type": "object",
+      "required": [
+        "gate_id",
+        "result",
+        "predicate",
+        "evidence_refs"
+      ],
+      "properties": {
+        "gate_id": {
+          "type": "string",
+          "minLength": 3
+        },
+        "result": {
+          "enum": [
+            "PASS",
+            "BLOCK",
+            "PENDING",
+            "WAIVED",
+            "STALE",
+            "SUPERSEDED"
+          ]
+        },
+        "predicate": {
+          "type": "string",
+          "minLength": 6
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "next_safe_action": {
+      "type": "string",
+      "minLength": 6
+    },
+    "lifecycle_acceptance": {
+      "type": "object",
+      "required": [
+        "scope_completion_state",
+        "proof_level",
+        "implemented_by_contract",
+        "runtime_proven",
+        "production_ready_claimed",
+        "customer_ready_claimed"
+      ],
+      "properties": {
+        "scope_completion_state": {
+          "enum": [
+            "not_started",
+            "in_progress",
+            "scope_complete",
+            "production_complete",
+            "customer_ready",
+            "released",
+            "operational",
+            "blocked"
+          ]
+        },
+        "proof_level": {
+          "enum": [
+            "implemented_by_contract",
+            "static_or_schema_validated",
+            "runtime_proven",
+            "production_strict",
+            "customer_validated"
+          ]
+        },
+        "implemented_by_contract": {
+          "type": "boolean"
+        },
+        "runtime_proven": {
+          "type": "boolean"
+        },
+        "production_ready_claimed": {
+          "type": "boolean"
+        },
+        "customer_ready_claimed": {
+          "type": "boolean"
+        },
+        "limits": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "raw_private_evidence_embedded",
+        "public_safe_refs_only",
+        "private_runtime_evidence_stays_local"
+      ],
+      "properties": {
+        "raw_private_evidence_embedded": {
+          "const": false
+        },
+        "public_safe_refs_only": {
+          "const": true
+        },
+        "private_runtime_evidence_stays_local": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "projection_policy": {
+      "type": "object",
+      "required": [
+        "cockpit_is_source_of_truth",
+        "dashboard_visibility_is_evidence",
+        "consumer_role"
+      ],
+      "properties": {
+        "cockpit_is_source_of_truth": {
+          "const": false
+        },
+        "dashboard_visibility_is_evidence": {
+          "const": false
+        },
+        "consumer_role": {
+          "enum": [
+            "projection_only",
+            "operator_read_model",
+            "worker_context"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "linked_operational_evidence_bundle_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    }
+  },
+  "additionalProperties": false
+}

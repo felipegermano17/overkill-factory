@@ -474,6 +474,44 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                 errors.append(f"{at}: synthetic operational_evidence_bundle requires reusable_for_product=false")
             if not data.get("cannot_satisfy"):
                 errors.append(f"{at}: synthetic operational_evidence_bundle requires cannot_satisfy")
+    if data.get("record_type") == "factory_sdlc_lifecycle_state":
+        refs = data.get("evidence_refs") if isinstance(data.get("evidence_refs"), list) else []
+        for index, ref in enumerate(refs):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.evidence_refs[{index}]: {reason}")
+        gate = data.get("gate_predicate") if isinstance(data.get("gate_predicate"), dict) else {}
+        gate_refs = gate.get("evidence_refs") if isinstance(gate.get("evidence_refs"), list) else []
+        for index, ref in enumerate(gate_refs):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.gate_predicate.evidence_refs[{index}]: {reason}")
+        phase_states = data.get("phase_states") if isinstance(data.get("phase_states"), list) else []
+        for phase_index, phase in enumerate(phase_states):
+            if not isinstance(phase, dict):
+                continue
+            phase_refs = phase.get("evidence_refs") if isinstance(phase.get("evidence_refs"), list) else []
+            for index, ref in enumerate(phase_refs):
+                reason = public_artifact_ref_error(ref)
+                if reason:
+                    errors.append(f"{at}.phase_states[{phase_index}].evidence_refs[{index}]: {reason}")
+            phase_gate = phase.get("gate_predicate") if isinstance(phase.get("gate_predicate"), dict) else {}
+            phase_gate_refs = phase_gate.get("evidence_refs") if isinstance(phase_gate.get("evidence_refs"), list) else []
+            for index, ref in enumerate(phase_gate_refs):
+                reason = public_artifact_ref_error(ref)
+                if reason:
+                    errors.append(f"{at}.phase_states[{phase_index}].gate_predicate.evidence_refs[{index}]: {reason}")
+            status = str(phase.get("status") or "").strip().upper()
+            human_gate = phase.get("human_gate") if isinstance(phase.get("human_gate"), dict) else {}
+            recovery = phase.get("recovery_route") if isinstance(phase.get("recovery_route"), dict) else {}
+            if status == "BLOCKED" and human_gate.get("required") is not True and recovery.get("required") is not True:
+                errors.append(f"{at}.phase_states[{phase_index}]: non-human BLOCKED state requires recovery route")
+        acceptance = data.get("lifecycle_acceptance") if isinstance(data.get("lifecycle_acceptance"), dict) else {}
+        proof_level = str(acceptance.get("proof_level") or "")
+        if acceptance.get("production_ready_claimed") is True and proof_level not in {"production_strict", "customer_validated"}:
+            errors.append(f"{at}: production readiness requires production_strict or customer_validated proof")
+        if acceptance.get("customer_ready_claimed") is True and proof_level != "customer_validated":
+            errors.append(f"{at}: customer readiness requires customer_validated proof")
     if data.get("record_type") == "product_face_result" and data.get("reusable_for_product") is True:
         if not str(data.get("packet_ref") or "").strip():
             errors.append(f"{at}: reusable product_face_result requires packet_ref")

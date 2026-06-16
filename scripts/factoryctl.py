@@ -4199,6 +4199,131 @@ def validate_operational_evidence_bundle(bundle: dict[str, Any]) -> list[str]:
     return errors
 
 
+def factory_workflow_catalog_phase_ids() -> set[str]:
+    if not DEFAULT_WORKFLOW_CATALOG.exists():
+        return set()
+    catalog = json.loads(DEFAULT_WORKFLOW_CATALOG.read_text(encoding="utf-8"))
+    phases = catalog.get("phases") if isinstance(catalog.get("phases"), list) else []
+    return {str(phase.get("phase_id") or "").strip() for phase in phases if isinstance(phase, dict)}
+
+
+def _validate_lifecycle_refs(refs: list[str], at: str, errors: list[str]) -> None:
+    for index, ref in enumerate(refs):
+        _, redaction = sanitize_public_ref(ref)
+        if redaction is not None:
+            errors.append(f"{at}[{index}] must be public-safe")
+
+
+def validate_factory_sdlc_lifecycle_state(state: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-sdlc-lifecycle-state.schema.json")
+    if not schema:
+        return ["factory_sdlc_lifecycle_state schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            state,
+            "factory_sdlc_lifecycle_state",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    catalog_phase_ids = factory_workflow_catalog_phase_ids()
+    active_phase_id = str(state.get("active_phase_id") or "").strip()
+    if catalog_phase_ids and active_phase_id not in catalog_phase_ids:
+        errors.append(f"factory_sdlc_lifecycle_state.active_phase_id unknown phase {active_phase_id!r}")
+
+    phase_states = state.get("phase_states") if isinstance(state.get("phase_states"), list) else []
+    active_phase_seen = False
+    for index, phase in enumerate(phase_states):
+        if not isinstance(phase, dict):
+            continue
+        phase_id = str(phase.get("phase_id") or "").strip()
+        if catalog_phase_ids and phase_id not in catalog_phase_ids:
+            errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}].phase_id unknown phase {phase_id!r}")
+        if phase_id == active_phase_id:
+            active_phase_seen = True
+
+        evidence_refs = _list_items(phase.get("evidence_refs"))
+        _validate_lifecycle_refs(evidence_refs, f"factory_sdlc_lifecycle_state.phase_states[{index}].evidence_refs", errors)
+        gate = phase.get("gate_predicate") if isinstance(phase.get("gate_predicate"), dict) else {}
+        _validate_lifecycle_refs(
+            _list_items(gate.get("evidence_refs")),
+            f"factory_sdlc_lifecycle_state.phase_states[{index}].gate_predicate.evidence_refs",
+            errors,
+        )
+
+        status = str(phase.get("status") or "").strip().upper()
+        human_gate = phase.get("human_gate") if isinstance(phase.get("human_gate"), dict) else {}
+        human_required = human_gate.get("required") is True
+        classification = str(human_gate.get("classification") or "").strip()
+        authority_ref = str(human_gate.get("authority_ref") or "").strip()
+        if human_required:
+            if classification != "required_real_human_gate":
+                errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}] human gate classification is ambiguous")
+            if authority_ref != "human_gate_record" and not authority_ref.startswith("external:"):
+                errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}] human gate requires real authority ref")
+        elif classification != "not_required":
+            errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}] non-human phase must classify human gate as not_required")
+
+        recovery_route = phase.get("recovery_route") if isinstance(phase.get("recovery_route"), dict) else {}
+        if status == "BLOCKED" and not human_required:
+            if recovery_route.get("required") is not True:
+                errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}] non-human BLOCKED state requires recovery_route.required=true")
+            if recovery_route.get("factory_owned_repair_allowed") is not True:
+                errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}] non-human BLOCKED state requires factory-owned repair route")
+            if not _non_empty_text(recovery_route.get("route_ref")):
+                errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}] blocked recovery route requires route_ref")
+            retry_policy = recovery_route.get("retry_policy") if isinstance(recovery_route.get("retry_policy"), dict) else {}
+            max_attempts = retry_policy.get("max_attempts")
+            if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
+                errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}] blocked recovery route requires retry_policy.max_attempts")
+        if status == "BLOCKED" and human_required and recovery_route.get("factory_owned_repair_allowed") is True:
+            errors.append(f"factory_sdlc_lifecycle_state.phase_states[{index}] human gate cannot allow factory-owned repair")
+
+    if active_phase_id and not active_phase_seen:
+        errors.append("factory_sdlc_lifecycle_state.active_phase_id must appear in phase_states")
+
+    _validate_lifecycle_refs(_list_items(state.get("evidence_refs")), "factory_sdlc_lifecycle_state.evidence_refs", errors)
+    gate = state.get("gate_predicate") if isinstance(state.get("gate_predicate"), dict) else {}
+    _validate_lifecycle_refs(_list_items(gate.get("evidence_refs")), "factory_sdlc_lifecycle_state.gate_predicate.evidence_refs", errors)
+    _validate_lifecycle_refs(
+        _list_items(state.get("linked_operational_evidence_bundle_refs")),
+        "factory_sdlc_lifecycle_state.linked_operational_evidence_bundle_refs",
+        errors,
+    )
+
+    acceptance = state.get("lifecycle_acceptance") if isinstance(state.get("lifecycle_acceptance"), dict) else {}
+    proof_level = str(acceptance.get("proof_level") or "").strip()
+    scope_state = str(acceptance.get("scope_completion_state") or "").strip()
+    delivery_state = str(state.get("delivery_state") or "").strip()
+    production_claim = acceptance.get("production_ready_claimed") is True
+    customer_claim = acceptance.get("customer_ready_claimed") is True
+    production_states = {"production_complete", "released", "operational"}
+    customer_states = {"customer_ready", "released", "operational"}
+    production_delivery_claim = delivery_state in {"release_candidate", "deployed", "operational"}
+    if (
+        production_claim
+        or scope_state in production_states
+        or production_delivery_claim
+    ) and proof_level not in {"production_strict", "customer_validated"}:
+        errors.append("factory_sdlc_lifecycle_state production readiness requires production_strict or customer_validated proof")
+    if (customer_claim or scope_state in customer_states) and proof_level != "customer_validated":
+        errors.append("factory_sdlc_lifecycle_state customer readiness requires customer_validated proof")
+    if proof_level in {"implemented_by_contract", "static_or_schema_validated"} and acceptance.get("runtime_proven") is True:
+        errors.append("factory_sdlc_lifecycle_state runtime_proven cannot be true for contract/static proof")
+
+    projection = state.get("projection_policy") if isinstance(state.get("projection_policy"), dict) else {}
+    if projection.get("cockpit_is_source_of_truth") is not False:
+        errors.append("factory_sdlc_lifecycle_state cockpit must not be source of truth")
+    if projection.get("dashboard_visibility_is_evidence") is not False:
+        errors.append("factory_sdlc_lifecycle_state dashboard visibility must not be evidence")
+
+    return errors
+
+
 def _required_product_states(card: dict[str, Any]) -> list[str]:
     plan = card.get("product_experience_plan") if isinstance(card.get("product_experience_plan"), dict) else {}
     packet = card.get("product_face_packet") if isinstance(card.get("product_face_packet"), dict) else {}
@@ -8408,6 +8533,16 @@ def command_validate_evidence_bundle(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_sdlc_lifecycle(args: argparse.Namespace) -> int:
+    errors = validate_factory_sdlc_lifecycle_state(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_worker_packet(args: argparse.Namespace) -> int:
     card = load_json_like(args.card)
     if args.required_only and args.worker != "all":
@@ -8708,6 +8843,14 @@ def build_parser() -> argparse.ArgumentParser:
     validate_bundle_parser = sub.add_parser("validate-bundle")
     validate_bundle_parser.add_argument("path", type=Path)
     validate_bundle_parser.set_defaults(func=command_validate_evidence_bundle)
+
+    validate_sdlc_lifecycle_parser = sub.add_parser("validate-sdlc-lifecycle")
+    validate_sdlc_lifecycle_parser.add_argument("path", type=Path)
+    validate_sdlc_lifecycle_parser.set_defaults(func=command_validate_sdlc_lifecycle)
+
+    validate_lifecycle_parser = sub.add_parser("validate-lifecycle")
+    validate_lifecycle_parser.add_argument("path", type=Path)
+    validate_lifecycle_parser.set_defaults(func=command_validate_sdlc_lifecycle)
 
     worker_packet_parser = sub.add_parser("worker-packet")
     worker_packet_parser.add_argument("--worker", choices=[*WORKERS.keys(), "all"], required=True)
