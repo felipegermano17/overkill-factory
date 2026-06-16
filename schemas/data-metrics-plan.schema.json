@@ -4,10 +4,13 @@
   "title": "Overkill Factory Data Metrics Plan",
   "type": "object",
   "required": [
+    "gate_enforcement",
     "success_metrics",
     "events",
     "owners",
     "privacy_limits",
+    "dashboards",
+    "evidence_refs",
     "risk_metrics",
     "logs",
     "alerts",

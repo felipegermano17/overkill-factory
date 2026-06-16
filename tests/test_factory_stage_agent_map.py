@@ -78,6 +78,20 @@ class FactoryStageAgentMapTest(unittest.TestCase):
         self.assertIn("Product Experience Gate", product_experience["required_gates"])
         self.assertNotIn("product_experience_plan", phases["F11"]["optional_artifacts"])
 
+    def test_executable_plan_catalog_marks_data_and_docs_as_schema_backed_conditionals(self) -> None:
+        phases = {row["phase_id"]: row for row in self.workflow_catalog["phases"]}
+        executable_plan = phases["F11"]
+
+        self.assertNotIn("data_metrics_plan", executable_plan["optional_artifacts"])
+        for artifact in ("data_metrics_plan", "user_docs_onboarding_plan"):
+            with self.subTest(artifact=artifact):
+                self.assertIn(artifact, executable_plan["conditional_artifacts"])
+        self.assertIn("schemas/data-metrics-plan.schema.json", executable_plan["related_schema_refs"])
+        self.assertIn("schemas/user-docs-onboarding-plan.schema.json", executable_plan["related_schema_refs"])
+        self.assertTrue(
+            any("schema-backed runtime validation" in item for item in executable_plan["completion_detection"])
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -173,6 +173,42 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         self.assertTrue(any("$.review" in error and "expected type object" in error for error in errors))
         self.assertTrue(any("$.owner_worker" in error and "expected type string" in error for error in errors))
 
+    def test_factory_card_schema_applies_data_metrics_and_docs_plan_refs(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["factory-card.schema.json"]
+        card = json.loads((ROOT / "templates" / "vfinal-factory-card.json").read_text(encoding="utf-8"))
+
+        invalid = json.loads(json.dumps(card))
+        invalid["data_metrics_plan"] = {
+            "success_metrics": ["activation"],
+            "events": ["product.activated"],
+            "owners": ["product"],
+            "privacy_limits": ["no personal data"],
+            "risk_metrics": ["dropoff"],
+            "logs": ["activation logs"],
+            "alerts": ["activation failed"],
+            "personal_data": ["none"],
+            "visibility": ["operator dashboard"],
+            "instrumentation_proof": ["dashboard test"],
+        }
+        invalid["user_docs_onboarding_plan"] = {
+            "audience": "operator",
+            "first_success_path": "run the first command",
+            "tasks_covered": ["install"],
+            "proof_required": ["reader smoke"],
+        }
+
+        errors = validator.validate_node(schema, invalid, "$", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("$.data_metrics_plan: missing required field gate_enforcement" in error for error in errors))
+        self.assertTrue(any("$.data_metrics_plan: missing required field dashboards" in error for error in errors))
+        self.assertTrue(any("$.data_metrics_plan: missing required field evidence_refs" in error for error in errors))
+        self.assertTrue(
+            any("$.user_docs_onboarding_plan: missing required field gate_enforcement" in error for error in errors)
+        )
+        self.assertTrue(any("$.user_docs_onboarding_plan: missing required field evidence_refs" in error for error in errors))
+
     def test_receipt_five_schema_rejects_invalid_transition_event_shapes(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()

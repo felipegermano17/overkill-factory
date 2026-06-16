@@ -768,6 +768,57 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("data_metrics_plan.dashboards must be a non-empty array", errors)
         self.assertIn("data_metrics_plan.evidence_refs must be a non-empty array", errors)
 
+    def test_vfinal_data_metrics_plan_cannot_skip_deep_validation_by_omitting_gate(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["data_metrics_plan"] = {
+            "$schema": "https://overkill-factory.dev/schemas/data-metrics-plan.schema.json",
+            "success_metrics": [],
+            "events": ["looks good"],
+            "owners": [],
+            "privacy_limits": [],
+            "risk_metrics": [],
+            "logs": [],
+            "alerts": [],
+            "personal_data": [],
+            "visibility": [],
+            "instrumentation_proof": ["nice dashboard someday"],
+            "dashboards": [],
+            "evidence_refs": [],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("data_metrics_plan.success_metrics must be a non-empty array", errors)
+        self.assertIn("data_metrics_plan.events[0] must be a stable event id, not prose", errors)
+        self.assertIn("data_metrics_plan.dashboards must be a non-empty array", errors)
+        self.assertIn("data_metrics_plan.evidence_refs must be a non-empty array", errors)
+
+    def test_vfinal_data_metrics_plan_rejects_advisory_gate(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["data_metrics_plan"] = factoryctl.load_json_like(ROOT / "templates" / "data-metrics-plan.json")
+        card["data_metrics_plan"]["gate_enforcement"] = "advisory"
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("data_metrics_plan.gate_enforcement must be strict or production for OVERKILL_VFINAL cards", errors)
+
+    def test_vfinal_data_metrics_plan_rejects_missing_or_unknown_gate_even_when_body_is_valid(self) -> None:
+        for gate in (None, "experimental"):
+            with self.subTest(gate=gate):
+                card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+                card["data_metrics_plan"] = factoryctl.load_json_like(ROOT / "templates" / "data-metrics-plan.json")
+                if gate is None:
+                    card["data_metrics_plan"].pop("gate_enforcement", None)
+                else:
+                    card["data_metrics_plan"]["gate_enforcement"] = gate
+
+                errors = factoryctl.validate_card(card)
+
+                self.assertIn(
+                    "data_metrics_plan.gate_enforcement must be strict or production for OVERKILL_VFINAL cards",
+                    errors,
+                )
+
     def test_user_docs_onboarding_plan_rejects_missing_first_success_and_proof(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
         card["user_docs_onboarding_plan"] = {
@@ -785,6 +836,97 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("user_docs_onboarding_plan.first_success_path is required", errors)
         self.assertIn("user_docs_onboarding_plan.tasks_covered must be a non-empty array", errors)
         self.assertIn("user_docs_onboarding_plan.evidence_refs must be a non-empty array", errors)
+
+    def test_required_user_docs_onboarding_plan_cannot_skip_deep_validation_by_omitting_gate(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["method_contract"] = dict(card["method_contract"])
+        card["method_contract"]["required_plans"] = list(card["method_contract"]["required_plans"]) + [
+            "user_docs_onboarding_plan"
+        ]
+        card["user_docs_onboarding_plan"] = {
+            "$schema": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
+            "audience": "",
+            "tasks_covered": [],
+            "proof_required": ["someone reads it eventually"],
+            "evidence_refs": [],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("user_docs_onboarding_plan.audience is required", errors)
+        self.assertIn("user_docs_onboarding_plan.first_success_path is required", errors)
+        self.assertIn("user_docs_onboarding_plan.tasks_covered must be a non-empty array", errors)
+        self.assertIn("user_docs_onboarding_plan.evidence_refs must be a non-empty array", errors)
+
+    def test_present_user_docs_onboarding_plan_cannot_skip_deep_validation_outside_required_plans(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["user_docs_onboarding_plan"] = {
+            "$schema": "https://overkill-factory.dev/schemas/user-docs-onboarding-plan.schema.json",
+            "audience": "",
+            "tasks_covered": [],
+            "proof_required": ["someone reads it eventually"],
+            "evidence_refs": [],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            "user_docs_onboarding_plan.gate_enforcement must be strict or production for OVERKILL_VFINAL cards",
+            errors,
+        )
+        self.assertIn("user_docs_onboarding_plan.audience is required", errors)
+        self.assertIn("user_docs_onboarding_plan.first_success_path is required", errors)
+        self.assertIn("user_docs_onboarding_plan.tasks_covered must be a non-empty array", errors)
+        self.assertIn("user_docs_onboarding_plan.evidence_refs must be a non-empty array", errors)
+
+    def test_vfinal_user_docs_onboarding_plan_rejects_advisory_gate(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["method_contract"] = dict(card["method_contract"])
+        card["method_contract"]["required_plans"] = list(card["method_contract"]["required_plans"]) + [
+            "user_docs_onboarding_plan"
+        ]
+        card["user_docs_onboarding_plan"] = factoryctl.load_json_like(ROOT / "templates" / "user-docs-onboarding-plan.json")
+        card["user_docs_onboarding_plan"]["gate_enforcement"] = "advisory"
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            "user_docs_onboarding_plan.gate_enforcement must be strict or production for OVERKILL_VFINAL cards",
+            errors,
+        )
+
+    def test_vfinal_user_docs_onboarding_plan_rejects_missing_or_unknown_gate_even_when_body_is_valid(self) -> None:
+        for gate in (None, "experimental"):
+            with self.subTest(gate=gate):
+                card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+                card["user_docs_onboarding_plan"] = factoryctl.load_json_like(
+                    ROOT / "templates" / "user-docs-onboarding-plan.json"
+                )
+                if gate is None:
+                    card["user_docs_onboarding_plan"].pop("gate_enforcement", None)
+                else:
+                    card["user_docs_onboarding_plan"]["gate_enforcement"] = gate
+
+                errors = factoryctl.validate_card(card)
+
+                self.assertIn(
+                    "user_docs_onboarding_plan.gate_enforcement must be strict or production for OVERKILL_VFINAL cards",
+                    errors,
+                )
+
+    def test_schema_backed_data_and_docs_plan_templates_remain_valid_for_vfinal(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["method_contract"] = dict(card["method_contract"])
+        card["method_contract"]["required_plans"] = list(card["method_contract"]["required_plans"]) + [
+            "data_metrics_plan",
+            "user_docs_onboarding_plan",
+        ]
+        card["data_metrics_plan"] = factoryctl.load_json_like(ROOT / "templates" / "data-metrics-plan.json")
+        card["user_docs_onboarding_plan"] = factoryctl.load_json_like(ROOT / "templates" / "user-docs-onboarding-plan.json")
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertEqual(errors, [])
 
     def test_product_face_completion_requires_visual_result(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")

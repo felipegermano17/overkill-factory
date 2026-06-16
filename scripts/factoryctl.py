@@ -20,7 +20,7 @@ import sysconfig
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PureWindowsPath
-from typing import Any
+from typing import Any, Callable
 
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
@@ -2996,6 +2996,58 @@ def _strict_plan_gate_enabled(plan: dict[str, Any]) -> bool:
     return str(plan.get("gate_enforcement") or "").strip().lower() in {"strict", "production"}
 
 
+def _plan_gate_value(plan: dict[str, Any]) -> str:
+    return str(plan.get("gate_enforcement") or "").strip().lower()
+
+
+def _declared_required_plan(data: dict[str, Any], field: str) -> bool:
+    method_contract = data.get("method_contract") if isinstance(data.get("method_contract"), dict) else {}
+    required_plans = method_contract.get("required_plans") if isinstance(method_contract.get("required_plans"), list) else []
+    return field in {str(plan).strip() for plan in required_plans}
+
+
+def _vfinal_material_product_context(data: dict[str, Any]) -> bool:
+    authority = str(data.get("authority_max") or "").strip()
+    scope_intent = str(data.get("scope_intent") or "").strip()
+    return (
+        authority in HARDENING_REQUIRED_EXECUTION_MODES
+        or data.get("material_execution") is True
+        or data.get("complete_product_required") is True
+        or scope_intent == "full_product"
+    )
+
+
+def _validate_vfinal_schema_backed_plan_gate(
+    data: dict[str, Any],
+    field: str,
+    validator: Callable[[dict[str, Any]], list[str]],
+) -> list[str]:
+    plan = data.get(field)
+    if not isinstance(plan, dict):
+        return []
+
+    errors: list[str] = []
+    gate = _plan_gate_value(plan)
+    material_product_context = _vfinal_material_product_context(data)
+    should_validate = (
+        _strict_plan_gate_enabled(plan)
+        or gate == "advisory"
+        or (material_product_context and _declared_required_plan(data, field))
+    )
+
+    if material_product_context and field == "data_metrics_plan":
+        should_validate = True
+    if material_product_context and field == "user_docs_onboarding_plan" and _non_empty_dict(plan):
+        should_validate = True
+
+    if should_validate and gate not in {"strict", "production"}:
+        errors.append(f"{field}.gate_enforcement must be strict or production for OVERKILL_VFINAL cards")
+
+    if should_validate:
+        errors.extend(validator(plan))
+    return errors
+
+
 def _validate_professional_design_gate(gate: dict[str, Any], *, at: str, reviewer_field: str) -> list[str]:
     errors: list[str] = []
     status = str(gate.get("status") or "").strip().upper()
@@ -3295,10 +3347,20 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_product_creation_readiness_contract(data))
     errors.extend(validate_production_promotion_ladder_contract(data))
     errors.extend(validate_user_facing_autonomy_contract(data))
-    if isinstance(data.get("data_metrics_plan"), dict) and _strict_plan_gate_enabled(data["data_metrics_plan"]):
-        errors.extend(validate_data_metrics_plan(data["data_metrics_plan"]))
-    if isinstance(data.get("user_docs_onboarding_plan"), dict) and _strict_plan_gate_enabled(data["user_docs_onboarding_plan"]):
-        errors.extend(validate_user_docs_onboarding_plan(data["user_docs_onboarding_plan"]))
+    errors.extend(
+        _validate_vfinal_schema_backed_plan_gate(
+            data,
+            "data_metrics_plan",
+            validate_data_metrics_plan,
+        )
+    )
+    errors.extend(
+        _validate_vfinal_schema_backed_plan_gate(
+            data,
+            "user_docs_onboarding_plan",
+            validate_user_docs_onboarding_plan,
+        )
+    )
     return errors
 
 

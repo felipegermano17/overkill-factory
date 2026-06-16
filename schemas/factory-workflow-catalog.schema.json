@@ -45,6 +45,7 @@
           "phase_name": { "type": "string", "minLength": 3 },
           "entry_conditions": { "type": "array", "items": { "type": "string" } },
           "required_artifacts": { "type": "array", "items": { "type": "string" } },
+          "conditional_artifacts": { "type": "array", "items": { "type": "string" } },
           "optional_artifacts": { "type": "array", "items": { "type": "string" } },
           "required_gates": { "type": "array", "items": { "type": "string" } },
           "required_workers": { "type": "array", "items": { "type": "string" } },

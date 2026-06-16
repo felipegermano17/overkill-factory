@@ -70,6 +70,7 @@ class CanonicalRuntimeEnforcementTest(unittest.TestCase):
             "budget_contract",
             "privacy_compliance_plan",
             "autonomy_readiness_packet",
+            "user_docs_onboarding_plan",
             "factory_maturity_scorecard",
         ):
             card.pop(field, None)
@@ -84,6 +85,7 @@ class CanonicalRuntimeEnforcementTest(unittest.TestCase):
         self.assertIn("budget_contract", blocker_fields)
         self.assertIn("privacy_compliance_plan", blocker_fields)
         self.assertIn("autonomy_readiness_packet", blocker_fields)
+        self.assertIn("user_docs_onboarding_plan", blocker_fields)
         self.assertIn("factory_maturity_scorecard", blocker_fields)
 
     def test_full_template_satisfies_canonical_runtime_gate(self) -> None:
