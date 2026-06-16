@@ -16,6 +16,7 @@
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
   "product_context_packet_ref": "templates/product-context-packet.json",
   "product_implementation_readiness_ref": "templates/product-implementation-readiness.json",
+  "customer_readiness_gate_ref": "templates/customer-readiness-gate.json",
   "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
   "autonomy_mode": "bounded_execution",
   "agent_readiness_basis": {

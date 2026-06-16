@@ -136,6 +136,19 @@
             "object",
             "null"
           ]
+        },
+        "customer_readiness_gate_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 3
+        },
+        "customer_readiness_gate": {
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "additionalProperties": true

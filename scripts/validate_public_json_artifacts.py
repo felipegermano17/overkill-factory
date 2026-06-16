@@ -677,6 +677,15 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                 errors.append(f"{at}: synthetic operational_evidence_bundle requires reusable_for_product=false")
             if not data.get("cannot_satisfy"):
                 errors.append(f"{at}: synthetic operational_evidence_bundle requires cannot_satisfy")
+    if data.get("record_type") == "customer_readiness_gate":
+        add_public_ref_errors(data.get("evidence_refs"), f"{at}.evidence_refs", errors)
+        waiver = data.get("waiver") if isinstance(data.get("waiver"), dict) else {}
+        add_public_ref_errors(waiver.get("evidence_refs"), f"{at}.waiver.evidence_refs", errors)
+        decision = str(data.get("decision") or "").strip().upper()
+        if decision == "WAIVED" and waiver.get("cannot_claim_customer_ready") is not True:
+            errors.append(f"{at}: customer_readiness_gate WAIVED must set cannot_claim_customer_ready=true")
+        if decision == "PASS" and waiver:
+            errors.append(f"{at}: customer_readiness_gate PASS must not carry a waiver")
     if data.get("record_type") == "factory_sdlc_lifecycle_state":
         refs = data.get("evidence_refs") if isinstance(data.get("evidence_refs"), list) else []
         for index, ref in enumerate(refs):
