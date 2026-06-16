@@ -1,0 +1,51 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-face-state-journey-driver.schema.json",
+  "record_type": "product_face_state_journey_driver",
+  "target_binding": {
+    "target_ref": "external:replace-with-local-or-public-url",
+    "card_ref": "external:replace-with-card-ref",
+    "product_face_packet_ref": "external:replace-with-product-face-packet-ref"
+  },
+  "timeout_ms": 5000,
+  "retry": {
+    "attempts": 1,
+    "delay_ms": 0
+  },
+  "public_artifact_policy": {
+    "no_private_screenshots_in_repo": true,
+    "no_secrets_in_values": true,
+    "proof_output_location": ".tmp/factory-runs/product-face"
+  },
+  "journeys": [
+    {
+      "journey_id": "initial-readiness",
+      "name": "initial readiness",
+      "state": "loaded",
+      "required_for_pass": true,
+      "data_condition": "public-safe fixture data",
+      "viewport_names": ["desktop", "mobile"],
+      "state_setup": [
+        {
+          "action": "wait_for_selector",
+          "selector": "main"
+        }
+      ],
+      "steps": [
+        {
+          "action": "assert_visible",
+          "selector": "main"
+        },
+        {
+          "action": "assert_text",
+          "selector": "main",
+          "text": "replace with expected public copy"
+        },
+        {
+          "action": "screenshot",
+          "full_page": true
+        }
+      ],
+      "evidence_refs": ["external:driver-owned-proof-output"]
+    }
+  ]
+}

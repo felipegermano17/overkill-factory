@@ -1454,6 +1454,36 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(factoryctl.validate_card(card), [])
 
+    def test_product_face_result_pass_rejects_failed_state_journey_driver(self) -> None:
+        result = product_face_result_fixture(
+            state_journey_driver={
+                "driver_ref": "templates/product-face-state-journey-driver.json",
+                "status": "FAIL",
+                "execution_ref": "reports/product-face/state-journey-driver-execution.json",
+                "journeys_executed": ["login success"],
+                "states_executed": ["success"],
+            },
+            driver_execution={
+                "record_type": "product_face_state_journey_driver_execution",
+                "driver_ref": "templates/product-face-state-journey-driver.json",
+                "executions": [
+                    {
+                        "journey": "login success",
+                        "state": "success",
+                        "viewport": "desktop 1440x900",
+                        "status": "FAIL",
+                        "steps": [],
+                        "evidence_refs": ["reports/product-face/state-journey-driver-execution.json"],
+                    }
+                ],
+            },
+        )
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn("product_face_result PASS requires state_journey_driver.status=PASS", errors)
+        self.assertIn("product_face_result PASS driver_execution.executions[0].status must be PASS", errors)
+
     def test_terminal_product_face_result_ref_external_cannot_claim_full_acceptance(self) -> None:
         card = self.terminal_product_face_ref_card()
         card["product_face_result_ref"] = "external:operator-owned-product-face-result"

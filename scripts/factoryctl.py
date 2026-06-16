@@ -5083,6 +5083,28 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
         errors.append("product_face_result PASS cannot include uncaptured_states")
     if is_pass and _list_items(result.get("uncaptured_journeys")):
         errors.append("product_face_result PASS cannot include uncaptured_journeys")
+    state_journey_driver = result.get("state_journey_driver")
+    if is_pass and isinstance(state_journey_driver, dict):
+        if str(state_journey_driver.get("status") or "").upper() != "PASS":
+            errors.append("product_face_result PASS requires state_journey_driver.status=PASS")
+        if not _non_empty_text(state_journey_driver.get("execution_ref")):
+            errors.append("product_face_result PASS requires state_journey_driver.execution_ref")
+        if not _non_empty_string_list(state_journey_driver.get("journeys_executed")):
+            errors.append("product_face_result PASS requires state_journey_driver.journeys_executed")
+        if not _non_empty_string_list(state_journey_driver.get("states_executed")):
+            errors.append("product_face_result PASS requires state_journey_driver.states_executed")
+    driver_execution = result.get("driver_execution")
+    if is_pass and isinstance(driver_execution, dict):
+        executions = driver_execution.get("executions")
+        if not isinstance(executions, list) or not executions:
+            errors.append("product_face_result PASS driver_execution.executions must be non-empty")
+        else:
+            for index, execution in enumerate(executions):
+                if not isinstance(execution, dict):
+                    errors.append(f"product_face_result.driver_execution.executions[{index}] must be an object")
+                    continue
+                if str(execution.get("status") or "").upper() != "PASS":
+                    errors.append(f"product_face_result PASS driver_execution.executions[{index}].status must be PASS")
     for field in ("screenshots", "viewports", "checked_states", "user_journeys_checked", "evidence_refs"):
         if not _non_empty_string_list(result.get(field)):
             errors.append(f"product_face_result {field} must be a non-empty string array")
