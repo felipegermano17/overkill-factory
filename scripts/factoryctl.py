@@ -2878,6 +2878,13 @@ def _required_domain_proof_ids(card: dict[str, Any], phase: str) -> list[str]:
     return sorted({proof_id for proof_id in proof_ids if proof_id})
 
 
+def _required_delivery_profile_proof_ids(card: dict[str, Any], phase: str) -> list[str]:
+    profile = _product_delivery_quality_profile(card)
+    if not profile:
+        return []
+    return _delivery_profile_required_proof_ids(profile, phase)
+
+
 def _validate_delivery_profile_proof_coverage(
     coverage: Any,
     required_proof_ids: list[str],
@@ -5362,7 +5369,7 @@ def validate_completion(
     to_status: str | None = None,
 ) -> list[str]:
     errors = validate_receipt(metadata)
-    errors.extend(done_promotion_errors(metadata, from_status=from_status, to_status=to_status))
+    errors.extend(done_promotion_errors(metadata, card=card, from_status=from_status, to_status=to_status))
     receipt = metadata.get("receipt_five") if isinstance(metadata.get("receipt_five"), dict) else {}
     if receipt.get("reviewer_required") is True and str(receipt.get("reviewer_result") or "").strip().upper() != "PASS":
         errors.append("reviewer_result must be PASS when reviewer_required=true")
@@ -7357,10 +7364,31 @@ def receipt_reconciliation_errors(metadata: dict[str, Any] | None) -> list[str]:
 def done_promotion_errors(
     metadata: dict[str, Any] | None,
     *,
+    card: dict[str, Any] | None = None,
     from_status: str | None = None,
     to_status: str | None = None,
 ) -> list[str]:
     errors = receipt_reconciliation_errors(metadata)
+    if isinstance(card, dict) and isinstance(metadata, dict):
+        required_promotion_proofs = _required_delivery_profile_proof_ids(card, "before_promotion")
+        if required_promotion_proofs:
+            profile = _product_delivery_quality_profile(card) or {
+                "waiver_policy": {
+                    "allowed": True,
+                    "requires_owner": True,
+                    "requires_reason": True,
+                    "cannot_claim_full_acceptance": True,
+                }
+            }
+            errors.extend(
+                _validate_delivery_profile_proof_coverage(
+                    metadata.get("product_delivery_promotion_proof_coverage"),
+                    required_promotion_proofs,
+                    at="product_delivery_promotion_proof_coverage",
+                    profile=profile,
+                    full_acceptance=True,
+                )
+            )
     if from_status is not None and to_status is not None and isinstance(metadata, dict):
         errors.extend(
             validate_transition_event_matches(
