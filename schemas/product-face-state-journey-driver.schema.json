@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-face-state-journey-driver.schema.json",
+  "title": "Overkill Factory Product Face State/Journey Driver",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "target_binding",
+    "public_artifact_policy",
+    "journeys"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/product-face-state-journey-driver.schema.json"
+    },
+    "record_type": {
+      "const": "product_face_state_journey_driver"
+    },
+    "target_binding": {
+      "type": "object",
+      "required": ["target_ref"],
+      "properties": {
+        "target_ref": { "type": "string", "minLength": 3 },
+        "card_ref": { "type": "string", "minLength": 3 },
+        "product_face_packet_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 100
+    },
+    "retry": {
+      "type": "object",
+      "properties": {
+        "attempts": { "type": "integer", "minimum": 1 },
+        "delay_ms": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "public_artifact_policy": {
+      "type": "object",
+      "required": ["no_private_screenshots_in_repo", "no_secrets_in_values", "proof_output_location"],
+      "properties": {
+        "no_private_screenshots_in_repo": { "type": "boolean" },
+        "no_secrets_in_values": { "type": "boolean" },
+        "proof_output_location": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "journeys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "state", "steps"],
+        "properties": {
+          "journey_id": { "type": "string", "minLength": 3 },
+          "name": { "type": "string", "minLength": 3 },
+          "state": { "type": "string", "minLength": 3 },
+          "required_for_pass": { "type": "boolean" },
+          "data_condition": { "type": "string", "minLength": 3 },
+          "viewport_names": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 2 }
+          },
+          "timeout_ms": { "type": "integer", "minimum": 100 },
+          "state_setup": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/driver_step" }
+          },
+          "steps": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/driver_step" }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "driver_step": {
+      "type": "object",
+      "required": ["action"],
+      "properties": {
+        "action": {
+          "enum": [
+            "goto",
+            "click",
+            "fill",
+            "wait",
+            "wait_for_selector",
+            "assert_visible",
+            "assert_text",
+            "screenshot"
+          ]
+        },
+        "selector": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" },
+        "text": { "type": "string", "minLength": 1 },
+        "ms": { "type": "integer", "minimum": 0 },
+        "full_page": { "type": "boolean" },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -121,6 +121,54 @@
         "additionalProperties": true
       }
     },
+    "state_journey_driver": {
+      "type": "object",
+      "required": ["driver_ref", "status", "execution_ref", "journeys_executed", "states_executed"],
+      "properties": {
+        "driver_ref": { "type": "string", "minLength": 3 },
+        "status": { "enum": ["PASS", "FAIL"] },
+        "execution_ref": { "type": "string", "minLength": 3 },
+        "journeys_executed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "states_executed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "driver_execution": {
+      "type": "object",
+      "required": ["record_type", "driver_ref", "executions"],
+      "properties": {
+        "record_type": { "const": "product_face_state_journey_driver_execution" },
+        "driver_ref": { "type": "string", "minLength": 3 },
+        "executions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["journey", "state", "viewport", "status", "steps", "evidence_refs"],
+            "properties": {
+              "journey": { "type": "string", "minLength": 1 },
+              "state": { "type": "string", "minLength": 1 },
+              "viewport": { "type": "string", "minLength": 1 },
+              "data_condition": { "type": "string" },
+              "status": { "enum": ["PASS", "FAIL"] },
+              "steps": { "type": "array" },
+              "evidence_refs": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "failure": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
     "surface_evidence_profile": {
       "$ref": "#/$defs/surface_evidence_profile"
     },

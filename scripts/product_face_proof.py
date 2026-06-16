@@ -55,6 +55,17 @@ BROWSER_CAPTURED_STATE_ALIASES = {
     "page loaded",
 }
 BROWSER_CAPTURED_JOURNEYS = ("open target", "inspect configured viewports")
+DRIVER_STEP_ACTIONS = {
+    "goto",
+    "click",
+    "fill",
+    "wait",
+    "wait_for_selector",
+    "assert_visible",
+    "assert_text",
+    "screenshot",
+}
+DRIVER_SELECTOR_ACTIONS = {"click", "fill", "wait_for_selector", "assert_visible", "assert_text"}
 
 
 class PlaywrightUnavailable(RuntimeError):
@@ -274,6 +285,192 @@ def apply_capture_scope(result: dict[str, Any], scope: dict[str, Any]) -> None:
             "Provide Product Face state/journey drivers or separate proof artifacts for uncaptured coverage, "
             "then rerun before product acceptance."
         )
+    else:
+        result["checked_states"] = result["captured_states"] or result["checked_states"]
+        result["user_journeys_checked"] = result["captured_journeys"] or result["user_journeys_checked"]
+        result["journeys"] = result["user_journeys_checked"]
+
+
+def load_state_journey_driver(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    driver = load_json_like(path)
+    validate_state_journey_driver(driver)
+    driver["_driver_ref"] = repo_ref(path)
+    return driver
+
+
+def validate_state_journey_driver(driver: Any) -> None:
+    if not isinstance(driver, dict):
+        raise ValueError("Product Face state/journey driver must be a JSON object")
+    if driver.get("record_type") != "product_face_state_journey_driver":
+        raise ValueError("Product Face state/journey driver record_type must be product_face_state_journey_driver")
+    journeys = driver.get("journeys")
+    if not isinstance(journeys, list) or not journeys:
+        raise ValueError("Product Face state/journey driver requires at least one journey")
+    for journey_index, journey in enumerate(journeys):
+        if not isinstance(journey, dict):
+            raise ValueError(f"driver.journeys[{journey_index}] must be an object")
+        for field in ("name", "state"):
+            if not str(journey.get(field) or "").strip():
+                raise ValueError(f"driver.journeys[{journey_index}].{field} is required")
+        for block_name in ("state_setup", "steps"):
+            steps = journey.get(block_name, [])
+            if block_name == "steps" and not steps:
+                raise ValueError(f"driver.journeys[{journey_index}].steps requires at least one step")
+            if not isinstance(steps, list):
+                raise ValueError(f"driver.journeys[{journey_index}].{block_name} must be a list")
+            for step_index, step in enumerate(steps):
+                if not isinstance(step, dict):
+                    raise ValueError(f"driver.journeys[{journey_index}].{block_name}[{step_index}] must be an object")
+                action = str(step.get("action") or "").strip()
+                if action not in DRIVER_STEP_ACTIONS:
+                    raise ValueError(
+                        f"driver.journeys[{journey_index}].{block_name}[{step_index}].action "
+                        f"must be one of: {', '.join(sorted(DRIVER_STEP_ACTIONS))}"
+                    )
+                if action in DRIVER_SELECTOR_ACTIONS and not str(step.get("selector") or "").strip():
+                    raise ValueError(
+                        f"driver.journeys[{journey_index}].{block_name}[{step_index}].selector is required for {action}"
+                    )
+                if action == "fill" and "value" not in step:
+                    raise ValueError(f"driver.journeys[{journey_index}].{block_name}[{step_index}].value is required")
+                if action == "assert_text" and not str(step.get("text") or "").strip():
+                    raise ValueError(f"driver.journeys[{journey_index}].{block_name}[{step_index}].text is required")
+                if action == "goto" and not str(step.get("url") or "").strip():
+                    raise ValueError(f"driver.journeys[{journey_index}].{block_name}[{step_index}].url is required")
+
+
+def driver_capture_scope(
+    *,
+    states: list[str],
+    journeys: list[str],
+    driver: dict[str, Any],
+    executions: list[dict[str, Any]],
+) -> dict[str, Any]:
+    driver_journeys = [
+        str(journey.get("name") or "").strip()
+        for journey in driver.get("journeys", [])
+        if isinstance(journey, dict)
+    ]
+    driver_states = [
+        str(journey.get("state") or "").strip()
+        for journey in driver.get("journeys", [])
+        if isinstance(journey, dict)
+    ]
+    declared_states = _unique_non_empty(states) or _unique_non_empty(driver_states) or ["initial-render"]
+    declared_journeys = _unique_non_empty(journeys) or _unique_non_empty(driver_journeys)
+    passed = [execution for execution in executions if execution.get("status") == "PASS"]
+    captured_states = _unique_non_empty([str(execution.get("state") or "") for execution in passed])
+    captured_journeys = _unique_non_empty([str(execution.get("journey") or "") for execution in passed])
+    captured_state_keys = {_normalized_label(state) for state in captured_states}
+    captured_journey_keys = {_normalized_label(journey) for journey in captured_journeys}
+    return {
+        "mode": "product_face_state_journey_driver",
+        "declared_states": declared_states,
+        "declared_journeys": declared_journeys,
+        "captured_states": captured_states,
+        "captured_journeys": captured_journeys,
+        "uncaptured_states": [state for state in declared_states if _normalized_label(state) not in captured_state_keys],
+        "uncaptured_journeys": [
+            journey for journey in declared_journeys if _normalized_label(journey) not in captured_journey_keys
+        ],
+        "basis": "Product Face state/journey driver executed named journeys, setup steps and assertions in the browser.",
+    }
+
+
+def state_journey_driver_status(executions: list[dict[str, Any]], capture_scope: dict[str, Any]) -> str:
+    if (
+        not executions
+        or any(item.get("status") != "PASS" for item in executions)
+        or capture_scope["uncaptured_states"]
+        or capture_scope["uncaptured_journeys"]
+    ):
+        return "FAIL"
+    return "PASS"
+
+
+def run_driver_step(page: Any, step: dict[str, Any], *, timeout_ms: int, screenshot_path: Path | None = None) -> None:
+    action = str(step.get("action") or "").strip()
+    selector = str(step.get("selector") or "").strip()
+    if action == "goto":
+        page.goto(str(step.get("url") or ""), wait_until="networkidle", timeout=timeout_ms)
+    elif action == "click":
+        page.locator(selector).click(timeout=timeout_ms)
+    elif action == "fill":
+        page.locator(selector).fill(str(step.get("value") or ""), timeout=timeout_ms)
+    elif action == "wait":
+        page.wait_for_timeout(int(step.get("ms") or 250))
+    elif action == "wait_for_selector":
+        page.wait_for_selector(selector, timeout=timeout_ms)
+    elif action == "assert_visible":
+        page.wait_for_selector(selector, state="visible", timeout=timeout_ms)
+    elif action == "assert_text":
+        page.wait_for_selector(selector, timeout=timeout_ms)
+        actual = str(page.locator(selector).text_content(timeout=timeout_ms) or "")
+        expected = str(step.get("text") or "")
+        if expected not in actual:
+            raise AssertionError(f"selector {selector!r} text did not contain {expected!r}")
+    elif action == "screenshot":
+        if screenshot_path is None:
+            raise ValueError("screenshot step requires a screenshot path")
+        page.screenshot(path=str(screenshot_path), full_page=bool(step.get("full_page", True)))
+    else:
+        raise ValueError(f"unsupported Product Face driver action: {action}")
+
+
+def execute_state_journey_driver(
+    *,
+    page: Any,
+    driver: dict[str, Any],
+    viewport: Viewport,
+    screenshot_dir: Path,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    executions: list[dict[str, Any]] = []
+    screenshot_refs: list[str] = []
+    default_timeout = int(driver.get("timeout_ms") or 5000)
+    for journey_index, journey in enumerate(driver.get("journeys", [])):
+        viewport_names = {str(item).strip() for item in journey.get("viewport_names", []) if str(item).strip()}
+        if viewport_names and viewport.name not in viewport_names and viewport.label not in viewport_names:
+            continue
+        journey_name = str(journey.get("name") or "").strip()
+        state_name = str(journey.get("state") or "").strip()
+        timeout_ms = int(journey.get("timeout_ms") or default_timeout)
+        execution: dict[str, Any] = {
+            "journey": journey_name,
+            "state": state_name,
+            "viewport": viewport.label,
+            "data_condition": str(journey.get("data_condition") or "driver-controlled proof data"),
+            "status": "PASS",
+            "steps": [],
+            "evidence_refs": list(journey.get("evidence_refs") or []),
+        }
+        try:
+            for block_name in ("state_setup", "steps"):
+                for step_index, step in enumerate(journey.get(block_name, [])):
+                    step_action = str(step.get("action") or "").strip()
+                    step_record = {
+                        "block": block_name,
+                        "index": step_index,
+                        "action": step_action,
+                        "selector": str(step.get("selector") or ""),
+                    }
+                    screenshot_path = None
+                    if step_action == "screenshot":
+                        safe_journey = re.sub(r"[^a-zA-Z0-9_-]+", "-", journey_name.lower()).strip("-") or "journey"
+                        screenshot_path = screenshot_dir / f"driver-{viewport.name}-{journey_index}-{safe_journey}-{step_index}.png"
+                    run_driver_step(page, step, timeout_ms=timeout_ms, screenshot_path=screenshot_path)
+                    if screenshot_path is not None:
+                        ref = repo_ref(screenshot_path)
+                        screenshot_refs.append(ref)
+                        execution["evidence_refs"].append(ref)
+                        step_record["evidence_ref"] = ref
+                    execution["steps"].append(step_record)
+        except Exception as exc:
+            execution["status"] = "FAIL"
+            execution["failure"] = redact_text(str(exc)[:1000])
+        executions.append(execution)
+    return executions, screenshot_refs
 
 
 def repo_ref(path: Path) -> str:
@@ -1001,6 +1198,7 @@ def run_playwright(
     states: list[str],
     journeys: list[str],
     strict: bool,
+    state_journey_driver: dict[str, Any] | None = None,
     card_ref: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     try:
@@ -1015,6 +1213,8 @@ def run_playwright(
     console_messages: list[dict[str, str]] = []
     page_errors: list[str] = []
     viewport_results: dict[str, Any] = {}
+    driver_executions: list[dict[str, Any]] = []
+    driver_screenshots: list[str] = []
     screenshot_dir = output_dir / "screenshots"
     screenshot_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1034,6 +1234,15 @@ def run_playwright(
                 page.on("pageerror", lambda err: page_errors.append(str(err)[:1000]))
                 page.goto(target_url, wait_until="networkidle", timeout=15000)
                 page.wait_for_timeout(250)
+                if state_journey_driver is not None:
+                    executions, driver_refs = execute_state_journey_driver(
+                        page=page,
+                        driver=state_journey_driver,
+                        viewport=viewport,
+                        screenshot_dir=screenshot_dir,
+                    )
+                    driver_executions.extend(executions)
+                    driver_screenshots.extend(driver_refs)
                 screenshot_path = screenshot_dir / f"{viewport.name}.png"
                 page.screenshot(path=str(screenshot_path), full_page=True)
                 screenshots.append(repo_ref(screenshot_path))
@@ -1043,9 +1252,20 @@ def run_playwright(
         finally:
             browser.close()
 
+    if state_journey_driver is not None:
+        capture_scope = driver_capture_scope(
+            states=states,
+            journeys=journeys,
+            driver=state_journey_driver,
+            executions=driver_executions,
+        )
+        captured_states = list(capture_scope["captured_states"])
+        captured_journeys = list(capture_scope["captured_journeys"])
+
     captured_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     console_path = output_dir / "console.json"
     state_path = output_dir / "state.json"
+    driver_path = output_dir / "state-journey-driver-execution.json"
     write_json(
         console_path,
         {
@@ -1078,6 +1298,8 @@ def run_playwright(
         item for item in console_messages if item.get("type") in {"error", "assert"}
     ]
     blocking = bool(page_errors or console_errors or a11y_issues or overlap_issues)
+    if any(execution.get("status") != "PASS" for execution in driver_executions):
+        blocking = True
     result = base_result(
         target_ref=target_ref,
         viewports=viewports,
@@ -1100,7 +1322,7 @@ def run_playwright(
                 target_ref=target_ref,
                 viewports=viewports,
                 states=captured_states,
-                screenshot_refs=screenshots,
+                screenshot_refs=[*screenshots, *driver_screenshots],
                 captured_at=captured_at,
             ),
             "a11y": {
@@ -1131,12 +1353,12 @@ def run_playwright(
             },
             "performance_note": "; ".join(perf_notes)
             + "; browser-local static proof only, not a production performance benchmark",
-            "evidence_refs": [repo_ref(state_path), repo_ref(console_path), *screenshots],
+            "evidence_refs": [repo_ref(state_path), repo_ref(console_path), *screenshots, *driver_screenshots],
             "usage_evidence_matrix": build_usage_evidence_matrix(
                 viewports=viewports,
                 states=captured_states,
                 journeys=captured_journeys,
-                evidence_refs=[repo_ref(state_path), repo_ref(console_path), *screenshots],
+                evidence_refs=[repo_ref(state_path), repo_ref(console_path), *screenshots, *driver_screenshots],
                 data_condition="browser-local rendered state fixture",
                 a11y_status="warn" if a11y_issues else "pass",
                 performance_status="pass",
@@ -1148,6 +1370,33 @@ def run_playwright(
             ),
         }
     )
+    if state_journey_driver is not None:
+        driver_record = {
+            "$schema": "https://overkill-factory.dev/schemas/product-face-state-journey-driver-execution.schema.json",
+            "record_type": "product_face_state_journey_driver_execution",
+            "driver_ref": state_journey_driver.get("_driver_ref", "external:product-face-state-journey-driver"),
+            "executions": driver_executions,
+        }
+        write_json(driver_path, driver_record)
+        result["state_journey_driver"] = {
+            "driver_ref": state_journey_driver.get("_driver_ref", "external:product-face-state-journey-driver"),
+            "status": state_journey_driver_status(driver_executions, capture_scope),
+            "execution_ref": repo_ref(driver_path),
+            "journeys_executed": captured_journeys,
+            "states_executed": captured_states,
+        }
+        result["driver_execution"] = driver_record
+        result["evidence_refs"] = [*result["evidence_refs"], repo_ref(driver_path)]
+        result["usage_evidence_matrix"] = build_usage_evidence_matrix(
+            viewports=viewports,
+            states=captured_states,
+            journeys=captured_journeys,
+            evidence_refs=[repo_ref(driver_path), *driver_screenshots],
+            data_condition="driver-controlled proof data",
+            a11y_status="warn" if a11y_issues else "pass",
+            performance_status="pass",
+            basis="Journey, state and viewport were executed through the Product Face state/journey driver.",
+        )
     apply_capture_scope(result, capture_scope)
     return result
 
@@ -1269,6 +1518,7 @@ def build_product_face_proof(
     strict: bool = True,
     force_fallback: bool = False,
     allow_external_file: bool = False,
+    driver: Path | None = None,
     card: Path | None = None,
     reusable_for_product: bool = False,
     product_id: str | None = None,
@@ -1293,8 +1543,13 @@ def build_product_face_proof(
     output_dir = out if out.suffix == "" else out.parent
     output_dir.mkdir(parents=True, exist_ok=True)
     viewports = viewports or [Viewport(name, *size) for name, size in DEFAULT_VIEWPORTS.items()]
-    states = states or ["initial-render"]
-    journeys = journeys or ["open target", "inspect configured viewports"]
+    state_journey_driver = load_state_journey_driver(driver)
+    if state_journey_driver is None:
+        states = states or ["initial-render"]
+        journeys = journeys or ["open target", "inspect configured viewports"]
+    else:
+        states = states or []
+        journeys = journeys or []
     target_url, target_path = resolve_target(target, allow_external_file=allow_external_file)
     target_ref = repo_ref(target_path) if target_path else target
     card_ref = card_ref_from_card(load_json_like(card)) if card else None
@@ -1321,6 +1576,7 @@ def build_product_face_proof(
                 states=states,
                 journeys=journeys,
                 strict=strict,
+                state_journey_driver=state_journey_driver,
                 card_ref=card_ref,
             )
         except PlaywrightUnavailable as exc:
@@ -1396,6 +1652,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--strict", action="store_true", default=True, help="Treat a11y and overlap warnings as blocking findings. Enabled by default.")
     parser.add_argument("--force-fallback", action="store_true", help="Skip Playwright and write bounded static fallback evidence.")
     parser.add_argument("--allow-external-file", action="store_true", help="Allow absolute file targets outside this repo; output is redacted.")
+    parser.add_argument("--driver", type=Path, help="Product Face state/journey driver JSON for executable journeys.")
     parser.add_argument("--card", type=Path, help="Factory card to bind this Product Face result to.")
     parser.add_argument("--reusable-for-product", action="store_true", help="Mark this PASS proof reusable for the named product scope.")
     parser.add_argument("--product-id", help="Stable product id required with --reusable-for-product.")
@@ -1466,6 +1723,7 @@ def main(argv: list[str] | None = None) -> int:
             strict=args.strict,
             force_fallback=args.force_fallback,
             allow_external_file=args.allow_external_file,
+            driver=args.driver,
             card=args.card,
             reusable_for_product=args.reusable_for_product,
             product_id=args.product_id,

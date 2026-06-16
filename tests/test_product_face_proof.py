@@ -32,6 +32,76 @@ def reference_dimension_basis() -> dict[str, str]:
     }
 
 
+def valid_driver() -> dict:
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/product-face-state-journey-driver.schema.json",
+        "record_type": "product_face_state_journey_driver",
+        "target_binding": {"target_ref": "external:unit-target"},
+        "timeout_ms": 1000,
+        "public_artifact_policy": {
+            "no_private_screenshots_in_repo": True,
+            "no_secrets_in_values": True,
+            "proof_output_location": ".tmp/factory-runs/product-face",
+        },
+        "journeys": [
+            {
+                "journey_id": "login-success",
+                "name": "login success",
+                "state": "success",
+                "required_for_pass": True,
+                "data_condition": "public fixture user",
+                "state_setup": [{"action": "wait_for_selector", "selector": "#email"}],
+                "steps": [
+                    {"action": "fill", "selector": "#email", "value": "operator@example.com"},
+                    {"action": "click", "selector": "#submit"},
+                    {"action": "assert_text", "selector": "#status", "text": "Ready"},
+                    {"action": "screenshot", "full_page": True},
+                ],
+            }
+        ],
+    }
+
+
+class FakeLocator:
+    def __init__(self, page: "FakeDriverPage", selector: str) -> None:
+        self.page = page
+        self.selector = selector
+
+    def click(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        self.page.calls.append(("click", self.selector))
+
+    def fill(self, value: str, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        self.page.calls.append(("fill", self.selector, value))
+
+    def text_content(self, **kwargs) -> str:  # type: ignore[no-untyped-def]
+        return self.page.text_by_selector.get(self.selector, "")
+
+
+class FakeDriverPage:
+    def __init__(self, *, fail_selectors: set[str] | None = None) -> None:
+        self.calls: list[tuple] = []
+        self.fail_selectors = fail_selectors or set()
+        self.text_by_selector = {"#status": "Ready"}
+
+    def locator(self, selector: str) -> FakeLocator:
+        return FakeLocator(self, selector)
+
+    def wait_for_selector(self, selector: str, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        self.calls.append(("wait_for_selector", selector))
+        if selector in self.fail_selectors:
+            raise TimeoutError(f"missing selector {selector}")
+
+    def wait_for_timeout(self, ms: int) -> None:
+        self.calls.append(("wait", ms))
+
+    def goto(self, url: str, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        self.calls.append(("goto", url))
+
+    def screenshot(self, *, path: str, full_page: bool = True) -> None:
+        self.calls.append(("screenshot", path, full_page))
+        Path(path).write_bytes(b"fake-png")
+
+
 class ProductFaceProofTest(unittest.TestCase):
     def test_public_product_face_result_template_validates_semantically(self) -> None:
         result = json.loads((ROOT / "templates" / "product-face-result.json").read_text(encoding="utf-8"))
@@ -218,6 +288,111 @@ class ProductFaceProofTest(unittest.TestCase):
         self.assertEqual(result["uncaptured_states"], ["loading", "success"])
         self.assertEqual(result["uncaptured_journeys"], ["purchase flow"])
         self.assertIn("state/journey drivers", result["next_action"])
+
+    def test_state_journey_driver_executes_valid_journey(self) -> None:
+        driver = valid_driver()
+        product_face_proof.validate_state_journey_driver(driver)
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            executions, screenshots = product_face_proof.execute_state_journey_driver(
+                page=FakeDriverPage(),
+                driver=driver,
+                viewport=product_face_proof.Viewport("desktop", 1440, 900),
+                screenshot_dir=Path(tmp),
+            )
+
+        scope = product_face_proof.driver_capture_scope(
+            states=[],
+            journeys=[],
+            driver=driver,
+            executions=executions,
+        )
+
+        self.assertEqual(executions[0]["status"], "PASS")
+        self.assertEqual(scope["captured_states"], ["success"])
+        self.assertEqual(scope["captured_journeys"], ["login success"])
+        self.assertTrue(screenshots)
+
+    def test_state_journey_driver_rejects_missing_selector_action(self) -> None:
+        driver = valid_driver()
+        driver["journeys"][0]["steps"][1] = {"action": "click"}
+
+        with self.assertRaisesRegex(ValueError, "selector is required"):
+            product_face_proof.validate_state_journey_driver(driver)
+
+    def test_state_journey_driver_failure_blocks_capture(self) -> None:
+        driver = valid_driver()
+        driver["journeys"][0]["steps"][2] = {"action": "assert_visible", "selector": "#never"}
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            executions, _ = product_face_proof.execute_state_journey_driver(
+                page=FakeDriverPage(fail_selectors={"#never"}),
+                driver=driver,
+                viewport=product_face_proof.Viewport("desktop", 1440, 900),
+                screenshot_dir=Path(tmp),
+            )
+
+        scope = product_face_proof.driver_capture_scope(
+            states=["success"],
+            journeys=["login success"],
+            driver=driver,
+            executions=executions,
+        )
+        result = product_face_proof.base_result(
+            target_ref="external:unit-target",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=scope["captured_states"],
+            journeys=scope["captured_journeys"],
+            tool_or_profile="unit-test",
+        )
+        result["state_journey_driver"] = {
+            "driver_ref": "templates/product-face-state-journey-driver.json",
+            "status": "FAIL",
+            "execution_ref": "external:driver-execution",
+            "journeys_executed": scope["captured_journeys"],
+            "states_executed": scope["captured_states"],
+        }
+
+        product_face_proof.apply_capture_scope(result, scope)
+
+        self.assertEqual(executions[0]["status"], "FAIL")
+        self.assertEqual(result["result"], "WAIVED")
+        self.assertTrue(result["blocking_findings"])
+
+    def test_state_journey_driver_state_setup_failure_blocks_capture(self) -> None:
+        driver = valid_driver()
+        driver["journeys"][0]["state_setup"] = [{"action": "wait_for_selector", "selector": "#missing-setup"}]
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            executions, _ = product_face_proof.execute_state_journey_driver(
+                page=FakeDriverPage(fail_selectors={"#missing-setup"}),
+                driver=driver,
+                viewport=product_face_proof.Viewport("desktop", 1440, 900),
+                screenshot_dir=Path(tmp),
+            )
+
+        self.assertEqual(executions[0]["status"], "FAIL")
+        self.assertIn("missing-setup", executions[0]["failure"])
+
+    def test_declared_driver_journey_cannot_pass_without_execution(self) -> None:
+        driver = valid_driver()
+        scope = product_face_proof.driver_capture_scope(
+            states=["success"],
+            journeys=["login success"],
+            driver=driver,
+            executions=[],
+        )
+        result = product_face_proof.base_result(
+            target_ref="external:unit-target",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=[],
+            journeys=[],
+            tool_or_profile="unit-test",
+        )
+
+        product_face_proof.apply_capture_scope(result, scope)
+
+        self.assertEqual(result["result"], "WAIVED")
+        self.assertEqual(result["uncaptured_states"], ["success"])
+        self.assertEqual(result["uncaptured_journeys"], ["login success"])
+        self.assertEqual(product_face_proof.state_journey_driver_status([], scope), "FAIL")
 
     def test_visual_artifacts_are_emitted_only_for_captured_states(self) -> None:
         scope = product_face_proof.browser_capture_scope(

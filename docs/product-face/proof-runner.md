@@ -121,6 +121,9 @@ Useful options:
   be proven before product acceptance.
 - `--journey "open target" --journey "inspect mobile viewport"` to declare
   journeys that must be proven before product acceptance.
+- `--driver templates/product-face-state-journey-driver.json` to execute named
+  browser journeys, setup steps and assertions instead of merely declaring
+  coverage.
 - `--strict` to treat accessibility and overlap warnings as blocking.
 - `--force-fallback` to register bounded static evidence without a browser.
 - `--card` to bind the result to the exact factory card/slice that will later
@@ -152,13 +155,26 @@ performance note. Without Playwright, it writes a `WAIVED` result with
 rendered screenshot, console, layout, accessibility tree or performance claim
 was captured.
 
-The repo runner does not drive arbitrary product states or user journeys by
-itself. It records requested states and journeys as `declared_states` and
-`declared_journeys`, but only the actually captured initial render/default
-browser journey can appear in `checked_states`, `user_journeys_checked`,
-`visual_artifacts` and `usage_evidence_matrix`. If extra states or journeys are
-declared without a state driver or separate proof artifact, the result is
-`WAIVED`, not a reusable Product Face PASS.
+The repo runner can drive named product states and journeys when a
+`product_face_state_journey_driver` is supplied with `--driver`. The driver is a
+small public-safe contract, not a full E2E framework. It supports bounded
+browser actions such as `goto`, `click`, `fill`, `wait_for_selector`,
+`assert_visible`, `assert_text` and `screenshot`. The runner records a
+`state_journey_driver` summary and a `driver_execution` record in the
+`product_face_result`, then uses only successfully executed journeys/states to
+populate `checked_states`, `user_journeys_checked`, `visual_artifacts` and
+`usage_evidence_matrix`.
+
+Without `--driver`, the runner still records requested states and journeys as
+`declared_states` and `declared_journeys`, but only the actually captured
+initial render/default browser journey can appear in executable proof fields.
+If extra states or journeys are declared without a driver or separate proof
+artifact, the result is `WAIVED`, not a reusable Product Face PASS.
+
+Driver values must be public-safe. Do not put secrets, private screenshots,
+absolute local paths, raw logs or generated proof history into the public repo.
+Keep execution outputs under `.tmp`, a private evidence store or a release
+artifact, and reference them through the result emitted by the runner.
 
 For product-facing completion, Receipt Five must include `product_face_result`.
 A Product Face Packet is planning; a Product Face Result is proof. Browser
@@ -192,6 +208,7 @@ python scripts/product_face_proof.py \
   --viewport mobile=390x844 \
   --state initial-render \
   --journey "open target" \
+  --driver templates/product-face-state-journey-driver.json \
   --packet-ref examples/minimal-hermes-project/card.md#product_face_packet \
   --packet-comparison-basis "Screens, states and viewports match the Product Face Packet." \
   --source-promise-coverage-basis "The checked journey covers the stated product promise." \
