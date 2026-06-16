@@ -305,6 +305,31 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         self.assertTrue(any("$.evidence_refs[0]" in error and "private" in error for error in errors), errors)
         self.assertTrue(any("cannot_claim_customer_ready=true" in error for error in errors), errors)
 
+    def test_scale_slo_readiness_gate_schema_and_public_domain_rules(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["scale-slo-readiness-gate.schema.json"]
+        gate = json.loads((ROOT / "templates" / "scale-slo-readiness-gate.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(validator.validate_node(schema, gate, "$", schemas=schemas, root_schema=schema), [])
+        self.assertEqual(validator.validate_domain_rules(gate, "$"), [])
+
+        unsafe = json.loads(json.dumps(gate))
+        unsafe["evidence_refs"] = ["C:/Users/felip/private/scale-proof.json"]
+        unsafe["waiver"]["cannot_claim_scale_ready"] = False
+        errors = validator.validate_domain_rules(unsafe, "$")
+
+        self.assertTrue(any("$.evidence_refs[0]" in error and "private" in error for error in errors), errors)
+        self.assertTrue(any("cannot_claim_scale_ready=true" in error for error in errors), errors)
+
+        incoherent = json.loads(json.dumps(gate))
+        incoherent["decision"] = "PASS"
+        incoherent["proof_result"] = "DEGRADED"
+        incoherent.pop("waiver", None)
+        errors = validator.validate_domain_rules(incoherent, "$")
+
+        self.assertTrue(any("PASS requires proof_result PASS" in error for error in errors), errors)
+
     def test_professional_design_process_schema_accepts_controlled_blocked_gate(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()

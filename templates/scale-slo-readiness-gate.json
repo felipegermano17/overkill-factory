@@ -1,0 +1,48 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/scale-slo-readiness-gate.schema.json",
+  "record_type": "scale_slo_readiness_gate",
+  "decision": "WAIVED",
+  "proof_result": "NOT_RUN",
+  "target_load": {
+    "basis": "Template only; product-specific customer load has not been proven.",
+    "steady_state": "product-specific steady load required",
+    "peak": "product-specific peak load required",
+    "unit": "requests, jobs, users or transactions per declared time window"
+  },
+  "concurrency_envelope": {
+    "steady_concurrency": "product-specific steady concurrency required",
+    "peak_concurrency": "product-specific peak concurrency required",
+    "queue_policy": "Queueing, backpressure or rejection policy required before scale-ready claim."
+  },
+  "latency_slo": {
+    "primary_path": "primary customer-visible path",
+    "p95": "product-specific p95 required",
+    "p99": "product-specific p99 required"
+  },
+  "availability_slo": "Product-specific availability SLO required before scale-ready claim.",
+  "error_budget": "Product-specific error budget required before scale-ready claim.",
+  "saturation_behavior": "Saturation behavior must be known before scale-ready claim.",
+  "degradation_policy": "Graceful degradation or fail-closed policy required before scale-ready claim.",
+  "rate_limit_boundary": "Rate limit and quota boundaries required before scale-ready claim.",
+  "cost_capacity_boundary": "Cost and capacity budget required before scale-ready claim.",
+  "monitoring_signals": [
+    "latency",
+    "error_rate",
+    "saturation",
+    "cost_or_quota"
+  ],
+  "acceptance_owner": "scale-slo-readiness-owner",
+  "evidence_refs": [
+    "templates/scale-slo-readiness-gate.json"
+  ],
+  "waiver": {
+    "owner": "scale-slo-readiness-owner",
+    "reason": "Template only; product-specific scale/SLO proof has not been recorded.",
+    "expires_at": "2099-01-01T00:00:00+00:00",
+    "cannot_claim_scale_ready": true,
+    "next_required_action": "Replace this template with product-specific scale, capacity and SLO evidence before claiming customer-scale readiness.",
+    "evidence_refs": [
+      "templates/scale-slo-readiness-gate.json"
+    ]
+  }
+}

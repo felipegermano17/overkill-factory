@@ -2236,6 +2236,95 @@ def validate_customer_readiness_contract(card: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _scale_slo_gate_required(card: dict[str, Any]) -> bool:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return False
+    return _customer_readiness_gate_required(card) or _production_ladder_required(card)
+
+
+def _scale_slo_ready_claimed(card: dict[str, Any]) -> bool:
+    if card.get("scale_slo_ready_claimed") is True:
+        return True
+    if card.get("production_ready_claimed") is True:
+        return True
+    if _customer_ready_claimed(card):
+        return True
+    lifecycle = card.get("factory_sdlc_lifecycle_state")
+    if not isinstance(lifecycle, dict):
+        return False
+    acceptance = lifecycle.get("lifecycle_acceptance") if isinstance(lifecycle.get("lifecycle_acceptance"), dict) else {}
+    scope_state = str(acceptance.get("scope_completion_state") or "").strip()
+    delivery_state = str(lifecycle.get("delivery_state") or "").strip()
+    return (
+        acceptance.get("production_ready_claimed") is True
+        or acceptance.get("scale_slo_ready_claimed") is True
+        or scope_state in {"production_complete", "released", "operational"}
+        or delivery_state in {"release_candidate", "deployed", "operational"}
+    )
+
+
+def validate_scale_slo_readiness_gate(gate: dict[str, Any], *, at: str = "scale_slo_readiness_gate") -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("scale-slo-readiness-gate.schema.json")
+    if not schema:
+        return ["scale_slo_readiness_gate schema is not bundled"]
+    errors.extend(validate_node(schema, gate, at, schemas=schemas, root_schema=schema))
+    _validate_lifecycle_refs(_list_items(gate.get("evidence_refs")), f"{at}.evidence_refs", errors)
+
+    decision = str(gate.get("decision") or "").strip().upper()
+    proof_result = str(gate.get("proof_result") or "").strip().upper()
+    waiver = gate.get("waiver") if isinstance(gate.get("waiver"), dict) else {}
+    if waiver:
+        _validate_lifecycle_refs(_list_items(waiver.get("evidence_refs")), f"{at}.waiver.evidence_refs", errors)
+        expires_at = str(waiver.get("expires_at") or "").strip()
+        if expires_at:
+            try:
+                parsed = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            except ValueError:
+                errors.append(f"{at}.waiver.expires_at must be ISO-8601")
+            else:
+                if parsed.tzinfo is None:
+                    parsed = parsed.replace(tzinfo=timezone.utc)
+                if parsed <= datetime.now(timezone.utc):
+                    errors.append(f"{at}.waiver.expires_at must be in the future")
+    if decision == "PASS" and waiver:
+        errors.append(f"{at} PASS must not carry a waiver")
+    if decision == "PASS" and proof_result != "PASS":
+        errors.append(f"{at} PASS requires proof_result PASS")
+    if proof_result in {"FAIL", "DEGRADED"} and decision == "PASS":
+        errors.append(f"{at} degraded or failed proof cannot pass scale/SLO readiness")
+    return errors
+
+
+def validate_scale_slo_readiness_contract(card: dict[str, Any]) -> list[str]:
+    if not _scale_slo_gate_required(card):
+        return []
+    errors: list[str] = []
+    has_gate = isinstance(card.get("scale_slo_readiness_gate"), dict)
+    gate_ref = str(card.get("scale_slo_readiness_gate_ref") or "").strip()
+    if not has_gate and not gate_ref:
+        errors.append("scale_slo_readiness_gate or scale_slo_readiness_gate_ref is required for customer-ready or production-scale products")
+        return errors
+    if gate_ref:
+        _validate_public_ref(gate_ref, "scale_slo_readiness_gate_ref", errors)
+
+    gate = card.get("scale_slo_readiness_gate") if has_gate else _load_repo_local_json_ref(gate_ref)
+    if isinstance(gate, dict) and gate:
+        errors.extend(validate_scale_slo_readiness_gate(gate))
+    elif _scale_slo_ready_claimed(card):
+        errors.append("scale/SLO ready claim requires resolvable scale_slo_readiness_gate")
+
+    if _scale_slo_ready_claimed(card):
+        decision = str(gate.get("decision") or "").strip().upper() if isinstance(gate, dict) else ""
+        proof_result = str(gate.get("proof_result") or "").strip().upper() if isinstance(gate, dict) else ""
+        if decision != "PASS":
+            errors.append("scale/SLO ready claim requires scale_slo_readiness_gate decision PASS")
+        if proof_result != "PASS":
+            errors.append("scale/SLO ready claim requires scale_slo_readiness_gate proof_result PASS")
+    return errors
+
+
 def _research_required(card: dict[str, Any]) -> bool:
     outcome = card.get("outcome_contract") if isinstance(card.get("outcome_contract"), dict) else {}
     if outcome.get("discovery_depth") == "research_required":
@@ -3881,6 +3970,7 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_specialist_research_contract(data))
     errors.extend(validate_product_creation_readiness_contract(data))
     errors.extend(validate_customer_readiness_contract(data))
+    errors.extend(validate_scale_slo_readiness_contract(data))
     errors.extend(validate_production_promotion_ladder_contract(data))
     errors.extend(validate_user_facing_autonomy_contract(data))
     errors.extend(validate_material_autonomy_routing_contract(data))
@@ -6330,6 +6420,9 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "customer_readiness_gate_ref": card.get("customer_readiness_gate_ref")
             or ("card.customer_readiness_gate" if isinstance(card.get("customer_readiness_gate"), dict) else None),
             "customer_readiness_gate": card.get("customer_readiness_gate"),
+            "scale_slo_readiness_gate_ref": card.get("scale_slo_readiness_gate_ref")
+            or ("card.scale_slo_readiness_gate" if isinstance(card.get("scale_slo_readiness_gate"), dict) else None),
+            "scale_slo_readiness_gate": card.get("scale_slo_readiness_gate"),
             "required_structured_proofs": _activated_capability_pack_structured_proof_ids(card),
             "required_completion_proofs": _required_domain_proof_ids(card, "before_completion"),
             "specialist_research_plan_ref": card.get("specialist_research_plan_ref")
