@@ -720,6 +720,25 @@ class FactoryCtlTest(unittest.TestCase):
             ],
         )
 
+    def test_worker_packet_carries_sdlc_feedback_loop_ref(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+
+        packet = factoryctl.build_worker_packet("implementation-worker", card, card_path)
+
+        self.assertEqual(
+            packet["input_contract"]["sdlc_feedback_loop_ref"],
+            card["sdlc_feedback_loop_ref"],
+        )
+
+    def test_worker_packet_schema_declares_sdlc_feedback_loop_ref(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))
+
+        self.assertIn(
+            "sdlc_feedback_loop_ref",
+            schema["properties"]["input_contract"]["properties"],
+        )
+
     def test_worker_packet_schema_allows_every_registered_worker(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-packet.schema.json").read_text(encoding="utf-8"))
         allowed = set(schema["properties"]["worker"]["properties"]["id"]["enum"])

@@ -5757,6 +5757,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "reference_quality_packet": card.get("reference_quality_packet"),
             "professional_design_process": card.get("professional_design_process"),
             "learning_proposal_refs": card.get("learning_proposal_refs", []),
+            "sdlc_feedback_loop_ref": card.get("sdlc_feedback_loop_ref"),
             "canonical_product_sot_ref": card.get("canonical_product_sot_ref") or "card.product_sot",
             "product_creation_plan_ref": card.get("product_creation_plan_ref")
             or ("card.product_creation_plan" if isinstance(card.get("product_creation_plan"), dict) else None),
