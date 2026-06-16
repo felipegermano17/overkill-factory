@@ -61,7 +61,10 @@ class FactorySelfImprovementTest(unittest.TestCase):
         process = json.loads(json.dumps(vfinal_card()["professional_design_process"]))
         process["reference_research"]["sources"] = process["reference_research"]["sources"][:1]
         process["reference_research"]["sources"][0]["extracted_patterns"] = ["single pattern is too weak"]
-        process["wireframe_gate"]["status"] = "BLOCK"
+        process["wireframe_gate"] = {
+            "status": "BLOCKED",
+            "basis": "Wireframe review found a product-specific blocker.",
+        }
 
         errors = factoryctl.validate_professional_design_process(process)
 
@@ -70,8 +73,56 @@ class FactorySelfImprovementTest(unittest.TestCase):
             "professional_design_process.reference_research.sources[0].extracted_patterns requires at least 2 items",
             errors,
         )
+        self.assertIn("professional_design_process.wireframe_gate.blocker_id is required when status is BLOCKED", errors)
+        self.assertIn("professional_design_process.wireframe_gate.owner is required when status is BLOCKED", errors)
+        self.assertIn("professional_design_process.wireframe_gate.next_action is required when status is BLOCKED", errors)
+        self.assertIn("professional_design_process.wireframe_gate.proof_refs must be a non-empty array when status is BLOCKED", errors)
+
+    def test_professional_design_process_accepts_controlled_blocking_gates_as_records(self) -> None:
+        process = json.loads(json.dumps(vfinal_card()["professional_design_process"]))
+        process["wireframe_gate"] = {
+            "status": "BLOCKED",
+            "blocker_id": "wireframe-state-map-missing",
+            "owner": "product-face",
+            "next_action": "Add explicit blocked and error state wireframes.",
+            "basis": "The current wireframe does not map blocked/error states.",
+            "proof_refs": ["external:wireframe-review"],
+        }
+        process["prototype_gate"] = {
+            "status": "NEEDS_REWORK",
+            "blocker_id": "prototype-real-data-missing",
+            "owner": "product-face",
+            "next_action": "Replay prototype with dense and empty data states.",
+            "basis": "Prototype review did not include realistic data states.",
+            "proof_refs": ["external:prototype-review"],
+        }
+        process["comparative_review_gate"] = {
+            "status": "PENDING",
+            "blocker_id": "comparative-review-not-run",
+            "owner": "independent-product-face-reviewer",
+            "next_action": "Run side-by-side reference comparison.",
+            "basis": "Comparative review has not executed yet.",
+            "proof_refs": ["external:comparative-review-request"],
+        }
+
+        self.assertEqual(factoryctl.validate_professional_design_process(process), [])
+
+    def test_controlled_design_gate_blocks_product_facing_implementation(self) -> None:
+        card = vfinal_card()
+        card["surfaces"] = ["frontend"]
+        card["professional_design_process"]["wireframe_gate"] = {
+            "status": "BLOCKED",
+            "blocker_id": "wireframe-state-map-missing",
+            "owner": "product-face",
+            "next_action": "Add explicit blocked and error state wireframes.",
+            "basis": "The current wireframe does not map blocked/error states.",
+            "proof_refs": ["external:wireframe-review"],
+        }
+
+        errors = factoryctl.validate_card(card)
+
         self.assertIn(
-            "professional_design_process.wireframe_gate.status must be PASS before product-facing implementation",
+            "professional_design_process.wireframe_gate.status BLOCKED blocks product-facing implementation: Add explicit blocked and error state wireframes.",
             errors,
         )
 

@@ -219,6 +219,44 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
             factoryctl.validate_card(card),
         )
 
+    def test_product_implementation_concerns_require_structured_items(self) -> None:
+        card = self.vfinal_card()
+        card["product_creation_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+        card["product_implementation_readiness"] = factoryctl.load_json_like(
+            ROOT / "templates" / "product-implementation-readiness.json"
+        )
+        card["product_implementation_readiness"].pop("concern_items")
+
+        self.assertIn(
+            "product_implementation_readiness.CONCERNS requires concern_items",
+            factoryctl.validate_card(card),
+        )
+
+    def test_product_implementation_concerns_must_cover_ready_work_units(self) -> None:
+        card = self.vfinal_card()
+        card["product_creation_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+        card["product_implementation_readiness"] = factoryctl.load_json_like(
+            ROOT / "templates" / "product-implementation-readiness.json"
+        )
+        card["product_implementation_readiness"]["concern_items"][0]["allowed_ready_work_units"] = ["other-unit"]
+
+        self.assertIn(
+            "product_implementation_readiness.CONCERNS ready_work_units must be covered by concern_items[0].allowed_ready_work_units: work-unit-001",
+            factoryctl.validate_card(card),
+        )
+
+    def test_product_implementation_concerns_accept_controlled_ready_units(self) -> None:
+        card = self.vfinal_card()
+        card["product_creation_plan"] = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+        card["product_implementation_readiness"] = factoryctl.load_json_like(
+            ROOT / "templates" / "product-implementation-readiness.json"
+        )
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertNotIn("product_implementation_readiness.CONCERNS requires concern_items", errors)
+        self.assertFalse(any("allowed_ready_work_units" in error for error in errors), errors)
+
     def test_activated_capability_pack_proofs_block_readiness_when_missing(self) -> None:
         card = self.vfinal_card()
         card["surfaces"] = ["game", "3d", "asset-pipeline"]

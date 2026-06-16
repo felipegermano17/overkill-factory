@@ -333,12 +333,16 @@
     "density_rationale": "Use dense, quiet, repeatable product-tool layout for operators instead of a landing page or generic analytics dashboard."
   },
   "wireframe_gate": {
-    "status": "PASS",
+    "status": "PENDING",
+    "blocker_id": "wireframe-review-pending",
+    "owner": "product-face",
+    "next_action": "Run product-specific wireframe review against this surface's task map and UX architecture.",
     "reviewer": "product-face",
     "artifact_refs": [
       "templates/professional-design-process.json#ux_architecture"
     ],
-    "basis": "Layout separates source, state, work queue and inspector before visual styling."
+    "basis": "Starter template records the expected wireframe review path, but it is not product-specific approval.",
+    "proof_refs": ["templates/professional-design-process.json#ux_architecture"]
   },
   "visual_direction": {
     "typography": "Compact system UI scale; no hero-scale type inside product tools.",
@@ -352,12 +356,16 @@
     ]
   },
   "prototype_gate": {
-    "status": "PASS",
+    "status": "PENDING",
+    "blocker_id": "prototype-review-pending",
+    "owner": "product-face",
+    "next_action": "Run product-specific prototype review with real states before implementation approval.",
     "reviewer": "product-face",
     "artifact_refs": [
       "templates/professional-design-process.json"
     ],
-    "basis": "Prototype must cover real state categories and unhappy paths before implementation.",
+    "basis": "Starter template names the prototype review requirements, but it is not product-specific approval.",
+    "proof_refs": ["templates/professional-design-process.json#design_qa_plan"],
     "real_data_states": [
       "long dense data",
       "blocked gate",
@@ -392,10 +400,14 @@
     "overlap_check_required": true
   },
   "comparative_review_gate": {
-    "status": "PASS",
+    "status": "PENDING",
+    "blocker_id": "comparative-review-pending",
+    "owner": "independent-product-face-reviewer",
+    "next_action": "Compare the implemented product surface side-by-side against selected references and record product-specific evidence.",
     "reviewer_role": "independent-product-face-reviewer",
     "must_compare_to_reference_packet": true,
-    "basis": "Independent Product Face reviewer must compare the implemented surface side-by-side against selected references, the pattern synthesis, task model and Product Face packet before approval.",
+    "basis": "Starter template defines the comparative review gate; PASS requires product-specific side-by-side evidence.",
+    "proof_refs": ["templates/professional-design-process.json#reference_research"],
     "block_when": [
       "The result resembles a generic dashboard rather than the product's task model.",
       "Reference research exists but did not affect layout, hierarchy, controls or state treatment.",

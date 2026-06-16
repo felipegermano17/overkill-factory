@@ -442,6 +442,23 @@ PROFESSIONAL_DESIGN_PROCESS_REQUIRED_FIELDS = (
     "comparative_review_gate",
     "handoff_requirements",
 )
+PROFESSIONAL_DESIGN_GATE_ALLOWED_STATUSES = {"PASS", "BLOCKED", "NEEDS_REWORK", "PENDING"}
+PROFESSIONAL_DESIGN_GATE_BLOCKING_STATUSES = {"BLOCKED", "NEEDS_REWORK", "PENDING"}
+PROFESSIONAL_DESIGN_BLOCKER_REQUIRED_FIELDS = (
+    "blocker_id",
+    "owner",
+    "next_action",
+    "basis",
+)
+IMPLEMENTATION_CONCERN_ALLOWED_SEVERITIES = {"LOW", "MEDIUM", "HIGH", "BLOCKING"}
+IMPLEMENTATION_CONCERN_REQUIRED_FIELDS = (
+    "concern_id",
+    "severity",
+    "owner",
+    "impact",
+    "expiry",
+    "next_action",
+)
 PRODUCT_DELIVERY_QUALITY_PROFILE_REQUIRED_FIELDS = (
     "record_type",
     "profile_id",
@@ -2023,6 +2040,45 @@ def validate_specialist_research_contract(card: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_product_implementation_concerns(readiness: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    result = str(readiness.get("artifact_alignment_result") or "").strip().upper()
+    if result != "CONCERNS":
+        return errors
+
+    concerns = readiness.get("concern_items")
+    if not isinstance(concerns, list) or not concerns:
+        return ["product_implementation_readiness.CONCERNS requires concern_items"]
+
+    ready_work_units = _list_items(readiness.get("ready_work_units"))
+    for index, concern in enumerate(concerns):
+        if not isinstance(concern, dict):
+            errors.append(f"product_implementation_readiness.concern_items[{index}] must be an object")
+            continue
+        for field in IMPLEMENTATION_CONCERN_REQUIRED_FIELDS:
+            if not _non_empty_text(concern.get(field)):
+                errors.append(f"product_implementation_readiness.concern_items[{index}].{field} is required")
+        severity = str(concern.get("severity") or "").strip().upper()
+        if severity and severity not in IMPLEMENTATION_CONCERN_ALLOWED_SEVERITIES:
+            errors.append(
+                f"product_implementation_readiness.concern_items[{index}].severity must be LOW, MEDIUM, HIGH or BLOCKING"
+            )
+        if not _non_empty_string_list(concern.get("allowed_actions")):
+            errors.append(f"product_implementation_readiness.concern_items[{index}].allowed_actions must be non-empty")
+        if not _non_empty_string_list(concern.get("forbidden_actions")):
+            errors.append(f"product_implementation_readiness.concern_items[{index}].forbidden_actions must be non-empty")
+        if not _non_empty_string_list(concern.get("evidence_refs")):
+            errors.append(f"product_implementation_readiness.concern_items[{index}].evidence_refs must be non-empty")
+        allowed_units = _list_items(concern.get("allowed_ready_work_units"))
+        missing_ready_units = [unit for unit in ready_work_units if unit not in allowed_units]
+        if missing_ready_units:
+            errors.append(
+                "product_implementation_readiness.CONCERNS ready_work_units must be covered by "
+                f"concern_items[{index}].allowed_ready_work_units: " + ", ".join(missing_ready_units)
+            )
+    return errors
+
+
 def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[str]:
     if card.get("factory_method_version") != "OVERKILL_VFINAL":
         return []
@@ -2073,6 +2129,7 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
             errors.append("product_implementation_readiness.artifact_alignment_result blocks material implementation")
         if result == "PASS" and not _non_empty_string_list(readiness.get("ready_work_units")):
             errors.append("product_implementation_readiness PASS requires ready_work_units")
+        errors.extend(validate_product_implementation_concerns(readiness))
         required_readiness_proofs = _required_domain_proof_ids(card, "before_implementation")
         if required_readiness_proofs:
             proof_profile = profile or {
@@ -2939,6 +2996,43 @@ def _strict_plan_gate_enabled(plan: dict[str, Any]) -> bool:
     return str(plan.get("gate_enforcement") or "").strip().lower() in {"strict", "production"}
 
 
+def _validate_professional_design_gate(gate: dict[str, Any], *, at: str, reviewer_field: str) -> list[str]:
+    errors: list[str] = []
+    status = str(gate.get("status") or "").strip().upper()
+    if status not in PROFESSIONAL_DESIGN_GATE_ALLOWED_STATUSES:
+        errors.append(f"{at}.status must be PASS, BLOCKED, NEEDS_REWORK or PENDING")
+        return errors
+
+    if status == "PASS":
+        if not _non_empty_text(gate.get(reviewer_field)):
+            errors.append(f"{at}.{reviewer_field} is required")
+        if not _list_items(gate.get("artifact_refs")) and reviewer_field != "reviewer_role":
+            errors.append(f"{at}.artifact_refs must be a non-empty array")
+        if not _non_empty_text(gate.get("basis")):
+            errors.append(f"{at}.basis is required")
+        return errors
+
+    for field in PROFESSIONAL_DESIGN_BLOCKER_REQUIRED_FIELDS:
+        if not _non_empty_text(gate.get(field)):
+            errors.append(f"{at}.{field} is required when status is {status}")
+    if not _non_empty_string_list(gate.get("proof_refs")):
+        errors.append(f"{at}.proof_refs must be a non-empty array when status is {status}")
+    return errors
+
+
+def professional_design_process_gate_blockers(process: dict[str, Any]) -> list[str]:
+    blockers: list[str] = []
+    for field in ("wireframe_gate", "prototype_gate", "comparative_review_gate"):
+        gate = process.get(field) if isinstance(process.get(field), dict) else {}
+        status = str(gate.get("status") or "").strip().upper()
+        if status in PROFESSIONAL_DESIGN_GATE_BLOCKING_STATUSES:
+            next_action = str(gate.get("next_action") or "complete the controlled design gate repair").strip()
+            blockers.append(
+                f"professional_design_process.{field}.status {status} blocks product-facing implementation: {next_action}"
+            )
+    return blockers
+
+
 def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     for field in PROFESSIONAL_DESIGN_PROCESS_REQUIRED_FIELDS:
@@ -3093,14 +3187,13 @@ def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
 
     for field in ("wireframe_gate", "prototype_gate"):
         gate = process.get(field) if isinstance(process.get(field), dict) else {}
-        if gate.get("status") != "PASS":
-            errors.append(f"professional_design_process.{field}.status must be PASS before product-facing implementation")
-        if not _non_empty_text(gate.get("reviewer")):
-            errors.append(f"professional_design_process.{field}.reviewer is required")
-        if not _list_items(gate.get("artifact_refs")):
-            errors.append(f"professional_design_process.{field}.artifact_refs must be a non-empty array")
-        if not _non_empty_text(gate.get("basis")):
-            errors.append(f"professional_design_process.{field}.basis is required")
+        errors.extend(
+            _validate_professional_design_gate(
+                gate,
+                at=f"professional_design_process.{field}",
+                reviewer_field="reviewer",
+            )
+        )
 
     visual_direction = process.get("visual_direction") if isinstance(process.get("visual_direction"), dict) else {}
     for field in ("typography", "spacing", "color_semantics", "component_model", "anti_generic_commitments"):
@@ -3120,17 +3213,19 @@ def validate_professional_design_process(process: dict[str, Any]) -> list[str]:
             errors.append(f"professional_design_process.design_qa_plan.{field} must be true")
 
     comparative = process.get("comparative_review_gate") if isinstance(process.get("comparative_review_gate"), dict) else {}
-    if comparative.get("status") != "PASS":
-        errors.append("professional_design_process.comparative_review_gate.status must be PASS")
-    if comparative.get("must_compare_to_reference_packet") is not True:
+    errors.extend(
+        _validate_professional_design_gate(
+            comparative,
+            at="professional_design_process.comparative_review_gate",
+            reviewer_field="reviewer_role",
+        )
+    )
+    comparative_status = str(comparative.get("status") or "").strip().upper()
+    if comparative_status == "PASS" and comparative.get("must_compare_to_reference_packet") is not True:
         errors.append("professional_design_process.comparative_review_gate.must_compare_to_reference_packet must be true")
-    if not _non_empty_text(comparative.get("reviewer_role")):
-        errors.append("professional_design_process.comparative_review_gate.reviewer_role is required")
-    elif "independent" not in str(comparative.get("reviewer_role") or "").strip().lower():
+    if comparative_status == "PASS" and _non_empty_text(comparative.get("reviewer_role")) and "independent" not in str(comparative.get("reviewer_role") or "").strip().lower():
         errors.append("professional_design_process.comparative_review_gate.reviewer_role must identify an independent design/Product Face reviewer")
-    if not _non_empty_text(comparative.get("basis")):
-        errors.append("professional_design_process.comparative_review_gate.basis is required")
-    if not _list_items(comparative.get("block_when")):
+    if comparative_status == "PASS" and not _list_items(comparative.get("block_when")):
         errors.append("professional_design_process.comparative_review_gate.block_when must be a non-empty array")
 
     return errors
@@ -3287,6 +3382,7 @@ def validate_card(data: dict[str, Any]) -> list[str]:
                 errors.append("professional_design_process required for vFinal product-facing surfaces")
             else:
                 errors.extend(validate_professional_design_process(data["professional_design_process"]))
+                errors.extend(professional_design_process_gate_blockers(data["professional_design_process"]))
     phase = str(data.get("phase", "")).upper()
     if product_experience_surface_required(data) and phase in {"F11", "F16", "F17"}:
         if not isinstance(data.get("product_face_result"), dict) and not str(data.get("product_face_result_ref") or "").strip():

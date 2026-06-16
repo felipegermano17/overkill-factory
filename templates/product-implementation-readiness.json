@@ -20,6 +20,20 @@
     }
   ],
   "artifact_alignment_result": "CONCERNS",
+  "concern_items": [
+    {
+      "concern_id": "scope-fit-bounded-slice",
+      "severity": "MEDIUM",
+      "owner": "factory-orchestrator",
+      "impact": "The first work unit may execute, but it cannot claim complete-product acceptance until the remaining Product SOT scope is proven.",
+      "allowed_actions": ["execute work-unit-001 within Product SOT scope"],
+      "forbidden_actions": ["claim complete product done from one bounded slice"],
+      "allowed_ready_work_units": ["work-unit-001"],
+      "expiry": "until Product SOT scope coverage changes",
+      "next_action": "execute work-unit-001 and preserve the complete-product scope gate for later units",
+      "evidence_refs": ["templates/full-product-sot-scope-coverage.json"]
+    }
+  ],
   "requirements_trace": [
     {
       "requirement_ref": "product-sot#scope-in-001",
