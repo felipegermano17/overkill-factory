@@ -308,6 +308,27 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
         self.assertTrue(any("$.wireframe_gate" in error and "next_action" in error for error in errors), errors)
         self.assertTrue(any("$.wireframe_gate" in error and "proof_refs" in error for error in errors), errors)
 
+    def test_professional_design_process_public_validator_binds_reference_ids(self) -> None:
+        validator = load_validator()
+        process = json.loads((ROOT / "templates" / "professional-design-process.json").read_text(encoding="utf-8"))
+        broken_selected = json.loads(json.dumps(process))
+        broken_selected["reference_research"]["library_searches"][0]["selected_source_ids"].append("invented-reference")
+        broken_rejected = json.loads(json.dumps(process))
+        broken_rejected["reference_research"]["library_searches"][0]["rejected_candidate_ids"].append("missing-rejected")
+        duplicated = json.loads(json.dumps(process))
+        duplicated["reference_research"]["library_searches"][0]["selected_source_ids"].append("21st-dev-components")
+
+        self.assertEqual(validator.validate_domain_rules(process, "$"), [])
+        self.assertTrue(
+            any("selected_source_ids[2]" in error and "invented-reference" in error for error in validator.validate_domain_rules(broken_selected, "$"))
+        )
+        self.assertTrue(
+            any("rejected_candidate_ids[2]" in error and "missing-rejected" in error for error in validator.validate_domain_rules(broken_rejected, "$"))
+        )
+        self.assertTrue(
+            any("selected_source_ids" in error and "duplicate id 21st-dev-components" in error for error in validator.validate_domain_rules(duplicated, "$"))
+        )
+
     def test_resolves_internal_defs_refs(self) -> None:
         validator = load_validator()
         schema = {

@@ -153,6 +153,53 @@ class FactorySelfImprovementTest(unittest.TestCase):
             errors,
         )
 
+    def test_professional_design_process_binds_selected_source_ids(self) -> None:
+        process = json.loads(json.dumps(vfinal_card()["professional_design_process"]))
+        process["reference_research"]["library_searches"][0]["selected_source_ids"] = [
+            "21st-dev-components",
+            "invented-reference",
+        ]
+
+        errors = factoryctl.validate_professional_design_process(process)
+
+        self.assertIn(
+            "professional_design_process.reference_research.library_searches[0].selected_source_ids[1] does not resolve to reference_research.sources: invented-reference",
+            errors,
+        )
+
+    def test_professional_design_process_binds_rejected_candidate_ids(self) -> None:
+        process = json.loads(json.dumps(vfinal_card()["professional_design_process"]))
+        process["reference_research"]["library_searches"][0]["rejected_candidate_ids"] = [
+            "decorative-dashboard-template",
+            "missing-rejected-candidate",
+        ]
+
+        errors = factoryctl.validate_professional_design_process(process)
+
+        self.assertIn(
+            "professional_design_process.reference_research.library_searches[0].rejected_candidate_ids[1] does not resolve to reference_research.rejected_references: missing-rejected-candidate",
+            errors,
+        )
+
+    def test_professional_design_process_rejects_duplicate_reference_ids(self) -> None:
+        process = json.loads(json.dumps(vfinal_card()["professional_design_process"]))
+        process["reference_research"]["library_searches"][0]["selected_source_ids"] = [
+            "21st-dev-components",
+            "21st-dev-components",
+        ]
+
+        errors = factoryctl.validate_professional_design_process(process)
+
+        self.assertIn(
+            "professional_design_process.reference_research.library_searches[0].selected_source_ids contains duplicate id: 21st-dev-components",
+            errors,
+        )
+
+    def test_professional_design_process_template_reference_ids_resolve(self) -> None:
+        process = json.loads((ROOT / "templates" / "professional-design-process.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(factoryctl.validate_professional_design_process(process), [])
+
     def test_reference_quality_rejects_copy_without_license_ref(self) -> None:
         packet = dict(vfinal_card()["reference_quality_packet"])
         packet["references"] = [
