@@ -354,6 +354,13 @@
             "items": { "type": "string", "minLength": 3 }
           },
           "reviewer": { "type": "string" },
+          "reviewer_role": { "type": "string" },
+          "evidence_kind": {
+            "enum": ["contract", "runtime", "review", "domain", "human_gate"]
+          },
+          "human_gate_ref": { "type": "string" },
+          "human_gate_bounded_acceptance": { "type": "boolean" },
+          "human_gate_sanitized": { "type": "boolean" },
           "basis": { "type": "string", "minLength": 3 },
           "waiver_owner": { "type": "string" },
           "waiver_reason": { "type": "string" }
