@@ -1,0 +1,46 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operational-evidence-bundle.schema.json",
+  "record_type": "operational_evidence_bundle",
+  "bundle_id": "bundle-schema-self-check",
+  "claim_id": "claim-operational-evidence-contract",
+  "claim_text": "The public operational evidence bundle contract can be independently validated.",
+  "claim_scope": "gate",
+  "materiality": "medium",
+  "verification_method": "schema_validation",
+  "steps_executed": [
+    "Validate this template against the public operational evidence bundle schema.",
+    "Run factoryctl validate-evidence-bundle against this template."
+  ],
+  "expected_result": "The template validates without embedding raw private evidence.",
+  "observed_result": "The template is public-safe and points only at repo-relative contract files.",
+  "artifacts": [
+    {
+      "artifact_ref": "schemas/operational-evidence-bundle.schema.json",
+      "artifact_type": "schema_validation",
+      "public_safe": true,
+      "basis": "Defines the enforced public bundle shape."
+    },
+    {
+      "artifact_ref": "tests/test_operational_evidence_bundle.py",
+      "artifact_type": "test_output_ref",
+      "public_safe": true,
+      "basis": "Covers verdict, waiver, synthetic and private-ref semantics."
+    }
+  ],
+  "verdict": "CONFIRMED",
+  "evidence_kind": "real",
+  "confidence_boundary": "This confirms the public contract shape, not a live production run.",
+  "freshness": {
+    "checked_at": "2026-06-16T00:00:00+00:00",
+    "source_ref": "repo:overkill-factory"
+  },
+  "private_evidence_policy": {
+    "contains_private_evidence": false,
+    "raw_private_evidence_embedded": false,
+    "public_safe_refs_only": true,
+    "redaction_policy": "Only repo-relative or explicitly sanitized refs are allowed."
+  },
+  "reusable_for_product": true,
+  "reviewer_ref": "external:public-contract-review",
+  "next_safe_action": "Attach bundles to worker results when a claim needs reusable proof."
+}

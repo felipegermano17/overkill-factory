@@ -140,6 +140,19 @@
         "type": "string"
       }
     },
+    "operational_evidence_bundle_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "operational_evidence_bundles": {
+      "type": "array",
+      "items": {
+        "$ref": "operational-evidence-bundle.schema.json"
+      }
+    },
     "evidence_kind": {
       "enum": [
         "real",
