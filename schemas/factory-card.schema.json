@@ -158,6 +158,7 @@
     "product_context_packet_ref": { "type": "string" },
     "product_implementation_readiness": { "type": "object" },
     "product_implementation_readiness_ref": { "type": "string" },
+    "sdlc_feedback_loop_ref": { "type": "string", "minLength": 3 },
     "user_facing_autonomy_contract": { "type": "object" },
     "user_facing_autonomy_contract_ref": { "type": "string" },
     "product_experience_plan": { "type": "object" },

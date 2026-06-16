@@ -84,6 +84,11 @@ python scripts/factoryctl.py validate-sdlc-feedback-loop \
 Use this before converting external research, incidents, review findings,
 runtime gaps or product quality findings into durable factory changes.
 
+For `OVERKILL_VFINAL` cards with bounded, material or production autonomous
+execution, add `sdlc_feedback_loop_ref`. Planning-only and read-only work can
+stay lighter, but material work must not run without a feedback loop that keeps
+signal, routing, evidence and learnback connected.
+
 ## Factory Readiness Scorecard
 
 Use `factory_readiness_scorecard` before long autonomous execution to decide

@@ -850,6 +850,37 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertIn("OVERKILL_VFINAL card missing core contracts: product_sot, spec_graph", errors)
 
+    def test_vfinal_material_execution_requires_sdlc_feedback_loop_ref(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("sdlc_feedback_loop_ref", None)
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("sdlc_feedback_loop_ref required for material vFinal autonomous execution", errors)
+
+    def test_vfinal_planning_only_does_not_require_sdlc_feedback_loop_ref(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card.pop("sdlc_feedback_loop_ref", None)
+        card["authority_max"] = "validate_gate_only"
+        card["runtime_contract"] = dict(card["runtime_contract"], mode="planning_only")
+        card["autonomy_readiness_packet"] = dict(card["autonomy_readiness_packet"], execution_mode="planning_only")
+        card["agent_runtime_hardening_profile"] = dict(
+            card["agent_runtime_hardening_profile"],
+            execution_mode="planning_only",
+        )
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertNotIn("sdlc_feedback_loop_ref required for material vFinal autonomous execution", errors)
+
+    def test_vfinal_feedback_loop_ref_must_be_public_safe(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["sdlc_feedback_loop_ref"] = "C:/Users/felip/private/feedback-loop.json"
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("sdlc_feedback_loop_ref must be public-safe", errors)
+
     def test_vfinal_method_contract_requires_named_plan_fields(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
         card["method_contract"] = dict(card["method_contract"])

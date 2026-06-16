@@ -16,6 +16,7 @@
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
   "product_context_packet_ref": "templates/product-context-packet.json",
   "product_implementation_readiness_ref": "templates/product-implementation-readiness.json",
+  "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
   "user_facing_autonomy_contract_ref": "templates/user-facing-autonomy-contract.json",
   "source_refs": ["source-ledger.md"],
   "source_state": "promoted",
