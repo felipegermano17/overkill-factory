@@ -348,6 +348,15 @@ def product_face_result_fixture(**overrides: object) -> dict:
             "reference_quality_bar_checked": True,
             "ai_generic_symptoms": [],
         },
+        "domain_proof_coverage": [
+            {
+                "proof_id": "generic.operator-usability",
+                "status": "PASS",
+                "evidence_refs": ["reports/product-face/operator-usability.json"],
+                "reviewer": "product-face-reviewer",
+                "basis": "Operator can understand current state, evidence and next action.",
+            }
+        ],
         "blocking_findings": False,
         "evidence_refs": ["reports/product-face.md"],
         "next_action": "independent review",
@@ -837,6 +846,15 @@ class FactoryCtlTest(unittest.TestCase):
                     "reference_quality_bar_checked": True,
                     "ai_generic_symptoms": [],
                 },
+                "domain_proof_coverage": [
+                    {
+                        "proof_id": "generic.operator-usability",
+                        "status": "PASS",
+                        "evidence_refs": ["reports/product-face/operator-usability.json"],
+                        "reviewer": "product-face-reviewer",
+                        "basis": "Operator can understand current state, evidence and next action.",
+                    }
+                ],
                 "blocking_findings": False,
                 "evidence_refs": ["reports/product-face.md"],
                 "next_action": "independent review",
@@ -895,7 +913,7 @@ class FactoryCtlTest(unittest.TestCase):
         errors = factoryctl.validate_product_face_result_against_card(product_face_result_fixture(), card)
 
         self.assertIn(
-            "product_face_result.domain_proof_coverage missing product delivery proof coverage for required proof ids: game.playable-smoke",
+            "product_face_result.domain_proof_coverage missing required product delivery proof ids: game.playable-smoke",
             errors,
         )
 
@@ -906,7 +924,7 @@ class FactoryCtlTest(unittest.TestCase):
         errors = factoryctl.validate_product_face_result_against_card(product_face_result_fixture(), card)
 
         self.assertIn(
-            "product_face_result.domain_proof_coverage missing product delivery proof coverage for required proof ids: game.design-packet, game.performance-budget, game.playable-smoke, game.playtest-review, game.runtime-choice",
+            "product_face_result.domain_proof_coverage missing required product delivery proof ids: game.design-packet, game.performance-budget, game.playable-smoke, game.playtest-review, game.runtime-choice",
             errors,
         )
 
@@ -915,6 +933,15 @@ class FactoryCtlTest(unittest.TestCase):
         card["capability_pack_contract"] = activated_game_contract_fixture()
         result = product_face_result_fixture(
             domain_proof_coverage=[
+                {
+                    "proof_id": "generic.operator-usability",
+                    "status": "PASS",
+                    "evidence_refs": ["reports/domain-proof/generic.operator-usability.json"],
+                    "reviewer": "domain-proof-reviewer",
+                    "basis": "Operator usability proof passed with structured evidence.",
+                }
+            ]
+            + [
                 {
                     "proof_id": proof_id,
                     "status": "PASS",
@@ -932,7 +959,10 @@ class FactoryCtlTest(unittest.TestCase):
         card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
         card["product_delivery_quality_profile_ref"] = "templates/product-delivery-quality-profile.json"
 
-        errors = factoryctl.validate_product_face_result_against_card(product_face_result_fixture(), card)
+        errors = factoryctl.validate_product_face_result_against_card(
+            product_face_result_fixture(domain_proof_coverage=[]),
+            card,
+        )
 
         self.assertIn(
             "product_face_result.domain_proof_coverage missing product delivery proof coverage for required proof ids: generic.operator-usability",

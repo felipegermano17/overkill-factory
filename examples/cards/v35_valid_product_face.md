@@ -77,7 +77,78 @@
     "required_tools": ["codex-security", "appsec-owasp-specialist"],
     "acceptance_policy": {"blocking_findings": "must_fix_or_human_waiver"}
   },
+  "product_experience_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json",
+    "surface_type": "web app",
+    "surface_pack": "web-app-surface-pack",
+    "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+    "surface_evidence_profile": "web_visual_ui",
+    "experience_sot": "The operator can review pilot status, evidence, blockers and next action without generic dashboard filler.",
+    "user": "factory operator",
+    "job_to_be_done": "Review pilot status and evidence with clear next action.",
+    "main_flows": ["pilot status review", "review evidence inspection"],
+    "required_states": ["loading", "error", "success", "pending"],
+    "design_direction": {
+      "visual_tone": "focused operational validation surface",
+      "product_fit": "Status, evidence and review hierarchy must be visible before decorative content.",
+      "density": "compact enough for repeated operator review",
+      "interaction_style": "direct inspection with explicit blockers and next action"
+    },
+    "visual_quality_bar": {
+      "reference_quality_bar": "A focused operator validation surface with clear status, evidence and review hierarchy.",
+      "anti_generic_criteria": [
+        "no generic AI dashboard composition",
+        "no excessive explanatory copy",
+        "no weak hierarchy between status, evidence and next action"
+      ],
+      "professional_review_required": true,
+      "block_when": [
+        "screenshots pass mechanically but the surface looks templated or product-agnostic",
+        "visual hierarchy does not match the Product Face job"
+      ]
+    },
+    "proof_required": ["desktop screenshot", "mobile screenshot", "state evidence", "visual_quality_result verdict"],
+    "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
+    "done_definition": [
+      "Product Face Packet exists before implementation",
+      "states are checked against the plan",
+      "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"
+    ],
+    "human_gate": {
+      "required": false,
+      "approver": "",
+      "reason": "No material external visual direction decision in this fixture."
+    },
+    "prototype_decision": "prototype_not_required because this is a validation fixture",
+    "device_or_viewport_scope": ["desktop 1440x900", "mobile 390x844"],
+    "accessibility_scope": ["keyboard", "focus", "contrast", "labels"],
+    "performance_scope": ["static validation render only"],
+    "data_context": "Fixture evidence includes loading, error, success and pending status data.",
+    "docs_onboarding": ["operator can read status without private context"],
+    "experience_qa": ["responsive proof", "state coverage", "a11y basics"],
+    "product_face_result_required": true,
+    "evidence_refs": ["examples/cards/v35_valid_product_face.md#product_experience_plan"],
+    "reference_quality_waiver": {
+      "owner": "product-face",
+      "reason": "This public fixture validates Product Experience routing and Product Face Packet shape; it does not claim final visual reference research as production evidence."
+    }
+  },
   "product_face_packet": {
+    "$schema": "https://overkill-factory.dev/schemas/product-face-packet.schema.json",
+    "surface": "web_app",
+    "mode": "greenfield",
+    "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+    "surface_evidence_profile": "web_visual_ui",
+    "user": "factory operator",
+    "job_to_be_done": "Review pilot status and evidence with clear next action.",
+    "main_flows": ["pilot status review", "review evidence inspection"],
+    "required_states": ["loading", "error", "success", "pending"],
+    "design_direction": {
+      "visual_tone": "focused operational validation surface",
+      "product_fit": "Status, evidence and review hierarchy must be visible before decorative content.",
+      "density": "compact enough for repeated operator review",
+      "interaction_style": "direct inspection with explicit blockers and next action"
+    },
     "screen_inventory": ["pilot status screen", "review evidence screen"],
     "state_matrix": {"loading": "shown", "error": "shown", "success": "shown", "pending": "shown"},
     "design_contract_ref": "design_contract_candidate_v1",
@@ -98,7 +169,20 @@
         "visual hierarchy does not match the Product Face job"
       ]
     },
-    "visual_evidence_plan": ["desktop screenshot", "mobile screenshot"]
+    "visual_evidence_plan": ["desktop screenshot", "mobile screenshot"],
+    "proof_required": ["desktop screenshot", "mobile screenshot", "state evidence", "visual_quality_result verdict"],
+    "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
+    "done_definition": [
+      "result covers required flows and states",
+      "result includes evidence for required viewports",
+      "review confirms result fits the product promise and visual direction",
+      "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"
+    ],
+    "human_gate": {
+      "required": false,
+      "approver": "",
+      "reason": "No material external visual direction decision in this fixture."
+    }
   },
   "professional_design_process": {
     "$schema": "https://overkill-factory.dev/schemas/professional-design-process.schema.json",

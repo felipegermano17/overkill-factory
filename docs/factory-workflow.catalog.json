@@ -149,6 +149,49 @@
       "related_issue_refs": ["#104", "#99"]
     },
     {
+      "phase_id": "F8A",
+      "phase_name": "Product Experience And Surface Pack Gate",
+      "entry_conditions": ["method contract exists", "product-facing surface or surface pack is in scope"],
+      "required_artifacts": [
+        "product_experience_plan",
+        "product_face_packet",
+        "professional_design_process",
+        "surface_evidence_profile",
+        "product_delivery_quality_profile"
+      ],
+      "optional_artifacts": ["reference_quality_waiver"],
+      "required_gates": ["Product Experience Gate", "Surface Pack Gate"],
+      "required_workers": ["product-face", "factory-orchestrator"],
+      "allowed_next_actions": ["create Product Experience Plan", "create Product Face Packet", "select surface evidence profile"],
+      "blocked_actions": [
+        "start product-facing implementation before surface state coverage",
+        "treat generic UI proof as Product Experience proof",
+        "move to implementation with unnamed surface pack or proof profile"
+      ],
+      "output_locations": [
+        "card.product_experience_plan",
+        "card.product_face_packet",
+        "card.professional_design_process",
+        "card.product_delivery_quality_profile_ref"
+      ],
+      "completion_detection": [
+        "product_experience_plan exists and names surface_pack",
+        "product_face_packet exists and names required states and proof",
+        "surface_evidence_profile or surface_evidence_profiles are declared",
+        "professional_design_process exists before product-facing implementation"
+      ],
+      "operator_visible_summary": "Factory is defining the product surface, states, experience bar and proof before implementation.",
+      "maintainer_visible_details": "Product-facing work cannot use generic implementation planning as a substitute for Product Experience and Product Face contracts.",
+      "related_schema_refs": [
+        "schemas/product-experience-plan.schema.json",
+        "schemas/product-face-packet.schema.json",
+        "schemas/professional-design-process.schema.json",
+        "schemas/product-delivery-quality-profile.schema.json"
+      ],
+      "related_command_refs": ["factoryctl help-next", "factoryctl gate-report", "factoryctl validate-card"],
+      "related_issue_refs": ["#215", "#194", "#198"]
+    },
+    {
       "phase_id": "F9",
       "phase_name": "Risk And Authority Gates",
       "entry_conditions": ["risk tier and surfaces are known"],
@@ -189,7 +232,7 @@
       "phase_name": "Executable Plans",
       "entry_conditions": ["method and required gates are known"],
       "required_artifacts": ["software_development_plan", "spec_graph", "loop_plan"],
-      "optional_artifacts": ["product_experience_plan", "data_metrics_plan", "agent_eval_plan"],
+      "optional_artifacts": ["data_metrics_plan", "agent_eval_plan"],
       "required_gates": ["Ready Gate"],
       "required_workers": ["decomposition-planner"],
       "allowed_next_actions": ["create work units and verification plan"],

@@ -148,7 +148,78 @@
   "done_definition": "The minimal example is documented, gate-reportable, packet-generating and clear that Product Face evidence plus Receipt Five are required before done.",
   "transition_event_required": true,
   "kanban_transition_event_ref": "required_before_done",
+  "product_experience_plan": {
+    "$schema": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json",
+    "surface_type": "web app",
+    "surface_pack": "minimal-public-receipt-surface-pack",
+    "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+    "surface_evidence_profile": "web_visual_ui",
+    "experience_sot": "A first-time operator can see whether the minimal example is ready, blocked or missing Product Face and Receipt Five evidence.",
+    "user": "external open-source factory operator",
+    "job_to_be_done": "Understand the minimal factory flow and the exact evidence still required before done.",
+    "main_flows": ["review receipt status", "find missing evidence", "inspect validation commands"],
+    "required_states": ["loading", "empty", "success", "blocked"],
+    "design_direction": {
+      "visual_tone": "quiet public validation surface",
+      "product_fit": "The surface must teach the factory proof boundary without looking like product completion.",
+      "density": "compact and readable for first-run onboarding",
+      "interaction_style": "linear inspection with explicit blocked-state guidance"
+    },
+    "visual_quality_bar": {
+      "reference_quality_bar": "A quiet, inspectable operator receipt/status surface; not a generic marketing dashboard.",
+      "anti_generic_criteria": [
+        "no generic AI dashboard composition",
+        "no excessive explanatory copy where status structure should carry meaning",
+        "no decorative visual treatment that hides receipt state or next action"
+      ],
+      "professional_review_required": true,
+      "block_when": [
+        "mechanical screenshots pass but hierarchy, density or product fit feels generic",
+        "the UI looks like a template rather than a purpose-built factory operator surface"
+      ]
+    },
+    "proof_required": ["desktop screenshot", "mobile screenshot", "state matrix", "visual_quality_result verdict"],
+    "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
+    "done_definition": [
+      "Product Face evidence plan exists before generated packets",
+      "Receipt status states are checked",
+      "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"
+    ],
+    "human_gate": {
+      "required": false,
+      "approver": "",
+      "reason": "Public minimal example has no material visual direction decision."
+    },
+    "prototype_decision": "prototype_not_required because the minimal flow is documented",
+    "device_or_viewport_scope": ["desktop 1440x900", "mobile 390x844"],
+    "accessibility_scope": ["keyboard", "focus", "contrast", "labels"],
+    "performance_scope": ["local static receipt/status render"],
+    "data_context": "Fixture states cover loading, empty, success and blocked evidence.",
+    "docs_onboarding": ["first-run operator guidance stays in the example README and expected flow"],
+    "experience_qa": ["responsive proof", "state coverage", "a11y basics"],
+    "product_face_result_required": true,
+    "evidence_refs": ["examples/minimal-hermes-project/card.md#product_experience_plan"],
+    "reference_quality_waiver": {
+      "owner": "product-face",
+      "reason": "This minimal public fixture proves the Product Experience gate and first-run flow, not a production visual benchmark decision."
+    }
+  },
   "product_face_packet": {
+    "$schema": "https://overkill-factory.dev/schemas/product-face-packet.schema.json",
+    "surface": "web_app",
+    "mode": "greenfield",
+    "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+    "surface_evidence_profile": "web_visual_ui",
+    "user": "external open-source factory operator",
+    "job_to_be_done": "Understand the minimal factory flow and the exact evidence still required before done.",
+    "main_flows": ["review receipt status", "find missing evidence", "inspect validation commands"],
+    "required_states": ["loading", "empty", "success", "blocked"],
+    "design_direction": {
+      "visual_tone": "quiet public validation surface",
+      "product_fit": "The surface must teach the factory proof boundary without looking like product completion.",
+      "density": "compact and readable for first-run onboarding",
+      "interaction_style": "linear inspection with explicit blocked-state guidance"
+    },
     "screen_inventory": [
       "receipt status screen"
     ],
@@ -195,7 +266,20 @@
       "desktop screenshot",
       "mobile screenshot",
       "state matrix"
-    ]
+    ],
+    "proof_required": ["desktop screenshot", "mobile screenshot", "state matrix", "visual_quality_result verdict"],
+    "reviewers_required": ["product-face", "qa-verification-worker", "independent-reviewer"],
+    "done_definition": [
+      "result covers required flows and states",
+      "result includes evidence for required viewports",
+      "review confirms result fits the public minimal example promise",
+      "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"
+    ],
+    "human_gate": {
+      "required": false,
+      "approver": "",
+      "reason": "Public minimal example has no material visual direction decision."
+    }
   },
   "professional_design_process": {
     "record_type": "professional_design_process",

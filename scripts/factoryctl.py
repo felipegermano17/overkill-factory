@@ -602,12 +602,18 @@ WORKERS: dict[str, WorkerDefinition] = {
         factory_phase="F5/F13",
         output_field="product_face_result",
         tool_required="browser screenshot/a11y/mobile validation runner",
-        timing="after product_face_packet and professional_design_process, before product-facing done",
+        timing="after product_experience_plan, product_face_packet and professional_design_process, before product-facing done",
         blocking_policy=(
             "Frontend, UX, mobile, wallet UI, or visible product work cannot be "
             "declared complete without screen/state/mobile/a11y evidence."
         ),
-        required_inputs=("product_face_packet", "professional_design_process", "target_repo_paths", "acceptance_criteria"),
+        required_inputs=(
+            "product_experience_plan",
+            "product_face_packet",
+            "professional_design_process",
+            "target_repo_paths",
+            "acceptance_criteria",
+        ),
     ),
     "independent-reviewer": WorkerDefinition(
         worker_id="independent-reviewer",
@@ -736,7 +742,14 @@ WORKERS: dict[str, WorkerDefinition] = {
         tool_required="frontend runtime, browser, component tests and visual proof handoff",
         timing="during scoped visible-product implementation, before Product Face validation",
         blocking_policy="Frontend work cannot be treated as generic code when visible product surfaces are in scope.",
-        required_inputs=("product_face_packet", "professional_design_process", "scope_in", "scope_out", "done_definition"),
+        required_inputs=(
+            "product_experience_plan",
+            "product_face_packet",
+            "professional_design_process",
+            "scope_in",
+            "scope_out",
+            "done_definition",
+        ),
     ),
     "backend-api-builder": WorkerDefinition(
         worker_id="backend-api-builder",
@@ -6528,6 +6541,34 @@ def workflow_phase_for_card(card: dict[str, Any], catalog: dict[str, Any]) -> di
     }
 
 
+def workflow_phase_by_id(catalog: dict[str, Any], phase_id: str) -> dict[str, Any] | None:
+    wanted = phase_id.strip().upper()
+    for row in catalog.get("phases", []) if isinstance(catalog.get("phases"), list) else []:
+        if isinstance(row, dict) and str(row.get("phase_id") or "").strip().upper() == wanted:
+            return row
+    return None
+
+
+def product_experience_planning_gap(card: dict[str, Any], validation_errors: list[str] | None = None) -> bool:
+    if not product_experience_surface_required(card):
+        return False
+    if not isinstance(card.get("product_experience_plan"), dict):
+        return True
+    if not isinstance(card.get("product_face_packet"), dict):
+        return True
+    if strict_product_experience_required(card) and not isinstance(card.get("professional_design_process"), dict):
+        return True
+    markers = (
+        "product_experience_plan",
+        "product_face_packet",
+        "professional_design_process",
+        "reference_quality_packet",
+        "surface_evidence_profile",
+        "product_delivery_quality_profile",
+    )
+    return any(any(marker in error for marker in markers) for error in (validation_errors or []))
+
+
 def truth_scope_for_card(card: dict[str, Any]) -> str:
     if card.get("release_ref") or card.get("production_release_ref"):
         return "production_ready"
@@ -6548,6 +6589,13 @@ def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], pha
     blocked_workers = _list_items(gate_report.get("blocked_workers"))
     command_refs = _list_items(phase_row.get("related_command_refs")) or ["factoryctl gate-report"]
 
+    if product_experience_planning_gap(card, errors):
+        return {
+            "owner": "factory",
+            "action": "create or repair the Product Experience Plan, Product Face Packet and professional design process before implementation",
+            "why": "Product-facing work needs named surface states, surface pack, proof profile and design-quality bar before builders run.",
+            "command_refs": command_refs,
+        }
     if any("product_sot" in error.lower() for error in errors):
         return {
             "owner": "factory",
@@ -6658,6 +6706,8 @@ def build_factory_help(card: dict[str, Any], card_path: Path, *, catalog_path: P
     catalog = load_workflow_catalog(catalog_path)
     phase_row = workflow_phase_for_card(card, catalog)
     gate_report = build_gate_report(card)
+    if product_experience_planning_gap(card, _list_items(gate_report.get("card_validation_errors"))):
+        phase_row = workflow_phase_by_id(catalog, "F8A") or phase_row
     factory_action = help_action_from_gate(card, gate_report, phase_row)
     blocked_workers = _list_items(gate_report.get("blocked_workers"))
     validation_errors = _list_items(gate_report.get("card_validation_errors"))
