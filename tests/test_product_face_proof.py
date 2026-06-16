@@ -344,6 +344,61 @@ class ProductFaceProofTest(unittest.TestCase):
                 reference_quality_dimensions=reference_dimension_basis(),
             )
 
+    def test_visual_quality_residual_parser_requires_bounded_structured_input(self) -> None:
+        residual = product_face_proof.parse_visual_quality_residual(
+            "residual-minor-spacing|low|product-face-reviewer|2099-01-01T00:00:00+00:00|"
+            "Accepted only for this bounded Product Face validation|external:residual-proof|"
+            "Minor spacing variance remains after review."
+        )
+
+        self.assertEqual(residual["id"], "residual-minor-spacing")
+        self.assertEqual(residual["severity"], "low")
+        self.assertFalse(residual["blocks_full_acceptance"])
+        self.assertEqual(residual["proof_refs"], ["external:residual-proof"])
+
+    def test_visual_quality_review_rejects_unstructured_residuals(self) -> None:
+        result = product_face_proof.base_result(
+            target_ref="examples/minimal-hermes-project",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=["initial-render"],
+            journeys=["open target"],
+            tool_or_profile="unit-test",
+        )
+
+        with self.assertRaisesRegex(ValueError, "bounded-visual-quality-residual"):
+            product_face_proof.apply_visual_quality_review(
+                result=result,
+                status="PASS_WITH_RESIDUALS",
+                reviewer="product-face-reviewer",
+                basis="Residual is accepted.",
+                residuals=["minor issue"],  # type: ignore[list-item]
+            )
+
+    def test_visual_quality_review_accepts_bounded_structured_residuals(self) -> None:
+        result = product_face_proof.base_result(
+            target_ref="examples/minimal-hermes-project",
+            viewports=[product_face_proof.Viewport("desktop", 1440, 900)],
+            states=["initial-render"],
+            journeys=["open target"],
+            tool_or_profile="unit-test",
+        )
+        residual = product_face_proof.parse_visual_quality_residual(
+            "residual-minor-spacing|medium|product-face-reviewer|2099-01-01T00:00:00+00:00|"
+            "Accepted only for this bounded Product Face validation|external:residual-proof|"
+            "Minor non-blocking performance variance remains after review."
+        )
+
+        product_face_proof.apply_visual_quality_review(
+            result=result,
+            status="PASS_WITH_RESIDUALS",
+            reviewer="product-face-reviewer",
+            basis="Residual is bounded, owned and expires.",
+            residuals=[residual],
+        )
+
+        self.assertTrue(product_face_proof.visual_quality_passes(result))
+        self.assertEqual(result["visual_quality_result"]["residuals"], [residual])
+
     def test_reusable_for_product_requires_packet_alignment(self) -> None:
         result = product_face_proof.base_result(
             target_ref="examples/minimal-hermes-project",

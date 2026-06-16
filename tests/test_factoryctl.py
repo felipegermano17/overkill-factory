@@ -551,6 +551,21 @@ def product_face_result_fixture(**overrides: object) -> dict:
     return result
 
 
+def visual_quality_residual_fixture(**overrides: object) -> dict:
+    residual = {
+        "id": "residual-minor-spacing",
+        "description": "Minor spacing variance remains in a bounded non-critical state.",
+        "severity": "low",
+        "owner": "product-face-reviewer",
+        "expires_at": "2099-01-01T00:00:00+00:00",
+        "accepted_scope": "Accepted only for this bounded Product Face validation result.",
+        "proof_refs": ["external:product-face-residual-review"],
+        "blocks_full_acceptance": False,
+    }
+    residual.update(overrides)
+    return residual
+
+
 def surface_profile(profile_id: str, surface: str) -> dict:
     return {
         "profile_id": profile_id,
@@ -2300,6 +2315,123 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_result PASS requires a11y.status=pass", errors)
         self.assertIn("product_face_result PASS requires overlap_check.status=pass", errors)
         self.assertIn("product_face_result.visual_quality_result is required", errors)
+
+    def test_product_face_pass_with_residuals_requires_structured_acceptance(self) -> None:
+        result = product_face_result_fixture(
+            visual_quality_result={
+                "status": "PASS_WITH_RESIDUALS",
+                "reviewer": "product-face-reviewer",
+                "basis": "Residual was accepted as bounded.",
+                "reference_quality_bar_checked": True,
+                "ai_generic_symptoms": [],
+                "residuals": ["minor spacing issue"],
+            }
+        )
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn("product_face_result.visual_quality_result.residuals entries must be objects", errors)
+        self.assertIn("product_face_result PASS_WITH_RESIDUALS requires structured residuals", errors)
+
+    def test_product_face_pass_rejects_unbounded_or_blocking_residual(self) -> None:
+        result = product_face_result_fixture(
+            visual_quality_result={
+                "status": "PASS_WITH_RESIDUALS",
+                "reviewer": "product-face-reviewer",
+                "basis": "Residual was accepted as bounded.",
+                "reference_quality_bar_checked": True,
+                "ai_generic_symptoms": [],
+                "residuals": [
+                    visual_quality_residual_fixture(
+                        severity="high",
+                        blocks_full_acceptance=True,
+                        expires_at="2020-01-01T00:00:00+00:00",
+                        proof_refs=[],
+                    )
+                ],
+            }
+        )
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.visual_quality_result.residuals[0].proof_refs must be a non-empty string array",
+            errors,
+        )
+        self.assertIn(
+            "product_face_result.visual_quality_result.residuals[0] is stale; expires_at is in the past",
+            errors,
+        )
+        self.assertIn(
+            "product_face_result.visual_quality_result.residuals[0].blocks_full_acceptance=false is required for Product Face PASS",
+            errors,
+        )
+        self.assertIn(
+            "product_face_result.visual_quality_result.residuals[0].severity cannot be high or critical for Product Face PASS",
+            errors,
+        )
+
+    def test_product_face_pass_warn_requires_matching_accepted_residual(self) -> None:
+        usage_matrix = usage_evidence_matrix_fixture(
+            journeys=["pilot status review"],
+            states=["success"],
+            viewports=["desktop 1440x900"],
+        )
+        usage_matrix[0]["a11y_status"] = "warn"
+        result = product_face_result_fixture(
+            user_journeys_checked=["pilot status review"],
+            checked_states=["success"],
+            viewports=["desktop 1440x900"],
+            screenshots=["external:product-face-fixture-desktop.png"],
+            usage_evidence_matrix=usage_matrix,
+        )
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result PASS usage_evidence_matrix[0].a11y_status=warn requires accepted_residual_ref",
+            errors,
+        )
+
+        usage_matrix[0]["accepted_residual_ref"] = "residual-minor-spacing"
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertIn(
+            "product_face_result.usage_evidence_matrix[0].accepted_residual_ref must match visual_quality_result.residuals[].id",
+            errors,
+        )
+        self.assertIn(
+            "product_face_result PASS usage_evidence_matrix[0] warnings require visual_quality_result.status PASS_WITH_RESIDUALS",
+            errors,
+        )
+
+    def test_product_face_pass_accepts_bounded_warning_residual_contract(self) -> None:
+        usage_matrix = usage_evidence_matrix_fixture(
+            journeys=["pilot status review"],
+            states=["success"],
+            viewports=["desktop 1440x900"],
+        )
+        usage_matrix[0]["performance_status"] = "warn"
+        usage_matrix[0]["accepted_residual_ref"] = "residual-minor-spacing"
+        result = product_face_result_fixture(
+            user_journeys_checked=["pilot status review"],
+            checked_states=["success"],
+            viewports=["desktop 1440x900"],
+            screenshots=["external:product-face-fixture-desktop.png"],
+            usage_evidence_matrix=usage_matrix,
+            visual_quality_result={
+                "status": "PASS_WITH_RESIDUALS",
+                "reviewer": "product-face-reviewer",
+                "basis": "Residual is bounded, owned and does not block the accepted scope.",
+                "reference_quality_bar_checked": True,
+                "ai_generic_symptoms": [],
+                "residuals": [visual_quality_residual_fixture()],
+            },
+        )
+
+        errors = factoryctl.validate_product_face_result(result)
+
+        self.assertEqual([], errors)
 
     def test_product_face_waived_allows_pending_reference_quality(self) -> None:
         result = {

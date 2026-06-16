@@ -121,6 +121,11 @@ Useful options:
   product approval alignment.
 - `--visual-quality-status`, `--visual-quality-reviewer` and
   `--visual-quality-basis` to record the professional visual quality verdict.
+- `--visual-quality-residual` only when the verdict is
+  `PASS_WITH_RESIDUALS`. The value must be
+  `ID|SEVERITY|OWNER|EXPIRES_AT|ACCEPTED_SCOPE|PROOF_REF[,PROOF_REF]|DESCRIPTION`.
+  Only bounded `low` or `medium` residuals that do not block full acceptance
+  are valid for a Product Face PASS.
 - `--reference-quality-ref`, `--reference-quality-comparison-basis`,
   `--compared-reference-id`, `--reference-comparison-dimension` and
   `--reference-comparison-artifact` to record the material reference/design
@@ -155,6 +160,11 @@ packet comparison, source-promise coverage, design-fit review and
 visually unacceptable UI. Reference/design comparison cannot be prose-only:
 `reference_quality_comparison` must bind the compared source ids to material
 comparison artifacts or to a bounded sanitized comparison manifest.
+`PASS_WITH_RESIDUALS` is not an informal approval note. Each residual must have
+an id, severity, owner, expiry, accepted scope and proof refs. Any warning in
+`usage_evidence_matrix` must point to one of those residual ids through
+`accepted_residual_ref`, otherwise the result cannot be consumed as a Product
+Face PASS.
 
 `templates/professional-design-process.json` is a starter contract. Its gates
 are intentionally `PENDING`; copying that template into a card is not

@@ -30,6 +30,7 @@ PRODUCT_ALIGNMENT_FIELDS = (
     "reference_quality_comparison",
 )
 VISUAL_QUALITY_PASS_RESULTS = {"PASS", "PASS_WITH_RESIDUALS"}
+VISUAL_QUALITY_RESIDUAL_SEVERITIES = {"low", "medium"}
 REFERENCE_COMPARISON_DIMENSIONS = (
     "layout_hierarchy",
     "interaction_model",
@@ -691,9 +692,70 @@ def visual_quality_passes(result: dict[str, Any]) -> bool:
         return False
     if not str(visual_quality.get("basis") or "").strip():
         return False
-    if visual_quality.get("status") == "PASS_WITH_RESIDUALS" and not visual_quality.get("residuals"):
+    if visual_quality.get("status") == "PASS_WITH_RESIDUALS":
+        residuals = visual_quality.get("residuals")
+        if not isinstance(residuals, list) or not residuals:
+            return False
+        for residual in residuals:
+            if not visual_quality_residual_is_bounded(residual):
+                return False
+    return True
+
+
+def parse_iso_timestamp(value: str) -> datetime | None:
+    text = str(value or "").strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def visual_quality_residual_is_bounded(residual: Any) -> bool:
+    if not isinstance(residual, dict):
+        return False
+    for field in ("id", "description", "severity", "owner", "expires_at", "accepted_scope"):
+        if not str(residual.get(field) or "").strip():
+            return False
+    if str(residual.get("severity") or "").strip().lower() not in VISUAL_QUALITY_RESIDUAL_SEVERITIES:
+        return False
+    expires_at = parse_iso_timestamp(str(residual.get("expires_at") or ""))
+    if expires_at is None or expires_at <= datetime.now(timezone.utc):
+        return False
+    if residual.get("blocks_full_acceptance") is not False:
+        return False
+    proof_refs = residual.get("proof_refs")
+    if not isinstance(proof_refs, list) or not any(str(item).strip() for item in proof_refs):
         return False
     return True
+
+
+def parse_visual_quality_residual(raw: str) -> dict[str, Any]:
+    parts = [part.strip() for part in str(raw or "").split("|", 6)]
+    if len(parts) != 7:
+        raise ValueError(
+            "--visual-quality-residual must use "
+            "ID|SEVERITY|OWNER|EXPIRES_AT|ACCEPTED_SCOPE|PROOF_REF[,PROOF_REF]|DESCRIPTION"
+        )
+    residual_id, severity, owner, expires_at, accepted_scope, proof_refs_raw, description = parts
+    proof_refs = [item.strip() for item in proof_refs_raw.split(",") if item.strip()]
+    residual = {
+        "id": residual_id,
+        "description": description,
+        "severity": severity.lower(),
+        "owner": owner,
+        "expires_at": expires_at,
+        "accepted_scope": accepted_scope,
+        "proof_refs": proof_refs,
+        "blocks_full_acceptance": False,
+    }
+    if not visual_quality_residual_is_bounded(residual):
+        raise ValueError("--visual-quality-residual must describe a bounded low/medium non-blocking residual with proof refs")
+    return residual
 
 
 def reference_quality_passes(result: dict[str, Any]) -> bool:
@@ -840,7 +902,7 @@ def apply_visual_quality_review(
     status: str | None,
     reviewer: str | None,
     basis: str | None,
-    residuals: list[str] | None = None,
+    residuals: list[dict[str, Any]] | None = None,
 ) -> None:
     supplied = any(str(value or "").strip() for value in (status, reviewer, basis)) or bool(residuals)
     if not supplied:
@@ -855,6 +917,8 @@ def apply_visual_quality_review(
         missing.append("visual-quality-basis")
     if normalized_status == "PASS_WITH_RESIDUALS" and not residuals:
         missing.append("visual-quality-residual")
+    if residuals and any(not visual_quality_residual_is_bounded(residual) for residual in residuals):
+        missing.append("bounded-visual-quality-residual")
     if missing:
         raise ValueError("Visual quality review is incomplete: missing " + ", ".join(missing))
     result["visual_quality_result"] = {
@@ -1224,7 +1288,7 @@ def build_product_face_proof(
     visual_quality_status: str | None = None,
     visual_quality_reviewer: str | None = None,
     visual_quality_basis: str | None = None,
-    visual_quality_residuals: list[str] | None = None,
+    visual_quality_residuals: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     output_dir = out if out.suffix == "" else out.parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1363,7 +1427,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--visual-quality-status", choices=["PASS", "BLOCK", "PASS_WITH_RESIDUALS"], help="Professional visual quality verdict.")
     parser.add_argument("--visual-quality-reviewer", help="Reviewer empowered to block visually unacceptable UI.")
     parser.add_argument("--visual-quality-basis", help="Why the surface meets or fails the product-specific quality bar.")
-    parser.add_argument("--visual-quality-residual", action="append", help="Residual visual quality issue when status is PASS_WITH_RESIDUALS.")
+    parser.add_argument(
+        "--visual-quality-residual",
+        action="append",
+        help=(
+            "Bounded residual when status is PASS_WITH_RESIDUALS, as "
+            "ID|SEVERITY|OWNER|EXPIRES_AT|ACCEPTED_SCOPE|PROOF_REF[,PROOF_REF]|DESCRIPTION."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -1381,6 +1452,10 @@ def main(argv: list[str] | None = None) -> int:
         reference_artifacts = [
             parse_reference_comparison_artifact(raw, compared_ids)
             for raw in args.reference_comparison_artifact or []
+        ]
+        visual_quality_residuals = [
+            parse_visual_quality_residual(raw)
+            for raw in args.visual_quality_residual or []
         ]
         result = build_product_face_proof(
             target=args.target,
@@ -1410,7 +1485,7 @@ def main(argv: list[str] | None = None) -> int:
             visual_quality_status=args.visual_quality_status,
             visual_quality_reviewer=args.visual_quality_reviewer,
             visual_quality_basis=args.visual_quality_basis,
-            visual_quality_residuals=args.visual_quality_residual,
+            visual_quality_residuals=visual_quality_residuals,
         )
     except Exception as exc:
         print(f"product_face_proof failed: {exc}", file=sys.stderr)
