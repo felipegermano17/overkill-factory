@@ -30,6 +30,10 @@
         "verification_result": { "enum": ["PASS", "BLOCKED", "WAIVED"] },
         "reviewer_required": { "type": "boolean" },
         "reviewer_result": { "type": "string" },
+        "sdlc_feedback_loop_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
         "next_action": { "type": "string", "minLength": 3 }
       },
       "additionalProperties": true
@@ -146,6 +150,20 @@
         "next_action"
       ],
       "additionalProperties": true
+    },
+    "receipt_five_reconciliation_result": {
+      "type": "object",
+      "properties": {
+        "sdlc_feedback_loop_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "sdlc_feedback_loop_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
     },
     "independent_review_result": {
       "type": "object",

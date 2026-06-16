@@ -62,6 +62,39 @@ class EvidenceGraphTruthTest(unittest.TestCase):
         self.assertIn("redacted:private-runtime-ref", serialized)
         self.assertNotIn("webhook-marker", serialized)
 
+    def test_evidence_graph_exposes_worker_result_sdlc_feedback_loop_ref(self) -> None:
+        card = self.minimal_card()
+        card["sdlc_feedback_loop_ref"] = "templates/factory-sdlc-feedback-loop.json"
+        worker_id = factoryctl.required_worker_ids(card)[0]
+        worker = factoryctl.WORKERS[worker_id]
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            results_dir = Path(tmp)
+            result = factoryctl.build_worker_result(
+                worker_id,
+                card,
+                result="PASS",
+                tool_or_profile="fixture",
+                executed_by=worker_id,
+                evidence_refs=["README.md"],
+                blocking_findings=False,
+                findings_summary="fixture",
+                next_action="continue",
+            )
+            (results_dir / f"{worker_id}.json").write_text(json.dumps(result), encoding="utf-8")
+
+            graph = factoryctl.build_evidence_graph(card, self.minimal_card_path(), worker_results_dir=results_dir)
+
+        result_nodes = [
+            node
+            for node in graph["nodes"]
+            if node["id"] == f"worker-result:{worker.output_field}"
+        ]
+        self.assertEqual(result_nodes[0]["sdlc_feedback_loop_ref"], "templates/factory-sdlc-feedback-loop.json")
+        self.assertIn(
+            "templates/factory-sdlc-feedback-loop.json",
+            result_nodes[0]["factory_sdlc_lifecycle_refs"],
+        )
+
     def test_hermes_evidence_exporter_redacts_record_names_and_private_refs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "operator-hermes"
