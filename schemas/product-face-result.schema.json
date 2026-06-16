@@ -545,6 +545,16 @@
     "reusable_for_product": {
       "type": "boolean"
     },
+    "product_acceptance_boundary": {
+      "type": "object",
+      "required": ["boundary", "cannot_satisfy_product_acceptance", "next_required_action"],
+      "properties": {
+        "boundary": { "type": "string", "minLength": 3 },
+        "cannot_satisfy_product_acceptance": { "type": "boolean" },
+        "next_required_action": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
     "next_action": {
       "type": "string"
     }
@@ -593,6 +603,27 @@
         "required": ["visual_artifacts"],
         "properties": {
           "visual_artifacts": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result": { "const": "PASS" },
+          "evidence_kind": { "const": "synthetic" }
+        },
+        "required": ["result", "evidence_kind"]
+      },
+      "then": {
+        "required": ["reusable_for_product", "product_acceptance_boundary"],
+        "properties": {
+          "reusable_for_product": { "const": false },
+          "product_acceptance_boundary": {
+            "required": ["boundary", "cannot_satisfy_product_acceptance", "next_required_action"],
+            "properties": {
+              "cannot_satisfy_product_acceptance": { "const": true }
+            }
+          }
         }
       }
     }

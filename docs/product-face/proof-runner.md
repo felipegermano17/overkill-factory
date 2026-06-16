@@ -187,6 +187,11 @@ That fallback is intentional. Static HTML metadata is not visual proof. It is a
 receipt that the Product Face worker tried to run and that the card must remain
 blocked until real browser evidence exists.
 
+Synthetic Product Face evidence is also bounded. It may support fixtures,
+smoke checks or validation cards only when `reusable_for_product=false` and the
+result carries a `product_acceptance_boundary` stating that it cannot satisfy
+product acceptance. Product-facing completion needs real Product Face proof.
+
 ## Current Boundary
 
 The repository documents the runner contract. Actual screenshots, state
