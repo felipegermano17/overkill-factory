@@ -25,6 +25,6 @@
     "slices_are_order_only": true,
     "waiver_required_for_defer": true
   },
-  "completion_rule": "The Product SOT cannot be claimed complete until every meaningful SOT requirement is done, blocked, deferred with owner, or explicitly out of scope.",
+  "completion_rule": "Scope-accounted completion may track done, blocked, deferred-with-owner and out-of-scope requirements, but production-complete or customer-ready acceptance requires every active Product SOT requirement to be DONE unless a human-gated SOT rebaseline explicitly supersedes that scope.",
   "evidence_refs": ["source-ledger.md"]
 }

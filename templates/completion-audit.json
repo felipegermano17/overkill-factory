@@ -6,6 +6,7 @@
   "reviewed": ["review evidence"],
   "residual_risk": ["known remaining risk with owner"],
   "decision": "done_with_owner",
+  "acceptance_decision": "done_with_owner",
   "sot_claim_results": [
     {
       "claim_ref": "product-sot#scope-in-001",

@@ -409,6 +409,8 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
         )
 
         metadata["completion_audit"] = {
+            "decision": "done",
+            "acceptance_decision": "production_complete",
             "sot_claim_results": [
                 {"claim_ref": "product-sot#scope-in-001", "status": "DONE", "owner": "product-owner"}
             ],

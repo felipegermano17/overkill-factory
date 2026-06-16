@@ -10,6 +10,7 @@
     "reviewed",
     "residual_risk",
     "decision",
+    "acceptance_decision",
     "sot_claim_results",
     "method_execution_results"
   ],
@@ -20,6 +21,29 @@
     "reviewed": { "type": "array", "items": { "type": "string" } },
     "residual_risk": { "type": "array", "items": { "type": "string" } },
     "decision": { "enum": ["done", "block", "done_with_owner"] },
+    "acceptance_decision": {
+      "enum": ["scope_accounted", "done_with_owner", "production_complete", "customer_ready"]
+    },
+    "scope_rebaseline": {
+      "type": "object",
+      "required": ["required", "human_gate_ref", "rebaselined_scope_refs", "evidence_refs"],
+      "properties": {
+        "required": { "const": true },
+        "human_gate_ref": { "type": "string", "minLength": 3 },
+        "rationale": { "type": "string" },
+        "rebaselined_scope_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
     "sot_claim_results": {
       "type": "array",
       "items": {

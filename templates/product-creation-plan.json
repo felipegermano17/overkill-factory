@@ -44,7 +44,10 @@
   "risk_map": ["scope shrinkage is blocked by the full Product SOT coverage map"],
   "access_and_secret_requirements": ["no secrets required by default"],
   "release_promotion_ladder_refs": ["templates/production-promotion-ladder.json"],
-  "complete_product_done_criteria": ["all SOT requirements are done, blocked, deferred with owner, or out of scope"],
+  "complete_product_done_criteria": [
+    "scope-accounted completion may record done, blocked, deferred-with-owner or out-of-scope requirements for traceability",
+    "production-complete or customer-ready acceptance requires every active SOT requirement to be DONE unless a human-gated SOT rebaseline explicitly supersedes that scope"
+  ],
   "slice_done_criteria": ["slice verification passes and evidence refs are attached"],
   "drift_check": "Refresh this plan when Product SOT, method, architecture, capability packs or landed slices change.",
   "stop_conditions": ["missing Product SOT coverage", "missing promotion ladder for production intent", "stale product context"],
