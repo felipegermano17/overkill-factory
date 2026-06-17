@@ -56,6 +56,8 @@ factoryctl method-contract --full-scope-coverage templates/full-product-sot-scop
 factoryctl validate-method-contract templates/method-contract.json
 factoryctl product-creation-plan --method-contract templates/method-contract.json --out .tmp/product-creation-plan.json
 factoryctl validate-product-creation-plan templates/product-creation-plan.json
+factoryctl product-implementation-readiness --product-creation-plan templates/product-creation-plan.json --out .tmp/product-implementation-readiness.json
+factoryctl validate-product-implementation-readiness templates/product-implementation-readiness.json
 factoryctl validate-signal-corpus templates/universal-signal-golden-corpus.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl v1-completion-gate --release-preflight .tmp/factory-runs/release/release-integration-preflight.json --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
@@ -95,6 +97,9 @@ worker, gate and evidence requirements without handing DDD/BDD/spec choices to
 the operator. `product-creation-plan` turns the Method Contract into a complete
 product decomposition with work units, proof ids, blockers, stop rules,
 reconciliation and the next readiness gate, while keeping execution blocked.
+`product-implementation-readiness` checks that Product Creation Plan work units
+are aligned enough to materialize only explicit ready units, or blocks with
+named owners and human decisions.
 `validate-signal-corpus` and `signal-coverage` prove that the public
 Golden Corpus covers every known route without treating contract coverage as
 production readiness.

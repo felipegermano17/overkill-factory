@@ -46,6 +46,10 @@ def build_valid_method_contract() -> dict:
     return factoryctl.build_method_contract(coverage)
 
 
+def build_valid_product_creation_plan() -> dict:
+    return factoryctl.build_product_creation_plan(build_valid_method_contract())
+
+
 class UniversalSignalIntakeTest(unittest.TestCase):
     def test_public_template_validates(self) -> None:
         errors = factoryctl.validate_universal_signal_intake(signal_intake())
@@ -828,6 +832,76 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(scope_unit["status"], "blocked")
         self.assertEqual(scope_unit["blocker_id"], "human-gate-method-scope-001")
         self.assertEqual(scope_unit["blocker_owner"], "human-gate-clerk")
+
+    def test_product_implementation_readiness_from_product_creation_plan_is_valid(self) -> None:
+        plan = build_valid_product_creation_plan()
+
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+
+        self.assertEqual(factoryctl.validate_product_implementation_readiness(readiness), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(readiness, "$"), [])
+        self.assertEqual(readiness["record_type"], "product_implementation_readiness")
+        self.assertEqual(readiness["product_creation_plan_ref"], plan["plan_id"])
+        self.assertEqual(readiness["artifact_alignment_result"], "CONCERNS")
+        self.assertEqual(readiness["acceptance"]["allowed_execution_scope"], "ready_work_units_only")
+        self.assertFalse(readiness["acceptance"]["complete_product_claim_allowed"])
+        self.assertGreaterEqual(len(readiness["ready_work_units"]), 1)
+
+    def test_product_implementation_readiness_requires_valid_product_creation_plan(self) -> None:
+        plan = build_valid_product_creation_plan()
+        plan["acceptance"]["execution_allowed"] = True
+
+        with self.assertRaisesRegex(ValueError, "execution_allowed"):
+            factoryctl.build_product_implementation_readiness(plan)
+
+    def test_product_implementation_readiness_cli_generates_public_safe_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            product_creation_plan_path = Path(tmpdir) / "product-creation-plan.json"
+            out_path = Path(tmpdir) / "product-implementation-readiness.json"
+            plan = build_valid_product_creation_plan()
+            product_creation_plan_path.write_text(json.dumps(plan), encoding="utf-8")
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "product-implementation-readiness",
+                    "--product-creation-plan",
+                    str(product_creation_plan_path),
+                    "--out",
+                    str(out_path),
+                ]
+            )
+
+            readiness = json.loads(out_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(readiness["record_type"], "product_implementation_readiness")
+        self.assertEqual(factoryctl.validate_product_implementation_readiness(readiness), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(readiness, "$"), [])
+
+    def test_product_implementation_readiness_preserves_human_scope_gate(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+        coverage = factoryctl.build_full_scope_coverage(product_sot)
+        coverage["requirement_coverage"][0]["status"] = "human_decision_required"
+        coverage["requirement_coverage"][0]["blocker_id"] = "human-gate-method-scope-001"
+        method_contract = factoryctl.build_method_contract(coverage)
+        plan = factoryctl.build_product_creation_plan(method_contract)
+
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+
+        self.assertEqual(readiness["artifact_alignment_result"], "BLOCKED")
+        self.assertEqual(readiness["blocked_work_units"], ["work-unit-001-scope-reconciliation"])
+        self.assertEqual(readiness["ready_work_units"], [])
+        self.assertIn("human-gate-method-scope-001", readiness["human_decisions_required"])
+        self.assertFalse(readiness["acceptance"]["material_execution_allowed"])
 
 
 if __name__ == "__main__":
