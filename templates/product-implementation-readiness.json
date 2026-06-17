@@ -1,6 +1,9 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/product-implementation-readiness.schema.json",
   "record_type": "product_implementation_readiness",
+  "readiness_id": "product-implementation-readiness-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
   "product_sot_ref": "templates/product-sot.json",
   "method_contract_ref": "templates/method-contract.json",
   "product_creation_plan_ref": "templates/product-creation-plan.json",
@@ -57,5 +60,34 @@
   "human_decisions_required": [],
   "allowed_next_actions": ["execute ready work units without changing canonical Product SOT scope"],
   "forbidden_next_actions": ["claim complete product done from one bounded slice"],
+  "blocking_rules": {
+    "product_creation_plan_required": true,
+    "blocked_or_failed_readiness_blocks_execution": true,
+    "concerns_allow_only_ready_work_units": true,
+    "complete_product_claim_forbidden_until_all_scope_reconciled": true,
+    "raw_private_evidence_must_stay_external": true
+  },
+  "handoff": {
+    "next_artifact": "worker_packets",
+    "next_worker": "factory-orchestrator",
+    "next_safe_action": "Materialize only ready_work_units as Hermes worker packets with Receipt Five evidence.",
+    "user_decision_required": false,
+    "factory_owned_next_step": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  },
+  "acceptance": {
+    "product_implementation_readiness_created": true,
+    "material_execution_allowed": true,
+    "allowed_execution_scope": "ready_work_units_only",
+    "complete_product_claim_allowed": false,
+    "evidence_refs": [
+      "templates/product-implementation-readiness.json",
+      "templates/product-creation-plan.json"
+    ]
+  },
   "evidence_refs": ["templates/product-creation-plan.json"]
 }

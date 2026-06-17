@@ -107,6 +107,7 @@ factoryctl product-sot --outcome-contract .tmp/outcome-contract.json --out .tmp/
 factoryctl full-scope-coverage --product-sot .tmp/product-sot.json --out .tmp/full-product-sot-scope-coverage.json
 factoryctl method-contract --full-scope-coverage .tmp/full-product-sot-scope-coverage.json --out .tmp/method-contract.json
 factoryctl product-creation-plan --method-contract .tmp/method-contract.json --out .tmp/product-creation-plan.json
+factoryctl product-implementation-readiness --product-creation-plan .tmp/product-creation-plan.json --out .tmp/product-implementation-readiness.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
