@@ -51,6 +51,9 @@ Overkill Factory provides:
 
 - a card contract for describing phase, risk, scope, runtime, security and done
   evidence;
+- a Universal Signal Intake contract, Route Registry, Golden Corpus and signal
+  coverage scorecard for routing papers, bugs, repos, incidents, research,
+  UX, analytics and agent changes without chat-only state;
 - a worker registry and Hermes profile bindings for routing work to the right
   role;
 - a capability pack registry for checking whether the product type has ready
@@ -108,6 +111,8 @@ python -m pip install -e .
 factoryctl doctor
 factoryctl run minimal
 factoryctl init --out ../my-product-factory --project-name my-product
+factoryctl route-registry --route-class product_creation
+factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 ```
 
 Then read `docs/getting-started/install-in-hermes.md` and connect generated

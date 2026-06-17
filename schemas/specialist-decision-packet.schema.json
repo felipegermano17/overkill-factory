@@ -11,9 +11,11 @@
     "claim_conflict_gap_ledger",
     "resolutions",
     "impacts",
+    "decision_closure",
     "unresolved_risk",
     "human_decisions_required",
     "public_safety_policy",
+    "public_private_boundary",
     "evidence_refs"
   ],
   "properties": {
@@ -27,7 +29,16 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["claim_id", "classification", "statement", "status", "evidence_refs"],
+        "required": [
+          "claim_id",
+          "classification",
+          "statement",
+          "status",
+          "evidence_strength",
+          "freshness_status",
+          "contradiction_state",
+          "evidence_refs"
+        ],
         "properties": {
           "claim_id": { "type": "string", "minLength": 3 },
           "classification": {
@@ -45,9 +56,12 @@
           },
           "statement": { "type": "string", "minLength": 3 },
           "status": { "enum": ["accepted", "rejected", "blocked", "deferred"] },
+          "evidence_strength": { "enum": ["primary", "official", "strong", "bounded", "weak", "blocked"] },
+          "freshness_status": { "enum": ["fresh", "bounded", "stale", "unknown"] },
+          "contradiction_state": { "enum": ["none", "resolved", "open_blocking"] },
           "evidence_refs": { "type": "array", "items": { "type": "string" } }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
     },
     "resolutions": {
@@ -73,16 +87,45 @@
     "impacts": {
       "type": "object",
       "required": ["sot", "architecture", "method_router", "gates", "proof"],
-      "additionalProperties": true
+      "properties": {
+        "sot": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+        "architecture": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+        "method_router": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+        "gates": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+        "proof": { "type": "array", "items": { "type": "string", "minLength": 3 } }
+      },
+      "additionalProperties": false
+    },
+    "decision_closure": {
+      "type": "object",
+      "required": ["terminal_state", "method_or_architecture_may_proceed", "blocked_next_action"],
+      "properties": {
+        "terminal_state": {
+          "enum": ["accepted_decision", "blocker", "deferred_with_owner", "human_decision_request", "explicit_rejection"]
+        },
+        "method_or_architecture_may_proceed": { "type": "boolean" },
+        "blocked_next_action": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
     },
     "unresolved_risk": { "type": "array", "items": { "type": "string" } },
     "human_decisions_required": { "type": "array", "items": { "type": "string" } },
     "public_safety_policy": { "type": "string", "minLength": 8 },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["public_safe_refs_only", "raw_private_evidence_embedded", "private_context_retained_outside_public_repo"],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    },
     "evidence_refs": {
       "type": "array",
       "minItems": 1,
       "items": { "type": "string", "minLength": 3 }
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

@@ -183,6 +183,55 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
             errors,
         )
 
+    def test_specialist_research_templates_validate_as_decision_os(self) -> None:
+        schemas = factoryctl.bundled_schemas()
+        research_schema = schemas["specialist-research-plan.schema.json"]
+        decision_schema = schemas["specialist-decision-packet.schema.json"]
+        research_plan = factoryctl.load_json_like(ROOT / "templates" / "specialist-research-plan.json")
+        decision_packet = factoryctl.load_json_like(ROOT / "templates" / "specialist-decision-packet.json")
+
+        research_errors = factoryctl.validate_node(
+            research_schema,
+            research_plan,
+            "specialist_research_plan",
+            schemas=schemas,
+            root_schema=research_schema,
+        )
+        decision_errors = factoryctl.validate_node(
+            decision_schema,
+            decision_packet,
+            "specialist_decision_packet",
+            schemas=schemas,
+            root_schema=decision_schema,
+        )
+
+        self.assertEqual(research_errors, [])
+        self.assertEqual(decision_errors, [])
+        self.assertTrue(research_plan["decision_closure"]["architecture_or_decomposition_blocked_until_decision"])
+
+    def test_specialist_decision_closure_blocks_method_when_research_is_blocked(self) -> None:
+        card = self.vfinal_card()
+        card["specialist_decision_packet"] = factoryctl.load_json_like(ROOT / "templates" / "specialist-decision-packet.json")
+        card["specialist_decision_packet"]["decision_closure"]["terminal_state"] = "blocker"
+        card["specialist_decision_packet"]["decision_closure"]["method_or_architecture_may_proceed"] = True
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            "specialist_decision_packet.decision_closure cannot allow method or architecture to proceed while research is blocked, deferred or human-gated",
+            errors,
+        )
+
+    def test_brownfield_os_plan_template_validates(self) -> None:
+        schemas = factoryctl.bundled_schemas()
+        schema = schemas["brownfield-os-plan.schema.json"]
+        plan = factoryctl.load_json_like(ROOT / "templates" / "brownfield-os-plan.json")
+
+        errors = factoryctl.validate_node(schema, plan, "brownfield_os_plan", schemas=schemas, root_schema=schema)
+
+        self.assertEqual(errors, [])
+        self.assertTrue(plan["acceptance_boundary"]["execution_blocked_without_baseline"])
+
     def test_onchain_production_ladder_requires_devnet_mainnet_and_human_authority_policy(self) -> None:
         card = self.vfinal_card()
         card["surfaces"] = ["solana", "production"]

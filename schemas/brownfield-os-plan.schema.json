@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/brownfield-os-plan.schema.json",
+  "title": "Overkill Factory Brownfield OS Plan",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "plan_id",
+    "legacy_system_map",
+    "behavior_baseline",
+    "compatibility_matrix",
+    "regression_plan",
+    "rollback_cutover_plan",
+    "data_risk_map",
+    "ownership",
+    "acceptance_boundary",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/brownfield-os-plan.schema.json"
+    },
+    "record_type": {
+      "const": "brownfield_os_plan"
+    },
+    "plan_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "legacy_system_map": {
+      "type": "object",
+      "required": ["system_refs", "entrypoints", "owned_boundaries", "unknowns"],
+      "properties": {
+        "system_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "entrypoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "owned_boundaries": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "unknowns": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "behavior_baseline": {
+      "type": "object",
+      "required": ["baseline_command_refs", "known_good_behaviors", "current_failures"],
+      "properties": {
+        "baseline_command_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "known_good_behaviors": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "current_failures": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "compatibility_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["surface", "compatibility_rule", "breakage_detection"],
+        "properties": {
+          "surface": { "type": "string", "minLength": 3 },
+          "compatibility_rule": { "type": "string", "minLength": 6 },
+          "breakage_detection": { "type": "string", "minLength": 6 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "regression_plan": {
+      "type": "object",
+      "required": ["must_preserve", "test_refs", "review_owner"],
+      "properties": {
+        "must_preserve": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "test_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "review_owner": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "rollback_cutover_plan": {
+      "type": "object",
+      "required": ["rollback_trigger", "rollback_command_or_plan_ref", "cutover_gate"],
+      "properties": {
+        "rollback_trigger": { "type": "string", "minLength": 6 },
+        "rollback_command_or_plan_ref": { "type": "string", "minLength": 3 },
+        "cutover_gate": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "data_risk_map": {
+      "type": "object",
+      "required": ["data_touched", "migration_required", "backup_or_restore_ref"],
+      "properties": {
+        "data_touched": { "type": "boolean" },
+        "migration_required": { "type": "boolean" },
+        "backup_or_restore_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "ownership": {
+      "type": "object",
+      "required": ["route_owner", "regression_owner", "rollback_owner"],
+      "properties": {
+        "route_owner": { "type": "string", "minLength": 3 },
+        "regression_owner": { "type": "string", "minLength": 3 },
+        "rollback_owner": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "acceptance_boundary": {
+      "type": "object",
+      "required": [
+        "execution_blocked_without_baseline",
+        "completion_blocked_without_regression",
+        "promotion_blocked_without_rollback"
+      ],
+      "properties": {
+        "execution_blocked_without_baseline": { "const": true },
+        "completion_blocked_without_regression": { "const": true },
+        "promotion_blocked_without_rollback": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["public_safe_refs_only", "raw_private_evidence_embedded", "private_context_retained_outside_public_repo"],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

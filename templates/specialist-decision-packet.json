@@ -10,6 +10,9 @@
       "classification": "accepted_decision",
       "statement": "This claim is accepted only for the scope stated in the Product SOT.",
       "status": "accepted",
+      "evidence_strength": "bounded",
+      "freshness_status": "bounded",
+      "contradiction_state": "none",
       "evidence_refs": ["templates/reference-source-registry.json"]
     }
   ],
@@ -21,8 +24,18 @@
     "gates": ["add any required gate or worker"],
     "proof": ["add specific tests, audits, benchmarks or promotion checks"]
   },
+  "decision_closure": {
+    "terminal_state": "accepted_decision",
+    "method_or_architecture_may_proceed": true,
+    "blocked_next_action": "No blocker remains in this template decision; replace with product-specific blocker when evidence is not decisive."
+  },
   "unresolved_risk": [],
   "human_decisions_required": [],
   "public_safety_policy": "Store the decision and refs, not raw research material.",
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  },
   "evidence_refs": ["templates/specialist-research-plan.json"]
 }

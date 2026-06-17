@@ -614,14 +614,36 @@
       "required": ["profile_id", "surface"],
       "properties": {
         "profile_id": {
-          "enum": ["web_visual_ui", "cli_tui", "docs_onboarding", "agentic_interface"]
+          "enum": [
+            "web_visual_ui",
+            "native_mobile",
+            "desktop_app",
+            "browser_extension",
+            "design_system_component",
+            "game_playable",
+            "cli_tui",
+            "docs_onboarding",
+            "agentic_interface",
+            "api_data_product"
+          ]
         },
         "surface": {
           "type": "string",
           "minLength": 2
         },
         "evidence_kind": {
-          "enum": ["visual_ui", "command_transcript", "reader_success", "task_transcript"]
+          "enum": [
+            "visual_ui",
+            "device_lifecycle",
+            "desktop_packaging",
+            "extension_permission",
+            "component_variant",
+            "playable_loop",
+            "command_transcript",
+            "reader_success",
+            "task_transcript",
+            "contract_data"
+          ]
         },
         "evidence_refs": {
           "type": "array",

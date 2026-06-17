@@ -239,7 +239,14 @@
         "required": ["mode", "dry_run"]
       },
       "then": {
-        "required": ["idempotency_contract"]
+        "required": [
+          "main_task_id",
+          "worker_task_ids",
+          "recovery_promoted_worker_task_ids",
+          "recovery_retry_blocked_worker_task_ids",
+          "recovery_attempts",
+          "idempotency_contract"
+        ]
       }
     }
   ],

@@ -1,0 +1,392 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-route-registry.schema.json",
+  "record_type": "factory_route_registry",
+  "registry_id": "factory-route-registry-v1",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "routes": [
+    {
+      "route_class": "product_creation",
+      "request_types": ["product_new"],
+      "signal_types": ["product_paper", "prd_or_architecture", "mixed"],
+      "scope_intents": ["full_product"],
+      "selected_method_family": "spec_first",
+      "required_artifacts": [
+        "source_ledger",
+        "outcome_contract",
+        "product_sot",
+        "full_product_sot_scope_coverage",
+        "method_contract",
+        "product_creation_plan",
+        "product_implementation_readiness",
+        "sdlc_feedback_loop"
+      ],
+      "required_gates": ["Source Gate", "Product SOT Gate", "Ready Gate"],
+      "required_workers": ["factory-orchestrator", "source-ledger-worker", "product-sot-planner"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "required artifacts and gates pass or a human authority gate blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "feature_delivery",
+      "request_types": ["feature", "slice"],
+      "signal_types": ["feature_idea", "customer_feedback", "mixed"],
+      "scope_intents": ["child_slice"],
+      "selected_method_family": "behavior_first",
+      "required_artifacts": ["source_ledger", "outcome_contract", "method_contract", "spec_graph", "qa_plan"],
+      "required_gates": ["Source Gate", "Method Gate", "Ready Gate"],
+      "required_workers": ["factory-orchestrator", "decomposition-planner", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "feature acceptance criteria and regression proof pass or a human authority gate blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "bug_repair",
+      "request_types": ["bug"],
+      "signal_types": ["bug_report", "monitoring_alert", "customer_feedback"],
+      "scope_intents": ["bug"],
+      "selected_method_family": "test_first",
+      "required_artifacts": ["source_ledger", "bug_reproduction", "diagnosis", "regression_check", "receipt_five"],
+      "required_gates": ["Reproduction Gate", "Regression Gate", "Receipt Gate"],
+      "required_workers": ["qa-verification-worker", "test-automation-builder", "evidence-reconciler"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "bug reproduction and regression check pass or a human authority gate blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "incident_response",
+      "request_types": ["incident"],
+      "signal_types": ["incident", "monitoring_alert"],
+      "scope_intents": ["incident"],
+      "selected_method_family": "incident_first",
+      "required_artifacts": ["incident_support_plan", "severity_model", "mitigation_plan", "evidence_record", "learnback"],
+      "required_gates": ["Severity Gate", "Mitigation Gate", "Learnback Gate"],
+      "required_workers": ["detection-monitoring-worker", "release-ops-worker", "evidence-reconciler"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "mitigation, evidence and learnback are complete or a human incident owner blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "brownfield_discovery",
+      "request_types": ["migration", "refactor", "integration"],
+      "signal_types": ["existing_repository", "refactor_request", "integration_request", "migration_request"],
+      "scope_intents": ["migration", "integration"],
+      "selected_method_family": "legacy_diagnosis",
+      "required_artifacts": ["source_ledger", "brownfield_os_plan", "legacy_system_map", "baseline", "regression_plan", "rollback_plan"],
+      "required_gates": ["Brownfield Baseline Gate", "Regression Gate", "Rollback Gate"],
+      "required_workers": ["source-ledger-worker", "product-architect", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "baseline, regression and rollback proof exist or a human owner blocks legacy mutation",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "release_promotion",
+      "request_types": ["release"],
+      "signal_types": ["release_request"],
+      "scope_intents": ["release"],
+      "selected_method_family": "spec_first",
+      "required_artifacts": ["production_readiness_plan", "promotion_ladder", "rollback_path", "monitoring_signals"],
+      "required_gates": ["Production Readiness Gate", "Rollback Gate", "Release Gate"],
+      "required_workers": ["release-ops-worker", "detection-monitoring-worker", "evidence-reconciler"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "promotion evidence is green or a human release authority blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "research_validation",
+      "request_types": ["feature", "product_new", "security", "ux_ui", "data_analytics", "agent_skill"],
+      "signal_types": ["research_request", "external_research_signal", "dependency_or_runtime_change", "mixed"],
+      "scope_intents": ["child_slice", "full_product"],
+      "selected_method_family": "research_first",
+      "required_artifacts": ["specialist_research_plan", "specialist_decision_packet", "sdlc_feedback_loop"],
+      "required_gates": ["Source Quality Gate", "Specialist Decision Gate", "SOT Impact Gate"],
+      "required_workers": ["source-ledger-worker", "product-architect", "factory-orchestrator"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "claim ledger is resolved into SOT, gate or proof impact or a human decision blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "docs_onboarding",
+      "request_types": ["doc"],
+      "signal_types": ["documentation_request"],
+      "scope_intents": ["doc"],
+      "selected_method_family": "docs_first",
+      "required_artifacts": ["user_docs_onboarding_plan", "reader_success_path", "docs_verification"],
+      "required_gates": ["Docs Utility Gate", "First Run Gate"],
+      "required_workers": ["docs-os-worker", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "reader success path validates or a human docs owner blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "security_remediation",
+      "request_types": ["security"],
+      "signal_types": ["security_review_request", "dependency_or_runtime_change"],
+      "scope_intents": ["child_slice"],
+      "selected_method_family": "security_first",
+      "required_artifacts": ["security_architecture_plan", "security_scan_packet", "review_result"],
+      "required_gates": ["Security Architecture Gate", "Security Review Gate"],
+      "required_workers": ["security-orchestrator", "appsec-owasp-specialist", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "security findings are fixed or accepted by explicit human risk owner",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "critical_integration",
+      "request_types": ["integration"],
+      "signal_types": ["integration_request", "dependency_or_runtime_change"],
+      "scope_intents": ["integration"],
+      "selected_method_family": "spec_first",
+      "required_artifacts": ["integration_contract", "dependency_gate", "contract_tests", "fallback_plan"],
+      "required_gates": ["Dependency Gate", "Contract Test Gate", "Fallback Gate"],
+      "required_workers": ["product-architect", "backend-api-builder", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "contract tests and fallback plan pass or a human integration owner blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "migration_execution",
+      "request_types": ["migration"],
+      "signal_types": ["migration_request", "existing_repository"],
+      "scope_intents": ["migration"],
+      "selected_method_family": "legacy_diagnosis",
+      "required_artifacts": ["brownfield_os_plan", "legacy_system_map", "migration_plan", "regression_plan", "rollback_plan"],
+      "required_gates": ["Migration Plan Gate", "Regression Gate", "Rollback Gate"],
+      "required_workers": ["product-architect", "data-persistence-builder", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "migration tests and rollback proof pass or a human migration owner blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "ux_product_experience",
+      "request_types": ["ux_ui", "product_new", "feature"],
+      "signal_types": ["ux_ui_request", "feature_idea", "product_paper"],
+      "scope_intents": ["child_slice", "full_product"],
+      "selected_method_family": "design_first",
+      "required_artifacts": ["product_experience_plan", "product_face_packet", "professional_design_process", "product_face_result"],
+      "required_gates": ["Product Experience Gate", "Product Face Gate", "Independent Design Review Gate"],
+      "required_workers": ["product-face", "frontend-builder", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "Product Face evidence passes across required states and journeys or a human product authority blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "analytics_data",
+      "request_types": ["data_analytics", "product_new", "feature"],
+      "signal_types": ["analytics_request", "customer_feedback", "prd_or_architecture"],
+      "scope_intents": ["child_slice", "full_product"],
+      "selected_method_family": "analytics_first",
+      "required_artifacts": ["data_metrics_plan", "event_contract", "dashboard_health_proof", "privacy_limits"],
+      "required_gates": ["Data Contract Gate", "Privacy Gate", "Metrics Proof Gate"],
+      "required_workers": ["detection-monitoring-worker", "data-persistence-builder", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "data contracts, privacy limits and health proof pass or a human data owner blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    },
+    {
+      "route_class": "agent_quality_change",
+      "request_types": ["agent_skill"],
+      "signal_types": ["agent_skill_or_model_change", "dependency_or_runtime_change"],
+      "scope_intents": ["child_slice"],
+      "selected_method_family": "agent_eval_first",
+      "required_artifacts": ["agent_eval_plan", "reasoning_policy", "worker_profile_readiness", "learnback"],
+      "required_gates": ["Agent Eval Gate", "Worker Profile Readiness Gate", "Learnback Gate"],
+      "required_workers": ["skill-eval-distiller", "agent-runtime-builder", "qa-verification-worker"],
+      "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],
+      "recovery_policy": {
+        "non_human_block_recovery_required": true,
+        "factory_owned_repair_allowed": true,
+        "max_attempts_minimum": 1,
+        "until": "agent eval, worker readiness and learnback pass or a human method owner blocks",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": false
+      },
+      "hermes_boundary": {
+        "runtime_authority": "hermes_kanban",
+        "uses_native_kanban_primitives": true,
+        "local_state_authority": false,
+        "factory_may_project_status": true,
+        "factory_may_create_tasks_only_through_adapter": true
+      }
+    }
+  ],
+  "coverage_policy": {
+    "golden_corpus_required": true,
+    "all_routes_require_signal_case": true,
+    "all_routes_require_recovery_policy": true,
+    "all_routes_require_hermes_boundary": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  }
+}

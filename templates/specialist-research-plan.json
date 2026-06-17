@@ -12,11 +12,40 @@
   "forbidden_sources": ["raw private notes", "private links", "screenshots with private data", "copyrighted source dumps"],
   "source_quality_bar": "Use traceable primary or official sources before relying on summaries or generic search output.",
   "freshness_requirement": "Refresh whenever the source, dependency, standard or product SOT materially changes.",
+  "freshness_policy": {
+    "freshness_required": true,
+    "stale_source_blocks_decision": true,
+    "refresh_trigger": "Refresh when source material, dependency versions, standards or the Product SOT changes."
+  },
+  "source_evidence_matrix": [
+    {
+      "source_ref": "templates/reference-source-registry.json",
+      "source_type": "operator_approved_benchmark",
+      "freshness_status": "bounded",
+      "use_allowed": true,
+      "claims_informed": ["specialist decision impact", "proof requirement"]
+    }
+  ],
+  "contradiction_policy": {
+    "conflicts_block_decision": true,
+    "owner": "source-ledger-worker",
+    "required_resolution": "Conflicting claims must be accepted, rejected, deferred with owner or escalated to a human decision before architecture or decomposition."
+  },
   "copy_license_policy": "Do not copy source material unless license and allowed use are recorded in a reference packet.",
   "expected_output_type": ["specialist_decision_packet", "SOT impact", "gate impact", "proof requirement"],
+  "decision_closure": {
+    "must_end_as": ["accepted_decision", "blocker", "deferred_with_owner", "human_decision_request", "explicit_rejection"],
+    "architecture_or_decomposition_blocked_until_decision": true,
+    "decision_packet_required": true
+  },
   "stop_rule": "Stop when the decision can be made, explicitly blocked, deferred with owner, or escalated for human decision.",
   "risk_if_skipped": "The factory may build a persuasive but unsupported plan that cannot prove the Product SOT.",
   "public_safety_policy": "Publish only structured decisions and public-safe refs; keep raw notes and private captures outside the repo.",
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  },
   "reference_quality_packet_refs": ["templates/reference-quality-packet.json"],
   "evidence_refs": ["source-ledger.md"]
 }

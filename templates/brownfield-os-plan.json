@@ -1,0 +1,53 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/brownfield-os-plan.schema.json",
+  "record_type": "brownfield_os_plan",
+  "plan_id": "brownfield-os-plan-v1",
+  "legacy_system_map": {
+    "system_refs": ["external:source-card-existing-system"],
+    "entrypoints": ["public CLI, API, UI or job entrypoints must be listed before mutation"],
+    "owned_boundaries": ["boundaries the operator explicitly owns or may change"],
+    "unknowns": ["runtime behavior not yet baselined remains blocked"]
+  },
+  "behavior_baseline": {
+    "baseline_command_refs": ["external:source-card-baseline-command"],
+    "known_good_behaviors": ["existing behavior that must survive migration or refactor"],
+    "current_failures": []
+  },
+  "compatibility_matrix": [
+    {
+      "surface": "public contract",
+      "compatibility_rule": "Existing public behavior must remain compatible unless a human-gated SOT rebaseline approves change.",
+      "breakage_detection": "Regression plan must include a command, contract test or review that detects breakage."
+    }
+  ],
+  "regression_plan": {
+    "must_preserve": ["public behavior, data shape, auth boundary and documented workflows"],
+    "test_refs": ["external:source-card-regression-plan"],
+    "review_owner": "qa-verification-worker"
+  },
+  "rollback_cutover_plan": {
+    "rollback_trigger": "Any baseline, compatibility, data or public-safety regression blocks cutover.",
+    "rollback_command_or_plan_ref": "templates/legacy-migration-plan.json#rollback_plan",
+    "cutover_gate": "Brownfield rollback and regression gate"
+  },
+  "data_risk_map": {
+    "data_touched": false,
+    "migration_required": false,
+    "backup_or_restore_ref": "external:source-card-backup-or-not-applicable"
+  },
+  "ownership": {
+    "route_owner": "product-architect",
+    "regression_owner": "qa-verification-worker",
+    "rollback_owner": "release-ops-worker"
+  },
+  "acceptance_boundary": {
+    "execution_blocked_without_baseline": true,
+    "completion_blocked_without_regression": true,
+    "promotion_blocked_without_rollback": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  }
+}

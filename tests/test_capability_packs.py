@@ -63,6 +63,28 @@ def activated_game_contract() -> dict:
 
 
 class CapabilityPacksTest(unittest.TestCase):
+    def test_product_quality_pack_template_validates(self) -> None:
+        schemas = factoryctl.bundled_schemas()
+        schema = schemas["product-quality-pack.schema.json"]
+        pack = json.loads((ROOT / "templates" / "product-quality-pack.json").read_text(encoding="utf-8"))
+
+        errors = factoryctl.validate_node(schema, pack, "product_quality_pack", schemas=schemas, root_schema=schema)
+
+        self.assertEqual(errors, [])
+        self.assertIn("native_mobile", pack["surface_evidence_profiles"])
+        self.assertIn("game_playable", pack["surface_evidence_profiles"])
+
+    def test_product_face_packet_accepts_non_web_surface_evidence_profiles(self) -> None:
+        schemas = factoryctl.bundled_schemas()
+        schema = schemas["product-face-packet.schema.json"]
+        packet = json.loads((ROOT / "templates" / "product-face-packet.json").read_text(encoding="utf-8"))
+        packet["surface_evidence_profile"] = "native_mobile"
+        packet["surface_evidence_profiles"] = ["native_mobile", "desktop_app", "browser_extension", "game_playable"]
+
+        errors = factoryctl.validate_node(schema, packet, "product_face_packet", schemas=schemas, root_schema=schema)
+
+        self.assertEqual(errors, [])
+
     def test_capability_pack_registry_contains_modular_product_domains(self) -> None:
         packs = json.loads((ROOT / "agents" / "capability-packs.public.json").read_text(encoding="utf-8"))["packs"]
 

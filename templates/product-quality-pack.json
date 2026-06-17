@@ -1,0 +1,113 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-quality-pack.schema.json",
+  "record_type": "product_quality_pack",
+  "pack_id": "product-quality-pack-v1",
+  "delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+  "reference_quality_packet_ref": "templates/reference-quality-packet.json",
+  "surface_evidence_profiles": [
+    "web_visual_ui",
+    "native_mobile",
+    "desktop_app",
+    "browser_extension",
+    "design_system_component",
+    "game_playable",
+    "cli_tui",
+    "docs_onboarding",
+    "agentic_interface",
+    "api_data_product"
+  ],
+  "required_quality_gates": [
+    {
+      "gate_id": "product-experience-gate",
+      "owner_worker": "product-face",
+      "blocks_completion_when_missing": true
+    },
+    {
+      "gate_id": "reference-quality-gate",
+      "owner_worker": "product-face",
+      "blocks_completion_when_missing": true
+    },
+    {
+      "gate_id": "independent-quality-review-gate",
+      "owner_worker": "qa-verification-worker",
+      "blocks_completion_when_missing": true
+    }
+  ],
+  "domain_proofs": [
+    {
+      "proof_id": "web.visual-state-journey-proof",
+      "surface_evidence_profile": "web_visual_ui",
+      "required_before": "completion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "mobile.device-lifecycle-proof",
+      "surface_evidence_profile": "native_mobile",
+      "required_before": "completion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "desktop.packaging-update-proof",
+      "surface_evidence_profile": "desktop_app",
+      "required_before": "promotion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "extension.permission-store-proof",
+      "surface_evidence_profile": "browser_extension",
+      "required_before": "promotion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "design-system.variant-contract-proof",
+      "surface_evidence_profile": "design_system_component",
+      "required_before": "completion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "game.playable-loop-proof",
+      "surface_evidence_profile": "game_playable",
+      "required_before": "completion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "cli.transcript-error-proof",
+      "surface_evidence_profile": "cli_tui",
+      "required_before": "completion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "docs.first-run-proof",
+      "surface_evidence_profile": "docs_onboarding",
+      "required_before": "completion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "agentic.user-control-proof",
+      "surface_evidence_profile": "agentic_interface",
+      "required_before": "completion",
+      "cannot_be_waived_for_full_acceptance": true
+    },
+    {
+      "proof_id": "api.contract-data-proof",
+      "surface_evidence_profile": "api_data_product",
+      "required_before": "completion",
+      "cannot_be_waived_for_full_acceptance": true
+    }
+  ],
+  "waiver_policy": {
+    "waivers_allowed": true,
+    "human_owner_required": true,
+    "cannot_claim_full_product_acceptance_with_waiver": true
+  },
+  "acceptance_boundary": {
+    "full_acceptance_requires_all_applicable_domain_proofs": true,
+    "product_face_result_is_required_for_visible_surfaces": true,
+    "design_reference_comparison_required": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  }
+}
