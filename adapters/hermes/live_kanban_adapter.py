@@ -656,6 +656,25 @@ def ensure_ready_work_unit_readback_contract(
     ensure_no_pre_dispatch_activity(payload, task_id=task_id)
 
 
+def ready_work_unit_readback_contract_error(
+    *,
+    payload: dict[str, Any],
+    task_id: str,
+    expected_assignee: str,
+    expected_packet_id: str,
+) -> str | None:
+    try:
+        ensure_ready_work_unit_readback_contract(
+            payload=payload,
+            task_id=task_id,
+            expected_assignee=expected_assignee,
+            expected_packet_id=expected_packet_id,
+        )
+    except RuntimeError as exc:
+        return str(exc)
+    return None
+
+
 def ready_work_unit_body_transport_comments(*, payload: dict[str, Any], task_id: str, manifest: dict[str, Any]) -> list[str]:
     transport = manifest.get("context_transport")
     if not isinstance(transport, dict):
@@ -1828,10 +1847,21 @@ def recover_ready_work_units(args: argparse.Namespace, runner: Runner = default_
                 payload,
                 required_markers=READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS,
             )
-            if markers and (dependency_blockers or not legal_release_seen):
-                contaminated.append((payload, markers))
-            elif task_readback_status(payload) == "blocked":
-                clean_blocked.append(payload)
+            if markers:
+                if dependency_blockers or not legal_release_seen:
+                    contaminated.append((payload, markers))
+                continue
+            if task_readback_status(payload) == "blocked":
+                contract_error = ready_work_unit_readback_contract_error(
+                    payload=payload,
+                    task_id=task_readback_id(payload),
+                    expected_assignee=ready_work_unit_release_assignee(task, args.worker_assignee_prefix),
+                    expected_packet_id=packet_id,
+                )
+                if contract_error:
+                    contaminated.append((payload, ["invalid_blocked_replacement_contract"]))
+                else:
+                    clean_blocked.append(payload)
 
         if not contaminated:
             clean_work_unit_ids.append(work_unit_id)
@@ -1866,8 +1896,15 @@ def recover_ready_work_units(args: argparse.Namespace, runner: Runner = default_
             )
             replacement_ready_work_unit_task_ids[work_unit_id] = replacement_task_id
 
+        superseded_task_ids_for_plan = [
+            task_id
+            for task_id in contaminated_task_ids
+            if not replacement_task_id or task_id != replacement_task_id
+        ]
         if args.create_replacements or clean_blocked:
             for payload, markers in contaminated:
+                if task_readback_id(payload) == replacement_task_id:
+                    continue
                 mark_ready_work_unit_superseded(
                     hermes_bin=args.hermes_bin,
                     board=board,
@@ -1877,11 +1914,11 @@ def recover_ready_work_units(args: argparse.Namespace, runner: Runner = default_
                     contamination_markers=markers,
                     runner=runner,
                 )
-        superseded_ready_work_unit_task_ids[work_unit_id] = contaminated_task_ids
+        superseded_ready_work_unit_task_ids[work_unit_id] = superseded_task_ids_for_plan
         recovery_plan[work_unit_id] = {
             "packet_id": packet_id,
             "status": "replacement_created" if replacement_task_id and args.create_replacements else "replacement_planned",
-            "contaminated_task_refs": contaminated_task_ids,
+            "contaminated_task_refs": superseded_task_ids_for_plan,
             "contamination_markers": contamination_markers,
             "replacement_task_ref": replacement_task_id,
             "replacement_idempotency_key": replacement_task["idempotency_key"],
