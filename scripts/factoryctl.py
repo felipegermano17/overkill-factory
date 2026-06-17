@@ -6655,6 +6655,367 @@ def validate_outcome_contract(contract: dict[str, Any]) -> list[str]:
     return errors
 
 
+PRODUCT_SOT_SCOPE_SECTIONS = {
+    "produto desejado",
+    "idiomas",
+    "modelo esperado: projeto, frente, run e release",
+    "promessa central do produto",
+    "regras nao negociaveis",
+    "telas esperadas",
+    "portfolio",
+    "sala do projeto",
+    "frentes do projeto",
+    "gates humanos",
+    "execucao",
+    "evidencias",
+    "release e operacoes",
+    "saude da fabrica",
+    "direcao de design",
+    "capacidades obrigatorias",
+}
+
+PRODUCT_SOT_DEPENDENCY_SECTIONS = {"fontes de dados esperadas"}
+PRODUCT_SOT_SUCCESS_SECTIONS = {"criterios de sucesso"}
+PRODUCT_SOT_DECISION_SECTIONS = {"perguntas que a fabrica deve resolver"}
+PRODUCT_SOT_OPERATOR_BOUNDARY_SECTIONS = {"restricoes do operador", "fronteira publica e privada"}
+
+
+def _product_sot_public_text(value: Any) -> str:
+    text = redact_private_text(value)
+    text = re.sub(
+        r"public\s*/\s*\[redacted-private-marker\]\s+safety scans",
+        "public and credential safety scans",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        r"\[redacted-private-marker\]\s+safety scans",
+        "credential safety scans",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return text
+
+
+def _normalize_heading(text: str) -> str:
+    return re.sub(r"\s+", " ", text.strip().strip("#").strip()).lower()
+
+
+def _markdown_material_bullets(markdown_text: str) -> dict[str, list[str]]:
+    sections: dict[str, list[str]] = {
+        "scope_in": [],
+        "scope_out": [],
+        "dependencies": [],
+        "success_criteria": [],
+        "open_decisions": [],
+        "operations_expected": [],
+        "risks": [],
+    }
+    current = ""
+    for raw_line in markdown_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            current = _normalize_heading(line)
+            continue
+        if line.startswith("!["):
+            continue
+        text = ""
+        if line.startswith("- "):
+            text = line[2:].strip()
+        elif re.match(r"^\d+\.\s+", line):
+            text = re.sub(r"^\d+\.\s+", "", line).strip()
+        if not text:
+            continue
+        text = _product_sot_public_text(text)
+        if not public_safe_text(text):
+            continue
+        if current in PRODUCT_SOT_SCOPE_SECTIONS:
+            sections["scope_in"].append(text)
+            if current == "release e operacoes":
+                sections["operations_expected"].append(text)
+        elif current in PRODUCT_SOT_DEPENDENCY_SECTIONS:
+            sections["dependencies"].append(text)
+        elif current in PRODUCT_SOT_SUCCESS_SECTIONS:
+            sections["success_criteria"].append(text)
+        elif current in PRODUCT_SOT_DECISION_SECTIONS:
+            sections["open_decisions"].append(text)
+        elif current in PRODUCT_SOT_OPERATOR_BOUNDARY_SECTIONS:
+            sections["scope_out"].append(text)
+        if "risco" in text.lower() or "bloqueio" in text.lower() or "privad" in text.lower():
+            sections["risks"].append(text)
+    return {key: _dedupe_preserve_order(values) for key, values in sections.items()}
+
+
+def _dedupe_preserve_order(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        normalized = re.sub(r"\s+", " ", _product_sot_public_text(value).strip())
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        result.append(normalized)
+    return result
+
+
+def _product_sot_next_action_ref(sot_id: str) -> str:
+    slug = slug_for_ref(sot_id)
+    return f"pending/{slug}-full-product-sot-scope-coverage.json"
+
+
+def build_product_sot(
+    outcome_contract: dict[str, Any],
+    *,
+    source_material_text: str | None = None,
+    created_at: str | None = None,
+    sot_id: str | None = None,
+) -> dict[str, Any]:
+    outcome_errors = validate_outcome_contract(outcome_contract)
+    if outcome_errors:
+        raise ValueError("; ".join(outcome_errors))
+
+    source_signal = copy.deepcopy(outcome_contract.get("source_signal") or {})
+    if source_signal.get("needs_product_sot") is not True:
+        raise ValueError("outcome_contract route does not require Product SOT")
+    handoff = outcome_contract.get("handoff") if isinstance(outcome_contract.get("handoff"), dict) else {}
+    if str(handoff.get("next_artifact") or "").strip() != "product_sot":
+        raise ValueError("outcome_contract does not hand off to Product SOT")
+
+    contract_id = str(outcome_contract.get("contract_id") or "outcome-contract")
+    ledger_ref = str(outcome_contract.get("source_ledger_ref") or "product-source-ledger")
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    final_sot_id = sot_id or f"product-sot-{slug_for_ref(str(source_signal.get('intake_id') or contract_id))}"
+    material = _markdown_material_bullets(source_material_text or "")
+    outcome_text = str(outcome_contract.get("outcome") or "Complete product outcome")
+    target_surface = str(source_signal.get("target_surface") or "target product")
+    summary = str(source_signal.get("summary_public_safe") or outcome_text)
+
+    scope_in = _dedupe_preserve_order(
+        [
+            f"Complete production-ready product target for {target_surface}.",
+            summary,
+            *material["scope_in"],
+        ]
+    )
+    scope_out = _dedupe_preserve_order(
+        [
+            *outcome_contract.get("non_goals", []),
+            *material["scope_out"],
+            "Implementation, release and production promotion are out of scope until downstream gates pass.",
+        ]
+    )
+    risks = _dedupe_preserve_order([*outcome_contract.get("risk_signals", []), *material["risks"]])
+    success_criteria = _dedupe_preserve_order(
+        [*outcome_contract.get("success_signals", []), *material["success_criteria"]]
+    )
+    dependencies = _dedupe_preserve_order(
+        [
+            contract_id,
+            ledger_ref,
+            *material["dependencies"],
+            "Hermes or configured runtime remains source of truth for live state.",
+        ]
+    )
+    open_decisions = _dedupe_preserve_order(
+        [*outcome_contract.get("open_questions", []), *material["open_decisions"]]
+    )
+    operations_expected = _dedupe_preserve_order(
+        [
+            "Product must include release readiness and operational visibility before production claim.",
+            *material["operations_expected"],
+        ]
+    )
+    requirement_refs = [contract_id, ledger_ref]
+    full_scope_ref = _product_sot_next_action_ref(final_sot_id)
+
+    requirement_graph = [
+        {
+            "requirement_id": "product-sot#scope-in-001",
+            "source_refs": requirement_refs,
+            "decision_state": "approved",
+            "owner": "product-sot-planner",
+            "next_action": "create full Product SOT scope coverage before method routing or execution",
+            "evidence_refs": [contract_id, "schemas/product-sot.schema.json"],
+        },
+        {
+            "requirement_id": "product-sot#coverage-001",
+            "source_refs": [contract_id],
+            "decision_state": "approved",
+            "owner": "product-sot-planner",
+            "next_action": "account for every Product SOT requirement in full scope coverage",
+            "evidence_refs": [full_scope_ref],
+        },
+    ]
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/product-sot.schema.json",
+        "record_type": "product_sot",
+        "sot_id": final_sot_id,
+        "created_at": created,
+        "factory_method_version": "OVERKILL_VFINAL",
+        "outcome_contract_ref": contract_id,
+        "source_ledger_ref": ledger_ref,
+        "source_signal": source_signal,
+        "what_it_is": f"Complete Product SOT for {target_surface}.",
+        "target_users": _dedupe_preserve_order(outcome_contract.get("users_or_actors", [])),
+        "why_it_matters": str(outcome_contract.get("behavior_change") or "The product needs a stable source of truth before execution."),
+        "outcome": outcome_text,
+        "scope_in": scope_in,
+        "scope_out": scope_out,
+        "risks": risks,
+        "authority": "Factory owns Product SOT creation; humans decide only explicit authority, access, risk or preference gates.",
+        "data_and_metrics": success_criteria,
+        "dependencies": dependencies,
+        "access_and_capabilities": [
+            "Runtime read access is needed for live state projection.",
+            "Material execution access remains blocked until downstream readiness gates pass.",
+        ],
+        "compliance_privacy": [
+            "Public artifacts must not contain raw private source, screenshots, local paths or private runtime evidence.",
+            "Private/operator runtime data may be used locally only inside the operator-owned environment.",
+        ],
+        "cost_relevance": "No material spend or deployment is allowed before method, readiness and release gates pass.",
+        "operations_expected": operations_expected,
+        "success_criteria": success_criteria,
+        "requirement_graph": requirement_graph,
+        "full_product_sot_scope_coverage_ref": full_scope_ref,
+        "research_decision_refs": [],
+        "research_confirmations": [],
+        "open_decisions": open_decisions,
+        "evidence_refs": [
+            contract_id,
+            ledger_ref,
+            "schemas/product-sot.schema.json",
+            "schemas/outcome-contract.schema.json",
+        ],
+        "blocking_rules": {
+            "outcome_contract_required": True,
+            "full_scope_coverage_required": True,
+            "method_contract_required": True,
+            "execution_blocked_until_required_artifacts_pass": True,
+            "raw_private_evidence_must_stay_external": True,
+            "human_gate_only_for_authority_access_risk_or_preference": True,
+        },
+        "handoff": {
+            "next_artifact": "full_product_sot_scope_coverage",
+            "next_worker": "product-sot-planner",
+            "next_safe_action": "Create full Product SOT scope coverage before method contract, planning or execution.",
+            "user_decision_required": False,
+            "factory_owned_next_step": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "product_sot_created": True,
+            "execution_allowed": False,
+            "blocked_reason": (
+                "Product SOT exists, but execution remains blocked until full scope coverage, "
+                "method contract, readiness and gates pass."
+            ),
+            "evidence_refs": ["schemas/product-sot.schema.json", contract_id],
+        },
+    }
+
+
+def validate_product_sot(product_sot: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("product-sot.schema.json")
+    if not schema:
+        return ["product_sot schema is not bundled"]
+    errors.extend(validate_node(schema, product_sot, "product_sot", schemas=schemas, root_schema=schema))
+    if product_sot.get("record_type") != "product_sot":
+        errors.append("product_sot.record_type must be product_sot")
+    errors.extend(validate_product_sot_requirement_graph(product_sot))
+
+    for field in ("outcome_contract_ref", "source_ledger_ref", "full_product_sot_scope_coverage_ref"):
+        value = str(product_sot.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"product_sot.{field}", errors)
+
+    source_signal = product_sot.get("source_signal") if isinstance(product_sot.get("source_signal"), dict) else {}
+    signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
+    if signal_ref:
+        _validate_public_ref(signal_ref, "product_sot.source_signal.signal_ref_public_safe", errors)
+
+    for field in (
+        "scope_in",
+        "scope_out",
+        "risks",
+        "data_and_metrics",
+        "dependencies",
+        "access_and_capabilities",
+        "compliance_privacy",
+        "operations_expected",
+        "success_criteria",
+        "open_decisions",
+        "evidence_refs",
+        "research_decision_refs",
+        "research_confirmations",
+    ):
+        for index, item in enumerate(_list_items(product_sot.get(field))):
+            if field.endswith("refs") or field == "evidence_refs":
+                _validate_public_ref(item, f"product_sot.{field}[{index}]", errors)
+            elif not public_safe_text(item):
+                errors.append(f"product_sot.{field}[{index}] must be public-safe")
+
+    for index, requirement in enumerate(product_sot.get("requirement_graph", []) if isinstance(product_sot.get("requirement_graph"), list) else []):
+        if not isinstance(requirement, dict):
+            continue
+        for ref_index, ref in enumerate(_list_items(requirement.get("source_refs"))):
+            _validate_public_ref(ref, f"product_sot.requirement_graph[{index}].source_refs[{ref_index}]", errors)
+        for ref_index, ref in enumerate(_list_items(requirement.get("evidence_refs"))):
+            _validate_public_ref(ref, f"product_sot.requirement_graph[{index}].evidence_refs[{ref_index}]", errors)
+
+    blocking_rules = product_sot.get("blocking_rules") if isinstance(product_sot.get("blocking_rules"), dict) else {}
+    for field in (
+        "outcome_contract_required",
+        "full_scope_coverage_required",
+        "method_contract_required",
+        "execution_blocked_until_required_artifacts_pass",
+        "raw_private_evidence_must_stay_external",
+        "human_gate_only_for_authority_access_risk_or_preference",
+    ):
+        if blocking_rules.get(field) is not True:
+            errors.append(f"product_sot.blocking_rules.{field} must be true")
+
+    handoff = product_sot.get("handoff") if isinstance(product_sot.get("handoff"), dict) else {}
+    if handoff.get("factory_owned_next_step") is not True:
+        errors.append("product_sot.handoff.factory_owned_next_step must be true")
+    if handoff.get("next_artifact") != "full_product_sot_scope_coverage":
+        errors.append("product_sot.handoff.next_artifact must be full_product_sot_scope_coverage")
+    next_worker = str(handoff.get("next_worker") or "").strip()
+    if next_worker and next_worker not in WORKERS:
+        errors.append(f"product_sot.handoff.next_worker must be a registered worker: {next_worker}")
+
+    boundary = product_sot.get("public_private_boundary") if isinstance(product_sot.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("product_sot requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("product_sot must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("product_sot private context must stay outside the public repo")
+
+    acceptance = product_sot.get("acceptance") if isinstance(product_sot.get("acceptance"), dict) else {}
+    if acceptance.get("product_sot_created") is not True:
+        errors.append("product_sot acceptance.product_sot_created must be true")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("product_sot acceptance.execution_allowed must be false")
+    _validate_lifecycle_refs(
+        _list_items(acceptance.get("evidence_refs")),
+        "product_sot.acceptance.evidence_refs",
+        errors,
+    )
+
+    return errors
+
+
 def validate_universal_signal_golden_corpus(corpus: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     schemas = bundled_schemas()
@@ -12214,6 +12575,16 @@ def command_validate_outcome_contract(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_product_sot(args: argparse.Namespace) -> int:
+    errors = validate_product_sot(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_route_registry(args: argparse.Namespace) -> int:
     registry = load_route_registry(args.registry)
     if args.route_class:
@@ -12310,6 +12681,29 @@ def command_outcome_contract(args: argparse.Namespace) -> int:
             print(error, file=sys.stderr)
         return 1
     write_json(args.out, contract)
+    return 0
+
+
+def command_product_sot(args: argparse.Namespace) -> int:
+    source_material_text = None
+    if args.source_material:
+        source_material_text = args.source_material.read_text(encoding="utf-8")
+    try:
+        product_sot = build_product_sot(
+            load_json_like(args.outcome_contract),
+            source_material_text=source_material_text,
+            created_at=args.created_at,
+            sot_id=args.sot_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_product_sot(product_sot)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, product_sot)
     return 0
 
 
@@ -12751,6 +13145,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_outcome_contract_parser.add_argument("path", type=Path)
     validate_outcome_contract_parser.set_defaults(func=command_validate_outcome_contract)
 
+    validate_product_sot_parser = sub.add_parser("validate-product-sot")
+    validate_product_sot_parser.add_argument("path", type=Path)
+    validate_product_sot_parser.set_defaults(func=command_validate_product_sot)
+
     route_registry_parser = sub.add_parser("route-registry", help="Show the canonical Universal Signal route registry.")
     route_registry_parser.add_argument("--registry", type=Path, default=DEFAULT_ROUTE_REGISTRY_PATH)
     route_registry_parser.add_argument("--route-class")
@@ -12806,6 +13204,17 @@ def build_parser() -> argparse.ArgumentParser:
     outcome_contract_parser.add_argument("--contract-id")
     outcome_contract_parser.add_argument("--out", type=Path)
     outcome_contract_parser.set_defaults(func=command_outcome_contract)
+
+    product_sot_parser = sub.add_parser(
+        "product-sot",
+        help="Build Product SOT from a validated outcome contract without allowing execution.",
+    )
+    product_sot_parser.add_argument("--outcome-contract", type=Path, required=True)
+    product_sot_parser.add_argument("--source-material", type=Path)
+    product_sot_parser.add_argument("--created-at")
+    product_sot_parser.add_argument("--sot-id")
+    product_sot_parser.add_argument("--out", type=Path)
+    product_sot_parser.set_defaults(func=command_product_sot)
 
     validate_signal_corpus_parser = sub.add_parser("validate-signal-corpus")
     validate_signal_corpus_parser.add_argument("path", type=Path)
