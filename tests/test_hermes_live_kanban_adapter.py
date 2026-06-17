@@ -346,6 +346,15 @@ def assert_route_readiness_schema(testcase: unittest.TestCase, result: dict[str,
 
 
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
+    def test_safe_command_for_error_redacts_body_and_large_args(self) -> None:
+        unsafe_body = '{"private":"secret"}'
+        unsafe_comment = "x" * 600
+        text = adapter.safe_command_for_error(["hermes", "kanban", "create", "--body", unsafe_body, unsafe_comment])
+
+        self.assertNotIn(unsafe_body, text)
+        self.assertNotIn(unsafe_comment, text)
+        self.assertIn("<redacted", text)
+
     def test_collect_route_readiness_derives_workers_from_ready_plan(self) -> None:
         fake = FakeRouteReadinessHermes()
         plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
@@ -455,6 +464,48 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(fake.tasks[materialized_task_id]["status"], "blocked")
         self.assertEqual(fake.tasks[materialized_task_id]["assignee"], "implementation-worker")
         self.assertTrue(fake.tasks[materialized_task_id]["events"])
+
+    def test_materialize_ready_work_units_chunks_large_body_without_losing_context(self) -> None:
+        fake = FakeHermes()
+        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        body_contract = plan["tasks"][0]["body_contract"]
+        body_contract["work_unit_context_packet"]["embedded_payloads"]["large_context"] = "x" * 40000
+        plan["tasks"][0]["work_unit_context_packet"] = body_contract["work_unit_context_packet"]
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness = tmp_path / "route-readiness.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness, extra_workers=["implementation-worker"])
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            result = adapter.materialize_ready_work_units(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        create_call = next(call for call in fake.calls if len(call) >= 5 and call[4] == "create")
+        create_body = create_call[create_call.index("--body") + 1]
+        self.assertLess(len(create_body), adapter.READY_WORK_UNIT_DIRECT_BODY_LIMIT)
+        create_body_manifest = json.loads(create_body)
+        self.assertEqual(create_body_manifest["context_transport"]["mode"], adapter.READY_WORK_UNIT_CONTEXT_TRANSPORT_MODE)
+
+        comment_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "comment"]
+        self.assertGreater(len(comment_calls), 1)
+        materialized_task_id = next(iter(fake.tasks))
+        reconstructed = adapter.ready_work_unit_body(fake.tasks[materialized_task_id], task_id=materialized_task_id)
+        self.assertEqual(reconstructed["packet_id"], body_contract["packet_id"])
+        self.assertEqual(
+            reconstructed["work_unit_context_packet"]["embedded_payloads"]["large_context"],
+            "x" * 40000,
+        )
 
     def test_materialize_ready_work_units_dry_run_does_not_touch_hermes(self) -> None:
         fake = FakeHermes()
