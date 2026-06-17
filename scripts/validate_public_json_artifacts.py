@@ -1806,6 +1806,73 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "ready_work_unit_packet_manifest":
+        for field in ("product_creation_plan_ref", "product_implementation_readiness_ref"):
+            reason = public_artifact_ref_error(data.get(field))
+            if reason:
+                errors.append(f"{at}.{field}: {reason}")
+        if data.get("complete_product_claim_allowed") is not False:
+            errors.append(f"{at}: ready_work_unit_packet_manifest cannot allow complete-product claim")
+        runtime = data.get("runtime_boundary") if isinstance(data.get("runtime_boundary"), dict) else {}
+        if runtime.get("live_hermes_mutated") is not False:
+            errors.append(f"{at}: ready_work_unit_packet_manifest must not claim live Hermes mutation")
+        if runtime.get("hermes_materialization_requires_gate") is not True:
+            errors.append(f"{at}: ready_work_unit_packet_manifest requires Hermes materialization gate")
+        packets = data.get("packets") if isinstance(data.get("packets"), list) else []
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("packet_count") != len(packets):
+            errors.append(f"{at}: ready_work_unit_packet_manifest acceptance.packet_count must match packets length")
+        if acceptance.get("complete_product_claim_allowed") is not False:
+            errors.append(f"{at}: ready_work_unit_packet_manifest acceptance cannot allow complete-product claim")
+        if acceptance.get("live_hermes_mutated") is not False:
+            errors.append(f"{at}: ready_work_unit_packet_manifest acceptance must not claim live Hermes mutation")
+        packet_ids: list[str] = []
+        work_unit_ids: list[str] = []
+        for index, packet in enumerate(packets):
+            if not isinstance(packet, dict):
+                errors.append(f"{at}.packets[{index}]: expected object")
+                continue
+            packet_id = str(packet.get("packet_id") or "").strip()
+            work_unit_id = str(packet.get("work_unit_id") or "").strip()
+            if packet_id:
+                packet_ids.append(packet_id)
+            if work_unit_id:
+                work_unit_ids.append(work_unit_id)
+            owner = str(packet.get("owner_worker") or "").strip()
+            if owner and owner not in public_worker_ids():
+                errors.append(f"{at}.packets[{index}].owner_worker must be a registered worker: {owner}")
+            receipt = packet.get("receipt_five_contract") if isinstance(packet.get("receipt_five_contract"), dict) else {}
+            if receipt.get("complete_product_claim_allowed") is not False:
+                errors.append(f"{at}.packets[{index}].receipt_five_contract cannot allow complete-product claim")
+            materialization = packet.get("hermes_materialization") if isinstance(packet.get("hermes_materialization"), dict) else {}
+            if materialization.get("live_hermes_mutated") is not False:
+                errors.append(f"{at}.packets[{index}].hermes_materialization must not claim live Hermes mutation")
+            if materialization.get("dispatch_allowed_without_runtime_gate") is not False:
+                errors.append(f"{at}.packets[{index}].hermes_materialization cannot dispatch without runtime gate")
+            boundary = packet.get("public_private_boundary") if isinstance(packet.get("public_private_boundary"), dict) else {}
+            if boundary.get("public_safe_refs_only") is not True:
+                errors.append(f"{at}.packets[{index}] requires public_safe_refs_only=true")
+            if boundary.get("raw_private_evidence_embedded") is not False:
+                errors.append(f"{at}.packets[{index}] must not embed raw private evidence")
+        duplicate_packets = sorted({packet_id for packet_id in packet_ids if packet_ids.count(packet_id) > 1})
+        if duplicate_packets:
+            errors.append(f"{at}: duplicate ready work-unit packet ids: {', '.join(duplicate_packets)}")
+        duplicate_units = sorted({unit_id for unit_id in work_unit_ids if work_unit_ids.count(unit_id) > 1})
+        if duplicate_units:
+            errors.append(f"{at}: duplicate ready work-unit ids: {', '.join(duplicate_units)}")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: ready_work_unit_packet_manifest requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: ready_work_unit_packet_manifest must not embed raw private evidence")
+        for index, ref in enumerate(data.get("evidence_refs", []) if isinstance(data.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.evidence_refs[{index}]: {reason}")
+        for index, ref in enumerate(acceptance.get("evidence_refs", []) if isinstance(acceptance.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_v1_completion_gate":

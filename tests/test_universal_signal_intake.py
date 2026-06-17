@@ -903,6 +903,92 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertIn("human-gate-method-scope-001", readiness["human_decisions_required"])
         self.assertFalse(readiness["acceptance"]["material_execution_allowed"])
 
+    def test_ready_work_unit_packets_from_readiness_are_valid(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+
+        self.assertEqual(factoryctl.validate_ready_work_unit_packet_manifest(manifest), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(manifest, "$"), [])
+        self.assertEqual(manifest["record_type"], "ready_work_unit_packet_manifest")
+        self.assertEqual(manifest["readiness_result"], "CONCERNS")
+        self.assertEqual(manifest["acceptance"]["allowed_execution_scope"], "ready_work_units_only")
+        self.assertFalse(manifest["acceptance"]["complete_product_claim_allowed"])
+        self.assertFalse(manifest["runtime_boundary"]["live_hermes_mutated"])
+        self.assertEqual(
+            [packet["work_unit_id"] for packet in manifest["packets"]],
+            readiness["ready_work_units"],
+        )
+        self.assertTrue(all(packet["receipt_five_contract"]["must_attach_artifact_refs"] for packet in manifest["packets"]))
+
+    def test_ready_work_unit_packets_reject_blocked_readiness(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+        coverage = factoryctl.build_full_scope_coverage(product_sot)
+        coverage["requirement_coverage"][0]["status"] = "human_decision_required"
+        coverage["requirement_coverage"][0]["blocker_id"] = "human-gate-method-scope-001"
+        method_contract = factoryctl.build_method_contract(coverage)
+        plan = factoryctl.build_product_creation_plan(method_contract)
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+
+        with self.assertRaisesRegex(ValueError, "does not allow ready work-unit packet materialization"):
+            factoryctl.build_ready_work_unit_packet_manifest(plan, readiness)
+
+    def test_ready_work_unit_packets_reject_unknown_ready_unit(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness["ready_work_units"].append("missing-work-unit")
+
+        with self.assertRaisesRegex(ValueError, "ready_work_units not found in Product Creation Plan"):
+            factoryctl.build_ready_work_unit_packet_manifest(plan, readiness)
+
+    def test_ready_work_unit_packets_cli_generates_manifest_and_requests(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_path = Path(tmpdir) / "product-creation-plan.json"
+            readiness_path = Path(tmpdir) / "product-implementation-readiness.json"
+            out_dir = Path(tmpdir) / "ready-work-unit-packets"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            readiness_path.write_text(json.dumps(readiness), encoding="utf-8")
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "ready-work-unit-packets",
+                    "--product-creation-plan",
+                    str(plan_path),
+                    "--product-implementation-readiness",
+                    str(readiness_path),
+                    "--out",
+                    str(out_dir),
+                ]
+            )
+            manifest = json.loads((out_dir / "manifest.json").read_text(encoding="utf-8"))
+
+            validate_result = factoryctl.main_with_args_for_test(
+                ["validate-ready-work-unit-packets", str(out_dir / "manifest.json")]
+            )
+
+        self.assertEqual(result, 0)
+        self.assertEqual(validate_result, 0)
+        self.assertEqual(manifest["record_type"], "ready_work_unit_packet_manifest")
+        self.assertEqual(len(manifest["packets"]), len(readiness["ready_work_units"]))
+
 
 if __name__ == "__main__":
     unittest.main()
