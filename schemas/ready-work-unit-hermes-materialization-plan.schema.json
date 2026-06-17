@@ -172,6 +172,7 @@
         "proof_ids_required",
         "receipt_five_contract",
         "context_boundary",
+        "work_unit_context_packet",
         "runtime_refs",
         "idempotency_key",
         "create_policy",
@@ -232,6 +233,78 @@
             "worker_instruction": { "type": "string", "minLength": 30 }
           },
           "additionalProperties": false
+        },
+        "work_unit_context_packet": {
+          "type": "object",
+          "required": [
+            "context_packet_id",
+            "work_unit_id",
+            "resolution_status",
+            "dispatch_allowed_with_unresolved_context",
+            "worker_input_contract",
+            "context_resolver",
+            "embedded_payloads",
+            "context_repair_route"
+          ],
+          "properties": {
+            "context_packet_id": { "type": "string", "minLength": 3 },
+            "work_unit_id": { "type": "string", "minLength": 3 },
+            "resolution_status": { "const": "resolved_for_worker_execution" },
+            "dispatch_allowed_with_unresolved_context": { "const": false },
+            "worker_input_contract": { "type": "object" },
+            "context_resolver": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "ref",
+                  "resolution_status",
+                  "payload_key",
+                  "required_before_dispatch",
+                  "missing_context_action",
+                  "repair_owner"
+                ],
+                "properties": {
+                  "ref": { "type": "string", "minLength": 3 },
+                  "resolution_status": {
+                    "enum": [
+                      "embedded_public_safe_payload",
+                      "covered_by_embedded_public_safe_payload",
+                      "resolved_from_worker_input_contract"
+                    ]
+                  },
+                  "payload_key": { "type": "string", "minLength": 3 },
+                  "required_before_dispatch": { "const": true },
+                  "missing_context_action": { "const": "BLOCK_WITH_OWNER" },
+                  "repair_owner": { "type": "string", "minLength": 3 }
+                },
+                "additionalProperties": true
+              }
+            },
+            "embedded_payloads": {
+              "type": "object",
+              "required": ["product_creation_plan", "product_implementation_readiness", "current_work_unit"],
+              "properties": {
+                "product_creation_plan": { "type": "object" },
+                "product_implementation_readiness": { "type": "object" },
+                "current_work_unit": { "type": "object" }
+              },
+              "additionalProperties": true
+            },
+            "context_repair_route": {
+              "type": "object",
+              "required": ["repair_owner", "repair_action", "operator_action_required", "dispatch_allowed_when_missing_context"],
+              "properties": {
+                "repair_owner": { "type": "string", "minLength": 3 },
+                "repair_action": { "type": "string", "minLength": 3 },
+                "operator_action_required": { "const": false },
+                "dispatch_allowed_when_missing_context": { "const": false }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
         },
         "runtime_refs": {
           "type": "object",

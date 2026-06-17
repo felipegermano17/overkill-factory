@@ -26,14 +26,28 @@
       "owner_worker": "implementation-worker",
       "reviewer_role": "independent-reviewer",
       "objective": "Deliver one safe execution slice without reducing the Product SOT scope.",
-      "scope_in": ["the named Product SOT requirement refs"],
-      "scope_out": ["unrelated Product SOT requirements"],
-      "verification": ["run the checks named by the work unit"],
+      "scope_in": [
+        "the named Product SOT requirement refs"
+      ],
+      "scope_out": [
+        "unrelated Product SOT requirements"
+      ],
+      "verification": [
+        "run the checks named by the work unit"
+      ],
       "expected_result": "PASS or explicit BLOCK with owner",
-      "proof_ids_required": ["generic.scope-fit"],
-      "product_sot_requirement_refs": ["product-sot#scope-in-001"],
-      "dependency_refs": ["product-sot#scope-in-001"],
-      "capability_profile_refs": ["agents/hermes-profile-bindings.public.json#implementation-worker"],
+      "proof_ids_required": [
+        "generic.scope-fit"
+      ],
+      "product_sot_requirement_refs": [
+        "product-sot#scope-in-001"
+      ],
+      "dependency_refs": [
+        "product-sot#scope-in-001"
+      ],
+      "capability_profile_refs": [
+        "agents/hermes-profile-bindings.public.json#implementation-worker"
+      ],
       "ready_rules": [
         "Product SOT requirement refs resolve to the approved Product SOT",
         "required proof ids are mapped before execution starts"
@@ -46,20 +60,96 @@
         "all proof_ids_required have PASS or valid waiver evidence",
         "reviewer_role has reviewed the work-unit evidence"
       ],
-      "stop_conditions": ["Product SOT drifted", "required context packet is stale"],
+      "stop_conditions": [
+        "Product SOT drifted",
+        "required context packet is stale"
+      ],
       "forbidden_actions": [
         "claim complete product done from ready work-unit execution",
         "execute blocked, failed, stale or unlisted work units",
         "mutate live Hermes without an explicit runtime gate",
         "claim complete product done from one bounded slice"
       ],
+      "phase": "F12",
+      "risk_effective": "R2",
+      "surfaces": [
+        "code",
+        "release path",
+        "rollback",
+        "monitoring",
+        "support",
+        "customer readiness"
+      ],
+      "done_definition": {
+        "definition": "PASS or explicit BLOCK with owner",
+        "rules": [
+          "all proof_ids_required have PASS or valid waiver evidence",
+          "reviewer_role has reviewed the work-unit evidence"
+        ],
+        "required_proof_ids": [
+          "generic.scope-fit"
+        ],
+        "reviewer_role": "independent-reviewer",
+        "complete_product_claim_allowed": false
+      },
+      "worker_input_contract": {
+        "owner_worker": "implementation-worker",
+        "worker_name": "Implementation Fallback Worker",
+        "required_inputs": [
+          "scope_in",
+          "scope_out",
+          "forbidden_actions",
+          "done_definition"
+        ],
+        "inputs": {
+          "scope_in": [
+            "the named Product SOT requirement refs"
+          ],
+          "scope_out": [
+            "unrelated Product SOT requirements"
+          ],
+          "forbidden_actions": [
+            "claim complete product done from ready work-unit execution",
+            "execute blocked, failed, stale or unlisted work units",
+            "mutate live Hermes without an explicit runtime gate",
+            "claim complete product done from one bounded slice"
+          ],
+          "done_definition": {
+            "definition": "PASS or explicit BLOCK with owner",
+            "rules": [
+              "all proof_ids_required have PASS or valid waiver evidence",
+              "reviewer_role has reviewed the work-unit evidence"
+            ],
+            "required_proof_ids": [
+              "generic.scope-fit"
+            ],
+            "reviewer_role": "independent-reviewer",
+            "complete_product_claim_allowed": false
+          },
+          "phase": "F12",
+          "risk_effective": "R2",
+          "surfaces": [
+            "code",
+            "release path",
+            "rollback",
+            "monitoring",
+            "support",
+            "customer readiness"
+          ]
+        },
+        "complete_product_claim_allowed": false,
+        "missing_required_input_action": "BLOCK_WITH_OWNER",
+        "operator_action_required_for_missing_input": false
+      },
       "receipt_five_contract": {
         "must_attach_artifact_refs": true,
         "must_state_blocking_findings": true,
         "must_record_tool_or_profile": true,
         "must_record_review": true,
         "complete_product_claim_allowed": false,
-        "required_proof_ids": ["generic.scope-fit"],
+        "required_proof_ids": [
+          "generic.scope-fit"
+        ],
         "reviewer_role": "independent-reviewer"
       },
       "context_boundary": {
@@ -77,6 +167,232 @@
         "block_owner": "implementation-worker",
         "operator_action_required_for_missing_context": false,
         "worker_instruction": "Use only the named allowed_context_refs and artifacts produced for this work_unit_id. If required context is missing, stale, forbidden or ambiguous, block with owner instead of searching unrelated repository history."
+      },
+      "work_unit_context_packet": {
+        "context_packet_id": "work-unit-context-packet-work-unit-001",
+        "work_unit_id": "work-unit-001",
+        "resolution_status": "resolved_for_worker_execution",
+        "dispatch_allowed_with_unresolved_context": false,
+        "worker_input_contract": {
+          "owner_worker": "implementation-worker",
+          "worker_name": "Implementation Fallback Worker",
+          "required_inputs": [
+            "scope_in",
+            "scope_out",
+            "forbidden_actions",
+            "done_definition"
+          ],
+          "inputs": {
+            "scope_in": [
+              "the named Product SOT requirement refs"
+            ],
+            "scope_out": [
+              "unrelated Product SOT requirements"
+            ],
+            "forbidden_actions": [
+              "claim complete product done from ready work-unit execution",
+              "execute blocked, failed, stale or unlisted work units",
+              "mutate live Hermes without an explicit runtime gate",
+              "claim complete product done from one bounded slice"
+            ],
+            "done_definition": {
+              "definition": "PASS or explicit BLOCK with owner",
+              "rules": [
+                "all proof_ids_required have PASS or valid waiver evidence",
+                "reviewer_role has reviewed the work-unit evidence"
+              ],
+              "required_proof_ids": [
+                "generic.scope-fit"
+              ],
+              "reviewer_role": "independent-reviewer",
+              "complete_product_claim_allowed": false
+            },
+            "phase": "F12",
+            "risk_effective": "R2",
+            "surfaces": [
+              "code",
+              "release path",
+              "rollback",
+              "monitoring",
+              "support",
+              "customer readiness"
+            ]
+          },
+          "complete_product_claim_allowed": false,
+          "missing_required_input_action": "BLOCK_WITH_OWNER",
+          "operator_action_required_for_missing_input": false
+        },
+        "context_resolver": [
+          {
+            "ref": "templates/product-creation-plan.json",
+            "resolution_status": "embedded_public_safe_payload",
+            "payload_key": "product_creation_plan",
+            "required_before_dispatch": true,
+            "missing_context_action": "BLOCK_WITH_OWNER",
+            "repair_owner": "factory-orchestrator"
+          },
+          {
+            "ref": "templates/product-implementation-readiness.json",
+            "resolution_status": "embedded_public_safe_payload",
+            "payload_key": "product_implementation_readiness",
+            "required_before_dispatch": true,
+            "missing_context_action": "BLOCK_WITH_OWNER",
+            "repair_owner": "factory-orchestrator"
+          },
+          {
+            "ref": "product-sot#scope-in-001",
+            "resolution_status": "covered_by_embedded_public_safe_payload",
+            "payload_key": "product_creation_plan",
+            "required_before_dispatch": true,
+            "missing_context_action": "BLOCK_WITH_OWNER",
+            "repair_owner": "factory-orchestrator"
+          },
+          {
+            "ref": "agents/hermes-profile-bindings.public.json#implementation-worker",
+            "resolution_status": "covered_by_embedded_public_safe_payload",
+            "payload_key": "product_creation_plan",
+            "required_before_dispatch": true,
+            "missing_context_action": "BLOCK_WITH_OWNER",
+            "repair_owner": "factory-orchestrator"
+          }
+        ],
+        "embedded_payloads": {
+          "product_creation_plan": {
+            "resolved_ref": "templates/product-creation-plan.json",
+            "plan_id": "product-creation-plan-public-template",
+            "product_sot_ref": "templates/product-sot.json",
+            "method_contract_ref": "templates/method-contract.json",
+            "complete_product_scope": [
+              "every meaningful Product SOT capability, operation, proof and release requirement"
+            ],
+            "production_readiness_scope": [
+              "release path",
+              "rollback",
+              "monitoring",
+              "support",
+              "customer readiness"
+            ],
+            "surface_matrix": [
+              {
+                "surface": "code",
+                "required_pack": "web-saas-core",
+                "proof": "tests and review",
+                "structured_proofs_required": [
+                  "generic.scope-fit",
+                  "generic.operator-usability"
+                ]
+              }
+            ],
+            "execution_order": [
+              "work-unit-001"
+            ],
+            "dependency_graph": [
+              {
+                "from": "product-sot#scope-in-001",
+                "to": "work-unit-001"
+              }
+            ],
+            "complete_product_done_criteria": [
+              "scope-accounted completion may record done, blocked, deferred-with-owner or out-of-scope requirements for traceability",
+              "production-complete or customer-ready acceptance requires every active SOT requirement to be DONE unless a human-gated SOT rebaseline explicitly supersedes that scope"
+            ],
+            "slice_done_criteria": [
+              "slice verification passes and evidence refs are attached"
+            ],
+            "related_work_units": [
+              {
+                "unit_id": "work-unit-001",
+                "owner_worker": "implementation-worker",
+                "status": "ready",
+                "proof_ids_required": [
+                  "generic.scope-fit"
+                ],
+                "product_sot_requirement_refs": [
+                  "product-sot#scope-in-001"
+                ],
+                "dependency_refs": [
+                  "product-sot#scope-in-001"
+                ],
+                "capability_profile_refs": [
+                  "agents/hermes-profile-bindings.public.json#implementation-worker"
+                ]
+              }
+            ]
+          },
+          "product_implementation_readiness": {
+            "resolved_ref": "templates/product-implementation-readiness.json",
+            "readiness_id": "product-implementation-readiness-public-template",
+            "artifact_alignment_result": "CONCERNS",
+            "ready_work_units": [
+              "work-unit-001"
+            ],
+            "blocked_work_units": [],
+            "human_decisions_required": [],
+            "allowed_next_actions": [
+              "execute ready work units without changing canonical Product SOT scope"
+            ],
+            "forbidden_next_actions": [
+              "claim complete product done from one bounded slice"
+            ]
+          },
+          "current_work_unit": {
+            "resolved_ref": "work-unit-001",
+            "unit_id": "work-unit-001",
+            "product_sot_requirement_refs": [
+              "product-sot#scope-in-001"
+            ],
+            "objective": "Deliver one safe execution slice without reducing the Product SOT scope.",
+            "scope_in": [
+              "the named Product SOT requirement refs"
+            ],
+            "scope_out": [
+              "unrelated Product SOT requirements"
+            ],
+            "verification": [
+              "run the checks named by the work unit"
+            ],
+            "expected_result": "PASS or explicit BLOCK with owner",
+            "proof_ids_required": [
+              "generic.scope-fit"
+            ],
+            "owner_worker": "implementation-worker",
+            "reviewer_role": "independent-reviewer",
+            "capability_profile_refs": [
+              "agents/hermes-profile-bindings.public.json#implementation-worker"
+            ],
+            "ready_rules": [
+              "Product SOT requirement refs resolve to the approved Product SOT",
+              "required proof ids are mapped before execution starts"
+            ],
+            "blocked_when": [
+              "required proof cannot be produced",
+              "owner worker or reviewer role is unavailable"
+            ],
+            "done_rules": [
+              "all proof_ids_required have PASS or valid waiver evidence",
+              "reviewer_role has reviewed the work-unit evidence"
+            ],
+            "stop_conditions": [
+              "Product SOT drifted",
+              "required context packet is stale"
+            ],
+            "status": "ready",
+            "product_context_packet_ref": "templates/product-context-packet.json",
+            "forbidden_actions": [
+              "claim complete product done from ready work-unit execution",
+              "execute blocked, failed, stale or unlisted work units",
+              "mutate live Hermes without an explicit runtime gate",
+              "claim complete product done from one bounded slice"
+            ]
+          }
+        },
+        "context_repair_route": {
+          "repair_owner": "factory-orchestrator",
+          "repair_action": "regenerate_ready_work_unit_packet_with_resolved_public_safe_context",
+          "operator_action_required": false,
+          "dispatch_allowed_when_missing_context": false,
+          "retry_policy": "repair_and_retry_until_gate_passes_or_explicit_human_gate_is_required"
+        }
       },
       "hermes_materialization": {
         "recommended_initial_status": "blocked",

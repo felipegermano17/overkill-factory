@@ -6,7 +6,7 @@
   "factory_method_version": "OVERKILL_VFINAL",
   "product_sot_ref": "templates/product-sot.json",
   "method_contract_ref": "templates/method-contract.json",
-  "product_creation_plan_ref": "templates/product-creation-plan.json",
+  "product_creation_plan_ref": "product-creation-plan-public-template",
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
   "product_delivery_quality_profile_trace": [
     "templates/product-delivery-quality-profile.json#generic-software-product-v1",

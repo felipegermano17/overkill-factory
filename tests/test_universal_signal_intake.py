@@ -935,6 +935,40 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             self.assertFalse(context_boundary["operator_action_required_for_missing_context"])
             self.assertIn("external:sanitized-product-creation-plan", context_boundary["allowed_context_refs"])
             self.assertIn("external:sanitized-product-implementation-readiness", context_boundary["allowed_context_refs"])
+            self.assertIn("done_definition", packet)
+            self.assertIn("phase", packet)
+            self.assertIn("risk_effective", packet)
+            self.assertIn("surfaces", packet)
+            worker_contract = packet["worker_input_contract"]
+            self.assertEqual(worker_contract["owner_worker"], packet["owner_worker"])
+            self.assertEqual(worker_contract["inputs"]["done_definition"], packet["done_definition"])
+            for required_input in factoryctl._ready_work_unit_required_inputs(packet["owner_worker"]):
+                self.assertIn(required_input, worker_contract["required_inputs"])
+                self.assertIn(required_input, worker_contract["inputs"])
+            context_packet = packet["work_unit_context_packet"]
+            self.assertEqual(context_packet["resolution_status"], "resolved_for_worker_execution")
+            self.assertFalse(context_packet["dispatch_allowed_with_unresolved_context"])
+            self.assertEqual(context_packet["worker_input_contract"], worker_contract)
+            resolver_refs = [entry["ref"] for entry in context_packet["context_resolver"]]
+            for allowed_ref in context_boundary["allowed_context_refs"]:
+                self.assertIn(allowed_ref, resolver_refs)
+            self.assertTrue(
+                all(entry["required_before_dispatch"] is True for entry in context_packet["context_resolver"])
+            )
+            self.assertTrue(
+                all(
+                    entry["resolution_status"] in factoryctl.READY_WORK_UNIT_RESOLVED_CONTEXT_STATUSES
+                    for entry in context_packet["context_resolver"]
+                )
+            )
+            self.assertFalse(context_packet["context_repair_route"]["operator_action_required"])
+            self.assertFalse(context_packet["context_repair_route"]["dispatch_allowed_when_missing_context"])
+        release_packet = next(packet for packet in manifest["packets"] if packet["owner_worker"] == "release-ops-worker")
+        self.assertIn("release_plan", release_packet["worker_input_contract"]["inputs"])
+        self.assertIn("production_operations_plan", release_packet["worker_input_contract"]["inputs"])
+        decomposition_packet = next(packet for packet in manifest["packets"] if packet["owner_worker"] == "decomposition-planner")
+        self.assertIn("spec_graph", decomposition_packet["worker_input_contract"]["inputs"])
+        self.assertIn("parallel_lane_contract", decomposition_packet["worker_input_contract"]["inputs"])
 
     def test_ready_work_unit_packets_reject_unbounded_context_boundary(self) -> None:
         plan = build_valid_product_creation_plan()
@@ -970,6 +1004,67 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
         self.assertTrue(any("refs cannot be both allowed and forbidden" in error for error in errors), errors)
         self.assertTrue(any("block_owner must match owner_worker" in error for error in errors), errors)
+
+    def test_ready_work_unit_packets_reject_missing_worker_context(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        packet = manifest["packets"][0]
+        packet["worker_input_contract"]["inputs"].pop("done_definition", None)
+
+        errors = factoryctl.validate_ready_work_unit_packet_manifest(manifest)
+
+        self.assertTrue(any("inputs.done_definition must be resolved before dispatch" in error for error in errors), errors)
+
+    def test_ready_work_unit_packets_reject_unresolved_context_refs(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        packet = manifest["packets"][0]
+        packet["work_unit_context_packet"]["context_resolver"] = [
+            entry
+            for entry in packet["work_unit_context_packet"]["context_resolver"]
+            if entry["ref"] != packet["context_boundary"]["allowed_context_refs"][0]
+        ]
+        packet["work_unit_context_packet"]["context_resolver"][0]["resolution_status"] = "external_ref_only"
+        packet["work_unit_context_packet"]["context_resolver"][0]["payload_key"] = "missing_payload"
+
+        errors = factoryctl.validate_ready_work_unit_packet_manifest(manifest)
+
+        self.assertTrue(any("context_resolver missing refs" in error for error in errors), errors)
+        self.assertTrue(any("resolution_status must be resolved" in error for error in errors), errors)
+        self.assertTrue(any("payload_key must reference an embedded payload" in error for error in errors), errors)
+
+    def test_ready_work_unit_packets_reject_context_contract_divergence(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        packet = manifest["packets"][0]
+        packet["work_unit_context_packet"]["worker_input_contract"]["inputs"]["done_definition"] = {
+            "definition": "different"
+        }
+
+        errors = factoryctl.validate_ready_work_unit_packet_manifest(manifest)
+
+        self.assertTrue(
+            any("work_unit_context_packet.worker_input_contract must match packet.worker_input_contract" in error for error in errors),
+            errors,
+        )
 
     def test_ready_work_unit_packets_reject_blocked_readiness(self) -> None:
         source_resolution = factoryctl.build_source_resolution_packet(
@@ -1087,6 +1182,12 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             all(task["context_boundary"] == task["body_contract"]["context_boundary"] for task in materialization["tasks"])
         )
         self.assertTrue(
+            all(
+                task["work_unit_context_packet"] == task["body_contract"]["work_unit_context_packet"]
+                for task in materialization["tasks"]
+            )
+        )
+        self.assertTrue(
             all(task["context_boundary"]["workspace_search_policy"] == "bounded_refs_only" for task in materialization["tasks"])
         )
         self.assertTrue(
@@ -1118,6 +1219,52 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
         self.assertTrue(any("context_boundary must match body_contract.context_boundary" in error for error in errors), errors)
         self.assertTrue(any("broad_repo_search_allowed must be false" in error for error in errors), errors)
+
+    def test_ready_work_unit_hermes_plan_rejects_context_packet_mismatch(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        materialization = factoryctl.build_ready_work_unit_hermes_materialization_plan(
+            manifest,
+            board="overkill-factory-live",
+            ready_work_unit_packet_manifest_ref="external:sanitized-ready-work-unit-packets",
+        )
+
+        materialization["tasks"][0]["work_unit_context_packet"]["resolution_status"] = "stale"
+        materialization["tasks"][0]["body_contract"]["work_unit_context_packet"]["context_resolver"][0]["resolution_status"] = "external_ref_only"
+
+        errors = factoryctl.validate_ready_work_unit_hermes_materialization_plan(materialization)
+
+        self.assertTrue(any("work_unit_context_packet must match body_contract.work_unit_context_packet" in error for error in errors), errors)
+        self.assertTrue(any("resolution_status must be resolved" in error for error in errors), errors)
+
+    def test_ready_work_unit_hermes_plan_schema_rejects_unresolved_context_packet(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        materialization = factoryctl.build_ready_work_unit_hermes_materialization_plan(
+            manifest,
+            board="overkill-factory-live",
+            ready_work_unit_packet_manifest_ref="external:sanitized-ready-work-unit-packets",
+        )
+        materialization["tasks"][0]["work_unit_context_packet"]["context_resolver"][0]["resolution_status"] = "external_ref_only"
+        materialization["tasks"][0]["body_contract"]["work_unit_context_packet"]["context_resolver"][0]["resolution_status"] = "external_ref_only"
+        schemas = public_json_validator.load_schemas()
+        schema = schemas["ready-work-unit-hermes-materialization-plan.schema.json"]
+
+        schema_errors = public_json_validator.validate_node(schema, materialization, "$", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("external_ref_only" in error or "resolution_status" in error for error in schema_errors), schema_errors)
 
     def test_ready_work_unit_hermes_plan_rejects_context_boundary_conflicts_and_bad_owner(self) -> None:
         plan = build_valid_product_creation_plan()

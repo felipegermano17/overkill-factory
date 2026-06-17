@@ -167,8 +167,14 @@
         "done_rules",
         "stop_conditions",
         "forbidden_actions",
+        "phase",
+        "risk_effective",
+        "surfaces",
+        "done_definition",
+        "worker_input_contract",
         "receipt_five_contract",
         "context_boundary",
+        "work_unit_context_packet",
         "hermes_materialization",
         "public_private_boundary"
       ],
@@ -194,6 +200,41 @@
         "done_rules": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
         "stop_conditions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
         "forbidden_actions": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+        "phase": { "type": "string", "minLength": 2 },
+        "risk_effective": { "type": "string", "minLength": 2 },
+        "surfaces": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+        "done_definition": {
+          "type": "object",
+          "required": ["definition", "rules", "required_proof_ids", "complete_product_claim_allowed"],
+          "properties": {
+            "definition": { "type": "string", "minLength": 3 },
+            "rules": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+            "required_proof_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+            "reviewer_role": { "type": "string", "minLength": 3 },
+            "complete_product_claim_allowed": { "const": false }
+          },
+          "additionalProperties": true
+        },
+        "worker_input_contract": {
+          "type": "object",
+          "required": [
+            "owner_worker",
+            "required_inputs",
+            "inputs",
+            "complete_product_claim_allowed",
+            "missing_required_input_action",
+            "operator_action_required_for_missing_input"
+          ],
+          "properties": {
+            "owner_worker": { "type": "string", "minLength": 3 },
+            "required_inputs": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+            "inputs": { "type": "object" },
+            "complete_product_claim_allowed": { "const": false },
+            "missing_required_input_action": { "const": "BLOCK_WITH_OWNER" },
+            "operator_action_required_for_missing_input": { "const": false }
+          },
+          "additionalProperties": true
+        },
         "receipt_five_contract": {
           "type": "object",
           "required": [
@@ -244,6 +285,78 @@
             "worker_instruction": { "type": "string", "minLength": 30 }
           },
           "additionalProperties": false
+        },
+        "work_unit_context_packet": {
+          "type": "object",
+          "required": [
+            "context_packet_id",
+            "work_unit_id",
+            "resolution_status",
+            "dispatch_allowed_with_unresolved_context",
+            "worker_input_contract",
+            "context_resolver",
+            "embedded_payloads",
+            "context_repair_route"
+          ],
+          "properties": {
+            "context_packet_id": { "type": "string", "minLength": 3 },
+            "work_unit_id": { "type": "string", "minLength": 3 },
+            "resolution_status": { "const": "resolved_for_worker_execution" },
+            "dispatch_allowed_with_unresolved_context": { "const": false },
+            "worker_input_contract": { "type": "object" },
+            "context_resolver": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "ref",
+                  "resolution_status",
+                  "payload_key",
+                  "required_before_dispatch",
+                  "missing_context_action",
+                  "repair_owner"
+                ],
+                "properties": {
+                  "ref": { "type": "string", "minLength": 3 },
+                  "resolution_status": {
+                    "enum": [
+                      "embedded_public_safe_payload",
+                      "covered_by_embedded_public_safe_payload",
+                      "resolved_from_worker_input_contract"
+                    ]
+                  },
+                  "payload_key": { "type": "string", "minLength": 3 },
+                  "required_before_dispatch": { "const": true },
+                  "missing_context_action": { "const": "BLOCK_WITH_OWNER" },
+                  "repair_owner": { "type": "string", "minLength": 3 }
+                },
+                "additionalProperties": true
+              }
+            },
+            "embedded_payloads": {
+              "type": "object",
+              "required": ["product_creation_plan", "product_implementation_readiness", "current_work_unit"],
+              "properties": {
+                "product_creation_plan": { "type": "object" },
+                "product_implementation_readiness": { "type": "object" },
+                "current_work_unit": { "type": "object" }
+              },
+              "additionalProperties": true
+            },
+            "context_repair_route": {
+              "type": "object",
+              "required": ["repair_owner", "repair_action", "operator_action_required", "dispatch_allowed_when_missing_context"],
+              "properties": {
+                "repair_owner": { "type": "string", "minLength": 3 },
+                "repair_action": { "type": "string", "minLength": 3 },
+                "operator_action_required": { "const": false },
+                "dispatch_allowed_when_missing_context": { "const": false }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
         },
         "hermes_materialization": {
           "type": "object",
