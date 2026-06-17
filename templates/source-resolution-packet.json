@@ -1,0 +1,201 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/source-resolution-packet.schema.json",
+  "record_type": "source_resolution_packet",
+  "packet_id": "source-resolution-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "intake_ref_public_safe": "templates/universal-signal-intake.json",
+  "source_signal": {
+    "intake_id": "universal-signal-intake-public-template",
+    "signal_type": "product_paper",
+    "request_type": "product_new",
+    "route_class": "product_creation",
+    "target_surface": "complete-product-production",
+    "summary_public_safe": "Operator supplied product material must become a routed source-resolution packet before Product SOT or execution starts.",
+    "signal_ref_public_safe": "external:source-card-product-brief",
+    "source_class": "operator_supplied",
+    "sensitivity_class": "public_safe",
+    "freshness": "bounded",
+    "risk_initial": "R2",
+    "materiality": "material",
+    "needs_product_sot": true
+  },
+  "source_claim_classes": [
+    {
+      "class": "fact",
+      "routing": "Resolved facts become source-ledger claims with evidence refs before Product SOT."
+    },
+    {
+      "class": "inference",
+      "routing": "Inferences stay marked as inference until accepted by the responsible factory worker."
+    },
+    {
+      "class": "decision",
+      "routing": "Decisions require an owner, authority class and downstream artifact impact."
+    },
+    {
+      "class": "conflict",
+      "routing": "Conflicts block promotion until source resolution assigns a winner, split, or human gate."
+    },
+    {
+      "class": "gap",
+      "routing": "Discoverable gaps stay factory-owned; only authority, access, risk or preference gaps reach the user."
+    },
+    {
+      "class": "stale",
+      "routing": "Stale material must be refreshed, marked bounded, or excluded before it can shape Product SOT."
+    }
+  ],
+  "resolution_policy": {
+    "source_resolution_required": true,
+    "factory_owns_discoverable_gaps": true,
+    "user_only_for_authority_access_risk_or_preference": true,
+    "no_chat_only_state": true,
+    "claim_resolution_required_before_product_sot": true,
+    "non_human_block_recovery": {
+      "factory_owned_repair_allowed": true,
+      "retry_policy": {
+        "max_attempts": 10,
+        "until": "the blocking source or readiness gate passes or a real human authority gate is required"
+      }
+    }
+  },
+  "next_artifacts": [
+    {
+      "artifact_type": "source_ledger",
+      "artifact_ref": "templates/reference-source-registry.json",
+      "required_before": "source_resolution",
+      "owner_worker": "source-ledger-worker",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "outcome_contract",
+      "artifact_ref": "templates/vfinal-factory-card.json#outcome_contract",
+      "required_before": "product_sot",
+      "owner_worker": "product-sot-planner",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "product_sot",
+      "artifact_ref": "templates/product-sot.json",
+      "required_before": "method_contract",
+      "owner_worker": "product-sot-planner",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "full_product_sot_scope_coverage",
+      "artifact_ref": "templates/full-product-sot-scope-coverage.json",
+      "required_before": "method_contract",
+      "owner_worker": "product-sot-planner",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "method_contract",
+      "artifact_ref": "templates/method-contract.json",
+      "required_before": "ready_gate",
+      "owner_worker": "factory-orchestrator",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "product_creation_plan",
+      "artifact_ref": "templates/product-creation-plan.json",
+      "required_before": "ready_gate",
+      "owner_worker": "decomposition-planner",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "product_implementation_readiness",
+      "artifact_ref": "templates/product-implementation-readiness.json",
+      "required_before": "execution",
+      "owner_worker": "factory-orchestrator",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "sdlc_feedback_loop",
+      "artifact_ref": "templates/factory-sdlc-feedback-loop.json",
+      "required_before": "execution",
+      "owner_worker": "skill-eval-distiller",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    }
+  ],
+  "required_gates": [
+    {
+      "gate": "Source Gate",
+      "authority": "source-ledger-worker",
+      "evidence_required": ["source refs", "claim resolution"],
+      "blocks_execution_when_missing": true
+    },
+    {
+      "gate": "Product SOT Gate",
+      "authority": "product-sot-planner",
+      "evidence_required": ["approved Product SOT", "full Product SOT scope coverage"],
+      "blocks_execution_when_missing": true
+    },
+    {
+      "gate": "Ready Gate",
+      "authority": "factory-orchestrator",
+      "evidence_required": ["product implementation readiness", "autonomy readiness"],
+      "blocks_execution_when_missing": true
+    }
+  ],
+  "required_workers": [
+    {
+      "worker_id": "factory-orchestrator",
+      "role": "route-owner",
+      "reason": "Maintains the selected route and blocks execution until required artifacts are present.",
+      "required_before_execution": true
+    },
+    {
+      "worker_id": "source-ledger-worker",
+      "role": "source-owner",
+      "reason": "Separates facts, inference, decisions, conflicts, stale material and gaps before Product SOT.",
+      "required_before_execution": true
+    },
+    {
+      "worker_id": "product-sot-planner",
+      "role": "product-scope-owner",
+      "reason": "Turns resolved source material into complete Product SOT scope.",
+      "required_before_execution": true
+    }
+  ],
+  "blocking_rules": {
+    "source_resolution_required": true,
+    "source_ledger_required": true,
+    "product_sot_worker_required": true,
+    "execution_blocked_until_required_artifacts_pass": true,
+    "human_gate_only_for_authority_access_risk_or_preference": true
+  },
+  "handoff": {
+    "next_artifact": "source_ledger",
+    "next_worker": "source-ledger-worker",
+    "next_safe_action": "Materialize the source ledger and resolve source claims before Product SOT or execution.",
+    "user_decision_required": false,
+    "factory_owned_next_step": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "operator_instance_may_hold_private_source": true
+  },
+  "acceptance": {
+    "source_resolution_packet_ready": true,
+    "product_sot_generated": false,
+    "execution_allowed": false,
+    "blocked_reason": "Source resolution handoff is ready, but execution remains blocked until source ledger, Product SOT, method contract, readiness and gates pass.",
+    "evidence_refs": [
+      "schemas/source-resolution-packet.schema.json",
+      "schemas/universal-signal-intake.schema.json",
+      "templates/factory-route-registry.json",
+      "templates/universal-signal-intake.json"
+    ]
+  }
+}

@@ -10,6 +10,7 @@ specialist worker still has to run and attach real evidence.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import importlib.util
 import json
@@ -5925,6 +5926,300 @@ def build_universal_signal_intake(
     }
 
 
+SOURCE_CLAIM_CLASSES = [
+    {
+        "class": "fact",
+        "routing": "Resolved facts become source-ledger claims with evidence refs before Product SOT.",
+    },
+    {
+        "class": "inference",
+        "routing": "Inferences stay marked as inference until accepted by the responsible factory worker.",
+    },
+    {
+        "class": "decision",
+        "routing": "Decisions require an owner, authority class and downstream artifact impact.",
+    },
+    {
+        "class": "conflict",
+        "routing": "Conflicts block promotion until source resolution assigns a winner, split, or human gate.",
+    },
+    {
+        "class": "gap",
+        "routing": "Discoverable gaps stay factory-owned; only authority, access, risk or preference gaps reach the user.",
+    },
+    {
+        "class": "stale",
+        "routing": "Stale material must be refreshed, marked bounded, or excluded before it can shape Product SOT.",
+    },
+]
+
+
+def _source_resolution_next_artifacts(intake: dict[str, Any]) -> list[dict[str, Any]]:
+    artifacts = intake.get("required_artifacts") if isinstance(intake.get("required_artifacts"), list) else []
+    next_artifacts: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        artifact_type = str(artifact.get("artifact_type") or "").strip()
+        if not artifact_type:
+            continue
+        seen.add(artifact_type)
+        next_artifacts.append(
+            {
+                "artifact_type": artifact_type,
+                "artifact_ref": str(artifact.get("artifact_ref") or artifact_ref_for_type(artifact_type)),
+                "required_before": str(artifact.get("required_before") or artifact_required_before(artifact_type)),
+                "owner_worker": str(artifact.get("owner_worker") or "factory-orchestrator"),
+                "status": "pending_factory_worker",
+                "blocks_execution_when_missing": bool(artifact.get("blocks_execution_when_missing") is True),
+            }
+        )
+    if "source_ledger" not in seen:
+        next_artifacts.insert(
+            0,
+            {
+                "artifact_type": "source_ledger",
+                "artifact_ref": artifact_ref_for_type("source_ledger"),
+                "required_before": artifact_required_before("source_ledger"),
+                "owner_worker": artifact_owner_for_type("source_ledger", {}),
+                "status": "pending_factory_worker",
+                "blocks_execution_when_missing": True,
+            },
+        )
+    return next_artifacts
+
+
+def _next_source_worker(packet_artifacts: list[dict[str, Any]]) -> str:
+    for artifact in packet_artifacts:
+        if artifact.get("artifact_type") == "source_ledger":
+            return str(artifact.get("owner_worker") or "source-ledger-worker")
+    return "source-ledger-worker"
+
+
+def build_source_resolution_packet(
+    intake: dict[str, Any],
+    *,
+    intake_ref_public_safe: str,
+    created_at: str | None = None,
+    packet_id: str | None = None,
+) -> dict[str, Any]:
+    intake_errors = validate_universal_signal_intake(intake)
+    if intake_errors:
+        raise ValueError("; ".join(intake_errors))
+
+    signal = intake.get("signal") if isinstance(intake.get("signal"), dict) else {}
+    classification = intake.get("classification") if isinstance(intake.get("classification"), dict) else {}
+    route = intake.get("route_decision") if isinstance(intake.get("route_decision"), dict) else {}
+    recovery = route.get("non_human_block_recovery") if isinstance(route.get("non_human_block_recovery"), dict) else {}
+    retry_policy = recovery.get("retry_policy") if isinstance(recovery.get("retry_policy"), dict) else {}
+    next_artifacts = _source_resolution_next_artifacts(intake)
+    next_worker = _next_source_worker(next_artifacts)
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    intake_id = str(intake.get("intake_id") or "intake")
+    needs_product_sot = bool(classification.get("needs_product_sot") is True)
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/source-resolution-packet.schema.json",
+        "record_type": "source_resolution_packet",
+        "packet_id": packet_id or f"source-resolution-{slug_for_ref(intake_id)}",
+        "created_at": created,
+        "factory_method_version": "OVERKILL_VFINAL",
+        "intake_ref_public_safe": intake_ref_public_safe,
+        "source_signal": {
+            "intake_id": intake_id,
+            "signal_type": str(signal.get("signal_type") or ""),
+            "request_type": str(classification.get("request_type") or ""),
+            "route_class": str(classification.get("route_class") or ""),
+            "target_surface": str(signal.get("target_surface") or ""),
+            "summary_public_safe": str(signal.get("summary_public_safe") or ""),
+            "signal_ref_public_safe": str(signal.get("signal_ref_public_safe") or ""),
+            "source_class": str(signal.get("source_class") or ""),
+            "sensitivity_class": str(signal.get("sensitivity_class") or ""),
+            "freshness": str(signal.get("freshness") or ""),
+            "risk_initial": str(classification.get("risk_initial") or ""),
+            "materiality": str(classification.get("materiality") or ""),
+            "needs_product_sot": needs_product_sot,
+        },
+        "source_claim_classes": copy.deepcopy(SOURCE_CLAIM_CLASSES),
+        "resolution_policy": {
+            "source_resolution_required": True,
+            "factory_owns_discoverable_gaps": True,
+            "user_only_for_authority_access_risk_or_preference": True,
+            "no_chat_only_state": True,
+            "claim_resolution_required_before_product_sot": True,
+            "non_human_block_recovery": {
+                "factory_owned_repair_allowed": True,
+                "retry_policy": {
+                    "max_attempts": int(retry_policy.get("max_attempts") or 1),
+                    "until": str(retry_policy.get("until") or "the blocking gate passes"),
+                },
+            },
+        },
+        "next_artifacts": next_artifacts,
+        "required_gates": copy.deepcopy(intake.get("required_gates") or []),
+        "required_workers": copy.deepcopy(intake.get("required_workers") or []),
+        "blocking_rules": {
+            "source_resolution_required": True,
+            "source_ledger_required": True,
+            "product_sot_worker_required": needs_product_sot,
+            "execution_blocked_until_required_artifacts_pass": True,
+            "human_gate_only_for_authority_access_risk_or_preference": True,
+        },
+        "handoff": {
+            "next_artifact": "source_ledger",
+            "next_worker": next_worker,
+            "next_safe_action": "Materialize the source ledger and resolve source claims before Product SOT or execution.",
+            "user_decision_required": False,
+            "factory_owned_next_step": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "source_resolution_packet_ready": True,
+            "product_sot_generated": False,
+            "execution_allowed": False,
+            "blocked_reason": (
+                "Source resolution handoff is ready, but execution remains blocked until source ledger, "
+                "Product SOT when required, method contract, readiness and gates pass."
+            ),
+            "evidence_refs": [
+                "schemas/source-resolution-packet.schema.json",
+                "schemas/universal-signal-intake.schema.json",
+                "templates/factory-route-registry.json",
+            ],
+        },
+    }
+
+
+def validate_source_resolution_packet(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("source-resolution-packet.schema.json")
+    if not schema:
+        return ["source_resolution_packet schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            packet,
+            "source_resolution_packet",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    intake_ref = str(packet.get("intake_ref_public_safe") or "").strip()
+    if intake_ref:
+        _validate_public_ref(intake_ref, "source_resolution_packet.intake_ref_public_safe", errors)
+
+    source_signal = packet.get("source_signal") if isinstance(packet.get("source_signal"), dict) else {}
+    signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
+    if signal_ref:
+        _validate_public_ref(signal_ref, "source_resolution_packet.source_signal.signal_ref_public_safe", errors)
+
+    claim_classes = {
+        str(item.get("class") or "").strip()
+        for item in packet.get("source_claim_classes", [])
+        if isinstance(item, dict)
+    }
+    missing_claim_classes = sorted({"fact", "inference", "decision", "conflict", "gap", "stale"} - claim_classes)
+    if missing_claim_classes:
+        errors.append("source_resolution_packet missing claim classes: " + ", ".join(missing_claim_classes))
+
+    resolution = packet.get("resolution_policy") if isinstance(packet.get("resolution_policy"), dict) else {}
+    if resolution.get("source_resolution_required") is not True:
+        errors.append("source_resolution_packet.source_resolution_required must be true")
+    if resolution.get("factory_owns_discoverable_gaps") is not True:
+        errors.append("source_resolution_packet discoverable gaps must be factory-owned")
+    if resolution.get("user_only_for_authority_access_risk_or_preference") is not True:
+        errors.append("source_resolution_packet user gate must be limited to authority, access, risk or preference")
+    if resolution.get("no_chat_only_state") is not True:
+        errors.append("source_resolution_packet no_chat_only_state must be true")
+    if resolution.get("claim_resolution_required_before_product_sot") is not True:
+        errors.append("source_resolution_packet claim resolution must precede Product SOT")
+    recovery = resolution.get("non_human_block_recovery") if isinstance(resolution.get("non_human_block_recovery"), dict) else {}
+    if recovery.get("factory_owned_repair_allowed") is not True:
+        errors.append("source_resolution_packet non-human block must return to factory-owned repair")
+    retry_policy = recovery.get("retry_policy") if isinstance(recovery.get("retry_policy"), dict) else {}
+    max_attempts = retry_policy.get("max_attempts")
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
+        errors.append("source_resolution_packet retry_policy.max_attempts must be >= 1")
+
+    artifacts = packet.get("next_artifacts") if isinstance(packet.get("next_artifacts"), list) else []
+    artifact_types = {
+        str(artifact.get("artifact_type") or "").strip()
+        for artifact in artifacts
+        if isinstance(artifact, dict)
+    }
+    if "source_ledger" not in artifact_types:
+        errors.append("source_resolution_packet requires source_ledger as a next artifact")
+    for index, artifact in enumerate(artifacts):
+        if not isinstance(artifact, dict):
+            continue
+        artifact_ref = str(artifact.get("artifact_ref") or "").strip()
+        if artifact_ref:
+            _validate_public_ref(artifact_ref, f"source_resolution_packet.next_artifacts[{index}].artifact_ref", errors)
+        if artifact.get("status") != "pending_factory_worker":
+            errors.append(f"source_resolution_packet.next_artifacts[{index}].status must be pending_factory_worker")
+        if artifact.get("blocks_execution_when_missing") is not True:
+            errors.append(
+                f"source_resolution_packet.next_artifacts[{index}].blocks_execution_when_missing must be true"
+            )
+        owner_worker = str(artifact.get("owner_worker") or "").strip()
+        if owner_worker and owner_worker not in WORKERS:
+            errors.append(
+                f"source_resolution_packet.next_artifacts[{index}].owner_worker must be a registered worker: {owner_worker}"
+            )
+
+    blocking_rules = packet.get("blocking_rules") if isinstance(packet.get("blocking_rules"), dict) else {}
+    for field in (
+        "source_resolution_required",
+        "source_ledger_required",
+        "execution_blocked_until_required_artifacts_pass",
+        "human_gate_only_for_authority_access_risk_or_preference",
+    ):
+        if blocking_rules.get(field) is not True:
+            errors.append(f"source_resolution_packet.blocking_rules.{field} must be true")
+    needs_product_sot = source_signal.get("needs_product_sot") is True
+    if needs_product_sot and blocking_rules.get("product_sot_worker_required") is not True:
+        errors.append("source_resolution_packet.blocking_rules.product_sot_worker_required must be true when Product SOT is required")
+    if not isinstance(blocking_rules.get("product_sot_worker_required"), bool):
+        errors.append("source_resolution_packet.blocking_rules.product_sot_worker_required must be boolean")
+
+    handoff = packet.get("handoff") if isinstance(packet.get("handoff"), dict) else {}
+    if handoff.get("next_artifact") != "source_ledger":
+        errors.append("source_resolution_packet.handoff.next_artifact must be source_ledger")
+    if handoff.get("factory_owned_next_step") is not True:
+        errors.append("source_resolution_packet.handoff.factory_owned_next_step must be true")
+
+    boundary = packet.get("public_private_boundary") if isinstance(packet.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("source_resolution_packet requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("source_resolution_packet must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("source_resolution_packet private context must stay outside the public repo")
+
+    acceptance = packet.get("acceptance") if isinstance(packet.get("acceptance"), dict) else {}
+    if acceptance.get("source_resolution_packet_ready") is not True:
+        errors.append("source_resolution_packet acceptance.source_resolution_packet_ready must be true")
+    if acceptance.get("product_sot_generated") is not False:
+        errors.append("source_resolution_packet must not claim Product SOT was generated")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("source_resolution_packet acceptance.execution_allowed must be false")
+    _validate_lifecycle_refs(
+        _list_items(acceptance.get("evidence_refs")),
+        "source_resolution_packet.acceptance.evidence_refs",
+        errors,
+    )
+
+    return errors
+
+
 def validate_universal_signal_golden_corpus(corpus: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     schemas = bundled_schemas()
@@ -11454,6 +11749,16 @@ def command_validate_signal_intake(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_source_resolution(args: argparse.Namespace) -> int:
+    errors = validate_source_resolution_packet(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_route_registry(args: argparse.Namespace) -> int:
     registry = load_route_registry(args.registry)
     if args.route_class:
@@ -11491,6 +11796,26 @@ def command_intake(args: argparse.Namespace) -> int:
             print(error, file=sys.stderr)
         return 1
     write_json(args.out, intake)
+    return 0
+
+
+def command_source_resolution(args: argparse.Namespace) -> int:
+    try:
+        packet = build_source_resolution_packet(
+            load_json_like(args.intake),
+            intake_ref_public_safe=args.intake_ref,
+            created_at=args.created_at,
+            packet_id=args.packet_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_source_resolution_packet(packet)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, packet)
     return 0
 
 
@@ -11920,6 +12245,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_signal_intake_parser.add_argument("path", type=Path)
     validate_signal_intake_parser.set_defaults(func=command_validate_signal_intake)
 
+    validate_source_resolution_parser = sub.add_parser("validate-source-resolution")
+    validate_source_resolution_parser.add_argument("path", type=Path)
+    validate_source_resolution_parser.set_defaults(func=command_validate_source_resolution)
+
     route_registry_parser = sub.add_parser("route-registry", help="Show the canonical Universal Signal route registry.")
     route_registry_parser.add_argument("--registry", type=Path, default=DEFAULT_ROUTE_REGISTRY_PATH)
     route_registry_parser.add_argument("--route-class")
@@ -11943,6 +12272,17 @@ def build_parser() -> argparse.ArgumentParser:
     intake_parser.add_argument("--intake-id")
     intake_parser.add_argument("--out", type=Path)
     intake_parser.set_defaults(func=command_intake)
+
+    source_resolution_parser = sub.add_parser(
+        "source-resolution",
+        help="Build a source-resolution handoff packet from a validated Universal Signal Intake.",
+    )
+    source_resolution_parser.add_argument("--intake", type=Path, required=True)
+    source_resolution_parser.add_argument("--intake-ref", default="external:sanitized-universal-signal-intake")
+    source_resolution_parser.add_argument("--created-at")
+    source_resolution_parser.add_argument("--packet-id")
+    source_resolution_parser.add_argument("--out", type=Path)
+    source_resolution_parser.set_defaults(func=command_source_resolution)
 
     validate_signal_corpus_parser = sub.add_parser("validate-signal-corpus")
     validate_signal_corpus_parser.add_argument("path", type=Path)
