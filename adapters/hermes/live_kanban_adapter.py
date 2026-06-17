@@ -48,6 +48,10 @@ VOLATILE_CONTRACT_KEYS = {
 }
 CANONICALIZATION_VERSION = "v1"
 IDEMPOTENCY_LINEAGE_POLICY = "base_identity_is_logical_lineage_contract_key_is_runtime_identity"
+READY_WORK_UNIT_DIRECT_BODY_LIMIT = 12000
+READY_WORK_UNIT_CONTEXT_TRANSPORT_MODE = "hermes_comment_chunks.v1"
+READY_WORK_UNIT_CONTEXT_CHUNK_AUTHOR = "overkill-factory-context"
+READY_WORK_UNIT_CONTEXT_CHUNK_SIZE = 5000
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -72,12 +76,31 @@ def default_runner(argv: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(argv, text=True, capture_output=True, env=env)  # nosec B603
 
 
+def safe_command_for_error(argv: list[str]) -> str:
+    redacted: list[str] = []
+    redact_next = False
+    for arg in argv:
+        if redact_next:
+            digest = hashlib.sha256(str(arg).encode("utf-8", errors="replace")).hexdigest()[:12]
+            redacted.append(f"<redacted len={len(str(arg))} sha256={digest}>")
+            redact_next = False
+            continue
+        redacted.append(str(arg))
+        if arg == "--body":
+            redact_next = True
+            continue
+        if len(str(arg)) > 500:
+            digest = hashlib.sha256(str(arg).encode("utf-8", errors="replace")).hexdigest()[:12]
+            redacted[-1] = f"<redacted-long-arg len={len(str(arg))} sha256={digest}>"
+    return " ".join(redacted)
+
+
 def run_checked(argv: list[str], runner: Runner = default_runner) -> subprocess.CompletedProcess[str]:
     completed = runner(argv)
     if completed.returncode != 0:
         raise RuntimeError(
             "command failed: "
-            + " ".join(argv)
+            + safe_command_for_error(argv)
             + "\nstdout:\n"
             + (completed.stdout or "")
             + "\nstderr:\n"
@@ -526,6 +549,18 @@ def task_readback_body(payload: dict[str, Any]) -> str:
     return str(task_readback_task(payload).get("body") or "")
 
 
+def task_readback_comments(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    comments = payload.get("comments")
+    if isinstance(comments, list):
+        return [comment for comment in comments if isinstance(comment, dict)]
+    task = payload.get("task")
+    if isinstance(task, dict):
+        nested = task.get("comments")
+        if isinstance(nested, list):
+            return [comment for comment in nested if isinstance(comment, dict)]
+    return []
+
+
 def task_dispatcher_workspace_ref(payload: dict[str, Any]) -> str:
     task = task_readback_task(payload)
     kind = str(task.get("workspace_kind") or task.get("workspace") or "").strip()
@@ -581,13 +616,66 @@ def ensure_ready_work_unit_readback_contract(
         raise RuntimeError(f"Hermes task {task_id} is not blocked after ready work-unit materialization")
     if task_readback_assignee(payload) != expected_assignee:
         raise RuntimeError(f"Hermes task {task_id} assignee readback does not match target profile")
-    try:
-        body = json.loads(task_readback_body(payload))
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Hermes task {task_id} body readback is not valid JSON") from exc
+    body = ready_work_unit_body(payload, task_id=task_id)
     if str(body.get("packet_id") or "").strip() != expected_packet_id:
         raise RuntimeError(f"Hermes task {task_id} body readback does not match ready work-unit packet")
     ensure_no_pre_dispatch_activity(payload, task_id=task_id)
+
+
+def ready_work_unit_body_transport_comments(*, payload: dict[str, Any], task_id: str, manifest: dict[str, Any]) -> list[str]:
+    transport = manifest.get("context_transport")
+    if not isinstance(transport, dict):
+        raise RuntimeError(f"Hermes task {task_id} body transport manifest is missing")
+    chunk_count = int(transport.get("chunk_count") or 0)
+    expected_digest = str(transport.get("sha256") or "").strip()
+    if chunk_count <= 0 or not expected_digest:
+        raise RuntimeError(f"Hermes task {task_id} body transport manifest is incomplete")
+
+    chunks_by_index: dict[int, str] = {}
+    for comment in task_readback_comments(payload):
+        if str(comment.get("author") or "").strip() != READY_WORK_UNIT_CONTEXT_CHUNK_AUTHOR:
+            continue
+        raw_body = str(comment.get("body") or comment.get("text") or comment.get("content") or "")
+        try:
+            body = json.loads(raw_body)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(body, dict):
+            continue
+        if body.get("context_transport") != READY_WORK_UNIT_CONTEXT_TRANSPORT_MODE:
+            continue
+        if str(body.get("packet_id") or "").strip() != str(manifest.get("packet_id") or "").strip():
+            continue
+        if str(body.get("sha256") or "").strip() != expected_digest:
+            continue
+        raw_index = body.get("chunk_index")
+        index = int(raw_index) if raw_index is not None else -1
+        if index < 0 or index >= chunk_count:
+            raise RuntimeError(f"Hermes task {task_id} body transport chunk index is out of range")
+        if index in chunks_by_index:
+            raise RuntimeError(f"Hermes task {task_id} body transport has duplicate chunk {index}")
+        chunks_by_index[index] = str(body.get("data") or "")
+
+    missing = [index for index in range(chunk_count) if index not in chunks_by_index]
+    if missing:
+        raise RuntimeError(f"Hermes task {task_id} body transport is missing chunks: {missing}")
+    chunks = [chunks_by_index[index] for index in range(chunk_count)]
+    joined = "".join(chunks)
+    actual_digest = hashlib.sha256(joined.encode("utf-8")).hexdigest()
+    if actual_digest != expected_digest:
+        raise RuntimeError(f"Hermes task {task_id} body transport sha256 does not match manifest")
+    return chunks
+
+
+def ready_work_unit_body_from_transport(*, payload: dict[str, Any], task_id: str, manifest: dict[str, Any]) -> dict[str, Any]:
+    chunks = ready_work_unit_body_transport_comments(payload=payload, task_id=task_id, manifest=manifest)
+    try:
+        body = json.loads("".join(chunks))
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Hermes task {task_id} reconstructed ready work-unit body is not valid JSON") from exc
+    if not isinstance(body, dict):
+        raise RuntimeError(f"Hermes task {task_id} reconstructed ready work-unit body is not a JSON object")
+    return body
 
 
 def ready_work_unit_body(payload: dict[str, Any], *, task_id: str) -> dict[str, Any]:
@@ -597,6 +685,12 @@ def ready_work_unit_body(payload: dict[str, Any], *, task_id: str) -> dict[str, 
         raise RuntimeError(f"Hermes task {task_id} body readback is not valid JSON") from exc
     if not isinstance(body, dict):
         raise RuntimeError(f"Hermes task {task_id} body readback is not a JSON object")
+    transport = body.get("context_transport")
+    if isinstance(transport, dict):
+        mode = str(transport.get("mode") or "").strip()
+        if mode == READY_WORK_UNIT_CONTEXT_TRANSPORT_MODE:
+            return ready_work_unit_body_from_transport(payload=payload, task_id=task_id, manifest=body)
+        raise RuntimeError(f"Hermes task {task_id} has unsupported ready work-unit body transport: {mode}")
     return body
 
 
@@ -933,6 +1027,73 @@ def create_task(
     return task_id
 
 
+def ready_work_unit_create_body_and_chunks(body_contract: dict[str, Any]) -> tuple[str, list[str]]:
+    full_body = compact_json_argument(body_contract)
+    if len(full_body) <= READY_WORK_UNIT_DIRECT_BODY_LIMIT:
+        return full_body, []
+
+    digest = hashlib.sha256(full_body.encode("utf-8")).hexdigest()
+    chunks = [
+        full_body[index : index + READY_WORK_UNIT_CONTEXT_CHUNK_SIZE]
+        for index in range(0, len(full_body), READY_WORK_UNIT_CONTEXT_CHUNK_SIZE)
+    ]
+    manifest = {
+        "packet_id": body_contract.get("packet_id"),
+        "packet_type": body_contract.get("packet_type"),
+        "work_unit_id": body_contract.get("work_unit_id"),
+        "context_transport": {
+            "mode": READY_WORK_UNIT_CONTEXT_TRANSPORT_MODE,
+            "author": READY_WORK_UNIT_CONTEXT_CHUNK_AUTHOR,
+            "encoding": "utf-8-json-chunks",
+            "chunk_count": len(chunks),
+            "sha256": digest,
+            "payload_type": "ready_work_unit_execution_request",
+            "instruction": (
+                "Reconstruct the full ready work-unit packet from durable Hermes comments "
+                "before execution; block if chunks are missing or digest mismatches."
+            ),
+        },
+    }
+    comment_bodies = [
+        compact_json_argument(
+            {
+                "context_transport": READY_WORK_UNIT_CONTEXT_TRANSPORT_MODE,
+                "packet_id": body_contract.get("packet_id"),
+                "work_unit_id": body_contract.get("work_unit_id"),
+                "chunk_index": index,
+                "chunk_count": len(chunks),
+                "sha256": digest,
+                "data": chunk,
+            }
+        )
+        for index, chunk in enumerate(chunks)
+    ]
+    return compact_json_argument(manifest), comment_bodies
+
+
+def post_ready_work_unit_context_chunks(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    chunks: list[str],
+    runner: Runner = default_runner,
+) -> None:
+    for chunk in chunks:
+        run_checked(
+            hermes_kanban(
+                hermes_bin,
+                board,
+                "comment",
+                "--author",
+                READY_WORK_UNIT_CONTEXT_CHUNK_AUTHOR,
+                task_id,
+                chunk,
+            ),
+            runner,
+        )
+
+
 def load_ready_work_unit_materialization_plan(path: Path) -> dict[str, Any]:
     plan = load_json(path)
     factoryctl = load_factoryctl()
@@ -965,7 +1126,8 @@ def create_ready_work_unit_task(
         raise RuntimeError("ready work-unit task must require final blocked status before dispatch")
 
     body_contract = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
-    ensure_non_empty_body(compact_json_argument(body_contract))
+    create_body, context_chunks = ready_work_unit_create_body_and_chunks(body_contract)
+    ensure_non_empty_body(create_body)
     target_assignee = str(create_policy.get("target_assignee_profile") or task.get("owner_worker") or "").strip()
     if not target_assignee:
         raise RuntimeError("ready work-unit task requires target_assignee_profile")
@@ -977,7 +1139,7 @@ def create_ready_work_unit_task(
                 "create",
                 str(task.get("title") or f"OF ready work unit {task.get('work_unit_id') or 'work-unit'}"),
                 "--body",
-                compact_json_argument(body_contract),
+                create_body,
                 "--idempotency-key",
                 str(task.get("idempotency_key") or ""),
                 "--created-by",
@@ -997,6 +1159,13 @@ def create_ready_work_unit_task(
             block_policy.get("blocked_reason")
             or "Overkill Factory ready work-unit runtime gate starts blocked until evidence passes."
         ),
+        runner=runner,
+    )
+    post_ready_work_unit_context_chunks(
+        hermes_bin=hermes_bin,
+        board=board,
+        task_id=task_id,
+        chunks=context_chunks,
         runner=runner,
     )
     blocked_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
