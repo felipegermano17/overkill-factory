@@ -86,8 +86,8 @@
       "idempotency_key": "overkill:ready-work-unit-template:work-unit-001:0123456789abcdef",
       "create_policy": {
         "create_without_dispatch": true,
-        "create_unassigned_first": true,
-        "assign_after_block_event_verified": true,
+        "create_with_assignee": true,
+        "documented_hermes_cli_shape": "hermes kanban create --assignee --initial-status blocked --json",
         "target_assignee_profile": "implementation-worker"
       },
       "block_policy": {
@@ -116,7 +116,6 @@
       "create each Hermes task without dispatch",
       "block each materialized task",
       "verify hermes kanban show --json contains a blocked event for each task",
-      "assign the target worker only after blocked-event readback",
       "dispatch only after the runtime gate records the verified blocked event evidence"
     ],
     "evidence_required": [

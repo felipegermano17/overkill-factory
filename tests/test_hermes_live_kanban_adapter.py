@@ -178,7 +178,7 @@ class FakeDispatchHermes:
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
 
 
-def write_route_readiness(path: Path) -> None:
+def write_route_readiness(path: Path, extra_workers: list[str] | None = None) -> None:
     workers = [
         "codex-security",
         "solana-quasar-auditor",
@@ -193,6 +193,9 @@ def write_route_readiness(path: Path) -> None:
         "handoff-packer",
         "supply-chain-gate",
     ]
+    for worker in extra_workers or []:
+        if worker not in workers:
+            workers.append(worker)
     path.write_text(
         json.dumps(
             {
@@ -234,6 +237,87 @@ def assert_live_adapter_result_schema(testcase: unittest.TestCase, result: dict[
 
 
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
+    def test_materialize_ready_work_units_creates_blocked_tasks_without_dispatch(self) -> None:
+        fake = FakeHermes()
+        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness = tmp_path / "route-readiness.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness, extra_workers=["implementation-worker"])
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness),
+                ]
+            )
+            result = adapter.materialize_ready_work_units(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["mode"], "materialize-ready-work-units")
+        self.assertFalse(result["dry_run"])
+        self.assertEqual(result["ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        create_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "create"]
+        block_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "block"]
+        dispatch_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "dispatch"]
+        self.assertEqual(len(create_calls), 1)
+        self.assertIn("--assignee", create_calls[0])
+        self.assertIn("implementation-worker", create_calls[0])
+        self.assertIn("--initial-status", create_calls[0])
+        self.assertIn("blocked", create_calls[0])
+        self.assertEqual(len(block_calls), 1)
+        self.assertEqual(dispatch_calls, [])
+        materialized_task_id = next(iter(fake.tasks))
+        self.assertEqual(fake.tasks[materialized_task_id]["status"], "blocked")
+        self.assertTrue(fake.tasks[materialized_task_id]["events"])
+
+    def test_materialize_ready_work_units_dry_run_does_not_touch_hermes(self) -> None:
+        fake = FakeHermes()
+        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_path = Path(tmp) / "plan.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--dry-run",
+                    "--ensure-board",
+                ]
+            )
+            result = adapter.materialize_ready_work_units(args, runner=fake)
+
+        self.assertTrue(result["dry_run"])
+        self.assertTrue(result["board_create_requested"])
+        self.assertFalse(result["board_create_checked"])
+        self.assertEqual(fake.calls, [])
+
+    def test_materialize_ready_work_units_rejects_unsafe_plan(self) -> None:
+        fake = FakeHermes()
+        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan["tasks"][0]["dispatch_policy"]["dispatch_allowed_without_runtime_gate"] = True
+        with tempfile.TemporaryDirectory() as tmp:
+            plan_path = Path(tmp) / "plan.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--dry-run",
+                ]
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "invalid ready work-unit Hermes materialization plan"):
+                adapter.materialize_ready_work_units(args, runner=fake)
+
+        self.assertEqual(fake.calls, [])
+
     def test_materialize_schema_requires_recovery_and_idempotency_fields_for_real_run(self) -> None:
         schema = json.loads((ROOT / "schemas" / "hermes-live-adapter-result.schema.json").read_text(encoding="utf-8"))
         result = {

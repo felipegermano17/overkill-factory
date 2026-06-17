@@ -212,14 +212,14 @@
           "type": "object",
           "required": [
             "create_without_dispatch",
-            "create_unassigned_first",
-            "assign_after_block_event_verified",
+            "create_with_assignee",
+            "documented_hermes_cli_shape",
             "target_assignee_profile"
           ],
           "properties": {
             "create_without_dispatch": { "const": true },
-            "create_unassigned_first": { "const": true },
-            "assign_after_block_event_verified": { "const": true },
+            "create_with_assignee": { "const": true },
+            "documented_hermes_cli_shape": { "const": "hermes kanban create --assignee --initial-status blocked --json" },
             "target_assignee_profile": { "type": "string", "minLength": 3 }
           },
           "additionalProperties": false

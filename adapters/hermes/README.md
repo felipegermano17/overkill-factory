@@ -178,11 +178,23 @@ python scripts/factoryctl.py ready-work-unit-hermes-plan \
 ```
 
 The plan is not runtime execution proof and does not mutate Hermes. It defines
-the exact runtime gate for each ready work unit: create the task without
-dispatch, block it, verify a real `blocked` event through Hermes readback, then
-assign and dispatch only after that gate evidence exists. Complete-product
-claims remain forbidden until all Product SOT scope is reconciled through
-worker results, review and Receipt Five.
+the exact runtime gate for each ready work unit: create the task with the
+documented Hermes `--assignee` and `--initial-status blocked` shape, block it,
+verify a real `blocked` event through Hermes readback, and dispatch only after
+that gate evidence exists. Complete-product claims remain forbidden until all
+Product SOT scope is reconciled through worker results, review and Receipt Five.
+
+When the runtime is reachable, the live adapter can consume that plan:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py materialize-ready-work-units \
+  --plan path/to/ready-work-unit-hermes-plan.json \
+  --route-readiness path/to/route-readiness.json \
+  --out path/to/live-ready-work-unit-materialization-result.json
+```
+
+This command creates blocked Hermes tasks only. It does not dispatch workers,
+complete tasks, approve Receipt Five, or claim product completion.
 
 ## Dispatch Reporting
 
