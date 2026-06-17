@@ -44,6 +44,8 @@ factoryctl intake --route-class bug_repair --request-type bug --signal-type bug_
 factoryctl validate-signal-intake templates/universal-signal-intake.json
 factoryctl source-resolution --intake templates/universal-signal-intake.json --intake-ref templates/universal-signal-intake.json --out .tmp/source-resolution-packet.json
 factoryctl validate-source-resolution templates/source-resolution-packet.json
+factoryctl source-ledger --source-resolution templates/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json
+factoryctl validate-source-ledger templates/product-source-ledger.json
 factoryctl validate-signal-corpus templates/universal-signal-golden-corpus.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl v1-completion-gate --release-preflight .tmp/factory-runs/release/release-integration-preflight.json --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
@@ -69,9 +71,12 @@ policy and Hermes boundary. `intake` builds a valid Universal Signal Intake
 from that registry without executing work. `source-resolution` turns a valid
 intake into the next factory-owned source-resolution handoff packet, keeping
 Product SOT ungenerated and execution blocked until the source ledger, route
-artifacts, gates and workers pass. `validate-signal-corpus` and
-`signal-coverage` prove that the public Golden Corpus covers every known route
-without treating contract coverage as production readiness.
+artifacts, gates and workers pass. `source-ledger` materializes that handoff as
+a product source ledger with public-safe refs, claim table, unresolved gaps and
+the next factory-owned artifact. It still does not generate Product SOT or allow
+execution. `validate-signal-corpus` and `signal-coverage` prove that the public
+Golden Corpus covers every known route without treating contract coverage as
+production readiness.
 
 `v1-completion-gate` is the finish-line gate for the public Factory v1 kernel.
 It does not search forever for new work. It requires current release preflight,
