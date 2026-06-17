@@ -49,6 +49,7 @@
         "source_refs_exist",
         "worker_count",
         "stage_count",
+        "map_fidelity",
         "risk_tiers",
         "source_of_truth_disclaimer",
         "no_runtime_proof_claim"
@@ -73,7 +74,66 @@
         "Mapa != Prova",
         "Hermes segue como fonte da verdade",
         "não provam entrega"
-      ]
+      ],
+      "fidelity_contract": {
+        "workflow_catalog_ref": "docs/factory-workflow.catalog.json",
+        "stage_agent_map_ref": "docs/agents/factory-stage-agent-map.md",
+        "required_workflow_phase_ids": [
+          "__all__"
+        ],
+        "required_template_refs": [
+          "templates/universal-signal-intake.json",
+          "templates/product-creation-plan.json",
+          "templates/product-implementation-readiness.json",
+          "templates/professional-design-process.json",
+          "templates/product-delivery-quality-profile.json"
+        ],
+        "required_terms": [
+          "Universal Signal Intake",
+          "full Product SOT scope coverage",
+          "Specialist Research Decision",
+          "Product Creation Plan",
+          "Product Experience Gate",
+          "Product Implementation Readiness",
+          "Factory v1 Completion Gate",
+          "Mapa != Prova"
+        ],
+        "required_stage_nodes": [
+          { "node_id": "intake", "title": "Universal Signal Intake", "required_output_terms": ["Tipo de sinal"] },
+          { "node_id": "ledger", "title": "Source Ledger" },
+          { "node_id": "resolution", "title": "Source Resolution", "required_output_terms": ["Specialist Research Decision"] },
+          { "node_id": "outcome", "title": "Resultado e Descoberta" },
+          { "node_id": "sot", "title": "Product SOT", "required_output_terms": ["full Product SOT scope coverage"] },
+          { "node_id": "router", "title": "Roteador de Método" },
+          { "node_id": "contract", "title": "Contrato de Método" },
+          { "node_id": "packs", "title": "Product e Surface Packs" },
+          { "node_id": "securityplan", "title": "Arquitetura de Segurança" },
+          { "node_id": "devplan", "title": "Product Creation Plan", "required_output_terms": ["Product Creation Plan", "Work units"] },
+          { "node_id": "experience", "title": "Product Experience Gate", "required_output_terms": ["professional_design_process", "surface_evidence_profile", "product_delivery_quality_profile"] },
+          { "node_id": "dataeval", "title": "Dados e Evals" },
+          { "node_id": "specgraph", "title": "Grafo de Especificação" },
+          { "node_id": "riskgates", "title": "Gates de Risco" },
+          { "node_id": "loop", "title": "Plano de Loops" },
+          { "node_id": "autonomy", "title": "Prontidão de Autonomia" },
+          { "node_id": "ready", "title": "Product Implementation Readiness" },
+          { "node_id": "controltower", "title": "Projeção da Control Tower" },
+          { "node_id": "humangate", "title": "Gate Humano" },
+          { "node_id": "runtime", "title": "Runtime Hermes" },
+          { "node_id": "workerresult", "title": "Resultado do Agente" },
+          { "node_id": "verification", "title": "Verificação" },
+          { "node_id": "review", "title": "Revisão Independente" },
+          { "node_id": "closure", "title": "Resumo de Fechamento" },
+          { "node_id": "receipt", "title": "Receipt Five" },
+          { "node_id": "completion", "title": "Factory v1 Completion Gate", "required_output_terms": ["v1 blocker", "vNext ou not planned"] },
+          { "node_id": "prodops", "title": "Operação de Produção" },
+          { "node_id": "release", "title": "Release ou Bloqueio" },
+          { "node_id": "monitoring", "title": "Monitoramento e Suporte" },
+          { "node_id": "learnback", "title": "Learnback" },
+          { "node_id": "maturity", "title": "Auditoria de Maturidade" },
+          { "node_id": "readiness", "title": "Mapa != Prova" },
+          { "node_id": "r4", "title": "Rigor R4" }
+        ]
+      }
     },
     {
       "surface_id": "visual-map-v1.0.1-svg",
@@ -91,6 +151,7 @@
       "claim_checks": [
         "metadata",
         "source_refs_exist",
+        "map_fidelity",
         "risk_tiers",
         "source_of_truth_disclaimer",
         "no_runtime_proof_claim"
@@ -102,7 +163,25 @@
         "Factory v1 Completion Gate",
         "not runtime evidence",
         "not a source of truth"
-      ]
+      ],
+      "fidelity_contract": {
+        "workflow_catalog_ref": "docs/factory-workflow.catalog.json",
+        "stage_agent_map_ref": "docs/agents/factory-stage-agent-map.md",
+        "required_workflow_phase_ids": [],
+        "required_template_refs": [
+          "templates/universal-signal-intake.json",
+          "templates/product-creation-plan.json",
+          "templates/product-implementation-readiness.json"
+        ],
+        "required_terms": [
+          "Universal Signal Intake",
+          "Product Creation Plan",
+          "Product Implementation Readiness",
+          "Factory v1 Completion Gate",
+          "not runtime evidence",
+          "not a source of truth"
+        ]
+      }
     },
     {
       "surface_id": "visuals-index",
