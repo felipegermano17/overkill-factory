@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/source-resolution-packet.schema.json",
+  "title": "Overkill Factory Source Resolution Packet",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "packet_id",
+    "created_at",
+    "factory_method_version",
+    "intake_ref_public_safe",
+    "source_signal",
+    "source_claim_classes",
+    "resolution_policy",
+    "next_artifacts",
+    "required_gates",
+    "required_workers",
+    "blocking_rules",
+    "handoff",
+    "public_private_boundary",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/source-resolution-packet.schema.json"
+    },
+    "record_type": {
+      "const": "source_resolution_packet"
+    },
+    "packet_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "intake_ref_public_safe": {
+      "type": "string",
+      "minLength": 3
+    },
+    "source_signal": {
+      "type": "object",
+      "required": [
+        "intake_id",
+        "signal_type",
+        "request_type",
+        "route_class",
+        "target_surface",
+        "summary_public_safe",
+        "signal_ref_public_safe",
+        "source_class",
+        "sensitivity_class",
+        "freshness",
+        "risk_initial",
+        "materiality",
+        "needs_product_sot"
+      ],
+      "properties": {
+        "intake_id": { "type": "string", "minLength": 3 },
+        "signal_type": { "type": "string", "minLength": 3 },
+        "request_type": { "type": "string", "minLength": 3 },
+        "route_class": { "type": "string", "minLength": 3 },
+        "target_surface": { "type": "string", "minLength": 3 },
+        "summary_public_safe": { "type": "string", "minLength": 6 },
+        "signal_ref_public_safe": { "type": "string", "minLength": 3 },
+        "source_class": { "type": "string", "minLength": 3 },
+        "sensitivity_class": { "type": "string", "minLength": 3 },
+        "freshness": { "type": "string", "minLength": 3 },
+        "risk_initial": { "type": "string", "minLength": 2 },
+        "materiality": { "type": "string", "minLength": 3 },
+        "needs_product_sot": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "source_claim_classes": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["class", "routing"],
+        "properties": {
+          "class": {
+            "enum": ["fact", "inference", "decision", "conflict", "gap", "stale"]
+          },
+          "routing": {
+            "type": "string",
+            "minLength": 6
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "resolution_policy": {
+      "type": "object",
+      "required": [
+        "source_resolution_required",
+        "factory_owns_discoverable_gaps",
+        "user_only_for_authority_access_risk_or_preference",
+        "no_chat_only_state",
+        "claim_resolution_required_before_product_sot",
+        "non_human_block_recovery"
+      ],
+      "properties": {
+        "source_resolution_required": { "const": true },
+        "factory_owns_discoverable_gaps": { "const": true },
+        "user_only_for_authority_access_risk_or_preference": { "const": true },
+        "no_chat_only_state": { "const": true },
+        "claim_resolution_required_before_product_sot": { "const": true },
+        "non_human_block_recovery": {
+          "type": "object",
+          "required": ["factory_owned_repair_allowed", "retry_policy"],
+          "properties": {
+            "factory_owned_repair_allowed": { "const": true },
+            "retry_policy": {
+              "type": "object",
+              "required": ["max_attempts", "until"],
+              "properties": {
+                "max_attempts": { "type": "integer", "minimum": 1 },
+                "until": { "type": "string", "minLength": 6 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "next_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_type",
+          "artifact_ref",
+          "required_before",
+          "owner_worker",
+          "status",
+          "blocks_execution_when_missing"
+        ],
+        "properties": {
+          "artifact_type": { "type": "string", "minLength": 3 },
+          "artifact_ref": { "type": "string", "minLength": 3 },
+          "required_before": {
+            "enum": [
+              "source_resolution",
+              "product_sot",
+              "method_contract",
+              "ready_gate",
+              "execution",
+              "verification",
+              "release",
+              "completion"
+            ]
+          },
+          "owner_worker": { "type": "string", "minLength": 3 },
+          "status": {
+            "enum": [
+              "pending_factory_worker",
+              "blocked",
+              "not_required"
+            ]
+          },
+          "blocks_execution_when_missing": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required_gates": { "type": "array", "minItems": 1 },
+    "required_workers": { "type": "array", "minItems": 1 },
+    "blocking_rules": {
+      "type": "object",
+      "required": [
+        "source_resolution_required",
+        "source_ledger_required",
+        "product_sot_worker_required",
+        "execution_blocked_until_required_artifacts_pass",
+        "human_gate_only_for_authority_access_risk_or_preference"
+      ],
+      "properties": {
+        "source_resolution_required": { "const": true },
+        "source_ledger_required": { "const": true },
+        "product_sot_worker_required": { "type": "boolean" },
+        "execution_blocked_until_required_artifacts_pass": { "const": true },
+        "human_gate_only_for_authority_access_risk_or_preference": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "next_artifact",
+        "next_worker",
+        "next_safe_action",
+        "user_decision_required",
+        "factory_owned_next_step"
+      ],
+      "properties": {
+        "next_artifact": { "type": "string", "minLength": 3 },
+        "next_worker": { "type": "string", "minLength": 3 },
+        "next_safe_action": { "type": "string", "minLength": 6 },
+        "user_decision_required": { "type": "boolean" },
+        "factory_owned_next_step": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo",
+        "operator_instance_may_hold_private_source"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true },
+        "operator_instance_may_hold_private_source": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "source_resolution_packet_ready",
+        "product_sot_generated",
+        "execution_allowed",
+        "blocked_reason",
+        "evidence_refs"
+      ],
+      "properties": {
+        "source_resolution_packet_ready": { "const": true },
+        "product_sot_generated": { "const": false },
+        "execution_allowed": { "const": false },
+        "blocked_reason": { "type": "string", "minLength": 6 },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

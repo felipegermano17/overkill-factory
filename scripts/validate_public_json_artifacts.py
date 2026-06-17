@@ -1064,6 +1064,104 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "source_resolution_packet":
+        intake_ref = str(data.get("intake_ref_public_safe") or "").strip()
+        reason = public_artifact_ref_error(intake_ref)
+        if reason:
+            errors.append(f"{at}.intake_ref_public_safe: {reason}")
+        source_signal = data.get("source_signal") if isinstance(data.get("source_signal"), dict) else {}
+        signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
+        reason = public_artifact_ref_error(signal_ref)
+        if reason:
+            errors.append(f"{at}.source_signal.signal_ref_public_safe: {reason}")
+        claim_classes = {
+            str(item.get("class") or "").strip()
+            for item in data.get("source_claim_classes", [])
+            if isinstance(item, dict)
+        }
+        missing_claim_classes = sorted({"fact", "inference", "decision", "conflict", "gap", "stale"} - claim_classes)
+        if missing_claim_classes:
+            errors.append(f"{at}: source_resolution_packet missing claim classes: " + ", ".join(missing_claim_classes))
+        resolution = data.get("resolution_policy") if isinstance(data.get("resolution_policy"), dict) else {}
+        if resolution.get("source_resolution_required") is not True:
+            errors.append(f"{at}: source_resolution_packet source_resolution_required must be true")
+        if resolution.get("factory_owns_discoverable_gaps") is not True:
+            errors.append(f"{at}: source_resolution_packet discoverable gaps must be factory-owned")
+        if resolution.get("user_only_for_authority_access_risk_or_preference") is not True:
+            errors.append(f"{at}: source_resolution_packet user gate must be limited to authority, access, risk or preference")
+        if resolution.get("no_chat_only_state") is not True:
+            errors.append(f"{at}: source_resolution_packet no_chat_only_state must be true")
+        if resolution.get("claim_resolution_required_before_product_sot") is not True:
+            errors.append(f"{at}: source_resolution_packet claim resolution must precede Product SOT")
+        recovery = resolution.get("non_human_block_recovery") if isinstance(resolution.get("non_human_block_recovery"), dict) else {}
+        if recovery.get("factory_owned_repair_allowed") is not True:
+            errors.append(f"{at}: source_resolution_packet non-human block must return to factory-owned repair")
+        retry_policy = recovery.get("retry_policy") if isinstance(recovery.get("retry_policy"), dict) else {}
+        max_attempts = retry_policy.get("max_attempts")
+        if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
+            errors.append(f"{at}: source_resolution_packet retry_policy.max_attempts must be >= 1")
+        artifacts = data.get("next_artifacts") if isinstance(data.get("next_artifacts"), list) else []
+        artifact_types = {
+            str(artifact.get("artifact_type") or "").strip()
+            for artifact in artifacts
+            if isinstance(artifact, dict)
+        }
+        if "source_ledger" not in artifact_types:
+            errors.append(f"{at}: source_resolution_packet requires source_ledger as a next artifact")
+        for index, artifact in enumerate(artifacts):
+            if not isinstance(artifact, dict):
+                continue
+            artifact_ref = str(artifact.get("artifact_ref") or "").strip()
+            reason = public_artifact_ref_error(artifact_ref)
+            if reason:
+                errors.append(f"{at}.next_artifacts[{index}].artifact_ref: {reason}")
+            if artifact.get("status") != "pending_factory_worker":
+                errors.append(f"{at}.next_artifacts[{index}].status must be pending_factory_worker")
+            if artifact.get("blocks_execution_when_missing") is not True:
+                errors.append(f"{at}.next_artifacts[{index}].blocks_execution_when_missing must be true")
+            owner_worker = str(artifact.get("owner_worker") or "").strip()
+            if owner_worker and owner_worker not in public_worker_ids():
+                errors.append(f"{at}.next_artifacts[{index}].owner_worker must be a registered worker: {owner_worker}")
+        blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
+        for field in (
+            "source_resolution_required",
+            "source_ledger_required",
+            "execution_blocked_until_required_artifacts_pass",
+            "human_gate_only_for_authority_access_risk_or_preference",
+        ):
+            if blocking_rules.get(field) is not True:
+                errors.append(f"{at}.blocking_rules.{field} must be true")
+        needs_product_sot = source_signal.get("needs_product_sot") is True
+        if needs_product_sot and blocking_rules.get("product_sot_worker_required") is not True:
+            errors.append(
+                f"{at}.blocking_rules.product_sot_worker_required must be true when Product SOT is required"
+            )
+        if not isinstance(blocking_rules.get("product_sot_worker_required"), bool):
+            errors.append(f"{at}.blocking_rules.product_sot_worker_required must be boolean")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        if handoff.get("next_artifact") != "source_ledger":
+            errors.append(f"{at}: source_resolution_packet.handoff.next_artifact must be source_ledger")
+        if handoff.get("factory_owned_next_step") is not True:
+            errors.append(f"{at}: source_resolution_packet.handoff.factory_owned_next_step must be true")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: source_resolution_packet requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: source_resolution_packet must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: source_resolution_packet private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("source_resolution_packet_ready") is not True:
+            errors.append(f"{at}: source_resolution_packet acceptance.source_resolution_packet_ready must be true")
+        if acceptance.get("product_sot_generated") is not False:
+            errors.append(f"{at}: source_resolution_packet must not claim Product SOT was generated")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: source_resolution_packet acceptance.execution_allowed must be false")
+        evidence_refs = acceptance.get("evidence_refs") if isinstance(acceptance.get("evidence_refs"), list) else []
+        for index, ref in enumerate(evidence_refs):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_v1_completion_gate":

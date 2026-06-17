@@ -123,6 +123,135 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
         self.assertEqual(result, 0)
 
+    def test_source_resolution_packet_from_intake_is_valid(self) -> None:
+        intake = signal_intake()
+
+        packet = factoryctl.build_source_resolution_packet(
+            intake,
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+
+        self.assertEqual(factoryctl.validate_source_resolution_packet(packet), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(packet, "$"), [])
+        self.assertEqual(packet["record_type"], "source_resolution_packet")
+        self.assertEqual(packet["source_signal"]["intake_id"], intake["intake_id"])
+        self.assertEqual(packet["handoff"]["next_artifact"], "source_ledger")
+        self.assertTrue(packet["handoff"]["factory_owned_next_step"])
+
+    def test_source_resolution_packet_keeps_product_sot_uncreated(self) -> None:
+        packet = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+
+        self.assertFalse(packet["acceptance"]["product_sot_generated"])
+        self.assertFalse(packet["acceptance"]["execution_allowed"])
+        self.assertTrue(packet["blocking_rules"]["product_sot_worker_required"])
+        product_sot_artifacts = [
+            artifact for artifact in packet["next_artifacts"] if artifact["artifact_type"] == "product_sot"
+        ]
+        self.assertEqual(len(product_sot_artifacts), 1)
+        self.assertEqual(product_sot_artifacts[0]["status"], "pending_factory_worker")
+
+    def test_source_resolution_packet_does_not_require_product_sot_for_bug_route(self) -> None:
+        intake = factoryctl.build_universal_signal_intake(
+            route_class="bug_repair",
+            request_type="bug",
+            signal_type="bug_report",
+            summary_public_safe="Representative bug signal should enter source resolution without Product SOT.",
+            signal_ref_public_safe="external:sanitized-bug-signal",
+            target_surface="bug-target",
+            owner="factory-orchestrator",
+            source_class="operator_supplied",
+            sensitivity_class="public_safe",
+            freshness="fresh",
+            risk_initial="R2",
+            materiality="material",
+            created_at="2026-06-17T00:00:00+00:00",
+            intake_id="intake-bug-repair",
+        )
+
+        packet = factoryctl.build_source_resolution_packet(
+            intake,
+            intake_ref_public_safe="external:sanitized-bug-intake",
+        )
+
+        self.assertFalse(packet["source_signal"]["needs_product_sot"])
+        self.assertFalse(packet["blocking_rules"]["product_sot_worker_required"])
+        self.assertFalse(any(artifact["artifact_type"] == "product_sot" for artifact in packet["next_artifacts"]))
+
+    def test_source_resolution_packet_rejects_invalid_intake(self) -> None:
+        intake = signal_intake()
+        intake["normalization"]["source_resolution_required"] = False
+
+        with self.assertRaisesRegex(ValueError, "source_resolution_required"):
+            factoryctl.build_source_resolution_packet(
+                intake,
+                intake_ref_public_safe="external:sanitized-universal-signal-intake",
+            )
+
+    def test_source_resolution_cli_generates_packet(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            intake_path = Path(tmpdir) / "signal-intake.json"
+            out_path = Path(tmpdir) / "source-resolution-packet.json"
+            intake_path.write_text(json.dumps(signal_intake()), encoding="utf-8")
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "source-resolution",
+                    "--intake",
+                    str(intake_path),
+                    "--intake-ref",
+                    "external:sanitized-universal-signal-intake",
+                    "--out",
+                    str(out_path),
+                ]
+            )
+
+            packet = json.loads(out_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(packet["record_type"], "source_resolution_packet")
+        self.assertEqual(factoryctl.validate_source_resolution_packet(packet), [])
+
+    def test_source_resolution_runner_covers_representative_signal_routes(self) -> None:
+        cases = [
+            ("product_creation", "product_new", "product_paper"),
+            ("ux_product_experience", "ux_ui", "ux_ui_request"),
+            ("bug_repair", "bug", "bug_report"),
+            ("incident_response", "incident", "incident"),
+            ("feature_delivery", "feature", "feature_idea"),
+        ]
+
+        for route_class, request_type, signal_type in cases:
+            with self.subTest(route_class=route_class):
+                intake = factoryctl.build_universal_signal_intake(
+                    route_class=route_class,
+                    request_type=request_type,
+                    signal_type=signal_type,
+                    summary_public_safe=f"Representative {route_class} signal for source resolution runner coverage.",
+                    signal_ref_public_safe=f"external:sanitized-{route_class}-signal",
+                    target_surface=f"{route_class}-target",
+                    owner="factory-orchestrator",
+                    source_class="operator_supplied",
+                    sensitivity_class="public_safe",
+                    freshness="fresh",
+                    risk_initial="R2",
+                    materiality="material",
+                    created_at="2026-06-17T00:00:00+00:00",
+                    intake_id=f"intake-{route_class}",
+                )
+
+                packet = factoryctl.build_source_resolution_packet(
+                    intake,
+                    intake_ref_public_safe=f"external:sanitized-{route_class}-intake",
+                )
+
+                self.assertEqual(factoryctl.validate_source_resolution_packet(packet), [])
+                self.assertTrue(packet["handoff"]["factory_owned_next_step"])
+                self.assertFalse(packet["acceptance"]["execution_allowed"])
+                self.assertEqual(packet["blocking_rules"]["source_resolution_required"], True)
+
 
 if __name__ == "__main__":
     unittest.main()
