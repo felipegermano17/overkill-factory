@@ -4,28 +4,79 @@
   "title": "Overkill Factory Outcome Contract",
   "type": "object",
   "required": [
+    "$schema",
+    "record_type",
+    "contract_id",
+    "created_at",
+    "factory_method_version",
+    "source_ledger_ref",
+    "source_signal",
     "outcome",
     "users_or_actors",
     "problem",
     "success_signals",
     "non_goals",
     "open_questions",
+    "evidence_refs",
     "behavior_change",
     "risk_signals",
     "assumptions",
     "human_questions",
-    "discovery_depth"
+    "discovery_depth",
+    "blocking_rules",
+    "handoff",
+    "public_private_boundary",
+    "acceptance"
   ],
   "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/outcome-contract.schema.json"
+    },
+    "record_type": {
+      "const": "outcome_contract"
+    },
+    "contract_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "source_ledger_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "source_signal": {
+      "type": "object",
+      "required": [
+        "intake_id",
+        "signal_type",
+        "request_type",
+        "route_class",
+        "target_surface",
+        "summary_public_safe",
+        "signal_ref_public_safe",
+        "source_class",
+        "sensitivity_class",
+        "freshness",
+        "risk_initial",
+        "materiality",
+        "needs_product_sot"
+      ],
+      "additionalProperties": true
+    },
     "outcome": {
       "type": "string",
       "minLength": 3
     },
     "users_or_actors": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 }
     },
     "problem": {
       "type": "string",
@@ -33,27 +84,21 @@
     },
     "success_signals": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
     },
     "non_goals": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "items": { "type": "string", "minLength": 3 }
     },
     "open_questions": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "items": { "type": "string", "minLength": 3 }
     },
     "evidence_refs": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
     },
     "behavior_change": {
       "type": "string",
@@ -61,31 +106,94 @@
     },
     "risk_signals": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
     },
     "assumptions": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "items": { "type": "string", "minLength": 3 }
     },
     "human_questions": {
       "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "items": { "type": "string", "minLength": 3 }
     },
     "discovery_depth": {
-      "enum": [
-        "none",
-        "light",
-        "standard",
-        "deep",
-        "research_required"
-      ]
+      "enum": ["none", "light", "standard", "deep", "research_required"]
+    },
+    "blocking_rules": {
+      "type": "object",
+      "required": [
+        "source_ledger_required",
+        "product_sot_blocked_until_outcome_reviewed",
+        "execution_blocked_until_required_artifacts_pass",
+        "raw_private_evidence_must_stay_external",
+        "human_gate_only_for_authority_access_risk_or_preference"
+      ],
+      "properties": {
+        "source_ledger_required": { "const": true },
+        "product_sot_blocked_until_outcome_reviewed": { "type": "boolean" },
+        "execution_blocked_until_required_artifacts_pass": { "const": true },
+        "raw_private_evidence_must_stay_external": { "const": true },
+        "human_gate_only_for_authority_access_risk_or_preference": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "next_artifact",
+        "next_worker",
+        "next_safe_action",
+        "user_decision_required",
+        "factory_owned_next_step"
+      ],
+      "properties": {
+        "next_artifact": { "type": "string", "minLength": 3 },
+        "next_worker": { "type": "string", "minLength": 3 },
+        "next_safe_action": { "type": "string", "minLength": 6 },
+        "user_decision_required": { "type": "boolean" },
+        "factory_owned_next_step": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo",
+        "operator_instance_may_hold_private_source"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true },
+        "operator_instance_may_hold_private_source": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "outcome_contract_created",
+        "product_sot_generated",
+        "execution_allowed",
+        "blocked_reason",
+        "evidence_refs"
+      ],
+      "properties": {
+        "outcome_contract_created": { "const": true },
+        "product_sot_generated": { "const": false },
+        "execution_allowed": { "const": false },
+        "blocked_reason": { "type": "string", "minLength": 6 },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

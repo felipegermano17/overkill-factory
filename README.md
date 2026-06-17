@@ -103,6 +103,7 @@ factoryctl route-registry --route-class product_creation
 factoryctl intake --route-class product_creation --request-type product_new --signal-type product_paper --summary "Public product brief enters the complete product-creation route." --source-ref external:source-card-product-brief --out .tmp/product-intake.json
 factoryctl source-resolution --intake .tmp/product-intake.json --intake-ref external:sanitized-product-intake --out .tmp/source-resolution-packet.json
 factoryctl source-ledger --source-resolution .tmp/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json
+factoryctl outcome-contract --source-ledger .tmp/product-source-ledger.json --out .tmp/outcome-contract.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets

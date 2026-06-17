@@ -1249,6 +1249,74 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "outcome_contract":
+        reason = public_artifact_ref_error(data.get("source_ledger_ref"))
+        if reason:
+            errors.append(f"{at}.source_ledger_ref: {reason}")
+        source_signal = data.get("source_signal") if isinstance(data.get("source_signal"), dict) else {}
+        signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
+        reason = public_artifact_ref_error(signal_ref)
+        if reason:
+            errors.append(f"{at}.source_signal.signal_ref_public_safe: {reason}")
+        route_class = str(source_signal.get("route_class") or "").strip()
+        request_type = str(source_signal.get("request_type") or "").strip()
+        signal_type = str(source_signal.get("signal_type") or "").strip()
+        allowed_request_types = UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES.get(route_class)
+        if allowed_request_types and request_type and request_type not in allowed_request_types:
+            errors.append(
+                f"{at}: outcome_contract.source_signal.request_type is not valid "
+                f"for route_class {route_class}: {request_type}"
+            )
+        allowed_signal_types = UNIVERSAL_SIGNAL_ROUTE_SIGNAL_TYPES.get(route_class)
+        if allowed_signal_types and signal_type and signal_type not in allowed_signal_types:
+            errors.append(
+                f"{at}: outcome_contract.source_signal.signal_type is not valid "
+                f"for route_class {route_class}: {signal_type}"
+            )
+        for field in ("evidence_refs", "open_questions", "assumptions", "human_questions"):
+            values = data.get(field) if isinstance(data.get(field), list) else []
+            for index, value in enumerate(values):
+                if field == "evidence_refs":
+                    reason = public_artifact_ref_error(value)
+                    if reason:
+                        errors.append(f"{at}.{field}[{index}]: {reason}")
+                elif PRIVATE_MARKERS.search(str(value or "")):
+                    errors.append(f"{at}.{field}[{index}]: private local or runtime marker")
+        blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
+        for field in (
+            "source_ledger_required",
+            "execution_blocked_until_required_artifacts_pass",
+            "raw_private_evidence_must_stay_external",
+            "human_gate_only_for_authority_access_risk_or_preference",
+        ):
+            if blocking_rules.get(field) is not True:
+                errors.append(f"{at}.blocking_rules.{field} must be true")
+        if not isinstance(blocking_rules.get("product_sot_blocked_until_outcome_reviewed"), bool):
+            errors.append(f"{at}.blocking_rules.product_sot_blocked_until_outcome_reviewed must be boolean")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        next_worker = str(handoff.get("next_worker") or "").strip()
+        if handoff.get("factory_owned_next_step") is not True:
+            errors.append(f"{at}: outcome_contract.handoff.factory_owned_next_step must be true")
+        if next_worker and next_worker not in public_worker_ids():
+            errors.append(f"{at}.handoff.next_worker must be a registered worker: {next_worker}")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: outcome_contract requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: outcome_contract must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: outcome_contract private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("outcome_contract_created") is not True:
+            errors.append(f"{at}: outcome_contract acceptance.outcome_contract_created must be true")
+        if acceptance.get("product_sot_generated") is not False:
+            errors.append(f"{at}: outcome_contract must not claim Product SOT was generated")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: outcome_contract acceptance.execution_allowed must be false")
+        for index, ref in enumerate(acceptance.get("evidence_refs", []) if isinstance(acceptance.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_v1_completion_gate":

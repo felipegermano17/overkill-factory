@@ -5700,7 +5700,7 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
 
 DEFAULT_ARTIFACT_REFS = {
     "source_ledger": "templates/reference-source-registry.json",
-    "outcome_contract": "templates/vfinal-factory-card.json#outcome_contract",
+    "outcome_contract": "templates/outcome-contract.json",
     "product_sot": "templates/product-sot.json",
     "full_product_sot_scope_coverage": "templates/full-product-sot-scope-coverage.json",
     "method_contract": "templates/method-contract.json",
@@ -6455,6 +6455,200 @@ def validate_product_source_ledger(ledger: dict[str, Any]) -> list[str]:
     _validate_lifecycle_refs(
         _list_items(acceptance.get("evidence_refs")),
         "product_source_ledger.acceptance.evidence_refs",
+        errors,
+    )
+
+    return errors
+
+
+def _outcome_next_artifact(ledger: dict[str, Any]) -> tuple[str, str]:
+    source_signal = ledger.get("source_signal") if isinstance(ledger.get("source_signal"), dict) else {}
+    if source_signal.get("needs_product_sot") is True:
+        return "product_sot", "product-sot-planner"
+    handoff = ledger.get("handoff") if isinstance(ledger.get("handoff"), dict) else {}
+    artifact = str(handoff.get("next_artifact") or "method_contract").strip()
+    if artifact == "outcome_contract":
+        artifact = "method_contract"
+    worker = str(handoff.get("next_worker") or DEFAULT_ARTIFACT_OWNERS.get(artifact) or "factory-orchestrator").strip()
+    if worker not in WORKERS:
+        worker = DEFAULT_ARTIFACT_OWNERS.get(artifact, "factory-orchestrator")
+    return artifact, worker
+
+
+def build_outcome_contract(
+    source_ledger: dict[str, Any],
+    *,
+    created_at: str | None = None,
+    contract_id: str | None = None,
+) -> dict[str, Any]:
+    ledger_errors = validate_product_source_ledger(source_ledger)
+    if ledger_errors:
+        raise ValueError("; ".join(ledger_errors))
+
+    source_signal = copy.deepcopy(source_ledger.get("source_signal") or {})
+    ledger_id = str(source_ledger.get("ledger_id") or "product-source-ledger")
+    summary = str(source_signal.get("summary_public_safe") or "Factory source signal must become a bounded outcome.")
+    target = str(source_signal.get("target_surface") or "target surface")
+    needs_product_sot = source_signal.get("needs_product_sot") is True
+    next_artifact, next_worker = _outcome_next_artifact(source_ledger)
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    discovery_depth = "deep" if str(source_signal.get("risk_initial") or "").upper() in {"R3", "R4"} else "standard"
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/outcome-contract.schema.json",
+        "record_type": "outcome_contract",
+        "contract_id": contract_id or f"outcome-contract-{slug_for_ref(str(source_signal.get('intake_id') or ledger_id))}",
+        "created_at": created,
+        "factory_method_version": "OVERKILL_VFINAL",
+        "source_ledger_ref": ledger_id,
+        "source_signal": source_signal,
+        "outcome": f"Produce a complete, production-ready outcome for {target}: {summary}",
+        "users_or_actors": ["target product user", "factory operator"],
+        "problem": (
+            "The factory must convert source material into a bounded outcome before Product SOT, "
+            "method routing, planning or execution can start."
+        ),
+        "success_signals": [
+            "Outcome, target user, problem, success signals and risks are explicit before downstream planning.",
+            "No execution starts until the required downstream artifacts, gates and workers pass.",
+        ],
+        "non_goals": [
+            "Do not treat the raw input or chat summary as Product SOT.",
+            "Do not start implementation from the source ledger or outcome contract alone.",
+        ],
+        "open_questions": [
+            "Worker-owned claim review must decide which source claims become Product SOT scope.",
+            "Any authority, access, risk or preference decision must become an explicit human gate if needed.",
+        ],
+        "evidence_refs": [
+            ledger_id,
+            "schemas/product-source-ledger.schema.json",
+            "schemas/outcome-contract.schema.json",
+        ],
+        "behavior_change": (
+            "The factory moves from source bookkeeping to a bounded outcome that the assigned worker can use "
+            "for the next artifact without asking the operator to coordinate internal machinery."
+        ),
+        "risk_signals": [
+            "Outcome is too vague to derive the next artifact.",
+            "A downstream artifact claims readiness without Product SOT, method, readiness or gate evidence.",
+        ],
+        "assumptions": [
+            "The product source ledger is valid and contains public-safe refs only.",
+            "The next artifact will be produced by the assigned factory worker, not inferred from chat memory.",
+        ],
+        "human_questions": [],
+        "discovery_depth": discovery_depth,
+        "blocking_rules": {
+            "source_ledger_required": True,
+            "product_sot_blocked_until_outcome_reviewed": needs_product_sot,
+            "execution_blocked_until_required_artifacts_pass": True,
+            "raw_private_evidence_must_stay_external": True,
+            "human_gate_only_for_authority_access_risk_or_preference": True,
+        },
+        "handoff": {
+            "next_artifact": next_artifact,
+            "next_worker": next_worker,
+            "next_safe_action": (
+                "Produce Product SOT from the outcome contract and source ledger before planning or execution."
+                if next_artifact == "product_sot"
+                else f"Produce {next_artifact} from the outcome contract before execution."
+            ),
+            "user_decision_required": False,
+            "factory_owned_next_step": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "outcome_contract_created": True,
+            "product_sot_generated": False,
+            "execution_allowed": False,
+            "blocked_reason": (
+                "Outcome contract exists, but execution remains blocked until Product SOT when required, "
+                "method contract, readiness and gates pass."
+            ),
+            "evidence_refs": [
+                "schemas/outcome-contract.schema.json",
+                "schemas/product-source-ledger.schema.json",
+            ],
+        },
+    }
+
+
+def validate_outcome_contract(contract: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("outcome-contract.schema.json")
+    if not schema:
+        return ["outcome_contract schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            contract,
+            "outcome_contract",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    for field in ("source_ledger_ref",):
+        value = str(contract.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"outcome_contract.{field}", errors)
+
+    source_signal = contract.get("source_signal") if isinstance(contract.get("source_signal"), dict) else {}
+    signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
+    if signal_ref:
+        _validate_public_ref(signal_ref, "outcome_contract.source_signal.signal_ref_public_safe", errors)
+
+    for field in ("evidence_refs", "open_questions", "assumptions", "human_questions"):
+        for index, item in enumerate(_list_items(contract.get(field))):
+            if field == "evidence_refs":
+                _validate_public_ref(item, f"outcome_contract.{field}[{index}]", errors)
+            elif not public_safe_text(item):
+                errors.append(f"outcome_contract.{field}[{index}] must be public-safe")
+
+    blocking_rules = contract.get("blocking_rules") if isinstance(contract.get("blocking_rules"), dict) else {}
+    for field in (
+        "source_ledger_required",
+        "execution_blocked_until_required_artifacts_pass",
+        "raw_private_evidence_must_stay_external",
+        "human_gate_only_for_authority_access_risk_or_preference",
+    ):
+        if blocking_rules.get(field) is not True:
+            errors.append(f"outcome_contract.blocking_rules.{field} must be true")
+    if not isinstance(blocking_rules.get("product_sot_blocked_until_outcome_reviewed"), bool):
+        errors.append("outcome_contract.blocking_rules.product_sot_blocked_until_outcome_reviewed must be boolean")
+
+    handoff = contract.get("handoff") if isinstance(contract.get("handoff"), dict) else {}
+    if handoff.get("factory_owned_next_step") is not True:
+        errors.append("outcome_contract.handoff.factory_owned_next_step must be true")
+    next_worker = str(handoff.get("next_worker") or "").strip()
+    if next_worker and next_worker not in WORKERS:
+        errors.append(f"outcome_contract.handoff.next_worker must be a registered worker: {next_worker}")
+
+    boundary = contract.get("public_private_boundary") if isinstance(contract.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("outcome_contract requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("outcome_contract must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("outcome_contract private context must stay outside the public repo")
+
+    acceptance = contract.get("acceptance") if isinstance(contract.get("acceptance"), dict) else {}
+    if acceptance.get("outcome_contract_created") is not True:
+        errors.append("outcome_contract acceptance.outcome_contract_created must be true")
+    if acceptance.get("product_sot_generated") is not False:
+        errors.append("outcome_contract must not claim Product SOT was generated")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("outcome_contract acceptance.execution_allowed must be false")
+    _validate_lifecycle_refs(
+        _list_items(acceptance.get("evidence_refs")),
+        "outcome_contract.acceptance.evidence_refs",
         errors,
     )
 
@@ -12010,6 +12204,16 @@ def command_validate_source_ledger(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_outcome_contract(args: argparse.Namespace) -> int:
+    errors = validate_outcome_contract(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_route_registry(args: argparse.Namespace) -> int:
     registry = load_route_registry(args.registry)
     if args.route_class:
@@ -12087,6 +12291,25 @@ def command_source_ledger(args: argparse.Namespace) -> int:
             print(error, file=sys.stderr)
         return 1
     write_json(args.out, ledger)
+    return 0
+
+
+def command_outcome_contract(args: argparse.Namespace) -> int:
+    try:
+        contract = build_outcome_contract(
+            load_json_like(args.source_ledger),
+            created_at=args.created_at,
+            contract_id=args.contract_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_outcome_contract(contract)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, contract)
     return 0
 
 
@@ -12524,6 +12747,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_source_ledger_parser.add_argument("path", type=Path)
     validate_source_ledger_parser.set_defaults(func=command_validate_source_ledger)
 
+    validate_outcome_contract_parser = sub.add_parser("validate-outcome-contract")
+    validate_outcome_contract_parser.add_argument("path", type=Path)
+    validate_outcome_contract_parser.set_defaults(func=command_validate_outcome_contract)
+
     route_registry_parser = sub.add_parser("route-registry", help="Show the canonical Universal Signal route registry.")
     route_registry_parser.add_argument("--registry", type=Path, default=DEFAULT_ROUTE_REGISTRY_PATH)
     route_registry_parser.add_argument("--route-class")
@@ -12569,6 +12796,16 @@ def build_parser() -> argparse.ArgumentParser:
     source_ledger_parser.add_argument("--ledger-id")
     source_ledger_parser.add_argument("--out", type=Path)
     source_ledger_parser.set_defaults(func=command_source_ledger)
+
+    outcome_contract_parser = sub.add_parser(
+        "outcome-contract",
+        help="Build an outcome contract from a validated product source ledger without generating Product SOT.",
+    )
+    outcome_contract_parser.add_argument("--source-ledger", type=Path, required=True)
+    outcome_contract_parser.add_argument("--created-at")
+    outcome_contract_parser.add_argument("--contract-id")
+    outcome_contract_parser.add_argument("--out", type=Path)
+    outcome_contract_parser.set_defaults(func=command_outcome_contract)
 
     validate_signal_corpus_parser = sub.add_parser("validate-signal-corpus")
     validate_signal_corpus_parser.add_argument("path", type=Path)
