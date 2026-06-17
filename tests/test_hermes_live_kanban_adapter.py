@@ -792,6 +792,52 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertEqual(len(unblock_calls), 1)
 
+    def test_recover_ready_work_units_does_not_supersede_legally_released_blocked_first_wave(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            task_id = next(iter(fake.tasks))
+            fake.tasks[task_id]["status"] = "blocked"
+            fake.tasks[task_id].setdefault("events", []).append({"kind": "claimed"})
+            fake.tasks[task_id].setdefault("runs", []).append({"status": "blocked", "outcome": "blocked"})
+            recover_args = adapter.build_parser().parse_args(
+                [
+                    "recover-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                ]
+            )
+            recovery = adapter.recover_ready_work_units(recover_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, recovery)
+        self.assertEqual(recovery["runtime_gate"]["superseded_task_count"], 0)
+        self.assertEqual(recovery["runtime_gate"]["clean_task_count"], 1)
+        self.assertEqual(recovery["recovery_plan"]["work-unit-001"]["status"], "clean_no_recovery_needed")
+        self.assertFalse(
+            any(
+                adapter.READY_WORK_UNIT_SUPERSESSION_MARKER in str(comment.get("body") or "")
+                for comment in fake.tasks[task_id].get("comments", [])
+            )
+        )
+
     def test_release_ready_work_units_releases_only_first_dependency_wave(self) -> None:
         fake = FakeHermes()
         plan = two_step_ready_work_unit_plan()

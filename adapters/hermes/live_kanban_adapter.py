@@ -56,6 +56,11 @@ READY_WORK_UNIT_CONTEXT_CHUNK_AUTHOR = "overkill-factory-context"
 READY_WORK_UNIT_CONTEXT_CHUNK_SIZE = 5000
 READY_WORK_UNIT_SUPERSESSION_MARKER = "ready_work_unit_superseded"
 READY_WORK_UNIT_RECOVERY_AUTHOR = "overkill-factory-recovery"
+READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS = [
+    "runtime_gate=blocked_event_verified_for_each_task",
+    "release_scope=ready_work_units_only",
+    "dispatch_separate=true",
+]
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -1584,11 +1589,7 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
         args.reason
         or "runtime_gate=blocked_event_verified_for_each_task; release_scope=ready_work_units_only; dispatch_separate=true"
     )
-    required_markers = [
-        "runtime_gate=blocked_event_verified_for_each_task",
-        "release_scope=ready_work_units_only",
-        "dispatch_separate=true",
-    ]
+    required_markers = READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS
     if not args.dry_run:
         for _task, task_id, packet_id, work_unit_id, _status in eligible:
             unblock_task(
@@ -1778,6 +1779,16 @@ def recover_ready_work_units(args: argparse.Namespace, runner: Runner = default_
         include_superseded=True,
         runner=runner,
     )
+    dependencies = ready_work_unit_dependencies(tasks)
+    active_status_by_work_unit: dict[str, str] = {}
+    for task in tasks:
+        key = expected_ready_work_unit_key(task)
+        matches = candidates.get(key) or []
+        active_matches = [
+            payload for payload in matches if not task_has_ready_work_unit_supersession(payload)
+        ]
+        if active_matches:
+            active_status_by_work_unit[key[1]] = task_readback_status(active_matches[0])
     recovery_plan: dict[str, Any] = {}
     replacement_ready_work_unit_task_ids: dict[str, str] = {}
     superseded_ready_work_unit_task_ids: dict[str, list[str]] = {}
@@ -1803,9 +1814,21 @@ def recover_ready_work_units(args: argparse.Namespace, runner: Runner = default_
 
         contaminated: list[tuple[dict[str, Any], list[str]]] = []
         clean_blocked: list[dict[str, Any]] = []
+        dependency_blockers = [
+            dep
+            for dep in dependencies.get(work_unit_id, [])
+            if active_status_by_work_unit.get(dep) not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES
+        ]
         for payload in active_matches:
             markers = ready_work_unit_contamination_markers(payload)
-            if markers:
+            legal_release_seen = history_contains_markers(
+                payload,
+                READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS,
+            ) or task_has_unblocked_event(
+                payload,
+                required_markers=READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS,
+            )
+            if markers and (dependency_blockers or not legal_release_seen):
                 contaminated.append((payload, markers))
             elif task_readback_status(payload) == "blocked":
                 clean_blocked.append(payload)
@@ -1816,6 +1839,7 @@ def recover_ready_work_units(args: argparse.Namespace, runner: Runner = default_
                 "packet_id": packet_id,
                 "status": "clean_no_recovery_needed",
                 "active_task_count": len(active_matches),
+                "dependency_blockers": dependency_blockers,
             }
             continue
 
