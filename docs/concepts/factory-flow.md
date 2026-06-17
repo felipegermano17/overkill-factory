@@ -32,6 +32,7 @@ source intake
 -> method contract
 -> Product Creation Plan
 -> Product Implementation Readiness
+-> ready work-unit packets
 -> Product Face or surface-specific plan
 -> security, access and budget gates
 -> decomposition into Hermes cards
