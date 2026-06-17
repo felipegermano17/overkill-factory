@@ -1,6 +1,9 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/product-creation-plan.schema.json",
   "record_type": "product_creation_plan",
+  "plan_id": "product-creation-plan-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
   "product_sot_ref": "templates/product-sot.json",
   "method_contract_ref": "templates/method-contract.json",
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
@@ -73,6 +76,36 @@
     "runtime_authority": "hermes_kanban",
     "local_state_authority": false,
     "materialized_hermes_task_refs": []
+  },
+  "blocking_rules": {
+    "product_sot_required": true,
+    "method_contract_required": true,
+    "product_implementation_readiness_required": true,
+    "execution_blocked_until_ready_gate": true,
+    "raw_private_evidence_must_stay_external": true
+  },
+  "handoff": {
+    "next_artifact": "product_implementation_readiness",
+    "next_worker": "factory-orchestrator",
+    "next_safe_action": "Create Product Implementation Readiness before material work units or execution.",
+    "user_decision_required": false,
+    "factory_owned_next_step": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  },
+  "acceptance": {
+    "product_creation_plan_created": true,
+    "execution_allowed": false,
+    "scope_reduction_detected": false,
+    "work_units_accounted": 1,
+    "blocked_reason": "Product Creation Plan exists, but execution remains blocked until implementation readiness, Ready Gate, required workers and proof pass.",
+    "evidence_refs": [
+      "templates/product-creation-plan.json",
+      "templates/method-contract.json"
+    ]
   },
   "evidence_refs": ["templates/full-product-sot-scope-coverage.json"]
 }

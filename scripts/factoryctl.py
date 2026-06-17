@@ -7549,6 +7549,449 @@ def validate_method_contract(method_contract: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _product_creation_plan_id(method_contract_ref: str) -> str:
+    return f"product-creation-plan-{slug_for_ref(method_contract_ref)}"
+
+
+def _product_creation_unit(
+    *,
+    unit_id: str,
+    requirement_refs: list[str],
+    objective: str,
+    scope_in: list[str],
+    scope_out: list[str],
+    verification: list[str],
+    expected_result: str,
+    owner_worker: str,
+    proof_ids: list[str],
+    ready_rules: list[str],
+    blocked_when: list[str],
+    done_rules: list[str],
+    stop_conditions: list[str],
+    status: str,
+    blocker_id: str | None = None,
+    blocker_owner: str | None = None,
+    next_action: str | None = None,
+) -> dict[str, Any]:
+    unit: dict[str, Any] = {
+        "unit_id": unit_id,
+        "product_sot_requirement_refs": _dedupe_preserve_order(requirement_refs),
+        "objective": objective,
+        "scope_in": _dedupe_preserve_order(scope_in),
+        "scope_out": _dedupe_preserve_order(scope_out),
+        "verification": _dedupe_preserve_order(verification),
+        "expected_result": expected_result,
+        "proof_ids_required": _dedupe_preserve_order(proof_ids),
+        "owner_worker": owner_worker,
+        "reviewer_role": "independent-reviewer",
+        "capability_profile_refs": _dedupe_preserve_order(
+            [
+                f"agents/hermes-profile-bindings.public.json#{owner_worker}",
+                "agents/hermes-profile-bindings.public.json#independent-reviewer",
+            ]
+        ),
+        "ready_rules": _dedupe_preserve_order(ready_rules),
+        "blocked_when": _dedupe_preserve_order(blocked_when),
+        "done_rules": _dedupe_preserve_order(done_rules),
+        "stop_conditions": _dedupe_preserve_order(stop_conditions),
+        "status": status,
+        "product_context_packet_ref": "templates/product-context-packet.json",
+    }
+    if status == "blocked":
+        unit["blocker_id"] = blocker_id or f"{unit_id}-blocker"
+        unit["blocker_owner"] = blocker_owner or "factory-orchestrator"
+        unit["next_action"] = next_action or "Resolve the blocker before this work unit can move to readiness."
+    return unit
+
+
+def build_product_creation_plan(
+    method_contract: dict[str, Any],
+    *,
+    created_at: str | None = None,
+    plan_id: str | None = None,
+) -> dict[str, Any]:
+    method_errors = validate_method_contract(method_contract)
+    if method_errors:
+        raise ValueError("; ".join(method_errors))
+
+    handoff = method_contract.get("handoff") if isinstance(method_contract.get("handoff"), dict) else {}
+    if str(handoff.get("next_artifact") or "").strip() != "product_creation_plan":
+        raise ValueError("method_contract does not hand off to Product Creation Plan")
+
+    method_contract_ref = str(method_contract.get("contract_id") or "method-contract")
+    coverage_ref = str(method_contract.get("full_product_sot_scope_coverage_ref") or "full-product-sot-scope-coverage")
+    product_sot_ref = f"{coverage_ref}#approved-product-sot"
+    final_plan_id = plan_id or _product_creation_plan_id(method_contract_ref)
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    user_decision_required = bool(handoff.get("user_decision_required"))
+    matrix = method_contract.get("engineering_method_matrix") if isinstance(method_contract.get("engineering_method_matrix"), list) else []
+    selected_methods = _list_items(method_contract.get("selected_methods"))
+    required_artifacts = _dedupe_preserve_order(
+        [
+            *[item for item in _list_items(method_contract.get("required_artifacts")) if item != "product_creation_plan"],
+            *[item for item in _list_items(method_contract.get("required_plans")) if item != "product_creation_plan"],
+            "product_implementation_readiness",
+        ]
+    )
+    blocker_refs = _dedupe_preserve_order(
+        [
+            value
+            for value in _list_items(method_contract.get("evidence_requirements"))
+            if "human-gate" in value or "blocker" in value.lower()
+        ]
+    )
+    base_requirement_refs = [f"{coverage_ref}#all-active-product-sot-requirements"]
+    common_ready_rules = [
+        "Product Creation Plan validates against schema and domain rules",
+        "Product Implementation Readiness allows this work unit before material execution",
+        "required capability profile and reviewer are available",
+    ]
+    common_blocked_when = [
+        "Product Implementation Readiness is FAIL or BLOCKED",
+        "required capability pack, access, worker or reviewer is unavailable",
+        "Product SOT, Method Contract or full scope coverage has drifted",
+    ]
+    common_done_rules = [
+        "all proof_ids_required have PASS, BLOCK with owner, or valid human-gated waiver evidence",
+        "independent-reviewer reviewed the work-unit evidence",
+        "Receipt Five can reference the produced evidence without private refs",
+    ]
+    common_stop_conditions = [
+        "Product SOT scope changes without a refreshed plan",
+        "worker would need to infer private source material or hidden operator context",
+        "execution tries to treat one slice as complete-product completion",
+    ]
+
+    work_units: list[dict[str, Any]] = []
+    work_units.append(
+        _product_creation_unit(
+            unit_id="work-unit-001-scope-reconciliation",
+            requirement_refs=base_requirement_refs,
+            objective="Reconcile the complete Product SOT scope into executable work without reducing the product promise.",
+            scope_in=[
+                "all active Product SOT requirements represented by full scope coverage",
+                "method, gates, workers, reviewers and evidence requirements from Method Contract",
+            ],
+            scope_out=["raw private source material", "implementation or release state"],
+            verification=[
+                "validate-product-creation-plan passes",
+                "every planned slice links back to Method Contract and full scope coverage",
+            ],
+            expected_result="PASS or explicit BLOCK with owner before any work unit can execute",
+            owner_worker="decomposition-planner",
+            proof_ids=["product_creation.scope_reconciliation", "product_creation.no_scope_reduction"],
+            ready_rules=common_ready_rules,
+            blocked_when=common_blocked_when,
+            done_rules=common_done_rules,
+            stop_conditions=common_stop_conditions,
+            status="blocked" if user_decision_required else "todo",
+            blocker_id=blocker_refs[0] if blocker_refs else "human-gate-product-scope",
+            blocker_owner="human-gate-clerk",
+            next_action="Resolve the named human scope decision before planning moves to readiness.",
+        )
+    )
+
+    for index, row in enumerate(matrix, start=2):
+        row = row if isinstance(row, dict) else {}
+        surface = str(row.get("surface_or_component") or f"method-surface-{index - 1}").strip()
+        unit_id = f"work-unit-{index:03d}-{slug_for_ref(surface)}"
+        row_methods = _list_items(row.get("methods")) or selected_methods or ["spec-first"]
+        required_row_artifacts = _list_items(row.get("required_artifacts")) or required_artifacts
+        evidence_required = _list_items(row.get("evidence_required")) or ["tests pass", "worker result evidence"]
+        work_units.append(
+            _product_creation_unit(
+                unit_id=unit_id,
+                requirement_refs=[*base_requirement_refs, f"{method_contract_ref}#engineering-method-matrix-{index - 1:03d}"],
+                objective=f"Plan and execute the {surface} slice using {', '.join(row_methods)} while preserving full product scope.",
+                scope_in=[
+                    f"{surface} requirements from approved Product SOT coverage",
+                    *[f"required artifact: {artifact}" for artifact in required_row_artifacts],
+                ],
+                scope_out=[
+                    "requirements not represented by the approved Product SOT",
+                    "release or production promotion without later readiness gates",
+                ],
+                verification=[
+                    *evidence_required,
+                    "Product Implementation Readiness confirms this slice is allowed",
+                ],
+                expected_result="Slice evidence is PASS, or BLOCKED with owner and recovery route.",
+                owner_worker="implementation-worker",
+                proof_ids=[f"product_creation.{slug_for_ref(surface)}.scope_fit", f"product_creation.{slug_for_ref(surface)}.verification"],
+                ready_rules=[
+                    *common_ready_rules,
+                    f"methods selected for this slice are fixed: {', '.join(row_methods)}",
+                ],
+                blocked_when=common_blocked_when,
+                done_rules=common_done_rules,
+                stop_conditions=common_stop_conditions,
+                status="todo",
+            )
+        )
+
+    readiness_unit_id = f"work-unit-{len(work_units) + 1:03d}-implementation-readiness"
+    work_units.append(
+        _product_creation_unit(
+            unit_id=readiness_unit_id,
+            requirement_refs=[*base_requirement_refs, f"{method_contract_ref}#product-implementation-readiness"],
+            objective="Prove artifact alignment before material implementation starts.",
+            scope_in=[
+                "Product SOT, full scope coverage, Method Contract and Product Creation Plan",
+                "work-unit proof, reviewer, blocker and stop-rule coverage",
+            ],
+            scope_out=["executing workers", "approving production readiness without evidence"],
+            verification=["validate product_implementation_readiness artifact", "gate report blocks or allows explicit slices"],
+            expected_result="Product Implementation Readiness returns PASS, CONCERNS, FAIL or BLOCKED with allowed next actions.",
+            owner_worker="factory-orchestrator",
+            proof_ids=["product_creation.implementation_readiness", "product_creation.gate_alignment"],
+            ready_rules=common_ready_rules,
+            blocked_when=common_blocked_when,
+            done_rules=common_done_rules,
+            stop_conditions=common_stop_conditions,
+            status="todo",
+        )
+    )
+
+    promotion_unit_id = f"work-unit-{len(work_units) + 1:03d}-release-operations-readiness"
+    work_units.append(
+        _product_creation_unit(
+            unit_id=promotion_unit_id,
+            requirement_refs=[*base_requirement_refs, f"{method_contract_ref}#production-route"],
+            objective="Plan production, release, rollback, monitoring and support proof before customer-ready claims.",
+            scope_in=["production promotion ladder", "rollback", "monitoring", "support", "customer readiness"],
+            scope_out=["mainnet, customer, irreversible or production release without explicit promotion gates"],
+            verification=["production promotion ladder is referenced", "release readiness evidence is attached before promotion"],
+            expected_result="Release path is ready, blocked with owner, or explicitly out of scope by human-gated SOT rebaseline.",
+            owner_worker="release-ops-worker",
+            proof_ids=["product_creation.release_path", "product_creation.operations_readiness"],
+            ready_rules=common_ready_rules,
+            blocked_when=common_blocked_when,
+            done_rules=common_done_rules,
+            stop_conditions=common_stop_conditions,
+            status="todo",
+        )
+    )
+
+    execution_order = [str(unit["unit_id"]) for unit in work_units]
+    dependency_graph = [{"from": method_contract_ref, "to": "work-unit-001-scope-reconciliation"}]
+    dependency_graph.extend({"from": "work-unit-001-scope-reconciliation", "to": unit_id} for unit_id in execution_order[1:])
+    dependency_graph.append({"from": readiness_unit_id, "to": "product_implementation_readiness"})
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/product-creation-plan.schema.json",
+        "record_type": "product_creation_plan",
+        "plan_id": final_plan_id,
+        "created_at": created,
+        "factory_method_version": "OVERKILL_VFINAL",
+        "product_sot_ref": product_sot_ref,
+        "method_contract_ref": method_contract_ref,
+        "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+        "research_decision_refs": _list_items(method_contract.get("research_decision_refs")),
+        "architecture_decision_refs": [],
+        "complete_product_required": True,
+        "complete_product_scope": [
+            f"all active Product SOT requirements accounted by {coverage_ref}",
+            "all Method Contract required artifacts, gates, workers, reviewers and evidence requirements",
+            "production, operations, release and support requirements when product intent reaches real users",
+        ],
+        "complete_product_non_goals": ["anything explicitly marked out of scope by the approved Product SOT or human-gated rebaseline"],
+        "production_readiness_scope": ["release path", "rollback", "monitoring", "support", "customer readiness"],
+        "surface_matrix": [
+            {
+                "surface": str(row.get("surface_or_component") or "complete product scope"),
+                "methods": _list_items(row.get("methods")) or selected_methods or ["spec-first"],
+                "proof": _list_items(row.get("evidence_required")) or ["tests pass", "worker result evidence"],
+            }
+            for row in matrix
+            if isinstance(row, dict)
+        ],
+        "capability_pack_requirements": ["templates/capability-pack-contract.json"],
+        "work_units": work_units,
+        "execution_order": execution_order,
+        "slice_boundaries": [
+            "slices are execution order units, not product scope reductions",
+            "each slice must remain reversible or explicitly gated before irreversible change",
+            "no slice may claim whole-product completion without full Product SOT reconciliation",
+        ],
+        "dependency_graph": dependency_graph,
+        "risk_map": [
+            f"method risk tier: {method_contract.get('risk_tier')}",
+            "scope shrinkage is blocked by full Product SOT coverage",
+            "execution is blocked until Product Implementation Readiness and Ready Gate pass",
+        ],
+        "access_and_secret_requirements": ["declare required access in Product Implementation Readiness before material execution"],
+        "release_promotion_ladder_refs": ["templates/production-promotion-ladder.json"],
+        "complete_product_done_criteria": [
+            "every active Product SOT requirement is done, blocked with owner, or explicitly rebaselined by human gate",
+            "all required work units carry PASS/BLOCK/waiver evidence and independent review",
+            "production/customer-ready claims have release, rollback, monitoring and support evidence",
+        ],
+        "slice_done_criteria": [
+            "slice verification passes and evidence refs are attached",
+            "reviewer_role has reviewed the slice evidence",
+            "slice result updates Product Creation Plan reconciliation state",
+        ],
+        "drift_check": "Refresh this plan when Product SOT, full scope coverage, Method Contract, capability packs, landed slices or repo state change.",
+        "stop_conditions": [
+            "missing Product SOT coverage",
+            "Method Contract changed after this plan was created",
+            "required proof cannot be produced",
+            "execution attempts to bypass Product Implementation Readiness",
+        ],
+        "reconciliation_policy": (
+            "Mark work units todo, ready, blocked, in_progress, done, rejected, superseded or needs_refresh; "
+            "never treat a done slice as whole-product completion."
+        ),
+        "runtime_boundary": {
+            "state_role": "planning_only",
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "materialized_hermes_task_refs": [],
+        },
+        "blocking_rules": {
+            "product_sot_required": True,
+            "method_contract_required": True,
+            "product_implementation_readiness_required": True,
+            "execution_blocked_until_ready_gate": True,
+            "raw_private_evidence_must_stay_external": True,
+        },
+        "handoff": {
+            "next_artifact": "product_implementation_readiness",
+            "next_worker": "factory-orchestrator",
+            "next_safe_action": "Create Product Implementation Readiness before material work units or execution.",
+            "user_decision_required": user_decision_required,
+            "factory_owned_next_step": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+        },
+        "acceptance": {
+            "product_creation_plan_created": True,
+            "execution_allowed": False,
+            "scope_reduction_detected": False,
+            "work_units_accounted": len(work_units),
+            "blocked_reason": (
+                "Product Creation Plan exists, but execution remains blocked until implementation "
+                "readiness, Ready Gate, required workers and proof pass."
+            ),
+            "evidence_refs": ["schemas/product-creation-plan.schema.json", method_contract_ref, coverage_ref],
+        },
+        "evidence_refs": ["schemas/product-creation-plan.schema.json", method_contract_ref, coverage_ref],
+    }
+
+
+def validate_product_creation_plan(plan: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("product-creation-plan.schema.json")
+    if not schema:
+        return ["product_creation_plan schema is not bundled"]
+    errors.extend(validate_node(schema, plan, "product_creation_plan", schemas=schemas, root_schema=schema))
+    if plan.get("record_type") != "product_creation_plan":
+        errors.append("product_creation_plan.record_type must be product_creation_plan")
+    if plan.get("complete_product_required") is not True:
+        errors.append("product_creation_plan.complete_product_required must be true")
+
+    for field in ("product_sot_ref", "method_contract_ref", "product_delivery_quality_profile_ref"):
+        value = str(plan.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"product_creation_plan.{field}", errors)
+
+    errors.extend(validate_product_creation_plan_work_unit_graph(plan))
+
+    for field in (
+        "complete_product_scope",
+        "production_readiness_scope",
+        "release_promotion_ladder_refs",
+        "complete_product_done_criteria",
+        "slice_done_criteria",
+        "stop_conditions",
+        "evidence_refs",
+    ):
+        if not _non_empty_string_list(plan.get(field)):
+            errors.append(f"product_creation_plan.{field} must be non-empty")
+    for field in ("drift_check", "reconciliation_policy"):
+        if not public_safe_text(plan.get(field)):
+            errors.append(f"product_creation_plan.{field} must be public-safe")
+
+    for index, ref in enumerate(_list_items(plan.get("release_promotion_ladder_refs"))):
+        _validate_public_ref(ref, f"product_creation_plan.release_promotion_ladder_refs[{index}]", errors)
+    for index, ref in enumerate(_list_items(plan.get("evidence_refs"))):
+        _validate_public_ref(ref, f"product_creation_plan.evidence_refs[{index}]", errors)
+
+    for index, unit in enumerate(plan.get("work_units", []) if isinstance(plan.get("work_units"), list) else []):
+        if not isinstance(unit, dict):
+            continue
+        owner = str(unit.get("owner_worker") or "").strip()
+        reviewer = str(unit.get("reviewer_role") or "").strip()
+        blocker_owner = str(unit.get("blocker_owner") or "").strip()
+        if owner and owner not in WORKERS:
+            errors.append(f"product_creation_plan.work_units[{index}].owner_worker must be a registered worker: {owner}")
+        if reviewer and reviewer not in WORKERS:
+            errors.append(f"product_creation_plan.work_units[{index}].reviewer_role must be a registered worker: {reviewer}")
+        if blocker_owner and blocker_owner not in WORKERS:
+            errors.append(f"product_creation_plan.work_units[{index}].blocker_owner must be a registered worker: {blocker_owner}")
+        for ref_field in ("product_sot_requirement_refs", "capability_profile_refs"):
+            for ref_index, ref in enumerate(_list_items(unit.get(ref_field))):
+                _validate_public_ref(ref, f"product_creation_plan.work_units[{index}].{ref_field}[{ref_index}]", errors)
+
+    runtime_boundary = plan.get("runtime_boundary") if isinstance(plan.get("runtime_boundary"), dict) else {}
+    if runtime_boundary.get("state_role") != "planning_only":
+        errors.append("product_creation_plan.runtime_boundary.state_role must be planning_only")
+    if runtime_boundary.get("runtime_authority") != "hermes_kanban":
+        errors.append("product_creation_plan.runtime_boundary.runtime_authority must be hermes_kanban")
+    if runtime_boundary.get("local_state_authority") is not False:
+        errors.append("product_creation_plan.runtime_boundary.local_state_authority must be false")
+
+    blocking_rules = plan.get("blocking_rules") if isinstance(plan.get("blocking_rules"), dict) else {}
+    for field in (
+        "product_sot_required",
+        "method_contract_required",
+        "product_implementation_readiness_required",
+        "execution_blocked_until_ready_gate",
+        "raw_private_evidence_must_stay_external",
+    ):
+        if blocking_rules.get(field) is not True:
+            errors.append(f"product_creation_plan.blocking_rules.{field} must be true")
+
+    handoff = plan.get("handoff") if isinstance(plan.get("handoff"), dict) else {}
+    if handoff.get("factory_owned_next_step") is not True:
+        errors.append("product_creation_plan.handoff.factory_owned_next_step must be true")
+    if handoff.get("next_artifact") != "product_implementation_readiness":
+        errors.append("product_creation_plan.handoff.next_artifact must be product_implementation_readiness")
+    next_worker = str(handoff.get("next_worker") or "").strip()
+    if next_worker and next_worker not in WORKERS:
+        errors.append(f"product_creation_plan.handoff.next_worker must be a registered worker: {next_worker}")
+
+    boundary = plan.get("public_private_boundary") if isinstance(plan.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("product_creation_plan requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("product_creation_plan must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("product_creation_plan private context must stay outside the public repo")
+
+    acceptance = plan.get("acceptance") if isinstance(plan.get("acceptance"), dict) else {}
+    if acceptance.get("product_creation_plan_created") is not True:
+        errors.append("product_creation_plan acceptance.product_creation_plan_created must be true")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("product_creation_plan acceptance.execution_allowed must be false")
+    if acceptance.get("scope_reduction_detected") is not False:
+        errors.append("product_creation_plan acceptance.scope_reduction_detected must be false")
+    work_units = plan.get("work_units") if isinstance(plan.get("work_units"), list) else []
+    if acceptance.get("work_units_accounted") != len(work_units):
+        errors.append("product_creation_plan acceptance.work_units_accounted must match work_units length")
+    _validate_lifecycle_refs(
+        _list_items(acceptance.get("evidence_refs")),
+        "product_creation_plan.acceptance.evidence_refs",
+        errors,
+    )
+
+    return errors
+
+
 def validate_universal_signal_golden_corpus(corpus: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     schemas = bundled_schemas()
@@ -13138,6 +13581,16 @@ def command_validate_method_contract(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_product_creation_plan(args: argparse.Namespace) -> int:
+    errors = validate_product_creation_plan(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_route_registry(args: argparse.Namespace) -> int:
     registry = load_route_registry(args.registry)
     if args.route_class:
@@ -13295,6 +13748,25 @@ def command_method_contract(args: argparse.Namespace) -> int:
             print(error, file=sys.stderr)
         return 1
     write_json(args.out, method_contract)
+    return 0
+
+
+def command_product_creation_plan(args: argparse.Namespace) -> int:
+    try:
+        plan = build_product_creation_plan(
+            load_json_like(args.method_contract),
+            created_at=args.created_at,
+            plan_id=args.plan_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_product_creation_plan(plan)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, plan)
     return 0
 
 
@@ -13748,6 +14220,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_method_contract_parser.add_argument("path", type=Path)
     validate_method_contract_parser.set_defaults(func=command_validate_method_contract)
 
+    validate_product_creation_plan_parser = sub.add_parser("validate-product-creation-plan")
+    validate_product_creation_plan_parser.add_argument("path", type=Path)
+    validate_product_creation_plan_parser.set_defaults(func=command_validate_product_creation_plan)
+
     route_registry_parser = sub.add_parser("route-registry", help="Show the canonical Universal Signal route registry.")
     route_registry_parser.add_argument("--registry", type=Path, default=DEFAULT_ROUTE_REGISTRY_PATH)
     route_registry_parser.add_argument("--route-class")
@@ -13834,6 +14310,16 @@ def build_parser() -> argparse.ArgumentParser:
     method_contract_parser.add_argument("--contract-id")
     method_contract_parser.add_argument("--out", type=Path)
     method_contract_parser.set_defaults(func=command_method_contract)
+
+    product_creation_plan_parser = sub.add_parser(
+        "product-creation-plan",
+        help="Build Product Creation Plan from a validated Method Contract without allowing execution.",
+    )
+    product_creation_plan_parser.add_argument("--method-contract", type=Path, required=True)
+    product_creation_plan_parser.add_argument("--created-at")
+    product_creation_plan_parser.add_argument("--plan-id")
+    product_creation_plan_parser.add_argument("--out", type=Path)
+    product_creation_plan_parser.set_defaults(func=command_product_creation_plan)
 
     validate_signal_corpus_parser = sub.add_parser("validate-signal-corpus")
     validate_signal_corpus_parser.add_argument("path", type=Path)
