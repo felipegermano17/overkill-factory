@@ -989,6 +989,116 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(manifest["record_type"], "ready_work_unit_packet_manifest")
         self.assertEqual(len(manifest["packets"]), len(readiness["ready_work_units"]))
 
+    def test_ready_work_unit_hermes_plan_from_packets_is_valid_and_blocked_first(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+
+        materialization = factoryctl.build_ready_work_unit_hermes_materialization_plan(
+            manifest,
+            board="overkill-factory-live",
+            ready_work_unit_packet_manifest_ref="external:sanitized-ready-work-unit-packets",
+        )
+
+        self.assertEqual(factoryctl.validate_ready_work_unit_hermes_materialization_plan(materialization), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(materialization, "$"), [])
+        self.assertEqual(materialization["record_type"], "ready_work_unit_hermes_materialization_plan")
+        self.assertFalse(materialization["runtime_boundary"]["live_hermes_mutated"])
+        self.assertFalse(materialization["complete_product_claim_allowed"])
+        self.assertEqual(len(materialization["tasks"]), len(manifest["packets"]))
+        self.assertTrue(all(task["initial_status"] == "blocked" for task in materialization["tasks"]))
+        self.assertTrue(
+            all(task["block_policy"]["block_event_required_before_dispatch"] for task in materialization["tasks"])
+        )
+        self.assertTrue(
+            all(
+                task["dispatch_policy"]["dispatch_allowed_without_runtime_gate"] is False
+                for task in materialization["tasks"]
+            )
+        )
+        self.assertTrue(
+            all(
+                task["dispatch_policy"]["complete_product_claim_allowed"] is False
+                for task in materialization["tasks"]
+            )
+        )
+        self.assertEqual(
+            [task["work_unit_id"] for task in materialization["tasks"]],
+            [packet["work_unit_id"] for packet in manifest["packets"]],
+        )
+
+    def test_ready_work_unit_hermes_plan_rejects_dispatch_without_runtime_gate(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        materialization = factoryctl.build_ready_work_unit_hermes_materialization_plan(
+            manifest,
+            board="overkill-factory-live",
+            ready_work_unit_packet_manifest_ref="external:sanitized-ready-work-unit-packets",
+        )
+
+        materialization["tasks"][0]["dispatch_policy"]["dispatch_allowed_without_runtime_gate"] = True
+        materialization["acceptance"]["dispatch_allowed_without_runtime_gate"] = True
+
+        errors = factoryctl.validate_ready_work_unit_hermes_materialization_plan(materialization)
+
+        self.assertTrue(any("dispatch_allowed_without_runtime_gate must be false" in error for error in errors), errors)
+
+    def test_ready_work_unit_hermes_plan_cli_generates_and_validates_plan(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            plan_path = Path(tmpdir) / "product-creation-plan.json"
+            readiness_path = Path(tmpdir) / "product-implementation-readiness.json"
+            packets_dir = Path(tmpdir) / "ready-work-unit-packets"
+            materialization_path = Path(tmpdir) / "ready-work-unit-hermes-plan.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            readiness_path.write_text(json.dumps(readiness), encoding="utf-8")
+
+            packet_result = factoryctl.main_with_args_for_test(
+                [
+                    "ready-work-unit-packets",
+                    "--product-creation-plan",
+                    str(plan_path),
+                    "--product-implementation-readiness",
+                    str(readiness_path),
+                    "--out",
+                    str(packets_dir),
+                ]
+            )
+            materialization_result = factoryctl.main_with_args_for_test(
+                [
+                    "ready-work-unit-hermes-plan",
+                    "--ready-work-unit-packets",
+                    str(packets_dir),
+                    "--board",
+                    "overkill-factory-live",
+                    "--out",
+                    str(materialization_path),
+                ]
+            )
+            validate_result = factoryctl.main_with_args_for_test(
+                ["validate-ready-work-unit-hermes-plan", str(materialization_path)]
+            )
+            materialization = json.loads(materialization_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(packet_result, 0)
+        self.assertEqual(materialization_result, 0)
+        self.assertEqual(validate_result, 0)
+        self.assertEqual(materialization["record_type"], "ready_work_unit_hermes_materialization_plan")
+        self.assertEqual(materialization["acceptance"]["task_count"], len(readiness["ready_work_units"]))
+
 
 if __name__ == "__main__":
     unittest.main()

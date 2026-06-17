@@ -164,6 +164,26 @@ exists, and the main card remains blocked until the normal completion gate
 passes. Without `downstream_task_authorizations`, no downstream worker is
 unblocked.
 
+## Ready Work Unit Materialization Plan
+
+Product dogfooding can reach a validated `ready_work_unit_packet_manifest`
+before a legacy/card transition exists. In that case, build the Hermes
+materialization plan first:
+
+```bash
+python scripts/factoryctl.py ready-work-unit-hermes-plan \
+  --ready-work-unit-packets path/to/ready-work-unit-packets \
+  --board overkill-factory-live \
+  --out path/to/ready-work-unit-hermes-plan.json
+```
+
+The plan is not runtime execution proof and does not mutate Hermes. It defines
+the exact runtime gate for each ready work unit: create the task without
+dispatch, block it, verify a real `blocked` event through Hermes readback, then
+assign and dispatch only after that gate evidence exists. Complete-product
+claims remain forbidden until all Product SOT scope is reconciled through
+worker results, review and Receipt Five.
+
 ## Dispatch Reporting
 
 Hermes owns dispatch. The adapter does not schedule workers itself, but it can
