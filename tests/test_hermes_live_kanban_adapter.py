@@ -792,6 +792,70 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertEqual(len(unblock_calls), 1)
 
+    def test_recover_ready_work_units_repairs_incomplete_existing_replacement(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            contaminated_task_id = next(iter(fake.tasks))
+            fake.tasks[contaminated_task_id].setdefault("runs", []).append({"status": "reclaimed"})
+            replacement_task = adapter.replacement_ready_work_unit_task(
+                plan_task=plan["tasks"][0],
+                contaminated_task_ids=[contaminated_task_id],
+                contamination_markers=["run:reclaimed"],
+            )
+            partial_replacement_task_id = adapter.create_ready_work_unit_task(
+                hermes_bin="hermes",
+                board=TEST_BOARD,
+                task=replacement_task,
+                worker_assignee_prefix="",
+                workspace_ref="scratch",
+                runner=fake,
+            )
+            fake.tasks[partial_replacement_task_id]["assignee"] = None
+            recover_args = adapter.build_parser().parse_args(
+                [
+                    "recover-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                    "--create-replacements",
+                ]
+            )
+            recovery = adapter.recover_ready_work_units(recover_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, recovery)
+        self.assertEqual(recovery["runtime_gate"]["replacement_created_count"], 1)
+        self.assertIn(
+            adapter.READY_WORK_UNIT_SUPERSESSION_MARKER,
+            fake.tasks[contaminated_task_id]["comments"][0]["body"],
+        )
+        partial_comments = fake.tasks[partial_replacement_task_id].get("comments", [])
+        partial_repaired_or_superseded = (
+            fake.tasks[partial_replacement_task_id]["assignee"] == "implementation-worker"
+            or any(adapter.READY_WORK_UNIT_SUPERSESSION_MARKER in str(comment.get("body") or "") for comment in partial_comments)
+        )
+        self.assertTrue(partial_repaired_or_superseded)
+        self.assertTrue(
+            any(
+                task_id != contaminated_task_id
+                and str(task.get("assignee") or "") == "implementation-worker"
+                and not any(
+                    adapter.READY_WORK_UNIT_SUPERSESSION_MARKER in str(comment.get("body") or "")
+                    for comment in task.get("comments", [])
+                )
+                for task_id, task in fake.tasks.items()
+            )
+        )
+
     def test_recover_ready_work_units_does_not_supersede_legally_released_blocked_first_wave(self) -> None:
         fake = FakeHermes()
         with tempfile.TemporaryDirectory() as tmp:
