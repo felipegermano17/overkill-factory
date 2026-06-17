@@ -1011,7 +1011,11 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertFalse(materialization["runtime_boundary"]["live_hermes_mutated"])
         self.assertFalse(materialization["complete_product_claim_allowed"])
         self.assertEqual(len(materialization["tasks"]), len(manifest["packets"]))
-        self.assertTrue(all(task["initial_status"] == "blocked" for task in materialization["tasks"]))
+        self.assertTrue(all(task["initial_status"] == "unassigned_pending_block" for task in materialization["tasks"]))
+        self.assertTrue(all(task["create_policy"]["create_with_assignee"] is False for task in materialization["tasks"]))
+        self.assertTrue(
+            all(task["create_policy"]["assign_after_block_event_verified"] is True for task in materialization["tasks"])
+        )
         self.assertTrue(
             all(task["block_policy"]["block_event_required_before_dispatch"] for task in materialization["tasks"])
         )

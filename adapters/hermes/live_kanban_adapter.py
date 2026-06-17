@@ -48,6 +48,7 @@ VOLATILE_CONTRACT_KEYS = {
 }
 CANONICALIZATION_VERSION = "v1"
 IDEMPOTENCY_LINEAGE_POLICY = "base_identity_is_logical_lineage_contract_key_is_runtime_identity"
+ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
     "worker_id",
@@ -125,6 +126,10 @@ def contract_digest(value: Any) -> str:
     else:
         payload = json.dumps(stable_value, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def compact_json_argument(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=True, separators=(",", ":"))
 
 
 def idempotency_digest_fragment(digest: str) -> str:
@@ -331,38 +336,268 @@ def route_readiness_blockers(path: Path | None, required_worker_ids: list[str]) 
     return blockers
 
 
+def strip_terminal_markup(value: str) -> str:
+    return ANSI_ESCAPE_RE.sub("", value or "").replace("\r", "")
+
+
+def parse_profile_list(output: str) -> dict[str, dict[str, str]]:
+    profiles: dict[str, dict[str, str]] = {}
+    for raw_line in strip_terminal_markup(output).splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        while line and not (line[0].isalnum() or line[0] in {"_", "-", "."}):
+            line = line[1:].lstrip()
+        if not line:
+            continue
+        columns = line.split()
+        if len(columns) < 2:
+            continue
+        profile = columns[0]
+        if profile.lower() in {"profile", "profiles"}:
+            continue
+        if profile.lower().startswith("profile "):
+            continue
+        profiles[profile] = {
+            "model": columns[1],
+            "gateway": columns[2] if len(columns) > 2 else "",
+            "alias": columns[3] if len(columns) > 3 else "",
+        }
+    return profiles
+
+
+def status_has_provider_auth(status_output: str, provider_name: str) -> bool:
+    target = " ".join(str(provider_name or "").split()).lower()
+    if not target:
+        return False
+    for raw_line in strip_terminal_markup(status_output).splitlines():
+        normalized = " ".join(raw_line.split()).lower()
+        if target in normalized and "logged in" in normalized and "not logged in" not in normalized:
+            return True
+    return False
+
+
+def required_workers_from_ready_plan(path: Path | None) -> list[str]:
+    if path is None:
+        return []
+    plan = load_ready_work_unit_materialization_plan(path.resolve())
+    workers: list[str] = []
+    for task in plan.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+        worker_id = str(task.get("owner_worker") or "").strip()
+        if worker_id and worker_id not in workers:
+            workers.append(worker_id)
+    return workers
+
+
+def build_route_readiness_manifest(
+    *,
+    required_workers: list[str],
+    profiles: dict[str, dict[str, str]],
+    auth_ready: bool,
+    ledger_ref: str,
+    credential_evidence_ref: str,
+) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    blocked_workers: list[str] = []
+    for worker_id in required_workers:
+        profile = profiles.get(worker_id)
+        profile_exists = profile is not None
+        model = str((profile or {}).get("model") or "").strip()
+        model_configured = bool(model and model not in {"-", "\u2014"})
+        provider_configured = bool(auth_ready)
+        credential_status = "pass" if auth_ready else "fail"
+        blocked_reasons: list[str] = []
+        if not profile_exists:
+            blocked_reasons.append("profile_missing")
+        if not model_configured:
+            blocked_reasons.append("model_missing")
+        if not provider_configured:
+            blocked_reasons.append("provider_auth_not_proven")
+        if credential_status != "pass":
+            blocked_reasons.append("credential_not_proven")
+        status = "ready" if not blocked_reasons else "blocked"
+        if status == "blocked":
+            blocked_workers.append(worker_id)
+        checks.append(
+            {
+                "worker_id": worker_id,
+                "task_id": f"route:{worker_id}",
+                "required_before": "materialize-ready-work-units",
+                "queue_class": "runtime-readiness-before-materialization",
+                "status": status,
+                "profile_exists": profile_exists,
+                "config_ref": f"hermes-profile:{worker_id}" if profile_exists else None,
+                "model_configured": model_configured,
+                "provider_configured": provider_configured,
+                "credential_status": credential_status,
+                "credential_evidence": [credential_evidence_ref] if credential_status == "pass" else [],
+                "blocked_reasons": blocked_reasons,
+            }
+        )
+    return {
+        "$schema": ROUTE_READINESS_SCHEMA,
+        "schema": "overkill_factory_hermes_worker_route_readiness.v1",
+        "ledger_ref": ledger_ref,
+        "hermes_home_ref": "redacted-hermes-home",
+        "result": "PASS" if not blocked_workers else "BLOCKED",
+        "worker_count": len(required_workers),
+        "blocked_worker_count": len(blocked_workers),
+        "blocked_workers": blocked_workers,
+        "checks": checks,
+        "production_rule": (
+            "Route readiness is collected from read-only Hermes profile/status readback; "
+            "blocked workers must be repaired before live materialization or dispatch."
+        ),
+    }
+
+
+def collect_route_readiness(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    required_workers: list[str] = []
+    for worker_id in required_workers_from_ready_plan(args.plan):
+        if worker_id not in required_workers:
+            required_workers.append(worker_id)
+    for worker_id in args.worker or []:
+        normalized = str(worker_id or "").strip()
+        if normalized and normalized not in required_workers:
+            required_workers.append(normalized)
+    if not required_workers:
+        raise RuntimeError("route readiness collection requires --plan or at least one --worker")
+
+    profile_output = run_checked([args.hermes_bin, "profile", "list"], runner).stdout
+    status_output = run_checked([args.hermes_bin, "status"], runner).stdout
+    profiles = parse_profile_list(profile_output)
+    auth_ready = status_has_provider_auth(status_output, args.required_auth_provider)
+    manifest = build_route_readiness_manifest(
+        required_workers=required_workers,
+        profiles=profiles,
+        auth_ready=auth_ready,
+        ledger_ref=args.ledger_ref,
+        credential_evidence_ref=args.credential_evidence_ref,
+    )
+    if args.out:
+        write_json(args.out, manifest)
+    return manifest
+
+
 def ensure_non_empty_body(body: str) -> None:
     if not str(body or "").strip():
         raise RuntimeError("Hermes task body must be non-empty before dispatch")
 
 
+def task_readback_status(payload: dict[str, Any]) -> str:
+    status = str(payload.get("status") or "").strip().lower()
+    task = payload.get("task")
+    if not status and isinstance(task, dict):
+        status = str(task.get("status") or "").strip().lower()
+    return status
+
+
+def task_readback_task(payload: dict[str, Any]) -> dict[str, Any]:
+    task = payload.get("task")
+    if isinstance(task, dict):
+        return task
+    return payload
+
+
+def task_readback_events(payload: dict[str, Any]) -> list[Any]:
+    events = payload.get("events") or payload.get("history") or payload.get("timeline") or []
+    if isinstance(events, list):
+        return events
+    task = payload.get("task")
+    if isinstance(task, dict):
+        nested_events = task.get("events") or task.get("history") or task.get("timeline") or []
+        if isinstance(nested_events, list):
+            return nested_events
+    return []
+
+
+def task_readback_assignee(payload: dict[str, Any]) -> str:
+    return str(task_readback_task(payload).get("assignee") or "").strip()
+
+
+def task_readback_body(payload: dict[str, Any]) -> str:
+    return str(task_readback_task(payload).get("body") or "")
+
+
+def pre_dispatch_activity_markers(payload: dict[str, Any]) -> list[str]:
+    markers: list[str] = []
+    for event in task_readback_events(payload):
+        if not isinstance(event, dict):
+            continue
+        kind = str(event.get("kind") or event.get("type") or event.get("event") or event.get("action") or "").strip().lower()
+        if kind in {"claimed", "spawned", "spawn_failed", "running"}:
+            markers.append(kind)
+    runs = payload.get("runs")
+    if isinstance(runs, list):
+        for run in runs:
+            if isinstance(run, dict):
+                status = str(run.get("status") or run.get("outcome") or "").strip().lower()
+                if status and status != "blocked":
+                    markers.append(f"run:{status}")
+    return markers
+
+
+def ensure_no_pre_dispatch_activity(payload: dict[str, Any], *, task_id: str) -> None:
+    markers = pre_dispatch_activity_markers(payload)
+    if markers:
+        raise RuntimeError(f"Hermes task {task_id} had pre-dispatch activity: {', '.join(markers)}")
+
+
+def ensure_ready_work_unit_readback_contract(
+    *,
+    payload: dict[str, Any],
+    task_id: str,
+    expected_assignee: str,
+    expected_packet_id: str,
+) -> None:
+    if task_readback_status(payload) != "blocked":
+        raise RuntimeError(f"Hermes task {task_id} is not blocked after ready work-unit materialization")
+    if task_readback_assignee(payload) != expected_assignee:
+        raise RuntimeError(f"Hermes task {task_id} assignee readback does not match target profile")
+    try:
+        body = json.loads(task_readback_body(payload))
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Hermes task {task_id} body readback is not valid JSON") from exc
+    if str(body.get("packet_id") or "").strip() != expected_packet_id:
+        raise RuntimeError(f"Hermes task {task_id} body readback does not match ready work-unit packet")
+    ensure_no_pre_dispatch_activity(payload, task_id=task_id)
+
+
 def task_has_blocked_event(payload: dict[str, Any]) -> bool:
-    if str(payload.get("status") or "").strip().lower() == "blocked":
-        events = payload.get("events") or payload.get("history") or payload.get("timeline") or []
-        if isinstance(events, list):
-            for event in events:
-                if isinstance(event, dict):
-                    event_type = str(event.get("type") or event.get("event") or event.get("action") or "").strip().lower()
-                    if event_type in {"block", "blocked"}:
-                        return True
-                text = str(event).lower()
-                if re.search(r"\bblocked\b", text) and not re.search(r"\bunblocked\b", text):
+    if task_readback_status(payload) == "blocked":
+        for event in task_readback_events(payload):
+            if isinstance(event, dict):
+                event_type = str(
+                    event.get("type") or event.get("event") or event.get("action") or event.get("kind") or ""
+                ).strip().lower()
+                if event_type in {"block", "blocked"}:
                     return True
+                continue
+            text = str(event).lower()
+            if re.search(r"\bblocked\b", text) and not re.search(r"\bunblocked\b", text):
+                return True
     return False
 
 
 def task_has_unblocked_event(payload: dict[str, Any], required_markers: list[str] | None = None) -> bool:
-    if str(payload.get("status") or "").strip().lower() == "blocked":
+    if task_readback_status(payload) == "blocked":
         return False
     markers = [marker.strip().lower() for marker in (required_markers or []) if marker.strip()]
-    events = payload.get("events") or payload.get("history") or payload.get("timeline") or []
-    if isinstance(events, list):
-        for event in events:
-            text = str(event).lower()
-            if "unblock" not in text:
-                continue
-            if all(marker in text for marker in markers):
+    for event in task_readback_events(payload):
+        if isinstance(event, dict):
+            event_type = str(
+                event.get("type") or event.get("event") or event.get("action") or event.get("kind") or ""
+            ).strip().lower()
+            if event_type in {"unblock", "unblocked"} and all(marker in str(event).lower() for marker in markers):
                 return True
+            continue
+        text = str(event).lower()
+        if "unblock" not in text:
+            continue
+        if all(marker in text for marker in markers):
+            return True
     return False
 
 
@@ -654,13 +889,19 @@ def create_ready_work_unit_task(
 ) -> str:
     create_policy = task.get("create_policy") if isinstance(task.get("create_policy"), dict) else {}
     block_policy = task.get("block_policy") if isinstance(task.get("block_policy"), dict) else {}
-    if create_policy.get("create_with_assignee") is not True:
-        raise RuntimeError("ready work-unit task create_policy must use the documented assignee create path")
+    if create_policy.get("create_with_assignee") is not False:
+        raise RuntimeError("ready work-unit task create_policy must create without assignee before the blocked event")
+    if create_policy.get("assign_after_block_event_verified") is not True:
+        raise RuntimeError("ready work-unit task create_policy must assign only after the blocked event is verified")
+    if create_policy.get("no_spawn_protocol") != "create-unassigned-default-block-assign-v2":
+        raise RuntimeError("ready work-unit task create_policy must use the no-spawn create-unassigned-block-assign protocol")
     if block_policy.get("block_event_required_before_dispatch") is not True:
         raise RuntimeError("ready work-unit task must require a blocked event before dispatch")
+    if block_policy.get("final_status_required") != "blocked":
+        raise RuntimeError("ready work-unit task must require final blocked status before dispatch")
 
     body_contract = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
-    ensure_non_empty_body(json.dumps(body_contract, ensure_ascii=True))
+    ensure_non_empty_body(compact_json_argument(body_contract))
     target_assignee = str(create_policy.get("target_assignee_profile") or task.get("owner_worker") or "").strip()
     if not target_assignee:
         raise RuntimeError("ready work-unit task requires target_assignee_profile")
@@ -672,9 +913,7 @@ def create_ready_work_unit_task(
                 "create",
                 str(task.get("title") or f"OF ready work unit {task.get('work_unit_id') or 'work-unit'}"),
                 "--body",
-                json.dumps(body_contract, indent=2, ensure_ascii=True),
-                "--assignee",
-                worker_assignee_prefix + target_assignee,
+                compact_json_argument(body_contract),
                 "--idempotency-key",
                 str(task.get("idempotency_key") or ""),
                 "--created-by",
@@ -682,27 +921,54 @@ def create_ready_work_unit_task(
                 "--workspace",
                 f"dir:{ROOT}",
                 "--json",
-                "--initial-status",
-                "blocked",
             ),
             runner,
         ).stdout
     )
-    shown_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
-    if not task_has_blocked_event(shown_task):
-        ensure_blocked_event(
-            hermes_bin=hermes_bin,
-            board=board,
-            task_id=task_id,
-            reason=str(
-                block_policy.get("blocked_reason")
-                or "Overkill Factory ready work-unit runtime gate starts blocked until evidence passes."
-            ),
-            runner=runner,
-        )
-    final_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
-    if not task_has_blocked_event(final_task):
+    ensure_blocked_event(
+        hermes_bin=hermes_bin,
+        board=board,
+        task_id=task_id,
+        reason=str(
+            block_policy.get("blocked_reason")
+            or "Overkill Factory ready work-unit runtime gate starts blocked until evidence passes."
+        ),
+        runner=runner,
+    )
+    blocked_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    ensure_no_pre_dispatch_activity(blocked_task, task_id=task_id)
+    if not task_has_blocked_event(blocked_task):
         raise RuntimeError(f"Hermes task {task_id} lacks verified blocked event after materialization")
+    if task_readback_status(blocked_task) != "blocked":
+        raise RuntimeError(f"Hermes task {task_id} is not blocked before assignment")
+    run_checked(
+        hermes_kanban(
+            hermes_bin,
+            board,
+            "assign",
+            task_id,
+            worker_assignee_prefix + target_assignee,
+        ),
+        runner,
+    )
+    final_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    try:
+        ensure_ready_work_unit_readback_contract(
+            payload=final_task,
+            task_id=task_id,
+            expected_assignee=worker_assignee_prefix + target_assignee,
+            expected_packet_id=str(task.get("packet_id") or "").strip(),
+        )
+    except RuntimeError:
+        if task_readback_status(final_task) != "blocked":
+            ensure_blocked_event(
+                hermes_bin=hermes_bin,
+                board=board,
+                task_id=task_id,
+                reason="Ready work-unit assignment triggered unsafe non-blocked state; re-blocking before failing closed.",
+                runner=runner,
+            )
+        raise
     return task_id
 
 
@@ -921,7 +1187,7 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
             hermes_bin=args.hermes_bin,
             board=args.board,
             title=str(task.get("title") or f"OF {card_id} {worker_id}"),
-            body=json.dumps(packet, indent=2, ensure_ascii=True),
+            body=compact_json_argument(packet),
             assignee=args.worker_assignee_prefix + worker_id,
             idempotency_key=worker_idempotency_key,
             created_by="overkill-factory",
@@ -1305,6 +1571,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_ready.add_argument("--route-readiness", type=Path)
     p_ready.add_argument("--out", type=Path)
 
+    p_route = sub.add_parser(
+        "collect-route-readiness",
+        help="Collect the public-safe Hermes worker route readiness manifest from read-only Hermes state.",
+    )
+    p_route.add_argument("--plan", type=Path)
+    p_route.add_argument("--worker", action="append", default=[])
+    p_route.add_argument("--hermes-bin", default="hermes")
+    p_route.add_argument("--required-auth-provider", default="OpenAI Codex")
+    p_route.add_argument("--credential-evidence-ref", default="external:hermes-status-auth-provider-ready")
+    p_route.add_argument("--ledger-ref", default="external:hermes-worker-route-readiness-ledger")
+    p_route.add_argument("--out", type=Path)
+
     p_done = sub.add_parser("enforce-done", help="Validate worker results before completing the main card.")
     p_done.add_argument("--card", type=Path, required=True)
     p_done.add_argument("--board", required=True)
@@ -1338,6 +1616,8 @@ def main() -> int:
             envelope = materialize(args)
         elif args.command == "materialize-ready-work-units":
             envelope = materialize_ready_work_units(args)
+        elif args.command == "collect-route-readiness":
+            envelope = collect_route_readiness(args)
         elif args.command == "enforce-done":
             envelope = enforce_done(args)
         elif args.command == "dispatch":

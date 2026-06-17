@@ -8629,6 +8629,7 @@ def _ready_work_unit_hermes_idempotency_key(
         "manifest_id": manifest_id,
         "packet_id": str(packet.get("packet_id") or "").strip(),
         "work_unit_id": work_unit_id,
+        "materialization_protocol": "create-unassigned-default-block-assign-v2",
         "body_contract": packet,
     }
     digest = hashlib.sha256(json.dumps(contract, sort_keys=True, ensure_ascii=True).encode("utf-8")).hexdigest()
@@ -8682,7 +8683,7 @@ def build_ready_work_unit_hermes_materialization_plan(
             "reviewer_role": str(packet.get("reviewer_role") or "").strip(),
             "title": _ready_work_unit_hermes_title(packet),
             "materialization_state": "planned_pending_hermes_runtime_gate",
-            "initial_status": "blocked",
+            "initial_status": "unassigned_pending_block",
             "body_format": "ready_work_unit_execution_request_json",
             "body_contract": safe_packet,
             "dependency_refs": _list_items(packet.get("dependency_refs")),
@@ -8699,13 +8700,18 @@ def build_ready_work_unit_hermes_materialization_plan(
             ),
             "create_policy": {
                 "create_without_dispatch": True,
-                "create_with_assignee": True,
-                "documented_hermes_cli_shape": "hermes kanban create --assignee --initial-status blocked --json",
+                "create_with_assignee": False,
+                "assign_after_block_event_verified": True,
+                "no_spawn_protocol": "create-unassigned-default-block-assign-v2",
+                "documented_hermes_cli_shape": (
+                    "hermes kanban create --json; hermes kanban block; hermes kanban assign"
+                ),
                 "target_assignee_profile": owner_worker,
             },
             "block_policy": {
                 "initial_block_required": True,
                 "block_event_required_before_dispatch": True,
+                "final_status_required": "blocked",
                 "verify_command": "hermes kanban show --json",
                 "blocked_reason": (
                     "Ready work unit starts blocked until Hermes readback proves a blocked event "
@@ -8715,6 +8721,7 @@ def build_ready_work_unit_hermes_materialization_plan(
             "dispatch_policy": {
                 "dispatch_allowed_without_runtime_gate": False,
                 "complete_product_claim_allowed": False,
+                "claim_or_spawn_forbidden_before_dispatch": True,
                 "dispatch_precondition": "blocked_event_verified",
             },
             "public_private_boundary": {
@@ -8773,7 +8780,8 @@ def build_ready_work_unit_hermes_materialization_plan(
         },
         "acceptance": {
             "task_count": len(tasks),
-            "all_tasks_start_blocked": True,
+            "all_tasks_start_unassigned": True,
+            "all_tasks_materialized_blocked": True,
             "block_event_required_before_dispatch": True,
             "dispatch_allowed_without_runtime_gate": False,
             "live_hermes_mutated": False,
@@ -8836,8 +8844,10 @@ def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -
         owner = str(task.get("owner_worker") or "").strip()
         if owner and owner not in WORKERS:
             errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].owner_worker must be registered: {owner}")
-        if task.get("initial_status") != "blocked":
-            errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].initial_status must be blocked")
+        if task.get("initial_status") != "unassigned_pending_block":
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].initial_status must be unassigned_pending_block"
+            )
         receipt = task.get("receipt_five_contract") if isinstance(task.get("receipt_five_contract"), dict) else {}
         if receipt.get("complete_product_claim_allowed") is not False:
             errors.append(
@@ -8846,11 +8856,30 @@ def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -
         body_contract = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
         if body_contract.get("packet_type") != "ready_work_unit_execution_request":
             errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].body_contract must be a ready work-unit packet")
+        create_policy = task.get("create_policy") if isinstance(task.get("create_policy"), dict) else {}
+        if create_policy.get("create_without_dispatch") is not True:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].create_policy.create_without_dispatch must be true"
+            )
+        if create_policy.get("create_with_assignee") is not False:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].create_policy.create_with_assignee must be false"
+            )
+        if create_policy.get("assign_after_block_event_verified") is not True:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].create_policy.assign_after_block_event_verified must be true"
+            )
+        if create_policy.get("no_spawn_protocol") != "create-unassigned-default-block-assign-v2":
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].create_policy.no_spawn_protocol must be create-unassigned-default-block-assign-v2"
+            )
         block_policy = task.get("block_policy") if isinstance(task.get("block_policy"), dict) else {}
         if block_policy.get("block_event_required_before_dispatch") is not True:
             errors.append(
                 f"ready_work_unit_hermes_materialization_plan.tasks[{index}].block_policy.block_event_required_before_dispatch must be true"
             )
+        if block_policy.get("final_status_required") != "blocked":
+            errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].block_policy.final_status_required must be blocked")
         dispatch_policy = task.get("dispatch_policy") if isinstance(task.get("dispatch_policy"), dict) else {}
         if dispatch_policy.get("dispatch_allowed_without_runtime_gate") is not False:
             errors.append(
@@ -8859,6 +8888,10 @@ def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -
         if dispatch_policy.get("complete_product_claim_allowed") is not False:
             errors.append(
                 f"ready_work_unit_hermes_materialization_plan.tasks[{index}].dispatch_policy.complete_product_claim_allowed must be false"
+            )
+        if dispatch_policy.get("claim_or_spawn_forbidden_before_dispatch") is not True:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].dispatch_policy.claim_or_spawn_forbidden_before_dispatch must be true"
             )
 
     duplicate_packet_ids = sorted({item for item in packet_ids if packet_ids.count(item) > 1})
@@ -8871,8 +8904,10 @@ def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -
     acceptance = plan.get("acceptance") if isinstance(plan.get("acceptance"), dict) else {}
     if acceptance.get("task_count") != len(tasks):
         errors.append("ready_work_unit_hermes_materialization_plan.acceptance.task_count must match tasks length")
-    if acceptance.get("all_tasks_start_blocked") is not True:
-        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.all_tasks_start_blocked must be true")
+    if acceptance.get("all_tasks_start_unassigned") is not True:
+        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.all_tasks_start_unassigned must be true")
+    if acceptance.get("all_tasks_materialized_blocked") is not True:
+        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.all_tasks_materialized_blocked must be true")
     if acceptance.get("block_event_required_before_dispatch") is not True:
         errors.append("ready_work_unit_hermes_materialization_plan.acceptance.block_event_required_before_dispatch must be true")
     if acceptance.get("dispatch_allowed_without_runtime_gate") is not False:

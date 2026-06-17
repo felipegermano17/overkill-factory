@@ -178,23 +178,35 @@ python scripts/factoryctl.py ready-work-unit-hermes-plan \
 ```
 
 The plan is not runtime execution proof and does not mutate Hermes. It defines
-the exact runtime gate for each ready work unit: create the task with the
-documented Hermes `--assignee` and `--initial-status blocked` shape, block it,
-verify a real `blocked` event through Hermes readback, and dispatch only after
-that gate evidence exists. Complete-product claims remain forbidden until all
-Product SOT scope is reconciled through worker results, review and Receipt Five.
+the exact runtime gate for each ready work unit using the
+`create-unassigned-default-block-assign-v2` protocol: create the task without an
+assignee and without `--initial-status blocked`, block it, verify a real
+`blocked` event through Hermes readback,
+assign the intended worker only after that blocked event exists, then verify
+the task is still blocked and has no pre-dispatch `promoted`, `claimed`,
+`spawned`, `spawn_failed` or run history. Dispatch happens only after that gate
+evidence exists. Complete-product claims remain forbidden until all Product SOT
+scope is reconciled through worker results, review and Receipt Five.
 
 When the runtime is reachable, the live adapter can consume that plan:
 
 ```bash
+python adapters/hermes/live_kanban_adapter.py collect-route-readiness \
+  --plan path/to/ready-work-unit-hermes-plan.json \
+  --out path/to/route-readiness.json
+
 python adapters/hermes/live_kanban_adapter.py materialize-ready-work-units \
   --plan path/to/ready-work-unit-hermes-plan.json \
   --route-readiness path/to/route-readiness.json \
   --out path/to/live-ready-work-unit-materialization-result.json
 ```
 
-This command creates blocked Hermes tasks only. It does not dispatch workers,
-complete tasks, approve Receipt Five, or claim product completion.
+The collector is read-only: it derives required workers from the plan, checks
+Hermes profiles and auth/provider readiness, and emits the official
+`hermes-worker-route-readiness` manifest without embedding raw status dumps or
+private paths. Materialization then creates blocked Hermes tasks only. It does
+not dispatch workers, complete tasks, approve Receipt Five, or claim product
+completion.
 
 ## Dispatch Reporting
 

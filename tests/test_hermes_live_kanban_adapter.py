@@ -60,10 +60,17 @@ class FakeHermes:
             self.counter += 1
             task_id = "t_" + f"{self.counter:08x}"
             initial_status = "blocked" if "--initial-status" in argv and "blocked" in argv else "ready"
-            self.tasks[task_id] = {"status": initial_status, "events": []}
+            body = argv[argv.index("--body") + 1] if "--body" in argv else "{}"
+            assignee = argv[argv.index("--assignee") + 1] if "--assignee" in argv else None
+            self.tasks[task_id] = {"status": initial_status, "events": [], "body": body, "assignee": assignee}
             if idempotency_key:
                 self.idempotent_task_ids[idempotency_key] = task_id
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
+        if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "assign":
+            task = self.tasks.setdefault(argv[5], {"status": "blocked", "events": [], "body": "{}", "assignee": None})
+            task["assignee"] = argv[6]
+            task.setdefault("events", []).append({"type": "assigned", "profile": argv[6]})
+            return subprocess.CompletedProcess(argv, 0, stdout="assigned", stderr="")
         if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
             task = self.tasks.setdefault(argv[5], {"status": "ready", "events": []})
             task["status"] = "blocked"
@@ -79,6 +86,46 @@ class FakeHermes:
             return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(payload), stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
             return subprocess.CompletedProcess(argv, 0, stdout="linked", stderr="")
+        return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
+
+
+class UnsafePromotionHermes(FakeHermes):
+    def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
+        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
+            task = self.tasks.setdefault(argv[5], {"status": "blocked", "events": [], "body": "{}", "assignee": None})
+            task.setdefault("events", []).append({"kind": "promoted"})
+            task.setdefault("events", []).append({"kind": "claimed"})
+            return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(task), stderr="")
+        return super().__call__(argv)
+
+
+class FakeRouteReadinessHermes:
+    def __init__(self, *, include_implementation_worker: bool = True, auth_ready: bool = True) -> None:
+        self.calls: list[list[str]] = []
+        self.include_implementation_worker = include_implementation_worker
+        self.auth_ready = auth_ready
+
+    def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
+        self.calls.append(argv)
+        if argv == ["hermes", "profile", "list"]:
+            rows = [
+                " Profile          Model                        Gateway      Alias        Distribution",
+                " default          gpt-5.5                      stopped      -            -",
+                " factory-orchestrator gpt-5.5                      stopped      factory-orchestrator -",
+            ]
+            if self.include_implementation_worker:
+                rows.append(
+                    " implementation-worker gpt-5.5                      stopped      implementation-worker -"
+                )
+            return subprocess.CompletedProcess(argv, 0, stdout="\n".join(rows), stderr="")
+        if argv == ["hermes", "status"]:
+            marker = "\u2713 logged in" if self.auth_ready else "x not logged in"
+            return subprocess.CompletedProcess(
+                argv,
+                0,
+                stdout=f"OpenAI Codex  {marker}\nGateway Service  \u2713 running\n",
+                stderr="",
+            )
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
 
 
@@ -236,7 +283,80 @@ def assert_live_adapter_result_schema(testcase: unittest.TestCase, result: dict[
     testcase.assertEqual(errors, [])
 
 
+def assert_route_readiness_schema(testcase: unittest.TestCase, result: dict[str, object]) -> None:
+    schema = json.loads((ROOT / "schemas" / "hermes-worker-route-readiness.schema.json").read_text(encoding="utf-8"))
+    errors = validator.validate_node(schema, result, "$", schemas={"hermes-worker-route-readiness.schema.json": schema}, root_schema=schema)
+    testcase.assertEqual(errors, [])
+
+
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
+    def test_collect_route_readiness_derives_workers_from_ready_plan(self) -> None:
+        fake = FakeRouteReadinessHermes()
+        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            out_path = tmp_path / "route-readiness.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            args = adapter.build_parser().parse_args(
+                [
+                    "collect-route-readiness",
+                    "--plan",
+                    str(plan_path),
+                    "--out",
+                    str(out_path),
+                    "--ledger-ref",
+                    "external:test-route-ledger",
+                    "--credential-evidence-ref",
+                    "external:test-auth",
+                ]
+            )
+            result = adapter.collect_route_readiness(args, runner=fake)
+            wrote_output = out_path.exists()
+
+        assert_route_readiness_schema(self, result)
+        self.assertEqual(result["result"], "PASS")
+        self.assertEqual(result["blocked_worker_count"], 0)
+        self.assertEqual([check["worker_id"] for check in result["checks"]], ["implementation-worker"])
+        self.assertEqual(result["checks"][0]["credential_evidence"], ["external:test-auth"])
+        self.assertTrue(wrote_output)
+        self.assertEqual(fake.calls, [["hermes", "profile", "list"], ["hermes", "status"]])
+
+    def test_collect_route_readiness_blocks_missing_profile(self) -> None:
+        fake = FakeRouteReadinessHermes(include_implementation_worker=False)
+        args = adapter.build_parser().parse_args(
+            [
+                "collect-route-readiness",
+                "--worker",
+                "implementation-worker",
+                "--ledger-ref",
+                "external:test-route-ledger",
+            ]
+        )
+        result = adapter.collect_route_readiness(args, runner=fake)
+
+        assert_route_readiness_schema(self, result)
+        self.assertEqual(result["result"], "BLOCKED")
+        self.assertEqual(result["blocked_workers"], ["implementation-worker"])
+        self.assertIn("profile_missing", result["checks"][0]["blocked_reasons"])
+
+    def test_collect_route_readiness_blocks_unproven_auth(self) -> None:
+        fake = FakeRouteReadinessHermes(auth_ready=False)
+        args = adapter.build_parser().parse_args(
+            [
+                "collect-route-readiness",
+                "--worker",
+                "implementation-worker",
+                "--ledger-ref",
+                "external:test-route-ledger",
+            ]
+        )
+        result = adapter.collect_route_readiness(args, runner=fake)
+
+        assert_route_readiness_schema(self, result)
+        self.assertEqual(result["result"], "BLOCKED")
+        self.assertIn("credential_not_proven", result["checks"][0]["blocked_reasons"])
+
     def test_materialize_ready_work_units_creates_blocked_tasks_without_dispatch(self) -> None:
         fake = FakeHermes()
         plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
@@ -263,16 +383,18 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(result["ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
         create_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "create"]
         block_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "block"]
+        assign_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "assign"]
         dispatch_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "dispatch"]
         self.assertEqual(len(create_calls), 1)
-        self.assertIn("--assignee", create_calls[0])
-        self.assertIn("implementation-worker", create_calls[0])
-        self.assertIn("--initial-status", create_calls[0])
-        self.assertIn("blocked", create_calls[0])
+        self.assertNotIn("--assignee", create_calls[0])
+        self.assertNotIn("--initial-status", create_calls[0])
         self.assertEqual(len(block_calls), 1)
+        self.assertEqual(len(assign_calls), 1)
+        self.assertEqual(assign_calls[0][-1], "implementation-worker")
         self.assertEqual(dispatch_calls, [])
         materialized_task_id = next(iter(fake.tasks))
         self.assertEqual(fake.tasks[materialized_task_id]["status"], "blocked")
+        self.assertEqual(fake.tasks[materialized_task_id]["assignee"], "implementation-worker")
         self.assertTrue(fake.tasks[materialized_task_id]["events"])
 
     def test_materialize_ready_work_units_dry_run_does_not_touch_hermes(self) -> None:
@@ -317,6 +439,31 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 adapter.materialize_ready_work_units(args, runner=fake)
 
         self.assertEqual(fake.calls, [])
+
+    def test_materialize_ready_work_units_rejects_pre_dispatch_activity(self) -> None:
+        fake = UnsafePromotionHermes()
+        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness = tmp_path / "route-readiness.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness, extra_workers=["implementation-worker"])
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness),
+                ]
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "pre-dispatch activity"):
+                adapter.materialize_ready_work_units(args, runner=fake)
+
+        dispatch_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "dispatch"]
+        self.assertEqual(dispatch_calls, [])
 
     def test_materialize_schema_requires_recovery_and_idempotency_fields_for_real_run(self) -> None:
         schema = json.loads((ROOT / "schemas" / "hermes-live-adapter-result.schema.json").read_text(encoding="utf-8"))
@@ -448,12 +595,37 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 }
             )
         )
+        self.assertFalse(
+            adapter.task_has_blocked_event(
+                {
+                    "task": {"status": "blocked"},
+                    "events": [{"kind": "created", "payload": {"status": "blocked"}}],
+                }
+            )
+        )
         self.assertTrue(
             adapter.task_has_blocked_event(
                 {
                     "status": "blocked",
                     "events": [{"type": "blocked", "reason": "current gate"}],
                 }
+            )
+        )
+        self.assertTrue(
+            adapter.task_has_blocked_event(
+                {
+                    "task": {"status": "blocked"},
+                    "events": [{"kind": "blocked", "payload": {"reason": "current gate"}}],
+                }
+            )
+        )
+        self.assertTrue(
+            adapter.task_has_unblocked_event(
+                {
+                    "task": {"status": "ready"},
+                    "events": [{"kind": "unblocked", "payload": {"reason": "factory_recovery_attempt"}}],
+                },
+                required_markers=["factory_recovery_attempt"],
             )
         )
 
