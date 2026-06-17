@@ -91,10 +91,23 @@ class FakeHermes:
             task["status"] = "blocked"
             task.setdefault("events", []).append({"type": "blocked", "reason": argv[6]})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"blocked"}', stderr="")
+        if len(argv) >= 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "comment":
+            if argv[5] == "--author":
+                author = argv[6]
+                task_id = argv[7]
+                body = " ".join(argv[8:])
+            else:
+                author = "default"
+                task_id = argv[5]
+                body = " ".join(argv[6:])
+            task = self.tasks.setdefault(task_id, {"status": "blocked", "events": [], "comments": []})
+            task.setdefault("comments", []).append({"author": author, "body": body})
+            task.setdefault("events", []).append({"type": "commented", "author": author})
+            return subprocess.CompletedProcess(argv, 0, stdout="commented", stderr="")
         if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "unblock":
             task = self.tasks.setdefault(argv[5], {"status": "blocked", "events": []})
             task["status"] = "ready"
-            task.setdefault("events", []).append({"type": "unblocked", "reason": argv[6]})
+            task.setdefault("events", []).append({"type": "unblocked", "payload": None})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"ready"}', stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
             payload = self.tasks.get(argv[5], {"status": "blocked", "events": [{"type": "blocked", "reason": "gate"}]})
@@ -858,6 +871,25 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     "events": [{"kind": "unblocked", "payload": {"reason": "factory_recovery_attempt"}}],
                 },
                 required_markers=["factory_recovery_attempt"],
+            )
+        )
+        self.assertTrue(
+            adapter.task_has_unblocked_event(
+                {
+                    "task": {"status": "ready"},
+                    "events": [{"kind": "unblocked", "payload": None}],
+                    "comments": [
+                        {
+                            "author": "overkill-factory",
+                            "body": "runtime_gate=blocked_event_verified_for_each_task release_scope=ready_work_units_only dispatch_separate=true",
+                        }
+                    ],
+                },
+                required_markers=[
+                    "runtime_gate=blocked_event_verified_for_each_task",
+                    "release_scope=ready_work_units_only",
+                    "dispatch_separate=true",
+                ],
             )
         )
 

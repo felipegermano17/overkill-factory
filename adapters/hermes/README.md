@@ -216,9 +216,12 @@ not dispatch workers, complete tasks, approve Receipt Five, or claim product
 completion. Release verifies the materialization result, finds exactly one
 blocked Hermes task per planned `packet_id`/`work_unit_id`, proves the real
 `blocked` event, assignee, JSON body, dispatcher-visible workspace and absence
-of pre-dispatch activity, then unblocks those tasks to `ready`. Release does not
-dispatch workers; native Hermes dispatch remains a separate command and the
-complete-product claim remains forbidden.
+of pre-dispatch activity, records a Hermes-native audit comment with the
+release markers, then unblocks those tasks to `ready`. Release accepts real
+Hermes readback where the `unblocked` event itself has no payload as long as the
+marker-bearing comment is present. Release does not dispatch workers; native
+Hermes dispatch remains a separate command and the complete-product claim
+remains forbidden.
 
 Use `--workspace` when the adapter runs outside the Hermes host. The workspace
 must be meaningful to the Hermes dispatcher, not merely to the machine that runs
