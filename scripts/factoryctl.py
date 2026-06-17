@@ -7016,6 +7016,275 @@ def validate_product_sot(product_sot: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _full_scope_coverage_id(product_sot_ref: str) -> str:
+    return f"full-scope-coverage-{slug_for_ref(product_sot_ref)}"
+
+
+def _coverage_status_for_requirement(requirement: dict[str, Any]) -> str:
+    state = str(requirement.get("decision_state") or "").strip()
+    if state == "blocked":
+        return "blocked"
+    if state == "open_decision":
+        return "human_decision_required"
+    if state == "rejected":
+        return "out_of_scope"
+    if state == "superseded":
+        return "deferred_with_owner"
+    return "planned"
+
+
+def build_full_scope_coverage(
+    product_sot: dict[str, Any],
+    *,
+    created_at: str | None = None,
+    coverage_id: str | None = None,
+) -> dict[str, Any]:
+    product_sot_errors = validate_product_sot(product_sot)
+    if product_sot_errors:
+        raise ValueError("; ".join(product_sot_errors))
+
+    handoff = product_sot.get("handoff") if isinstance(product_sot.get("handoff"), dict) else {}
+    if str(handoff.get("next_artifact") or "").strip() != "full_product_sot_scope_coverage":
+        raise ValueError("product_sot does not hand off to full Product SOT scope coverage")
+
+    product_sot_ref = str(product_sot.get("sot_id") or product_sot.get("product_sot_ref") or "product-sot")
+    final_coverage_id = coverage_id or _full_scope_coverage_id(product_sot_ref)
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    requirements = product_sot.get("requirement_graph") if isinstance(product_sot.get("requirement_graph"), list) else []
+
+    source_refs = _dedupe_preserve_order(
+        [
+            str(product_sot.get("outcome_contract_ref") or ""),
+            str(product_sot.get("source_ledger_ref") or ""),
+            *[
+                ref
+                for requirement in requirements
+                if isinstance(requirement, dict)
+                for ref in _list_items(requirement.get("source_refs"))
+            ],
+        ]
+    )
+    source_claim_resolution = [
+        {
+            "claim_ref": ref,
+            "disposition": "promoted",
+            "rationale": "Claim remains accounted in the Product SOT coverage graph.",
+            "authority_ref": product_sot_ref,
+        }
+        for ref in source_refs
+    ]
+
+    requirement_coverage: list[dict[str, Any]] = []
+    user_decision_required = False
+    for index, requirement in enumerate(requirements):
+        if not isinstance(requirement, dict):
+            continue
+        requirement_ref = str(requirement.get("requirement_id") or f"product-sot#requirement-{index + 1:03d}")
+        status = _coverage_status_for_requirement(requirement)
+        blocker_id = str(requirement.get("blocker_id") or "").strip()
+        if status in {"blocked", "human_decision_required"}:
+            user_decision_required = status == "human_decision_required" or user_decision_required
+            if not blocker_id:
+                blocker_id = f"{requirement_ref}#blocker"
+        evidence_refs = _dedupe_preserve_order(
+            [
+                product_sot_ref,
+                *[
+                    ref
+                    for ref in _list_items(requirement.get("evidence_refs"))
+                    if str(ref or "").strip()
+                ],
+                *([blocker_id] if blocker_id else []),
+            ]
+        )
+        owner = str(requirement.get("owner") or "product-sot-planner").strip()
+        if owner not in WORKERS:
+            owner = "product-sot-planner"
+        row: dict[str, Any] = {
+            "requirement_ref": requirement_ref,
+            "status": status,
+            "owner": owner,
+            "work_unit_refs": [],
+            "evidence_refs": evidence_refs,
+            "next_action": (
+                "resolve blocker or explicit human decision before method routing"
+                if status in {"blocked", "human_decision_required"}
+                else "route through method contract before creating implementation work units"
+            ),
+        }
+        if blocker_id:
+            row["blocker_id"] = blocker_id
+        requirement_coverage.append(row)
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/full-product-sot-scope-coverage.schema.json",
+        "record_type": "full_product_sot_scope_coverage",
+        "coverage_id": final_coverage_id,
+        "created_at": created,
+        "factory_method_version": "OVERKILL_VFINAL",
+        "product_sot_ref": product_sot_ref,
+        "coverage_policy": (
+            "Every Product SOT requirement must be accounted before method routing, "
+            "planning or execution can claim readiness."
+        ),
+        "source_claim_resolution": source_claim_resolution,
+        "requirement_coverage": requirement_coverage,
+        "slice_policy": {
+            "scope_reduction_forbidden": True,
+            "slices_are_order_only": True,
+            "waiver_required_for_defer": True,
+        },
+        "completion_rule": (
+            "Scope-accounted completion may track planned, blocked, deferred-with-owner "
+            "and out-of-scope requirements, but production-complete acceptance requires "
+            "every active Product SOT requirement to be done or explicitly rebaselined by a human gate."
+        ),
+        "evidence_refs": [
+            product_sot_ref,
+            "schemas/full-product-sot-scope-coverage.schema.json",
+            "schemas/product-sot.schema.json",
+        ],
+        "blocking_rules": {
+            "product_sot_required": True,
+            "every_requirement_accounted": True,
+            "scope_reduction_forbidden": True,
+            "execution_blocked_until_method_readiness_and_gates_pass": True,
+            "raw_private_evidence_must_stay_external": True,
+        },
+        "handoff": {
+            "next_artifact": "method_contract",
+            "next_worker": "factory-orchestrator",
+            "next_safe_action": "Create method contract before planning, work units or execution.",
+            "user_decision_required": user_decision_required,
+            "factory_owned_next_step": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+        },
+        "acceptance": {
+            "full_scope_coverage_created": True,
+            "execution_allowed": False,
+            "scope_reduction_detected": False,
+            "requirements_accounted": len(requirement_coverage),
+            "blocked_reason": (
+                "Full Product SOT scope coverage exists, but execution remains blocked "
+                "until method contract, planning, readiness and gates pass."
+            ),
+            "evidence_refs": ["schemas/full-product-sot-scope-coverage.schema.json", product_sot_ref],
+        },
+    }
+
+
+def validate_full_scope_coverage(coverage: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("full-product-sot-scope-coverage.schema.json")
+    if not schema:
+        return ["full_product_sot_scope_coverage schema is not bundled"]
+    errors.extend(validate_node(schema, coverage, "full_product_sot_scope_coverage", schemas=schemas, root_schema=schema))
+    if coverage.get("record_type") != "full_product_sot_scope_coverage":
+        errors.append("full_product_sot_scope_coverage.record_type must be full_product_sot_scope_coverage")
+
+    product_sot_ref = str(coverage.get("product_sot_ref") or "").strip()
+    if product_sot_ref:
+        _validate_public_ref(product_sot_ref, "full_product_sot_scope_coverage.product_sot_ref", errors)
+
+    for index, item in enumerate(coverage.get("source_claim_resolution", []) if isinstance(coverage.get("source_claim_resolution"), list) else []):
+        if not isinstance(item, dict):
+            continue
+        for field in ("claim_ref", "authority_ref"):
+            value = str(item.get(field) or "").strip()
+            if value:
+                _validate_public_ref(value, f"full_product_sot_scope_coverage.source_claim_resolution[{index}].{field}", errors)
+        for field in ("rationale",):
+            if not public_safe_text(item.get(field)):
+                errors.append(f"full_product_sot_scope_coverage.source_claim_resolution[{index}].{field} must be public-safe")
+
+    requirements = coverage.get("requirement_coverage") if isinstance(coverage.get("requirement_coverage"), list) else []
+    if not requirements:
+        errors.append("full_product_sot_scope_coverage requires requirement_coverage")
+    seen_requirements: set[str] = set()
+    for index, item in enumerate(requirements):
+        if not isinstance(item, dict):
+            continue
+        requirement_ref = str(item.get("requirement_ref") or "").strip()
+        if requirement_ref:
+            if requirement_ref in seen_requirements:
+                errors.append(f"full_product_sot_scope_coverage.requirement_coverage[{index}].requirement_ref is duplicated")
+            seen_requirements.add(requirement_ref)
+            _validate_public_ref(requirement_ref, f"full_product_sot_scope_coverage.requirement_coverage[{index}].requirement_ref", errors)
+        status = str(item.get("status") or "").strip()
+        blocker_id = str(item.get("blocker_id") or "").strip()
+        if status in {"blocked", "human_decision_required"} and not blocker_id:
+            errors.append(f"full_product_sot_scope_coverage.requirement_coverage[{index}] blocked/human decision requires blocker_id")
+        if blocker_id:
+            _validate_public_ref(blocker_id, f"full_product_sot_scope_coverage.requirement_coverage[{index}].blocker_id", errors)
+        owner = str(item.get("owner") or "").strip()
+        if owner and owner not in WORKERS:
+            errors.append(f"full_product_sot_scope_coverage.requirement_coverage[{index}].owner must be a registered worker: {owner}")
+        for field in ("work_unit_refs", "evidence_refs"):
+            for ref_index, ref in enumerate(_list_items(item.get(field))):
+                _validate_public_ref(ref, f"full_product_sot_scope_coverage.requirement_coverage[{index}].{field}[{ref_index}]", errors)
+        if not public_safe_text(item.get("next_action")):
+            errors.append(f"full_product_sot_scope_coverage.requirement_coverage[{index}].next_action must be public-safe")
+
+    slice_policy = coverage.get("slice_policy") if isinstance(coverage.get("slice_policy"), dict) else {}
+    if slice_policy.get("scope_reduction_forbidden") is not True:
+        errors.append("full_product_sot_scope_coverage.slice_policy.scope_reduction_forbidden must be true")
+    if slice_policy.get("slices_are_order_only") is not True:
+        errors.append("full_product_sot_scope_coverage.slice_policy.slices_are_order_only must be true")
+
+    for index, ref in enumerate(_list_items(coverage.get("evidence_refs"))):
+        _validate_public_ref(ref, f"full_product_sot_scope_coverage.evidence_refs[{index}]", errors)
+
+    blocking_rules = coverage.get("blocking_rules") if isinstance(coverage.get("blocking_rules"), dict) else {}
+    for field in (
+        "product_sot_required",
+        "every_requirement_accounted",
+        "scope_reduction_forbidden",
+        "execution_blocked_until_method_readiness_and_gates_pass",
+        "raw_private_evidence_must_stay_external",
+    ):
+        if blocking_rules.get(field) is not True:
+            errors.append(f"full_product_sot_scope_coverage.blocking_rules.{field} must be true")
+
+    handoff = coverage.get("handoff") if isinstance(coverage.get("handoff"), dict) else {}
+    if handoff.get("factory_owned_next_step") is not True:
+        errors.append("full_product_sot_scope_coverage.handoff.factory_owned_next_step must be true")
+    if handoff.get("next_artifact") != "method_contract":
+        errors.append("full_product_sot_scope_coverage.handoff.next_artifact must be method_contract")
+    next_worker = str(handoff.get("next_worker") or "").strip()
+    if next_worker and next_worker not in WORKERS:
+        errors.append(f"full_product_sot_scope_coverage.handoff.next_worker must be a registered worker: {next_worker}")
+
+    boundary = coverage.get("public_private_boundary") if isinstance(coverage.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("full_product_sot_scope_coverage requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("full_product_sot_scope_coverage must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("full_product_sot_scope_coverage private context must stay outside the public repo")
+
+    acceptance = coverage.get("acceptance") if isinstance(coverage.get("acceptance"), dict) else {}
+    if acceptance.get("full_scope_coverage_created") is not True:
+        errors.append("full_product_sot_scope_coverage acceptance.full_scope_coverage_created must be true")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("full_product_sot_scope_coverage acceptance.execution_allowed must be false")
+    if acceptance.get("scope_reduction_detected") is not False:
+        errors.append("full_product_sot_scope_coverage acceptance.scope_reduction_detected must be false")
+    if acceptance.get("requirements_accounted") != len(requirements):
+        errors.append("full_product_sot_scope_coverage acceptance.requirements_accounted must match requirement_coverage length")
+    _validate_lifecycle_refs(
+        _list_items(acceptance.get("evidence_refs")),
+        "full_product_sot_scope_coverage.acceptance.evidence_refs",
+        errors,
+    )
+
+    return errors
+
+
 def validate_universal_signal_golden_corpus(corpus: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     schemas = bundled_schemas()
@@ -12585,6 +12854,16 @@ def command_validate_product_sot(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_full_scope_coverage(args: argparse.Namespace) -> int:
+    errors = validate_full_scope_coverage(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_route_registry(args: argparse.Namespace) -> int:
     registry = load_route_registry(args.registry)
     if args.route_class:
@@ -12704,6 +12983,25 @@ def command_product_sot(args: argparse.Namespace) -> int:
             print(error, file=sys.stderr)
         return 1
     write_json(args.out, product_sot)
+    return 0
+
+
+def command_full_scope_coverage(args: argparse.Namespace) -> int:
+    try:
+        coverage = build_full_scope_coverage(
+            load_json_like(args.product_sot),
+            created_at=args.created_at,
+            coverage_id=args.coverage_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_full_scope_coverage(coverage)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, coverage)
     return 0
 
 
@@ -13149,6 +13447,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_product_sot_parser.add_argument("path", type=Path)
     validate_product_sot_parser.set_defaults(func=command_validate_product_sot)
 
+    validate_full_scope_coverage_parser = sub.add_parser("validate-full-scope-coverage")
+    validate_full_scope_coverage_parser.add_argument("path", type=Path)
+    validate_full_scope_coverage_parser.set_defaults(func=command_validate_full_scope_coverage)
+
     route_registry_parser = sub.add_parser("route-registry", help="Show the canonical Universal Signal route registry.")
     route_registry_parser.add_argument("--registry", type=Path, default=DEFAULT_ROUTE_REGISTRY_PATH)
     route_registry_parser.add_argument("--route-class")
@@ -13215,6 +13517,16 @@ def build_parser() -> argparse.ArgumentParser:
     product_sot_parser.add_argument("--sot-id")
     product_sot_parser.add_argument("--out", type=Path)
     product_sot_parser.set_defaults(func=command_product_sot)
+
+    full_scope_coverage_parser = sub.add_parser(
+        "full-scope-coverage",
+        help="Build full Product SOT scope coverage from a validated Product SOT without allowing execution.",
+    )
+    full_scope_coverage_parser.add_argument("--product-sot", type=Path, required=True)
+    full_scope_coverage_parser.add_argument("--created-at")
+    full_scope_coverage_parser.add_argument("--coverage-id")
+    full_scope_coverage_parser.add_argument("--out", type=Path)
+    full_scope_coverage_parser.set_defaults(func=command_full_scope_coverage)
 
     validate_signal_corpus_parser = sub.add_parser("validate-signal-corpus")
     validate_signal_corpus_parser.add_argument("path", type=Path)

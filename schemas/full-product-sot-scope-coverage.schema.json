@@ -5,17 +5,27 @@
   "type": "object",
   "required": [
     "record_type",
+    "coverage_id",
+    "created_at",
+    "factory_method_version",
     "product_sot_ref",
     "coverage_policy",
     "source_claim_resolution",
     "requirement_coverage",
     "slice_policy",
     "completion_rule",
-    "evidence_refs"
+    "evidence_refs",
+    "blocking_rules",
+    "handoff",
+    "public_private_boundary",
+    "acceptance"
   ],
   "properties": {
     "$schema": { "const": "https://overkill-factory.dev/schemas/full-product-sot-scope-coverage.schema.json" },
     "record_type": { "const": "full_product_sot_scope_coverage" },
+    "coverage_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "factory_method_version": { "const": "OVERKILL_VFINAL" },
     "product_sot_ref": { "type": "string", "minLength": 3 },
     "coverage_policy": {
       "type": "string",
@@ -51,8 +61,19 @@
           },
           "owner": { "type": "string", "minLength": 3 },
           "work_unit_refs": { "type": "array", "items": { "type": "string" } },
-          "evidence_refs": { "type": "array", "items": { "type": "string" } }
+          "evidence_refs": { "type": "array", "items": { "type": "string" } },
+          "blocker_id": { "type": "string", "minLength": 3 },
+          "next_action": { "type": "string", "minLength": 3 }
         },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "status": { "enum": ["blocked", "human_decision_required"] } },
+              "required": ["status"]
+            },
+            "then": { "required": ["blocker_id"] }
+          }
+        ],
         "additionalProperties": true
       }
     },
@@ -71,6 +92,80 @@
       "type": "array",
       "minItems": 1,
       "items": { "type": "string", "minLength": 3 }
+    },
+    "blocking_rules": {
+      "type": "object",
+      "required": [
+        "product_sot_required",
+        "every_requirement_accounted",
+        "scope_reduction_forbidden",
+        "execution_blocked_until_method_readiness_and_gates_pass",
+        "raw_private_evidence_must_stay_external"
+      ],
+      "properties": {
+        "product_sot_required": { "const": true },
+        "every_requirement_accounted": { "const": true },
+        "scope_reduction_forbidden": { "const": true },
+        "execution_blocked_until_method_readiness_and_gates_pass": { "const": true },
+        "raw_private_evidence_must_stay_external": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "next_artifact",
+        "next_worker",
+        "next_safe_action",
+        "user_decision_required",
+        "factory_owned_next_step"
+      ],
+      "properties": {
+        "next_artifact": { "type": "string", "minLength": 3 },
+        "next_worker": { "type": "string", "minLength": 3 },
+        "next_safe_action": { "type": "string", "minLength": 6 },
+        "user_decision_required": { "type": "boolean" },
+        "factory_owned_next_step": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "full_scope_coverage_created",
+        "execution_allowed",
+        "scope_reduction_detected",
+        "requirements_accounted",
+        "blocked_reason",
+        "evidence_refs"
+      ],
+      "properties": {
+        "full_scope_coverage_created": { "const": true },
+        "execution_allowed": { "const": false },
+        "scope_reduction_detected": { "const": false },
+        "requirements_accounted": { "type": "integer", "minimum": 1 },
+        "blocked_reason": { "type": "string", "minLength": 6 },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": true

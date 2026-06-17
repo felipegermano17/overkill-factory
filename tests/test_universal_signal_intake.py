@@ -554,6 +554,99 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "does not require Product SOT"):
             factoryctl.build_product_sot(outcome)
 
+    def test_full_scope_coverage_from_product_sot_is_valid(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+
+        coverage = factoryctl.build_full_scope_coverage(product_sot)
+
+        self.assertEqual(factoryctl.validate_full_scope_coverage(coverage), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(coverage, "$"), [])
+        self.assertEqual(coverage["record_type"], "full_product_sot_scope_coverage")
+        self.assertEqual(coverage["product_sot_ref"], product_sot["sot_id"])
+        self.assertEqual(len(coverage["requirement_coverage"]), len(product_sot["requirement_graph"]))
+        self.assertTrue(coverage["slice_policy"]["scope_reduction_forbidden"])
+        self.assertTrue(coverage["slice_policy"]["slices_are_order_only"])
+        self.assertEqual(coverage["handoff"]["next_artifact"], "method_contract")
+        self.assertFalse(coverage["acceptance"]["execution_allowed"])
+
+    def test_full_scope_coverage_requires_valid_product_sot(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+        product_sot["acceptance"]["execution_allowed"] = True
+
+        with self.assertRaisesRegex(ValueError, "execution_allowed"):
+            factoryctl.build_full_scope_coverage(product_sot)
+
+    def test_full_scope_coverage_cli_generates_public_safe_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            product_sot_path = Path(tmpdir) / "product-sot.json"
+            out_path = Path(tmpdir) / "full-scope-coverage.json"
+            source_resolution = factoryctl.build_source_resolution_packet(
+                signal_intake(),
+                intake_ref_public_safe="external:sanitized-universal-signal-intake",
+            )
+            ledger = factoryctl.build_product_source_ledger(
+                source_resolution,
+                source_ref_public_safe="external:sanitized-product-brief",
+            )
+            outcome = factoryctl.build_outcome_contract(ledger)
+            product_sot = factoryctl.build_product_sot(outcome)
+            product_sot_path.write_text(json.dumps(product_sot), encoding="utf-8")
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "full-scope-coverage",
+                    "--product-sot",
+                    str(product_sot_path),
+                    "--out",
+                    str(out_path),
+                ]
+            )
+
+            coverage = json.loads(out_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(coverage["record_type"], "full_product_sot_scope_coverage")
+        self.assertEqual(factoryctl.validate_full_scope_coverage(coverage), [])
+
+    def test_full_scope_coverage_preserves_open_decision_blocker(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+        product_sot["requirement_graph"][0]["decision_state"] = "open_decision"
+        product_sot["requirement_graph"][0]["blocker_id"] = "human-gate-product-scope-001"
+
+        coverage = factoryctl.build_full_scope_coverage(product_sot)
+
+        first_requirement = coverage["requirement_coverage"][0]
+        self.assertEqual(first_requirement["status"], "human_decision_required")
+        self.assertEqual(first_requirement["blocker_id"], "human-gate-product-scope-001")
+        self.assertIn("human-gate-product-scope-001", first_requirement["evidence_refs"])
+
 
 if __name__ == "__main__":
     unittest.main()
