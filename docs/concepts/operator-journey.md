@@ -92,7 +92,7 @@ support, learnback and factory maturity audit.
 
 | Stage | What happens | Output |
 | --- | --- | --- |
-| 1. Intake | The operator brings a paper, bug, repo, incident, feature, release or research request. | Input type and initial scope. |
+| 1. Intake | The operator brings a paper, bug, repo, incident, feature, release or research request. | Universal signal intake, input type and initial scope. |
 | 2. Source Ledger | The factory records where source material came from. | Source list. |
 | 3. Source Resolution | Facts, inference, decisions, conflicts and gaps are separated. | Source resolution. |
 | 4. Product Outcome & Discovery | The desired result, user, problem and assumptions are clarified. | Outcome and discovery notes. |

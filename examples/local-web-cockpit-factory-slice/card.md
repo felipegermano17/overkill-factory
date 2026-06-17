@@ -4,6 +4,7 @@
   "slice_id": "LOCAL_WEB_COCKPIT_FACTORY_SLICE",
   "owner_profile": "factory-orchestrator",
   "request_type": "ux_ui",
+  "universal_signal_intake_ref": "examples/local-web-cockpit-factory-slice/universal-signal-intake.json",
   "source_refs": [
     "examples/local-web-cockpit-factory-slice/input-paper.md",
     "docs/operations/parallel-execution-and-status.md",
@@ -1101,6 +1102,33 @@
       "approver": "",
       "reason": "No human release approval in planning slice; implementation may require one if scope changes."
     },
+    "prototype_decision": "prototype required before implementation only if Product Face cannot prove the cockpit states from static plans and snapshots",
+    "device_or_viewport_scope": [
+      "desktop local browser for dense operator supervision",
+      "narrow viewport smoke for layout breakage and critical blocker visibility"
+    ],
+    "accessibility_scope": [
+      "keyboard reachability for primary controls",
+      "contrast for status and risk markers",
+      "labels for evidence, blocker and approval actions"
+    ],
+    "performance_scope": [
+      "local snapshot render remains responsive with long blocker and evidence lists",
+      "stale or missing data states render without network dependence"
+    ],
+    "data_context": "Use public-safe status snapshots with fresh, stale, blocked, empty, failed-gate and approval-needed states; raw logs, private paths and chat memory are out of scope.",
+    "docs_onboarding": [
+      "local run command",
+      "public/private evidence boundary",
+      "how to read blocked vs approval-needed state"
+    ],
+    "experience_qa": [
+      "state coverage against factory status snapshot",
+      "visual quality review against operational cockpit bar",
+      "public-safety scan for rendered refs",
+      "keyboard and narrow viewport smoke"
+    ],
+    "product_face_result_required": true,
     "evidence_refs": [
       "examples/local-web-cockpit-factory-slice/input-paper.md"
     ]

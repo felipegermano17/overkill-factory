@@ -80,6 +80,7 @@
         "incident",
         "release",
         "migration",
+        "refactor",
         "integration",
         "doc",
         "security",
@@ -88,6 +89,8 @@
         "agent_skill"
       ]
     },
+    "universal_signal_intake": { "$ref": "universal-signal-intake.schema.json" },
+    "universal_signal_intake_ref": { "type": "string", "minLength": 3 },
     "source_state": {
       "enum": ["backlog", "compiled", "inference", "promoted", "raw", "rejected"]
     },

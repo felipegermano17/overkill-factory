@@ -14,6 +14,7 @@ EXPECTED_REQUEST_TYPES = {
     "incident",
     "release",
     "migration",
+    "refactor",
     "integration",
     "doc",
     "security",

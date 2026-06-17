@@ -1,8 +1,9 @@
 # Overkill Factory
 
 Overkill Factory is an open source production line for agentic product work.
-It helps a Hermes operator turn a raw product or project paper into a controlled
-sequence of source resolution, planning, architecture, specialist work,
+It helps a Hermes operator turn a product paper, idea, bug, incident, existing
+repo, release, research request or other work signal into a controlled sequence
+of signal intake, source resolution, planning, architecture, specialist work,
 evidence, review, gates and receipts.
 
 The project is not a chat prompt. It is a set of public contracts, worker
@@ -14,7 +15,8 @@ inspectable before it is allowed to move forward.
 Overkill Factory gives Hermes a product-production method:
 
 ```text
-paper or project brief
+paper, bug, repo, incident, idea or research signal
+-> universal signal intake
 -> source resolution
 -> Product SOT
 -> architecture and risk routing

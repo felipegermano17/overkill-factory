@@ -117,12 +117,61 @@ VFINAL_REQUEST_TYPES = {
     "incident",
     "release",
     "migration",
+    "refactor",
     "integration",
     "doc",
     "security",
     "ux_ui",
     "data_analytics",
     "agent_skill",
+}
+
+UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS = {
+    "product_creation": {
+        "source_ledger",
+        "outcome_contract",
+        "product_sot",
+        "full_product_sot_scope_coverage",
+        "method_contract",
+        "product_creation_plan",
+        "product_implementation_readiness",
+        "sdlc_feedback_loop",
+    },
+    "feature_delivery": {"source_ledger", "outcome_contract", "method_contract", "spec_graph", "qa_plan"},
+    "bug_repair": {"source_ledger", "bug_reproduction", "diagnosis", "regression_check", "receipt_five"},
+    "incident_response": {"incident_support_plan", "severity_model", "mitigation_plan", "evidence_record", "learnback"},
+    "brownfield_discovery": {"source_ledger", "legacy_system_map", "baseline", "regression_plan", "rollback_plan"},
+    "release_promotion": {"production_readiness_plan", "promotion_ladder", "rollback_path", "monitoring_signals"},
+    "research_validation": {"specialist_research_plan", "specialist_decision_packet", "sdlc_feedback_loop"},
+    "docs_onboarding": {"user_docs_onboarding_plan", "reader_success_path", "docs_verification"},
+    "security_remediation": {"security_architecture_plan", "security_scan_packet", "review_result"},
+    "critical_integration": {"integration_contract", "dependency_gate", "contract_tests", "fallback_plan"},
+    "migration_execution": {"legacy_system_map", "migration_plan", "regression_plan", "rollback_plan"},
+    "ux_product_experience": {
+        "product_experience_plan",
+        "product_face_packet",
+        "professional_design_process",
+        "product_face_result",
+    },
+    "analytics_data": {"data_metrics_plan", "event_contract", "dashboard_health_proof", "privacy_limits"},
+    "agent_quality_change": {"agent_eval_plan", "reasoning_policy", "worker_profile_readiness", "learnback"},
+}
+
+UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES = {
+    "product_creation": {"product_new"},
+    "feature_delivery": {"feature", "slice"},
+    "bug_repair": {"bug"},
+    "incident_response": {"incident"},
+    "brownfield_discovery": {"migration", "refactor", "integration"},
+    "release_promotion": {"release"},
+    "research_validation": {"feature", "product_new", "security", "ux_ui", "data_analytics", "agent_skill"},
+    "docs_onboarding": {"doc"},
+    "security_remediation": {"security"},
+    "critical_integration": {"integration"},
+    "migration_execution": {"migration"},
+    "ux_product_experience": {"ux_ui", "product_new", "feature"},
+    "analytics_data": {"data_analytics", "product_new", "feature"},
+    "agent_quality_change": {"agent_skill"},
 }
 
 VFINAL_CORE_CONTRACTS = {
@@ -4299,6 +4348,40 @@ def validate_reasoning_policy(policy: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_card_universal_signal_intake_contract(card: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    intake_ref = str(card.get("universal_signal_intake_ref") or "").strip()
+    intake = card.get("universal_signal_intake") if isinstance(card.get("universal_signal_intake"), dict) else None
+    if not intake and not intake_ref:
+        return ["universal_signal_intake or universal_signal_intake_ref required for OVERKILL_VFINAL intake routing"]
+    if intake_ref:
+        _validate_public_ref(intake_ref, "universal_signal_intake_ref", errors)
+        resolved = _load_repo_local_json_ref_node(intake_ref)
+        if not isinstance(resolved, dict):
+            errors.append(f"universal_signal_intake_ref does not resolve to a repo-local object: {intake_ref}")
+        elif intake is None:
+            intake = resolved
+    if intake is None:
+        return errors
+
+    errors.extend(validate_universal_signal_intake(intake))
+    classification = intake.get("classification") if isinstance(intake.get("classification"), dict) else {}
+    intake_request_type = str(classification.get("request_type") or "").strip()
+    card_request_type = str(card.get("request_type") or "").strip()
+    if card_request_type and intake_request_type and intake_request_type != card_request_type:
+        errors.append("universal_signal_intake.classification.request_type must match card.request_type")
+    intake_scope_intent = str(classification.get("scope_intent") or "").strip()
+    card_scope_intent = str(card.get("scope_intent") or "").strip()
+    if card_scope_intent and intake_scope_intent and intake_scope_intent != card_scope_intent:
+        errors.append("universal_signal_intake.classification.scope_intent must match card.scope_intent")
+    route = intake.get("route_decision") if isinstance(intake.get("route_decision"), dict) else {}
+    intake_feedback_ref = str(route.get("sdlc_feedback_loop_ref") or "").strip()
+    card_feedback_ref = str(card.get("sdlc_feedback_loop_ref") or "").strip()
+    if card_feedback_ref and intake_feedback_ref and intake_feedback_ref != card_feedback_ref:
+        errors.append("universal_signal_intake.route_decision.sdlc_feedback_loop_ref must match card.sdlc_feedback_loop_ref")
+    return errors
+
+
 def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
     if data.get("factory_method_version") != "OVERKILL_VFINAL":
         return []
@@ -4324,6 +4407,8 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
         errors.append("sdlc_feedback_loop_ref required for material vFinal autonomous execution")
     if feedback_ref:
         _validate_public_ref(feedback_ref, "sdlc_feedback_loop_ref", errors)
+
+    errors.extend(validate_card_universal_signal_intake_contract(data))
 
     method_contract = data.get("method_contract") if isinstance(data.get("method_contract"), dict) else {}
     required_plans = method_contract.get("required_plans") if isinstance(method_contract, dict) else []
@@ -5472,6 +5557,116 @@ def validate_factory_sdlc_feedback_loop(loop: dict[str, Any]) -> list[str]:
         errors.append("factory_sdlc_feedback_loop must not embed raw private evidence")
     if sovereignty.get("private_context_retained_outside_public_repo") is not True:
         errors.append("factory_sdlc_feedback_loop private context must stay outside the public repo")
+
+    return errors
+
+
+def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("universal-signal-intake.schema.json")
+    if not schema:
+        return ["universal_signal_intake schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            intake,
+            "universal_signal_intake",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+
+    signal = intake.get("signal") if isinstance(intake.get("signal"), dict) else {}
+    source_ref = str(signal.get("signal_ref_public_safe") or "").strip()
+    if source_ref:
+        _validate_public_ref(source_ref, "universal_signal_intake.signal.signal_ref_public_safe", errors)
+    if signal.get("sensitivity_class") == "secret":
+        errors.append("universal_signal_intake cannot publish secret-class signals")
+    if signal.get("raw_private_embedded") is not False:
+        errors.append("universal_signal_intake signal must not embed raw private evidence")
+
+    classification = intake.get("classification") if isinstance(intake.get("classification"), dict) else {}
+    request_type = str(classification.get("request_type") or "").strip()
+    route_class = str(classification.get("route_class") or "").strip()
+    if request_type and request_type not in VFINAL_REQUEST_TYPES:
+        errors.append("universal_signal_intake.classification.request_type must be one of " + ", ".join(sorted(VFINAL_REQUEST_TYPES)))
+    allowed_request_types = UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES.get(route_class)
+    if allowed_request_types and request_type and request_type not in allowed_request_types:
+        errors.append(
+            "universal_signal_intake.classification.request_type is not valid for route_class "
+            f"{route_class}: {request_type}"
+        )
+    if classification.get("can_start_execution") is not False:
+        errors.append("universal_signal_intake classification cannot allow execution directly")
+
+    normalization = intake.get("normalization") if isinstance(intake.get("normalization"), dict) else {}
+    if normalization.get("source_resolution_required") is not True:
+        errors.append("universal_signal_intake.source_resolution_required must be true")
+    if normalization.get("no_chat_only_state") is not True:
+        errors.append("universal_signal_intake.no_chat_only_state must be true")
+
+    route = intake.get("route_decision") if isinstance(intake.get("route_decision"), dict) else {}
+    for field in ("method_contract_ref", "sdlc_feedback_loop_ref", "factory_workflow_phase_ref", "fallback_route"):
+        value = str(route.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"universal_signal_intake.route_decision.{field}", errors)
+    recovery = route.get("non_human_block_recovery") if isinstance(route.get("non_human_block_recovery"), dict) else {}
+    recovery_ref = str(recovery.get("route_ref") or "").strip()
+    if recovery_ref:
+        _validate_public_ref(recovery_ref, "universal_signal_intake.route_decision.non_human_block_recovery.route_ref", errors)
+    if recovery.get("required") is not True or recovery.get("factory_owned_repair_allowed") is not True:
+        errors.append("universal_signal_intake non-human block must return to a factory-owned repair route")
+    retry_policy = recovery.get("retry_policy") if isinstance(recovery.get("retry_policy"), dict) else {}
+    max_attempts = retry_policy.get("max_attempts")
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
+        errors.append("universal_signal_intake non-human recovery requires retry_policy.max_attempts >= 1")
+
+    artifacts = intake.get("required_artifacts") if isinstance(intake.get("required_artifacts"), list) else []
+    artifact_types = {
+        str(artifact.get("artifact_type") or "").strip()
+        for artifact in artifacts
+        if isinstance(artifact, dict)
+    }
+    missing_artifact_types = sorted(UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS.get(route_class, set()) - artifact_types)
+    if missing_artifact_types:
+        errors.append(
+            f"universal_signal_intake {route_class} route missing required artifact types: "
+            + ", ".join(missing_artifact_types)
+        )
+    for index, artifact in enumerate(artifacts):
+        if not isinstance(artifact, dict):
+            continue
+        artifact_ref = str(artifact.get("artifact_ref") or "").strip()
+        if artifact_ref:
+            _validate_public_ref(artifact_ref, f"universal_signal_intake.required_artifacts[{index}].artifact_ref", errors)
+        artifact_type = str(artifact.get("artifact_type") or "").strip()
+        if artifact_type in UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS.get(route_class, set()):
+            if artifact.get("blocks_execution_when_missing") is not True:
+                errors.append(
+                    "universal_signal_intake.required_artifacts"
+                    f"[{index}].blocks_execution_when_missing must be true for required route artifact"
+                )
+
+    boundary = intake.get("public_private_boundary") if isinstance(intake.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("universal_signal_intake requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("universal_signal_intake must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("universal_signal_intake private context must stay outside the public repo")
+
+    acceptance = intake.get("acceptance") if isinstance(intake.get("acceptance"), dict) else {}
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("universal_signal_intake acceptance.execution_allowed must be false")
+    _validate_lifecycle_refs(
+        _list_items(acceptance.get("evidence_refs")),
+        "universal_signal_intake.acceptance.evidence_refs",
+        errors,
+    )
+    handoff = intake.get("handoff") if isinstance(intake.get("handoff"), dict) else {}
+    if handoff.get("factory_owned_next_step") is not True:
+        errors.append("universal_signal_intake handoff.factory_owned_next_step must be true")
 
     return errors
 
@@ -6858,6 +7053,8 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "reference_quality_packet": card.get("reference_quality_packet"),
             "professional_design_process": card.get("professional_design_process"),
             "learning_proposal_refs": card.get("learning_proposal_refs", []),
+            "universal_signal_intake_ref": card.get("universal_signal_intake_ref")
+            or ("card.universal_signal_intake" if isinstance(card.get("universal_signal_intake"), dict) else None),
             "sdlc_feedback_loop_ref": card.get("sdlc_feedback_loop_ref"),
             "autonomy_mode": card.get("autonomy_mode"),
             "agent_readiness_basis": card.get("agent_readiness_basis"),
@@ -10329,6 +10526,16 @@ def command_validate_sdlc_feedback_loop(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_signal_intake(args: argparse.Namespace) -> int:
+    errors = validate_universal_signal_intake(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_readiness_scorecard(args: argparse.Namespace) -> int:
     errors = validate_factory_readiness_scorecard(load_json_like(args.path))
     if errors:
@@ -10678,6 +10885,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_sdlc_feedback_parser = sub.add_parser("validate-sdlc-feedback-loop")
     validate_sdlc_feedback_parser.add_argument("path", type=Path)
     validate_sdlc_feedback_parser.set_defaults(func=command_validate_sdlc_feedback_loop)
+
+    validate_signal_intake_parser = sub.add_parser("validate-signal-intake")
+    validate_signal_intake_parser.add_argument("path", type=Path)
+    validate_signal_intake_parser.set_defaults(func=command_validate_signal_intake)
 
     validate_readiness_scorecard_parser = sub.add_parser("validate-readiness-scorecard")
     validate_readiness_scorecard_parser.add_argument("path", type=Path)
