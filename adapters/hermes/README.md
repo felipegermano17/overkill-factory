@@ -238,6 +238,30 @@ marker-bearing comment is present. Release does not dispatch workers; native
 Hermes dispatch remains a separate command and the complete-product claim
 remains forbidden.
 
+If a ready work-unit task shows pre-dispatch runtime activity such as claim,
+spawn, running state or run history before its dependency wave was legally
+released, do not unblock it manually and do not reuse that runtime lineage. Run
+the recovery path first:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py recover-ready-work-units \
+  --plan path/to/ready-work-unit-hermes-plan.json \
+  --materialization-result path/to/live-ready-work-unit-materialization-result.json \
+  --route-readiness path/to/route-readiness.json \
+  --workspace dir:<path-visible-to-hermes-dispatcher> \
+  --create-replacements \
+  --out path/to/recovered-ready-work-units.json
+```
+
+Without `--create-replacements`, the command is a read-only recovery plan. With
+it, the adapter preserves the contaminated task as blocked, records a
+Hermes-native supersession marker, and creates a clean replacement with a new
+idempotency lineage through the same blocked-first protocol. The old task
+remains history; the replacement must still pass normal release, worker result,
+review and Receipt Five gates before any product completion claim. The recovery
+result is sanitized for public refs and always keeps
+`complete_product_claim_allowed=false`.
+
 Use `--workspace` when the adapter runs outside the Hermes host. The workspace
 must be meaningful to the Hermes dispatcher, not merely to the machine that runs
 the adapter. Local operators can omit it and use the repo directory default;

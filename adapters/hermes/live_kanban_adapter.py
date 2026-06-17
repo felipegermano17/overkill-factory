@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import importlib.util
 import json
@@ -53,6 +54,8 @@ READY_WORK_UNIT_DIRECT_BODY_LIMIT = 12000
 READY_WORK_UNIT_CONTEXT_TRANSPORT_MODE = "hermes_comment_chunks.v1"
 READY_WORK_UNIT_CONTEXT_CHUNK_AUTHOR = "overkill-factory-context"
 READY_WORK_UNIT_CONTEXT_CHUNK_SIZE = 5000
+READY_WORK_UNIT_SUPERSESSION_MARKER = "ready_work_unit_superseded"
+READY_WORK_UNIT_RECOVERY_AUTHOR = "overkill-factory-recovery"
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -584,6 +587,11 @@ def ensure_dispatcher_visible_workspace(payload: dict[str, Any], *, task_id: str
 
 def pre_dispatch_activity_markers(payload: dict[str, Any]) -> list[str]:
     markers: list[str] = []
+    task = task_readback_task(payload)
+    if task.get("current_run_id") or task.get("run_id"):
+        markers.append("current_run_id")
+    if task.get("worker_pid"):
+        markers.append("worker_pid")
     for event in task_readback_events(payload):
         if not isinstance(event, dict):
             continue
@@ -598,6 +606,26 @@ def pre_dispatch_activity_markers(payload: dict[str, Any]) -> list[str]:
                 if status and status != "blocked":
                     markers.append(f"run:{status}")
     return markers
+
+
+def task_has_ready_work_unit_supersession(payload: dict[str, Any]) -> bool:
+    for comment in task_readback_comments(payload):
+        raw_body = str(comment.get("body") or comment.get("text") or comment.get("content") or "")
+        if READY_WORK_UNIT_SUPERSESSION_MARKER in raw_body:
+            return True
+    for event in task_readback_events(payload):
+        if READY_WORK_UNIT_SUPERSESSION_MARKER in str(event):
+            return True
+    return False
+
+
+def ready_work_unit_contamination_markers(payload: dict[str, Any]) -> list[str]:
+    status = task_readback_status(payload)
+    if status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+        return []
+    if task_has_ready_work_unit_supersession(payload):
+        return []
+    return pre_dispatch_activity_markers(payload)
 
 
 def ensure_no_pre_dispatch_activity(payload: dict[str, Any], *, task_id: str) -> None:
@@ -1448,6 +1476,7 @@ def ready_work_unit_readbacks_by_status(
     hermes_bin: str,
     board: str,
     statuses: list[str],
+    include_superseded: bool = False,
     runner: Runner = default_runner,
 ) -> dict[tuple[str, str], list[dict[str, Any]]]:
     candidates: dict[tuple[str, str], list[dict[str, Any]]] = {}
@@ -1462,6 +1491,8 @@ def ready_work_unit_readbacks_by_status(
             try:
                 body = ready_work_unit_body(payload, task_id=task_id)
             except RuntimeError:
+                continue
+            if not include_superseded and task_has_ready_work_unit_supersession(payload):
                 continue
             if str(body.get("packet_type") or "").strip() != "ready_work_unit_execution_request":
                 continue
@@ -1609,6 +1640,257 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
             "plan": plan,
             "materialization_result": materialization_result,
             "release_reason": release_reason,
+            "no_shadow_dispatcher": True,
+            "local_state_authority": False,
+        },
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
+
+
+def ready_work_unit_replacement_idempotency_key(
+    *, plan_task: dict[str, Any], contaminated_task_ids: list[str]
+) -> str:
+    base = str(plan_task.get("idempotency_key") or "").strip()
+    if not base:
+        _packet_id, work_unit_id = expected_ready_work_unit_key(plan_task)
+        base = f"overkill:ready-work-unit:{work_unit_id}"
+    digest = idempotency_digest_fragment(
+        contract_digest(
+            {
+                "base_idempotency_key": base,
+                "contaminated_task_ids": sorted(contaminated_task_ids),
+                "recovery_marker": READY_WORK_UNIT_SUPERSESSION_MARKER,
+                "version": "v1",
+            }
+        )
+    )
+    return f"{base}:supersedes:{digest}"
+
+
+def replacement_ready_work_unit_task(
+    *,
+    plan_task: dict[str, Any],
+    contaminated_task_ids: list[str],
+    contamination_markers: list[str],
+) -> dict[str, Any]:
+    replacement = copy.deepcopy(plan_task)
+    replacement["idempotency_key"] = ready_work_unit_replacement_idempotency_key(
+        plan_task=plan_task,
+        contaminated_task_ids=contaminated_task_ids,
+    )
+    title = str(replacement.get("title") or "").strip()
+    if title and " clean replacement" not in title:
+        replacement["title"] = f"{title} clean replacement"
+    body = replacement.get("body_contract") if isinstance(replacement.get("body_contract"), dict) else {}
+    body["runtime_lineage"] = {
+        "lineage_type": "ready_work_unit_supersession",
+        "supersedes_runtime_task_refs": sorted(contaminated_task_ids),
+        "supersession_marker": READY_WORK_UNIT_SUPERSESSION_MARKER,
+        "contamination_markers": sorted(set(contamination_markers)),
+        "complete_product_claim_allowed": False,
+    }
+    body["supersedes_runtime_task_refs"] = sorted(contaminated_task_ids)
+    body["complete_product_claim_allowed"] = False
+    replacement["body_contract"] = body
+    replacement["work_unit_context_packet"] = body.get("work_unit_context_packet")
+    return replacement
+
+
+def mark_ready_work_unit_superseded(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    replacement_task_id: str | None,
+    work_unit_id: str,
+    contamination_markers: list[str],
+    runner: Runner = default_runner,
+) -> None:
+    payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    if task_readback_status(payload) != "blocked":
+        ensure_blocked_event(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=task_id,
+            reason=(
+                "Ready work-unit superseded after pre-dispatch runtime activity; "
+                "preserve history and use the clean replacement lineage."
+            ),
+            runner=runner,
+        )
+    comment = compact_json_argument(
+        {
+            "marker": READY_WORK_UNIT_SUPERSESSION_MARKER,
+            "work_unit_id": work_unit_id,
+            "replacement_task_ref": replacement_task_id or "planned-clean-replacement",
+            "contamination_markers": sorted(set(contamination_markers)),
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "complete_product_claim_allowed": False,
+            "reason": "superseded contaminated ready work-unit runtime lineage; clean replacement required",
+        }
+    )
+    run_checked(
+        hermes_kanban(
+            hermes_bin,
+            board,
+            "comment",
+            "--author",
+            READY_WORK_UNIT_RECOVERY_AUTHOR,
+            task_id,
+            comment,
+        ),
+        runner,
+    )
+
+
+def recover_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
+    board = str(args.board or plan.get("board") or "").strip()
+    if not board:
+        raise RuntimeError("ready work-unit recovery requires a board")
+    if str(plan.get("board") or "").strip() and board != str(plan.get("board") or "").strip():
+        raise RuntimeError("provided board does not match the ready work-unit materialization plan")
+    materialization_result = load_ready_work_unit_materialization_result(
+        args.materialization_result.resolve(),
+        plan=plan,
+        board=board,
+    )
+    tasks = expected_ready_work_unit_tasks(plan)
+    required_workers = [
+        ready_work_unit_release_assignee(task, args.worker_assignee_prefix)
+        for task in tasks
+    ]
+    if args.create_replacements:
+        readiness_blockers = route_readiness_blockers(args.route_readiness, required_workers)
+        if readiness_blockers:
+            raise RuntimeError(
+                "pre-dispatch route readiness blocked ready work-unit recovery: " + "; ".join(readiness_blockers)
+            )
+
+    candidates = ready_work_unit_readbacks_by_status(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        statuses=["blocked", "ready", "running", "todo", "triage"],
+        include_superseded=True,
+        runner=runner,
+    )
+    recovery_plan: dict[str, Any] = {}
+    replacement_ready_work_unit_task_ids: dict[str, str] = {}
+    superseded_ready_work_unit_task_ids: dict[str, list[str]] = {}
+    existing_clean_replacement_task_ids: dict[str, str] = {}
+    missing_work_unit_ids: list[str] = []
+    clean_work_unit_ids: list[str] = []
+
+    for task in tasks:
+        key = expected_ready_work_unit_key(task)
+        packet_id, work_unit_id = key
+        matches = candidates.get(key) or []
+        active_matches = [
+            payload for payload in matches if not task_has_ready_work_unit_supersession(payload)
+        ]
+        if not active_matches:
+            missing_work_unit_ids.append(work_unit_id)
+            recovery_plan[work_unit_id] = {
+                "packet_id": packet_id,
+                "status": "missing_active_runtime_task",
+                "next_action": "materialize a clean ready work-unit task before release",
+            }
+            continue
+
+        contaminated: list[tuple[dict[str, Any], list[str]]] = []
+        clean_blocked: list[dict[str, Any]] = []
+        for payload in active_matches:
+            markers = ready_work_unit_contamination_markers(payload)
+            if markers:
+                contaminated.append((payload, markers))
+            elif task_readback_status(payload) == "blocked":
+                clean_blocked.append(payload)
+
+        if not contaminated:
+            clean_work_unit_ids.append(work_unit_id)
+            recovery_plan[work_unit_id] = {
+                "packet_id": packet_id,
+                "status": "clean_no_recovery_needed",
+                "active_task_count": len(active_matches),
+            }
+            continue
+
+        contaminated_task_ids = [task_readback_id(payload) for payload, _markers in contaminated]
+        contamination_markers = sorted({marker for _payload, markers in contaminated for marker in markers})
+        replacement_task_id: str | None = None
+        replacement_task = replacement_ready_work_unit_task(
+            plan_task=task,
+            contaminated_task_ids=contaminated_task_ids,
+            contamination_markers=contamination_markers,
+        )
+        if clean_blocked:
+            replacement_task_id = task_readback_id(clean_blocked[0])
+            existing_clean_replacement_task_ids[work_unit_id] = replacement_task_id
+        elif args.create_replacements:
+            workspace_ref = str(args.workspace or "scratch").strip() or "scratch"
+            replacement_task_id = create_ready_work_unit_task(
+                hermes_bin=args.hermes_bin,
+                board=board,
+                task=replacement_task,
+                worker_assignee_prefix=args.worker_assignee_prefix,
+                workspace_ref=workspace_ref,
+                runner=runner,
+            )
+            replacement_ready_work_unit_task_ids[work_unit_id] = replacement_task_id
+
+        if args.create_replacements or clean_blocked:
+            for payload, markers in contaminated:
+                mark_ready_work_unit_superseded(
+                    hermes_bin=args.hermes_bin,
+                    board=board,
+                    task_id=task_readback_id(payload),
+                    replacement_task_id=replacement_task_id,
+                    work_unit_id=work_unit_id,
+                    contamination_markers=markers,
+                    runner=runner,
+                )
+        superseded_ready_work_unit_task_ids[work_unit_id] = contaminated_task_ids
+        recovery_plan[work_unit_id] = {
+            "packet_id": packet_id,
+            "status": "replacement_created" if replacement_task_id and args.create_replacements else "replacement_planned",
+            "contaminated_task_refs": contaminated_task_ids,
+            "contamination_markers": contamination_markers,
+            "replacement_task_ref": replacement_task_id,
+            "replacement_idempotency_key": replacement_task["idempotency_key"],
+            "preserve_history": True,
+            "complete_product_claim_allowed": False,
+        }
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "recover-ready-work-units",
+        "dry_run": not bool(args.create_replacements),
+        "board": board,
+        "materialization_plan_id": plan.get("plan_id"),
+        "ready_work_unit_task_ids": materialization_result.get("ready_work_unit_task_ids") or {},
+        "replacement_ready_work_unit_task_ids": replacement_ready_work_unit_task_ids,
+        "superseded_ready_work_unit_task_ids": superseded_ready_work_unit_task_ids,
+        "existing_clean_replacement_task_ids": existing_clean_replacement_task_ids,
+        "recovery_plan": recovery_plan,
+        "runtime_gate": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "complete_product_claim_allowed": False,
+            "recovery_required_before_product_completion": bool(superseded_ready_work_unit_task_ids),
+            "replacement_created_count": len(replacement_ready_work_unit_task_ids),
+            "superseded_task_count": sum(len(ids) for ids in superseded_ready_work_unit_task_ids.values()),
+            "missing_active_task_count": len(missing_work_unit_ids),
+            "clean_task_count": len(clean_work_unit_ids),
+        },
+        "hook": {
+            "plan": plan,
+            "materialization_result": materialization_result,
+            "supersession_marker": READY_WORK_UNIT_SUPERSESSION_MARKER,
+            "create_replacements": bool(args.create_replacements),
             "no_shadow_dispatcher": True,
             "local_state_authority": False,
         },
@@ -2144,6 +2426,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_release.add_argument("--dry-run", action="store_true")
     p_release.add_argument("--out", type=Path)
 
+    p_recover_ready = sub.add_parser(
+        "recover-ready-work-units",
+        help="Plan or create clean replacements for contaminated ready work-unit runtime tasks.",
+    )
+    p_recover_ready.add_argument("--plan", type=Path, required=True)
+    p_recover_ready.add_argument("--materialization-result", type=Path, required=True)
+    p_recover_ready.add_argument("--board")
+    p_recover_ready.add_argument("--hermes-bin", default="hermes")
+    p_recover_ready.add_argument("--worker-assignee-prefix", default="")
+    p_recover_ready.add_argument("--route-readiness", type=Path)
+    p_recover_ready.add_argument("--workspace")
+    p_recover_ready.add_argument("--create-replacements", action="store_true")
+    p_recover_ready.add_argument("--out", type=Path)
+
     p_route = sub.add_parser(
         "collect-route-readiness",
         help="Collect the public-safe Hermes worker route readiness manifest from read-only Hermes state.",
@@ -2191,6 +2487,8 @@ def main() -> int:
             envelope = materialize_ready_work_units(args)
         elif args.command == "release-ready-work-units":
             envelope = release_ready_work_units(args)
+        elif args.command == "recover-ready-work-units":
+            envelope = recover_ready_work_units(args)
         elif args.command == "collect-route-readiness":
             envelope = collect_route_readiness(args)
         elif args.command == "enforce-done":
