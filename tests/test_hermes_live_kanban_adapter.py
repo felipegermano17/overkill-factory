@@ -51,6 +51,14 @@ class FakeHermes:
             return subprocess.CompletedProcess(argv, 0, stdout="[]", stderr="")
         if argv[:4] == ["hermes", "kanban", "boards", "create"]:
             return subprocess.CompletedProcess(argv, 0, stdout="created", stderr="")
+        if len(argv) >= 8 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "list":
+            status = argv[argv.index("--status") + 1] if "--status" in argv else ""
+            rows = [
+                {"id": task_id, **task}
+                for task_id, task in self.tasks.items()
+                if not status or str(task.get("status") or "") == status
+            ]
+            return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(rows), stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "create":
             idempotency_key = argv[argv.index("--idempotency-key") + 1] if "--idempotency-key" in argv else ""
             if idempotency_key and idempotency_key in self.idempotent_task_ids:
@@ -62,7 +70,14 @@ class FakeHermes:
             initial_status = "blocked" if "--initial-status" in argv and "blocked" in argv else "ready"
             body = argv[argv.index("--body") + 1] if "--body" in argv else "{}"
             assignee = argv[argv.index("--assignee") + 1] if "--assignee" in argv else None
-            self.tasks[task_id] = {"status": initial_status, "events": [], "body": body, "assignee": assignee}
+            workspace_ref = argv[argv.index("--workspace") + 1] if "--workspace" in argv else "scratch"
+            task = {"id": task_id, "status": initial_status, "events": [], "body": body, "assignee": assignee}
+            if workspace_ref.startswith("dir:"):
+                task["workspace_kind"] = "dir"
+                task["workspace_path"] = workspace_ref[4:]
+            else:
+                task["workspace_kind"] = workspace_ref
+            self.tasks[task_id] = task
             if idempotency_key:
                 self.idempotent_task_ids[idempotency_key] = task_id
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
@@ -277,6 +292,34 @@ def write_route_readiness(path: Path, extra_workers: list[str] | None = None) ->
     )
 
 
+def materialize_template_ready_work_unit(
+    *,
+    fake: FakeHermes,
+    tmp_path: Path,
+    workspace: str = "scratch",
+) -> tuple[dict[str, object], Path, Path, Path]:
+    plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+    plan_path = tmp_path / "plan.json"
+    readiness_path = tmp_path / "route-readiness.json"
+    materialization_result_path = tmp_path / "materialization-result.json"
+    plan_path.write_text(json.dumps(plan), encoding="utf-8")
+    write_route_readiness(readiness_path, extra_workers=["implementation-worker"])
+    materialize_args = adapter.build_parser().parse_args(
+        [
+            "materialize-ready-work-units",
+            "--plan",
+            str(plan_path),
+            "--route-readiness",
+            str(readiness_path),
+            "--workspace",
+            workspace,
+        ]
+    )
+    materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+    materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+    return plan, plan_path, readiness_path, materialization_result_path
+
+
 def assert_live_adapter_result_schema(testcase: unittest.TestCase, result: dict[str, object]) -> None:
     schema = json.loads((ROOT / "schemas" / "hermes-live-adapter-result.schema.json").read_text(encoding="utf-8"))
     errors = validator.validate_node(schema, result, "$", schemas={"hermes-live-adapter-result.schema.json": schema}, root_schema=schema)
@@ -467,6 +510,192 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         dispatch_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "dispatch"]
         self.assertEqual(dispatch_calls, [])
+
+    def test_release_ready_work_units_unblocks_verified_tasks_without_dispatch(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            result = adapter.release_ready_work_units(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["mode"], "release-ready-work-units")
+        self.assertFalse(result["dry_run"])
+        self.assertEqual(result["released_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        task_id = next(iter(fake.tasks))
+        self.assertEqual(fake.tasks[task_id]["status"], "ready")
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        dispatch_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "dispatch"]
+        self.assertEqual(len(unblock_calls), 1)
+        self.assertIn("runtime_gate=blocked_event_verified_for_each_task", unblock_calls[0][-1])
+        self.assertEqual(dispatch_calls, [])
+        self.assertFalse(result["runtime_gate"]["dispatch_allowed_by_this_step"])
+        self.assertTrue(result["runtime_gate"]["native_dispatch_required_next"])
+
+    def test_release_ready_work_units_dry_run_verifies_without_unblock(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--dry-run",
+                ]
+            )
+            result = adapter.release_ready_work_units(args, runner=fake)
+
+        self.assertTrue(result["dry_run"])
+        self.assertEqual(result["released_ready_work_unit_task_ids"], {})
+        task_id = next(iter(fake.tasks))
+        self.assertEqual(fake.tasks[task_id]["status"], "blocked")
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(unblock_calls, [])
+
+    def test_release_ready_work_units_rejects_pre_dispatch_activity(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            task_id = next(iter(fake.tasks))
+            fake.tasks[task_id].setdefault("events", []).append({"kind": "claimed"})
+            args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "pre-dispatch activity"):
+                adapter.release_ready_work_units(args, runner=fake)
+
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(unblock_calls, [])
+
+    def test_release_ready_work_units_rejects_ambiguous_matching_tasks(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            existing = next(iter(fake.tasks.values())).copy()
+            fake.tasks["t_duplicate"] = {**existing, "id": "t_duplicate"}
+            args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "expected exactly one blocked Hermes task"):
+                adapter.release_ready_work_units(args, runner=fake)
+
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(unblock_calls, [])
+
+    def test_release_ready_work_units_rejects_adapter_local_workspace(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+                workspace="dir:C:/Users/operator/repo",
+            )
+            args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "not dispatcher-visible"):
+                adapter.release_ready_work_units(args, runner=fake)
+
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(unblock_calls, [])
+
+    def test_release_ready_work_units_requires_real_materialization_result(self) -> None:
+        fake = FakeHermes()
+        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["implementation-worker"])
+            result_path.write_text(
+                json.dumps(
+                    {
+                        "$schema": "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json",
+                        "mode": "materialize-ready-work-units",
+                        "dry_run": True,
+                        "board": "overkill-factory-live",
+                        "hook": {},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "real materialization result"):
+                adapter.release_ready_work_units(args, runner=fake)
+
+        self.assertEqual(fake.calls, [])
 
     def test_materialize_schema_requires_recovery_and_idempotency_fields_for_real_run(self) -> None:
         schema = json.loads((ROOT / "schemas" / "hermes-live-adapter-result.schema.json").read_text(encoding="utf-8"))
