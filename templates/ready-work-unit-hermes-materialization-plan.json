@@ -1,0 +1,157 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/ready-work-unit-hermes-materialization-plan.schema.json",
+  "record_type": "ready_work_unit_hermes_materialization_plan",
+  "plan_id": "ready-work-unit-hermes-plan-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "ready_work_unit_packet_manifest_ref": "templates/ready-work-unit-packets.json",
+  "ready_work_unit_packet_manifest_id": "ready-work-unit-packets-public-template",
+  "board": "overkill-factory-live",
+  "runtime_boundary": {
+    "state_role": "runtime_materialization_plan_only",
+    "runtime_authority": "hermes_kanban",
+    "local_state_authority": false,
+    "live_hermes_mutated": false,
+    "hermes_materialization_requires_gate": true
+  },
+  "materialization_scope": "ready_work_units_only",
+  "complete_product_claim_allowed": false,
+  "tasks": [
+    {
+      "task_plan_id": "hermes-ready-work-unit-work-unit-001",
+      "packet_id": "ready-work-unit-packet-work-unit-001",
+      "work_unit_id": "work-unit-001",
+      "owner_worker": "implementation-worker",
+      "reviewer_role": "independent-reviewer",
+      "title": "OF ready work unit work-unit-001: Deliver one safe execution slice without reducing the Product SOT scope.",
+      "materialization_state": "planned_pending_hermes_runtime_gate",
+      "initial_status": "blocked",
+      "body_format": "ready_work_unit_execution_request_json",
+      "body_contract": {
+        "packet_id": "ready-work-unit-packet-work-unit-001",
+        "packet_type": "ready_work_unit_execution_request",
+        "work_unit_id": "work-unit-001",
+        "status": "ready_for_worker_execution",
+        "owner_worker": "implementation-worker",
+        "reviewer_role": "independent-reviewer",
+        "objective": "Deliver one safe execution slice without reducing the Product SOT scope.",
+        "scope_in": ["the named Product SOT requirement refs"],
+        "scope_out": ["unrelated Product SOT requirements"],
+        "verification": ["run the checks named by the work unit"],
+        "expected_result": "PASS or explicit BLOCK with owner",
+        "proof_ids_required": ["generic.scope-fit"],
+        "product_sot_requirement_refs": ["product-sot#scope-in-001"],
+        "dependency_refs": ["product-sot#scope-in-001"],
+        "capability_profile_refs": ["agents/hermes-profile-bindings.public.json#implementation-worker"],
+        "ready_rules": ["Product SOT requirement refs resolve to the approved Product SOT"],
+        "done_rules": ["all proof_ids_required have PASS or valid waiver evidence"],
+        "stop_conditions": ["Product SOT drifted"],
+        "forbidden_actions": ["claim complete product done from ready work-unit execution"],
+        "receipt_five_contract": {
+          "must_attach_artifact_refs": true,
+          "must_state_blocking_findings": true,
+          "must_record_tool_or_profile": true,
+          "must_record_review": true,
+          "complete_product_claim_allowed": false,
+          "required_proof_ids": ["generic.scope-fit"],
+          "reviewer_role": "independent-reviewer"
+        },
+        "hermes_materialization": {
+          "recommended_initial_status": "blocked",
+          "block_event_required_before_dispatch": true,
+          "dispatch_allowed_without_runtime_gate": false,
+          "live_hermes_mutated": false
+        },
+        "public_private_boundary": {
+          "public_safe_refs_only": true,
+          "raw_private_evidence_embedded": false
+        }
+      },
+      "dependency_refs": ["product-sot#scope-in-001"],
+      "proof_ids_required": ["generic.scope-fit"],
+      "receipt_five_contract": {
+        "must_attach_artifact_refs": true,
+        "must_state_blocking_findings": true,
+        "must_record_tool_or_profile": true,
+        "must_record_review": true,
+        "complete_product_claim_allowed": false,
+        "required_proof_ids": ["generic.scope-fit"],
+        "reviewer_role": "independent-reviewer"
+      },
+      "runtime_refs": {
+        "hermes_board_ref": "external:pending-hermes-board",
+        "hermes_task_ref": "external:pending-hermes-task",
+        "hermes_run_ref": "external:pending-hermes-run"
+      },
+      "idempotency_key": "overkill:ready-work-unit-template:work-unit-001:0123456789abcdef",
+      "create_policy": {
+        "create_without_dispatch": true,
+        "create_unassigned_first": true,
+        "assign_after_block_event_verified": true,
+        "target_assignee_profile": "implementation-worker"
+      },
+      "block_policy": {
+        "initial_block_required": true,
+        "block_event_required_before_dispatch": true,
+        "verify_command": "hermes kanban show --json",
+        "blocked_reason": "Ready work unit starts blocked until Hermes readback proves a blocked event for this exact materialized task."
+      },
+      "dispatch_policy": {
+        "dispatch_allowed_without_runtime_gate": false,
+        "complete_product_claim_allowed": false,
+        "dispatch_precondition": "blocked_event_verified"
+      },
+      "public_private_boundary": {
+        "public_safe_refs_only": true,
+        "raw_private_evidence_embedded": false
+      }
+    }
+  ],
+  "runtime_gate": {
+    "gate_id": "runtime-gate-ready-work-unit-hermes-plan-public-template",
+    "human_gate_required": false,
+    "user_decision_required": false,
+    "dispatch_precondition": "blocked_event_verified_for_each_task",
+    "required_sequence": [
+      "create each Hermes task without dispatch",
+      "block each materialized task",
+      "verify hermes kanban show --json contains a blocked event for each task",
+      "assign the target worker only after blocked-event readback",
+      "dispatch only after the runtime gate records the verified blocked event evidence"
+    ],
+    "evidence_required": [
+      "Hermes show --json readback contains a blocked event for every materialized ready work-unit task"
+    ]
+  },
+  "blocking_rules": {
+    "validated_ready_work_unit_packet_manifest_required": true,
+    "only_ready_work_units_materialized": true,
+    "block_event_required_before_dispatch": true,
+    "dispatch_forbidden_without_runtime_gate": true,
+    "complete_product_claim_forbidden_until_all_scope_reconciled": true,
+    "raw_private_evidence_must_stay_external": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  },
+  "acceptance": {
+    "task_count": 1,
+    "all_tasks_start_blocked": true,
+    "block_event_required_before_dispatch": true,
+    "dispatch_allowed_without_runtime_gate": false,
+    "live_hermes_mutated": false,
+    "complete_product_claim_allowed": false,
+    "evidence_refs": [
+      "schemas/ready-work-unit-hermes-materialization-plan.schema.json",
+      "schemas/ready-work-unit-packets.schema.json",
+      "templates/ready-work-unit-packets.json"
+    ]
+  },
+  "evidence_refs": [
+    "schemas/ready-work-unit-hermes-materialization-plan.schema.json",
+    "schemas/ready-work-unit-packets.schema.json",
+    "templates/ready-work-unit-packets.json"
+  ]
+}

@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/ready-work-unit-hermes-materialization-plan.schema.json",
+  "title": "Overkill Factory Ready Work Unit Hermes Materialization Plan",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "plan_id",
+    "created_at",
+    "factory_method_version",
+    "ready_work_unit_packet_manifest_ref",
+    "ready_work_unit_packet_manifest_id",
+    "board",
+    "runtime_boundary",
+    "materialization_scope",
+    "complete_product_claim_allowed",
+    "tasks",
+    "runtime_gate",
+    "blocking_rules",
+    "public_private_boundary",
+    "acceptance",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/ready-work-unit-hermes-materialization-plan.schema.json"
+    },
+    "record_type": { "const": "ready_work_unit_hermes_materialization_plan" },
+    "plan_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "factory_method_version": { "const": "OVERKILL_VFINAL" },
+    "ready_work_unit_packet_manifest_ref": { "type": "string", "minLength": 3 },
+    "ready_work_unit_packet_manifest_id": { "type": "string", "minLength": 3 },
+    "board": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{3,120}$" },
+    "runtime_boundary": {
+      "type": "object",
+      "required": [
+        "state_role",
+        "runtime_authority",
+        "local_state_authority",
+        "live_hermes_mutated",
+        "hermes_materialization_requires_gate"
+      ],
+      "properties": {
+        "state_role": { "const": "runtime_materialization_plan_only" },
+        "runtime_authority": { "const": "hermes_kanban" },
+        "local_state_authority": { "const": false },
+        "live_hermes_mutated": { "const": false },
+        "hermes_materialization_requires_gate": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "materialization_scope": { "enum": ["ready_work_units_only", "all_ready_work_units"] },
+    "complete_product_claim_allowed": { "const": false },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/materializationTask" }
+    },
+    "runtime_gate": {
+      "type": "object",
+      "required": [
+        "gate_id",
+        "human_gate_required",
+        "user_decision_required",
+        "dispatch_precondition",
+        "required_sequence",
+        "evidence_required"
+      ],
+      "properties": {
+        "gate_id": { "type": "string", "minLength": 3 },
+        "human_gate_required": { "const": false },
+        "user_decision_required": { "const": false },
+        "dispatch_precondition": { "const": "blocked_event_verified_for_each_task" },
+        "required_sequence": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "evidence_required": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "blocking_rules": {
+      "type": "object",
+      "required": [
+        "validated_ready_work_unit_packet_manifest_required",
+        "only_ready_work_units_materialized",
+        "block_event_required_before_dispatch",
+        "dispatch_forbidden_without_runtime_gate",
+        "complete_product_claim_forbidden_until_all_scope_reconciled",
+        "raw_private_evidence_must_stay_external"
+      ],
+      "properties": {
+        "validated_ready_work_unit_packet_manifest_required": { "const": true },
+        "only_ready_work_units_materialized": { "const": true },
+        "block_event_required_before_dispatch": { "const": true },
+        "dispatch_forbidden_without_runtime_gate": { "const": true },
+        "complete_product_claim_forbidden_until_all_scope_reconciled": { "const": true },
+        "raw_private_evidence_must_stay_external": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "task_count",
+        "all_tasks_start_blocked",
+        "block_event_required_before_dispatch",
+        "dispatch_allowed_without_runtime_gate",
+        "live_hermes_mutated",
+        "complete_product_claim_allowed",
+        "evidence_refs"
+      ],
+      "properties": {
+        "task_count": { "type": "integer", "minimum": 1 },
+        "all_tasks_start_blocked": { "const": true },
+        "block_event_required_before_dispatch": { "const": true },
+        "dispatch_allowed_without_runtime_gate": { "const": false },
+        "live_hermes_mutated": { "const": false },
+        "complete_product_claim_allowed": { "const": false },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "$defs": {
+    "materializationTask": {
+      "type": "object",
+      "required": [
+        "task_plan_id",
+        "packet_id",
+        "work_unit_id",
+        "owner_worker",
+        "reviewer_role",
+        "title",
+        "materialization_state",
+        "initial_status",
+        "body_format",
+        "body_contract",
+        "dependency_refs",
+        "proof_ids_required",
+        "receipt_five_contract",
+        "runtime_refs",
+        "idempotency_key",
+        "create_policy",
+        "block_policy",
+        "dispatch_policy",
+        "public_private_boundary"
+      ],
+      "properties": {
+        "task_plan_id": { "type": "string", "minLength": 3 },
+        "packet_id": { "type": "string", "minLength": 3 },
+        "work_unit_id": { "type": "string", "minLength": 3 },
+        "owner_worker": { "type": "string", "minLength": 3 },
+        "reviewer_role": { "type": "string", "minLength": 3 },
+        "title": { "type": "string", "minLength": 8 },
+        "materialization_state": { "const": "planned_pending_hermes_runtime_gate" },
+        "initial_status": { "const": "blocked" },
+        "body_format": { "const": "ready_work_unit_execution_request_json" },
+        "body_contract": { "type": "object" },
+        "dependency_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "proof_ids_required": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "receipt_five_contract": { "type": "object" },
+        "runtime_refs": {
+          "type": "object",
+          "required": ["hermes_board_ref", "hermes_task_ref", "hermes_run_ref"],
+          "properties": {
+            "hermes_board_ref": { "type": "string", "minLength": 3 },
+            "hermes_task_ref": { "const": "external:pending-hermes-task" },
+            "hermes_run_ref": { "const": "external:pending-hermes-run" }
+          },
+          "additionalProperties": false
+        },
+        "idempotency_key": { "type": "string", "minLength": 16 },
+        "create_policy": {
+          "type": "object",
+          "required": [
+            "create_without_dispatch",
+            "create_unassigned_first",
+            "assign_after_block_event_verified",
+            "target_assignee_profile"
+          ],
+          "properties": {
+            "create_without_dispatch": { "const": true },
+            "create_unassigned_first": { "const": true },
+            "assign_after_block_event_verified": { "const": true },
+            "target_assignee_profile": { "type": "string", "minLength": 3 }
+          },
+          "additionalProperties": false
+        },
+        "block_policy": {
+          "type": "object",
+          "required": [
+            "initial_block_required",
+            "block_event_required_before_dispatch",
+            "verify_command",
+            "blocked_reason"
+          ],
+          "properties": {
+            "initial_block_required": { "const": true },
+            "block_event_required_before_dispatch": { "const": true },
+            "verify_command": { "const": "hermes kanban show --json" },
+            "blocked_reason": { "type": "string", "minLength": 8 }
+          },
+          "additionalProperties": false
+        },
+        "dispatch_policy": {
+          "type": "object",
+          "required": [
+            "dispatch_allowed_without_runtime_gate",
+            "complete_product_claim_allowed",
+            "dispatch_precondition"
+          ],
+          "properties": {
+            "dispatch_allowed_without_runtime_gate": { "const": false },
+            "complete_product_claim_allowed": { "const": false },
+            "dispatch_precondition": { "const": "blocked_event_verified" }
+          },
+          "additionalProperties": false
+        },
+        "public_private_boundary": {
+          "type": "object",
+          "required": ["public_safe_refs_only", "raw_private_evidence_embedded"],
+          "properties": {
+            "public_safe_refs_only": { "const": true },
+            "raw_private_evidence_embedded": { "const": false }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

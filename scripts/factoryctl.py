@@ -8615,6 +8615,289 @@ def validate_ready_work_unit_packet_manifest(manifest: dict[str, Any]) -> list[s
     return errors
 
 
+def _ready_work_unit_hermes_plan_id(manifest_id: str, board: str) -> str:
+    return f"ready-work-unit-hermes-plan-{slug_for_ref(manifest_id)}-{slug_for_ref(board)}"[:120]
+
+
+def _ready_work_unit_hermes_idempotency_key(
+    *,
+    manifest_id: str,
+    packet: dict[str, Any],
+) -> str:
+    work_unit_id = str(packet.get("work_unit_id") or "work-unit").strip()
+    contract = {
+        "manifest_id": manifest_id,
+        "packet_id": str(packet.get("packet_id") or "").strip(),
+        "work_unit_id": work_unit_id,
+        "body_contract": packet,
+    }
+    digest = hashlib.sha256(json.dumps(contract, sort_keys=True, ensure_ascii=True).encode("utf-8")).hexdigest()
+    return f"overkill:{slug_for_ref(manifest_id)}:{slug_for_ref(work_unit_id)}:{digest[:16]}"
+
+
+def _ready_work_unit_hermes_title(packet: dict[str, Any]) -> str:
+    work_unit_id = str(packet.get("work_unit_id") or "work-unit").strip()
+    objective = str(packet.get("objective") or "").strip()
+    title = f"OF ready work unit {work_unit_id}"
+    if objective:
+        title = f"{title}: {objective}"
+    return title[:160]
+
+
+def build_ready_work_unit_hermes_materialization_plan(
+    ready_work_unit_packet_manifest: dict[str, Any],
+    *,
+    board: str,
+    created_at: str | None = None,
+    plan_id: str | None = None,
+    ready_work_unit_packet_manifest_ref: str | None = None,
+) -> dict[str, Any]:
+    manifest_errors = validate_ready_work_unit_packet_manifest(ready_work_unit_packet_manifest)
+    if manifest_errors:
+        raise ValueError("; ".join(manifest_errors))
+
+    board_slug = str(board or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_.-]{3,120}", board_slug):
+        raise ValueError("Hermes board must be a public-safe slug with 3-120 letters, numbers, dots, underscores or hyphens")
+
+    manifest_id = str(ready_work_unit_packet_manifest.get("manifest_id") or "").strip()
+    manifest_ref = ready_work_unit_packet_manifest_ref or manifest_id or "external:sanitized-ready-work-unit-packet-manifest"
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    final_plan_id = plan_id or _ready_work_unit_hermes_plan_id(manifest_id, board_slug)
+    gate_id = f"runtime-gate-{slug_for_ref(final_plan_id)}"
+    tasks: list[dict[str, Any]] = []
+
+    for packet in ready_work_unit_packet_manifest.get("packets", []):
+        if not isinstance(packet, dict):
+            continue
+        owner_worker = str(packet.get("owner_worker") or "").strip()
+        work_unit_id = str(packet.get("work_unit_id") or "").strip()
+        packet_id = str(packet.get("packet_id") or "").strip()
+        safe_packet = sanitize_public_refs(copy.deepcopy(packet))
+        task = {
+            "task_plan_id": f"hermes-ready-work-unit-{slug_for_ref(work_unit_id)}",
+            "packet_id": packet_id,
+            "work_unit_id": work_unit_id,
+            "owner_worker": owner_worker,
+            "reviewer_role": str(packet.get("reviewer_role") or "").strip(),
+            "title": _ready_work_unit_hermes_title(packet),
+            "materialization_state": "planned_pending_hermes_runtime_gate",
+            "initial_status": "blocked",
+            "body_format": "ready_work_unit_execution_request_json",
+            "body_contract": safe_packet,
+            "dependency_refs": _list_items(packet.get("dependency_refs")),
+            "proof_ids_required": _list_items(packet.get("proof_ids_required")),
+            "receipt_five_contract": copy.deepcopy(packet.get("receipt_five_contract") or {}),
+            "runtime_refs": {
+                "hermes_board_ref": f"hermes:{board_slug}",
+                "hermes_task_ref": "external:pending-hermes-task",
+                "hermes_run_ref": "external:pending-hermes-run",
+            },
+            "idempotency_key": _ready_work_unit_hermes_idempotency_key(
+                manifest_id=manifest_id,
+                packet=safe_packet,
+            ),
+            "create_policy": {
+                "create_without_dispatch": True,
+                "create_unassigned_first": True,
+                "assign_after_block_event_verified": True,
+                "target_assignee_profile": owner_worker,
+            },
+            "block_policy": {
+                "initial_block_required": True,
+                "block_event_required_before_dispatch": True,
+                "verify_command": "hermes kanban show --json",
+                "blocked_reason": (
+                    "Ready work unit starts blocked until Hermes readback proves a blocked event "
+                    "for this exact materialized task."
+                ),
+            },
+            "dispatch_policy": {
+                "dispatch_allowed_without_runtime_gate": False,
+                "complete_product_claim_allowed": False,
+                "dispatch_precondition": "blocked_event_verified",
+            },
+            "public_private_boundary": {
+                "public_safe_refs_only": True,
+                "raw_private_evidence_embedded": False,
+            },
+        }
+        tasks.append(task)
+
+    plan: dict[str, Any] = {
+        "$schema": "https://overkill-factory.dev/schemas/ready-work-unit-hermes-materialization-plan.schema.json",
+        "record_type": "ready_work_unit_hermes_materialization_plan",
+        "plan_id": final_plan_id,
+        "created_at": created,
+        "factory_method_version": "OVERKILL_VFINAL",
+        "ready_work_unit_packet_manifest_ref": manifest_ref,
+        "ready_work_unit_packet_manifest_id": manifest_id,
+        "board": board_slug,
+        "runtime_boundary": {
+            "state_role": "runtime_materialization_plan_only",
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "live_hermes_mutated": False,
+            "hermes_materialization_requires_gate": True,
+        },
+        "materialization_scope": str(ready_work_unit_packet_manifest.get("allowed_execution_scope") or "").strip(),
+        "complete_product_claim_allowed": False,
+        "tasks": tasks,
+        "runtime_gate": {
+            "gate_id": gate_id,
+            "human_gate_required": False,
+            "user_decision_required": False,
+            "dispatch_precondition": "blocked_event_verified_for_each_task",
+            "required_sequence": [
+                "create each Hermes task without dispatch",
+                "block each materialized task",
+                "verify hermes kanban show --json contains a blocked event for each task",
+                "assign the target worker only after blocked-event readback",
+                "dispatch only after the runtime gate records the verified blocked event evidence",
+            ],
+            "evidence_required": [
+                "Hermes show --json readback contains a blocked event for every materialized ready work-unit task"
+            ],
+        },
+        "blocking_rules": {
+            "validated_ready_work_unit_packet_manifest_required": True,
+            "only_ready_work_units_materialized": True,
+            "block_event_required_before_dispatch": True,
+            "dispatch_forbidden_without_runtime_gate": True,
+            "complete_product_claim_forbidden_until_all_scope_reconciled": True,
+            "raw_private_evidence_must_stay_external": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+        },
+        "acceptance": {
+            "task_count": len(tasks),
+            "all_tasks_start_blocked": True,
+            "block_event_required_before_dispatch": True,
+            "dispatch_allowed_without_runtime_gate": False,
+            "live_hermes_mutated": False,
+            "complete_product_claim_allowed": False,
+            "evidence_refs": [
+                "schemas/ready-work-unit-hermes-materialization-plan.schema.json",
+                "schemas/ready-work-unit-packets.schema.json",
+                manifest_ref,
+            ],
+        },
+        "evidence_refs": [
+            "schemas/ready-work-unit-hermes-materialization-plan.schema.json",
+            "schemas/ready-work-unit-packets.schema.json",
+            manifest_ref,
+        ],
+    }
+    return sanitize_public_refs(plan)
+
+
+def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("ready-work-unit-hermes-materialization-plan.schema.json")
+    if not schema:
+        return ["ready_work_unit_hermes_materialization_plan schema is not bundled"]
+    errors.extend(validate_node(schema, plan, "ready_work_unit_hermes_materialization_plan", schemas=schemas, root_schema=schema))
+    if plan.get("record_type") != "ready_work_unit_hermes_materialization_plan":
+        errors.append("ready_work_unit_hermes_materialization_plan.record_type must be ready_work_unit_hermes_materialization_plan")
+
+    for field in ("ready_work_unit_packet_manifest_ref",):
+        value = str(plan.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"ready_work_unit_hermes_materialization_plan.{field}", errors)
+    _validate_lifecycle_refs(_list_items(plan.get("evidence_refs")), "ready_work_unit_hermes_materialization_plan.evidence_refs", errors)
+
+    runtime_boundary = plan.get("runtime_boundary") if isinstance(plan.get("runtime_boundary"), dict) else {}
+    if runtime_boundary.get("live_hermes_mutated") is not False:
+        errors.append("ready_work_unit_hermes_materialization_plan.runtime_boundary.live_hermes_mutated must be false")
+    if runtime_boundary.get("hermes_materialization_requires_gate") is not True:
+        errors.append("ready_work_unit_hermes_materialization_plan.runtime_boundary.hermes_materialization_requires_gate must be true")
+    if plan.get("complete_product_claim_allowed") is not False:
+        errors.append("ready_work_unit_hermes_materialization_plan.complete_product_claim_allowed must be false")
+
+    tasks = plan.get("tasks") if isinstance(plan.get("tasks"), list) else []
+    packet_ids: list[str] = []
+    work_unit_ids: list[str] = []
+    for index, task in enumerate(tasks):
+        if not isinstance(task, dict):
+            errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}] must be an object")
+            continue
+        serialized = json.dumps(task, ensure_ascii=True, sort_keys=True)
+        if not public_safe_text(serialized):
+            errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}] must be public-safe")
+        packet_id = str(task.get("packet_id") or "").strip()
+        work_unit_id = str(task.get("work_unit_id") or "").strip()
+        if packet_id:
+            packet_ids.append(packet_id)
+        if work_unit_id:
+            work_unit_ids.append(work_unit_id)
+        owner = str(task.get("owner_worker") or "").strip()
+        if owner and owner not in WORKERS:
+            errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].owner_worker must be registered: {owner}")
+        if task.get("initial_status") != "blocked":
+            errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].initial_status must be blocked")
+        receipt = task.get("receipt_five_contract") if isinstance(task.get("receipt_five_contract"), dict) else {}
+        if receipt.get("complete_product_claim_allowed") is not False:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].receipt_five_contract.complete_product_claim_allowed must be false"
+            )
+        body_contract = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
+        if body_contract.get("packet_type") != "ready_work_unit_execution_request":
+            errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].body_contract must be a ready work-unit packet")
+        block_policy = task.get("block_policy") if isinstance(task.get("block_policy"), dict) else {}
+        if block_policy.get("block_event_required_before_dispatch") is not True:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].block_policy.block_event_required_before_dispatch must be true"
+            )
+        dispatch_policy = task.get("dispatch_policy") if isinstance(task.get("dispatch_policy"), dict) else {}
+        if dispatch_policy.get("dispatch_allowed_without_runtime_gate") is not False:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].dispatch_policy.dispatch_allowed_without_runtime_gate must be false"
+            )
+        if dispatch_policy.get("complete_product_claim_allowed") is not False:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].dispatch_policy.complete_product_claim_allowed must be false"
+            )
+
+    duplicate_packet_ids = sorted({item for item in packet_ids if packet_ids.count(item) > 1})
+    if duplicate_packet_ids:
+        errors.append("ready_work_unit_hermes_materialization_plan duplicate packet ids: " + ", ".join(duplicate_packet_ids))
+    duplicate_work_units = sorted({item for item in work_unit_ids if work_unit_ids.count(item) > 1})
+    if duplicate_work_units:
+        errors.append("ready_work_unit_hermes_materialization_plan duplicate work unit ids: " + ", ".join(duplicate_work_units))
+
+    acceptance = plan.get("acceptance") if isinstance(plan.get("acceptance"), dict) else {}
+    if acceptance.get("task_count") != len(tasks):
+        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.task_count must match tasks length")
+    if acceptance.get("all_tasks_start_blocked") is not True:
+        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.all_tasks_start_blocked must be true")
+    if acceptance.get("block_event_required_before_dispatch") is not True:
+        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.block_event_required_before_dispatch must be true")
+    if acceptance.get("dispatch_allowed_without_runtime_gate") is not False:
+        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.dispatch_allowed_without_runtime_gate must be false")
+    if acceptance.get("live_hermes_mutated") is not False:
+        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.live_hermes_mutated must be false")
+    if acceptance.get("complete_product_claim_allowed") is not False:
+        errors.append("ready_work_unit_hermes_materialization_plan.acceptance.complete_product_claim_allowed must be false")
+    _validate_lifecycle_refs(
+        _list_items(acceptance.get("evidence_refs")),
+        "ready_work_unit_hermes_materialization_plan.acceptance.evidence_refs",
+        errors,
+    )
+
+    boundary = plan.get("public_private_boundary") if isinstance(plan.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("ready_work_unit_hermes_materialization_plan requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("ready_work_unit_hermes_materialization_plan must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("ready_work_unit_hermes_materialization_plan private context must stay outside the public repo")
+    return errors
+
+
 def validate_universal_signal_golden_corpus(corpus: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     schemas = bundled_schemas()
@@ -14471,6 +14754,43 @@ def command_validate_ready_work_unit_packets(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_ready_work_unit_hermes_plan(args: argparse.Namespace) -> int:
+    manifest_path = args.ready_work_unit_packets
+    if manifest_path.is_dir():
+        manifest_path = manifest_path / "manifest.json"
+    try:
+        plan = build_ready_work_unit_hermes_materialization_plan(
+            load_json_like(manifest_path),
+            board=args.board,
+            created_at=args.created_at,
+            plan_id=args.plan_id,
+            ready_work_unit_packet_manifest_ref=_sanitized_cli_artifact_ref(
+                manifest_path,
+                "ready-work-unit-packets",
+            ),
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_ready_work_unit_hermes_materialization_plan(plan)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, plan)
+    return 0
+
+
+def command_validate_ready_work_unit_hermes_plan(args: argparse.Namespace) -> int:
+    errors = validate_ready_work_unit_hermes_materialization_plan(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_signal_corpus(args: argparse.Namespace) -> int:
     errors = validate_universal_signal_golden_corpus(load_json_like(args.path))
     if errors:
@@ -15050,6 +15370,21 @@ def build_parser() -> argparse.ArgumentParser:
     validate_ready_work_unit_packets_parser = sub.add_parser("validate-ready-work-unit-packets")
     validate_ready_work_unit_packets_parser.add_argument("path", type=Path)
     validate_ready_work_unit_packets_parser.set_defaults(func=command_validate_ready_work_unit_packets)
+
+    ready_work_unit_hermes_plan_parser = sub.add_parser(
+        "ready-work-unit-hermes-plan",
+        help="Build the blocked Hermes runtime materialization plan for ready work-unit packets without mutating Hermes.",
+    )
+    ready_work_unit_hermes_plan_parser.add_argument("--ready-work-unit-packets", type=Path, required=True)
+    ready_work_unit_hermes_plan_parser.add_argument("--board", required=True)
+    ready_work_unit_hermes_plan_parser.add_argument("--created-at")
+    ready_work_unit_hermes_plan_parser.add_argument("--plan-id")
+    ready_work_unit_hermes_plan_parser.add_argument("--out", type=Path, required=True)
+    ready_work_unit_hermes_plan_parser.set_defaults(func=command_ready_work_unit_hermes_plan)
+
+    validate_ready_work_unit_hermes_plan_parser = sub.add_parser("validate-ready-work-unit-hermes-plan")
+    validate_ready_work_unit_hermes_plan_parser.add_argument("path", type=Path)
+    validate_ready_work_unit_hermes_plan_parser.set_defaults(func=command_validate_ready_work_unit_hermes_plan)
 
     validate_signal_corpus_parser = sub.add_parser("validate-signal-corpus")
     validate_signal_corpus_parser.add_argument("path", type=Path)
