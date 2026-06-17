@@ -8699,8 +8699,8 @@ def build_ready_work_unit_hermes_materialization_plan(
             ),
             "create_policy": {
                 "create_without_dispatch": True,
-                "create_unassigned_first": True,
-                "assign_after_block_event_verified": True,
+                "create_with_assignee": True,
+                "documented_hermes_cli_shape": "hermes kanban create --assignee --initial-status blocked --json",
                 "target_assignee_profile": owner_worker,
             },
             "block_policy": {
@@ -8752,7 +8752,6 @@ def build_ready_work_unit_hermes_materialization_plan(
                 "create each Hermes task without dispatch",
                 "block each materialized task",
                 "verify hermes kanban show --json contains a blocked event for each task",
-                "assign the target worker only after blocked-event readback",
                 "dispatch only after the runtime gate records the verified blocked event evidence",
             ],
             "evidence_required": [

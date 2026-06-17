@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -18,6 +19,7 @@ from transition_hook import ACTION_BLOCK_TRANSITION, build_hook_result, write_js
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS_DIR = ROOT / "scripts"
+FACTORYCTL_PATH = SCRIPTS_DIR / "factoryctl.py"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -92,6 +94,16 @@ def parse_json_output(output: str, *, command: str) -> Any:
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_factoryctl() -> Any:
+    spec = importlib.util.spec_from_file_location("overkill_factoryctl_live_adapter", FACTORYCTL_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load factoryctl from {FACTORYCTL_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["overkill_factoryctl_live_adapter"] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def stable_contract_value(value: Any) -> Any:
@@ -623,6 +635,166 @@ def create_task(
     return task_id
 
 
+def load_ready_work_unit_materialization_plan(path: Path) -> dict[str, Any]:
+    plan = load_json(path)
+    factoryctl = load_factoryctl()
+    errors = factoryctl.validate_ready_work_unit_hermes_materialization_plan(plan)
+    if errors:
+        raise RuntimeError("invalid ready work-unit Hermes materialization plan: " + "; ".join(errors))
+    return plan
+
+
+def create_ready_work_unit_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    task: dict[str, Any],
+    worker_assignee_prefix: str,
+    runner: Runner = default_runner,
+) -> str:
+    create_policy = task.get("create_policy") if isinstance(task.get("create_policy"), dict) else {}
+    block_policy = task.get("block_policy") if isinstance(task.get("block_policy"), dict) else {}
+    if create_policy.get("create_with_assignee") is not True:
+        raise RuntimeError("ready work-unit task create_policy must use the documented assignee create path")
+    if block_policy.get("block_event_required_before_dispatch") is not True:
+        raise RuntimeError("ready work-unit task must require a blocked event before dispatch")
+
+    body_contract = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
+    ensure_non_empty_body(json.dumps(body_contract, ensure_ascii=True))
+    target_assignee = str(create_policy.get("target_assignee_profile") or task.get("owner_worker") or "").strip()
+    if not target_assignee:
+        raise RuntimeError("ready work-unit task requires target_assignee_profile")
+    task_id = parse_task_id(
+        run_checked(
+            hermes_kanban(
+                hermes_bin,
+                board,
+                "create",
+                str(task.get("title") or f"OF ready work unit {task.get('work_unit_id') or 'work-unit'}"),
+                "--body",
+                json.dumps(body_contract, indent=2, ensure_ascii=True),
+                "--assignee",
+                worker_assignee_prefix + target_assignee,
+                "--idempotency-key",
+                str(task.get("idempotency_key") or ""),
+                "--created-by",
+                "overkill-factory",
+                "--workspace",
+                f"dir:{ROOT}",
+                "--json",
+                "--initial-status",
+                "blocked",
+            ),
+            runner,
+        ).stdout
+    )
+    shown_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    if not task_has_blocked_event(shown_task):
+        ensure_blocked_event(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=task_id,
+            reason=str(
+                block_policy.get("blocked_reason")
+                or "Overkill Factory ready work-unit runtime gate starts blocked until evidence passes."
+            ),
+            runner=runner,
+        )
+    final_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    if not task_has_blocked_event(final_task):
+        raise RuntimeError(f"Hermes task {task_id} lacks verified blocked event after materialization")
+    return task_id
+
+
+def materialize_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
+    board = str(args.board or plan.get("board") or "").strip()
+    if not board:
+        raise RuntimeError("ready work-unit materialization requires a board")
+    if str(plan.get("board") or "").strip() and board != str(plan.get("board") or "").strip():
+        raise RuntimeError("provided board does not match the ready work-unit materialization plan")
+
+    if args.dry_run:
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "materialize-ready-work-units",
+            "dry_run": True,
+            "board": board,
+            "board_created": False,
+            "board_create_requested": bool(args.ensure_board),
+            "board_create_checked": False,
+            "materialization_plan_id": plan.get("plan_id"),
+            "ready_work_unit_task_ids": {},
+            "packet_task_ids": {},
+            "runtime_gate": plan.get("runtime_gate", {}),
+            "hook": {"plan": plan},
+        }
+        if args.out:
+            write_json(args.out, envelope)
+        return envelope
+
+    required_workers = [
+        str(task.get("owner_worker") or "").strip()
+        for task in plan.get("tasks", [])
+        if isinstance(task, dict) and str(task.get("owner_worker") or "").strip()
+    ]
+    readiness_blockers = route_readiness_blockers(args.route_readiness, required_workers)
+    if readiness_blockers:
+        raise RuntimeError("pre-dispatch route readiness blocked ready work-unit materialization: " + "; ".join(readiness_blockers))
+
+    board_created = False
+    if args.ensure_board:
+        board_created = ensure_board(
+            hermes_bin=args.hermes_bin,
+            board=board,
+            default_workdir=str(ROOT),
+            runner=runner,
+        )
+
+    ready_work_unit_task_ids: dict[str, str] = {}
+    packet_task_ids: dict[str, str] = {}
+    for task in plan.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+        task_id = create_ready_work_unit_task(
+            hermes_bin=args.hermes_bin,
+            board=board,
+            task=task,
+            worker_assignee_prefix=args.worker_assignee_prefix,
+            runner=runner,
+        )
+        work_unit_id = str(task.get("work_unit_id") or "").strip()
+        packet_id = str(task.get("packet_id") or "").strip()
+        if work_unit_id:
+            ready_work_unit_task_ids[work_unit_id] = task_id
+        if packet_id:
+            packet_task_ids[packet_id] = task_id
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "materialize-ready-work-units",
+        "dry_run": False,
+        "board": board,
+        "board_created": board_created,
+        "materialization_plan_id": plan.get("plan_id"),
+        "ready_work_unit_task_ids": ready_work_unit_task_ids,
+        "packet_task_ids": packet_task_ids,
+        "runtime_gate": {
+            **(plan.get("runtime_gate") if isinstance(plan.get("runtime_gate"), dict) else {}),
+            "blocked_event_verified_task_ids": ready_work_unit_task_ids,
+            "dispatch_allowed_by_this_step": False,
+            "live_hermes_mutated": True,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+        },
+        "hook": {"plan": plan},
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
+
+
 def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
     card_path = args.card.resolve()
     ledger_path = args.ledger.resolve()
@@ -1120,6 +1292,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_mat.add_argument("--route-readiness", type=Path)
     p_mat.add_argument("--out", type=Path)
 
+    p_ready = sub.add_parser(
+        "materialize-ready-work-units",
+        help="Create blocked Hermes tasks from a ready work-unit materialization plan.",
+    )
+    p_ready.add_argument("--plan", type=Path, required=True)
+    p_ready.add_argument("--board")
+    p_ready.add_argument("--hermes-bin", default="hermes")
+    p_ready.add_argument("--worker-assignee-prefix", default="")
+    p_ready.add_argument("--ensure-board", action="store_true")
+    p_ready.add_argument("--dry-run", action="store_true")
+    p_ready.add_argument("--route-readiness", type=Path)
+    p_ready.add_argument("--out", type=Path)
+
     p_done = sub.add_parser("enforce-done", help="Validate worker results before completing the main card.")
     p_done.add_argument("--card", type=Path, required=True)
     p_done.add_argument("--board", required=True)
@@ -1151,10 +1336,14 @@ def main() -> int:
     try:
         if args.command == "materialize":
             envelope = materialize(args)
+        elif args.command == "materialize-ready-work-units":
+            envelope = materialize_ready_work_units(args)
         elif args.command == "enforce-done":
             envelope = enforce_done(args)
-        else:
+        elif args.command == "dispatch":
             envelope = dispatch(args)
+        else:
+            raise RuntimeError(f"unsupported command: {args.command}")
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
         return 2
