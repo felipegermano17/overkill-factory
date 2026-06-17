@@ -106,6 +106,11 @@ named owners and human decisions.
 deterministic execution requests without mutating live Hermes, without exposing
 private refs and without allowing any complete-product claim from a bounded
 slice.
+`ready-work-unit-hermes-plan` prepares the blocked-first Hermes materialization
+contract for those packets. The live Hermes adapter then has a strict sequence:
+collect route readiness, materialize blocked tasks, release exactly the verified
+blocked tasks to `ready`, and only then run the native dispatch wrapper. Release
+does not dispatch workers and dispatch does not complete the product.
 `validate-signal-corpus` and `signal-coverage` prove that the public
 Golden Corpus covers every known route without treating contract coverage as
 production readiness.

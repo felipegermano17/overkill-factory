@@ -501,6 +501,11 @@ def task_readback_task(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
+def task_readback_id(payload: dict[str, Any]) -> str:
+    task = task_readback_task(payload)
+    return str(task.get("id") or task.get("task_id") or payload.get("id") or payload.get("task_id") or "").strip()
+
+
 def task_readback_events(payload: dict[str, Any]) -> list[Any]:
     events = payload.get("events") or payload.get("history") or payload.get("timeline") or []
     if isinstance(events, list):
@@ -519,6 +524,26 @@ def task_readback_assignee(payload: dict[str, Any]) -> str:
 
 def task_readback_body(payload: dict[str, Any]) -> str:
     return str(task_readback_task(payload).get("body") or "")
+
+
+def task_dispatcher_workspace_ref(payload: dict[str, Any]) -> str:
+    task = task_readback_task(payload)
+    kind = str(task.get("workspace_kind") or task.get("workspace") or "").strip()
+    path = str(task.get("workspace_path") or "").strip()
+    if kind == "dir" and path:
+        return f"dir:{path}"
+    if kind:
+        return kind
+    return path
+
+
+def ensure_dispatcher_visible_workspace(payload: dict[str, Any], *, task_id: str) -> None:
+    workspace_ref = task_dispatcher_workspace_ref(payload)
+    if not workspace_ref:
+        raise RuntimeError(f"Hermes task {task_id} has no dispatcher workspace ref before release")
+    normalized = workspace_ref.replace("\\", "/")
+    if re.search(r"\b[A-Za-z]:/", normalized):
+        raise RuntimeError(f"Hermes task {task_id} workspace is local to the adapter, not dispatcher-visible")
 
 
 def pre_dispatch_activity_markers(payload: dict[str, Any]) -> list[str]:
@@ -563,6 +588,16 @@ def ensure_ready_work_unit_readback_contract(
     if str(body.get("packet_id") or "").strip() != expected_packet_id:
         raise RuntimeError(f"Hermes task {task_id} body readback does not match ready work-unit packet")
     ensure_no_pre_dispatch_activity(payload, task_id=task_id)
+
+
+def ready_work_unit_body(payload: dict[str, Any], *, task_id: str) -> dict[str, Any]:
+    try:
+        body = json.loads(task_readback_body(payload))
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Hermes task {task_id} body readback is not valid JSON") from exc
+    if not isinstance(body, dict):
+        raise RuntimeError(f"Hermes task {task_id} body readback is not a JSON object")
+    return body
 
 
 def task_has_blocked_event(payload: dict[str, Any]) -> bool:
@@ -1056,6 +1091,223 @@ def materialize_ready_work_units(args: argparse.Namespace, runner: Runner = defa
             "local_state_authority": False,
         },
         "hook": {"plan": plan},
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
+
+
+def load_ready_work_unit_materialization_result(path: Path, *, plan: dict[str, Any], board: str) -> dict[str, Any]:
+    result = load_json(path)
+    if result.get("mode") != "materialize-ready-work-units":
+        raise RuntimeError("ready work-unit release requires a materialize-ready-work-units result")
+    if result.get("dry_run") is True:
+        raise RuntimeError("ready work-unit release requires a real materialization result, not dry-run output")
+    result_board = str(result.get("board") or "").strip()
+    if result_board and result_board != board:
+        raise RuntimeError("materialization result board does not match ready work-unit release board")
+    plan_id = str(plan.get("plan_id") or "").strip()
+    if plan_id and str(result.get("materialization_plan_id") or "").strip() != plan_id:
+        raise RuntimeError("materialization result does not match the ready work-unit materialization plan")
+    runtime_gate = result.get("runtime_gate")
+    if not isinstance(runtime_gate, dict) or runtime_gate.get("live_hermes_mutated") is not True:
+        raise RuntimeError("materialization result does not prove live Hermes materialization")
+    if runtime_gate.get("dispatch_allowed_by_this_step") is not False:
+        raise RuntimeError("materialization result must keep dispatch separated from materialization")
+    work_unit_ids = {
+        str(task.get("work_unit_id") or "").strip()
+        for task in plan.get("tasks", [])
+        if isinstance(task, dict) and str(task.get("work_unit_id") or "").strip()
+    }
+    packet_ids = {
+        str(task.get("packet_id") or "").strip()
+        for task in plan.get("tasks", [])
+        if isinstance(task, dict) and str(task.get("packet_id") or "").strip()
+    }
+    result_work_units = set((result.get("ready_work_unit_task_ids") or {}).keys())
+    result_packets = set((result.get("packet_task_ids") or {}).keys())
+    missing_work_units = sorted(work_unit_ids - result_work_units)
+    missing_packets = sorted(packet_ids - result_packets)
+    if missing_work_units:
+        raise RuntimeError("materialization result is missing work unit ids: " + ", ".join(missing_work_units))
+    if missing_packets:
+        raise RuntimeError("materialization result is missing packet ids: " + ", ".join(missing_packets))
+    return result
+
+
+def expected_ready_work_unit_tasks(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    tasks = [task for task in plan.get("tasks", []) if isinstance(task, dict)]
+    if not tasks:
+        raise RuntimeError("ready work-unit release requires at least one task in the plan")
+    return tasks
+
+
+def expected_ready_work_unit_key(task: dict[str, Any]) -> tuple[str, str]:
+    packet_id = str(task.get("packet_id") or "").strip()
+    work_unit_id = str(task.get("work_unit_id") or "").strip()
+    if not packet_id or not work_unit_id:
+        raise RuntimeError("ready work-unit release requires packet_id and work_unit_id for every plan task")
+    return packet_id, work_unit_id
+
+
+def ready_work_unit_release_assignee(task: dict[str, Any], worker_assignee_prefix: str) -> str:
+    create_policy = task.get("create_policy") if isinstance(task.get("create_policy"), dict) else {}
+    assignee = str(create_policy.get("target_assignee_profile") or task.get("owner_worker") or "").strip()
+    if not assignee:
+        raise RuntimeError("ready work-unit release requires target_assignee_profile")
+    return worker_assignee_prefix + assignee
+
+
+def verify_ready_work_unit_release_candidate(
+    *,
+    payload: dict[str, Any],
+    plan_task: dict[str, Any],
+    worker_assignee_prefix: str,
+) -> tuple[str, str, str]:
+    task_id = task_readback_id(payload)
+    if not task_id:
+        raise RuntimeError("Hermes task readback has no task id")
+    packet_id, work_unit_id = expected_ready_work_unit_key(plan_task)
+    expected_assignee = ready_work_unit_release_assignee(plan_task, worker_assignee_prefix)
+    if task_readback_status(payload) != "blocked":
+        raise RuntimeError(f"Hermes task {task_id} is not blocked before ready work-unit release")
+    if task_readback_assignee(payload) != expected_assignee:
+        raise RuntimeError(f"Hermes task {task_id} assignee readback does not match target profile")
+    body = ready_work_unit_body(payload, task_id=task_id)
+    if str(body.get("packet_id") or "").strip() != packet_id:
+        raise RuntimeError(f"Hermes task {task_id} body readback does not match ready work-unit packet")
+    if str(body.get("work_unit_id") or "").strip() != work_unit_id:
+        raise RuntimeError(f"Hermes task {task_id} body readback does not match ready work-unit id")
+    if str(body.get("packet_type") or "").strip() != "ready_work_unit_execution_request":
+        raise RuntimeError(f"Hermes task {task_id} body readback is not a ready work-unit execution request")
+    if not task_has_blocked_event(payload):
+        raise RuntimeError(f"Hermes task {task_id} lacks verified blocked event before release")
+    ensure_no_pre_dispatch_activity(payload, task_id=task_id)
+    ensure_dispatcher_visible_workspace(payload, task_id=task_id)
+    return task_id, packet_id, work_unit_id
+
+
+def blocked_ready_work_unit_readbacks(
+    *,
+    hermes_bin: str,
+    board: str,
+    runner: Runner = default_runner,
+) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    candidates: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    seen_task_ids: set[str] = set()
+    for record in list_tasks_by_status(hermes_bin=hermes_bin, board=board, status="blocked", runner=runner):
+        task_id = str(record.get("task_id") or record.get("id") or "").strip()
+        if not task_id or task_id in seen_task_ids:
+            continue
+        seen_task_ids.add(task_id)
+        payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+        try:
+            body = ready_work_unit_body(payload, task_id=task_id)
+        except RuntimeError:
+            continue
+        if str(body.get("packet_type") or "").strip() != "ready_work_unit_execution_request":
+            continue
+        packet_id = str(body.get("packet_id") or "").strip()
+        work_unit_id = str(body.get("work_unit_id") or "").strip()
+        if packet_id and work_unit_id:
+            candidates.setdefault((packet_id, work_unit_id), []).append(payload)
+    return candidates
+
+
+def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
+    board = str(args.board or plan.get("board") or "").strip()
+    if not board:
+        raise RuntimeError("ready work-unit release requires a board")
+    if str(plan.get("board") or "").strip() and board != str(plan.get("board") or "").strip():
+        raise RuntimeError("provided board does not match the ready work-unit materialization plan")
+    materialization_result = load_ready_work_unit_materialization_result(
+        args.materialization_result.resolve(),
+        plan=plan,
+        board=board,
+    )
+    tasks = expected_ready_work_unit_tasks(plan)
+    required_workers = [
+        ready_work_unit_release_assignee(task, args.worker_assignee_prefix)
+        for task in tasks
+    ]
+    readiness_blockers = route_readiness_blockers(args.route_readiness, required_workers)
+    if readiness_blockers:
+        raise RuntimeError("pre-dispatch route readiness blocked ready work-unit release: " + "; ".join(readiness_blockers))
+
+    candidates = blocked_ready_work_unit_readbacks(hermes_bin=args.hermes_bin, board=board, runner=runner)
+    verified: list[tuple[dict[str, Any], str, str, str]] = []
+    for task in tasks:
+        key = expected_ready_work_unit_key(task)
+        matches = candidates.get(key) or []
+        if len(matches) != 1:
+            raise RuntimeError(
+                f"ready work-unit release expected exactly one blocked Hermes task for packet {key[0]} / work unit {key[1]}, found {len(matches)}"
+            )
+        task_id, packet_id, work_unit_id = verify_ready_work_unit_release_candidate(
+            payload=matches[0],
+            plan_task=task,
+            worker_assignee_prefix=args.worker_assignee_prefix,
+        )
+        verified.append((task, task_id, packet_id, work_unit_id))
+
+    released_ready_work_unit_task_ids: dict[str, str] = {}
+    released_packet_task_ids: dict[str, str] = {}
+    release_reason = str(
+        args.reason
+        or "runtime_gate=blocked_event_verified_for_each_task; release_scope=ready_work_units_only; dispatch_separate=true"
+    )
+    required_markers = [
+        "runtime_gate=blocked_event_verified_for_each_task",
+        "release_scope=ready_work_units_only",
+        "dispatch_separate=true",
+    ]
+    if not args.dry_run:
+        for _task, task_id, packet_id, work_unit_id in verified:
+            unblock_task(
+                hermes_bin=args.hermes_bin,
+                board=board,
+                task_id=task_id,
+                reason=release_reason,
+                required_readback_markers=required_markers,
+                runner=runner,
+            )
+            released_ready_work_unit_task_ids[work_unit_id] = task_id
+            released_packet_task_ids[packet_id] = task_id
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "release-ready-work-units",
+        "dry_run": bool(args.dry_run),
+        "board": board,
+        "materialization_plan_id": plan.get("plan_id"),
+        "ready_work_unit_task_ids": {
+            work_unit_id: task_id
+            for _task, task_id, _packet_id, work_unit_id in verified
+        },
+        "packet_task_ids": {
+            packet_id: task_id
+            for _task, task_id, packet_id, _work_unit_id in verified
+        },
+        "released_ready_work_unit_task_ids": released_ready_work_unit_task_ids,
+        "released_packet_task_ids": released_packet_task_ids,
+        "runtime_gate": {
+            **(plan.get("runtime_gate") if isinstance(plan.get("runtime_gate"), dict) else {}),
+            "release_verified_task_count": len(verified),
+            "dispatch_allowed_by_this_step": False,
+            "native_dispatch_required_next": not args.dry_run,
+            "complete_product_claim_allowed": False,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+        },
+        "hook": {
+            "plan": plan,
+            "materialization_result": materialization_result,
+            "release_reason": release_reason,
+            "no_shadow_dispatcher": True,
+            "local_state_authority": False,
+        },
     }
     public_envelope = sanitize_public_refs(envelope)
     if args.out:
@@ -1574,6 +1826,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_ready.add_argument("--route-readiness", type=Path)
     p_ready.add_argument("--out", type=Path)
 
+    p_release = sub.add_parser(
+        "release-ready-work-units",
+        help="Release verified blocked ready work-unit tasks to ready without dispatching workers.",
+    )
+    p_release.add_argument("--plan", type=Path, required=True)
+    p_release.add_argument("--materialization-result", type=Path, required=True)
+    p_release.add_argument("--board")
+    p_release.add_argument("--hermes-bin", default="hermes")
+    p_release.add_argument("--worker-assignee-prefix", default="")
+    p_release.add_argument("--route-readiness", type=Path, required=True)
+    p_release.add_argument("--reason")
+    p_release.add_argument("--dry-run", action="store_true")
+    p_release.add_argument("--out", type=Path)
+
     p_route = sub.add_parser(
         "collect-route-readiness",
         help="Collect the public-safe Hermes worker route readiness manifest from read-only Hermes state.",
@@ -1619,6 +1885,8 @@ def main() -> int:
             envelope = materialize(args)
         elif args.command == "materialize-ready-work-units":
             envelope = materialize_ready_work_units(args)
+        elif args.command == "release-ready-work-units":
+            envelope = release_ready_work_units(args)
         elif args.command == "collect-route-readiness":
             envelope = collect_route_readiness(args)
         elif args.command == "enforce-done":

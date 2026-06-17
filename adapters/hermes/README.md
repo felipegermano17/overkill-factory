@@ -200,6 +200,12 @@ python adapters/hermes/live_kanban_adapter.py materialize-ready-work-units \
   --route-readiness path/to/route-readiness.json \
   --workspace dir:<path-visible-to-hermes-dispatcher> \
   --out path/to/live-ready-work-unit-materialization-result.json
+
+python adapters/hermes/live_kanban_adapter.py release-ready-work-units \
+  --plan path/to/ready-work-unit-hermes-plan.json \
+  --materialization-result path/to/live-ready-work-unit-materialization-result.json \
+  --route-readiness path/to/route-readiness.json \
+  --out path/to/released-ready-work-units.json
 ```
 
 The collector is read-only: it derives required workers from the plan, checks
@@ -207,7 +213,12 @@ Hermes profiles and auth/provider readiness, and emits the official
 `hermes-worker-route-readiness` manifest without embedding raw status dumps or
 private paths. Materialization then creates blocked Hermes tasks only. It does
 not dispatch workers, complete tasks, approve Receipt Five, or claim product
-completion.
+completion. Release verifies the materialization result, finds exactly one
+blocked Hermes task per planned `packet_id`/`work_unit_id`, proves the real
+`blocked` event, assignee, JSON body, dispatcher-visible workspace and absence
+of pre-dispatch activity, then unblocks those tasks to `ready`. Release does not
+dispatch workers; native Hermes dispatch remains a separate command and the
+complete-product claim remains forbidden.
 
 Use `--workspace` when the adapter runs outside the Hermes host. The workspace
 must be meaningful to the Hermes dispatcher, not merely to the machine that runs
