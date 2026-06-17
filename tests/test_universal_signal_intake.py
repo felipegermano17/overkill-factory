@@ -926,6 +926,50 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             readiness["ready_work_units"],
         )
         self.assertTrue(all(packet["receipt_five_contract"]["must_attach_artifact_refs"] for packet in manifest["packets"]))
+        for packet in manifest["packets"]:
+            context_boundary = packet["context_boundary"]
+            self.assertEqual(context_boundary["workspace_search_policy"], "bounded_refs_only")
+            self.assertFalse(context_boundary["broad_repo_search_allowed"])
+            self.assertEqual(context_boundary["missing_context_action"], "BLOCK_WITH_OWNER")
+            self.assertEqual(context_boundary["context_drift_action"], "BLOCK_AND_REPORT")
+            self.assertFalse(context_boundary["operator_action_required_for_missing_context"])
+            self.assertIn("external:sanitized-product-creation-plan", context_boundary["allowed_context_refs"])
+            self.assertIn("external:sanitized-product-implementation-readiness", context_boundary["allowed_context_refs"])
+
+    def test_ready_work_unit_packets_reject_unbounded_context_boundary(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        manifest["packets"][0]["context_boundary"]["broad_repo_search_allowed"] = True
+        manifest["packets"][0]["context_boundary"]["workspace_search_policy"] = "search_entire_workspace"
+
+        errors = factoryctl.validate_ready_work_unit_packet_manifest(manifest)
+
+        self.assertTrue(any("broad_repo_search_allowed must be false" in error for error in errors), errors)
+        self.assertTrue(any("workspace_search_policy must be bounded_refs_only" in error for error in errors), errors)
+
+    def test_ready_work_unit_packets_reject_context_boundary_conflicts_and_bad_owner(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        conflict_ref = manifest["packets"][0]["context_boundary"]["allowed_context_refs"][0]
+        manifest["packets"][0]["context_boundary"]["forbidden_context_refs"].append(conflict_ref)
+        manifest["packets"][0]["context_boundary"]["block_owner"] = "not-a-real-worker"
+
+        errors = factoryctl.validate_ready_work_unit_packet_manifest(manifest)
+
+        self.assertTrue(any("refs cannot be both allowed and forbidden" in error for error in errors), errors)
+        self.assertTrue(any("block_owner must match owner_worker" in error for error in errors), errors)
 
     def test_ready_work_unit_packets_reject_blocked_readiness(self) -> None:
         source_resolution = factoryctl.build_source_resolution_packet(
@@ -974,6 +1018,8 @@ class UniversalSignalIntakeTest(unittest.TestCase):
                     str(plan_path),
                     "--product-implementation-readiness",
                     str(readiness_path),
+                    "--forbidden-context-ref",
+                    "external:sanitized-off-limits-parallel-thread",
                     "--out",
                     str(out_dir),
                 ]
@@ -988,6 +1034,12 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(validate_result, 0)
         self.assertEqual(manifest["record_type"], "ready_work_unit_packet_manifest")
         self.assertEqual(len(manifest["packets"]), len(readiness["ready_work_units"]))
+        self.assertTrue(
+            all(
+                "external:sanitized-off-limits-parallel-thread" in packet["context_boundary"]["forbidden_context_refs"]
+                for packet in manifest["packets"]
+            )
+        )
 
     def test_ready_work_unit_hermes_plan_from_packets_is_valid_and_blocked_first(self) -> None:
         plan = build_valid_product_creation_plan()
@@ -1031,10 +1083,66 @@ class UniversalSignalIntakeTest(unittest.TestCase):
                 for task in materialization["tasks"]
             )
         )
+        self.assertTrue(
+            all(task["context_boundary"] == task["body_contract"]["context_boundary"] for task in materialization["tasks"])
+        )
+        self.assertTrue(
+            all(task["context_boundary"]["workspace_search_policy"] == "bounded_refs_only" for task in materialization["tasks"])
+        )
+        self.assertTrue(
+            all(task["context_boundary"]["broad_repo_search_allowed"] is False for task in materialization["tasks"])
+        )
         self.assertEqual(
             [task["work_unit_id"] for task in materialization["tasks"]],
             [packet["work_unit_id"] for packet in manifest["packets"]],
         )
+
+    def test_ready_work_unit_hermes_plan_rejects_context_boundary_mismatch(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        materialization = factoryctl.build_ready_work_unit_hermes_materialization_plan(
+            manifest,
+            board="overkill-factory-live",
+            ready_work_unit_packet_manifest_ref="external:sanitized-ready-work-unit-packets",
+        )
+
+        materialization["tasks"][0]["context_boundary"]["broad_repo_search_allowed"] = True
+
+        errors = factoryctl.validate_ready_work_unit_hermes_materialization_plan(materialization)
+
+        self.assertTrue(any("context_boundary must match body_contract.context_boundary" in error for error in errors), errors)
+        self.assertTrue(any("broad_repo_search_allowed must be false" in error for error in errors), errors)
+
+    def test_ready_work_unit_hermes_plan_rejects_context_boundary_conflicts_and_bad_owner(self) -> None:
+        plan = build_valid_product_creation_plan()
+        readiness = factoryctl.build_product_implementation_readiness(plan)
+        manifest = factoryctl.build_ready_work_unit_packet_manifest(
+            plan,
+            readiness,
+            product_creation_plan_ref="external:sanitized-product-creation-plan",
+            product_implementation_readiness_ref="external:sanitized-product-implementation-readiness",
+        )
+        materialization = factoryctl.build_ready_work_unit_hermes_materialization_plan(
+            manifest,
+            board="overkill-factory-live",
+            ready_work_unit_packet_manifest_ref="external:sanitized-ready-work-unit-packets",
+        )
+        conflict_ref = materialization["tasks"][0]["context_boundary"]["allowed_context_refs"][0]
+        materialization["tasks"][0]["context_boundary"]["forbidden_context_refs"].append(conflict_ref)
+        materialization["tasks"][0]["body_contract"]["context_boundary"]["forbidden_context_refs"].append(conflict_ref)
+        materialization["tasks"][0]["context_boundary"]["block_owner"] = "not-a-real-worker"
+        materialization["tasks"][0]["body_contract"]["context_boundary"]["block_owner"] = "not-a-real-worker"
+
+        errors = factoryctl.validate_ready_work_unit_hermes_materialization_plan(materialization)
+
+        self.assertTrue(any("refs cannot be both allowed and forbidden" in error for error in errors), errors)
+        self.assertTrue(any("block_owner must match owner_worker" in error for error in errors), errors)
 
     def test_ready_work_unit_hermes_plan_rejects_dispatch_without_runtime_gate(self) -> None:
         plan = build_valid_product_creation_plan()

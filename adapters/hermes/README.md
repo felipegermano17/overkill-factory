@@ -188,6 +188,15 @@ the task is still blocked and has no pre-dispatch `promoted`, `claimed`,
 evidence exists. Complete-product claims remain forbidden until all Product SOT
 scope is reconciled through worker results, review and Receipt Five.
 
+Ready work-unit packets and the resulting Hermes task contracts also carry a
+`context_boundary`. Workers may inspect only named allowed refs plus artifacts
+created for the current `work_unit_id`; broad repository archaeology is not a
+valid recovery path. When context is missing, stale, forbidden or ambiguous, the
+task must block with owner instead of continuing through unrelated history.
+Use repeated `--forbidden-context-ref <public-safe-ref>` values when a live run
+has known off-limits public refs, such as a separate issue or parallel product
+thread.
+
 When the runtime is reachable, the live adapter can consume that plan:
 
 ```bash

@@ -171,6 +171,7 @@
         "dependency_refs",
         "proof_ids_required",
         "receipt_five_contract",
+        "context_boundary",
         "runtime_refs",
         "idempotency_key",
         "create_policy",
@@ -199,6 +200,39 @@
           "items": { "type": "string", "minLength": 3 }
         },
         "receipt_five_contract": { "type": "object" },
+        "context_boundary": {
+          "type": "object",
+          "required": [
+            "allowed_context_refs",
+            "forbidden_context_refs",
+            "workspace_search_policy",
+            "broad_repo_search_allowed",
+            "missing_context_action",
+            "context_drift_action",
+            "block_owner",
+            "operator_action_required_for_missing_context",
+            "worker_instruction"
+          ],
+          "properties": {
+            "allowed_context_refs": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 3 }
+            },
+            "forbidden_context_refs": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 3 }
+            },
+            "workspace_search_policy": { "const": "bounded_refs_only" },
+            "broad_repo_search_allowed": { "const": false },
+            "missing_context_action": { "const": "BLOCK_WITH_OWNER" },
+            "context_drift_action": { "const": "BLOCK_AND_REPORT" },
+            "block_owner": { "type": "string", "minLength": 3 },
+            "operator_action_required_for_missing_context": { "const": false },
+            "worker_instruction": { "type": "string", "minLength": 30 }
+          },
+          "additionalProperties": false
+        },
         "runtime_refs": {
           "type": "object",
           "required": ["hermes_board_ref", "hermes_task_ref", "hermes_run_ref"],
