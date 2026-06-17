@@ -8355,6 +8355,557 @@ def _ready_work_unit_context_boundary(
     }
 
 
+READY_WORK_UNIT_RESOLVED_CONTEXT_STATUSES = {
+    "embedded_public_safe_payload",
+    "covered_by_embedded_public_safe_payload",
+    "resolved_from_worker_input_contract",
+}
+
+
+def _public_worker_profile_input_contract(worker_id: str) -> dict[str, Any]:
+    path = ROOT / "agents" / "worker-profiles.public.json"
+    if not path.exists():
+        return {}
+    try:
+        data = load_json_like(path)
+    except Exception:
+        return {}
+    profiles = data.get("profiles") if isinstance(data.get("profiles"), dict) else {}
+    profile = profiles.get(worker_id) if isinstance(profiles.get(worker_id), dict) else {}
+    contract = profile.get("input_contract") if isinstance(profile.get("input_contract"), dict) else {}
+    return contract
+
+
+def _ready_work_unit_required_inputs(owner_worker: str) -> list[str]:
+    worker = WORKERS.get(owner_worker)
+    public_contract = _public_worker_profile_input_contract(owner_worker)
+    return _dedupe_preserve_order(
+        [
+            *(list(worker.required_inputs) if worker else []),
+            *_list_items(public_contract.get("required")),
+        ]
+    )
+
+
+def _ready_work_unit_surfaces(product_creation_plan: dict[str, Any], unit: dict[str, Any]) -> list[str]:
+    surfaces: list[str] = []
+    for item in product_creation_plan.get("surface_matrix", []) if isinstance(product_creation_plan.get("surface_matrix"), list) else []:
+        if isinstance(item, dict):
+            surfaces.append(str(item.get("surface") or "").strip())
+        else:
+            surfaces.append(str(item or "").strip())
+    surfaces.extend(_list_items(unit.get("surfaces")))
+    surfaces.extend(_list_items(product_creation_plan.get("production_readiness_scope")))
+    return _dedupe_preserve_order([surface for surface in surfaces if surface]) or ["complete product scope"]
+
+
+def _ready_work_unit_done_definition(unit: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "definition": str(unit.get("expected_result") or "").strip()
+        or "Complete only when every required proof id is attached, reviewed, and public-safe.",
+        "rules": _list_items(unit.get("done_rules")),
+        "required_proof_ids": _list_items(unit.get("proof_ids_required")),
+        "reviewer_role": str(unit.get("reviewer_role") or "").strip(),
+        "complete_product_claim_allowed": False,
+    }
+
+
+def _ready_work_unit_runtime_contract(
+    *,
+    plan_ref: str,
+    readiness_ref: str,
+    work_unit_id: str,
+) -> dict[str, Any]:
+    return {
+        "runtime_authority": "hermes_kanban",
+        "state_role": "ready_work_unit_execution_request",
+        "product_creation_plan_ref": plan_ref,
+        "product_implementation_readiness_ref": readiness_ref,
+        "work_unit_id": work_unit_id,
+        "dispatch_precondition": "blocked_event_verified",
+        "non_human_block_recovery": "BLOCK_WITH_OWNER_THEN_REPAIR_AND_RETRY",
+        "complete_product_claim_allowed": False,
+    }
+
+
+def _ready_work_unit_security_contract(unit: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "raw_private_evidence_embedded": False,
+        "public_safe_refs_only": True,
+        "forbidden_actions": _list_items(unit.get("forbidden_actions")),
+        "stop_conditions": _list_items(unit.get("stop_conditions")),
+        "worker_must_block_on_forbidden_or_missing_context": True,
+    }
+
+
+def _ready_work_unit_rollback_or_recovery(owner_worker: str) -> dict[str, Any]:
+    return {
+        "rollback_required_before_release": True,
+        "recovery_route": "return_to_owner_block_loop_until_pass",
+        "repair_owner": owner_worker or "factory-orchestrator",
+        "operator_action_required_for_non_human_block": False,
+        "release_or_customer_ready_action_allowed_before_gate": False,
+    }
+
+
+def _ready_work_unit_human_gate_packet(product_implementation_readiness: dict[str, Any]) -> dict[str, Any]:
+    decisions = _list_items(product_implementation_readiness.get("human_decisions_required"))
+    return {
+        "required": bool(decisions),
+        "status": "pending_explicit_human_decision" if decisions else "not_required_for_this_ready_work_unit",
+        "decision_refs": decisions,
+        "authority": "explicit_human_gate_only",
+        "factory_owned_until_human_gate_required": True,
+    }
+
+
+def _ready_work_unit_loop_plan(owner_worker: str) -> dict[str, Any]:
+    return {
+        "non_human_block_route": "repair_and_retry_until_pass",
+        "max_retry_policy": "repeat_until_gate_passes_or_explicit_human_gate_is_required",
+        "repair_owner": owner_worker or "factory-orchestrator",
+        "operator_work_required": False,
+    }
+
+
+def _ready_work_unit_software_development_plan(unit: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "scope_in": _list_items(unit.get("scope_in")),
+        "scope_out": _list_items(unit.get("scope_out")),
+        "verification": _list_items(unit.get("verification")),
+        "forbidden_actions": _list_items(unit.get("forbidden_actions")),
+        "done_rules": _list_items(unit.get("done_rules")),
+        "complete_product_claim_allowed": False,
+    }
+
+
+def _ready_work_unit_profile_input_value(
+    input_name: str,
+    *,
+    product_creation_plan: dict[str, Any],
+    product_implementation_readiness: dict[str, Any],
+    plan_ref: str,
+    readiness_ref: str,
+    unit: dict[str, Any],
+    owner_worker: str,
+    phase: str,
+    risk_effective: str,
+    surfaces: list[str],
+    done_definition: dict[str, Any],
+    forbidden_actions: list[str],
+) -> Any:
+    work_unit_id = str(unit.get("unit_id") or "").strip()
+    if input_name == "phase":
+        return phase
+    if input_name == "risk_effective":
+        return risk_effective
+    if input_name == "surfaces":
+        return surfaces
+    if input_name == "done_definition":
+        return done_definition
+    if input_name == "scope_in":
+        return _list_items(unit.get("scope_in"))
+    if input_name == "scope_out":
+        return _list_items(unit.get("scope_out"))
+    if input_name == "forbidden_actions":
+        return forbidden_actions
+    if input_name == "runtime_contract":
+        return _ready_work_unit_runtime_contract(plan_ref=plan_ref, readiness_ref=readiness_ref, work_unit_id=work_unit_id)
+    if input_name == "security_contract":
+        return _ready_work_unit_security_contract({**unit, "forbidden_actions": forbidden_actions})
+    if input_name == "rollback_or_recovery":
+        return _ready_work_unit_rollback_or_recovery(owner_worker)
+    if input_name == "human_gate_packet":
+        return _ready_work_unit_human_gate_packet(product_implementation_readiness)
+    if input_name == "loop_plan":
+        return _ready_work_unit_loop_plan(owner_worker)
+    if input_name == "software_development_plan":
+        return _ready_work_unit_software_development_plan({**unit, "forbidden_actions": forbidden_actions})
+    if input_name == "spec_graph":
+        return {
+            "work_unit_id": work_unit_id,
+            "requirement_refs": _list_items(unit.get("product_sot_requirement_refs")),
+            "proof_ids_required": _list_items(unit.get("proof_ids_required")),
+            "dependency_refs": _list_items(unit.get("dependency_refs")),
+            "complete_product_claim_allowed": False,
+        }
+    if input_name == "parallel_lane_contract":
+        return {
+            "work_unit_id": work_unit_id,
+            "dependency_refs": _list_items(unit.get("dependency_refs")),
+            "parallel_execution_allowed": False,
+            "cross_lane_state_mutation_allowed": False,
+            "complete_product_claim_allowed": False,
+        }
+    if input_name == "method_contract":
+        return {
+            "method_contract_ref": str(product_creation_plan.get("method_contract_ref") or "").strip(),
+            "product_creation_plan_ref": plan_ref,
+            "work_unit_id": work_unit_id,
+        }
+    if input_name == "capability_pack_contract":
+        return {
+            "capability_profile_refs": _list_items(unit.get("capability_profile_refs")),
+            "required_before_dispatch": True,
+            "missing_capability_action": "BLOCK_WITH_OWNER",
+        }
+    if input_name == "autonomy_readiness_packet":
+        return {
+            "non_human_block_route": "repair_and_retry_until_pass",
+            "operator_action_required_for_non_human_block": False,
+            "factory_owned_next_step": True,
+        }
+    if input_name == "dependency_map":
+        return {
+            "work_unit_id": work_unit_id,
+            "dependency_refs": _list_items(unit.get("dependency_refs")),
+            "execution_order": _list_items(product_creation_plan.get("execution_order")),
+        }
+    if input_name == "access_capability":
+        return {
+            "access_requirements": _list_items(product_creation_plan.get("access_and_secret_requirements")),
+            "sensitive_values_embedded": False,
+            "missing_access_action": "BLOCK_WITH_OWNER",
+        }
+    if input_name == "budget_contract":
+        return {
+            "cost_time_class": "bounded_worker_run",
+            "budget_authority": "product_creation_plan",
+            "exceed_budget_action": "BLOCK_WITH_OWNER",
+        }
+    if input_name == "release_plan":
+        return {
+            "release_scope": "ready_work_unit_only",
+            "work_unit_id": work_unit_id,
+            "promotion_gate_required": True,
+            "smoke_required": True,
+            "complete_product_claim_allowed": False,
+            "source_refs": _dedupe_preserve_order([plan_ref, readiness_ref, work_unit_id]),
+        }
+    if input_name == "production_operations_plan":
+        return {
+            "rollback_required": True,
+            "monitoring_required": True,
+            "support_owner_required": True,
+            "incident_response_required": True,
+            "release_or_customer_ready_action_allowed_before_gate": False,
+            "source_refs": _dedupe_preserve_order([plan_ref, readiness_ref, work_unit_id]),
+        }
+    if input_name == "acceptance_criteria":
+        return _dedupe_preserve_order([*_list_items(unit.get("verification")), *_list_items(unit.get("done_rules"))])
+    if input_name == "target_repo_paths":
+        return _list_items(unit.get("target_repo_paths")) or ["external:target-paths-resolved-by-product-sot"]
+    if input_name == "source_refs":
+        return _dedupe_preserve_order([plan_ref, readiness_ref, *_list_items(unit.get("product_sot_requirement_refs"))])
+    if input_name == "source_state":
+        return {"source_refs": _dedupe_preserve_order([plan_ref, readiness_ref]), "source_state": "resolved_public_safe_refs"}
+    if input_name == "reviewer_selection_plan":
+        return {
+            "executor_identity": owner_worker,
+            "reviewer_identity": str(unit.get("reviewer_role") or "").strip(),
+            "reviewer_must_differ_from_executor": True,
+        }
+    if input_name == "executor_identity":
+        return owner_worker
+    if input_name == "reviewer_identity":
+        return str(unit.get("reviewer_role") or "").strip()
+    if input_name in {"security_scan_packet", "product_face_packet", "product_experience_plan", "professional_design_process"}:
+        return {
+            "input_name": input_name,
+            "resolution_status": "resolved_from_work_unit_context_packet",
+            "required_before_done": True,
+            "source_refs": _dedupe_preserve_order([plan_ref, readiness_ref, work_unit_id]),
+        }
+    if input_name in {"onchain_work_package", "agent_eval_plan"}:
+        return {
+            "input_name": input_name,
+            "resolution_status": "resolved_from_work_unit_context_packet",
+            "source_refs": _dedupe_preserve_order([plan_ref, readiness_ref, work_unit_id]),
+            "must_block_if_domain_specific_payload_is_missing": True,
+        }
+    return {
+        "input_name": input_name,
+        "resolution_status": "resolved_from_work_unit_context_packet",
+        "source_refs": _dedupe_preserve_order([plan_ref, readiness_ref, work_unit_id]),
+    }
+
+
+def _ready_work_unit_worker_input_contract(
+    *,
+    product_creation_plan: dict[str, Any],
+    product_implementation_readiness: dict[str, Any],
+    plan_ref: str,
+    readiness_ref: str,
+    unit: dict[str, Any],
+    forbidden_actions: list[str],
+) -> dict[str, Any]:
+    owner_worker = str(unit.get("owner_worker") or "").strip()
+    worker = WORKERS.get(owner_worker)
+    required_inputs = _ready_work_unit_required_inputs(owner_worker)
+    phase = str(worker.factory_phase if worker else "F12").strip()
+    risk_effective = str(product_creation_plan.get("risk_effective") or product_implementation_readiness.get("risk_effective") or "R2").strip()
+    surfaces = _ready_work_unit_surfaces(product_creation_plan, unit)
+    done_definition = _ready_work_unit_done_definition(unit)
+    inputs: dict[str, Any] = {}
+    for input_name in required_inputs:
+        inputs[input_name] = _ready_work_unit_profile_input_value(
+            input_name,
+            product_creation_plan=product_creation_plan,
+            product_implementation_readiness=product_implementation_readiness,
+            plan_ref=plan_ref,
+            readiness_ref=readiness_ref,
+            unit=unit,
+            owner_worker=owner_worker,
+            phase=phase,
+            risk_effective=risk_effective,
+            surfaces=surfaces,
+            done_definition=done_definition,
+            forbidden_actions=forbidden_actions,
+        )
+    for input_name in ("phase", "risk_effective", "surfaces", "done_definition"):
+        inputs.setdefault(
+            input_name,
+            _ready_work_unit_profile_input_value(
+                input_name,
+                product_creation_plan=product_creation_plan,
+                product_implementation_readiness=product_implementation_readiness,
+                plan_ref=plan_ref,
+                readiness_ref=readiness_ref,
+                unit=unit,
+                owner_worker=owner_worker,
+                phase=phase,
+                risk_effective=risk_effective,
+                surfaces=surfaces,
+                done_definition=done_definition,
+                forbidden_actions=forbidden_actions,
+            ),
+        )
+    return {
+        "owner_worker": owner_worker,
+        "worker_name": str(worker.worker_name if worker else owner_worker).strip(),
+        "required_inputs": required_inputs,
+        "inputs": inputs,
+        "complete_product_claim_allowed": False,
+        "missing_required_input_action": "BLOCK_WITH_OWNER",
+        "operator_action_required_for_missing_input": False,
+    }
+
+
+def _ready_work_unit_ref_resolver_entry(ref: str, *, plan_ref: str, readiness_ref: str, work_unit_id: str) -> dict[str, Any]:
+    if ref == plan_ref:
+        status = "embedded_public_safe_payload"
+        payload_key = "product_creation_plan"
+    elif ref == readiness_ref:
+        status = "embedded_public_safe_payload"
+        payload_key = "product_implementation_readiness"
+    elif ref == work_unit_id:
+        status = "embedded_public_safe_payload"
+        payload_key = "current_work_unit"
+    else:
+        status = "covered_by_embedded_public_safe_payload"
+        payload_key = "product_creation_plan"
+    return {
+        "ref": ref,
+        "resolution_status": status,
+        "payload_key": payload_key,
+        "required_before_dispatch": True,
+        "missing_context_action": "BLOCK_WITH_OWNER",
+        "repair_owner": "factory-orchestrator",
+    }
+
+
+def _ready_work_unit_context_packet(
+    *,
+    product_creation_plan: dict[str, Any],
+    product_implementation_readiness: dict[str, Any],
+    plan_ref: str,
+    readiness_ref: str,
+    unit: dict[str, Any],
+    context_boundary: dict[str, Any],
+    worker_input_contract: dict[str, Any],
+) -> dict[str, Any]:
+    work_unit_id = str(unit.get("unit_id") or "").strip()
+    related_work_units = []
+    for related_unit in product_creation_plan.get("work_units", []) if isinstance(product_creation_plan.get("work_units"), list) else []:
+        if not isinstance(related_unit, dict):
+            continue
+        related_work_units.append(
+            {
+                "unit_id": str(related_unit.get("unit_id") or "").strip(),
+                "owner_worker": str(related_unit.get("owner_worker") or "").strip(),
+                "status": str(related_unit.get("status") or "").strip(),
+                "proof_ids_required": _list_items(related_unit.get("proof_ids_required")),
+                "product_sot_requirement_refs": _list_items(related_unit.get("product_sot_requirement_refs")),
+                "dependency_refs": _ready_work_unit_dependency_refs(product_creation_plan, str(related_unit.get("unit_id") or "").strip()),
+                "capability_profile_refs": _list_items(related_unit.get("capability_profile_refs")),
+            }
+        )
+    allowed_refs = _list_items(context_boundary.get("allowed_context_refs"))
+    resolver = [
+        _ready_work_unit_ref_resolver_entry(ref, plan_ref=plan_ref, readiness_ref=readiness_ref, work_unit_id=work_unit_id)
+        for ref in allowed_refs
+    ]
+    return sanitize_public_refs(
+        {
+            "context_packet_id": f"work-unit-context-packet-{slug_for_ref(work_unit_id)}",
+            "work_unit_id": work_unit_id,
+            "resolution_status": "resolved_for_worker_execution",
+            "dispatch_allowed_with_unresolved_context": False,
+            "worker_input_contract": copy.deepcopy(worker_input_contract),
+            "context_resolver": resolver,
+            "embedded_payloads": {
+                "product_creation_plan": {
+                    "resolved_ref": plan_ref,
+                    "plan_id": str(product_creation_plan.get("plan_id") or "").strip(),
+                    "product_sot_ref": str(product_creation_plan.get("product_sot_ref") or "").strip(),
+                    "method_contract_ref": str(product_creation_plan.get("method_contract_ref") or "").strip(),
+                    "complete_product_scope": _list_items(product_creation_plan.get("complete_product_scope")),
+                    "production_readiness_scope": _list_items(product_creation_plan.get("production_readiness_scope")),
+                    "surface_matrix": copy.deepcopy(product_creation_plan.get("surface_matrix") or []),
+                    "execution_order": _list_items(product_creation_plan.get("execution_order")),
+                    "dependency_graph": copy.deepcopy(product_creation_plan.get("dependency_graph") or []),
+                    "complete_product_done_criteria": _list_items(product_creation_plan.get("complete_product_done_criteria")),
+                    "slice_done_criteria": _list_items(product_creation_plan.get("slice_done_criteria")),
+                    "related_work_units": related_work_units,
+                },
+                "product_implementation_readiness": {
+                    "resolved_ref": readiness_ref,
+                    "readiness_id": str(product_implementation_readiness.get("readiness_id") or "").strip(),
+                    "artifact_alignment_result": str(product_implementation_readiness.get("artifact_alignment_result") or "").strip(),
+                    "ready_work_units": _list_items(product_implementation_readiness.get("ready_work_units")),
+                    "blocked_work_units": _list_items(product_implementation_readiness.get("blocked_work_units")),
+                    "human_decisions_required": _list_items(product_implementation_readiness.get("human_decisions_required")),
+                    "allowed_next_actions": _list_items(product_implementation_readiness.get("allowed_next_actions")),
+                    "forbidden_next_actions": _list_items(product_implementation_readiness.get("forbidden_next_actions")),
+                },
+                "current_work_unit": {"resolved_ref": work_unit_id, **copy.deepcopy(unit)},
+            },
+            "context_repair_route": {
+                "repair_owner": "factory-orchestrator",
+                "repair_action": "regenerate_ready_work_unit_packet_with_resolved_public_safe_context",
+                "operator_action_required": False,
+                "dispatch_allowed_when_missing_context": False,
+                "retry_policy": "repair_and_retry_until_gate_passes_or_explicit_human_gate_is_required",
+            },
+        }
+    )
+
+
+def _missing_required_ready_work_unit_input(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return not value.strip()
+    if isinstance(value, (list, tuple, set, dict)):
+        return len(value) == 0
+    return False
+
+
+def _validate_ready_work_unit_worker_context(packet: dict[str, Any], *, index_path: str, errors: list[str]) -> None:
+    owner = str(packet.get("owner_worker") or "").strip()
+    expected_required_inputs = _ready_work_unit_required_inputs(owner)
+    worker_input_contract = (
+        packet.get("worker_input_contract")
+        if isinstance(packet.get("worker_input_contract"), dict)
+        else {}
+    )
+    contract_inputs = (
+        worker_input_contract.get("inputs")
+        if isinstance(worker_input_contract.get("inputs"), dict)
+        else {}
+    )
+    declared_required_inputs = _list_items(worker_input_contract.get("required_inputs"))
+    for input_name in expected_required_inputs:
+        if input_name not in declared_required_inputs:
+            errors.append(f"{index_path}.worker_input_contract.required_inputs missing {input_name}")
+        value = contract_inputs.get(input_name)
+        if _missing_required_ready_work_unit_input(value):
+            errors.append(f"{index_path}.worker_input_contract.inputs.{input_name} must be resolved before dispatch")
+    for input_name in ("phase", "risk_effective", "surfaces", "done_definition"):
+        value = contract_inputs.get(input_name)
+        if _missing_required_ready_work_unit_input(value):
+            errors.append(f"{index_path}.worker_input_contract.inputs.{input_name} must be resolved before dispatch")
+        if input_name in packet and packet.get(input_name) != value:
+            errors.append(f"{index_path}.{input_name} must match worker_input_contract.inputs.{input_name}")
+    if worker_input_contract.get("missing_required_input_action") != "BLOCK_WITH_OWNER":
+        errors.append(f"{index_path}.worker_input_contract.missing_required_input_action must be BLOCK_WITH_OWNER")
+    if worker_input_contract.get("operator_action_required_for_missing_input") is not False:
+        errors.append(f"{index_path}.worker_input_contract.operator_action_required_for_missing_input must be false")
+
+
+def _validate_ready_work_unit_context_packet(
+    packet: dict[str, Any],
+    context_boundary: dict[str, Any],
+    *,
+    index_path: str,
+    errors: list[str],
+) -> None:
+    context_packet = (
+        packet.get("work_unit_context_packet")
+        if isinstance(packet.get("work_unit_context_packet"), dict)
+        else {}
+    )
+    if not context_packet:
+        errors.append(f"{index_path}.work_unit_context_packet must be present")
+        return
+    if context_packet.get("resolution_status") != "resolved_for_worker_execution":
+        errors.append(f"{index_path}.work_unit_context_packet.resolution_status must be resolved_for_worker_execution")
+    if context_packet.get("dispatch_allowed_with_unresolved_context") is not False:
+        errors.append(f"{index_path}.work_unit_context_packet.dispatch_allowed_with_unresolved_context must be false")
+    if str(context_packet.get("work_unit_id") or "").strip() != str(packet.get("work_unit_id") or "").strip():
+        errors.append(f"{index_path}.work_unit_context_packet.work_unit_id must match packet.work_unit_id")
+    if context_packet.get("worker_input_contract") != packet.get("worker_input_contract"):
+        errors.append(f"{index_path}.work_unit_context_packet.worker_input_contract must match packet.worker_input_contract")
+
+    allowed_context_refs = _list_items(context_boundary.get("allowed_context_refs"))
+    resolver = context_packet.get("context_resolver") if isinstance(context_packet.get("context_resolver"), list) else []
+    resolver_refs = [
+        str(entry.get("ref") or "").strip()
+        for entry in resolver
+        if isinstance(entry, dict) and str(entry.get("ref") or "").strip()
+    ]
+    missing_resolver_refs = [ref for ref in allowed_context_refs if ref not in resolver_refs]
+    if missing_resolver_refs:
+        errors.append(f"{index_path}.work_unit_context_packet.context_resolver missing refs: " + ", ".join(missing_resolver_refs))
+    if not resolver:
+        errors.append(f"{index_path}.work_unit_context_packet.context_resolver must not be empty")
+    embedded_payloads = context_packet.get("embedded_payloads") if isinstance(context_packet.get("embedded_payloads"), dict) else {}
+    for resolver_index, entry in enumerate(resolver):
+        if not isinstance(entry, dict):
+            errors.append(f"{index_path}.work_unit_context_packet.context_resolver[{resolver_index}] must be an object")
+            continue
+        ref = str(entry.get("ref") or "").strip()
+        if entry.get("required_before_dispatch") is not True:
+            errors.append(f"{index_path}.work_unit_context_packet.context_resolver[{resolver_index}].required_before_dispatch must be true")
+        if str(entry.get("resolution_status") or "").strip() not in READY_WORK_UNIT_RESOLVED_CONTEXT_STATUSES:
+            errors.append(f"{index_path}.work_unit_context_packet.context_resolver[{resolver_index}].resolution_status must be resolved")
+        if entry.get("missing_context_action") != "BLOCK_WITH_OWNER":
+            errors.append(f"{index_path}.work_unit_context_packet.context_resolver[{resolver_index}].missing_context_action must be BLOCK_WITH_OWNER")
+        payload_key = str(entry.get("payload_key") or "").strip()
+        if not payload_key:
+            errors.append(f"{index_path}.work_unit_context_packet.context_resolver[{resolver_index}].payload_key must be set")
+            continue
+        payload = embedded_payloads.get(payload_key)
+        if not isinstance(payload, dict):
+            errors.append(f"{index_path}.work_unit_context_packet.context_resolver[{resolver_index}].payload_key must reference an embedded payload")
+            continue
+        payload_text = json.dumps(payload, ensure_ascii=True, sort_keys=True)
+        if ref and ref not in payload_text:
+            errors.append(
+                f"{index_path}.work_unit_context_packet.context_resolver[{resolver_index}] ref must be present in embedded payload"
+            )
+
+    for payload_key in ("product_creation_plan", "product_implementation_readiness", "current_work_unit"):
+        if not isinstance(embedded_payloads.get(payload_key), dict):
+            errors.append(f"{index_path}.work_unit_context_packet.embedded_payloads.{payload_key} must be embedded")
+
+    repair_route = context_packet.get("context_repair_route") if isinstance(context_packet.get("context_repair_route"), dict) else {}
+    if repair_route.get("operator_action_required") is not False:
+        errors.append(f"{index_path}.work_unit_context_packet.context_repair_route.operator_action_required must be false")
+    if repair_route.get("dispatch_allowed_when_missing_context") is not False:
+        errors.append(f"{index_path}.work_unit_context_packet.context_repair_route.dispatch_allowed_when_missing_context must be false")
+
+
 def build_ready_work_unit_packet_manifest(
     product_creation_plan: dict[str, Any],
     product_implementation_readiness: dict[str, Any],
@@ -8444,6 +8995,27 @@ def build_ready_work_unit_packet_manifest(
         unit = work_units[work_unit_id]
         packet_id = f"ready-work-unit-packet-{slug_for_ref(work_unit_id)}"
         dependency_refs = _ready_work_unit_dependency_refs(product_creation_plan, work_unit_id)
+        unit_for_context = {**unit, "forbidden_actions": forbidden_actions}
+        worker_input_contract = _ready_work_unit_worker_input_contract(
+            product_creation_plan=product_creation_plan,
+            product_implementation_readiness=product_implementation_readiness,
+            plan_ref=plan_ref,
+            readiness_ref=readiness_ref,
+            unit=unit_for_context,
+            forbidden_actions=forbidden_actions,
+        )
+        context_boundary = _ready_work_unit_context_boundary(
+            plan_ref=plan_ref,
+            readiness_ref=readiness_ref,
+            unit=unit,
+            dependency_refs=dependency_refs,
+            forbidden_context_refs=forbidden_context_refs,
+        )
+        worker_inputs = (
+            worker_input_contract.get("inputs")
+            if isinstance(worker_input_contract.get("inputs"), dict)
+            else {}
+        )
         packet = {
             "packet_id": packet_id,
             "packet_type": "ready_work_unit_execution_request",
@@ -8466,6 +9038,11 @@ def build_ready_work_unit_packet_manifest(
             "done_rules": _list_items(unit.get("done_rules")),
             "stop_conditions": _list_items(unit.get("stop_conditions")),
             "forbidden_actions": forbidden_actions,
+            "phase": worker_inputs.get("phase"),
+            "risk_effective": worker_inputs.get("risk_effective"),
+            "surfaces": worker_inputs.get("surfaces"),
+            "done_definition": worker_inputs.get("done_definition"),
+            "worker_input_contract": worker_input_contract,
             "receipt_five_contract": {
                 "must_attach_artifact_refs": True,
                 "must_state_blocking_findings": True,
@@ -8475,12 +9052,15 @@ def build_ready_work_unit_packet_manifest(
                 "required_proof_ids": _list_items(unit.get("proof_ids_required")),
                 "reviewer_role": str(unit.get("reviewer_role") or "").strip(),
             },
-            "context_boundary": _ready_work_unit_context_boundary(
+            "context_boundary": context_boundary,
+            "work_unit_context_packet": _ready_work_unit_context_packet(
+                product_creation_plan=product_creation_plan,
+                product_implementation_readiness=product_implementation_readiness,
                 plan_ref=plan_ref,
                 readiness_ref=readiness_ref,
-                unit=unit,
-                dependency_refs=dependency_refs,
-                forbidden_context_refs=forbidden_context_refs,
+                unit=unit_for_context,
+                context_boundary=context_boundary,
+                worker_input_contract=worker_input_contract,
             ),
             "hermes_materialization": {
                 "recommended_initial_status": "blocked",
@@ -8497,6 +9077,8 @@ def build_ready_work_unit_packet_manifest(
                 "raw_private_evidence_embedded": False,
             },
         }
+        for input_name, input_value in worker_inputs.items():
+            packet.setdefault(input_name, copy.deepcopy(input_value))
         packets.append(sanitize_public_refs(packet))
 
     manifest: dict[str, Any] = {
@@ -8649,6 +9231,17 @@ def validate_ready_work_unit_packet_manifest(manifest: dict[str, Any]) -> list[s
             errors.append(
                 f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.operator_action_required_for_missing_context must be false"
             )
+        _validate_ready_work_unit_worker_context(
+            packet,
+            index_path=f"ready_work_unit_packet_manifest.packets[{index}]",
+            errors=errors,
+        )
+        _validate_ready_work_unit_context_packet(
+            packet,
+            context_boundary,
+            index_path=f"ready_work_unit_packet_manifest.packets[{index}]",
+            errors=errors,
+        )
         materialization = (
             packet.get("hermes_materialization")
             if isinstance(packet.get("hermes_materialization"), dict)
@@ -8779,6 +9372,7 @@ def build_ready_work_unit_hermes_materialization_plan(
             "proof_ids_required": _list_items(packet.get("proof_ids_required")),
             "receipt_five_contract": copy.deepcopy(packet.get("receipt_five_contract") or {}),
             "context_boundary": copy.deepcopy(packet.get("context_boundary") or {}),
+            "work_unit_context_packet": copy.deepcopy(packet.get("work_unit_context_packet") or {}),
             "runtime_refs": {
                 "hermes_board_ref": f"hermes:{board_slug}",
                 "hermes_task_ref": "external:pending-hermes-task",
@@ -8952,6 +9546,31 @@ def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -
             errors.append(
                 f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary must match body_contract.context_boundary"
             )
+        task_context_packet = (
+            task.get("work_unit_context_packet")
+            if isinstance(task.get("work_unit_context_packet"), dict)
+            else {}
+        )
+        body_context_packet = (
+            body_contract.get("work_unit_context_packet")
+            if isinstance(body_contract.get("work_unit_context_packet"), dict)
+            else {}
+        )
+        if task_context_packet != body_context_packet:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].work_unit_context_packet must match body_contract.work_unit_context_packet"
+            )
+        _validate_ready_work_unit_worker_context(
+            body_contract,
+            index_path=f"ready_work_unit_hermes_materialization_plan.tasks[{index}].body_contract",
+            errors=errors,
+        )
+        _validate_ready_work_unit_context_packet(
+            body_contract,
+            body_context_boundary,
+            index_path=f"ready_work_unit_hermes_materialization_plan.tasks[{index}].body_contract",
+            errors=errors,
+        )
         task_allowed_context_refs = _list_items(task_context_boundary.get("allowed_context_refs"))
         task_forbidden_context_refs = _list_items(task_context_boundary.get("forbidden_context_refs"))
         task_context_ref_conflicts = sorted(set(task_allowed_context_refs).intersection(task_forbidden_context_refs))

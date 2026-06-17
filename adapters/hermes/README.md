@@ -188,11 +188,17 @@ the task is still blocked and has no pre-dispatch `promoted`, `claimed`,
 evidence exists. Complete-product claims remain forbidden until all Product SOT
 scope is reconciled through worker results, review and Receipt Five.
 
-Ready work-unit packets and the resulting Hermes task contracts also carry a
-`context_boundary`. Workers may inspect only named allowed refs plus artifacts
-created for the current `work_unit_id`; broad repository archaeology is not a
-valid recovery path. When context is missing, stale, forbidden or ambiguous, the
-task must block with owner instead of continuing through unrelated history.
+Ready work-unit packets and the resulting Hermes task contracts also carry both
+a `context_boundary` and a resolved `work_unit_context_packet`. Workers may
+inspect only named allowed refs plus artifacts created for the current
+`work_unit_id`; broad repository archaeology is not a valid recovery path. The
+packet must also include the owner worker's required inputs, such as
+`done_definition`, `phase`, `risk_effective`, `surfaces`, rollback or
+human-gate state when that profile requires them. If a required ref is only
+named but not resolved through the context packet, validation blocks
+materialization before dispatch. When context later becomes missing, stale,
+forbidden or ambiguous, the task must block with owner instead of continuing
+through unrelated history.
 Use repeated `--forbidden-context-ref <public-safe-ref>` values when a live run
 has known off-limits public refs, such as a separate issue or parallel product
 thread.

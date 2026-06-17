@@ -105,11 +105,14 @@ named owners and human decisions.
 `ready-work-unit-packets` turns those explicit `ready_work_units` into
 deterministic execution requests without mutating live Hermes, without exposing
 private refs and without allowing any complete-product claim from a bounded
-slice. Each packet carries a `context_boundary`: workers may inspect only the
-named allowed refs and artifacts produced for that `work_unit_id`; broad repo
-history search is forbidden. If required context is missing, stale, forbidden
-or ambiguous, the worker must BLOCK with owner instead of asking the operator to
-coordinate or searching unrelated project history. `--forbidden-context-ref` is
+slice. Each packet carries a `context_boundary` and a resolved
+`work_unit_context_packet`: workers may inspect only the named allowed refs and
+must receive the owner worker's required inputs, such as `done_definition`,
+`phase`, `risk_effective`, `surfaces`, rollback or human-gate state when that
+profile requires them. Broad repo history search is forbidden. If required
+context is missing, stale, forbidden, ambiguous or only named without a resolver,
+validation blocks materialization and the repair route stays factory-owned
+instead of asking the operator to coordinate. `--forbidden-context-ref` is
 repeatable and is intended for public-safe refs that must stay outside the
 worker's search space during a run.
 `ready-work-unit-hermes-plan` prepares the blocked-first Hermes materialization
@@ -118,8 +121,9 @@ collect route readiness, materialize blocked tasks, release exactly the verified
 blocked tasks to `ready`, and only then run the native dispatch wrapper. Release
 does not dispatch workers and dispatch does not complete the product. The
 materialization plan copies the same `context_boundary` into each Hermes task
-contract so runtime workers receive the same bounded-search rule as the packet
-validator.
+contract, along with the same `work_unit_context_packet`, so runtime workers
+receive both the bounded-search rule and the resolved context contract proven by
+the packet validator.
 `validate-signal-corpus` and `signal-coverage` prove that the public
 Golden Corpus covers every known route without treating contract coverage as
 production readiness.
