@@ -35,6 +35,7 @@ ROUTE_READINESS_SCHEMA = "https://overkill-factory.dev/schemas/hermes-worker-rou
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 RECOVERY_ATTEMPT_MARKER = "factory_recovery_attempt"
 ACTIVE_OR_TERMINAL_STATUSES = {"ready", "running", "done", "complete", "completed"}
+READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES = {"done", "complete", "completed"}
 HISTORY_SOURCE_KEYS = ("events", "history", "timeline", "comments", "runs")
 CONTRACT_DIGEST_ALGORITHM = "sha256"
 IDEMPOTENCY_DIGEST_LENGTH = 16
@@ -1385,30 +1386,89 @@ def verify_ready_work_unit_release_candidate(
     return task_id, packet_id, work_unit_id
 
 
-def blocked_ready_work_unit_readbacks(
+def verify_ready_work_unit_identity(
+    *,
+    payload: dict[str, Any],
+    plan_task: dict[str, Any],
+    worker_assignee_prefix: str,
+) -> tuple[str, str, str]:
+    task_id = task_readback_id(payload)
+    if not task_id:
+        raise RuntimeError("Hermes task readback has no task id")
+    packet_id, work_unit_id = expected_ready_work_unit_key(plan_task)
+    expected_assignee = ready_work_unit_release_assignee(plan_task, worker_assignee_prefix)
+    if task_readback_assignee(payload) != expected_assignee:
+        raise RuntimeError(f"Hermes task {task_id} assignee readback does not match target profile")
+    body = ready_work_unit_body(payload, task_id=task_id)
+    if str(body.get("packet_id") or "").strip() != packet_id:
+        raise RuntimeError(f"Hermes task {task_id} body readback does not match ready work-unit packet")
+    if str(body.get("work_unit_id") or "").strip() != work_unit_id:
+        raise RuntimeError(f"Hermes task {task_id} body readback does not match ready work-unit id")
+    if str(body.get("packet_type") or "").strip() != "ready_work_unit_execution_request":
+        raise RuntimeError(f"Hermes task {task_id} body readback is not a ready work-unit execution request")
+    return task_id, packet_id, work_unit_id
+
+
+def ready_work_unit_dependencies(tasks: list[dict[str, Any]]) -> dict[str, list[str]]:
+    work_unit_ids = {
+        str(task.get("work_unit_id") or "").strip()
+        for task in tasks
+        if str(task.get("work_unit_id") or "").strip()
+    }
+    dependencies: dict[str, set[str]] = {work_unit_id: set() for work_unit_id in work_unit_ids}
+    for task in tasks:
+        body = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
+        context_packet = body.get("work_unit_context_packet") if isinstance(body.get("work_unit_context_packet"), dict) else {}
+        embedded = context_packet.get("embedded_payloads") if isinstance(context_packet.get("embedded_payloads"), dict) else {}
+        product_plan = embedded.get("product_creation_plan") if isinstance(embedded.get("product_creation_plan"), dict) else {}
+        graph = product_plan.get("dependency_graph") if isinstance(product_plan.get("dependency_graph"), list) else []
+        for edge in graph:
+            if not isinstance(edge, dict):
+                continue
+            source = str(edge.get("from") or "").strip()
+            target = str(edge.get("to") or "").strip()
+            if source in work_unit_ids and target in work_unit_ids:
+                dependencies.setdefault(target, set()).add(source)
+    if any(dependencies.values()):
+        return {work_unit_id: sorted(deps) for work_unit_id, deps in sorted(dependencies.items())}
+
+    for task in tasks:
+        work_unit_id = str(task.get("work_unit_id") or "").strip()
+        body = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
+        refs = body.get("dependency_refs") if isinstance(body.get("dependency_refs"), list) else []
+        for ref in refs:
+            dep = str(ref or "").strip()
+            if dep in work_unit_ids and dep != work_unit_id:
+                dependencies.setdefault(work_unit_id, set()).add(dep)
+    return {work_unit_id: sorted(deps) for work_unit_id, deps in sorted(dependencies.items())}
+
+
+def ready_work_unit_readbacks_by_status(
     *,
     hermes_bin: str,
     board: str,
+    statuses: list[str],
     runner: Runner = default_runner,
 ) -> dict[tuple[str, str], list[dict[str, Any]]]:
     candidates: dict[tuple[str, str], list[dict[str, Any]]] = {}
     seen_task_ids: set[str] = set()
-    for record in list_tasks_by_status(hermes_bin=hermes_bin, board=board, status="blocked", runner=runner):
-        task_id = str(record.get("task_id") or record.get("id") or "").strip()
-        if not task_id or task_id in seen_task_ids:
-            continue
-        seen_task_ids.add(task_id)
-        payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
-        try:
-            body = ready_work_unit_body(payload, task_id=task_id)
-        except RuntimeError:
-            continue
-        if str(body.get("packet_type") or "").strip() != "ready_work_unit_execution_request":
-            continue
-        packet_id = str(body.get("packet_id") or "").strip()
-        work_unit_id = str(body.get("work_unit_id") or "").strip()
-        if packet_id and work_unit_id:
-            candidates.setdefault((packet_id, work_unit_id), []).append(payload)
+    for status in statuses:
+        for record in list_tasks_by_status(hermes_bin=hermes_bin, board=board, status=status, runner=runner):
+            task_id = str(record.get("task_id") or record.get("id") or "").strip()
+            if not task_id or task_id in seen_task_ids:
+                continue
+            seen_task_ids.add(task_id)
+            payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+            try:
+                body = ready_work_unit_body(payload, task_id=task_id)
+            except RuntimeError:
+                continue
+            if str(body.get("packet_type") or "").strip() != "ready_work_unit_execution_request":
+                continue
+            packet_id = str(body.get("packet_id") or "").strip()
+            work_unit_id = str(body.get("work_unit_id") or "").strip()
+            if packet_id and work_unit_id:
+                candidates.setdefault((packet_id, work_unit_id), []).append(payload)
     return candidates
 
 
@@ -1433,21 +1493,59 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
     if readiness_blockers:
         raise RuntimeError("pre-dispatch route readiness blocked ready work-unit release: " + "; ".join(readiness_blockers))
 
-    candidates = blocked_ready_work_unit_readbacks(hermes_bin=args.hermes_bin, board=board, runner=runner)
-    verified: list[tuple[dict[str, Any], str, str, str]] = []
+    candidates = ready_work_unit_readbacks_by_status(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        statuses=["blocked", *sorted(READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES)],
+        runner=runner,
+    )
+    verified: list[tuple[dict[str, Any], str, str, str, str]] = []
     for task in tasks:
         key = expected_ready_work_unit_key(task)
         matches = candidates.get(key) or []
         if len(matches) != 1:
             raise RuntimeError(
-                f"ready work-unit release expected exactly one blocked Hermes task for packet {key[0]} / work unit {key[1]}, found {len(matches)}"
+                f"ready work-unit release expected exactly one blocked or completed Hermes task for packet {key[0]} / work unit {key[1]}, found {len(matches)}"
             )
-        task_id, packet_id, work_unit_id = verify_ready_work_unit_release_candidate(
-            payload=matches[0],
-            plan_task=task,
-            worker_assignee_prefix=args.worker_assignee_prefix,
-        )
-        verified.append((task, task_id, packet_id, work_unit_id))
+        status = task_readback_status(matches[0])
+        if status == "blocked":
+            task_id, packet_id, work_unit_id = verify_ready_work_unit_release_candidate(
+                payload=matches[0],
+                plan_task=task,
+                worker_assignee_prefix=args.worker_assignee_prefix,
+            )
+        elif status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+            task_id, packet_id, work_unit_id = verify_ready_work_unit_identity(
+                payload=matches[0],
+                plan_task=task,
+                worker_assignee_prefix=args.worker_assignee_prefix,
+            )
+        else:
+            raise RuntimeError(f"Hermes task for ready work unit {key[1]} is not releasable or satisfied: {status}")
+        verified.append((task, task_id, packet_id, work_unit_id, status))
+
+    dependencies = ready_work_unit_dependencies(tasks)
+    status_by_work_unit = {work_unit_id: status for _task, _task_id, _packet_id, work_unit_id, status in verified}
+    satisfied_work_unit_ids = sorted(
+        work_unit_id
+        for work_unit_id, status in status_by_work_unit.items()
+        if status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES
+    )
+    dependency_blockers: dict[str, list[str]] = {}
+    eligible: list[tuple[dict[str, Any], str, str, str, str]] = []
+    for item in verified:
+        _task, _task_id, _packet_id, work_unit_id, status = item
+        if status != "blocked":
+            continue
+        blockers = [
+            dep
+            for dep in dependencies.get(work_unit_id, [])
+            if status_by_work_unit.get(dep) not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES
+        ]
+        if blockers:
+            dependency_blockers[work_unit_id] = blockers
+            continue
+        eligible.append(item)
 
     released_ready_work_unit_task_ids: dict[str, str] = {}
     released_packet_task_ids: dict[str, str] = {}
@@ -1461,7 +1559,7 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
         "dispatch_separate=true",
     ]
     if not args.dry_run:
-        for _task, task_id, packet_id, work_unit_id in verified:
+        for _task, task_id, packet_id, work_unit_id, _status in eligible:
             unblock_task(
                 hermes_bin=args.hermes_bin,
                 board=board,
@@ -1481,19 +1579,28 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
         "materialization_plan_id": plan.get("plan_id"),
         "ready_work_unit_task_ids": {
             work_unit_id: task_id
-            for _task, task_id, _packet_id, work_unit_id in verified
+            for _task, task_id, _packet_id, work_unit_id, _status in verified
         },
         "packet_task_ids": {
             packet_id: task_id
-            for _task, task_id, packet_id, _work_unit_id in verified
+            for _task, task_id, packet_id, _work_unit_id, _status in verified
         },
         "released_ready_work_unit_task_ids": released_ready_work_unit_task_ids,
         "released_packet_task_ids": released_packet_task_ids,
+        "release_wave": {
+            "eligible_work_unit_ids": sorted(work_unit_id for _task, _task_id, _packet_id, work_unit_id, _status in eligible),
+            "held_work_unit_ids": sorted(dependency_blockers.keys()),
+            "satisfied_work_unit_ids": satisfied_work_unit_ids,
+            "dependency_blockers": {key: dependency_blockers[key] for key in sorted(dependency_blockers)},
+        },
         "runtime_gate": {
             **(plan.get("runtime_gate") if isinstance(plan.get("runtime_gate"), dict) else {}),
             "release_verified_task_count": len(verified),
+            "release_eligible_task_count": len(eligible),
+            "release_held_task_count": len(dependency_blockers),
+            "release_satisfied_task_count": len(satisfied_work_unit_ids),
             "dispatch_allowed_by_this_step": False,
-            "native_dispatch_required_next": not args.dry_run,
+            "native_dispatch_required_next": bool(released_ready_work_unit_task_ids),
             "complete_product_claim_allowed": False,
             "runtime_authority": "hermes_kanban",
             "local_state_authority": False,
