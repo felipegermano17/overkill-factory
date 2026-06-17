@@ -75,13 +75,13 @@ def is_negative_test_guard(path_parts: tuple[str, ...], line: str) -> bool:
 
 
 def is_declared_negative_fixture_guard(path_parts: tuple[str, ...], line: str) -> bool:
-    """Allow the Issue 84 negative EvidenceRef fixture to carry the blocked sample.
+    """Allow the Local Status Cockpit negative EvidenceRef fixture to carry the blocked sample.
 
     The fixture is itself public proof that the EvidenceRef validator rejects
     local/private refs. Keep the exemption narrow: only the named negative
     fixture may contain the sample, and only on the concrete ref line.
     """
-    if path_parts != ("fixtures", "issue-84", "status-snapshot-v0", "FX10-forbidden_evidence_ref_negative.json"):
+    if path_parts != ("fixtures", "status-snapshot-v0", "FX10-forbidden_evidence_ref_negative.json"):
         return False
     if '"ref"' not in line:
         return False

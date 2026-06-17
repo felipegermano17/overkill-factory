@@ -417,7 +417,7 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         self.assertTrue(any("$.evidence_refs[0].ref" in error for error in errors))
         self.assertEqual(
-            validator.validate_public_ref_hygiene({"ref": "kanban:<redacted>", "issue": "github-issue-84"}, "$"),
+            validator.validate_public_ref_hygiene({"ref": "kanban:<redacted>", "issue": "github-issue-example"}, "$"),
             [],
         )
 

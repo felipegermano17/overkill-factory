@@ -22,7 +22,7 @@ whether an artifact is acceptable.
 ## Public Runtime Refs
 
 Public templates and generated public artifacts must never contain raw Hermes
-Kanban task IDs. Use stable issue refs such as `github-issue-84`, semantic
+Kanban task IDs. Use stable issue refs such as `github-issue-example`, semantic
 artifact refs, or `kanban:<redacted>` when private runtime traceability exists
 only in Hermes.
 

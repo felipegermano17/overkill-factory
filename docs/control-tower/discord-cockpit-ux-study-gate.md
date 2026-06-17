@@ -184,7 +184,7 @@ The Discord cockpit study depends on:
 - #80 because Discord must project canonical status snapshots rather than make
   up state;
 - #82 because visible cockpit UX needs Product Face visual quality review;
-- #84 because dense state and inspection should move to the local web cockpit
+- the local status cockpit because dense state and inspection should move there
   unless Discord proof demonstrates that the chat surface is better.
 
 ## Public Safety

@@ -177,7 +177,7 @@
     "Generate a product-specific Discord Control Tower UX Proof Pack before treating Discord as accepted cockpit UX.",
     "Keep #80 status snapshots as canonical state input for Discord projections.",
     "Apply #82 Product Face visual quality review to any visible cockpit surface before acceptance.",
-    "Use #84 local web cockpit for dense state, comparison, inspection and long-running control."
+    "Use the local status cockpit for dense state, comparison, inspection and long-running control."
   ],
   "evidence_refs": [
     "docs/control-tower/discord-cockpit-ux-study-gate.md",
