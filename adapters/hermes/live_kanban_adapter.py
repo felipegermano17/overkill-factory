@@ -885,6 +885,7 @@ def create_ready_work_unit_task(
     board: str,
     task: dict[str, Any],
     worker_assignee_prefix: str,
+    workspace_ref: str,
     runner: Runner = default_runner,
 ) -> str:
     create_policy = task.get("create_policy") if isinstance(task.get("create_policy"), dict) else {}
@@ -919,7 +920,7 @@ def create_ready_work_unit_task(
                 "--created-by",
                 "overkill-factory",
                 "--workspace",
-                f"dir:{ROOT}",
+                workspace_ref,
                 "--json",
             ),
             runner,
@@ -1027,6 +1028,7 @@ def materialize_ready_work_units(args: argparse.Namespace, runner: Runner = defa
             board=board,
             task=task,
             worker_assignee_prefix=args.worker_assignee_prefix,
+            workspace_ref=str(args.workspace or f"dir:{ROOT}"),
             runner=runner,
         )
         work_unit_id = str(task.get("work_unit_id") or "").strip()
@@ -1566,6 +1568,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_ready.add_argument("--board")
     p_ready.add_argument("--hermes-bin", default="hermes")
     p_ready.add_argument("--worker-assignee-prefix", default="")
+    p_ready.add_argument("--workspace")
     p_ready.add_argument("--ensure-board", action="store_true")
     p_ready.add_argument("--dry-run", action="store_true")
     p_ready.add_argument("--route-readiness", type=Path)
