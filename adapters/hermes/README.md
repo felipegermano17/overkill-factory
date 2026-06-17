@@ -198,6 +198,7 @@ python adapters/hermes/live_kanban_adapter.py collect-route-readiness \
 python adapters/hermes/live_kanban_adapter.py materialize-ready-work-units \
   --plan path/to/ready-work-unit-hermes-plan.json \
   --route-readiness path/to/route-readiness.json \
+  --workspace dir:<path-visible-to-hermes-dispatcher> \
   --out path/to/live-ready-work-unit-materialization-result.json
 ```
 
@@ -207,6 +208,12 @@ Hermes profiles and auth/provider readiness, and emits the official
 private paths. Materialization then creates blocked Hermes tasks only. It does
 not dispatch workers, complete tasks, approve Receipt Five, or claim product
 completion.
+
+Use `--workspace` when the adapter runs outside the Hermes host. The workspace
+must be meaningful to the Hermes dispatcher, not merely to the machine that runs
+the adapter. Local operators can omit it and use the repo directory default;
+remote operators should pass a dispatcher-visible `dir:<path>`, `worktree`, or
+`scratch` reference intentionally.
 
 ## Dispatch Reporting
 

@@ -373,6 +373,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     str(plan_path),
                     "--route-readiness",
                     str(readiness),
+                    "--workspace",
+                    "scratch",
                 ]
             )
             result = adapter.materialize_ready_work_units(args, runner=fake)
@@ -388,6 +390,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(len(create_calls), 1)
         self.assertNotIn("--assignee", create_calls[0])
         self.assertNotIn("--initial-status", create_calls[0])
+        self.assertEqual(create_calls[0][create_calls[0].index("--workspace") + 1], "scratch")
         self.assertEqual(len(block_calls), 1)
         self.assertEqual(len(assign_calls), 1)
         self.assertEqual(assign_calls[0][-1], "implementation-worker")
