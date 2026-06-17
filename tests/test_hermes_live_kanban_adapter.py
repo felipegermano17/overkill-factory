@@ -234,6 +234,46 @@ def assert_live_adapter_result_schema(testcase: unittest.TestCase, result: dict[
 
 
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
+    def test_materialize_schema_requires_recovery_and_idempotency_fields_for_real_run(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "hermes-live-adapter-result.schema.json").read_text(encoding="utf-8"))
+        result = {
+            "$schema": "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json",
+            "mode": "materialize",
+            "dry_run": False,
+            "board": TEST_BOARD,
+            "hook": {},
+            "idempotency_contract": {
+                "digest_algorithm": "sha256",
+                "canonicalization_version": "v1",
+                "volatile_fields_ignored": ["created_at"],
+                "digest_scope": "main_card_body_and_stable_worker_packet_contract",
+                "lineage_policy": "base_identity_is_logical_lineage_contract_key_is_runtime_identity",
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "main_task": {
+                    "idempotency_identity": {
+                        "card_id": "CARD-001",
+                        "task_role": "main",
+                        "base_idempotency_key": "overkill:CARD-001:main",
+                    },
+                    "contract_digest": "a" * 64,
+                    "idempotency_key": "overkill:CARD-001:main:aaaaaaaaaaaaaaaa",
+                    "runtime_history_query_keys": ["overkill:CARD-001:main", "CARD-001"],
+                    "previous_runtime_task_refs": [],
+                    "supersedes_idempotency_keys": [],
+                },
+                "worker_tasks": {},
+            },
+        }
+
+        errors = validator.validate_node(schema, result, "$", schemas={"hermes-live-adapter-result.schema.json": schema}, root_schema=schema)
+
+        self.assertIn("$.allOf[0]: missing required field main_task_id", errors)
+        self.assertIn("$.allOf[0]: missing required field worker_task_ids", errors)
+        self.assertIn("$.allOf[0]: missing required field recovery_promoted_worker_task_ids", errors)
+        self.assertIn("$.allOf[0]: missing required field recovery_retry_blocked_worker_task_ids", errors)
+        self.assertIn("$.allOf[0]: missing required field recovery_attempts", errors)
+
     def test_worker_idempotency_key_is_contract_bound_and_ignores_volatile_metadata(self) -> None:
         task_contract = {
             "worker_id": "codex-security",

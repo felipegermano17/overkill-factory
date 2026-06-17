@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-quality-pack.schema.json",
+  "title": "Overkill Factory Product Quality Pack",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "pack_id",
+    "delivery_quality_profile_ref",
+    "reference_quality_packet_ref",
+    "surface_evidence_profiles",
+    "required_quality_gates",
+    "domain_proofs",
+    "waiver_policy",
+    "acceptance_boundary",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/product-quality-pack.schema.json"
+    },
+    "record_type": {
+      "const": "product_quality_pack"
+    },
+    "pack_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "delivery_quality_profile_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "reference_quality_packet_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "surface_evidence_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "web_visual_ui",
+          "native_mobile",
+          "desktop_app",
+          "browser_extension",
+          "design_system_component",
+          "game_playable",
+          "cli_tui",
+          "docs_onboarding",
+          "agentic_interface",
+          "api_data_product"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "required_quality_gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["gate_id", "owner_worker", "blocks_completion_when_missing"],
+        "properties": {
+          "gate_id": {
+            "type": "string",
+            "minLength": 3
+          },
+          "owner_worker": {
+            "type": "string",
+            "minLength": 3
+          },
+          "blocks_completion_when_missing": {
+            "const": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "domain_proofs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["proof_id", "surface_evidence_profile", "required_before", "cannot_be_waived_for_full_acceptance"],
+        "properties": {
+          "proof_id": {
+            "type": "string",
+            "minLength": 3
+          },
+          "surface_evidence_profile": {
+            "type": "string",
+            "minLength": 3
+          },
+          "required_before": {
+            "enum": ["implementation", "completion", "promotion"]
+          },
+          "cannot_be_waived_for_full_acceptance": {
+            "const": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "waiver_policy": {
+      "type": "object",
+      "required": [
+        "waivers_allowed",
+        "human_owner_required",
+        "cannot_claim_full_product_acceptance_with_waiver"
+      ],
+      "properties": {
+        "waivers_allowed": {
+          "type": "boolean"
+        },
+        "human_owner_required": {
+          "const": true
+        },
+        "cannot_claim_full_product_acceptance_with_waiver": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "acceptance_boundary": {
+      "type": "object",
+      "required": [
+        "full_acceptance_requires_all_applicable_domain_proofs",
+        "product_face_result_is_required_for_visible_surfaces",
+        "design_reference_comparison_required"
+      ],
+      "properties": {
+        "full_acceptance_requires_all_applicable_domain_proofs": {
+          "const": true
+        },
+        "product_face_result_is_required_for_visible_surfaces": {
+          "const": true
+        },
+        "design_reference_comparison_required": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": {
+          "const": true
+        },
+        "raw_private_evidence_embedded": {
+          "const": false
+        },
+        "private_context_retained_outside_public_repo": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

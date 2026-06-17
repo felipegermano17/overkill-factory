@@ -14,10 +14,15 @@
     "allowed_sources",
     "forbidden_sources",
     "source_quality_bar",
+    "source_evidence_matrix",
+    "freshness_policy",
+    "contradiction_policy",
     "expected_output_type",
+    "decision_closure",
     "stop_rule",
     "risk_if_skipped",
     "public_safety_policy",
+    "public_private_boundary",
     "evidence_refs"
   ],
   "properties": {
@@ -34,11 +39,82 @@
     "forbidden_sources": { "type": "array", "minItems": 1, "items": { "type": "string" } },
     "source_quality_bar": { "type": "string", "minLength": 8 },
     "freshness_requirement": { "type": "string" },
+    "freshness_policy": {
+      "type": "object",
+      "required": ["freshness_required", "stale_source_blocks_decision", "refresh_trigger"],
+      "properties": {
+        "freshness_required": { "const": true },
+        "stale_source_blocks_decision": { "const": true },
+        "refresh_trigger": { "type": "string", "minLength": 8 }
+      },
+      "additionalProperties": false
+    },
+    "source_evidence_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source_ref", "source_type", "freshness_status", "use_allowed", "claims_informed"],
+        "properties": {
+          "source_ref": { "type": "string", "minLength": 3 },
+          "source_type": {
+            "enum": ["primary", "official_docs", "standard", "operator_approved_benchmark", "secondary"]
+          },
+          "freshness_status": {
+            "enum": ["fresh", "bounded", "stale", "unknown"]
+          },
+          "use_allowed": { "type": "boolean" },
+          "claims_informed": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "contradiction_policy": {
+      "type": "object",
+      "required": ["conflicts_block_decision", "owner", "required_resolution"],
+      "properties": {
+        "conflicts_block_decision": { "const": true },
+        "owner": { "type": "string", "minLength": 3 },
+        "required_resolution": { "type": "string", "minLength": 8 }
+      },
+      "additionalProperties": false
+    },
     "copy_license_policy": { "type": "string" },
     "expected_output_type": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "decision_closure": {
+      "type": "object",
+      "required": ["must_end_as", "architecture_or_decomposition_blocked_until_decision", "decision_packet_required"],
+      "properties": {
+        "must_end_as": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": ["accepted_decision", "blocker", "deferred_with_owner", "human_decision_request", "explicit_rejection"]
+          },
+          "uniqueItems": true
+        },
+        "architecture_or_decomposition_blocked_until_decision": { "const": true },
+        "decision_packet_required": { "const": true }
+      },
+      "additionalProperties": false
+    },
     "stop_rule": { "type": "string", "minLength": 8 },
     "risk_if_skipped": { "type": "string", "minLength": 8 },
     "public_safety_policy": { "type": "string", "minLength": 8 },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["public_safe_refs_only", "raw_private_evidence_embedded", "private_context_retained_outside_public_repo"],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    },
     "reference_quality_packet_refs": { "type": "array", "items": { "type": "string" } },
     "evidence_refs": {
       "type": "array",
@@ -46,5 +122,5 @@
       "items": { "type": "string", "minLength": 3 }
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

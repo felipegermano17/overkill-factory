@@ -1,0 +1,187 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/universal-signal-golden-corpus.schema.json",
+  "record_type": "universal_signal_golden_corpus",
+  "corpus_id": "universal-signal-golden-corpus-v1",
+  "registry_ref": "templates/factory-route-registry.json",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "cases": [
+    {
+      "case_id": "product-paper-to-product-creation",
+      "signal_type": "product_paper",
+      "request_type": "product_new",
+      "route_class": "product_creation",
+      "expected_method_family": "spec_first",
+      "expected_required_artifact_types": ["source_ledger", "outcome_contract", "product_sot", "full_product_sot_scope_coverage", "method_contract", "product_creation_plan", "product_implementation_readiness", "sdlc_feedback_loop"],
+      "expected_required_worker_ids": ["factory-orchestrator", "source-ledger-worker", "product-sot-planner"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "feature-idea-to-feature-delivery",
+      "signal_type": "feature_idea",
+      "request_type": "feature",
+      "route_class": "feature_delivery",
+      "expected_method_family": "behavior_first",
+      "expected_required_artifact_types": ["source_ledger", "outcome_contract", "method_contract", "spec_graph", "qa_plan"],
+      "expected_required_worker_ids": ["factory-orchestrator", "decomposition-planner", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "bug-report-to-bug-repair",
+      "signal_type": "bug_report",
+      "request_type": "bug",
+      "route_class": "bug_repair",
+      "expected_method_family": "test_first",
+      "expected_required_artifact_types": ["source_ledger", "bug_reproduction", "diagnosis", "regression_check", "receipt_five"],
+      "expected_required_worker_ids": ["qa-verification-worker", "test-automation-builder", "evidence-reconciler"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "incident-to-incident-response",
+      "signal_type": "incident",
+      "request_type": "incident",
+      "route_class": "incident_response",
+      "expected_method_family": "incident_first",
+      "expected_required_artifact_types": ["incident_support_plan", "severity_model", "mitigation_plan", "evidence_record", "learnback"],
+      "expected_required_worker_ids": ["detection-monitoring-worker", "release-ops-worker", "evidence-reconciler"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "existing-repository-to-brownfield-discovery",
+      "signal_type": "existing_repository",
+      "request_type": "refactor",
+      "route_class": "brownfield_discovery",
+      "expected_method_family": "legacy_diagnosis",
+      "expected_required_artifact_types": ["source_ledger", "brownfield_os_plan", "legacy_system_map", "baseline", "regression_plan", "rollback_plan"],
+      "expected_required_worker_ids": ["source-ledger-worker", "product-architect", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "release-request-to-release-promotion",
+      "signal_type": "release_request",
+      "request_type": "release",
+      "route_class": "release_promotion",
+      "expected_method_family": "spec_first",
+      "expected_required_artifact_types": ["production_readiness_plan", "promotion_ladder", "rollback_path", "monitoring_signals"],
+      "expected_required_worker_ids": ["release-ops-worker", "detection-monitoring-worker", "evidence-reconciler"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "research-request-to-research-validation",
+      "signal_type": "research_request",
+      "request_type": "feature",
+      "route_class": "research_validation",
+      "expected_method_family": "research_first",
+      "expected_required_artifact_types": ["specialist_research_plan", "specialist_decision_packet", "sdlc_feedback_loop"],
+      "expected_required_worker_ids": ["source-ledger-worker", "product-architect", "factory-orchestrator"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "documentation-request-to-docs-onboarding",
+      "signal_type": "documentation_request",
+      "request_type": "doc",
+      "route_class": "docs_onboarding",
+      "expected_method_family": "docs_first",
+      "expected_required_artifact_types": ["user_docs_onboarding_plan", "reader_success_path", "docs_verification"],
+      "expected_required_worker_ids": ["docs-os-worker", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "security-review-to-security-remediation",
+      "signal_type": "security_review_request",
+      "request_type": "security",
+      "route_class": "security_remediation",
+      "expected_method_family": "security_first",
+      "expected_required_artifact_types": ["security_architecture_plan", "security_scan_packet", "review_result"],
+      "expected_required_worker_ids": ["security-orchestrator", "appsec-owasp-specialist", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "integration-request-to-critical-integration",
+      "signal_type": "integration_request",
+      "request_type": "integration",
+      "route_class": "critical_integration",
+      "expected_method_family": "spec_first",
+      "expected_required_artifact_types": ["integration_contract", "dependency_gate", "contract_tests", "fallback_plan"],
+      "expected_required_worker_ids": ["product-architect", "backend-api-builder", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "migration-request-to-migration-execution",
+      "signal_type": "migration_request",
+      "request_type": "migration",
+      "route_class": "migration_execution",
+      "expected_method_family": "legacy_diagnosis",
+      "expected_required_artifact_types": ["brownfield_os_plan", "legacy_system_map", "migration_plan", "regression_plan", "rollback_plan"],
+      "expected_required_worker_ids": ["product-architect", "data-persistence-builder", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "ux-request-to-product-experience",
+      "signal_type": "ux_ui_request",
+      "request_type": "ux_ui",
+      "route_class": "ux_product_experience",
+      "expected_method_family": "design_first",
+      "expected_required_artifact_types": ["product_experience_plan", "product_face_packet", "professional_design_process", "product_face_result"],
+      "expected_required_worker_ids": ["product-face", "frontend-builder", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "analytics-request-to-analytics-data",
+      "signal_type": "analytics_request",
+      "request_type": "data_analytics",
+      "route_class": "analytics_data",
+      "expected_method_family": "analytics_first",
+      "expected_required_artifact_types": ["data_metrics_plan", "event_contract", "dashboard_health_proof", "privacy_limits"],
+      "expected_required_worker_ids": ["detection-monitoring-worker", "data-persistence-builder", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    },
+    {
+      "case_id": "agent-change-to-agent-quality-change",
+      "signal_type": "agent_skill_or_model_change",
+      "request_type": "agent_skill",
+      "route_class": "agent_quality_change",
+      "expected_method_family": "agent_eval_first",
+      "expected_required_artifact_types": ["agent_eval_plan", "reasoning_policy", "worker_profile_readiness", "learnback"],
+      "expected_required_worker_ids": ["skill-eval-distiller", "agent-runtime-builder", "qa-verification-worker"],
+      "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
+      "acceptance": {"route_known": true, "execution_blocked_until_gates_pass": true, "operator_not_required_to_coordinate_internal_repair": true}
+    }
+  ],
+  "coverage_policy": {
+    "must_cover_every_route_class": true,
+    "must_cover_recovery_invariant": true,
+    "must_cover_hermes_boundary": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  }
+}

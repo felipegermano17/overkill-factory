@@ -37,12 +37,34 @@
       "uniqueItems": true
     },
     "surface_evidence_profile": {
-      "enum": ["web_visual_ui", "cli_tui", "docs_onboarding", "agentic_interface"]
+      "enum": [
+        "web_visual_ui",
+        "native_mobile",
+        "desktop_app",
+        "browser_extension",
+        "design_system_component",
+        "game_playable",
+        "cli_tui",
+        "docs_onboarding",
+        "agentic_interface",
+        "api_data_product"
+      ]
     },
     "surface_evidence_profiles": {
       "type": "array",
       "items": {
-        "enum": ["web_visual_ui", "cli_tui", "docs_onboarding", "agentic_interface"]
+        "enum": [
+          "web_visual_ui",
+          "native_mobile",
+          "desktop_app",
+          "browser_extension",
+          "design_system_component",
+          "game_playable",
+          "cli_tui",
+          "docs_onboarding",
+          "agentic_interface",
+          "api_data_product"
+        ]
       },
       "uniqueItems": true
     },

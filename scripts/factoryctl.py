@@ -29,6 +29,17 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from public_refs import contains_private_kanban_task_marker, public_safe_kanban_ref, sanitize_public_refs  # noqa: E402
+from factory_route_registry import (  # noqa: E402
+    DEFAULT_ROUTE_REGISTRY_PATH,
+    load_route_registry,
+    registry_routes,
+    route_method_families,
+    route_request_types,
+    route_required_artifacts,
+    route_required_gates,
+    route_required_workers,
+    route_signal_types,
+)
 from validate_public_json_artifacts import load_schemas, validate_node  # noqa: E402
 
 
@@ -76,6 +87,8 @@ DEFAULT_EVIDENCE_GRAPH_OUT = ROOT / ".tmp" / "factory-runs" / "evidence" / "evid
 DEFAULT_READINESS_LEDGER_OUT = ROOT / ".tmp" / "factory-runs" / "readiness" / "readiness-truth-ledger.json"
 DEFAULT_HERMES_EVIDENCE_OUT = ROOT / ".tmp" / "factory-runs" / "hermes-evidence" / "sanitized-package.json"
 DEFAULT_PREPILOT_CHECKLIST_OUT = ROOT / ".tmp" / "factory-runs" / "prepilot" / "loose-end-checklist.json"
+DEFAULT_SIGNAL_CORPUS_PATH = ROOT / "templates" / "universal-signal-golden-corpus.json"
+DEFAULT_SIGNAL_COVERAGE_OUT = ROOT / ".tmp" / "factory-runs" / "signal-coverage" / "factory-signal-coverage-scorecard.json"
 PRIVATE_RUNTIME_REF_RE = re.compile(
     r"((?<![A-Za-z])[A-Za-z]:[\\/]|\\\\|/home/|/Users/|/srv/|/var/|discord(app)?\.com|webhook|token|secret|guild[_-]?id|channel[_-]?id|message[_-]?id)",
     re.IGNORECASE,
@@ -126,53 +139,10 @@ VFINAL_REQUEST_TYPES = {
     "agent_skill",
 }
 
-UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS = {
-    "product_creation": {
-        "source_ledger",
-        "outcome_contract",
-        "product_sot",
-        "full_product_sot_scope_coverage",
-        "method_contract",
-        "product_creation_plan",
-        "product_implementation_readiness",
-        "sdlc_feedback_loop",
-    },
-    "feature_delivery": {"source_ledger", "outcome_contract", "method_contract", "spec_graph", "qa_plan"},
-    "bug_repair": {"source_ledger", "bug_reproduction", "diagnosis", "regression_check", "receipt_five"},
-    "incident_response": {"incident_support_plan", "severity_model", "mitigation_plan", "evidence_record", "learnback"},
-    "brownfield_discovery": {"source_ledger", "legacy_system_map", "baseline", "regression_plan", "rollback_plan"},
-    "release_promotion": {"production_readiness_plan", "promotion_ladder", "rollback_path", "monitoring_signals"},
-    "research_validation": {"specialist_research_plan", "specialist_decision_packet", "sdlc_feedback_loop"},
-    "docs_onboarding": {"user_docs_onboarding_plan", "reader_success_path", "docs_verification"},
-    "security_remediation": {"security_architecture_plan", "security_scan_packet", "review_result"},
-    "critical_integration": {"integration_contract", "dependency_gate", "contract_tests", "fallback_plan"},
-    "migration_execution": {"legacy_system_map", "migration_plan", "regression_plan", "rollback_plan"},
-    "ux_product_experience": {
-        "product_experience_plan",
-        "product_face_packet",
-        "professional_design_process",
-        "product_face_result",
-    },
-    "analytics_data": {"data_metrics_plan", "event_contract", "dashboard_health_proof", "privacy_limits"},
-    "agent_quality_change": {"agent_eval_plan", "reasoning_policy", "worker_profile_readiness", "learnback"},
-}
-
-UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES = {
-    "product_creation": {"product_new"},
-    "feature_delivery": {"feature", "slice"},
-    "bug_repair": {"bug"},
-    "incident_response": {"incident"},
-    "brownfield_discovery": {"migration", "refactor", "integration"},
-    "release_promotion": {"release"},
-    "research_validation": {"feature", "product_new", "security", "ux_ui", "data_analytics", "agent_skill"},
-    "docs_onboarding": {"doc"},
-    "security_remediation": {"security"},
-    "critical_integration": {"integration"},
-    "migration_execution": {"migration"},
-    "ux_product_experience": {"ux_ui", "product_new", "feature"},
-    "analytics_data": {"data_analytics", "product_new", "feature"},
-    "agent_quality_change": {"agent_skill"},
-}
+UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS = route_required_artifacts()
+UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES = route_request_types()
+UNIVERSAL_SIGNAL_ROUTE_SIGNAL_TYPES = route_signal_types()
+UNIVERSAL_SIGNAL_ROUTE_METHOD_FAMILIES = route_method_families()
 
 VFINAL_CORE_CONTRACTS = {
     "request_type",
@@ -2608,14 +2578,27 @@ def validate_specialist_research_contract(card: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if _research_required(card) and not _has_ref_or_object(card, "specialist_research_plan"):
         errors.append("specialist_research_plan or specialist_research_plan_ref is required when research_required is active")
+    plan = card.get("specialist_research_plan") if isinstance(card.get("specialist_research_plan"), dict) else {}
+    if plan:
+        schema = bundled_schemas().get("specialist-research-plan.schema.json")
+        if schema:
+            errors.extend(validate_node(schema, plan, "specialist_research_plan", schemas=bundled_schemas(), root_schema=schema))
     decision = card.get("specialist_decision_packet") if isinstance(card.get("specialist_decision_packet"), dict) else {}
     if decision:
+        schema = bundled_schemas().get("specialist-decision-packet.schema.json")
+        if schema:
+            errors.extend(validate_node(schema, decision, "specialist_decision_packet", schemas=bundled_schemas(), root_schema=schema))
         if not _non_empty_string_list(decision.get("resolutions")):
             errors.append("specialist_decision_packet.resolutions must turn research into an operational factory decision")
         impacts = decision.get("impacts") if isinstance(decision.get("impacts"), dict) else {}
         for field in ("sot", "architecture", "method_router", "gates", "proof"):
             if field not in impacts:
                 errors.append(f"specialist_decision_packet.impacts.{field} is required")
+        closure = decision.get("decision_closure") if isinstance(decision.get("decision_closure"), dict) else {}
+        terminal_state = str(closure.get("terminal_state") or "").strip()
+        may_proceed = closure.get("method_or_architecture_may_proceed")
+        if terminal_state in {"blocker", "deferred_with_owner", "human_decision_request"} and may_proceed is True:
+            errors.append("specialist_decision_packet.decision_closure cannot allow method or architecture to proceed while research is blocked, deferred or human-gated")
     return errors
 
 
@@ -5589,6 +5572,7 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
     classification = intake.get("classification") if isinstance(intake.get("classification"), dict) else {}
     request_type = str(classification.get("request_type") or "").strip()
     route_class = str(classification.get("route_class") or "").strip()
+    signal_type = str(signal.get("signal_type") or "").strip()
     if request_type and request_type not in VFINAL_REQUEST_TYPES:
         errors.append("universal_signal_intake.classification.request_type must be one of " + ", ".join(sorted(VFINAL_REQUEST_TYPES)))
     allowed_request_types = UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES.get(route_class)
@@ -5596,6 +5580,12 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
         errors.append(
             "universal_signal_intake.classification.request_type is not valid for route_class "
             f"{route_class}: {request_type}"
+        )
+    allowed_signal_types = UNIVERSAL_SIGNAL_ROUTE_SIGNAL_TYPES.get(route_class)
+    if allowed_signal_types and signal_type and signal_type not in allowed_signal_types:
+        errors.append(
+            "universal_signal_intake.signal.signal_type is not valid for route_class "
+            f"{route_class}: {signal_type}"
         )
     if classification.get("can_start_execution") is not False:
         errors.append("universal_signal_intake classification cannot allow execution directly")
@@ -5607,6 +5597,13 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
         errors.append("universal_signal_intake.no_chat_only_state must be true")
 
     route = intake.get("route_decision") if isinstance(intake.get("route_decision"), dict) else {}
+    selected_method_family = str(route.get("selected_method_family") or "").strip()
+    expected_method_family = UNIVERSAL_SIGNAL_ROUTE_METHOD_FAMILIES.get(route_class)
+    if expected_method_family and selected_method_family and selected_method_family != expected_method_family:
+        errors.append(
+            "universal_signal_intake.route_decision.selected_method_family must match route registry "
+            f"for {route_class}: {expected_method_family}"
+        )
     for field in ("method_contract_ref", "sdlc_feedback_loop_ref", "factory_workflow_phase_ref", "fallback_route"):
         value = str(route.get(field) or "").strip()
         if value:
@@ -5647,6 +5644,32 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
                     "universal_signal_intake.required_artifacts"
                     f"[{index}].blocks_execution_when_missing must be true for required route artifact"
                 )
+        owner_worker = str(artifact.get("owner_worker") or "").strip()
+        if owner_worker and owner_worker not in WORKERS:
+            errors.append(
+                "universal_signal_intake.required_artifacts"
+                f"[{index}].owner_worker must be a registered worker: {owner_worker}"
+            )
+
+    required_workers = intake.get("required_workers") if isinstance(intake.get("required_workers"), list) else []
+    registry_required_workers = set(route_required_workers().get(route_class, []))
+    intake_worker_ids = {
+        str(worker.get("worker_id") or "").strip()
+        for worker in required_workers
+        if isinstance(worker, dict)
+    }
+    missing_workers = sorted(registry_required_workers - intake_worker_ids)
+    if missing_workers:
+        errors.append(
+            f"universal_signal_intake {route_class} route missing required workers: "
+            + ", ".join(missing_workers)
+        )
+    for index, worker in enumerate(required_workers):
+        if not isinstance(worker, dict):
+            continue
+        worker_id = str(worker.get("worker_id") or "").strip()
+        if worker_id and worker_id not in WORKERS:
+            errors.append(f"universal_signal_intake.required_workers[{index}].worker_id must be a registered worker: {worker_id}")
 
     boundary = intake.get("public_private_boundary") if isinstance(intake.get("public_private_boundary"), dict) else {}
     if boundary.get("public_safe_refs_only") is not True:
@@ -5668,6 +5691,428 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
     if handoff.get("factory_owned_next_step") is not True:
         errors.append("universal_signal_intake handoff.factory_owned_next_step must be true")
 
+    return errors
+
+
+DEFAULT_ARTIFACT_REFS = {
+    "source_ledger": "templates/reference-source-registry.json",
+    "outcome_contract": "templates/vfinal-factory-card.json#outcome_contract",
+    "product_sot": "templates/product-sot.json",
+    "full_product_sot_scope_coverage": "templates/full-product-sot-scope-coverage.json",
+    "method_contract": "templates/method-contract.json",
+    "product_creation_plan": "templates/product-creation-plan.json",
+    "product_implementation_readiness": "templates/product-implementation-readiness.json",
+    "sdlc_feedback_loop": "templates/factory-sdlc-feedback-loop.json",
+    "specialist_research_plan": "templates/specialist-research-plan.json",
+    "specialist_decision_packet": "templates/specialist-decision-packet.json",
+    "product_experience_plan": "templates/product-experience-plan.json",
+    "product_face_packet": "templates/product-face-packet.json",
+    "professional_design_process": "templates/professional-design-process.json",
+    "product_face_result": "templates/product-face-result.json",
+    "production_readiness_plan": "templates/production-readiness-plan.json",
+    "promotion_ladder": "templates/production-promotion-ladder.json",
+    "brownfield_os_plan": "templates/brownfield-os-plan.json",
+    "migration_plan": "templates/legacy-migration-plan.json",
+    "rollback_plan": "templates/legacy-migration-plan.json#rollback_plan",
+}
+
+DEFAULT_ARTIFACT_OWNERS = {
+    "source_ledger": "source-ledger-worker",
+    "outcome_contract": "product-sot-planner",
+    "product_sot": "product-sot-planner",
+    "full_product_sot_scope_coverage": "product-sot-planner",
+    "method_contract": "factory-orchestrator",
+    "product_creation_plan": "decomposition-planner",
+    "product_implementation_readiness": "factory-orchestrator",
+    "sdlc_feedback_loop": "skill-eval-distiller",
+    "specialist_research_plan": "source-ledger-worker",
+    "specialist_decision_packet": "product-architect",
+    "product_experience_plan": "product-face",
+    "product_face_packet": "product-face",
+    "professional_design_process": "product-face",
+    "product_face_result": "qa-verification-worker",
+    "production_readiness_plan": "release-ops-worker",
+    "promotion_ladder": "release-ops-worker",
+    "rollback_plan": "release-ops-worker",
+    "regression_plan": "qa-verification-worker",
+    "baseline": "qa-verification-worker",
+    "brownfield_os_plan": "product-architect",
+    "legacy_system_map": "product-architect",
+    "migration_plan": "data-persistence-builder",
+}
+
+ARTIFACT_REQUIRED_BEFORE = {
+    "source_ledger": "source_resolution",
+    "outcome_contract": "product_sot",
+    "product_sot": "method_contract",
+    "full_product_sot_scope_coverage": "method_contract",
+    "method_contract": "ready_gate",
+    "product_creation_plan": "ready_gate",
+    "product_implementation_readiness": "execution",
+    "sdlc_feedback_loop": "execution",
+    "specialist_research_plan": "method_contract",
+    "specialist_decision_packet": "method_contract",
+    "product_experience_plan": "execution",
+    "product_face_packet": "execution",
+    "professional_design_process": "execution",
+    "product_face_result": "completion",
+    "production_readiness_plan": "release",
+    "promotion_ladder": "release",
+    "rollback_plan": "release",
+    "brownfield_os_plan": "ready_gate",
+    "rollback_path": "release",
+    "monitoring_signals": "release",
+    "receipt_five": "completion",
+}
+
+
+def artifact_ref_for_type(artifact_type: str) -> str:
+    return DEFAULT_ARTIFACT_REFS.get(artifact_type, f"templates/{artifact_type.replace('_', '-')}.json")
+
+
+def artifact_owner_for_type(artifact_type: str, route: dict[str, Any]) -> str:
+    owner = DEFAULT_ARTIFACT_OWNERS.get(artifact_type)
+    if owner:
+        return owner
+    workers = route.get("required_workers") if isinstance(route.get("required_workers"), list) else []
+    return str(workers[0]) if workers else "factory-orchestrator"
+
+
+def artifact_required_before(artifact_type: str) -> str:
+    return ARTIFACT_REQUIRED_BEFORE.get(artifact_type, "execution")
+
+
+def slug_for_ref(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return slug[:64] or "signal"
+
+
+def build_universal_signal_intake(
+    *,
+    route_class: str,
+    request_type: str,
+    signal_type: str,
+    summary_public_safe: str,
+    signal_ref_public_safe: str,
+    target_surface: str,
+    owner: str,
+    source_class: str,
+    sensitivity_class: str,
+    freshness: str,
+    risk_initial: str,
+    materiality: str,
+    created_at: str | None = None,
+    intake_id: str | None = None,
+) -> dict[str, Any]:
+    routes = registry_routes(load_route_registry())
+    route = routes.get(route_class)
+    if not route:
+        raise ValueError(f"unknown route_class: {route_class}")
+    route_artifacts = list(route.get("required_artifacts") or [])
+    route_workers = [str(worker) for worker in route.get("required_workers", [])]
+    route_gates = [str(gate) for gate in route.get("required_gates", [])]
+    scope_intents = [str(scope) for scope in route.get("scope_intents", []) if str(scope).strip()]
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    source_slug = slug_for_ref(signal_ref_public_safe)
+    selected_method_family = str(route.get("selected_method_family") or "spec_first")
+    first_worker = route_workers[0] if route_workers else "factory-orchestrator"
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/universal-signal-intake.schema.json",
+        "record_type": "universal_signal_intake",
+        "intake_id": intake_id or f"intake-{route_class}-{source_slug}",
+        "created_at": created,
+        "factory_method_version": "OVERKILL_VFINAL",
+        "signal": {
+            "signal_type": signal_type,
+            "source_class": source_class,
+            "sensitivity_class": sensitivity_class,
+            "freshness": freshness,
+            "owner": owner,
+            "target_surface": target_surface,
+            "summary_public_safe": summary_public_safe,
+            "signal_ref_public_safe": signal_ref_public_safe,
+            "raw_private_embedded": False,
+        },
+        "classification": {
+            "request_type": request_type,
+            "route_class": route_class,
+            "scope_intent": scope_intents[0] if scope_intents else "child_slice",
+            "risk_initial": risk_initial,
+            "materiality": materiality,
+            "needs_product_sot": route_class in {"product_creation", "ux_product_experience", "analytics_data"},
+            "can_start_execution": False,
+        },
+        "normalization": {
+            "source_resolution_required": True,
+            "outcome_discovery_required": route_class in {"product_creation", "feature_delivery", "research_validation"},
+            "dedupe_key": f"{route_class}:{source_slug}",
+            "conflict_policy": "Conflicting or stale source claims stay blocked until source resolution assigns an owner and next action.",
+            "missing_info_policy": "Discoverable missing information is resolved by the factory; only authority, access, risk or preference gates reach the user.",
+            "no_chat_only_state": True,
+        },
+        "route_decision": {
+            "method_contract_ref": "templates/method-contract.json",
+            "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
+            "factory_workflow_phase_ref": "docs/factory-workflow.catalog.json#F1",
+            "selected_method_family": selected_method_family,
+            "route_reason": f"Route registry selected {route_class} for {request_type} from {signal_type}.",
+            "fallback_route": "If any non-human gate blocks, return to the factory-owned repair route until the gate passes or a real human authority gate is required.",
+            "non_human_block_recovery": {
+                "required": True,
+                "factory_owned_repair_allowed": True,
+                "route_ref": "docs/factory-workflow.catalog.json#recovery",
+                "retry_policy": {
+                    "max_attempts": int((route.get("recovery_policy") or {}).get("max_attempts_minimum") or 1),
+                    "until": str((route.get("recovery_policy") or {}).get("until") or "the blocking gate passes"),
+                },
+            },
+        },
+        "required_artifacts": [
+            {
+                "artifact_type": str(artifact_type),
+                "artifact_ref": artifact_ref_for_type(str(artifact_type)),
+                "required_before": artifact_required_before(str(artifact_type)),
+                "owner_worker": artifact_owner_for_type(str(artifact_type), route),
+                "status": "required",
+                "blocks_execution_when_missing": True,
+            }
+            for artifact_type in route_artifacts
+        ],
+        "required_gates": [
+            {
+                "gate": gate,
+                "authority": first_worker,
+                "evidence_required": ["route artifact evidence", "gate verdict"],
+                "blocks_execution_when_missing": True,
+            }
+            for gate in route_gates
+        ],
+        "required_workers": [
+            {
+                "worker_id": worker_id,
+                "role": "route-required-worker",
+                "reason": f"Required by {route_class} route registry before execution.",
+                "required_before_execution": True,
+            }
+            for worker_id in route_workers
+        ],
+        "handoff": {
+            "next_artifact": str(route_artifacts[0]) if route_artifacts else "source_ledger",
+            "next_safe_action": "Materialize the next required artifact through the factory route before any execution.",
+            "user_decision_required": False,
+            "factory_owned_next_step": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "intake_is_route_ready": True,
+            "execution_allowed": False,
+            "blocked_reason": "Intake classification is complete, but execution waits for required artifacts, gates, workers and recovery policy.",
+            "evidence_refs": [
+                "schemas/universal-signal-intake.schema.json",
+                "templates/factory-route-registry.json",
+                "docs/factory-workflow.catalog.json#F1",
+            ],
+        },
+    }
+
+
+def validate_universal_signal_golden_corpus(corpus: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("universal-signal-golden-corpus.schema.json")
+    if not schema:
+        return ["universal_signal_golden_corpus schema is not bundled"]
+    errors.extend(validate_node(schema, corpus, "universal_signal_golden_corpus", schemas=schemas, root_schema=schema))
+
+    registry_ref = str(corpus.get("registry_ref") or "").strip()
+    if registry_ref:
+        _validate_public_ref(registry_ref, "universal_signal_golden_corpus.registry_ref", errors)
+    boundary = corpus.get("public_private_boundary") if isinstance(corpus.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("universal_signal_golden_corpus requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("universal_signal_golden_corpus must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("universal_signal_golden_corpus private context must stay outside the public repo")
+
+    routes = registry_routes(load_route_registry())
+    cases = corpus.get("cases") if isinstance(corpus.get("cases"), list) else []
+    cases_by_route: dict[str, list[dict[str, Any]]] = {}
+    for case in cases:
+        if not isinstance(case, dict):
+            continue
+        route_class = str(case.get("route_class") or "").strip()
+        cases_by_route.setdefault(route_class, []).append(case)
+
+    missing_routes = sorted(set(routes) - set(cases_by_route))
+    if missing_routes:
+        errors.append("universal_signal_golden_corpus missing route classes: " + ", ".join(missing_routes))
+    extra_routes = sorted(set(cases_by_route) - set(routes))
+    if extra_routes:
+        errors.append("universal_signal_golden_corpus references unknown route classes: " + ", ".join(extra_routes))
+
+    for index, case in enumerate(cases):
+        if not isinstance(case, dict):
+            continue
+        route_class = str(case.get("route_class") or "").strip()
+        route = routes.get(route_class)
+        case_at = f"universal_signal_golden_corpus.cases[{index}]"
+        if not route:
+            continue
+        request_type = str(case.get("request_type") or "").strip()
+        signal_type = str(case.get("signal_type") or "").strip()
+        method_family = str(case.get("expected_method_family") or "").strip()
+        expected_artifacts = {
+            str(item)
+            for item in case.get("expected_required_artifact_types", [])
+            if str(item).strip()
+        }
+        expected_workers = {
+            str(item)
+            for item in case.get("expected_required_worker_ids", [])
+            if str(item).strip()
+        }
+        if request_type not in set(route.get("request_types") or []):
+            errors.append(f"{case_at}.request_type is not valid for {route_class}: {request_type}")
+        if signal_type not in set(route.get("signal_types") or []):
+            errors.append(f"{case_at}.signal_type is not valid for {route_class}: {signal_type}")
+        if method_family != str(route.get("selected_method_family") or ""):
+            errors.append(f"{case_at}.expected_method_family must match route registry for {route_class}")
+        route_artifacts = {str(item) for item in route.get("required_artifacts", [])}
+        missing_artifacts = sorted(route_artifacts - expected_artifacts)
+        extra_artifacts = sorted(expected_artifacts - route_artifacts)
+        if missing_artifacts:
+            errors.append(f"{case_at} missing artifact coverage for {route_class}: " + ", ".join(missing_artifacts))
+        if extra_artifacts:
+            errors.append(f"{case_at} has artifact coverage outside {route_class}: " + ", ".join(extra_artifacts))
+        route_workers = {str(item) for item in route.get("required_workers", [])}
+        missing_workers = sorted(route_workers - expected_workers)
+        extra_workers = sorted(expected_workers - route_workers)
+        if missing_workers:
+            errors.append(f"{case_at} missing worker coverage for {route_class}: " + ", ".join(missing_workers))
+        if extra_workers:
+            errors.append(f"{case_at} has worker coverage outside {route_class}: " + ", ".join(extra_workers))
+        recovery = case.get("expected_recovery_policy") if isinstance(case.get("expected_recovery_policy"), dict) else {}
+        route_recovery = route.get("recovery_policy") if isinstance(route.get("recovery_policy"), dict) else {}
+        if recovery.get("non_human_block_recovery_required") is not True:
+            errors.append(f"{case_at} recovery invariant must require non-human block recovery")
+        if recovery.get("factory_owned_repair_allowed") is not True:
+            errors.append(f"{case_at} recovery invariant must be factory-owned")
+        if recovery.get("runtime_authority") != route_recovery.get("runtime_authority"):
+            errors.append(f"{case_at} recovery runtime authority must match route registry")
+        if recovery.get("local_state_authority") is not False:
+            errors.append(f"{case_at} recovery must not claim local state authority")
+        hermes_boundary = case.get("expected_hermes_boundary") if isinstance(case.get("expected_hermes_boundary"), dict) else {}
+        route_hermes = route.get("hermes_boundary") if isinstance(route.get("hermes_boundary"), dict) else {}
+        if hermes_boundary.get("uses_native_kanban_primitives") is not True:
+            errors.append(f"{case_at} Hermes boundary must use native Kanban primitives")
+        if hermes_boundary.get("runtime_authority") != route_hermes.get("runtime_authority"):
+            errors.append(f"{case_at} Hermes runtime authority must match route registry")
+        if hermes_boundary.get("local_state_authority") is not False:
+            errors.append(f"{case_at} Hermes boundary must not claim local state authority")
+
+    return errors
+
+
+SIGNAL_COVERAGE_DIMENSIONS = [
+    ("route_class_coverage", "Every route class in the registry has at least one golden signal case."),
+    ("request_signal_fit", "Golden cases use request and signal types accepted by their route."),
+    ("artifact_coverage", "Golden cases cover every required artifact declared by each route."),
+    ("worker_coverage", "Golden cases cover every required worker declared by each route."),
+    ("recovery_invariant", "Every route proves factory-owned non-human recovery with Hermes runtime authority."),
+    ("hermes_boundary", "Every route keeps Hermes as runtime authority and avoids local shadow state."),
+    ("public_safety", "Coverage artifacts stay public-safe and contain no raw private evidence."),
+]
+
+
+def signal_coverage_dimension_for_error(error: str) -> str:
+    lowered = error.lower()
+    if "route class" in lowered:
+        return "route_class_coverage"
+    if "request_type" in lowered or "signal_type" in lowered or "method_family" in lowered:
+        return "request_signal_fit"
+    if "artifact" in lowered:
+        return "artifact_coverage"
+    if "worker" in lowered:
+        return "worker_coverage"
+    if "recovery" in lowered or "non-human" in lowered:
+        return "recovery_invariant"
+    if "hermes" in lowered or "runtime authority" in lowered or "local state authority" in lowered:
+        return "hermes_boundary"
+    return "public_safety"
+
+
+def build_factory_signal_coverage_scorecard(
+    corpus: dict[str, Any],
+    *,
+    registry_ref: str = "templates/factory-route-registry.json",
+    corpus_ref: str = "templates/universal-signal-golden-corpus.json",
+) -> dict[str, Any]:
+    routes = registry_routes(load_route_registry())
+    cases = corpus.get("cases") if isinstance(corpus.get("cases"), list) else []
+    covered_routes = {
+        str(case.get("route_class") or "").strip()
+        for case in cases
+        if isinstance(case, dict) and str(case.get("route_class") or "").strip() in routes
+    }
+    missing_route_classes = sorted(set(routes) - covered_routes)
+    validation_errors = validate_universal_signal_golden_corpus(corpus)
+    findings_by_dimension: dict[str, list[str]] = {dimension_id: [] for dimension_id, _ in SIGNAL_COVERAGE_DIMENSIONS}
+    for error in validation_errors:
+        findings_by_dimension[signal_coverage_dimension_for_error(error)].append(error)
+    dimensions = [
+        {
+            "dimension_id": dimension_id,
+            "status": "BLOCKED" if findings_by_dimension[dimension_id] else "PASS",
+            "basis": basis,
+            "blocking_findings": findings_by_dimension[dimension_id],
+        }
+        for dimension_id, basis in SIGNAL_COVERAGE_DIMENSIONS
+    ]
+    blocked = any(dimension["status"] == "BLOCKED" for dimension in dimensions)
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-signal-coverage-scorecard.schema.json",
+        "record_type": "factory_signal_coverage_scorecard",
+        "scorecard_id": "factory-signal-coverage-scorecard-v1",
+        "registry_ref": registry_ref,
+        "corpus_ref": corpus_ref,
+        "result": "BLOCKED" if blocked else "PASS",
+        "route_count": len(routes),
+        "covered_route_count": len(covered_routes),
+        "dimensions": dimensions,
+        "missing_route_classes": missing_route_classes,
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+        },
+    }
+
+
+def validate_factory_signal_coverage_scorecard(scorecard: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-signal-coverage-scorecard.schema.json")
+    if not schema:
+        return ["factory_signal_coverage_scorecard schema is not bundled"]
+    errors.extend(validate_node(schema, scorecard, "factory_signal_coverage_scorecard", schemas=schemas, root_schema=schema))
+    for field in ("registry_ref", "corpus_ref"):
+        value = str(scorecard.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"factory_signal_coverage_scorecard.{field}", errors)
+    boundary = scorecard.get("public_private_boundary") if isinstance(scorecard.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("factory_signal_coverage_scorecard requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("factory_signal_coverage_scorecard must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("factory_signal_coverage_scorecard private context must stay outside the public repo")
     return errors
 
 
@@ -10536,6 +10981,82 @@ def command_validate_signal_intake(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_route_registry(args: argparse.Namespace) -> int:
+    registry = load_route_registry(args.registry)
+    if args.route_class:
+        routes = registry_routes(registry)
+        route = routes.get(args.route_class)
+        if not route:
+            print(f"unknown route_class: {args.route_class}", file=sys.stderr)
+            return 1
+        write_json(args.out, route)
+        return 0
+    write_json(args.out, registry)
+    return 0
+
+
+def command_intake(args: argparse.Namespace) -> int:
+    intake = build_universal_signal_intake(
+        route_class=args.route_class,
+        request_type=args.request_type,
+        signal_type=args.signal_type,
+        summary_public_safe=args.summary,
+        signal_ref_public_safe=args.source_ref,
+        target_surface=args.target_surface,
+        owner=args.owner,
+        source_class=args.source_class,
+        sensitivity_class=args.sensitivity_class,
+        freshness=args.freshness,
+        risk_initial=args.risk_initial,
+        materiality=args.materiality,
+        created_at=args.created_at,
+        intake_id=args.intake_id,
+    )
+    errors = validate_universal_signal_intake(intake)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, intake)
+    return 0
+
+
+def command_validate_signal_corpus(args: argparse.Namespace) -> int:
+    errors = validate_universal_signal_golden_corpus(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_signal_coverage(args: argparse.Namespace) -> int:
+    corpus = load_json_like(args.corpus)
+    scorecard = build_factory_signal_coverage_scorecard(
+        corpus,
+        registry_ref=args.registry_ref,
+        corpus_ref=args.corpus_ref,
+    )
+    errors = validate_factory_signal_coverage_scorecard(scorecard)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, scorecard)
+    return 0 if scorecard["result"] == "PASS" else 1
+
+
+def command_validate_signal_coverage(args: argparse.Namespace) -> int:
+    errors = validate_factory_signal_coverage_scorecard(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_readiness_scorecard(args: argparse.Namespace) -> int:
     errors = validate_factory_readiness_scorecard(load_json_like(args.path))
     if errors:
@@ -10889,6 +11410,45 @@ def build_parser() -> argparse.ArgumentParser:
     validate_signal_intake_parser = sub.add_parser("validate-signal-intake")
     validate_signal_intake_parser.add_argument("path", type=Path)
     validate_signal_intake_parser.set_defaults(func=command_validate_signal_intake)
+
+    route_registry_parser = sub.add_parser("route-registry", help="Show the canonical Universal Signal route registry.")
+    route_registry_parser.add_argument("--registry", type=Path, default=DEFAULT_ROUTE_REGISTRY_PATH)
+    route_registry_parser.add_argument("--route-class")
+    route_registry_parser.add_argument("--out", type=Path)
+    route_registry_parser.set_defaults(func=command_route_registry)
+
+    intake_parser = sub.add_parser("intake", help="Build a valid Universal Signal Intake contract without executing work.")
+    intake_parser.add_argument("--route-class", required=True)
+    intake_parser.add_argument("--request-type", required=True)
+    intake_parser.add_argument("--signal-type", required=True)
+    intake_parser.add_argument("--summary", required=True)
+    intake_parser.add_argument("--source-ref", required=True)
+    intake_parser.add_argument("--target-surface", default="operator-supplied-target")
+    intake_parser.add_argument("--owner", default="factory-orchestrator")
+    intake_parser.add_argument("--source-class", default="operator_supplied")
+    intake_parser.add_argument("--sensitivity-class", default="public_safe")
+    intake_parser.add_argument("--freshness", default="bounded")
+    intake_parser.add_argument("--risk-initial", default="R2")
+    intake_parser.add_argument("--materiality", default="material")
+    intake_parser.add_argument("--created-at")
+    intake_parser.add_argument("--intake-id")
+    intake_parser.add_argument("--out", type=Path)
+    intake_parser.set_defaults(func=command_intake)
+
+    validate_signal_corpus_parser = sub.add_parser("validate-signal-corpus")
+    validate_signal_corpus_parser.add_argument("path", type=Path)
+    validate_signal_corpus_parser.set_defaults(func=command_validate_signal_corpus)
+
+    signal_coverage_parser = sub.add_parser("signal-coverage", help="Build route/signal coverage scorecard from the golden corpus.")
+    signal_coverage_parser.add_argument("--corpus", type=Path, default=DEFAULT_SIGNAL_CORPUS_PATH)
+    signal_coverage_parser.add_argument("--registry-ref", default="templates/factory-route-registry.json")
+    signal_coverage_parser.add_argument("--corpus-ref", default="templates/universal-signal-golden-corpus.json")
+    signal_coverage_parser.add_argument("--out", type=Path, default=DEFAULT_SIGNAL_COVERAGE_OUT)
+    signal_coverage_parser.set_defaults(func=command_signal_coverage)
+
+    validate_signal_coverage_parser = sub.add_parser("validate-signal-coverage")
+    validate_signal_coverage_parser.add_argument("path", type=Path)
+    validate_signal_coverage_parser.set_defaults(func=command_validate_signal_coverage)
 
     validate_readiness_scorecard_parser = sub.add_parser("validate-readiness-scorecard")
     validate_readiness_scorecard_parser.add_argument("path", type=Path)

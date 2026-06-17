@@ -129,6 +129,18 @@
       "required_before_execution": true
     },
     {
+      "worker_id": "frontend-builder",
+      "role": "surface-builder",
+      "reason": "Owns the implementation path for the visible cockpit surface after Product Face gates pass.",
+      "required_before_execution": true
+    },
+    {
+      "worker_id": "qa-verification-worker",
+      "role": "product-proof-owner",
+      "reason": "Verifies the cockpit states, journeys and Product Face evidence before completion.",
+      "required_before_execution": true
+    },
+    {
       "worker_id": "security-orchestrator",
       "role": "boundary-owner",
       "reason": "Prevents raw private evidence, chat memory or unsafe runtime state from becoming cockpit input.",

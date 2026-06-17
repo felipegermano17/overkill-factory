@@ -39,7 +39,11 @@ factoryctl init --out ../my-product-factory --project-name my-product
 
 ```bash
 factoryctl validate-card examples/minimal-hermes-project/card.md
+factoryctl route-registry --route-class product_creation
+factoryctl intake --route-class bug_repair --request-type bug --signal-type bug_report --summary "Public-safe bug report enters reproduction and regression gates." --source-ref external:source-card-bug-001 --out .tmp/bug-intake.json
 factoryctl validate-signal-intake templates/universal-signal-intake.json
+factoryctl validate-signal-corpus templates/universal-signal-golden-corpus.json
+factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
 factoryctl recovery-plan --card examples/minimal-hermes-project/card.md --receipt .tmp/receipt.json --worker-results-dir .tmp/worker-results
@@ -54,6 +58,13 @@ signal: paper, idea, bug, repo, incident, release, research, UX, analytics,
 security, docs, migration, refactor or agent/model change. It requires a known
 route, required artifacts, public-safe references, explicit non-human recovery
 and execution blocked until the factory has enough source and scope.
+
+`route-registry` exposes the canonical route matrix used by the validators:
+route class, request types, signal types, required artifacts, workers, recovery
+policy and Hermes boundary. `intake` builds a valid Universal Signal Intake
+from that registry without executing work. `validate-signal-corpus` and
+`signal-coverage` prove that the public Golden Corpus covers every known route
+without treating contract coverage as production readiness.
 
 `help-next` reads the card, workflow catalog and gate report, then separates the
 factory's next action from bounded user decisions. With `--receipt` or

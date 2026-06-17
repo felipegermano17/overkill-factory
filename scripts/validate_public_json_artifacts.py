@@ -22,6 +22,13 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from public_refs import contains_private_kanban_task_marker  # noqa: E402
+from factory_route_registry import (  # noqa: E402
+    route_method_families,
+    route_request_types,
+    route_required_artifacts,
+    route_required_workers,
+    route_signal_types,
+)
 
 SCHEMA_DIR = ROOT / "schemas"
 PUBLIC_SCHEMA_DIRS = [
@@ -121,36 +128,23 @@ FACTORY_READINESS_SCORECARD_DIMENSIONS = {
     "product_analytics_success_signals",
     "autonomy_risk_human_gates",
 }
-UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS = {
-    "product_creation": {
-        "source_ledger",
-        "outcome_contract",
-        "product_sot",
-        "full_product_sot_scope_coverage",
-        "method_contract",
-        "product_creation_plan",
-        "product_implementation_readiness",
-        "sdlc_feedback_loop",
-    },
-    "feature_delivery": {"source_ledger", "outcome_contract", "method_contract", "spec_graph", "qa_plan"},
-    "bug_repair": {"source_ledger", "bug_reproduction", "diagnosis", "regression_check", "receipt_five"},
-    "incident_response": {"incident_support_plan", "severity_model", "mitigation_plan", "evidence_record", "learnback"},
-    "brownfield_discovery": {"source_ledger", "legacy_system_map", "baseline", "regression_plan", "rollback_plan"},
-    "release_promotion": {"production_readiness_plan", "promotion_ladder", "rollback_path", "monitoring_signals"},
-    "research_validation": {"specialist_research_plan", "specialist_decision_packet", "sdlc_feedback_loop"},
-    "docs_onboarding": {"user_docs_onboarding_plan", "reader_success_path", "docs_verification"},
-    "security_remediation": {"security_architecture_plan", "security_scan_packet", "review_result"},
-    "critical_integration": {"integration_contract", "dependency_gate", "contract_tests", "fallback_plan"},
-    "migration_execution": {"legacy_system_map", "migration_plan", "regression_plan", "rollback_plan"},
-    "ux_product_experience": {
-        "product_experience_plan",
-        "product_face_packet",
-        "professional_design_process",
-        "product_face_result",
-    },
-    "analytics_data": {"data_metrics_plan", "event_contract", "dashboard_health_proof", "privacy_limits"},
-    "agent_quality_change": {"agent_eval_plan", "reasoning_policy", "worker_profile_readiness", "learnback"},
-}
+UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS = route_required_artifacts()
+UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES = route_request_types()
+UNIVERSAL_SIGNAL_ROUTE_SIGNAL_TYPES = route_signal_types()
+UNIVERSAL_SIGNAL_ROUTE_METHOD_FAMILIES = route_method_families()
+
+
+def public_worker_ids() -> set[str]:
+    path = ROOT / "agents" / "worker-registry.public.json"
+    if not path.exists():
+        return set()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    workers = data.get("workers") if isinstance(data.get("workers"), list) else []
+    return {
+        str(worker.get("worker_id") or "").strip()
+        for worker in workers
+        if isinstance(worker, dict) and str(worker.get("worker_id") or "").strip()
+    }
 
 
 def public_artifact_ref_error(ref: Any) -> str | None:
@@ -839,12 +833,33 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         if classification.get("can_start_execution") is not False:
             errors.append(f"{at}: universal_signal_intake classification cannot allow execution directly")
         route_class = str(classification.get("route_class") or "").strip()
+        request_type = str(classification.get("request_type") or "").strip()
+        signal_type = str(signal.get("signal_type") or "").strip()
+        allowed_request_types = UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES.get(route_class)
+        if allowed_request_types and request_type and request_type not in allowed_request_types:
+            errors.append(
+                f"{at}: universal_signal_intake.classification.request_type is not valid "
+                f"for route_class {route_class}: {request_type}"
+            )
+        allowed_signal_types = UNIVERSAL_SIGNAL_ROUTE_SIGNAL_TYPES.get(route_class)
+        if allowed_signal_types and signal_type and signal_type not in allowed_signal_types:
+            errors.append(
+                f"{at}: universal_signal_intake.signal.signal_type is not valid "
+                f"for route_class {route_class}: {signal_type}"
+            )
         normalization = data.get("normalization") if isinstance(data.get("normalization"), dict) else {}
         if normalization.get("source_resolution_required") is not True:
             errors.append(f"{at}: universal_signal_intake source_resolution_required must be true")
         if normalization.get("no_chat_only_state") is not True:
             errors.append(f"{at}: universal_signal_intake no_chat_only_state must be true")
         route = data.get("route_decision") if isinstance(data.get("route_decision"), dict) else {}
+        selected_method_family = str(route.get("selected_method_family") or "").strip()
+        expected_method_family = UNIVERSAL_SIGNAL_ROUTE_METHOD_FAMILIES.get(route_class)
+        if expected_method_family and selected_method_family and selected_method_family != expected_method_family:
+            errors.append(
+                f"{at}: universal_signal_intake.route_decision.selected_method_family "
+                f"must match route registry for {route_class}: {expected_method_family}"
+            )
         for field in ("method_contract_ref", "sdlc_feedback_loop_ref", "factory_workflow_phase_ref", "fallback_route"):
             route_ref = str(route.get(field) or "").strip()
             reason = public_artifact_ref_error(route_ref)
@@ -887,6 +902,28 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                         f"{at}.required_artifacts[{index}].blocks_execution_when_missing "
                         "must be true for required route artifact"
                     )
+            owner_worker = str(artifact.get("owner_worker") or "").strip()
+            if owner_worker and owner_worker not in public_worker_ids():
+                errors.append(f"{at}.required_artifacts[{index}].owner_worker must be a registered worker: {owner_worker}")
+        registry_required_workers = set(route_required_workers().get(route_class, []))
+        required_workers = data.get("required_workers") if isinstance(data.get("required_workers"), list) else []
+        intake_worker_ids = {
+            str(worker.get("worker_id") or "").strip()
+            for worker in required_workers
+            if isinstance(worker, dict)
+        }
+        missing_workers = sorted(registry_required_workers - intake_worker_ids)
+        if missing_workers:
+            errors.append(
+                f"{at}: universal_signal_intake {route_class} route missing required workers: "
+                + ", ".join(missing_workers)
+            )
+        for index, worker in enumerate(required_workers):
+            if not isinstance(worker, dict):
+                continue
+            worker_id = str(worker.get("worker_id") or "").strip()
+            if worker_id and worker_id not in public_worker_ids():
+                errors.append(f"{at}.required_workers[{index}].worker_id must be a registered worker: {worker_id}")
         handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
         if handoff.get("factory_owned_next_step") is not True:
             errors.append(f"{at}: universal_signal_intake handoff.factory_owned_next_step must be true")

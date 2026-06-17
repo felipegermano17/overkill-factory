@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-route-registry.schema.json",
+  "title": "Overkill Factory Route Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "factory_method_version",
+    "routes",
+    "coverage_policy",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-route-registry.schema.json"
+    },
+    "record_type": {
+      "const": "factory_route_registry"
+    },
+    "registry_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "route_class",
+          "request_types",
+          "signal_types",
+          "scope_intents",
+          "selected_method_family",
+          "required_artifacts",
+          "required_gates",
+          "required_workers",
+          "recovery_policy",
+          "hermes_boundary"
+        ],
+        "properties": {
+          "route_class": {
+            "enum": [
+              "product_creation",
+              "feature_delivery",
+              "bug_repair",
+              "incident_response",
+              "brownfield_discovery",
+              "release_promotion",
+              "research_validation",
+              "docs_onboarding",
+              "security_remediation",
+              "critical_integration",
+              "migration_execution",
+              "ux_product_experience",
+              "analytics_data",
+              "agent_quality_change"
+            ]
+          },
+          "request_types": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "product_new",
+                "slice",
+                "feature",
+                "bug",
+                "incident",
+                "release",
+                "migration",
+                "refactor",
+                "integration",
+                "doc",
+                "security",
+                "ux_ui",
+                "data_analytics",
+                "agent_skill"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "signal_types": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "scope_intents": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "selected_method_family": {
+            "enum": [
+              "spec_first",
+              "test_first",
+              "behavior_first",
+              "discovery_first",
+              "prototype_first",
+              "legacy_diagnosis",
+              "incident_first",
+              "research_first",
+              "docs_first",
+              "security_first",
+              "design_first",
+              "analytics_first",
+              "agent_eval_first"
+            ]
+          },
+          "required_artifacts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "required_gates": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "required_workers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "quality_profile_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "recovery_policy": {
+            "type": "object",
+            "required": [
+              "non_human_block_recovery_required",
+              "factory_owned_repair_allowed",
+              "max_attempts_minimum",
+              "until",
+              "runtime_authority",
+              "local_state_authority"
+            ],
+            "properties": {
+              "non_human_block_recovery_required": {
+                "const": true
+              },
+              "factory_owned_repair_allowed": {
+                "const": true
+              },
+              "max_attempts_minimum": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "until": {
+                "type": "string",
+                "minLength": 6
+              },
+              "runtime_authority": {
+                "const": "hermes_kanban"
+              },
+              "local_state_authority": {
+                "const": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "hermes_boundary": {
+            "type": "object",
+            "required": [
+              "runtime_authority",
+              "uses_native_kanban_primitives",
+              "local_state_authority",
+              "factory_may_project_status",
+              "factory_may_create_tasks_only_through_adapter"
+            ],
+            "properties": {
+              "runtime_authority": {
+                "const": "hermes_kanban"
+              },
+              "uses_native_kanban_primitives": {
+                "const": true
+              },
+              "local_state_authority": {
+                "const": false
+              },
+              "factory_may_project_status": {
+                "const": true
+              },
+              "factory_may_create_tasks_only_through_adapter": {
+                "const": true
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "coverage_policy": {
+      "type": "object",
+      "required": [
+        "golden_corpus_required",
+        "all_routes_require_signal_case",
+        "all_routes_require_recovery_policy",
+        "all_routes_require_hermes_boundary"
+      ],
+      "properties": {
+        "golden_corpus_required": {
+          "const": true
+        },
+        "all_routes_require_signal_case": {
+          "const": true
+        },
+        "all_routes_require_recovery_policy": {
+          "const": true
+        },
+        "all_routes_require_hermes_boundary": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": {
+          "const": true
+        },
+        "raw_private_evidence_embedded": {
+          "const": false
+        },
+        "private_context_retained_outside_public_repo": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
