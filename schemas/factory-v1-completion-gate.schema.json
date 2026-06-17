@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-v1-completion-gate.schema.json",
+  "title": "Factory v1 Completion Gate",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "gate_id",
+    "created_at",
+    "factory_method_version",
+    "target",
+    "decision",
+    "completion_claim_allowed",
+    "completion_claim_scope",
+    "required_evidence",
+    "route_coverage",
+    "representative_signals",
+    "gates",
+    "finding_policy",
+    "classified_findings",
+    "public_private_boundary",
+    "limits",
+    "next_required_actions"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-v1-completion-gate.schema.json"
+    },
+    "record_type": {
+      "const": "factory_v1_completion_gate"
+    },
+    "gate_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "target": {
+      "type": "object",
+      "required": ["target_type", "target_ref", "release_scope", "owner"],
+      "properties": {
+        "target_type": {
+          "enum": ["public_repo", "release_candidate", "local_validation_run"]
+        },
+        "target_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "release_scope": {
+          "enum": ["factory_v1_public_kernel", "factory_vnext", "product_specific_release"]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "decision": {
+      "enum": ["PASS", "BLOCKED"]
+    },
+    "completion_claim_allowed": {
+      "type": "boolean"
+    },
+    "completion_claim_scope": {
+      "type": "object",
+      "required": [
+        "factory_v1_public_kernel",
+        "product_specific_completion",
+        "universal_runtime_proof",
+        "hosted_service_release"
+      ],
+      "properties": {
+        "factory_v1_public_kernel": { "type": "boolean" },
+        "product_specific_completion": { "const": false },
+        "universal_runtime_proof": { "const": false },
+        "hosted_service_release": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "required_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "status",
+          "evidence_ref",
+          "blocks_v1_when_missing",
+          "produced_by"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 3
+          },
+          "status": {
+            "enum": ["PASS", "BOUNDED", "BLOCKED", "MISSING", "FAIL", "UNKNOWN"]
+          },
+          "evidence_ref": {
+            "type": "string",
+            "minLength": 3
+          },
+          "blocks_v1_when_missing": {
+            "type": "boolean"
+          },
+          "produced_by": {
+            "type": "string",
+            "minLength": 3
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "route_coverage": {
+      "type": "object",
+      "required": [
+        "registry_ref",
+        "corpus_ref",
+        "scorecard_ref",
+        "signal_coverage_result",
+        "route_count",
+        "covered_route_count",
+        "missing_route_classes"
+      ],
+      "properties": {
+        "registry_ref": { "type": "string", "minLength": 3 },
+        "corpus_ref": { "type": "string", "minLength": 3 },
+        "scorecard_ref": { "type": "string", "minLength": 3 },
+        "signal_coverage_result": { "enum": ["PASS", "BLOCKED"] },
+        "route_count": { "type": "integer", "minimum": 0 },
+        "covered_route_count": { "type": "integer", "minimum": 0 },
+        "missing_route_classes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "representative_signals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "case_id",
+          "route_class",
+          "request_type",
+          "signal_type",
+          "classification",
+          "covered_by_ref"
+        ],
+        "properties": {
+          "case_id": { "type": "string", "minLength": 3 },
+          "route_class": { "type": "string", "minLength": 3 },
+          "request_type": { "type": "string", "minLength": 3 },
+          "signal_type": { "type": "string", "minLength": 3 },
+          "classification": { "const": "v1_representative_signal" },
+          "covered_by_ref": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["gate_id", "status", "owner", "evidence_refs", "blocks_v1", "next_action"],
+        "properties": {
+          "gate_id": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["PASS", "BOUNDED", "BLOCKED", "MISSING", "FAIL", "UNKNOWN"] },
+          "owner": { "type": "string", "minLength": 3 },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "blocks_v1": { "type": "boolean" },
+          "next_action": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "finding_policy": {
+      "type": "object",
+      "required": [
+        "no_open_ended_audit",
+        "new_findings_must_be_classified",
+        "accepted_destinations",
+        "v1_blocker_definition",
+        "vnext_definition",
+        "not_planned_definition",
+        "reopen_v1_only_when"
+      ],
+      "properties": {
+        "no_open_ended_audit": { "const": true },
+        "new_findings_must_be_classified": { "const": true },
+        "accepted_destinations": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "enum": ["v1_blocker", "vnext", "not_planned"] }
+        },
+        "v1_blocker_definition": { "type": "string", "minLength": 12 },
+        "vnext_definition": { "type": "string", "minLength": 12 },
+        "not_planned_definition": { "type": "string", "minLength": 12 },
+        "reopen_v1_only_when": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 6 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "classified_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "title",
+          "classification",
+          "status",
+          "rationale",
+          "owner",
+          "evidence_refs"
+        ],
+        "properties": {
+          "finding_id": { "type": "string", "minLength": 3 },
+          "title": { "type": "string", "minLength": 3 },
+          "classification": { "enum": ["v1_blocker", "vnext", "not_planned"] },
+          "status": { "enum": ["open", "resolved", "closed", "rejected"] },
+          "rationale": { "type": "string", "minLength": 6 },
+          "owner": { "type": "string", "minLength": 3 },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_runtime_evidence_stays_local"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_runtime_evidence_stays_local": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 6 }
+    },
+    "next_required_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": false
+}

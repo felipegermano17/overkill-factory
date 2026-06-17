@@ -189,7 +189,11 @@ Factory v1 is the public kernel release. The repository has validated schemas,
 worker profiles, Hermes profile bindings, adapter hooks, safety scans, a
 packaged CLI, a runnable public example, Product Face proof drivers,
 capability-pack activation checks, production worker graph contracts and public
-surface synchronization checks.
+surface synchronization checks. The finish line for this public kernel is the
+Factory v1 Completion Gate: current route coverage, release preflight, GitHub
+checks, open PRs and open v1 blockers must pass before v1 can be closed.
+Remaining non-blocking findings must be explicitly classified as `vnext` or
+`not_planned`, not left as endless audit drift.
 
 The project is still not a hosted service and not a production launch for a
 user's product. A user must connect it to their own Hermes runtime, configure

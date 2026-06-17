@@ -1,0 +1,282 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-v1-completion-gate.schema.json",
+  "record_type": "factory_v1_completion_gate",
+  "gate_id": "factory-v1-completion-gate-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "target": {
+    "target_type": "public_repo",
+    "target_ref": "external:public-current-public-overkill-factory-ref",
+    "release_scope": "factory_v1_public_kernel",
+    "owner": "factory-orchestrator"
+  },
+  "decision": "BLOCKED",
+  "completion_claim_allowed": false,
+  "completion_claim_scope": {
+    "factory_v1_public_kernel": false,
+    "product_specific_completion": false,
+    "universal_runtime_proof": false,
+    "hosted_service_release": false
+  },
+  "required_evidence": [
+    {
+      "evidence_id": "route_registry",
+      "status": "PASS",
+      "evidence_ref": "templates/factory-route-registry.json",
+      "blocks_v1_when_missing": true,
+      "produced_by": "factoryctl route-registry",
+      "reason": "The route registry is the single public source of known signal routes."
+    },
+    {
+      "evidence_id": "golden_signal_corpus",
+      "status": "PASS",
+      "evidence_ref": "templates/universal-signal-golden-corpus.json",
+      "blocks_v1_when_missing": true,
+      "produced_by": "factoryctl validate-signal-corpus",
+      "reason": "The corpus covers representative inputs for every known route."
+    },
+    {
+      "evidence_id": "signal_coverage_scorecard",
+      "status": "PASS",
+      "evidence_ref": "external:public-current-signal-coverage-scorecard",
+      "blocks_v1_when_missing": true,
+      "produced_by": "factoryctl signal-coverage",
+      "reason": "Coverage proves routes, artifacts, workers, recovery and Hermes boundaries are represented."
+    },
+    {
+      "evidence_id": "factory_readiness_scorecard",
+      "status": "BOUNDED",
+      "evidence_ref": "templates/factory-readiness-scorecard.json",
+      "blocks_v1_when_missing": false,
+      "produced_by": "factoryctl validate-readiness-scorecard",
+      "reason": "Bounded non-blocking dimensions are allowed for vNext but cannot hide v1 blockers."
+    },
+    {
+      "evidence_id": "release_integration_preflight",
+      "status": "MISSING",
+      "evidence_ref": "external:public-current-release-integration-preflight",
+      "blocks_v1_when_missing": true,
+      "produced_by": "scripts/release_integration_preflight.py",
+      "reason": "The current public ref must pass release integration before v1 can close."
+    },
+    {
+      "evidence_id": "github_actions",
+      "status": "UNKNOWN",
+      "evidence_ref": "external:public-current-github-actions-checks",
+      "blocks_v1_when_missing": true,
+      "produced_by": "GitHub Actions",
+      "reason": "The current PR or main ref must have green checks before v1 can close."
+    },
+    {
+      "evidence_id": "open_v1_blockers",
+      "status": "UNKNOWN",
+      "evidence_ref": "external:public-current-v1-blocker-query",
+      "blocks_v1_when_missing": true,
+      "produced_by": "GitHub issue query",
+      "reason": "Open v1 blockers keep the release open; vNext and not-planned findings do not."
+    },
+    {
+      "evidence_id": "open_prs",
+      "status": "UNKNOWN",
+      "evidence_ref": "external:public-current-open-pr-query",
+      "blocks_v1_when_missing": true,
+      "produced_by": "GitHub PR query",
+      "reason": "Unexpected open PRs must be merged, closed or reclassified before final closure."
+    }
+  ],
+  "route_coverage": {
+    "registry_ref": "templates/factory-route-registry.json",
+    "corpus_ref": "templates/universal-signal-golden-corpus.json",
+    "scorecard_ref": "external:public-current-signal-coverage-scorecard",
+    "signal_coverage_result": "PASS",
+    "route_count": 14,
+    "covered_route_count": 14,
+    "missing_route_classes": []
+  },
+  "representative_signals": [
+    {
+      "case_id": "product-paper-to-product-creation",
+      "route_class": "product_creation",
+      "request_type": "product_new",
+      "signal_type": "product_paper",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#product-paper-to-product-creation"
+    },
+    {
+      "case_id": "feature-idea-to-feature-delivery",
+      "route_class": "feature_delivery",
+      "request_type": "feature",
+      "signal_type": "feature_idea",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#feature-idea-to-feature-delivery"
+    },
+    {
+      "case_id": "bug-report-to-bug-repair",
+      "route_class": "bug_repair",
+      "request_type": "bug",
+      "signal_type": "bug_report",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#bug-report-to-bug-repair"
+    },
+    {
+      "case_id": "incident-to-incident-response",
+      "route_class": "incident_response",
+      "request_type": "incident",
+      "signal_type": "incident",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#incident-to-incident-response"
+    },
+    {
+      "case_id": "existing-repository-to-brownfield-discovery",
+      "route_class": "brownfield_discovery",
+      "request_type": "refactor",
+      "signal_type": "existing_repository",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#existing-repository-to-brownfield-discovery"
+    },
+    {
+      "case_id": "release-request-to-release-promotion",
+      "route_class": "release_promotion",
+      "request_type": "release",
+      "signal_type": "release_request",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#release-request-to-release-promotion"
+    },
+    {
+      "case_id": "research-request-to-research-validation",
+      "route_class": "research_validation",
+      "request_type": "feature",
+      "signal_type": "research_request",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#research-request-to-research-validation"
+    },
+    {
+      "case_id": "documentation-request-to-docs-onboarding",
+      "route_class": "docs_onboarding",
+      "request_type": "doc",
+      "signal_type": "documentation_request",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#documentation-request-to-docs-onboarding"
+    },
+    {
+      "case_id": "security-review-to-security-remediation",
+      "route_class": "security_remediation",
+      "request_type": "security",
+      "signal_type": "security_review_request",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#security-review-to-security-remediation"
+    },
+    {
+      "case_id": "integration-request-to-critical-integration",
+      "route_class": "critical_integration",
+      "request_type": "integration",
+      "signal_type": "integration_request",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#integration-request-to-critical-integration"
+    },
+    {
+      "case_id": "migration-request-to-migration-execution",
+      "route_class": "migration_execution",
+      "request_type": "migration",
+      "signal_type": "migration_request",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#migration-request-to-migration-execution"
+    },
+    {
+      "case_id": "ux-request-to-product-experience",
+      "route_class": "ux_product_experience",
+      "request_type": "ux_ui",
+      "signal_type": "ux_ui_request",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#ux-request-to-product-experience"
+    },
+    {
+      "case_id": "analytics-request-to-analytics-data",
+      "route_class": "analytics_data",
+      "request_type": "data_analytics",
+      "signal_type": "analytics_request",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#analytics-request-to-analytics-data"
+    },
+    {
+      "case_id": "agent-change-to-agent-quality-change",
+      "route_class": "agent_quality_change",
+      "request_type": "agent_skill",
+      "signal_type": "agent_skill_or_model_change",
+      "classification": "v1_representative_signal",
+      "covered_by_ref": "templates/universal-signal-golden-corpus.json#agent-change-to-agent-quality-change"
+    }
+  ],
+  "gates": [
+    {
+      "gate_id": "canonical_route_system",
+      "status": "PASS",
+      "owner": "factory-orchestrator",
+      "evidence_refs": [
+        "templates/factory-route-registry.json",
+        "templates/universal-signal-golden-corpus.json"
+      ],
+      "blocks_v1": false,
+      "next_action": "Keep route registry and corpus synchronized through validators."
+    },
+    {
+      "gate_id": "release_integrity",
+      "status": "MISSING",
+      "owner": "release-ops-worker",
+      "evidence_refs": ["external:public-current-release-integration-preflight"],
+      "blocks_v1": true,
+      "next_action": "Run release integration preflight on the current ref."
+    },
+    {
+      "gate_id": "github_publication_state",
+      "status": "UNKNOWN",
+      "owner": "factory-orchestrator",
+      "evidence_refs": [
+        "external:public-current-github-actions-checks",
+        "external:public-current-open-pr-query",
+        "external:public-current-v1-blocker-query"
+      ],
+      "blocks_v1": true,
+      "next_action": "Confirm checks, PRs and v1 blocker query before closing v1."
+    },
+    {
+      "gate_id": "finding_classification",
+      "status": "PASS",
+      "owner": "factory-orchestrator",
+      "evidence_refs": ["templates/factory-v1-completion-gate.json#finding_policy"],
+      "blocks_v1": false,
+      "next_action": "Classify every new finding as v1_blocker, vnext or not_planned."
+    }
+  ],
+  "finding_policy": {
+    "no_open_ended_audit": true,
+    "new_findings_must_be_classified": true,
+    "accepted_destinations": ["v1_blocker", "vnext", "not_planned"],
+    "v1_blocker_definition": "The finding makes the public Factory v1 promise false, unsafe, uninstallable or unreleasable.",
+    "vnext_definition": "The finding improves the factory after v1 but does not invalidate the public Factory v1 promise.",
+    "not_planned_definition": "The finding is intentionally rejected because it adds complexity without changing the v1 promise.",
+    "reopen_v1_only_when": [
+      "public promise is false",
+      "public safety or secret boundary fails",
+      "first-value path is broken",
+      "release checks fail",
+      "known route coverage regresses",
+      "non-human recovery invariant regresses"
+    ]
+  },
+  "classified_findings": [],
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_runtime_evidence_stays_local": true
+  },
+  "limits": [
+    "This template is not a live release proof.",
+    "PASS allows closing the Factory v1 public kernel, not claiming every possible product is production-proven.",
+    "Product-specific releases still need their own SOT, gates, worker evidence, human approvals and runtime proof.",
+    "vNext findings may remain open when they do not invalidate the Factory v1 public promise."
+  ],
+  "next_required_actions": [
+    "Run factoryctl v1-completion-gate with current release preflight, GitHub Actions state, open PR count and open v1 blocker count."
+  ]
+}

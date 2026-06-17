@@ -62,6 +62,28 @@ map to the published public object. Run it only after the public object has been
 published or refreshed; before publication it may correctly report the remote
 map as out of sync.
 
+## Factory v1 Completion Gate
+
+Use this after the release preflight and GitHub checks are current, when the
+question is whether the public Factory v1 kernel can be closed instead of
+continuing an open-ended audit:
+
+```bash
+factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
+factoryctl v1-completion-gate \
+  --release-preflight .tmp/factory-runs/release/release-integration-preflight.json \
+  --github-actions-result PASS \
+  --open-v1-blockers 0 \
+  --open-prs 0 \
+  --out .tmp/factory-runs/v1-completion/factory-v1-completion-gate.json
+```
+
+A `PASS` here means the public Factory v1 kernel may be closed. It does not
+claim product-specific completion, hosted service release, mainnet release or
+universal runtime proof. New findings after this gate must be classified as
+`v1_blocker`, `vnext` or `not_planned`; only a real v1 blocker reopens the v1
+finish line.
+
 ## Full Product Worker Graph
 
 Production completion uses a product-scoped worker graph. The default contract
@@ -100,6 +122,7 @@ python scripts/validate_public_surface_sync.py
 python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
 python scripts/supply_chain_proof.py --check --no-write
+factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 python scripts/factory_completion_audit.py --no-write --require-complete
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
@@ -133,6 +156,8 @@ A release claim needs:
 - independent review when required;
 - real human gate records for high-risk or release authority;
 - public-safety pass before public publication.
+- a Factory v1 Completion Gate `PASS` before claiming the public Factory v1
+  kernel is closed.
 
 Release authority cannot be satisfied by a string ref alone. A production or
 R4 release gate must dereference and validate the human gate record before it

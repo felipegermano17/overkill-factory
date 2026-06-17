@@ -128,6 +128,8 @@ FACTORY_READINESS_SCORECARD_DIMENSIONS = {
     "product_analytics_success_signals",
     "autonomy_risk_human_gates",
 }
+V1_COMPLETION_BLOCKING_STATUSES = {"BLOCKED", "MISSING", "FAIL", "UNKNOWN"}
+V1_COMPLETION_FINDING_DESTINATIONS = {"v1_blocker", "vnext", "not_planned"}
 UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS = route_required_artifacts()
 UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES = route_request_types()
 UNIVERSAL_SIGNAL_ROUTE_SIGNAL_TYPES = route_signal_types()
@@ -361,6 +363,126 @@ def validate_factory_readiness_scorecard_domain(data: dict[str, Any], at: str) -
         errors.append(f"{at}: factory_readiness_scorecard is not release approval")
 
     return errors
+
+
+def validate_factory_v1_completion_gate_domain(data: dict[str, Any], at: str) -> list[str]:
+    errors: list[str] = []
+    target = data.get("target") if isinstance(data.get("target"), dict) else {}
+    reason = public_artifact_ref_error(target.get("target_ref"))
+    if reason:
+        errors.append(f"{at}.target.target_ref: {reason}")
+
+    route_coverage = data.get("route_coverage") if isinstance(data.get("route_coverage"), dict) else {}
+    for field in ("registry_ref", "corpus_ref", "scorecard_ref"):
+        reason = public_artifact_ref_error(route_coverage.get(field))
+        if reason:
+            errors.append(f"{at}.route_coverage.{field}: {reason}")
+
+    expected_routes = set(UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS)
+    representative_signals = data.get("representative_signals") if isinstance(data.get("representative_signals"), list) else []
+    represented_routes = {
+        str(item.get("route_class") or "").strip()
+        for item in representative_signals
+        if isinstance(item, dict)
+    }
+    if data.get("decision") == "PASS":
+        missing_routes = sorted(expected_routes - represented_routes)
+        extra_routes = sorted(represented_routes - expected_routes)
+        if missing_routes:
+            errors.append(f"{at}: PASS missing representative route classes: {', '.join(missing_routes)}")
+        if extra_routes:
+            errors.append(f"{at}: PASS has unknown representative route classes: {', '.join(extra_routes)}")
+
+    for index, item in enumerate(representative_signals):
+        if not isinstance(item, dict):
+            continue
+        reason = public_artifact_ref_error(item.get("covered_by_ref"))
+        if reason:
+            errors.append(f"{at}.representative_signals[{index}].covered_by_ref: {reason}")
+
+    blocking_evidence: list[str] = []
+    evidence_items = data.get("required_evidence") if isinstance(data.get("required_evidence"), list) else []
+    for index, item in enumerate(evidence_items):
+        if not isinstance(item, dict):
+            continue
+        reason = public_artifact_ref_error(item.get("evidence_ref"))
+        if reason:
+            errors.append(f"{at}.required_evidence[{index}].evidence_ref: {reason}")
+        status = str(item.get("status") or "").strip().upper()
+        if item.get("blocks_v1_when_missing") is True and status in V1_COMPLETION_BLOCKING_STATUSES:
+            blocking_evidence.append(str(item.get("evidence_id") or f"required_evidence[{index}]"))
+
+    blocking_gates: list[str] = []
+    gates = data.get("gates") if isinstance(data.get("gates"), list) else []
+    for index, gate in enumerate(gates):
+        if not isinstance(gate, dict):
+            continue
+        for ref_index, ref in enumerate(text_items(gate.get("evidence_refs"))):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.gates[{index}].evidence_refs[{ref_index}]: {reason}")
+        status = str(gate.get("status") or "").strip().upper()
+        if gate.get("blocks_v1") is True and status in V1_COMPLETION_BLOCKING_STATUSES:
+            blocking_gates.append(str(gate.get("gate_id") or f"gates[{index}]"))
+
+    open_v1_findings: list[str] = []
+    findings = data.get("classified_findings") if isinstance(data.get("classified_findings"), list) else []
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        classification = str(finding.get("classification") or "").strip()
+        status = str(finding.get("status") or "").strip()
+        if classification not in V1_COMPLETION_FINDING_DESTINATIONS:
+            errors.append(f"{at}.classified_findings[{index}]: unknown classification")
+        if classification == "v1_blocker" and status not in {"resolved", "closed", "rejected"}:
+            open_v1_findings.append(str(finding.get("finding_id") or f"classified_findings[{index}]"))
+        for ref_index, ref in enumerate(text_items(finding.get("evidence_refs"))):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.classified_findings[{index}].evidence_refs[{ref_index}]: {reason}")
+
+    policy = data.get("finding_policy") if isinstance(data.get("finding_policy"), dict) else {}
+    if policy.get("no_open_ended_audit") is not True:
+        errors.append(f"{at}: finding policy must forbid open-ended audit")
+    if policy.get("new_findings_must_be_classified") is not True:
+        errors.append(f"{at}: new findings must be classified")
+    destinations = set(text_items(policy.get("accepted_destinations")))
+    if destinations != V1_COMPLETION_FINDING_DESTINATIONS:
+        errors.append(f"{at}: accepted destinations must be v1_blocker, vnext and not_planned")
+
+    boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append(f"{at}: requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append(f"{at}: must not embed raw private evidence")
+    if boundary.get("private_runtime_evidence_stays_local") is not True:
+        errors.append(f"{at}: private runtime evidence must stay local")
+
+    decision = str(data.get("decision") or "").strip()
+    completion_allowed = data.get("completion_claim_allowed") is True
+    scope = data.get("completion_claim_scope") if isinstance(data.get("completion_claim_scope"), dict) else {}
+    if decision == "PASS":
+        if blocking_evidence:
+            errors.append(f"{at}: PASS has blocking evidence: {', '.join(sorted(blocking_evidence))}")
+        if blocking_gates:
+            errors.append(f"{at}: PASS has blocking gates: {', '.join(sorted(blocking_gates))}")
+        if open_v1_findings:
+            errors.append(f"{at}: PASS has open v1 blockers: {', '.join(sorted(open_v1_findings))}")
+        if not completion_allowed:
+            errors.append(f"{at}: PASS requires completion_claim_allowed=true")
+        if scope.get("factory_v1_public_kernel") is not True:
+            errors.append(f"{at}: PASS requires factory_v1_public_kernel=true")
+    if decision == "BLOCKED":
+        if completion_allowed:
+            errors.append(f"{at}: BLOCKED cannot allow completion claim")
+        if scope.get("factory_v1_public_kernel") is not False:
+            errors.append(f"{at}: BLOCKED requires factory_v1_public_kernel=false")
+    for field in ("product_specific_completion", "universal_runtime_proof", "hosted_service_release"):
+        if scope.get(field) is not False:
+            errors.append(f"{at}: cannot claim {field}")
+
+    return errors
+
 
 ANNOTATION_SCHEMA_KEYWORDS = {
     "$comment",
@@ -944,6 +1066,8 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
+    if data.get("record_type") == "factory_v1_completion_gate":
+        errors.extend(validate_factory_v1_completion_gate_domain(data, at))
     if data.get("record_type") == "factory_automation_run_target":
         trigger = data.get("trigger") if isinstance(data.get("trigger"), dict) else {}
         target = data.get("target") if isinstance(data.get("target"), dict) else {}
