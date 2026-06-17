@@ -4,6 +4,7 @@
   "slice_id": "PRODUCT_SLICE_ID",
   "owner_profile": "factory-orchestrator",
   "request_type": "product_new",
+  "universal_signal_intake_ref": "templates/universal-signal-intake.json",
   "canonical_product_sot_ref": "product_sot",
   "scope_intent": "full_product",
   "complete_product_required": true,

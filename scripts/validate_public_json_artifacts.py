@@ -121,6 +121,36 @@ FACTORY_READINESS_SCORECARD_DIMENSIONS = {
     "product_analytics_success_signals",
     "autonomy_risk_human_gates",
 }
+UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS = {
+    "product_creation": {
+        "source_ledger",
+        "outcome_contract",
+        "product_sot",
+        "full_product_sot_scope_coverage",
+        "method_contract",
+        "product_creation_plan",
+        "product_implementation_readiness",
+        "sdlc_feedback_loop",
+    },
+    "feature_delivery": {"source_ledger", "outcome_contract", "method_contract", "spec_graph", "qa_plan"},
+    "bug_repair": {"source_ledger", "bug_reproduction", "diagnosis", "regression_check", "receipt_five"},
+    "incident_response": {"incident_support_plan", "severity_model", "mitigation_plan", "evidence_record", "learnback"},
+    "brownfield_discovery": {"source_ledger", "legacy_system_map", "baseline", "regression_plan", "rollback_plan"},
+    "release_promotion": {"production_readiness_plan", "promotion_ladder", "rollback_path", "monitoring_signals"},
+    "research_validation": {"specialist_research_plan", "specialist_decision_packet", "sdlc_feedback_loop"},
+    "docs_onboarding": {"user_docs_onboarding_plan", "reader_success_path", "docs_verification"},
+    "security_remediation": {"security_architecture_plan", "security_scan_packet", "review_result"},
+    "critical_integration": {"integration_contract", "dependency_gate", "contract_tests", "fallback_plan"},
+    "migration_execution": {"legacy_system_map", "migration_plan", "regression_plan", "rollback_plan"},
+    "ux_product_experience": {
+        "product_experience_plan",
+        "product_face_packet",
+        "professional_design_process",
+        "product_face_result",
+    },
+    "analytics_data": {"data_metrics_plan", "event_contract", "dashboard_health_proof", "privacy_limits"},
+    "agent_quality_change": {"agent_eval_plan", "reasoning_policy", "worker_profile_readiness", "learnback"},
+}
 
 
 def public_artifact_ref_error(ref: Any) -> str | None:
@@ -795,6 +825,86 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             errors.append(f"{at}: factory_sdlc_feedback_loop must not embed raw private evidence")
         if sovereignty.get("private_context_retained_outside_public_repo") is not True:
             errors.append(f"{at}: factory_sdlc_feedback_loop private context must stay outside the public repo")
+    if data.get("record_type") == "universal_signal_intake":
+        signal = data.get("signal") if isinstance(data.get("signal"), dict) else {}
+        source_ref = str(signal.get("signal_ref_public_safe") or "").strip()
+        reason = public_artifact_ref_error(source_ref)
+        if reason:
+            errors.append(f"{at}.signal.signal_ref_public_safe: {reason}")
+        if signal.get("sensitivity_class") == "secret":
+            errors.append(f"{at}: universal_signal_intake cannot publish secret-class signals")
+        if signal.get("raw_private_embedded") is not False:
+            errors.append(f"{at}: universal_signal_intake signal must not embed raw private evidence")
+        classification = data.get("classification") if isinstance(data.get("classification"), dict) else {}
+        if classification.get("can_start_execution") is not False:
+            errors.append(f"{at}: universal_signal_intake classification cannot allow execution directly")
+        route_class = str(classification.get("route_class") or "").strip()
+        normalization = data.get("normalization") if isinstance(data.get("normalization"), dict) else {}
+        if normalization.get("source_resolution_required") is not True:
+            errors.append(f"{at}: universal_signal_intake source_resolution_required must be true")
+        if normalization.get("no_chat_only_state") is not True:
+            errors.append(f"{at}: universal_signal_intake no_chat_only_state must be true")
+        route = data.get("route_decision") if isinstance(data.get("route_decision"), dict) else {}
+        for field in ("method_contract_ref", "sdlc_feedback_loop_ref", "factory_workflow_phase_ref", "fallback_route"):
+            route_ref = str(route.get(field) or "").strip()
+            reason = public_artifact_ref_error(route_ref)
+            if reason:
+                errors.append(f"{at}.route_decision.{field}: {reason}")
+        recovery = route.get("non_human_block_recovery") if isinstance(route.get("non_human_block_recovery"), dict) else {}
+        recovery_ref = str(recovery.get("route_ref") or "").strip()
+        reason = public_artifact_ref_error(recovery_ref)
+        if reason:
+            errors.append(f"{at}.route_decision.non_human_block_recovery.route_ref: {reason}")
+        if recovery.get("required") is not True or recovery.get("factory_owned_repair_allowed") is not True:
+            errors.append(f"{at}: universal_signal_intake non-human block must return to a factory-owned repair route")
+        retry_policy = recovery.get("retry_policy") if isinstance(recovery.get("retry_policy"), dict) else {}
+        max_attempts = retry_policy.get("max_attempts")
+        if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
+            errors.append(f"{at}: universal_signal_intake non-human recovery requires retry_policy.max_attempts >= 1")
+        artifacts = data.get("required_artifacts") if isinstance(data.get("required_artifacts"), list) else []
+        artifact_types = {
+            str(artifact.get("artifact_type") or "").strip()
+            for artifact in artifacts
+            if isinstance(artifact, dict)
+        }
+        missing_artifacts = sorted(UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS.get(route_class, set()) - artifact_types)
+        if missing_artifacts:
+            errors.append(
+                f"{at}: universal_signal_intake {route_class} route missing required artifact types: "
+                + ", ".join(missing_artifacts)
+            )
+        for index, artifact in enumerate(artifacts):
+            if not isinstance(artifact, dict):
+                continue
+            artifact_ref = str(artifact.get("artifact_ref") or "").strip()
+            reason = public_artifact_ref_error(artifact_ref)
+            if reason:
+                errors.append(f"{at}.required_artifacts[{index}].artifact_ref: {reason}")
+            artifact_type = str(artifact.get("artifact_type") or "").strip()
+            if artifact_type in UNIVERSAL_SIGNAL_ROUTE_REQUIRED_ARTIFACTS.get(route_class, set()):
+                if artifact.get("blocks_execution_when_missing") is not True:
+                    errors.append(
+                        f"{at}.required_artifacts[{index}].blocks_execution_when_missing "
+                        "must be true for required route artifact"
+                    )
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        if handoff.get("factory_owned_next_step") is not True:
+            errors.append(f"{at}: universal_signal_intake handoff.factory_owned_next_step must be true")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: universal_signal_intake requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: universal_signal_intake must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: universal_signal_intake private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: universal_signal_intake acceptance.execution_allowed must be false")
+        evidence_refs = acceptance.get("evidence_refs") if isinstance(acceptance.get("evidence_refs"), list) else []
+        for index, ref in enumerate(evidence_refs):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_automation_run_target":

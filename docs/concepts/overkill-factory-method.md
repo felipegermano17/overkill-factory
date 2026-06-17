@@ -132,6 +132,21 @@ The factory can start from:
 Every input becomes source material. Product or material product-change work
 also needs outcome and discovery before the Product SOT is treated as stable.
 
+The first contract is the universal signal intake. It classifies the signal,
+chooses a route, lists required artifacts, names gates and prevents execution
+until source, scope and recovery are explicit.
+
+| Signal | Route class | First contract |
+| --- | --- | --- |
+| Product paper or idea | Product creation | Universal signal intake + Product SOT path |
+| Bug report | Bug repair | Universal signal intake + reproduction and regression path |
+| Incident | Incident response | Universal signal intake + mitigation and support path |
+| Existing repo, migration, integration or refactor | Brownfield or migration route | Universal signal intake + baseline and rollback path |
+| Release request | Release promotion | Universal signal intake + readiness and rollback path |
+| Research request | Research validation | Universal signal intake + specialist research path |
+| UX/UI or analytics request | Product experience or data route | Universal signal intake + proof profile path |
+| Docs, security or agent change | Specialized route | Universal signal intake + domain gate path |
+
 ## Canonical Flow
 
 This is the full flow. Small work can take a lighter path, but the router must

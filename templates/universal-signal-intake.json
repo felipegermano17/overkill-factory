@@ -1,0 +1,192 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/universal-signal-intake.schema.json",
+  "record_type": "universal_signal_intake",
+  "intake_id": "universal-signal-intake-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "signal": {
+    "signal_type": "product_paper",
+    "source_class": "operator_supplied",
+    "sensitivity_class": "public_safe",
+    "freshness": "bounded",
+    "owner": "factory-orchestrator",
+    "target_surface": "complete-product-production",
+    "summary_public_safe": "Operator supplied product material must become a routed factory contract before any execution starts.",
+    "signal_ref_public_safe": "external:source-card-product-brief",
+    "raw_private_embedded": false
+  },
+  "classification": {
+    "request_type": "product_new",
+    "route_class": "product_creation",
+    "scope_intent": "full_product",
+    "risk_initial": "R2",
+    "materiality": "material",
+    "needs_product_sot": true,
+    "can_start_execution": false
+  },
+  "normalization": {
+    "source_resolution_required": true,
+    "outcome_discovery_required": true,
+    "dedupe_key": "public-template-product-paper",
+    "conflict_policy": "Conflicting or stale source claims stay blocked until source resolution assigns an owner and next action.",
+    "missing_info_policy": "Discoverable missing information is resolved by the factory; only authority, access, risk or preference gates reach the user.",
+    "no_chat_only_state": true
+  },
+  "route_decision": {
+    "method_contract_ref": "templates/method-contract.json",
+    "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
+    "factory_workflow_phase_ref": "docs/factory-workflow.catalog.json#F1",
+    "selected_method_family": "spec_first",
+    "route_reason": "A new product signal needs complete Product SOT coverage, typed planning and readiness proof before execution.",
+    "fallback_route": "If any non-human gate blocks, return to source resolution, planning repair or readiness repair instead of asking the user to operate internals.",
+    "non_human_block_recovery": {
+      "required": true,
+      "factory_owned_repair_allowed": true,
+      "route_ref": "docs/factory-workflow.catalog.json#F3",
+      "retry_policy": {
+        "max_attempts": 10,
+        "until": "the blocking gate passes or a real human authority gate is required"
+      }
+    }
+  },
+  "required_artifacts": [
+    {
+      "artifact_type": "source_ledger",
+      "artifact_ref": "templates/reference-source-registry.json",
+      "required_before": "source_resolution",
+      "owner_worker": "source-ledger-worker",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "outcome_contract",
+      "artifact_ref": "templates/vfinal-factory-card.json#outcome_contract",
+      "required_before": "product_sot",
+      "owner_worker": "product-sot-planner",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "product_sot",
+      "artifact_ref": "templates/product-sot.json",
+      "required_before": "method_contract",
+      "owner_worker": "product-sot-planner",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "full_product_sot_scope_coverage",
+      "artifact_ref": "templates/full-product-sot-scope-coverage.json",
+      "required_before": "method_contract",
+      "owner_worker": "product-sot-planner",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "method_contract",
+      "artifact_ref": "templates/method-contract.json",
+      "required_before": "ready_gate",
+      "owner_worker": "factory-orchestrator",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "product_creation_plan",
+      "artifact_ref": "templates/product-creation-plan.json",
+      "required_before": "ready_gate",
+      "owner_worker": "decomposition-planner",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "product_implementation_readiness",
+      "artifact_ref": "templates/product-implementation-readiness.json",
+      "required_before": "execution",
+      "owner_worker": "factory-orchestrator",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "sdlc_feedback_loop",
+      "artifact_ref": "templates/factory-sdlc-feedback-loop.json",
+      "required_before": "execution",
+      "owner_worker": "skill-eval-distiller",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    }
+  ],
+  "required_gates": [
+    {
+      "gate": "Source Gate",
+      "authority": "source-ledger-worker",
+      "evidence_required": ["source refs", "claim resolution"],
+      "blocks_execution_when_missing": true
+    },
+    {
+      "gate": "Product SOT Gate",
+      "authority": "product-sot-planner",
+      "evidence_required": ["approved Product SOT", "full Product SOT scope coverage"],
+      "blocks_execution_when_missing": true
+    },
+    {
+      "gate": "Method Gate",
+      "authority": "factory-orchestrator",
+      "evidence_required": ["method contract", "required workers and gates"],
+      "blocks_execution_when_missing": true
+    },
+    {
+      "gate": "Ready Gate",
+      "authority": "factory-orchestrator",
+      "evidence_required": ["product implementation readiness", "autonomy readiness"],
+      "blocks_execution_when_missing": true
+    }
+  ],
+  "required_workers": [
+    {
+      "worker_id": "factory-orchestrator",
+      "role": "route-owner",
+      "reason": "Classifies the signal and selects the method route without pushing internal routing to the user.",
+      "required_before_execution": true
+    },
+    {
+      "worker_id": "source-ledger-worker",
+      "role": "source-owner",
+      "reason": "Separates facts, inference, conflicts, stale material and gaps before Product SOT.",
+      "required_before_execution": true
+    },
+    {
+      "worker_id": "product-sot-planner",
+      "role": "product-scope-owner",
+      "reason": "Turns resolved source material into complete Product SOT scope.",
+      "required_before_execution": true
+    },
+    {
+      "worker_id": "decomposition-planner",
+      "role": "work-graph-owner",
+      "reason": "Decomposes the complete Product SOT into work units and proof requirements.",
+      "required_before_execution": true
+    }
+  ],
+  "handoff": {
+    "next_artifact": "source_ledger",
+    "next_safe_action": "Start source ledger and source resolution, then produce Product SOT before any execution route.",
+    "user_decision_required": false,
+    "factory_owned_next_step": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "operator_instance_may_hold_private_source": true
+  },
+  "acceptance": {
+    "intake_is_route_ready": true,
+    "execution_allowed": false,
+    "blocked_reason": "Intake classification is complete, but execution waits for Product SOT, method contract, readiness and gates.",
+    "evidence_refs": [
+      "schemas/universal-signal-intake.schema.json",
+      "templates/universal-signal-intake.json",
+      "docs/factory-workflow.catalog.json#F1"
+    ]
+  }
+}

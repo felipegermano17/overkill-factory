@@ -51,7 +51,23 @@ class PrepilotMasterTaskReadinessTest(unittest.TestCase):
         self.assertIn(".tmp", factory_production_readiness.DEFAULT_OUT.parts)
         self.assertIn("factory-runs", factory_production_readiness.DEFAULT_OUT.parts)
 
-        receipt = factory_production_readiness.build_readiness(created_at="2026-06-12T00:00:00Z")
+        tmp_root = ROOT / ".tmp" / "factory-runs"
+        tmp_root.mkdir(parents=True, exist_ok=True)
+        with TemporaryDirectory(dir=tmp_root) as tmp:
+            missing = Path(tmp) / "missing"
+            receipt = factory_production_readiness.build_readiness(
+                prepilot_master_path=missing / "prepilot.json",
+                runtime_status_path=missing / "runtime.json",
+                preflight_path=missing / "preflight.json",
+                control_tower_path=missing / "control-tower.json",
+                control_tower_doctor_path=missing / "control-tower-doctor.json",
+                worktree_inventory_path=missing / "worktree.json",
+                release_integration_path=missing / "release-integration.json",
+                public_worktree_path=missing / "public-worktree.json",
+                public_head_path=missing / "public-head.json",
+                public_origin_path=missing / "public-origin.json",
+                created_at="2026-06-12T00:00:00Z",
+            )
 
         self.assertEqual(receipt["result"], "BLOCKED")
         self.assertTrue(all(ref.startswith(".tmp/factory-runs/") for ref in receipt["evidence_refs"]))

@@ -464,6 +464,7 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
         contract = packet["input_contract"]
 
         self.assertEqual(contract["product_context_packet_ref"], "templates/product-context-packet.json")
+        self.assertEqual(contract["universal_signal_intake_ref"], "templates/universal-signal-intake.json")
         self.assertEqual(contract["product_creation_plan_ref"], "templates/product-creation-plan.json")
         self.assertEqual(contract["specialist_research_plan_ref"], "templates/specialist-research-plan.json")
         self.assertEqual(contract["specialist_decision_packet_ref"], "templates/specialist-decision-packet.json")

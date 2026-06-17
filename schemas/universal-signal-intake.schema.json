@@ -1,0 +1,543 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/universal-signal-intake.schema.json",
+  "title": "Overkill Factory Universal Signal Intake",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "intake_id",
+    "created_at",
+    "factory_method_version",
+    "signal",
+    "classification",
+    "normalization",
+    "route_decision",
+    "required_artifacts",
+    "required_gates",
+    "required_workers",
+    "handoff",
+    "public_private_boundary",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/universal-signal-intake.schema.json"
+    },
+    "record_type": {
+      "const": "universal_signal_intake"
+    },
+    "intake_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "signal": {
+      "type": "object",
+      "required": [
+        "signal_type",
+        "source_class",
+        "sensitivity_class",
+        "freshness",
+        "owner",
+        "target_surface",
+        "summary_public_safe",
+        "signal_ref_public_safe",
+        "raw_private_embedded"
+      ],
+      "properties": {
+        "signal_type": {
+          "enum": [
+            "product_paper",
+            "feature_idea",
+            "bug_report",
+            "customer_feedback",
+            "monitoring_alert",
+            "incident",
+            "existing_repository",
+            "prd_or_architecture",
+            "release_request",
+            "refactor_request",
+            "research_request",
+            "documentation_request",
+            "security_review_request",
+            "integration_request",
+            "migration_request",
+            "ux_ui_request",
+            "analytics_request",
+            "agent_skill_or_model_change",
+            "dependency_or_runtime_change",
+            "external_research_signal",
+            "mixed"
+          ]
+        },
+        "source_class": {
+          "enum": [
+            "operator_supplied",
+            "internal_structured",
+            "runtime_observed",
+            "external_untrusted",
+            "mixed"
+          ]
+        },
+        "sensitivity_class": {
+          "enum": [
+            "public_safe",
+            "redacted_private",
+            "private_runtime",
+            "customer_sensitive",
+            "secret"
+          ]
+        },
+        "freshness": {
+          "enum": [
+            "fresh",
+            "bounded",
+            "stale",
+            "unknown"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 3
+        },
+        "target_surface": {
+          "type": "string",
+          "minLength": 3
+        },
+        "summary_public_safe": {
+          "type": "string",
+          "minLength": 6
+        },
+        "signal_ref_public_safe": {
+          "type": "string",
+          "minLength": 3
+        },
+        "raw_private_embedded": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "classification": {
+      "type": "object",
+      "required": [
+        "request_type",
+        "route_class",
+        "scope_intent",
+        "risk_initial",
+        "materiality",
+        "needs_product_sot",
+        "can_start_execution"
+      ],
+      "properties": {
+        "request_type": {
+          "enum": [
+            "product_new",
+            "slice",
+            "feature",
+            "bug",
+            "incident",
+            "release",
+            "migration",
+            "refactor",
+            "integration",
+            "doc",
+            "security",
+            "ux_ui",
+            "data_analytics",
+            "agent_skill"
+          ]
+        },
+        "route_class": {
+          "enum": [
+            "product_creation",
+            "feature_delivery",
+            "bug_repair",
+            "incident_response",
+            "brownfield_discovery",
+            "release_promotion",
+            "research_validation",
+            "docs_onboarding",
+            "security_remediation",
+            "critical_integration",
+            "migration_execution",
+            "ux_product_experience",
+            "analytics_data",
+            "agent_quality_change"
+          ]
+        },
+        "scope_intent": {
+          "enum": [
+            "full_product",
+            "child_slice",
+            "bug",
+            "release",
+            "incident",
+            "doc",
+            "migration",
+            "integration"
+          ]
+        },
+        "risk_initial": {
+          "enum": [
+            "R0",
+            "R1",
+            "R2",
+            "R3",
+            "R4"
+          ]
+        },
+        "materiality": {
+          "enum": [
+            "tiny",
+            "bounded",
+            "material",
+            "critical"
+          ]
+        },
+        "needs_product_sot": {
+          "type": "boolean"
+        },
+        "can_start_execution": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "normalization": {
+      "type": "object",
+      "required": [
+        "source_resolution_required",
+        "outcome_discovery_required",
+        "dedupe_key",
+        "conflict_policy",
+        "missing_info_policy",
+        "no_chat_only_state"
+      ],
+      "properties": {
+        "source_resolution_required": {
+          "const": true
+        },
+        "outcome_discovery_required": {
+          "type": "boolean"
+        },
+        "dedupe_key": {
+          "type": "string",
+          "minLength": 3
+        },
+        "conflict_policy": {
+          "type": "string",
+          "minLength": 6
+        },
+        "missing_info_policy": {
+          "type": "string",
+          "minLength": 6
+        },
+        "no_chat_only_state": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "route_decision": {
+      "type": "object",
+      "required": [
+        "method_contract_ref",
+        "sdlc_feedback_loop_ref",
+        "factory_workflow_phase_ref",
+        "selected_method_family",
+        "route_reason",
+        "fallback_route",
+        "non_human_block_recovery"
+      ],
+      "properties": {
+        "method_contract_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "sdlc_feedback_loop_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "factory_workflow_phase_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "selected_method_family": {
+          "enum": [
+            "spec_first",
+            "test_first",
+            "behavior_first",
+            "discovery_first",
+            "prototype_first",
+            "legacy_diagnosis",
+            "incident_first",
+            "research_first",
+            "docs_first",
+            "security_first",
+            "design_first",
+            "analytics_first",
+            "agent_eval_first"
+          ]
+        },
+        "route_reason": {
+          "type": "string",
+          "minLength": 6
+        },
+        "fallback_route": {
+          "type": "string",
+          "minLength": 6
+        },
+        "non_human_block_recovery": {
+          "type": "object",
+          "required": [
+            "required",
+            "factory_owned_repair_allowed",
+            "route_ref",
+            "retry_policy"
+          ],
+          "properties": {
+            "required": {
+              "const": true
+            },
+            "factory_owned_repair_allowed": {
+              "const": true
+            },
+            "route_ref": {
+              "type": "string",
+              "minLength": 3
+            },
+            "retry_policy": {
+              "type": "object",
+              "required": [
+                "max_attempts",
+                "until"
+              ],
+              "properties": {
+                "max_attempts": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "until": {
+                  "type": "string",
+                  "minLength": 6
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "required_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_type",
+          "artifact_ref",
+          "required_before",
+          "owner_worker",
+          "status",
+          "blocks_execution_when_missing"
+        ],
+        "properties": {
+          "artifact_type": {
+            "type": "string",
+            "minLength": 3
+          },
+          "artifact_ref": {
+            "type": "string",
+            "minLength": 3
+          },
+          "required_before": {
+            "enum": [
+              "source_resolution",
+              "product_sot",
+              "method_contract",
+              "ready_gate",
+              "execution",
+              "verification",
+              "release",
+              "completion"
+            ]
+          },
+          "owner_worker": {
+            "type": "string",
+            "minLength": 3
+          },
+          "status": {
+            "enum": [
+              "required",
+              "planned",
+              "present",
+              "blocked",
+              "not_required"
+            ]
+          },
+          "blocks_execution_when_missing": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required_gates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "gate",
+          "authority",
+          "evidence_required",
+          "blocks_execution_when_missing"
+        ],
+        "properties": {
+          "gate": {
+            "type": "string",
+            "minLength": 3
+          },
+          "authority": {
+            "type": "string",
+            "minLength": 3
+          },
+          "evidence_required": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            }
+          },
+          "blocks_execution_when_missing": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required_workers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "worker_id",
+          "role",
+          "reason",
+          "required_before_execution"
+        ],
+        "properties": {
+          "worker_id": {
+            "type": "string",
+            "minLength": 3
+          },
+          "role": {
+            "type": "string",
+            "minLength": 3
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 6
+          },
+          "required_before_execution": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "next_artifact",
+        "next_safe_action",
+        "user_decision_required",
+        "factory_owned_next_step"
+      ],
+      "properties": {
+        "next_artifact": {
+          "type": "string",
+          "minLength": 3
+        },
+        "next_safe_action": {
+          "type": "string",
+          "minLength": 6
+        },
+        "user_decision_required": {
+          "type": "boolean"
+        },
+        "factory_owned_next_step": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo",
+        "operator_instance_may_hold_private_source"
+      ],
+      "properties": {
+        "public_safe_refs_only": {
+          "const": true
+        },
+        "raw_private_evidence_embedded": {
+          "const": false
+        },
+        "private_context_retained_outside_public_repo": {
+          "const": true
+        },
+        "operator_instance_may_hold_private_source": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "intake_is_route_ready",
+        "execution_allowed",
+        "blocked_reason",
+        "evidence_refs"
+      ],
+      "properties": {
+        "intake_is_route_ready": {
+          "type": "boolean"
+        },
+        "execution_allowed": {
+          "const": false
+        },
+        "blocked_reason": {
+          "type": "string",
+          "minLength": 6
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
