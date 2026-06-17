@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
 import subprocess
@@ -303,6 +304,44 @@ def write_route_readiness(path: Path, extra_workers: list[str] | None = None) ->
         ),
         encoding="utf-8",
     )
+
+
+def two_step_ready_work_unit_plan() -> dict[str, object]:
+    plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+    first = copy.deepcopy(plan["tasks"][0])
+    second = copy.deepcopy(plan["tasks"][0])
+
+    first["work_unit_id"] = "work-unit-001"
+    first["packet_id"] = "ready-work-unit-packet-work-unit-001"
+    first["idempotency_key"] = "overkill:test:work-unit-001"
+    first["body_contract"]["work_unit_id"] = "work-unit-001"
+    first["body_contract"]["packet_id"] = "ready-work-unit-packet-work-unit-001"
+    first["body_contract"]["dependency_refs"] = []
+    first["body_contract"]["work_unit_context_packet"]["work_unit_id"] = "work-unit-001"
+    first["body_contract"]["work_unit_context_packet"]["embedded_payloads"]["current_work_unit"]["unit_id"] = "work-unit-001"
+
+    second["work_unit_id"] = "work-unit-002"
+    second["packet_id"] = "ready-work-unit-packet-work-unit-002"
+    second["idempotency_key"] = "overkill:test:work-unit-002"
+    second["title"] = "OF ready work unit work-unit-002"
+    second["body_contract"]["work_unit_id"] = "work-unit-002"
+    second["body_contract"]["packet_id"] = "ready-work-unit-packet-work-unit-002"
+    second["body_contract"]["dependency_refs"] = ["work-unit-001"]
+    second["body_contract"]["work_unit_context_packet"]["work_unit_id"] = "work-unit-002"
+    second["body_contract"]["work_unit_context_packet"]["embedded_payloads"]["current_work_unit"]["unit_id"] = "work-unit-002"
+
+    for task in (first, second):
+        product_plan = task["body_contract"]["work_unit_context_packet"]["embedded_payloads"]["product_creation_plan"]
+        product_plan["execution_order"] = ["work-unit-001", "work-unit-002"]
+        product_plan["dependency_graph"] = [{"from": "work-unit-001", "to": "work-unit-002"}]
+        task["body_contract"]["work_unit_context_packet"]["embedded_payloads"]["current_work_unit"][
+            "dependency_refs"
+        ] = list(task["body_contract"].get("dependency_refs") or [])
+        task["work_unit_context_packet"] = task["body_contract"]["work_unit_context_packet"]
+
+    plan["tasks"] = [first, second]
+    plan["acceptance"]["task_count"] = 2
+    return plan
 
 
 def materialize_template_ready_work_unit(
@@ -667,6 +706,102 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertEqual(unblock_calls, [])
 
+    def test_release_ready_work_units_releases_only_first_dependency_wave(self) -> None:
+        fake = FakeHermes()
+        plan = two_step_ready_work_unit_plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            result = adapter.release_ready_work_units(release_args, runner=fake)
+
+        self.assertEqual(result["released_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(result["release_wave"]["eligible_work_unit_ids"], ["work-unit-001"])
+        self.assertEqual(result["release_wave"]["held_work_unit_ids"], ["work-unit-002"])
+        self.assertEqual(result["release_wave"]["dependency_blockers"], {"work-unit-002": ["work-unit-001"]})
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(len(unblock_calls), 1)
+        released_task = next(task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001")
+        held_task = next(task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-002")
+        self.assertEqual(released_task["status"], "ready")
+        self.assertEqual(held_task["status"], "blocked")
+
+    def test_release_ready_work_units_releases_downstream_after_dependency_done(self) -> None:
+        fake = FakeHermes()
+        plan = two_step_ready_work_unit_plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            upstream_task = next(
+                task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001"
+            )
+            upstream_task["status"] = "done"
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            result = adapter.release_ready_work_units(release_args, runner=fake)
+
+        self.assertEqual(result["released_ready_work_unit_task_ids"], {"work-unit-002": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(result["release_wave"]["eligible_work_unit_ids"], ["work-unit-002"])
+        self.assertEqual(result["release_wave"]["satisfied_work_unit_ids"], ["work-unit-001"])
+        self.assertEqual(result["release_wave"]["held_work_unit_ids"], [])
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(len(unblock_calls), 1)
+        released_task = next(task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-002")
+        self.assertEqual(released_task["status"], "ready")
+
     def test_release_ready_work_units_rejects_ambiguous_matching_tasks(self) -> None:
         fake = FakeHermes()
         with tempfile.TemporaryDirectory() as tmp:
@@ -689,7 +824,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 ]
             )
 
-            with self.assertRaisesRegex(RuntimeError, "expected exactly one blocked Hermes task"):
+            with self.assertRaisesRegex(RuntimeError, "expected exactly one blocked or completed Hermes task"):
                 adapter.release_ready_work_units(args, runner=fake)
 
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
