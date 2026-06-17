@@ -620,17 +620,32 @@ def task_has_unblocked_event(payload: dict[str, Any], required_markers: list[str
     if task_readback_status(payload) == "blocked":
         return False
     markers = [marker.strip().lower() for marker in (required_markers or []) if marker.strip()]
+    unblocked_event_seen = False
     for event in task_readback_events(payload):
         if isinstance(event, dict):
             event_type = str(
                 event.get("type") or event.get("event") or event.get("action") or event.get("kind") or ""
             ).strip().lower()
-            if event_type in {"unblock", "unblocked"} and all(marker in str(event).lower() for marker in markers):
-                return True
+            if event_type in {"unblock", "unblocked"}:
+                unblocked_event_seen = True
+                if not markers or all(marker in str(event).lower() for marker in markers):
+                    return True
             continue
         text = str(event).lower()
         if "unblock" not in text:
             continue
+        if all(marker in text for marker in markers):
+            return True
+    return unblocked_event_seen and history_contains_markers(payload, markers)
+
+
+def history_contains_markers(payload: dict[str, Any], markers: list[str]) -> bool:
+    if not markers:
+        return True
+    for key, _index, item in history_items(payload):
+        if key == "runs":
+            continue
+        text = json.dumps(item, ensure_ascii=True, sort_keys=True).lower() if isinstance(item, dict) else str(item).lower()
         if all(marker in text for marker in markers):
             return True
     return False
@@ -753,6 +768,19 @@ def unblock_task(
     required_readback_markers: list[str] | None = None,
     runner: Runner = default_runner,
 ) -> None:
+    if required_readback_markers:
+        run_checked(
+            hermes_kanban(
+                hermes_bin,
+                board,
+                "comment",
+                "--author",
+                "overkill-factory",
+                task_id,
+                reason,
+            ),
+            runner,
+        )
     run_checked(hermes_kanban(hermes_bin, board, "unblock", task_id, reason), runner)
     shown = run_checked(hermes_kanban(hermes_bin, board, "show", task_id, "--json"), runner)
     try:
