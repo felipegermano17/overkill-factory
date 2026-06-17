@@ -1024,6 +1024,12 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(result["release_wave"]["eligible_work_unit_ids"], ["work-unit-002"])
         self.assertEqual(result["release_wave"]["satisfied_work_unit_ids"], ["work-unit-001"])
         self.assertEqual(result["release_wave"]["held_work_unit_ids"], [])
+        queried_statuses = [
+            call[call.index("--status") + 1]
+            for call in fake.calls
+            if len(call) >= 5 and call[4] == "list" and "--status" in call
+        ]
+        self.assertEqual(sorted(set(queried_statuses)), ["blocked", "done"])
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertEqual(len(unblock_calls), 1)
         released_task = next(task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-002")
