@@ -89,6 +89,9 @@ DEFAULT_HERMES_EVIDENCE_OUT = ROOT / ".tmp" / "factory-runs" / "hermes-evidence"
 DEFAULT_PREPILOT_CHECKLIST_OUT = ROOT / ".tmp" / "factory-runs" / "prepilot" / "loose-end-checklist.json"
 DEFAULT_SIGNAL_CORPUS_PATH = ROOT / "templates" / "universal-signal-golden-corpus.json"
 DEFAULT_SIGNAL_COVERAGE_OUT = ROOT / ".tmp" / "factory-runs" / "signal-coverage" / "factory-signal-coverage-scorecard.json"
+DEFAULT_FACTORY_READINESS_SCORECARD_PATH = ROOT / "templates" / "factory-readiness-scorecard.json"
+DEFAULT_V1_COMPLETION_GATE_OUT = ROOT / ".tmp" / "factory-runs" / "v1-completion" / "factory-v1-completion-gate.json"
+DEFAULT_RELEASE_INTEGRATION_PREFLIGHT = ROOT / ".tmp" / "factory-runs" / "release" / "release-integration-preflight.json"
 PRIVATE_RUNTIME_REF_RE = re.compile(
     r"((?<![A-Za-z])[A-Za-z]:[\\/]|\\\\|/home/|/Users/|/srv/|/var/|discord(app)?\.com|webhook|token|secret|guild[_-]?id|channel[_-]?id|message[_-]?id)",
     re.IGNORECASE,
@@ -6297,6 +6300,476 @@ def validate_factory_readiness_scorecard(scorecard: dict[str, Any]) -> list[str]
     return errors
 
 
+V1_COMPLETION_BLOCKING_STATUSES = {"BLOCKED", "MISSING", "FAIL", "UNKNOWN"}
+V1_COMPLETION_FINDING_DESTINATIONS = {"v1_blocker", "vnext", "not_planned"}
+
+
+def _normalized_gate_status(value: Any) -> str:
+    status = str(value or "UNKNOWN").strip().upper()
+    return status if status in {"PASS", "BOUNDED", "BLOCKED", "MISSING", "FAIL", "UNKNOWN"} else "UNKNOWN"
+
+
+def _evidence_status_for_count(count: int, *, zero_is_pass: bool = True) -> str:
+    if count == 0 and zero_is_pass:
+        return "PASS"
+    return "BLOCKED"
+
+
+def _release_preflight_status(release_preflight: dict[str, Any] | None) -> str:
+    if release_preflight is None:
+        return "MISSING"
+    result = str(release_preflight.get("result") or "UNKNOWN").strip().upper()
+    return "PASS" if result == "PASS" else "BLOCKED"
+
+
+def _readiness_nonblocking_findings(readiness: dict[str, Any]) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    dimensions = readiness.get("dimensions") if isinstance(readiness.get("dimensions"), list) else []
+    for dimension in dimensions:
+        if not isinstance(dimension, dict):
+            continue
+        status = str(dimension.get("status") or "").strip().upper()
+        if status == "PASS":
+            continue
+        dimension_id = str(dimension.get("dimension_id") or "unknown-dimension").strip()
+        blocks = dimension.get("blocks_autonomous_execution") is True or status == "BLOCKED"
+        findings.append(
+            {
+                "finding_id": f"readiness-{dimension_id}",
+                "title": f"Readiness dimension is {status}: {dimension_id}",
+                "classification": "v1_blocker" if blocks else "vnext",
+                "status": "open",
+                "rationale": (
+                    "This dimension blocks Factory v1 closure."
+                    if blocks
+                    else "This is useful follow-up work, but it does not invalidate the Factory v1 public kernel promise."
+                ),
+                "owner": str(dimension.get("owner") or "factory-orchestrator"),
+                "evidence_refs": _list_items(dimension.get("evidence_refs")) or ["templates/factory-readiness-scorecard.json"],
+            }
+        )
+    return findings
+
+
+def _representative_signal_cases(corpus: dict[str, Any]) -> list[dict[str, Any]]:
+    cases = corpus.get("cases") if isinstance(corpus.get("cases"), list) else []
+    representative: list[dict[str, Any]] = []
+    for case in cases:
+        if not isinstance(case, dict):
+            continue
+        case_id = str(case.get("case_id") or "").strip()
+        route_class = str(case.get("route_class") or "").strip()
+        request_type = str(case.get("request_type") or "").strip()
+        signal_type = str(case.get("signal_type") or "").strip()
+        if not (case_id and route_class and request_type and signal_type):
+            continue
+        representative.append(
+            {
+                "case_id": case_id,
+                "route_class": route_class,
+                "request_type": request_type,
+                "signal_type": signal_type,
+                "classification": "v1_representative_signal",
+                "covered_by_ref": f"templates/universal-signal-golden-corpus.json#{case_id}",
+            }
+        )
+    return representative
+
+
+def _evidence_item(
+    evidence_id: str,
+    status: str,
+    evidence_ref: str,
+    *,
+    blocks_v1_when_missing: bool,
+    produced_by: str,
+    reason: str,
+) -> dict[str, Any]:
+    return {
+        "evidence_id": evidence_id,
+        "status": _normalized_gate_status(status),
+        "evidence_ref": evidence_ref,
+        "blocks_v1_when_missing": blocks_v1_when_missing,
+        "produced_by": produced_by,
+        "reason": reason,
+    }
+
+
+def _gate_item(
+    gate_id: str,
+    status: str,
+    owner: str,
+    evidence_refs: list[str],
+    *,
+    blocks_v1: bool,
+    next_action: str,
+) -> dict[str, Any]:
+    return {
+        "gate_id": gate_id,
+        "status": _normalized_gate_status(status),
+        "owner": owner,
+        "evidence_refs": evidence_refs,
+        "blocks_v1": blocks_v1,
+        "next_action": next_action,
+    }
+
+
+def build_factory_v1_completion_gate(
+    *,
+    readiness_scorecard: dict[str, Any],
+    signal_corpus: dict[str, Any],
+    release_preflight: dict[str, Any] | None,
+    github_actions_result: str,
+    open_v1_blockers: int,
+    open_prs: int,
+    target_ref: str = "external:public-origin-main",
+    created_at: str | None = None,
+    signal_coverage_ref: str = "external:public-current-signal-coverage-scorecard",
+    release_preflight_ref: str = "external:public-current-release-integration-preflight",
+    github_actions_ref: str = "external:public-current-github-actions-checks",
+    open_v1_blockers_ref: str = "external:public-current-v1-blocker-query",
+    open_prs_ref: str = "external:public-current-open-pr-query",
+) -> dict[str, Any]:
+    signal_coverage = build_factory_signal_coverage_scorecard(signal_corpus)
+    readiness_errors = validate_factory_readiness_scorecard(readiness_scorecard)
+    signal_errors = validate_factory_signal_coverage_scorecard(signal_coverage)
+    release_status = _release_preflight_status(release_preflight)
+    actions_status = _normalized_gate_status(github_actions_result)
+    blocker_status = _evidence_status_for_count(open_v1_blockers)
+    pr_status = _evidence_status_for_count(open_prs)
+    readiness_findings = _readiness_nonblocking_findings(readiness_scorecard)
+
+    route_coverage_status = "PASS" if not signal_errors and signal_coverage.get("result") == "PASS" else "BLOCKED"
+    if not readiness_findings:
+        readiness_status = "PASS"
+    elif any(item["classification"] == "v1_blocker" for item in readiness_findings):
+        readiness_status = "BLOCKED"
+    else:
+        readiness_status = "BOUNDED"
+    if readiness_errors:
+        readiness_status = "BLOCKED"
+
+    required_evidence = [
+        _evidence_item(
+            "route_registry",
+            "PASS",
+            "templates/factory-route-registry.json",
+            blocks_v1_when_missing=True,
+            produced_by="factoryctl route-registry",
+            reason="The route registry is the canonical list of known signal routes.",
+        ),
+        _evidence_item(
+            "golden_signal_corpus",
+            "PASS" if not validate_universal_signal_golden_corpus(signal_corpus) else "BLOCKED",
+            "templates/universal-signal-golden-corpus.json",
+            blocks_v1_when_missing=True,
+            produced_by="factoryctl validate-signal-corpus",
+            reason="The Golden Corpus must cover representative signals for every route.",
+        ),
+        _evidence_item(
+            "signal_coverage_scorecard",
+            route_coverage_status,
+            signal_coverage_ref,
+            blocks_v1_when_missing=True,
+            produced_by="factoryctl signal-coverage",
+            reason="Route, artifact, worker, recovery and Hermes coverage must pass.",
+        ),
+        _evidence_item(
+            "factory_readiness_scorecard",
+            readiness_status,
+            "templates/factory-readiness-scorecard.json",
+            blocks_v1_when_missing=False,
+            produced_by="factoryctl validate-readiness-scorecard",
+            reason="Non-blocking bounded dimensions can move to vNext; blocking dimensions stop v1.",
+        ),
+        _evidence_item(
+            "release_integration_preflight",
+            release_status,
+            release_preflight_ref,
+            blocks_v1_when_missing=True,
+            produced_by="scripts/release_integration_preflight.py",
+            reason="The current release ref must pass release integration preflight.",
+        ),
+        _evidence_item(
+            "github_actions",
+            actions_status,
+            github_actions_ref,
+            blocks_v1_when_missing=True,
+            produced_by="GitHub Actions",
+            reason="The current public PR or main ref must be green.",
+        ),
+        _evidence_item(
+            "open_v1_blockers",
+            blocker_status,
+            open_v1_blockers_ref,
+            blocks_v1_when_missing=True,
+            produced_by="GitHub issue query",
+            reason="Open v1 blockers keep the release open.",
+        ),
+        _evidence_item(
+            "open_prs",
+            pr_status,
+            open_prs_ref,
+            blocks_v1_when_missing=True,
+            produced_by="GitHub PR query",
+            reason="Unexpected open PRs must be integrated, closed or reclassified.",
+        ),
+    ]
+
+    gates = [
+        _gate_item(
+            "canonical_route_system",
+            route_coverage_status,
+            "factory-orchestrator",
+            ["templates/factory-route-registry.json", "templates/universal-signal-golden-corpus.json", signal_coverage_ref],
+            blocks_v1=route_coverage_status != "PASS",
+            next_action="Fix route, corpus or coverage drift before closing v1.",
+        ),
+        _gate_item(
+            "readiness_boundary",
+            readiness_status,
+            "factory-orchestrator",
+            ["templates/factory-readiness-scorecard.json"],
+            blocks_v1=readiness_status == "BLOCKED",
+            next_action="Classify non-blocking readiness work as vNext and fix blocking readiness gaps before closing v1.",
+        ),
+        _gate_item(
+            "release_integrity",
+            release_status,
+            "release-ops-worker",
+            [release_preflight_ref],
+            blocks_v1=release_status != "PASS",
+            next_action="Run and pass release integration preflight on the current ref.",
+        ),
+        _gate_item(
+            "github_publication_state",
+            "PASS" if actions_status == "PASS" and blocker_status == "PASS" and pr_status == "PASS" else "BLOCKED",
+            "factory-orchestrator",
+            [github_actions_ref, open_v1_blockers_ref, open_prs_ref],
+            blocks_v1=not (actions_status == "PASS" and blocker_status == "PASS" and pr_status == "PASS"),
+            next_action="Confirm GitHub Actions, open PRs and open v1 blockers before final closure.",
+        ),
+        _gate_item(
+            "finding_classification",
+            "BLOCKED" if any(item["classification"] == "v1_blocker" for item in readiness_findings) else "PASS",
+            "factory-orchestrator",
+            ["templates/factory-v1-completion-gate.json#finding_policy"],
+            blocks_v1=any(item["classification"] == "v1_blocker" for item in readiness_findings),
+            next_action="Every new finding must be classified as v1_blocker, vnext or not_planned.",
+        ),
+    ]
+
+    blocking_evidence = [
+        item
+        for item in required_evidence
+        if item["blocks_v1_when_missing"] and item["status"] in V1_COMPLETION_BLOCKING_STATUSES
+    ]
+    blocking_gates = [gate for gate in gates if gate["blocks_v1"]]
+    open_v1_findings = [
+        item
+        for item in readiness_findings
+        if item["classification"] == "v1_blocker" and item["status"] not in {"resolved", "closed", "rejected"}
+    ]
+    decision = "BLOCKED" if blocking_evidence or blocking_gates or open_v1_findings else "PASS"
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-v1-completion-gate.schema.json",
+        "record_type": "factory_v1_completion_gate",
+        "gate_id": "factory-v1-completion-gate-current",
+        "created_at": created_at or utc_now(),
+        "factory_method_version": "OVERKILL_VFINAL",
+        "target": {
+            "target_type": "local_validation_run",
+            "target_ref": target_ref,
+            "release_scope": "factory_v1_public_kernel",
+            "owner": "factory-orchestrator",
+        },
+        "decision": decision,
+        "completion_claim_allowed": decision == "PASS",
+        "completion_claim_scope": {
+            "factory_v1_public_kernel": decision == "PASS",
+            "product_specific_completion": False,
+            "universal_runtime_proof": False,
+            "hosted_service_release": False,
+        },
+        "required_evidence": required_evidence,
+        "route_coverage": {
+            "registry_ref": "templates/factory-route-registry.json",
+            "corpus_ref": "templates/universal-signal-golden-corpus.json",
+            "scorecard_ref": signal_coverage_ref,
+            "signal_coverage_result": str(signal_coverage.get("result") or "BLOCKED"),
+            "route_count": int(signal_coverage.get("route_count") or 0),
+            "covered_route_count": int(signal_coverage.get("covered_route_count") or 0),
+            "missing_route_classes": _list_items(signal_coverage.get("missing_route_classes")),
+        },
+        "representative_signals": _representative_signal_cases(signal_corpus),
+        "gates": gates,
+        "finding_policy": {
+            "no_open_ended_audit": True,
+            "new_findings_must_be_classified": True,
+            "accepted_destinations": ["v1_blocker", "vnext", "not_planned"],
+            "v1_blocker_definition": "The finding makes the public Factory v1 promise false, unsafe, uninstallable or unreleasable.",
+            "vnext_definition": "The finding improves the factory after v1 but does not invalidate the public Factory v1 promise.",
+            "not_planned_definition": "The finding is intentionally rejected because it adds complexity without changing the v1 promise.",
+            "reopen_v1_only_when": [
+                "public promise is false",
+                "public safety or secret boundary fails",
+                "first-value path is broken",
+                "release checks fail",
+                "known route coverage regresses",
+                "non-human recovery invariant regresses",
+            ],
+        },
+        "classified_findings": readiness_findings,
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_runtime_evidence_stays_local": True,
+        },
+        "limits": [
+            "PASS allows closing the Factory v1 public kernel, not claiming every possible product is production-proven.",
+            "Product-specific releases still need their own SOT, gates, worker evidence, human approvals and runtime proof.",
+            "Contract coverage is required but not misrepresented as universal live runtime proof.",
+            "vNext findings may remain open when they do not invalidate the Factory v1 public promise.",
+        ],
+        "next_required_actions": (
+            ["Close Factory v1 and move new non-blocking findings to vNext or not_planned."]
+            if decision == "PASS"
+            else [
+                gate["next_action"]
+                for gate in gates
+                if gate["blocks_v1"]
+            ]
+        ),
+    }
+
+
+def validate_factory_v1_completion_gate(gate: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-v1-completion-gate.schema.json")
+    if not schema:
+        return ["factory_v1_completion_gate schema is not bundled"]
+    errors.extend(validate_node(schema, gate, "factory_v1_completion_gate", schemas=schemas, root_schema=schema))
+
+    target = gate.get("target") if isinstance(gate.get("target"), dict) else {}
+    target_ref = str(target.get("target_ref") or "").strip()
+    if target_ref:
+        _validate_public_ref(target_ref, "factory_v1_completion_gate.target.target_ref", errors)
+
+    route_coverage = gate.get("route_coverage") if isinstance(gate.get("route_coverage"), dict) else {}
+    for field in ("registry_ref", "corpus_ref", "scorecard_ref"):
+        ref = str(route_coverage.get(field) or "").strip()
+        if ref:
+            _validate_public_ref(ref, f"factory_v1_completion_gate.route_coverage.{field}", errors)
+
+    expected_routes = set(registry_routes(load_route_registry()))
+    representative_signals = gate.get("representative_signals") if isinstance(gate.get("representative_signals"), list) else []
+    represented_routes = {
+        str(item.get("route_class") or "").strip()
+        for item in representative_signals
+        if isinstance(item, dict)
+    }
+    if gate.get("decision") == "PASS" and represented_routes != expected_routes:
+        missing = sorted(expected_routes - represented_routes)
+        extra = sorted(represented_routes - expected_routes)
+        if missing:
+            errors.append("factory_v1_completion_gate PASS missing representative route classes: " + ", ".join(missing))
+        if extra:
+            errors.append("factory_v1_completion_gate PASS has unknown representative route classes: " + ", ".join(extra))
+    for index, item in enumerate(representative_signals):
+        if not isinstance(item, dict):
+            continue
+        ref = str(item.get("covered_by_ref") or "").strip()
+        if ref:
+            _validate_public_ref(ref, f"factory_v1_completion_gate.representative_signals[{index}].covered_by_ref", errors)
+
+    blocking_evidence = []
+    evidence_items = gate.get("required_evidence") if isinstance(gate.get("required_evidence"), list) else []
+    for index, item in enumerate(evidence_items):
+        if not isinstance(item, dict):
+            continue
+        ref = str(item.get("evidence_ref") or "").strip()
+        if ref:
+            _validate_public_ref(ref, f"factory_v1_completion_gate.required_evidence[{index}].evidence_ref", errors)
+        status = _normalized_gate_status(item.get("status"))
+        if item.get("blocks_v1_when_missing") is True and status in V1_COMPLETION_BLOCKING_STATUSES:
+            blocking_evidence.append(str(item.get("evidence_id") or f"required_evidence[{index}]"))
+
+    blocking_gates = []
+    gates = gate.get("gates") if isinstance(gate.get("gates"), list) else []
+    for index, item in enumerate(gates):
+        if not isinstance(item, dict):
+            continue
+        _validate_lifecycle_refs(_list_items(item.get("evidence_refs")), f"factory_v1_completion_gate.gates[{index}].evidence_refs", errors)
+        status = _normalized_gate_status(item.get("status"))
+        if item.get("blocks_v1") is True and status in V1_COMPLETION_BLOCKING_STATUSES:
+            blocking_gates.append(str(item.get("gate_id") or f"gates[{index}]"))
+
+    findings = gate.get("classified_findings") if isinstance(gate.get("classified_findings"), list) else []
+    open_v1_findings = []
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        _validate_lifecycle_refs(
+            _list_items(finding.get("evidence_refs")),
+            f"factory_v1_completion_gate.classified_findings[{index}].evidence_refs",
+            errors,
+        )
+        classification = str(finding.get("classification") or "").strip()
+        status = str(finding.get("status") or "").strip()
+        if classification not in V1_COMPLETION_FINDING_DESTINATIONS:
+            errors.append(f"factory_v1_completion_gate.classified_findings[{index}] has unknown classification")
+        if classification == "v1_blocker" and status not in {"resolved", "closed", "rejected"}:
+            open_v1_findings.append(str(finding.get("finding_id") or f"classified_findings[{index}]"))
+
+    policy = gate.get("finding_policy") if isinstance(gate.get("finding_policy"), dict) else {}
+    if policy.get("no_open_ended_audit") is not True:
+        errors.append("factory_v1_completion_gate finding policy must forbid open-ended audit")
+    if policy.get("new_findings_must_be_classified") is not True:
+        errors.append("factory_v1_completion_gate new findings must be classified")
+    destinations = set(_list_items(policy.get("accepted_destinations")))
+    if destinations != V1_COMPLETION_FINDING_DESTINATIONS:
+        errors.append("factory_v1_completion_gate accepted destinations must be v1_blocker, vnext and not_planned")
+
+    boundary = gate.get("public_private_boundary") if isinstance(gate.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("factory_v1_completion_gate requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("factory_v1_completion_gate must not embed raw private evidence")
+    if boundary.get("private_runtime_evidence_stays_local") is not True:
+        errors.append("factory_v1_completion_gate private runtime evidence must stay local")
+
+    decision = str(gate.get("decision") or "").strip()
+    completion_allowed = gate.get("completion_claim_allowed") is True
+    scope = gate.get("completion_claim_scope") if isinstance(gate.get("completion_claim_scope"), dict) else {}
+    if decision == "PASS":
+        if blocking_evidence:
+            errors.append("factory_v1_completion_gate PASS has blocking evidence: " + ", ".join(sorted(blocking_evidence)))
+        if blocking_gates:
+            errors.append("factory_v1_completion_gate PASS has blocking gates: " + ", ".join(sorted(blocking_gates)))
+        if open_v1_findings:
+            errors.append("factory_v1_completion_gate PASS has open v1 blockers: " + ", ".join(sorted(open_v1_findings)))
+        if not completion_allowed:
+            errors.append("factory_v1_completion_gate PASS requires completion_claim_allowed=true")
+        if scope.get("factory_v1_public_kernel") is not True:
+            errors.append("factory_v1_completion_gate PASS requires factory_v1_public_kernel=true")
+    if decision == "BLOCKED":
+        if completion_allowed:
+            errors.append("factory_v1_completion_gate BLOCKED cannot allow completion claim")
+        if scope.get("factory_v1_public_kernel") is not False:
+            errors.append("factory_v1_completion_gate BLOCKED requires factory_v1_public_kernel=false")
+
+    if scope.get("product_specific_completion") is not False:
+        errors.append("factory_v1_completion_gate cannot claim product-specific completion")
+    if scope.get("universal_runtime_proof") is not False:
+        errors.append("factory_v1_completion_gate cannot claim universal runtime proof")
+    if scope.get("hosted_service_release") is not False:
+        errors.append("factory_v1_completion_gate cannot claim hosted service release")
+
+    return errors
+
+
 AUTOMATION_GITHUB_AUTHORITIES = {"github_pr", "release_candidate", "production_operation"}
 AUTOMATION_REPO_BOUND_AUTHORITIES = {"bounded_edit", "local_commit", "github_pr", "release_candidate", "production_operation"}
 AUTOMATION_REPO_BOUND_TARGETS = {"repo", "factory_issue", "release"}
@@ -11067,6 +11540,42 @@ def command_validate_readiness_scorecard(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_v1_completion_gate(args: argparse.Namespace) -> int:
+    release_preflight = load_optional_json(args.release_preflight)
+    gate = build_factory_v1_completion_gate(
+        readiness_scorecard=load_json_like(args.readiness_scorecard),
+        signal_corpus=load_json_like(args.signal_corpus),
+        release_preflight=release_preflight,
+        github_actions_result=args.github_actions_result,
+        open_v1_blockers=args.open_v1_blockers,
+        open_prs=args.open_prs,
+        target_ref=args.target_ref,
+        created_at=args.created_at,
+        signal_coverage_ref=args.signal_coverage_ref,
+        release_preflight_ref=args.release_preflight_ref,
+        github_actions_ref=args.github_actions_ref,
+        open_v1_blockers_ref=args.open_v1_blockers_ref,
+        open_prs_ref=args.open_prs_ref,
+    )
+    errors = validate_factory_v1_completion_gate(gate)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, gate)
+    return 0 if gate["decision"] == "PASS" else 1
+
+
+def command_validate_v1_completion_gate(args: argparse.Namespace) -> int:
+    errors = validate_factory_v1_completion_gate(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_automation_target(args: argparse.Namespace) -> int:
     errors = validate_factory_automation_run_target(load_json_like(args.path))
     if errors:
@@ -11457,6 +11966,30 @@ def build_parser() -> argparse.ArgumentParser:
     validate_factory_readiness_scorecard_parser = sub.add_parser("validate-factory-readiness-scorecard")
     validate_factory_readiness_scorecard_parser.add_argument("path", type=Path)
     validate_factory_readiness_scorecard_parser.set_defaults(func=command_validate_readiness_scorecard)
+
+    v1_completion_gate_parser = sub.add_parser(
+        "v1-completion-gate",
+        help="Build the Factory v1 finish-line gate from current public-safe release evidence.",
+    )
+    v1_completion_gate_parser.add_argument("--readiness-scorecard", type=Path, default=DEFAULT_FACTORY_READINESS_SCORECARD_PATH)
+    v1_completion_gate_parser.add_argument("--signal-corpus", type=Path, default=DEFAULT_SIGNAL_CORPUS_PATH)
+    v1_completion_gate_parser.add_argument("--release-preflight", type=Path, default=DEFAULT_RELEASE_INTEGRATION_PREFLIGHT)
+    v1_completion_gate_parser.add_argument("--github-actions-result", choices=["PASS", "FAIL", "UNKNOWN"], default="UNKNOWN")
+    v1_completion_gate_parser.add_argument("--open-v1-blockers", type=int, default=0)
+    v1_completion_gate_parser.add_argument("--open-prs", type=int, default=0)
+    v1_completion_gate_parser.add_argument("--target-ref", default="external:public-origin-main")
+    v1_completion_gate_parser.add_argument("--created-at")
+    v1_completion_gate_parser.add_argument("--signal-coverage-ref", default="external:public-current-signal-coverage-scorecard")
+    v1_completion_gate_parser.add_argument("--release-preflight-ref", default="external:public-current-release-integration-preflight")
+    v1_completion_gate_parser.add_argument("--github-actions-ref", default="external:public-current-github-actions-checks")
+    v1_completion_gate_parser.add_argument("--open-v1-blockers-ref", default="external:public-current-v1-blocker-query")
+    v1_completion_gate_parser.add_argument("--open-prs-ref", default="external:public-current-open-pr-query")
+    v1_completion_gate_parser.add_argument("--out", type=Path, default=DEFAULT_V1_COMPLETION_GATE_OUT)
+    v1_completion_gate_parser.set_defaults(func=command_v1_completion_gate)
+
+    validate_v1_completion_gate_parser = sub.add_parser("validate-v1-completion-gate")
+    validate_v1_completion_gate_parser.add_argument("path", type=Path)
+    validate_v1_completion_gate_parser.set_defaults(func=command_validate_v1_completion_gate)
 
     validate_automation_target_parser = sub.add_parser("validate-automation-target")
     validate_automation_target_parser.add_argument("path", type=Path)

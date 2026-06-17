@@ -44,6 +44,8 @@ factoryctl intake --route-class bug_repair --request-type bug --signal-type bug_
 factoryctl validate-signal-intake templates/universal-signal-intake.json
 factoryctl validate-signal-corpus templates/universal-signal-golden-corpus.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
+factoryctl v1-completion-gate --release-preflight .tmp/factory-runs/release/release-integration-preflight.json --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
+factoryctl validate-v1-completion-gate templates/factory-v1-completion-gate.json
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
 factoryctl recovery-plan --card examples/minimal-hermes-project/card.md --receipt .tmp/receipt.json --worker-results-dir .tmp/worker-results
@@ -65,6 +67,13 @@ policy and Hermes boundary. `intake` builds a valid Universal Signal Intake
 from that registry without executing work. `validate-signal-corpus` and
 `signal-coverage` prove that the public Golden Corpus covers every known route
 without treating contract coverage as production readiness.
+
+`v1-completion-gate` is the finish-line gate for the public Factory v1 kernel.
+It does not search forever for new work. It requires current release preflight,
+GitHub check state, open PR count and open v1 blocker count, then classifies
+remaining findings as `v1_blocker`, `vnext` or `not_planned`. `PASS` allows
+closing Factory v1 public kernel work; it does not claim product-specific
+completion, hosted service release or universal runtime proof.
 
 `help-next` reads the card, workflow catalog and gate report, then separates the
 factory's next action from bounded user decisions. With `--receipt` or
