@@ -1162,6 +1162,93 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "product_source_ledger":
+        for field in ("source_resolution_ref", "source_ref_public_safe"):
+            reason = public_artifact_ref_error(data.get(field))
+            if reason:
+                errors.append(f"{at}.{field}: {reason}")
+        source_signal = data.get("source_signal") if isinstance(data.get("source_signal"), dict) else {}
+        signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
+        reason = public_artifact_ref_error(signal_ref)
+        if reason:
+            errors.append(f"{at}.source_signal.signal_ref_public_safe: {reason}")
+        route_class = str(source_signal.get("route_class") or "").strip()
+        request_type = str(source_signal.get("request_type") or "").strip()
+        signal_type = str(source_signal.get("signal_type") or "").strip()
+        allowed_request_types = UNIVERSAL_SIGNAL_ROUTE_REQUEST_TYPES.get(route_class)
+        if allowed_request_types and request_type and request_type not in allowed_request_types:
+            errors.append(
+                f"{at}: product_source_ledger.source_signal.request_type is not valid "
+                f"for route_class {route_class}: {request_type}"
+            )
+        allowed_signal_types = UNIVERSAL_SIGNAL_ROUTE_SIGNAL_TYPES.get(route_class)
+        if allowed_signal_types and signal_type and signal_type not in allowed_signal_types:
+            errors.append(
+                f"{at}: product_source_ledger.source_signal.signal_type is not valid "
+                f"for route_class {route_class}: {signal_type}"
+            )
+        for index, source in enumerate(data.get("source_map", []) if isinstance(data.get("source_map"), list) else []):
+            if not isinstance(source, dict):
+                continue
+            reason = public_artifact_ref_error(source.get("source_ref_public_safe"))
+            if reason:
+                errors.append(f"{at}.source_map[{index}].source_ref_public_safe: {reason}")
+            if source.get("raw_private_embedded") is not False:
+                errors.append(f"{at}.source_map[{index}].raw_private_embedded must be false")
+        claim_classes = {
+            str(claim.get("claim_class") or "").strip()
+            for claim in data.get("claim_table", []) if isinstance(claim, dict)
+        }
+        if "fact" not in claim_classes:
+            errors.append(f"{at}: product_source_ledger requires at least one fact claim")
+        for claim_index, claim in enumerate(data.get("claim_table", []) if isinstance(data.get("claim_table"), list) else []):
+            if not isinstance(claim, dict):
+                continue
+            if claim.get("claim_class") == "conflict" and claim.get("status") == "promoted":
+                errors.append(f"{at}.claim_table[{claim_index}] cannot promote unresolved conflict claims")
+            for ref_index, ref in enumerate(claim.get("source_refs", []) if isinstance(claim.get("source_refs"), list) else []):
+                reason = public_artifact_ref_error(ref)
+                if reason:
+                    errors.append(f"{at}.claim_table[{claim_index}].source_refs[{ref_index}]: {reason}")
+        resolution_state = data.get("resolution_state") if isinstance(data.get("resolution_state"), dict) else {}
+        if resolution_state.get("source_ledger_created") is not True:
+            errors.append(f"{at}: product_source_ledger source_ledger_created must be true")
+        if resolution_state.get("no_chat_only_state") is not True:
+            errors.append(f"{at}: product_source_ledger no_chat_only_state must be true")
+        blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
+        for field in (
+            "execution_blocked_until_required_artifacts_pass",
+            "raw_private_evidence_must_stay_external",
+            "human_gate_only_for_authority_access_risk_or_preference",
+        ):
+            if blocking_rules.get(field) is not True:
+                errors.append(f"{at}.blocking_rules.{field} must be true")
+        if not isinstance(blocking_rules.get("product_sot_blocked_until_claims_reviewed"), bool):
+            errors.append(f"{at}.blocking_rules.product_sot_blocked_until_claims_reviewed must be boolean")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        next_worker = str(handoff.get("next_worker") or "").strip()
+        if handoff.get("factory_owned_next_step") is not True:
+            errors.append(f"{at}: product_source_ledger.handoff.factory_owned_next_step must be true")
+        if next_worker and next_worker not in public_worker_ids():
+            errors.append(f"{at}.handoff.next_worker must be a registered worker: {next_worker}")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: product_source_ledger requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: product_source_ledger must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: product_source_ledger private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("source_ledger_created") is not True:
+            errors.append(f"{at}: product_source_ledger acceptance.source_ledger_created must be true")
+        if acceptance.get("product_sot_generated") is not False:
+            errors.append(f"{at}: product_source_ledger must not claim Product SOT was generated")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: product_source_ledger acceptance.execution_allowed must be false")
+        for index, ref in enumerate(acceptance.get("evidence_refs", []) if isinstance(acceptance.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_v1_completion_gate":

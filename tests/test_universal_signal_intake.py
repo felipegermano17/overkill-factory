@@ -252,6 +252,98 @@ class UniversalSignalIntakeTest(unittest.TestCase):
                 self.assertFalse(packet["acceptance"]["execution_allowed"])
                 self.assertEqual(packet["blocking_rules"]["source_resolution_required"], True)
 
+    def test_product_source_ledger_from_source_resolution_is_valid(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+
+        self.assertEqual(factoryctl.validate_product_source_ledger(ledger), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(ledger, "$"), [])
+        self.assertEqual(ledger["record_type"], "product_source_ledger")
+        self.assertEqual(ledger["source_resolution_ref"], source_resolution["packet_id"])
+        self.assertEqual(ledger["handoff"]["next_artifact"], "outcome_contract")
+        self.assertEqual(ledger["handoff"]["next_worker"], "product-sot-planner")
+        self.assertFalse(ledger["acceptance"]["product_sot_generated"])
+        self.assertFalse(ledger["acceptance"]["execution_allowed"])
+
+    def test_product_source_ledger_requires_valid_source_resolution_packet(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        source_resolution["acceptance"]["execution_allowed"] = True
+
+        with self.assertRaisesRegex(ValueError, "execution_allowed"):
+            factoryctl.build_product_source_ledger(
+                source_resolution,
+                source_ref_public_safe="external:sanitized-product-brief",
+            )
+
+    def test_product_source_ledger_cli_generates_public_safe_ledger(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source_resolution_path = Path(tmpdir) / "source-resolution-packet.json"
+            out_path = Path(tmpdir) / "product-source-ledger.json"
+            source_resolution = factoryctl.build_source_resolution_packet(
+                signal_intake(),
+                intake_ref_public_safe="external:sanitized-universal-signal-intake",
+            )
+            source_resolution_path.write_text(json.dumps(source_resolution), encoding="utf-8")
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "source-ledger",
+                    "--source-resolution",
+                    str(source_resolution_path),
+                    "--source-ref",
+                    "external:sanitized-product-brief",
+                    "--out",
+                    str(out_path),
+                ]
+            )
+
+            ledger = json.loads(out_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(ledger["record_type"], "product_source_ledger")
+        self.assertEqual(factoryctl.validate_product_source_ledger(ledger), [])
+
+    def test_product_source_ledger_for_bug_route_does_not_route_to_product_sot(self) -> None:
+        intake = factoryctl.build_universal_signal_intake(
+            route_class="bug_repair",
+            request_type="bug",
+            signal_type="bug_report",
+            summary_public_safe="Representative bug signal should create source ledger without Product SOT.",
+            signal_ref_public_safe="external:sanitized-bug-signal",
+            target_surface="bug-target",
+            owner="factory-orchestrator",
+            source_class="operator_supplied",
+            sensitivity_class="public_safe",
+            freshness="fresh",
+            risk_initial="R2",
+            materiality="material",
+            created_at="2026-06-17T00:00:00+00:00",
+            intake_id="intake-bug-repair",
+        )
+        source_resolution = factoryctl.build_source_resolution_packet(
+            intake,
+            intake_ref_public_safe="external:sanitized-bug-intake",
+        )
+
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-bug-report",
+        )
+
+        self.assertFalse(ledger["source_signal"]["needs_product_sot"])
+        self.assertEqual(ledger["handoff"]["next_artifact"], "bug_reproduction")
+        self.assertNotEqual(ledger["handoff"]["next_worker"], "product-sot-planner")
+
 
 if __name__ == "__main__":
     unittest.main()
