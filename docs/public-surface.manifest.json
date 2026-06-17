@@ -24,9 +24,9 @@
   },
   "surfaces": [
     {
-      "surface_id": "visual-map-v0.1.0-html",
-      "path": "docs/visuals/overkill-factory-map-v0.1.0.html",
-      "published_url": "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html",
+      "surface_id": "visual-map-v1.0.1-html",
+      "path": "docs/visuals/overkill-factory-map-v1.0.1.html",
+      "published_url": "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
       "surface_type": "conceptual_visual_map",
       "authority_level": "conceptual_supporting_surface",
       "source_refs": [
@@ -34,6 +34,14 @@
         "agents/worker-profiles.public.json",
         "agents/hermes-profile-bindings.public.json",
         "docs/agents/factory-stage-agent-map.md",
+        "docs/factory-workflow.catalog.json",
+        "docs/concepts/factory-flow.md",
+        "docs/operations/validation-and-release.md",
+        "templates/universal-signal-intake.json",
+        "templates/product-creation-plan.json",
+        "templates/product-implementation-readiness.json",
+        "templates/professional-design-process.json",
+        "templates/product-delivery-quality-profile.json",
         "scripts/factoryctl.py"
       ],
       "claim_checks": [
@@ -52,19 +60,33 @@
         "The visual map includes two conceptual summary nodes for readiness and R4 rigor in addition to the canonical 32-stage agent map."
       ],
       "required_phrases": [
+        "Universal Signal Intake",
+        "full Product SOT scope coverage",
+        "Specialist Research Decision",
+        "Product Creation Plan",
+        "Product Implementation Readiness",
+        "professional_design_process",
+        "surface_evidence_profile",
+        "product_delivery_quality_profile",
+        "Factory v1 Completion Gate",
+        "v1 blocker",
+        "Mapa != Prova",
         "Hermes segue como fonte da verdade",
         "não provam entrega"
       ]
     },
     {
-      "surface_id": "visual-map-v0.1.0-svg",
-      "path": "docs/visuals/overkill-factory-map-v0.1.0.svg",
+      "surface_id": "visual-map-v1.0.1-svg",
+      "path": "docs/visuals/overkill-factory-map-v1.0.1.svg",
       "surface_type": "static_visual_preview",
       "authority_level": "conceptual_supporting_surface",
       "source_refs": [
         "docs/visuals/README.md",
-        "docs/visuals/overkill-factory-map-v0.1.0.html",
-        "docs/agents/factory-stage-agent-map.md"
+        "docs/visuals/overkill-factory-map-v1.0.1.html",
+        "docs/agents/factory-stage-agent-map.md",
+        "docs/factory-workflow.catalog.json",
+        "docs/concepts/factory-flow.md",
+        "docs/operations/validation-and-release.md"
       ],
       "claim_checks": [
         "metadata",
@@ -74,6 +96,10 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
+        "Universal Signal Intake",
+        "Product Creation Plan",
+        "Product Implementation Readiness",
+        "Factory v1 Completion Gate",
         "not runtime evidence",
         "not a source of truth"
       ]
@@ -85,8 +111,8 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "docs/public-surface.manifest.json",
-        "docs/visuals/overkill-factory-map-v0.1.0.html",
-        "docs/visuals/overkill-factory-map-v0.1.0.svg"
+        "docs/visuals/overkill-factory-map-v1.0.1.html",
+        "docs/visuals/overkill-factory-map-v1.0.1.svg"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -279,7 +305,7 @@
       "source_refs": [
         "docs/visuals/README.md",
         "docs/public-surface.manifest.json",
-        "docs/visuals/overkill-factory-map-v0.1.0.html"
+        "docs/visuals/overkill-factory-map-v1.0.1.html"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -291,7 +317,7 @@
         "Hermes and Receipt Five remain the source of truth"
       ],
       "expected_links": [
-        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html"
+        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html"
       ]
     },
     {
@@ -303,7 +329,7 @@
         "README.md",
         "docs/visuals/README.md",
         "docs/public-surface.manifest.json",
-        "docs/visuals/overkill-factory-map-v0.1.0.html"
+        "docs/visuals/overkill-factory-map-v1.0.1.html"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -315,7 +341,7 @@
         "Hermes and Receipt Five remain the source of truth"
       ],
       "expected_links": [
-        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html"
+        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html"
       ]
     }
   ]

@@ -51,7 +51,7 @@ class PublicSurfaceSyncTest(unittest.TestCase):
         findings = surface_sync.validate_manifest_data(mutated)
 
         self.assertIn(
-            "docs/visuals/overkill-factory-map-v0.1.0.html: manifest worker count 999 does not match registry count 40",
+            "docs/visuals/overkill-factory-map-v1.0.1.html: manifest worker count 999 does not match registry count 40",
             findings,
         )
 
@@ -77,15 +77,15 @@ class PublicSurfaceSyncTest(unittest.TestCase):
 
     def test_runtime_overclaim_is_detected(self) -> None:
         findings = surface_sync.public_doc_overclaim_findings(
-            "docs/visuals/overkill-factory-map-v0.1.0.html",
+            "docs/visuals/overkill-factory-map-v1.0.1.html",
             "The visual map is the source of truth and map proves runtime readiness.",
         )
 
         self.assertEqual(
             findings,
             [
-                "docs/visuals/overkill-factory-map-v0.1.0.html: public surface overclaims runtime authority",
-                "docs/visuals/overkill-factory-map-v0.1.0.html: public surface overclaims runtime authority",
+                "docs/visuals/overkill-factory-map-v1.0.1.html: public surface overclaims runtime authority",
+                "docs/visuals/overkill-factory-map-v1.0.1.html: public surface overclaims runtime authority",
             ],
         )
 

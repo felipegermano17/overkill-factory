@@ -11,7 +11,7 @@ Ela existe para operadores que querem agentes trabalhando de verdade, sem deixar
 chat, entusiasmo ou demo parcial virar fonte de verdade.
 
 Mapa publico:
-https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html
+https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html
 
 ## Por Que Existe
 

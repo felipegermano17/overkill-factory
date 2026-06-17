@@ -48,7 +48,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("README.pt-BR.md", readme)
         self.assertIn("Public map:", readme)
         self.assertIn(
-            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
             readme,
         )
         self.assertIn("full Product SOT scope coverage", readme)
@@ -115,7 +115,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Hermes and Receipt Five remain the source of truth",
             "fixtures/README.md",
             "ui/README.md",
-            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
             "factoryctl run minimal",
         ]:
             with self.subTest(expected=expected):
