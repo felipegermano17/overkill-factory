@@ -615,11 +615,20 @@ def pre_dispatch_activity_markers(payload: dict[str, Any]) -> list[str]:
 
 def task_has_ready_work_unit_supersession(payload: dict[str, Any]) -> bool:
     for comment in task_readback_comments(payload):
+        if str(comment.get("author") or "").strip() != READY_WORK_UNIT_RECOVERY_AUTHOR:
+            continue
         raw_body = str(comment.get("body") or comment.get("text") or comment.get("content") or "")
-        if READY_WORK_UNIT_SUPERSESSION_MARKER in raw_body:
+        try:
+            body = json.loads(raw_body)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(body, dict) and body.get("marker") == READY_WORK_UNIT_SUPERSESSION_MARKER:
             return True
     for event in task_readback_events(payload):
-        if READY_WORK_UNIT_SUPERSESSION_MARKER in str(event):
+        if not isinstance(event, dict):
+            continue
+        event_body = event.get("payload")
+        if isinstance(event_body, dict) and event_body.get("marker") == READY_WORK_UNIT_SUPERSESSION_MARKER:
             return True
     return False
 
