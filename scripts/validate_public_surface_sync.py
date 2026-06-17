@@ -43,6 +43,27 @@ def normalized(text: str) -> str:
     return " ".join(text.lower().split())
 
 
+def normalized_loose(text: str) -> str:
+    text = re.sub(r"[_\-/]+", " ", text.lower())
+    return " ".join(text.split())
+
+
+def contains_loose(text: str, term: str) -> bool:
+    return normalized_loose(term) in normalized_loose(text)
+
+
+def term_variants(value: str) -> list[str]:
+    raw = str(value).strip()
+    words = [part for part in re.split(r"[_\-/\s]+", raw) if part]
+    variants = {raw}
+    if words:
+        variants.add(" ".join(words))
+        variants.add(" ".join(part[:1].upper() + part[1:] for part in words))
+        variants.add("_".join(words))
+        variants.add("-".join(words))
+    return [item for item in variants if item]
+
+
 def repo_path(root: Path, rel: str) -> Path:
     path = root / rel
     if not path.resolve().is_relative_to(root.resolve()):
@@ -74,6 +95,23 @@ def html_stage_count(text: str) -> int | None:
     return len(re.findall(r"\\{ id: \"[^\"]+\", n:", text)) or None
 
 
+def html_stage_nodes(text: str) -> dict[str, dict[str, Any]]:
+    nodes: dict[str, dict[str, Any]] = {}
+    stage_pattern = re.compile(
+        r'\{ id: "([^"]+)", n: "([^"]+)",.*?title: "([^"]+)".*?output: \[(.*?)\]',
+        flags=re.DOTALL,
+    )
+    for match in stage_pattern.finditer(text):
+        node_id, number, title, output_blob = match.groups()
+        outputs = re.findall(r'"([^"]+)"', output_blob)
+        nodes[node_id] = {
+            "number": number,
+            "title": title,
+            "outputs": outputs,
+        }
+    return nodes
+
+
 def missing_risk_tiers(text: str) -> set[str]:
     if "R0-R4" in text:
         return set()
@@ -102,6 +140,108 @@ def source_ref_exists(root: Path, ref: str) -> bool:
     if ref.startswith(("http://", "https://", "external:", "factoryctl:")):
         return True
     return repo_path(root, ref).exists()
+
+
+def load_workflow_phases(root: Path, workflow_catalog_ref: str) -> dict[str, dict[str, Any]]:
+    catalog = load_json(repo_path(root, workflow_catalog_ref))
+    phases = catalog.get("phases", [])
+    if not isinstance(phases, list):
+        raise ValueError(f"{workflow_catalog_ref}: phases must be an array")
+    indexed: dict[str, dict[str, Any]] = {}
+    for phase in phases:
+        if isinstance(phase, dict) and phase.get("phase_id"):
+            indexed[str(phase["phase_id"])] = phase
+    return indexed
+
+
+def workflow_phase_terms(phase: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    for key in ("phase_name",):
+        value = phase.get(key)
+        if isinstance(value, str):
+            values.extend(term_variants(value))
+    for key in ("required_artifacts", "optional_artifacts", "required_gates", "required_workers"):
+        for value in phase.get(key, []):
+            if isinstance(value, str):
+                values.extend(term_variants(value))
+    return values
+
+
+def validate_map_fidelity(surface: dict[str, Any], text: str, *, root: Path) -> list[str]:
+    rel = str(surface.get("path") or "")
+    contract = surface.get("fidelity_contract")
+    if not isinstance(contract, dict):
+        return [f"{rel}: map_fidelity check requires fidelity_contract"]
+
+    findings: list[str] = []
+    workflow_catalog_ref = str(contract.get("workflow_catalog_ref") or "")
+    stage_agent_map_ref = str(contract.get("stage_agent_map_ref") or "")
+
+    for ref_name, ref in (
+        ("workflow_catalog_ref", workflow_catalog_ref),
+        ("stage_agent_map_ref", stage_agent_map_ref),
+    ):
+        if ref and not source_ref_exists(root, ref):
+            findings.append(f"{rel}: fidelity {ref_name} does not exist: {ref}")
+
+    if workflow_catalog_ref and source_ref_exists(root, workflow_catalog_ref):
+        try:
+            phases = load_workflow_phases(root, workflow_catalog_ref)
+        except ValueError as exc:
+            findings.append(f"{rel}: {exc}")
+            phases = {}
+        requested_phase_ids = [str(item) for item in contract.get("required_workflow_phase_ids", [])]
+        phase_ids = list(phases) if "__all__" in requested_phase_ids else requested_phase_ids
+        for phase_id in phase_ids:
+            phase = phases.get(str(phase_id))
+            if not phase:
+                findings.append(f"{rel}: fidelity workflow phase is missing from catalog: {phase_id}")
+                continue
+            terms = workflow_phase_terms(phase)
+            if terms and not any(contains_loose(text, term) for term in terms):
+                findings.append(
+                    f"{rel}: fidelity workflow phase {phase_id} has no derived map coverage"
+                )
+
+    for ref in contract.get("required_template_refs", []):
+        ref = str(ref)
+        if not source_ref_exists(root, ref):
+            findings.append(f"{rel}: fidelity template_ref does not exist: {ref}")
+            continue
+        stem = repo_path(root, ref).stem
+        if not any(contains_loose(text, term) for term in term_variants(stem)):
+            findings.append(f"{rel}: fidelity template_ref has no map coverage: {ref}")
+
+    for term in contract.get("required_terms", []):
+        if not contains_loose(text, str(term)):
+            findings.append(f"{rel}: missing fidelity term {term!r}")
+
+    required_nodes = contract.get("required_stage_nodes", [])
+    if required_nodes:
+        nodes = html_stage_nodes(text)
+        for required_node in required_nodes:
+            if not isinstance(required_node, dict):
+                findings.append(f"{rel}: fidelity required_stage_nodes entries must be objects")
+                continue
+            node_id = str(required_node.get("node_id") or "")
+            expected_title = str(required_node.get("title") or "")
+            actual = nodes.get(node_id)
+            if not actual:
+                findings.append(f"{rel}: fidelity stage node is missing: {node_id}")
+                continue
+            if expected_title and actual.get("title") != expected_title:
+                findings.append(
+                    f"{rel}: fidelity stage node {node_id} title {actual.get('title')!r} "
+                    f"does not match {expected_title!r}"
+                )
+            output_text = " ".join(str(item) for item in actual.get("outputs", []))
+            for term in required_node.get("required_output_terms", []):
+                if not contains_loose(output_text, str(term)):
+                    findings.append(
+                        f"{rel}: fidelity stage node {node_id} missing output term {term!r}"
+                    )
+
+    return findings
 
 
 def validate_surface(
@@ -148,6 +288,9 @@ def validate_surface(
             findings.append(f"{rel}: visual stage count {visual} does not match manifest expected_stage_count {expected_stage_count}")
         if visual is not None and visual != canonical and not surface.get("conceptual_exceptions"):
             findings.append(f"{rel}: visual stage count differs from canonical stage map without conceptual_exceptions")
+
+    if "map_fidelity" in checks:
+        findings.extend(validate_map_fidelity(surface, text, root=root))
 
     if "risk_tiers" in checks:
         missing = missing_risk_tiers(text)

@@ -85,6 +85,7 @@
                 "source_refs_exist",
                 "worker_count",
                 "stage_count",
+                "map_fidelity",
                 "risk_tiers",
                 "source_of_truth_disclaimer",
                 "no_runtime_proof_claim",
@@ -102,6 +103,42 @@
           "required_phrases": {
             "type": "array",
             "items": { "type": "string", "minLength": 3 }
+          },
+          "fidelity_contract": {
+            "type": "object",
+            "properties": {
+              "workflow_catalog_ref": { "type": "string", "minLength": 3 },
+              "stage_agent_map_ref": { "type": "string", "minLength": 3 },
+              "required_workflow_phase_ids": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 2 }
+              },
+              "required_template_refs": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "required_terms": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "required_stage_nodes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["node_id", "title"],
+                  "properties": {
+                    "node_id": { "type": "string", "minLength": 2 },
+                    "title": { "type": "string", "minLength": 3 },
+                    "required_output_terms": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 3 }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
           },
           "expected_links": {
             "type": "array",
