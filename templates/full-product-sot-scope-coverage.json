@@ -1,6 +1,9 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/full-product-sot-scope-coverage.schema.json",
   "record_type": "full_product_sot_scope_coverage",
+  "coverage_id": "full-scope-coverage-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
   "product_sot_ref": "templates/product-sot.json",
   "coverage_policy": "The Product SOT is planned as the complete product target before any execution slice starts.",
   "source_claim_resolution": [
@@ -17,7 +20,8 @@
       "status": "planned",
       "owner": "decomposition-planner",
       "work_unit_refs": ["work-unit-001"],
-      "evidence_refs": ["templates/product-creation-plan.json"]
+      "evidence_refs": ["templates/product-creation-plan.json"],
+      "next_action": "route through method contract before creating implementation work units"
     }
   ],
   "slice_policy": {
@@ -26,5 +30,32 @@
     "waiver_required_for_defer": true
   },
   "completion_rule": "Scope-accounted completion may track done, blocked, deferred-with-owner and out-of-scope requirements, but production-complete or customer-ready acceptance requires every active Product SOT requirement to be DONE unless a human-gated SOT rebaseline explicitly supersedes that scope.",
-  "evidence_refs": ["source-ledger.md"]
+  "evidence_refs": ["templates/product-sot.json", "source-ledger.md"],
+  "blocking_rules": {
+    "product_sot_required": true,
+    "every_requirement_accounted": true,
+    "scope_reduction_forbidden": true,
+    "execution_blocked_until_method_readiness_and_gates_pass": true,
+    "raw_private_evidence_must_stay_external": true
+  },
+  "handoff": {
+    "next_artifact": "method_contract",
+    "next_worker": "factory-orchestrator",
+    "next_safe_action": "Create method contract before planning, work units or execution.",
+    "user_decision_required": false,
+    "factory_owned_next_step": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  },
+  "acceptance": {
+    "full_scope_coverage_created": true,
+    "execution_allowed": false,
+    "scope_reduction_detected": false,
+    "requirements_accounted": 1,
+    "blocked_reason": "Full Product SOT scope coverage exists, but execution remains blocked until method contract, planning, readiness and gates pass.",
+    "evidence_refs": ["templates/full-product-sot-scope-coverage.json", "templates/product-sot.json"]
+  }
 }

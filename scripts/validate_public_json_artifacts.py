@@ -1399,6 +1399,105 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "full_product_sot_scope_coverage":
+        reason = public_artifact_ref_error(data.get("product_sot_ref"))
+        if reason:
+            errors.append(f"{at}.product_sot_ref: {reason}")
+        for field in ("coverage_policy", "completion_rule"):
+            if PRIVATE_MARKERS.search(str(data.get(field) or "")):
+                errors.append(f"{at}.{field}: private local or runtime marker")
+        source_claims = data.get("source_claim_resolution") if isinstance(data.get("source_claim_resolution"), list) else []
+        if not source_claims:
+            errors.append(f"{at}: full_product_sot_scope_coverage requires source_claim_resolution")
+        for index, item in enumerate(source_claims):
+            if not isinstance(item, dict):
+                continue
+            for field in ("claim_ref", "authority_ref"):
+                reason = public_artifact_ref_error(item.get(field))
+                if reason:
+                    errors.append(f"{at}.source_claim_resolution[{index}].{field}: {reason}")
+            if PRIVATE_MARKERS.search(str(item.get("rationale") or "")):
+                errors.append(f"{at}.source_claim_resolution[{index}].rationale: private local or runtime marker")
+        requirements = data.get("requirement_coverage") if isinstance(data.get("requirement_coverage"), list) else []
+        if not requirements:
+            errors.append(f"{at}: full_product_sot_scope_coverage requires requirement_coverage")
+        seen_requirements: set[str] = set()
+        for index, item in enumerate(requirements):
+            if not isinstance(item, dict):
+                continue
+            requirement_ref = str(item.get("requirement_ref") or "").strip()
+            if requirement_ref:
+                if requirement_ref in seen_requirements:
+                    errors.append(f"{at}.requirement_coverage[{index}].requirement_ref is duplicated")
+                seen_requirements.add(requirement_ref)
+                reason = public_artifact_ref_error(requirement_ref)
+                if reason:
+                    errors.append(f"{at}.requirement_coverage[{index}].requirement_ref: {reason}")
+            blocker_id = str(item.get("blocker_id") or "").strip()
+            if item.get("status") in {"blocked", "human_decision_required"} and not blocker_id:
+                errors.append(f"{at}.requirement_coverage[{index}]: blocked/human decision requires blocker_id")
+            if blocker_id:
+                reason = public_artifact_ref_error(blocker_id)
+                if reason:
+                    errors.append(f"{at}.requirement_coverage[{index}].blocker_id: {reason}")
+            owner = str(item.get("owner") or "").strip()
+            if owner and owner not in public_worker_ids():
+                errors.append(f"{at}.requirement_coverage[{index}].owner must be a registered worker: {owner}")
+            for field in ("work_unit_refs", "evidence_refs"):
+                refs = item.get(field) if isinstance(item.get(field), list) else []
+                for ref_index, ref in enumerate(refs):
+                    reason = public_artifact_ref_error(ref)
+                    if reason:
+                        errors.append(f"{at}.requirement_coverage[{index}].{field}[{ref_index}]: {reason}")
+            if PRIVATE_MARKERS.search(str(item.get("next_action") or "")):
+                errors.append(f"{at}.requirement_coverage[{index}].next_action: private local or runtime marker")
+        slice_policy = data.get("slice_policy") if isinstance(data.get("slice_policy"), dict) else {}
+        if slice_policy.get("scope_reduction_forbidden") is not True:
+            errors.append(f"{at}.slice_policy.scope_reduction_forbidden must be true")
+        if slice_policy.get("slices_are_order_only") is not True:
+            errors.append(f"{at}.slice_policy.slices_are_order_only must be true")
+        for index, ref in enumerate(data.get("evidence_refs", []) if isinstance(data.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.evidence_refs[{index}]: {reason}")
+        blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
+        for field in (
+            "product_sot_required",
+            "every_requirement_accounted",
+            "scope_reduction_forbidden",
+            "execution_blocked_until_method_readiness_and_gates_pass",
+            "raw_private_evidence_must_stay_external",
+        ):
+            if blocking_rules.get(field) is not True:
+                errors.append(f"{at}.blocking_rules.{field} must be true")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        if handoff.get("next_artifact") != "method_contract":
+            errors.append(f"{at}.handoff.next_artifact must be method_contract")
+        if handoff.get("factory_owned_next_step") is not True:
+            errors.append(f"{at}: full_product_sot_scope_coverage.handoff.factory_owned_next_step must be true")
+        next_worker = str(handoff.get("next_worker") or "").strip()
+        if next_worker and next_worker not in public_worker_ids():
+            errors.append(f"{at}.handoff.next_worker must be a registered worker: {next_worker}")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: full_product_sot_scope_coverage requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: full_product_sot_scope_coverage must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: full_product_sot_scope_coverage private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("full_scope_coverage_created") is not True:
+            errors.append(f"{at}: full_product_sot_scope_coverage acceptance.full_scope_coverage_created must be true")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: full_product_sot_scope_coverage acceptance.execution_allowed must be false")
+        if acceptance.get("scope_reduction_detected") is not False:
+            errors.append(f"{at}: full_product_sot_scope_coverage acceptance.scope_reduction_detected must be false")
+        if acceptance.get("requirements_accounted") != len(requirements):
+            errors.append(f"{at}: full_product_sot_scope_coverage acceptance.requirements_accounted must match requirement_coverage length")
+        for index, ref in enumerate(acceptance.get("evidence_refs", []) if isinstance(acceptance.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_v1_completion_gate":
