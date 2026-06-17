@@ -8606,8 +8606,19 @@ def validate_ready_work_unit_packet_manifest(manifest: dict[str, Any]) -> list[s
         context_boundary = packet.get("context_boundary") if isinstance(packet.get("context_boundary"), dict) else {}
         allowed_context_refs = _list_items(context_boundary.get("allowed_context_refs"))
         forbidden_context_refs = _list_items(context_boundary.get("forbidden_context_refs"))
+        context_ref_conflicts = sorted(set(allowed_context_refs).intersection(forbidden_context_refs))
+        block_owner = str(context_boundary.get("block_owner") or "").strip()
         if not allowed_context_refs:
             errors.append(f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.allowed_context_refs must not be empty")
+        if context_ref_conflicts:
+            errors.append(
+                f"ready_work_unit_packet_manifest.packets[{index}].context_boundary refs cannot be both allowed and forbidden: "
+                + ", ".join(context_ref_conflicts)
+            )
+        if block_owner != owner:
+            errors.append(
+                f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.block_owner must match owner_worker"
+            )
         _validate_lifecycle_refs(
             allowed_context_refs,
             f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.allowed_context_refs",
@@ -8943,6 +8954,17 @@ def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -
             )
         task_allowed_context_refs = _list_items(task_context_boundary.get("allowed_context_refs"))
         task_forbidden_context_refs = _list_items(task_context_boundary.get("forbidden_context_refs"))
+        task_context_ref_conflicts = sorted(set(task_allowed_context_refs).intersection(task_forbidden_context_refs))
+        task_block_owner = str(task_context_boundary.get("block_owner") or "").strip()
+        if task_context_ref_conflicts:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary refs cannot be both allowed and forbidden: "
+                + ", ".join(task_context_ref_conflicts)
+            )
+        if task_block_owner != owner:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary.block_owner must match owner_worker"
+            )
         _validate_lifecycle_refs(
             task_allowed_context_refs,
             f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary.allowed_context_refs",
