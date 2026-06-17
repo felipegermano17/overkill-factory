@@ -8321,6 +8321,40 @@ def _ready_work_unit_dependency_refs(plan: dict[str, Any], work_unit_id: str) ->
     return _dedupe_preserve_order(refs)
 
 
+def _ready_work_unit_context_boundary(
+    *,
+    plan_ref: str,
+    readiness_ref: str,
+    unit: dict[str, Any],
+    dependency_refs: list[str],
+    forbidden_context_refs: list[str] | None,
+) -> dict[str, Any]:
+    allowed_context_refs = _dedupe_preserve_order(
+        [
+            plan_ref,
+            readiness_ref,
+            *_list_items(unit.get("product_sot_requirement_refs")),
+            *dependency_refs,
+            *_list_items(unit.get("capability_profile_refs")),
+        ]
+    )
+    return {
+        "allowed_context_refs": allowed_context_refs,
+        "forbidden_context_refs": _dedupe_preserve_order(forbidden_context_refs or []),
+        "workspace_search_policy": "bounded_refs_only",
+        "broad_repo_search_allowed": False,
+        "missing_context_action": "BLOCK_WITH_OWNER",
+        "context_drift_action": "BLOCK_AND_REPORT",
+        "block_owner": str(unit.get("owner_worker") or "").strip(),
+        "operator_action_required_for_missing_context": False,
+        "worker_instruction": (
+            "Use only the named allowed_context_refs and artifacts produced for this work_unit_id. "
+            "If required context is missing, stale, forbidden or ambiguous, block with owner instead "
+            "of searching unrelated repository history."
+        ),
+    }
+
+
 def build_ready_work_unit_packet_manifest(
     product_creation_plan: dict[str, Any],
     product_implementation_readiness: dict[str, Any],
@@ -8329,6 +8363,7 @@ def build_ready_work_unit_packet_manifest(
     manifest_id: str | None = None,
     product_creation_plan_ref: str | None = None,
     product_implementation_readiness_ref: str | None = None,
+    forbidden_context_refs: list[str] | None = None,
 ) -> dict[str, Any]:
     plan_errors = validate_product_creation_plan(product_creation_plan)
     if plan_errors:
@@ -8408,6 +8443,7 @@ def build_ready_work_unit_packet_manifest(
     for work_unit_id in ready_unit_ids:
         unit = work_units[work_unit_id]
         packet_id = f"ready-work-unit-packet-{slug_for_ref(work_unit_id)}"
+        dependency_refs = _ready_work_unit_dependency_refs(product_creation_plan, work_unit_id)
         packet = {
             "packet_id": packet_id,
             "packet_type": "ready_work_unit_execution_request",
@@ -8423,7 +8459,7 @@ def build_ready_work_unit_packet_manifest(
             "expected_result": str(unit.get("expected_result") or "").strip(),
             "proof_ids_required": _list_items(unit.get("proof_ids_required")),
             "product_sot_requirement_refs": _list_items(unit.get("product_sot_requirement_refs")),
-            "dependency_refs": _ready_work_unit_dependency_refs(product_creation_plan, work_unit_id),
+            "dependency_refs": dependency_refs,
             "capability_profile_refs": _list_items(unit.get("capability_profile_refs")),
             "ready_rules": _list_items(unit.get("ready_rules")),
             "blocked_when": _list_items(unit.get("blocked_when")),
@@ -8439,6 +8475,13 @@ def build_ready_work_unit_packet_manifest(
                 "required_proof_ids": _list_items(unit.get("proof_ids_required")),
                 "reviewer_role": str(unit.get("reviewer_role") or "").strip(),
             },
+            "context_boundary": _ready_work_unit_context_boundary(
+                plan_ref=plan_ref,
+                readiness_ref=readiness_ref,
+                unit=unit,
+                dependency_refs=dependency_refs,
+                forbidden_context_refs=forbidden_context_refs,
+            ),
             "hermes_materialization": {
                 "recommended_initial_status": "blocked",
                 "block_event_required_before_dispatch": True,
@@ -8559,6 +8602,41 @@ def validate_ready_work_unit_packet_manifest(manifest: dict[str, Any]) -> list[s
         if receipt.get("complete_product_claim_allowed") is not False:
             errors.append(
                 f"ready_work_unit_packet_manifest.packets[{index}].receipt_five_contract.complete_product_claim_allowed must be false"
+            )
+        context_boundary = packet.get("context_boundary") if isinstance(packet.get("context_boundary"), dict) else {}
+        allowed_context_refs = _list_items(context_boundary.get("allowed_context_refs"))
+        forbidden_context_refs = _list_items(context_boundary.get("forbidden_context_refs"))
+        if not allowed_context_refs:
+            errors.append(f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.allowed_context_refs must not be empty")
+        _validate_lifecycle_refs(
+            allowed_context_refs,
+            f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.allowed_context_refs",
+            errors,
+        )
+        _validate_lifecycle_refs(
+            forbidden_context_refs,
+            f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.forbidden_context_refs",
+            errors,
+        )
+        if context_boundary.get("workspace_search_policy") != "bounded_refs_only":
+            errors.append(
+                f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.workspace_search_policy must be bounded_refs_only"
+            )
+        if context_boundary.get("broad_repo_search_allowed") is not False:
+            errors.append(
+                f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.broad_repo_search_allowed must be false"
+            )
+        if context_boundary.get("missing_context_action") != "BLOCK_WITH_OWNER":
+            errors.append(
+                f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.missing_context_action must be BLOCK_WITH_OWNER"
+            )
+        if context_boundary.get("context_drift_action") != "BLOCK_AND_REPORT":
+            errors.append(
+                f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.context_drift_action must be BLOCK_AND_REPORT"
+            )
+        if context_boundary.get("operator_action_required_for_missing_context") is not False:
+            errors.append(
+                f"ready_work_unit_packet_manifest.packets[{index}].context_boundary.operator_action_required_for_missing_context must be false"
             )
         materialization = (
             packet.get("hermes_materialization")
@@ -8689,6 +8767,7 @@ def build_ready_work_unit_hermes_materialization_plan(
             "dependency_refs": _list_items(packet.get("dependency_refs")),
             "proof_ids_required": _list_items(packet.get("proof_ids_required")),
             "receipt_five_contract": copy.deepcopy(packet.get("receipt_five_contract") or {}),
+            "context_boundary": copy.deepcopy(packet.get("context_boundary") or {}),
             "runtime_refs": {
                 "hermes_board_ref": f"hermes:{board_slug}",
                 "hermes_task_ref": "external:pending-hermes-task",
@@ -8856,6 +8935,40 @@ def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -
         body_contract = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
         if body_contract.get("packet_type") != "ready_work_unit_execution_request":
             errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].body_contract must be a ready work-unit packet")
+        task_context_boundary = task.get("context_boundary") if isinstance(task.get("context_boundary"), dict) else {}
+        body_context_boundary = body_contract.get("context_boundary") if isinstance(body_contract.get("context_boundary"), dict) else {}
+        if task_context_boundary != body_context_boundary:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary must match body_contract.context_boundary"
+            )
+        task_allowed_context_refs = _list_items(task_context_boundary.get("allowed_context_refs"))
+        task_forbidden_context_refs = _list_items(task_context_boundary.get("forbidden_context_refs"))
+        _validate_lifecycle_refs(
+            task_allowed_context_refs,
+            f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary.allowed_context_refs",
+            errors,
+        )
+        _validate_lifecycle_refs(
+            task_forbidden_context_refs,
+            f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary.forbidden_context_refs",
+            errors,
+        )
+        if task_context_boundary.get("workspace_search_policy") != "bounded_refs_only":
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary.workspace_search_policy must be bounded_refs_only"
+            )
+        if task_context_boundary.get("broad_repo_search_allowed") is not False:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary.broad_repo_search_allowed must be false"
+            )
+        if task_context_boundary.get("missing_context_action") != "BLOCK_WITH_OWNER":
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary.missing_context_action must be BLOCK_WITH_OWNER"
+            )
+        if not task_allowed_context_refs:
+            errors.append(
+                f"ready_work_unit_hermes_materialization_plan.tasks[{index}].context_boundary.allowed_context_refs must not be empty"
+            )
         create_policy = task.get("create_policy") if isinstance(task.get("create_policy"), dict) else {}
         if create_policy.get("create_without_dispatch") is not True:
             errors.append(
@@ -14758,6 +14871,7 @@ def command_ready_work_unit_packets(args: argparse.Namespace) -> int:
                 args.product_implementation_readiness,
                 "product-implementation-readiness",
             ),
+            forbidden_context_refs=args.forbidden_context_ref,
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
@@ -15398,6 +15512,12 @@ def build_parser() -> argparse.ArgumentParser:
     ready_work_unit_packets_parser.add_argument("--product-implementation-readiness", type=Path, required=True)
     ready_work_unit_packets_parser.add_argument("--created-at")
     ready_work_unit_packets_parser.add_argument("--manifest-id")
+    ready_work_unit_packets_parser.add_argument(
+        "--forbidden-context-ref",
+        action="append",
+        default=[],
+        help="Public-safe context ref that worker packets must not inspect; repeatable.",
+    )
     ready_work_unit_packets_parser.add_argument("--out", type=Path, required=True)
     ready_work_unit_packets_parser.set_defaults(func=command_ready_work_unit_packets)
 

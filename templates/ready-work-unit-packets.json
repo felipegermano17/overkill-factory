@@ -62,6 +62,22 @@
         "required_proof_ids": ["generic.scope-fit"],
         "reviewer_role": "independent-reviewer"
       },
+      "context_boundary": {
+        "allowed_context_refs": [
+          "templates/product-creation-plan.json",
+          "templates/product-implementation-readiness.json",
+          "product-sot#scope-in-001",
+          "agents/hermes-profile-bindings.public.json#implementation-worker"
+        ],
+        "forbidden_context_refs": [],
+        "workspace_search_policy": "bounded_refs_only",
+        "broad_repo_search_allowed": false,
+        "missing_context_action": "BLOCK_WITH_OWNER",
+        "context_drift_action": "BLOCK_AND_REPORT",
+        "block_owner": "implementation-worker",
+        "operator_action_required_for_missing_context": false,
+        "worker_instruction": "Use only the named allowed_context_refs and artifacts produced for this work_unit_id. If required context is missing, stale, forbidden or ambiguous, block with owner instead of searching unrelated repository history."
+      },
       "hermes_materialization": {
         "recommended_initial_status": "blocked",
         "block_event_required_before_dispatch": true,
