@@ -89,6 +89,27 @@ If it fails, compare the tested Hermes commit and your local Hermes version.
 Treat that as adapter drift and run focused Hermes tests after rebasing the
 patch.
 
+## Ready Work Unit Was Claimed Too Early
+
+If a ready work-unit task has `claimed`, `spawned`, `running` or run history
+before its dependency wave was legally released, keep it blocked. Do not unblock
+or complete it manually.
+
+Run:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py recover-ready-work-units \
+  --plan <ready-work-unit-hermes-plan.json> \
+  --materialization-result <live-ready-work-unit-materialization-result.json> \
+  --route-readiness <route-readiness.json>
+```
+
+That produces a deterministic recovery plan. Add `--create-replacements` only
+when you want the adapter to mark the contaminated task superseded and create a
+clean blocked replacement through the same no-spawn protocol. Product completion
+remains forbidden until the replacement produces clean worker results, review
+and Receipt Five evidence.
+
 ## Discord Shows Progress But Repo Evidence Is Missing
 
 Trust the repo evidence. Discord is only a cockpit. Rebuild the missing worker
