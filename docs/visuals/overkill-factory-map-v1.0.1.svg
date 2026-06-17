@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
   <title id="title">Overkill Factory visual map</title>
-  <desc id="desc">Static preview of the Overkill Factory production line from source intake to Product SOT, gates, execution, proof, release and learnback.</desc>
-  <metadata id="overkill-public-surface-metadata">{"surface_id":"visual-map-v0.1.0-svg","manifest_ref":"docs/public-surface.manifest.json","authority_level":"conceptual_supporting_surface","source_refs":["docs/visuals/README.md","docs/visuals/overkill-factory-map-v0.1.0.html","docs/agents/factory-stage-agent-map.md"],"claim_checks":["risk_tiers","source_of_truth_disclaimer","no_runtime_proof_claim"]}</metadata>
+  <desc id="desc">Static preview of the Overkill Factory production line from Universal Signal Intake to Product SOT, Product Creation Plan, Product Implementation Readiness, execution, proof, release and learnback.</desc>
+  <metadata id="overkill-public-surface-metadata">{"surface_id":"visual-map-v1.0.1-svg","manifest_ref":"docs/public-surface.manifest.json","authority_level":"conceptual_supporting_surface","source_refs":["docs/visuals/README.md","docs/visuals/overkill-factory-map-v1.0.1.html","docs/agents/factory-stage-agent-map.md","docs/factory-workflow.catalog.json","docs/concepts/factory-flow.md","docs/operations/validation-and-release.md"],"claim_checks":["risk_tiers","source_of_truth_disclaimer","no_runtime_proof_claim"]}</metadata>
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
       <stop offset="0" stop-color="#151514"/>
@@ -36,26 +36,26 @@
   <path d="M64 115 H1216" stroke="url(#rail)" stroke-width="5" stroke-linecap="round"/>
 
   <text x="64" y="85" class="label big">Overkill Factory</text>
-  <text x="430" y="82" class="muted small">visual map v0.1.0</text>
-  <text x="64" y="136" class="body mid">A public onboarding map for the factory line. It explains the flow; executable contracts remain authoritative.</text>
+  <text x="430" y="82" class="muted small">visual map v1.0.1</text>
+  <text x="64" y="136" class="body mid">A public onboarding map for the current v1 factory line. It explains the flow; executable contracts remain authoritative.</text>
 
   <g transform="translate(64 175)">
     <rect width="216" height="92" rx="12" fill="#22302d" stroke="#74aaa3" filter="url(#shadow)"/>
     <text x="18" y="30" class="muted tiny">01-05</text>
     <text x="18" y="56" class="node-title">Truth Before Work</text>
-    <text x="18" y="78" class="node-mini">source - outcome - SOT</text>
+    <text x="18" y="78" class="node-mini">intake - source - full SOT</text>
   </g>
   <g transform="translate(300 175)">
     <rect width="216" height="92" rx="12" fill="#292633" stroke="#a89bdb" filter="url(#shadow)"/>
     <text x="18" y="30" class="muted tiny">06-15</text>
     <text x="18" y="56" class="node-title">Method And Plans</text>
-    <text x="18" y="78" class="node-mini">router - packs - specs</text>
+    <text x="18" y="78" class="node-mini">router - research - creation plan</text>
   </g>
   <g transform="translate(536 175)">
     <rect width="216" height="92" rx="12" fill="#33281f" stroke="#e19b63" filter="url(#shadow)"/>
     <text x="18" y="30" class="muted tiny">09, 16-19, 34</text>
     <text x="18" y="56" class="node-title">Risk And Authority</text>
-    <text x="18" y="78" class="node-mini">R0-R4 - gates - human</text>
+    <text x="18" y="78" class="node-mini">R0-R4 - readiness - human</text>
   </g>
   <g transform="translate(772 175)">
     <rect width="216" height="92" rx="12" fill="#202b34" stroke="#79a9d4" filter="url(#shadow)"/>
@@ -80,11 +80,11 @@
   <g transform="translate(64 327)">
     <rect width="540" height="274" rx="16" fill="#181817" stroke="#39352f"/>
     <text x="26" y="42" class="label mid">What the map makes visible</text>
-    <text x="26" y="82" class="body small">1. A raw request does not become execution until sources and outcome are clear.</text>
-    <text x="26" y="120" class="body small">2. Method, product surface, security, data and evals are routed before work starts.</text>
-    <text x="26" y="158" class="body small">3. R0-R4 gates decide authority, review, rollback and human approval strength.</text>
-    <text x="26" y="196" class="body small">4. Hermes runs worker cards, but completion requires evidence and Receipt Five.</text>
-    <text x="26" y="234" class="body small">5. Release is followed by monitoring, support, learnback and maturity audit.</text>
+    <text x="26" y="82" class="body small">1. Universal Signal Intake normalizes paper, bug, idea, repo, incident or product.</text>
+    <text x="26" y="120" class="body small">2. Product SOT and full scope coverage prevent hidden MVP shrinkage.</text>
+    <text x="26" y="158" class="body small">3. Product Creation Plan and Experience Gate turn SOT into work units and proof.</text>
+    <text x="26" y="196" class="body small">4. Product Implementation Readiness blocks execution until authority and proof align.</text>
+    <text x="26" y="234" class="body small">5. Factory v1 Completion Gate classifies gaps as v1 blocker, vNext or not planned.</text>
   </g>
 
   <g transform="translate(646 327)">
@@ -92,10 +92,10 @@
     <text x="28" y="42" class="label mid">Public boundary</text>
     <text x="28" y="82" class="body small">This SVG is an onboarding preview of the interactive HTML guide.</text>
     <text x="28" y="120" class="body small">It is not runtime evidence, not an approval record and not a source of truth.</text>
-    <text x="28" y="158" class="body small">Use it to understand the factory; use scripts, schemas, tests and Hermes state</text>
-    <text x="28" y="184" class="body small">to prove whether a real card is ready, blocked, complete or releasable.</text>
+    <text x="28" y="158" class="body small">Use it to understand the factory; use scripts, schemas, tests, Receipt Five and</text>
+    <text x="28" y="184" class="body small">Hermes state to prove whether a real card is ready, blocked, complete or releasable.</text>
     <rect x="28" y="216" width="330" height="36" rx="8" fill="#252520" stroke="#454139"/>
-    <text x="45" y="240" class="muted tiny">docs/visuals/overkill-factory-map-v0.1.0.html</text>
+    <text x="45" y="240" class="muted tiny">docs/visuals/overkill-factory-map-v1.0.1.html</text>
   </g>
 
   <text x="64" y="646" class="muted tiny">Static preview for GitHub README. Open the HTML from the docs site or a local checkout for keyboard navigation and step details.</text>

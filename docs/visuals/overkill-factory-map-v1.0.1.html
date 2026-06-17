@@ -6,7 +6,7 @@
 <title>Overkill Factory</title>
 <script type="application/json" id="overkill-public-surface-metadata">
 {
-  "surface_id": "visual-map-v0.1.0-html",
+  "surface_id": "visual-map-v1.0.1-html",
   "manifest_ref": "docs/public-surface.manifest.json",
   "authority_level": "conceptual_supporting_surface",
   "source_refs": [
@@ -14,6 +14,14 @@
     "agents/worker-profiles.public.json",
     "agents/hermes-profile-bindings.public.json",
     "docs/agents/factory-stage-agent-map.md",
+    "docs/factory-workflow.catalog.json",
+    "docs/concepts/factory-flow.md",
+    "docs/operations/validation-and-release.md",
+    "templates/universal-signal-intake.json",
+    "templates/product-creation-plan.json",
+    "templates/product-implementation-readiness.json",
+    "templates/professional-design-process.json",
+    "templates/product-delivery-quality-profile.json",
     "scripts/factoryctl.py"
   ],
   "claim_checks": ["worker_count", "stage_count", "risk_tiers", "source_of_truth_disclaimer", "no_runtime_proof_claim"]
@@ -844,11 +852,11 @@
   <header class="topbar">
     <div class="brand">
       <h1>Overkill Factory</h1>
-      <span class="version-badge">v0.1.0</span>
+      <span class="version-badge">v1.0.1</span>
       <span class="step-control" aria-label="Navegação por etapas">
         <button class="step-btn" id="prevStage" type="button" title="Etapa anterior" aria-label="Etapa anterior" aria-keyshortcuts="ArrowLeft ArrowUp">←</button>
         <button class="step-btn" id="nextStage" type="button" title="Próxima etapa" aria-label="Próxima etapa" aria-keyshortcuts="ArrowRight ArrowDown">→</button>
-        <span class="stage-state" id="stageState" aria-live="polite">01/33 · Entrada</span>
+        <span class="stage-state" id="stageState" aria-live="polite">01/33 · Universal Signal Intake</span>
       </span>
     </div>
     <nav class="chips" id="chips" aria-label="Visões do mapa">
@@ -900,9 +908,9 @@
     </section>
 
     <section class="panel" id="detail" aria-live="polite" role="region" aria-labelledby="dTitle">
-      <h2 id="dTitle">Entrada do Pedido</h2>
+      <h2 id="dTitle">Universal Signal Intake</h2>
       <div class="meta" id="dMeta">mapa de entendimento</div>
-      <div class="detail-copy" id="dBody">A primeira etapa classifica o pedido antes de qualquer execução.</div>
+      <div class="detail-copy" id="dBody">A primeira etapa normaliza qualquer sinal antes de qualquer execução.</div>
       <div class="out" id="dOut">
         <div class="pill">Fonte nomeada</div>
         <div class="pill">Escopo inicial</div>
@@ -918,33 +926,33 @@ const NODE_H = 84;
 const NODE_Y_NUDGE = 12;
 
 const ZONES = [
-  { key: "truth", label: "1. Verdade", sub: "fonte -> outcome -> Product SOT", y: 86, h: 176, fill: "var(--truth-soft)" },
-  { key: "method", label: "2. Método e planos", sub: "router -> contratos -> planos", y: 294, h: 176, fill: "var(--method-soft)" },
-  { key: "risk", label: "3. Risco e autoridade", sub: "risk tier -> readiness -> humano", y: 502, h: 176, fill: "var(--risk-soft)" },
+  { key: "truth", label: "1. Verdade", sub: "intake universal -> fontes -> Product SOT completa", y: 86, h: 176, fill: "var(--truth-soft)" },
+  { key: "method", label: "2. Método e planos", sub: "router -> pesquisa -> Product Creation Plan", y: 294, h: 176, fill: "var(--method-soft)" },
+  { key: "risk", label: "3. Risco e autoridade", sub: "risk tier -> Product Implementation Readiness -> humano", y: 502, h: 176, fill: "var(--risk-soft)" },
   { key: "exec", label: "4. Execução e prova", sub: "Hermes -> agentes -> evidência", y: 710, h: 176, fill: "var(--exec-soft)" },
   { key: "ops", label: "5. Operação e maturidade", sub: "release -> monitoramento -> learnback", y: 918, h: 176, fill: "var(--ops-soft)" }
 ];
 
 const STAGES = [
-  { id: "intake", n: "01", layer: "truth", x: 96, y: 158, w: 138, title: "Entrada do Pedido", mini: "entrada classificada", body: "Recebe paper, bug, repo, incidente, release, doc ou auditoria e decide se existe fonte mínima para avançar.", output: ["Tipo de entrada", "Escopo inicial", "Continuar, pedir fonte ou bloquear"] },
-  { id: "ledger", n: "02", layer: "truth", x: 252, y: 158, w: 150, title: "Registro de Fontes", mini: "origem rastreável", body: "Transforma documento, repo, conversa, log, print, board, teste e runtime em fontes nomeadas, com força e limite claros.", output: ["Fontes fortes e fracas", "Conflitos", "Lacunas"] },
-  { id: "resolution", n: "03", layer: "truth", x: 420, y: 158, w: 160, title: "Resolução das Fontes", mini: "fato vs inferência", body: "Resolve conflito entre fontes e impede que desejo, resumo ou inferência virem fato. O que não fecha vira pergunta humana.", output: ["Notas de resolução", "Lacunas abertas", "Perguntas humanas"] },
+  { id: "intake", n: "01", layer: "truth", x: 96, y: 158, w: 138, title: "Universal Signal Intake", mini: "sinal normalizado", body: "Recebe paper, bug, ideia, repo, incidente, produto API/data/web3, release, doc ou auditoria e transforma o sinal em entrada tipada antes de executar.", output: ["Tipo de sinal", "Escopo inicial", "Continuar, pedir fonte ou bloquear"] },
+  { id: "ledger", n: "02", layer: "truth", x: 252, y: 158, w: 150, title: "Source Ledger", mini: "origem rastreável", body: "Transforma documento, repo, conversa, log, print, board, teste e runtime em fontes nomeadas, com força, limite, conflito e validade claros.", output: ["Fontes fortes e fracas", "Conflitos", "Lacunas"] },
+  { id: "resolution", n: "03", layer: "truth", x: 420, y: 158, w: 160, title: "Source Resolution", mini: "fato vs inferência", body: "Resolve conflito entre fontes e impede que desejo, resumo ou inferência virem fato. Quando precisa de pesquisa especializada, abre Specialist Research Decision.", output: ["Notas de resolução", "Specialist Research Decision", "Perguntas humanas"] },
   { id: "outcome", n: "04", layer: "truth", x: 598, y: 158, w: 176, title: "Resultado e Descoberta", mini: "valor antes do plano", body: "Define usuário, problema real, comportamento esperado, métrica de sucesso e profundidade de discovery proporcional ao risco.", output: ["Outcome Contract", "Assumption Ledger", "Discovery Brief"] },
-  { id: "sot", n: "05", layer: "truth", x: 792, y: 158, w: 144, title: "SOT do Produto", mini: "verdade oficial", body: "Consolida escopo, limites, riscos, autoridade, dados, dependências, operação e critérios de sucesso antes dos packs e gates.", output: ["Product SOT", "Limites do produto", "Critérios de sucesso"] },
+  { id: "sot", n: "05", layer: "truth", x: 792, y: 158, w: 144, title: "Product SOT", mini: "verdade oficial", body: "Consolida escopo, limites, riscos, autoridade, dados, dependências, operação e critérios de sucesso. A full Product SOT scope coverage impede MVP disfarçado.", output: ["Product SOT", "full Product SOT scope coverage", "Critérios de sucesso"] },
 
   { id: "router", n: "06", layer: "method", x: 96, y: 366, w: 162, title: "Roteador de Método", mini: "rigor proporcional", body: "Escolhe a rota certa: discovery, PRD, TRD, DDD, BDD, TDD, diagnóstico, protótipo, evals, segurança, prova remota, humano ou bloqueio.", output: ["Método escolhido", "Rotas especiais", "O que foi dispensado"] },
   { id: "contract", n: "07", layer: "method", x: 276, y: 366, w: 152, title: "Contrato de Método", mini: "contrato de trabalho", body: "Registra artefatos exigidos, gates, agentes, revisores, autoridade, provas e critério de pronto. Sem contrato, execução vira palpite.", output: ["Artefatos obrigatórios", "Gates bloqueantes", "Agentes e revisores"] },
-  { id: "packs", n: "08", layer: "method", x: 446, y: 366, w: 172, title: "Packs de Produto", mini: "domínio e superfície", body: "Seleciona Product Pack e Surface Pack para web, mobile, CLI, docs, onboarding, dashboard ou interface agentica.", output: ["Packs selecionados", "Agentes específicos", "Evidências por superfície"] },
+  { id: "packs", n: "08", layer: "method", x: 446, y: 366, w: 172, title: "Product e Surface Packs", mini: "domínio e superfície", body: "Seleciona Product Pack e Surface Pack para web, mobile, CLI, docs, API, data, blockchain, onboarding, dashboard ou interface agentica.", output: ["Packs selecionados", "Agentes específicos", "Evidências por superfície"] },
   { id: "securityplan", n: "10", layer: "method", x: 636, y: 366, w: 168, title: "Arquitetura de Segurança", mini: "risco antes de código", body: "Quando há login, permissão, fundos, produção, cloud, usuário real ou superfície pública, define fronteiras, segredos, abuso esperado e mitigação.", output: ["Security Architecture Plan", "Modelo de permissões", "Casos de abuso"] },
-  { id: "devplan", n: "11", layer: "method", x: 822, y: 366, w: 174, title: "Plano de Desenvolvimento", mini: "execução legível", body: "Converte método em PRD/TRD, mapa de domínio, exemplos de aceitação, story, plano de teste, migração, release e comandos de verificação.", output: ["Plano de desenvolvimento", "Testes esperados", "Critérios técnicos"] },
-  { id: "experience", n: "12", layer: "method", x: 1014, y: 366, w: 174, title: "Plano de Experiência", mini: "produto visível", body: "Para superfícies de produto, exige fluxos, estados vazios, loading, erros, acessibilidade, onboarding, pacote Product Face e prova visual.", output: ["SOT de experiência", "Pacote Product Face", "Prova por superfície"] },
+  { id: "devplan", n: "11", layer: "method", x: 822, y: 366, w: 174, title: "Product Creation Plan", mini: "produto 100%", body: "Converte a Product SOT em decomposição completa de produto: work units, slices, provas, stop rules, reconciliação, release e operação sem reduzir para MVP.", output: ["Product Creation Plan", "Work units", "Stop rules e provas"] },
+  { id: "experience", n: "12", layer: "method", x: 1014, y: 366, w: 174, title: "Product Experience Gate", mini: "produto visível", body: "Para superfícies de produto, exige product_experience_plan, product_face_packet, professional_design_process, surface_evidence_profile e product_delivery_quality_profile.", output: ["professional_design_process", "surface_evidence_profile", "product_delivery_quality_profile"] },
   { id: "dataeval", n: "13-14", layer: "method", x: 1206, y: 366, w: 190, title: "Dados e Evals", mini: "valor e agente medidos", body: "Define métricas, eventos, dashboards, logs e alertas. Quando agente, skill, prompt ou modelo entram, cria evals e regressões.", output: ["Contrato de métricas", "Suite de evals", "Scorecard de comportamento"] },
   { id: "specgraph", n: "15", layer: "method", x: 1414, y: 366, w: 138, title: "Grafo de Especificação", mini: "requisito vira prova", body: "Liga outcome, requisitos, exemplos, decisões, riscos, dependências, acessos, gates, agentes e provas.", output: ["Mapa requisito -> prova", "Gates por requisito", "Trilha de decisão"] },
 
   { id: "riskgates", n: "09", layer: "risk", x: 96, y: 574, w: 190, title: "Gates de Risco", mini: "autoridade e limites", body: "Confirma tier, dono, autoridade, dependências, acesso, compliance, budget e se revisão, segurança ou humano são obrigatórios.", output: ["Tier de risco", "Donos", "Limites e bloqueios"], gate: true },
   { id: "loop", n: "16", layer: "risk", x: 304, y: 574, w: 148, title: "Plano de Loops", mini: "lanes controladas", body: "Define lanes, ordem, agentes, timeouts, budget, evidências, parada, bloqueio e isolamento quando houver paralelismo.", output: ["Lanes de agentes", "Dependências entre trabalhos", "Critérios de bloqueio"] },
   { id: "autonomy", n: "17", layer: "risk", x: 470, y: 574, w: 188, title: "Prontidão de Autonomia", mini: "acesso antes da ação", body: "Checa GitHub, cloud, billing, banco, storage, domínios, APIs, secrets, runtime, observabilidade, donos e canal humano.", output: ["Acessos concedidos", "Acessos pendentes", "Bloqueios de execução"], gate: true },
-  { id: "ready", n: "18", layer: "risk", x: 676, y: 574, w: 128, title: "Gate de Prontidão", mini: "pode executar?", body: "Confere fontes, outcome, SOT, contrato, packs, risco, dependências, budget, agentes, critério de pronto e plano de evidência.", output: ["Execução liberada", "Bloqueado com motivo", "Lista de correção"], gate: true },
+  { id: "ready", n: "18", layer: "risk", x: 676, y: 574, w: 128, title: "Product Implementation Readiness", mini: "pode executar?", body: "Confere SOT, método, pesquisa, arquitetura, experiência, work units, packs, acessos, dependências, budget, agentes e plano de evidência.", output: ["Execução liberada", "Bloqueado com motivo", "Lista de correção"], gate: true },
   { id: "controltower", n: "19", layer: "risk", x: 822, y: 574, w: 198, title: "Projeção da Control Tower", mini: "estado visível", body: "Mostra fase atual, bloqueios, acessos, aprovações, confiança da previsão, riscos e evidências. Discord pode ser cockpit; Hermes segue como fonte da verdade.", output: ["Projeção do trabalho", "Caixa de aprovações", "Registro no Hermes"], bridge: true, gate: true },
   { id: "humangate", n: "24", layer: "risk", x: 1038, y: 574, w: 150, title: "Gate Humano", mini: "decisão material", body: "Obrigatório para produção, signing, fundos, custody, mainnet, release R4, waiver bloqueante, custo material, risco legal ou acesso material ausente.", output: ["Aprovado", "Rejeitado", "Pedir ajuste", "Bloqueado"], gate: true },
 
@@ -954,14 +962,14 @@ const STAGES = [
   { id: "review", n: "23", layer: "exec", x: 542, y: 782, w: 142, title: "Revisão Independente", mini: "executor não aprova", body: "Código relevante, R2+, R3/R4, superfície sensível, release material e mudança em agente/skill exigem revisão separada.", output: ["Resultado de revisão", "Achados", "Waiver se permitido"], gate: true },
   { id: "closure", n: "25", layer: "exec", x: 696, y: 782, w: 132, title: "Resumo de Fechamento", mini: "fechamento legível", body: "Resume pedido, entrega, provas, riscos restantes, waivers, escopo aprovado, escopo proibido e próximo passo, sem inventar prova ausente.", output: ["Resumo", "Ponteiros de evidência", "Risco residual"] },
   { id: "receipt", n: "26", layer: "exec", x: 840, y: 782, w: 118, title: "Receipt Five", mini: "pronto em 5 respostas", body: "Fecha o trabalho respondendo o que mudou, onde está, como foi verificado, quem revisou e qual é o próximo passo.", output: ["O que mudou", "Onde está", "Como foi verificado", "Quem revisou", "Próximo passo"], gate: true },
-  { id: "completion", n: "27", layer: "exec", x: 970, y: 782, w: 142, title: "Auditoria de Conclusão", mini: "exigido vs entregue", body: "Compara contrato, gates, agentes, provas, revisões, gates humanos, pacote de prontidão, segurança, release e Receipt Five.", output: ["Passou ou falhou", "Lacunas", "Liberar, corrigir ou bloquear"], gate: true },
+  { id: "completion", n: "27", layer: "exec", x: 970, y: 782, w: 142, title: "Factory v1 Completion Gate", mini: "exigido vs entregue", body: "Compara contrato, gates, agentes, provas, revisões, gates humanos, prontidão, segurança, release e Receipt Five; lacunas viram v1 blocker, vNext ou not planned.", output: ["Passou ou falhou", "v1 blocker", "vNext ou not planned"], gate: true },
 
   { id: "prodops", n: "28", layer: "ops", x: 96, y: 990, w: 142, title: "Operação de Produção", mini: "código pronto não basta", body: "Define ambiente, dono operacional, checagem de saúde, logs, métricas, rollback, canal de release, suporte, incidente e prova de runtime.", output: ["Resultado de prontidão", "Runbooks", "Evidência de monitoramento"] },
   { id: "release", n: "29", layer: "ops", x: 250, y: 990, w: 126, title: "Release ou Bloqueio", mini: "decisão operacional", body: "Release exige canal, versão, evidência de build/publicação ou simulação válida, rollback, monitoramento, dono e restrições atendidas.", output: ["Release aprovado", "Candidato de release", "Registro de bloqueio"], gate: true },
   { id: "monitoring", n: "30", layer: "ops", x: 388, y: 990, w: 150, title: "Monitoramento e Suporte", mini: "pós-release real", body: "Acompanha saúde, alertas, métricas, erros, incidentes, suporte, custo, dependências, sinais de UX e risco.", output: ["Evidência de monitoramento", "Registro de incidente", "Rota de suporte"] },
   { id: "learnback", n: "31", layer: "ops", x: 550, y: 990, w: 120, title: "Learnback", mini: "falha vira melhoria", body: "Bug repetido vira teste. Falha de agente vira eval. Falha de UX vira atualização de pack. Incidente vira runbook.", output: ["Registro de aprendizado", "Atualização de pack/skill/gate/doc/teste"] },
   { id: "maturity", n: "32", layer: "ops", x: 682, y: 990, w: 152, title: "Auditoria de Maturidade", mini: "a fábrica se audita", body: "Verifica resultado, discovery, SOT, método, packs, dados, evals, dependências, compliance, orçamento, operação, prova, revisão, humano e limite público/privado.", output: ["Scorecard de maturidade", "Matriz de pontos cegos", "Registro de lacunas"], gate: true },
-  { id: "readiness", n: "R", layer: "ops", x: 846, y: 990, w: 140, title: "Plano != Execução", mini: "tese não é prova", body: "Arquitetura e regra orientam o trabalho, mas não provam entrega. Prontidão, roadmap e status dizem o que ainda falta implementar, provar ou operar.", output: ["Plano declarado", "Prontidão separada", "Sem overclaim"], warn: true },
+  { id: "readiness", n: "R", layer: "ops", x: 846, y: 990, w: 140, title: "Mapa != Prova", mini: "tese não é prova", body: "Este mapa é superfície conceitual pública. Arquitetura e regra orientam o trabalho, mas não provam entrega, runtime, release nem produção.", output: ["Plano declarado", "Prontidão separada", "Sem overclaim"], warn: true },
   { id: "r4", n: "R4", layer: "ops", x: 998, y: 990, w: 132, title: "Rigor R4", mini: "limite material", body: "Produção, ação irreversível, signing, fundos, release crítico, alto custo ou risco regulatório exigem gate humano, dono, rollback, monitoramento e prova forte.", output: ["Gate humano", "Rollback/mitigação", "Dono de risco", "Dono de budget"], warn: true, gate: true }
 ];
 
@@ -1115,16 +1123,16 @@ const CANONICAL_WORKER_IDS = [
 
 const STAGE_DETAILS = {
   intake: {
-    plain: ["A fábrica começa recusando a pressa: antes de agir, ela entende que tipo de pedido chegou e qual risco pode existir.", "Essa etapa evita que um pedido vago vire execução confiante demais."],
-    decision: ["Continuar com a fonte disponível, pedir material melhor ou bloquear antes de gastar trabalho."],
-    inside: ["Classifica tipo de entrada, dono, contexto, urgência, risco e se é planejamento ou execução.", "Separa privado de público seguro e identifica se toca produto, código, usuário, dado, release, agente, dependência ou produção."],
+    plain: ["A fábrica começa recusando a pressa: antes de agir, ela normaliza qualquer sinal em Universal Signal Intake.", "Paper, bug, ideia, projeto existente, incidente, API, data product ou produto blockchain entram pelo mesmo trilho previsível."],
+    decision: ["Continuar com a fonte disponível, pedir material melhor, ativar rota especializada ou bloquear antes de gastar trabalho."],
+    inside: ["Classifica tipo de sinal, dono, contexto, urgência, risco e se é planejamento, execução, diagnóstico, release ou operação.", "Separa privado de público seguro e identifica se toca produto, código, usuário, dado, release, agente, dependência, fundos, mainnet ou produção."],
     blocks: ["Executar antes de entender o pedido.", "Avançar sem fonte básica."],
-    proof: ["Entrada nomeada, escopo inicial e decisão explícita de continuar, pedir fonte ou bloquear."],
+    proof: ["Universal Signal Intake nomeado, escopo inicial e decisão explícita de continuar, pedir fonte, pesquisar ou bloquear."],
     worker: "factory-orchestrator"
   },
   ledger: {
     plain: ["Aqui a fábrica monta o inventário do que pode ser usado como base: arquivos, issues, conversa, logs, runtime, prints ou testes.", "Fonte forte, fonte fraca, memória e opinião não entram no mesmo saco."],
-    decision: ["Quais materiais contam como fonte para este trabalho e quais ainda precisam de confirmação."],
+    decision: ["Quais materiais contam como fonte para este trabalho, quais são privados, quais são públicos seguros e quais ainda precisam de confirmação."],
     inside: ["Registra documentos, repos, issues, design, conversa, logs, prints, board, runtime e testes como fontes separadas.", "Marca força, data, conflito, privacidade e limite de uso de cada fonte."],
     blocks: ["Fato crítico sem origem.", "Misturar fonte primária, memória antiga e inferência no mesmo nível."],
     proof: ["Ledger de fontes, conflitos e lacunas."],
@@ -1132,10 +1140,10 @@ const STAGE_DETAILS = {
   },
   resolution: {
     plain: ["A fábrica separa o que é fato, o que é interpretação e o que ainda está aberto.", "Quando duas fontes brigam, a etapa não escolhe a resposta mais conveniente; ela registra o conflito."],
-    decision: ["O que está decidido, o que é inferência aceitável e o que precisa voltar para o humano."],
-    inside: ["Compara versões, resolve contradições e decide o que é fato, inferência, decisão pendente ou pergunta humana.", "Quando não há como resolver, a lacuna fica aberta em vez de ser escondida."],
+    decision: ["O que está decidido, o que é inferência aceitável, o que precisa de Specialist Research Decision e o que precisa voltar para o humano."],
+    inside: ["Compara versões, resolve contradições e decide o que é fato, inferência, decisão pendente, pesquisa especializada ou pergunta humana.", "Quando não há como resolver, a lacuna fica aberta em vez de ser escondida."],
     blocks: ["Resumo bonito virar verdade oficial.", "Contradição documental entrar na execução."],
-    proof: ["Notas de resolução e perguntas humanas rastreáveis."],
+    proof: ["Notas de resolução, Specialist Research Decision quando aplicável e perguntas humanas rastreáveis."],
     worker: "factory-orchestrator + source-ledger-worker"
   },
   outcome: {
@@ -1147,11 +1155,11 @@ const STAGE_DETAILS = {
     worker: "product-sot-planner"
   },
   sot: {
-    plain: ["O Product SOT vira a versão operável da verdade: escopo, limites, critérios de sucesso, riscos e fora de escopo em um lugar só.", "Ele não é marketing nem resumo bonito; é o contrato que impede cada agente de imaginar um produto diferente."],
-    decision: ["O que entra no produto ou fatia, o que fica fora e qual critério permite dizer que a entrega resolveu o problema."],
-    inside: ["Consolida escopo, limites, riscos, autoridade, dados, dependências, operação, sucesso e fora de escopo.", "Vira a fonte de verdade usada por packs, método, gates e agentes."],
-    blocks: ["Cada agente trabalhar com uma interpretação diferente.", "Escopo crescer sem decisão."],
-    proof: ["Product SOT com limites e critérios de sucesso."],
+    plain: ["O Product SOT vira a versão operável da verdade: escopo, limites, critérios de sucesso, riscos e fora de escopo em um lugar só.", "A fábrica trabalha contra a SOT mais atual, não contra um paper bruto quando a SOT já evoluiu."],
+    decision: ["O que entra no produto completo, o que fica fora e qual critério permite dizer que a entrega resolveu o problema em produção."],
+    inside: ["Consolida escopo, limites, riscos, autoridade, dados, dependências, operação, sucesso e fora de escopo.", "A full Product SOT scope coverage prova que o planejamento cobre o produto completo, sem cortar para MVP disfarçado."],
+    blocks: ["Cada agente trabalhar com uma interpretação diferente.", "Escopo crescer sem decisão.", "Planejamento reduzir produto completo para fatia mínima sem autorização."],
+    proof: ["Product SOT com limites, critérios de sucesso e full Product SOT scope coverage."],
     worker: "product-sot-planner"
   },
   router: {
@@ -1173,7 +1181,7 @@ const STAGE_DETAILS = {
   packs: {
     plain: ["Packs trazem o contexto específico sem sujar o núcleo da fábrica: domínio, superfície, termos, riscos e agentes esperados.", "Um app, uma CLI, um onboarding e uma integração crítica não provam qualidade do mesmo jeito."],
     decision: ["Que Product Pack ou Surface Pack precisa entrar, e qual capacidade ainda está faltando."],
-    inside: ["Seleciona Product Pack e Surface Pack para domínio, interface, docs, onboarding, dashboard, CLI, mobile ou agente.", "Checa templates, versão, agentes e limite público/privado."],
+    inside: ["Seleciona Product Pack e Surface Pack para domínio, interface, docs, onboarding, dashboard, CLI, mobile, API, data, blockchain ou agente.", "Checa templates, versão, agentes, provas esperadas e limite público/privado."],
     blocks: ["Produto específico sem pack ou justificativa.", "Superfície visível sem evidência adequada."],
     proof: ["Packs selecionados e pacote de evidência por superfície."],
     worker: "product-architect + product-face"
@@ -1195,19 +1203,19 @@ const STAGE_DETAILS = {
     worker: "security-orchestrator + especialistas"
   },
   devplan: {
-    plain: ["O plano de desenvolvimento transforma intenção em trabalho que um builder consegue executar e outro agente consegue verificar.", "Ele precisa dizer o que mudar, como testar, como migrar e como voltar atrás quando o risco pede rollback."],
-    decision: ["Qual fatia será construída, em que ordem, com quais critérios técnicos e comandos de prova."],
-    inside: ["Transforma o contrato em unidades executáveis, exemplos, plano de teste, migração, release, rollback e comandos de verificação.", "Mantém o plano pequeno quando o risco permite e completo quando o risco exige."],
-    blocks: ["Execução sem critérios técnicos.", "Plano sem comando de prova."],
-    proof: ["Plano de desenvolvimento, exemplos de aceitação e plano de teste."],
+    plain: ["O Product Creation Plan transforma a SOT completa em trabalho que builders conseguem executar e outros agentes conseguem verificar.", "Ele precisa decompor o produto 100%, incluindo testes, migração, release, rollback e operação quando o risco pede."],
+    decision: ["Quais work units constroem o produto completo, em que ordem, com quais stop rules e comandos de prova."],
+    inside: ["Transforma o contrato em work units executáveis, exemplos, plano de teste, migração, release, rollback, reconciliação e comandos de verificação.", "Não reduz escopo para MVP; quando algo fica fora, isso precisa ser decisão explícita da SOT."],
+    blocks: ["Execução sem critérios técnicos.", "Plano sem comando de prova.", "Decomposição parcial vendida como produto completo."],
+    proof: ["Product Creation Plan, work units, exemplos de aceitação, stop rules e plano de teste."],
     worker: "product-architect + builders"
   },
   experience: {
-    plain: ["Quando existe interface, a fábrica trata experiência como parte da prova, não como acabamento.", "Fluxos, estados, viewports, acessibilidade e evidência visual precisam aparecer antes de chamar a superfície de pronta."],
-    decision: ["Que jornadas e estados precisam ser desenhados, testados e demonstrados para o usuário real."],
-    inside: ["Cobre fluxo, estados vazios, loading, erro, acessibilidade, viewports, onboarding e Product Face Result.", "Exige captura e prova de uso quando há superfície de produto."],
-    blocks: ["Interface promovida com sobreposição, vazamento ou estado quebrado.", "UX tratada como enfeite."],
-    proof: ["Pacote Product Face, resultado Product Face e evidências por viewport."],
+    plain: ["Quando existe interface, a fábrica trata experiência como parte da prova, não como acabamento.", "Design fraco não é problema cosmético: é falha de entrega do produto."],
+    decision: ["Que jornadas, estados e padrões de qualidade precisam ser desenhados, testados e demonstrados para o usuário real."],
+    inside: ["Cobre product_experience_plan, product_face_packet, professional_design_process, surface_evidence_profile e product_delivery_quality_profile.", "Exige captura, viewport, estado vazio, loading, erro, acessibilidade, onboarding e prova de uso quando há superfície de produto."],
+    blocks: ["Interface promovida com sobreposição, vazamento ou estado quebrado.", "UX tratada como enfeite.", "Entrega visual sem perfil de qualidade por superfície."],
+    proof: ["Product Face packet, professional_design_process, surface_evidence_profile e product_delivery_quality_profile."],
     worker: "product-face"
   },
   dataeval: {
@@ -1243,11 +1251,11 @@ const STAGE_DETAILS = {
     worker: "factory-orchestrator + human-gate-clerk"
   },
   ready: {
-    plain: ["Ready não significa pronto. Significa que a execução pode começar sem pular fonte, método, autoridade, acesso ou prova.", "É o último semáforo antes de deixar agentes mexerem no trabalho."],
+    plain: ["Product Implementation Readiness não significa produto pronto. Significa que a execução pode começar sem pular SOT, método, pesquisa, arquitetura, experiência, autoridade, acesso ou prova.", "É o último semáforo antes de deixar agentes mexerem no trabalho."],
     decision: ["Começar execução, revisar o pacote ou bloquear com motivo acionável."],
-    inside: ["Confere fonte, outcome, SOT, contrato, packs, riscos, agentes, acesso, critério de pronto e plano de evidência.", "É o último filtro antes de spawn/execução material."],
-    blocks: ["Agente sem escopo, autoridade ou prova esperada.", "Começar materialmente com lacuna essencial."],
-    proof: ["Liberado ou bloqueado com motivo acionável."],
+    inside: ["Confere SOT, método, pesquisa, arquitetura, experiência, work units, packs, riscos, agentes, acesso, critério de pronto e plano de evidência.", "É o último filtro antes de spawn/execução material."],
+    blocks: ["Agente sem escopo, autoridade ou prova esperada.", "Começar materialmente com lacuna essencial.", "Work unit executar sem readiness alinhada à SOT."],
+    proof: ["Product Implementation Readiness liberado ou bloqueado com motivo acionável."],
     worker: "factory-orchestrator"
   },
   controltower: {
@@ -1315,11 +1323,11 @@ const STAGE_DETAILS = {
     worker: "evidence-reconciler + handoff-packer"
   },
   completion: {
-    plain: ["A auditoria de conclusão compara o que a fábrica exigiu com o que foi realmente entregue.", "Ela é a defesa contra checklist parcial, gate esquecido e prova bonita porém incompleta."],
-    decision: ["Liberar, corrigir lacuna, pedir waiver registrado ou bloquear conclusão."],
-    inside: ["Compara exigido vs entregue: contrato, gates, agentes, provas, revisão, humano, readiness, segurança, release e receipt.", "Se algo obrigatório faltou, a conclusão falha."],
-    blocks: ["Checklist parcial virar conclusão.", "Gates esquecidos depois da entrega."],
-    proof: ["Auditoria de conclusão com passou/falhou e lacunas."],
+    plain: ["O Factory v1 Completion Gate compara o que a fábrica exigiu com o que foi realmente entregue.", "Ele cria um ponto final profissional: lacuna essencial vira v1 blocker; melhoria real mas não bloqueante vira vNext; o que não será feito vira not planned com razão pública."],
+    decision: ["Liberar, corrigir lacuna, pedir waiver registrado, classificar como v1 blocker, vNext ou not planned, ou bloquear conclusão."],
+    inside: ["Compara exigido vs entregue: contrato, gates, agentes, provas, revisão, humano, readiness, segurança, release e receipt.", "Se algo obrigatório faltou, a conclusão falha ou vira bloqueio explicitamente classificado."],
+    blocks: ["Checklist parcial virar conclusão.", "Gates esquecidos depois da entrega.", "Pendência ficar em aberto sem classificação."],
+    proof: ["Factory v1 Completion Gate com passou/falhou, lacunas e classificação v1 blocker, vNext ou not planned."],
     worker: "evidence-reconciler + independent-reviewer"
   },
   prodops: {
@@ -1363,11 +1371,11 @@ const STAGE_DETAILS = {
     worker: "skill-eval-distiller + independent-reviewer"
   },
   readiness: {
-    plain: ["Readiness mantém honestidade entre tese, implementação e prova real.", "Um mapa pode estar conceitualmente certo sem significar que tudo já roda, está integrado ou está pronto para produção."],
-    decision: ["O que é arquitetura, o que está implementado, o que foi provado e o que ainda é roadmap."],
-    inside: ["Separa arquitetura canônica, status de implementação, roadmap, prova de runtime e produção real.", "O documento pode estar correto mesmo quando parte do sistema ainda não está pronta."],
-    blocks: ["Overclaim.", "Confundir mapa conceitual com prova de operação."],
-    proof: ["Readiness separado, status explícito e sem promessa falsa."],
+    plain: ["Readiness mantém honestidade entre tese, implementação e prova real.", "Este mapa pode estar conceitualmente certo sem significar que um card real já rodou, foi aprovado ou está em produção."],
+    decision: ["O que é arquitetura, o que está implementado, o que foi provado no runtime, o que foi publicado e o que ainda é roadmap."],
+    inside: ["Separa arquitetura canônica, status de implementação, roadmap, prova de runtime, release real e produção real.", "A superfície pública explica a fábrica, mas Hermes, testes, scripts, schemas e receipts decidem trabalho real."],
+    blocks: ["Overclaim.", "Confundir mapa conceitual com prova de operação.", "Confundir link publicado com validação de produto."],
+    proof: ["Readiness separado, status explícito, release evidence e sem promessa falsa."],
     worker: "factory-orchestrator"
   },
   r4: {
@@ -1381,17 +1389,17 @@ const STAGE_DETAILS = {
 };
 
 const FLOWS = {
-  all: { title: "Jornada completa", nodes: JOURNEY, start: "intake", steps: ["A fábrica transforma um pedido cru em uma linha controlada: fonte, decisão, método, execução, prova, revisão e operação.", "A seta percorre a ordem real do trabalho, mesmo quando o desenho distribui as camadas em linhas diferentes.", "Readiness e R4 ficam no fim como freios de honestidade: tese não é prova e release material não é tarefa comum."], detail: ["A fábrica não é um agente único: é um sistema que decide o que deve acontecer, escolhe agentes, exige evidência e preserva autoridade humana quando o risco pede.", "Use as setas do teclado para sentir a linha inteira; use os chips para isolar um tipo de pergunta."] },
-  truth: { title: "Verdade do produto", nodes: ["intake","ledger","resolution","outcome","sot"], start: "intake", steps: ["Entrada vira fonte rastreável.", "Fonte vira fato, conflito, lacuna ou pergunta.", "Outcome e Product SOT impedem plano bonito para problema errado."], detail: ["A primeira camada separa fonte, inferência, decisão e lacuna antes de qualquer execução.", "O produto só ganha forma depois que resultado, usuário, limites e critério de sucesso estão claros.", "Quando a fonte não sustenta uma decisão, o mapa força pergunta humana ou bloqueio."] },
-  method: { title: "Método e planos", nodes: ["router","contract","packs","securityplan","devplan","experience","dataeval","specgraph"], start: "router", steps: ["O roteador escolhe rigor proporcional ao risco.", "O contrato transforma escolha em artefatos, gates e prova.", "Produto, segurança, experiência, dados e evals ficam conectados pelo grafo."], detail: ["Packs guardam contexto de domínio e superfície sem contaminar o kernel público.", "BDD, TDD, DDD, PRD, TRD, protótipo, diagnóstico, segurança e prova remota entram só quando o pedido pede esse rigor.", "O grafo conecta requisito, decisão, risco, worker e evidência para evitar planejamento solto."] },
-  risk: { title: "Risco, autoridade e acesso", nodes: ["riskgates","loop","autonomy","ready","controltower","humangate"], start: "riskgates", steps: ["R0: texto ou inspeção local sem impacto material.", "R1/R2: baixo risco ou produto visível exigem critério, QA, revisão e evidência.", "R3/R4: segurança, privacidade, infra, produção, custo alto ou release crítico exigem arquitetura, humano, dono, rollback e prova forte."], detail: ["Gates de dependência, acesso, compliance, privacidade e budget podem elevar o tier.", "Falta de acesso material não vira improviso: vira bloqueio.", "Control Tower deixa risco, aprovação e bloqueio visíveis sem trocar a fonte de verdade do runtime."] },
+  all: { title: "Jornada completa", nodes: JOURNEY, start: "intake", steps: ["A fábrica transforma qualquer sinal em uma linha controlada: Universal Signal Intake, fonte, decisão, método, execução, prova, revisão e operação.", "A seta percorre a ordem real do trabalho, mesmo quando o desenho distribui as camadas em linhas diferentes.", "Mapa, README e docs explicam; Hermes, scripts, schemas, testes e receipts continuam decidindo prontidão real."], detail: ["A fábrica não é um agente único: é um sistema que decide o que deve acontecer, escolhe agentes, exige evidência e preserva autoridade humana quando o risco pede.", "Use as setas do teclado para sentir a linha inteira; use os chips para isolar um tipo de pergunta."] },
+  truth: { title: "Verdade do produto", nodes: ["intake","ledger","resolution","outcome","sot"], start: "intake", steps: ["Universal Signal Intake transforma paper, bug, ideia, repo, incidente ou produto em entrada tipada.", "Fonte vira fato, conflito, lacuna, Specialist Research Decision ou pergunta.", "Product SOT e full Product SOT scope coverage impedem plano bonito para problema errado ou produto cortado sem autorização."], detail: ["A primeira camada separa fonte, inferência, decisão e lacuna antes de qualquer execução.", "O produto só ganha forma depois que resultado, usuário, limites e critério de sucesso estão claros.", "Quando a fonte não sustenta uma decisão, o mapa força pesquisa, pergunta humana ou bloqueio."] },
+  method: { title: "Método e planos", nodes: ["router","contract","packs","securityplan","devplan","experience","dataeval","specgraph"], start: "router", steps: ["O roteador escolhe rigor proporcional ao risco e ao tipo de produto.", "O contrato transforma escolha em artefatos, gates e prova.", "Product Creation Plan, Product Experience Gate, segurança, dados e evals ficam conectados pelo grafo."], detail: ["Packs guardam contexto de domínio e superfície sem contaminar o kernel público.", "BDD, TDD, DDD, PRD, TRD, protótipo, diagnóstico, segurança, pesquisa especializada e prova remota entram quando o pedido pede esse rigor.", "O grafo conecta requisito, decisão, risco, worker e evidência para evitar planejamento solto."] },
+  risk: { title: "Risco, autoridade e acesso", nodes: ["riskgates","loop","autonomy","ready","controltower","humangate"], start: "riskgates", steps: ["R0: texto ou inspeção local sem impacto material.", "R1/R2: baixo risco ou produto visível exigem critério, QA, revisão e evidência.", "R3/R4: segurança, privacidade, infra, produção, custo alto, mainnet, release crítico ou fundos exigem arquitetura, Product Implementation Readiness, humano, dono, rollback e prova forte."], detail: ["Gates de dependência, acesso, compliance, privacidade e budget podem elevar o tier.", "Falta de acesso material não vira improviso: vira bloqueio.", "Control Tower deixa risco, aprovação e bloqueio visíveis sem trocar a fonte de verdade do runtime."] },
   execution: { title: "Execução e prova", nodes: ["runtime","workerresult","verification","review","closure","receipt","completion"], start: "runtime", steps: ["Hermes instancia trabalho durável.", "Agentes entregam resultado estruturado com evidência.", "Verificação, revisão, Receipt Five e auditoria impedem pronto sem prova."], detail: ["Execução não é só mudar arquivo: precisa evento, referência de evidência, status e revisão quando exigido.", "Prova remota entra quando prova local não basta e precisa TTL, custo, limpeza e evidência.", "A auditoria de conclusão compara o contratado com o entregue."] },
   ops: { title: "Operação e maturidade", nodes: ["prodops","release","monitoring","learnback","maturity"], start: "prodops", steps: ["Código pronto não é produto pronto.", "Release exige dono, rollback, monitoramento e canal.", "Incidente e falha alimentam Learnback e auditoria da própria fábrica."], detail: ["Operação define se aquilo consegue rodar, ser observado, revertido e suportado.", "Release pode virar aprovado, candidato, pronto ou bloqueado.", "Falha repetida deve virar teste, eval, gate, pack, skill, runbook ou doc."] },
-  gates: { title: "Gates que bloqueiam", nodes: STAGES.filter(s => s.gate).map(s => s.id), start: "riskgates", steps: ["Gate existe para impedir avanço quando falta fonte, método, acesso, revisão, prova ou autoridade.", "Ele não é burocracia: é a peça que transforma confiança em condição verificável.", "Gate bom bloqueia cedo e com motivo acionável."], detail: ["Fonte, resultado, discovery, método, pack, experiência, dados/métricas e eval de agente protegem verdade e plano.", "Dependência, acesso e capacidade, compliance/privacidade, budget, prontidão e Control Tower protegem execução material.", "Revisão, segurança, prontidão de produção, canal de release, humano, pronto, conclusão, maturidade e release protegem fechamento e operação."] },
+  gates: { title: "Gates que bloqueiam", nodes: STAGES.filter(s => s.gate).map(s => s.id), start: "riskgates", steps: ["Gate existe para impedir avanço quando falta fonte, método, acesso, revisão, prova ou autoridade.", "Ele não é burocracia: é a peça que transforma confiança em condição verificável.", "Gate bom bloqueia cedo, volta para reparo quando não é human gate e registra motivo acionável."], detail: ["Fonte, resultado, discovery, método, pack, experiência, dados/métricas e eval de agente protegem verdade e plano.", "Dependência, acesso e capacidade, compliance/privacidade, budget, Product Implementation Readiness e Control Tower protegem execução material.", "Revisão, segurança, prontidão de produção, canal de release, humano, Factory v1 Completion Gate, maturidade e release protegem fechamento e operação."] },
   risklevels: { title: "R0-R4", nodes: ["riskgates","securityplan","autonomy","ready","controltower","humangate","verification","review","completion","prodops","release","monitoring","r4"], start: "riskgates", catalog: "risklevels", steps: ["Risco decide quanta prova, autoridade e revisão entram no trabalho.", "Qualquer gate pode elevar o tier quando aparece dado sensível, produção, custo alto, dependência crítica ou ação irreversível.", "R3/R4 não são tarefas comuns: exigem especialistas, revisão independente e gate humano quando o risco pede."] },
   agents: { title: "Agentes da fábrica", nodes: ["router","contract","runtime","workerresult","verification","review","humangate","controltower","prodops","learnback","maturity"], start: "router", catalog: "workers", steps: ["A fábrica tem 40 agentes operacionais registrados no catálogo público.", "Agente não é personalidade paralela: é papel com contrato, permissão, entrada, saída e evidência esperada.", "Um agente só é operável quando tem registro, perfil, vínculo de runtime, rota de pacote e validação."] },
-  journeys: { title: "Jornadas por tipo de pedido", nodes: ["intake","ledger","router","contract","packs","riskgates","runtime","verification","review","receipt","learnback","maturity"], start: "intake", steps: ["Pedido simples: fonte, rota leve, execução, verificação e Receipt Five.", "Bug: reprodução, diagnose loop, fix, regressão, revisão e Learnback se repetido.", "Produto complexo: fonte, outcome, SOT, packs, gates, segurança, planos, runtime, prova, operação, release e maturidade."], detail: ["Feature comum, interface, integração crítica, legado, migração, agente, skill, prompt, modelo, release R4 e incidente usam caminhos diferentes.", "Cada tipo corta o que não precisa, mas não corta fonte, critério de sucesso, prova e fechamento.", "Interface pronta precisa provar fluxos, estados, viewports, acessibilidade e ausência de sobreposição relevante."] },
-  done: { title: "Pronto de verdade", nodes: ["outcome","ledger","sot","contract","packs","riskgates","securityplan","autonomy","ready","verification","review","humangate","completion","prodops","receipt","learnback","maturity"], start: "outcome", steps: ["Pronto não é o agente dizer que acabou.", "Pronto exige fonte, SOT, método, packs, gates, segurança quando necessária, acesso, agentes, evidência, verificação, revisão e Receipt Five.", "Quando há release, operação, monitoramento, suporte, incidente e rollback também entram."], detail: ["Dados/métricas entram quando sucesso precisa ser medido.", "Agentes, skills, prompts e modelos importantes precisam eval ou justificativa.", "Auditoria de maturidade procura lacunas estruturais antes que virem confiança falsa."] }
+  journeys: { title: "Jornadas por tipo de pedido", nodes: ["intake","ledger","router","contract","packs","riskgates","runtime","verification","review","receipt","learnback","maturity"], start: "intake", steps: ["Pedido simples: fonte, rota leve, execução, verificação e Receipt Five.", "Bug: reprodução, diagnose loop, fix, regressão, revisão e Learnback se repetido.", "Produto completo: Universal Signal Intake, fonte, outcome, Product SOT, full scope coverage, Product Creation Plan, packs, gates, segurança, runtime, prova, operação, release e maturidade."], detail: ["Paper, feature comum, interface, integração crítica, legado, migração, agente, skill, prompt, modelo, API/data product, blockchain, release R4 e incidente usam caminhos diferentes.", "Cada tipo corta o que não precisa, mas não corta fonte, critério de sucesso, prova e fechamento.", "Interface pronta precisa provar fluxos, estados, viewports, acessibilidade e ausência de sobreposição relevante."] },
+  done: { title: "Pronto de verdade", nodes: ["outcome","ledger","sot","contract","packs","riskgates","securityplan","autonomy","ready","verification","review","humangate","completion","prodops","receipt","learnback","maturity"], start: "outcome", steps: ["Pronto não é o agente dizer que acabou.", "Pronto exige fonte, SOT, método, packs, gates, segurança quando necessária, Product Implementation Readiness, acesso, agentes, evidência, verificação, revisão e Receipt Five.", "Quando há release, operação, monitoramento, suporte, incidente e rollback também entram."], detail: ["Dados/métricas entram quando sucesso precisa ser medido.", "Agentes, skills, prompts e modelos importantes precisam eval ou justificativa.", "Factory v1 Completion Gate fecha ou classifica lacunas como v1 blocker, vNext ou not planned."] }
 };
 
 const zonesGroup = document.getElementById("zones");

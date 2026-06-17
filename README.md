@@ -11,7 +11,7 @@ It is built for operators who want agents to work without letting chat,
 enthusiasm or a partial demo become the source of truth.
 
 Public map:
-https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html
+https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html
 
 ## Why This Exists
 

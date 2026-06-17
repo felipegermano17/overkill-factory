@@ -33,8 +33,8 @@ The HTML visualizations explain those contracts; they do not replace them.
 
 | File | Purpose |
 | --- | --- |
-| `overkill-factory-map-v0.1.0.svg` | Static README preview of the factory line and public boundary. |
-| `overkill-factory-map-v0.1.0.html` | Interactive map of the production line, R0-R4 risk tiers and the 40 public factory agents. |
+| `overkill-factory-map-v1.0.1.svg` | Static README preview of the factory line and public boundary. |
+| `overkill-factory-map-v1.0.1.html` | Interactive map of the production line, R0-R4 risk tiers and the 40 public factory agents. |
 
 ## Validation
 
