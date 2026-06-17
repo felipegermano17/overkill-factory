@@ -442,6 +442,118 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertFalse(outcome["acceptance"]["product_sot_generated"])
         self.assertFalse(outcome["acceptance"]["execution_allowed"])
 
+    def test_product_sot_from_outcome_contract_is_valid(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+
+        product_sot = factoryctl.build_product_sot(outcome)
+
+        self.assertEqual(factoryctl.validate_product_sot(product_sot), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(product_sot, "$"), [])
+        self.assertEqual(product_sot["record_type"], "product_sot")
+        self.assertEqual(product_sot["outcome_contract_ref"], outcome["contract_id"])
+        self.assertEqual(product_sot["handoff"]["next_artifact"], "full_product_sot_scope_coverage")
+        self.assertEqual(product_sot["handoff"]["next_worker"], "product-sot-planner")
+        self.assertFalse(product_sot["acceptance"]["execution_allowed"])
+        self.assertTrue(product_sot["blocking_rules"]["full_scope_coverage_required"])
+
+    def test_product_sot_requires_valid_outcome_contract(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome["acceptance"]["execution_allowed"] = True
+
+        with self.assertRaisesRegex(ValueError, "execution_allowed"):
+            factoryctl.build_product_sot(outcome)
+
+    def test_product_sot_cli_generates_public_safe_sot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            outcome_path = Path(tmpdir) / "outcome-contract.json"
+            material_path = Path(tmpdir) / "source-material.md"
+            out_path = Path(tmpdir) / "product-sot.json"
+            source_resolution = factoryctl.build_source_resolution_packet(
+                signal_intake(),
+                intake_ref_public_safe="external:sanitized-universal-signal-intake",
+            )
+            ledger = factoryctl.build_product_source_ledger(
+                source_resolution,
+                source_ref_public_safe="external:sanitized-product-brief",
+            )
+            outcome = factoryctl.build_outcome_contract(ledger)
+            outcome_path.write_text(json.dumps(outcome), encoding="utf-8")
+            material_path.write_text(
+                "\n".join(
+                    [
+                        "# Saude da fabrica",
+                        "- status de public/secret safety scans;",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "product-sot",
+                    "--outcome-contract",
+                    str(outcome_path),
+                    "--source-material",
+                    str(material_path),
+                    "--out",
+                    str(out_path),
+                ]
+            )
+
+            product_sot = json.loads(out_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(product_sot["record_type"], "product_sot")
+        self.assertEqual(factoryctl.validate_product_sot(product_sot), [])
+        self.assertIn("status de public and credential safety scans;", product_sot["scope_in"])
+        self.assertNotIn("[redacted-private-marker]", json.dumps(product_sot))
+
+    def test_product_sot_for_bug_route_is_rejected(self) -> None:
+        intake = factoryctl.build_universal_signal_intake(
+            route_class="bug_repair",
+            request_type="bug",
+            signal_type="bug_report",
+            summary_public_safe="Representative bug signal should not produce Product SOT.",
+            signal_ref_public_safe="external:sanitized-bug-signal",
+            target_surface="bug-target",
+            owner="factory-orchestrator",
+            source_class="operator_supplied",
+            sensitivity_class="public_safe",
+            freshness="fresh",
+            risk_initial="R2",
+            materiality="material",
+            created_at="2026-06-17T00:00:00+00:00",
+            intake_id="intake-bug-repair",
+        )
+        source_resolution = factoryctl.build_source_resolution_packet(
+            intake,
+            intake_ref_public_safe="external:sanitized-bug-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-bug-report",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+
+        with self.assertRaisesRegex(ValueError, "does not require Product SOT"):
+            factoryctl.build_product_sot(outcome)
+
 
 if __name__ == "__main__":
     unittest.main()
