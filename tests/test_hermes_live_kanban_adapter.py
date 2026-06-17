@@ -792,6 +792,37 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertEqual(len(unblock_calls), 1)
 
+    def test_ready_work_unit_supersession_ignores_replacement_lineage_context(self) -> None:
+        payload = {
+            "comments": [
+                {
+                    "author": adapter.READY_WORK_UNIT_CONTEXT_CHUNK_AUTHOR,
+                    "body": json.dumps(
+                        {
+                            "context_transport": adapter.READY_WORK_UNIT_CONTEXT_TRANSPORT_MODE,
+                            "data": json.dumps(
+                                {
+                                    "runtime_lineage": {
+                                        "lineage_type": "ready_work_unit_supersession",
+                                        "supersession_marker": adapter.READY_WORK_UNIT_SUPERSESSION_MARKER,
+                                    }
+                                }
+                            ),
+                        }
+                    ),
+                }
+            ]
+        }
+        self.assertFalse(adapter.task_has_ready_work_unit_supersession(payload))
+
+        payload["comments"].append(
+            {
+                "author": adapter.READY_WORK_UNIT_RECOVERY_AUTHOR,
+                "body": json.dumps({"marker": adapter.READY_WORK_UNIT_SUPERSESSION_MARKER}),
+            }
+        )
+        self.assertTrue(adapter.task_has_ready_work_unit_supersession(payload))
+
     def test_recover_ready_work_units_repairs_incomplete_existing_replacement(self) -> None:
         fake = FakeHermes()
         with tempfile.TemporaryDirectory() as tmp:
