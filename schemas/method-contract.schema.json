@@ -4,6 +4,11 @@
   "title": "Overkill Factory Method Contract",
   "type": "object",
   "required": [
+    "record_type",
+    "contract_id",
+    "created_at",
+    "factory_method_version",
+    "full_product_sot_scope_coverage_ref",
     "selected_method",
     "why_this_method",
     "risk_tier",
@@ -25,9 +30,19 @@
     "reviewers",
     "evidence_requirements",
     "authority_limit",
-    "done_criteria"
+    "done_criteria",
+    "blocking_rules",
+    "handoff",
+    "public_private_boundary",
+    "acceptance"
   ],
   "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/method-contract.schema.json" },
+    "record_type": { "const": "method_contract" },
+    "contract_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "factory_method_version": { "const": "OVERKILL_VFINAL" },
+    "full_product_sot_scope_coverage_ref": { "type": "string", "minLength": 3 },
     "selected_method": {
       "type": "string",
       "minLength": 3
@@ -209,6 +224,80 @@
         "type": "string",
         "minLength": 3
       }
+    },
+    "blocking_rules": {
+      "type": "object",
+      "required": [
+        "full_scope_coverage_required",
+        "product_creation_plan_required",
+        "execution_blocked_until_ready_gate",
+        "raw_private_evidence_must_stay_external",
+        "operator_must_not_choose_internal_method"
+      ],
+      "properties": {
+        "full_scope_coverage_required": { "const": true },
+        "product_creation_plan_required": { "const": true },
+        "execution_blocked_until_ready_gate": { "const": true },
+        "raw_private_evidence_must_stay_external": { "const": true },
+        "operator_must_not_choose_internal_method": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "next_artifact",
+        "next_worker",
+        "next_safe_action",
+        "user_decision_required",
+        "factory_owned_next_step"
+      ],
+      "properties": {
+        "next_artifact": { "type": "string", "minLength": 3 },
+        "next_worker": { "type": "string", "minLength": 3 },
+        "next_safe_action": { "type": "string", "minLength": 6 },
+        "user_decision_required": { "type": "boolean" },
+        "factory_owned_next_step": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "method_contract_created",
+        "execution_allowed",
+        "selected_method_is_factory_owned",
+        "scope_reduction_detected",
+        "blocked_reason",
+        "evidence_refs"
+      ],
+      "properties": {
+        "method_contract_created": { "const": true },
+        "execution_allowed": { "const": false },
+        "selected_method_is_factory_owned": { "const": true },
+        "scope_reduction_detected": { "const": false },
+        "blocked_reason": { "type": "string", "minLength": 6 },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": true

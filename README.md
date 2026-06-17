@@ -106,6 +106,7 @@ factoryctl source-ledger --source-resolution .tmp/source-resolution-packet.json 
 factoryctl outcome-contract --source-ledger .tmp/product-source-ledger.json --out .tmp/outcome-contract.json
 factoryctl product-sot --outcome-contract .tmp/outcome-contract.json --out .tmp/product-sot.json
 factoryctl full-scope-coverage --product-sot .tmp/product-sot.json --out .tmp/full-product-sot-scope-coverage.json
+factoryctl method-contract --full-scope-coverage .tmp/full-product-sot-scope-coverage.json --out .tmp/method-contract.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets

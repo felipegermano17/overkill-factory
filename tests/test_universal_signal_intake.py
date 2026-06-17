@@ -647,6 +647,103 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(first_requirement["blocker_id"], "human-gate-product-scope-001")
         self.assertIn("human-gate-product-scope-001", first_requirement["evidence_refs"])
 
+    def test_method_contract_from_full_scope_coverage_is_valid(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+        coverage = factoryctl.build_full_scope_coverage(product_sot)
+
+        method_contract = factoryctl.build_method_contract(coverage)
+
+        self.assertEqual(factoryctl.validate_method_contract(method_contract), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(method_contract, "$"), [])
+        self.assertEqual(method_contract["record_type"], "method_contract")
+        self.assertEqual(method_contract["full_product_sot_scope_coverage_ref"], coverage["coverage_id"])
+        self.assertEqual(method_contract["canonical_scope_source"], "approved Product SOT")
+        self.assertIn("full_product_sot_scope_coverage", method_contract["required_factory_artifacts"])
+        self.assertIn("product_creation_plan", method_contract["required_factory_artifacts"])
+        self.assertEqual(method_contract["handoff"]["next_artifact"], "product_creation_plan")
+        self.assertEqual(method_contract["handoff"]["next_worker"], "decomposition-planner")
+        self.assertFalse(method_contract["acceptance"]["execution_allowed"])
+
+    def test_method_contract_requires_valid_full_scope_coverage(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+        coverage = factoryctl.build_full_scope_coverage(product_sot)
+        coverage["acceptance"]["execution_allowed"] = True
+
+        with self.assertRaisesRegex(ValueError, "execution_allowed"):
+            factoryctl.build_method_contract(coverage)
+
+    def test_method_contract_cli_generates_public_safe_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            coverage_path = Path(tmpdir) / "full-scope-coverage.json"
+            out_path = Path(tmpdir) / "method-contract.json"
+            source_resolution = factoryctl.build_source_resolution_packet(
+                signal_intake(),
+                intake_ref_public_safe="external:sanitized-universal-signal-intake",
+            )
+            ledger = factoryctl.build_product_source_ledger(
+                source_resolution,
+                source_ref_public_safe="external:sanitized-product-brief",
+            )
+            outcome = factoryctl.build_outcome_contract(ledger)
+            product_sot = factoryctl.build_product_sot(outcome)
+            coverage = factoryctl.build_full_scope_coverage(product_sot)
+            coverage_path.write_text(json.dumps(coverage), encoding="utf-8")
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "method-contract",
+                    "--full-scope-coverage",
+                    str(coverage_path),
+                    "--out",
+                    str(out_path),
+                ]
+            )
+
+            method_contract = json.loads(out_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(method_contract["record_type"], "method_contract")
+        self.assertEqual(factoryctl.validate_method_contract(method_contract), [])
+
+    def test_method_contract_preserves_human_scope_gate(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+        coverage = factoryctl.build_full_scope_coverage(product_sot)
+        coverage["requirement_coverage"][0]["status"] = "human_decision_required"
+        coverage["requirement_coverage"][0]["blocker_id"] = "human-gate-method-scope-001"
+
+        method_contract = factoryctl.build_method_contract(coverage)
+
+        self.assertIn("Human Scope Gate", method_contract["required_gates"])
+        self.assertTrue(method_contract["handoff"]["user_decision_required"])
+        self.assertIn("human-gate-method-scope-001", method_contract["evidence_requirements"])
+
 
 if __name__ == "__main__":
     unittest.main()
