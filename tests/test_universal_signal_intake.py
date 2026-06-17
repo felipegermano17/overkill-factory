@@ -344,6 +344,104 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(ledger["handoff"]["next_artifact"], "bug_reproduction")
         self.assertNotEqual(ledger["handoff"]["next_worker"], "product-sot-planner")
 
+    def test_outcome_contract_from_product_source_ledger_is_valid(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+
+        outcome = factoryctl.build_outcome_contract(ledger)
+
+        self.assertEqual(factoryctl.validate_outcome_contract(outcome), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(outcome, "$"), [])
+        self.assertEqual(outcome["record_type"], "outcome_contract")
+        self.assertEqual(outcome["source_ledger_ref"], ledger["ledger_id"])
+        self.assertEqual(outcome["handoff"]["next_artifact"], "product_sot")
+        self.assertEqual(outcome["handoff"]["next_worker"], "product-sot-planner")
+        self.assertFalse(outcome["acceptance"]["product_sot_generated"])
+        self.assertFalse(outcome["acceptance"]["execution_allowed"])
+
+    def test_outcome_contract_requires_valid_source_ledger(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        ledger["acceptance"]["execution_allowed"] = True
+
+        with self.assertRaisesRegex(ValueError, "execution_allowed"):
+            factoryctl.build_outcome_contract(ledger)
+
+    def test_outcome_contract_cli_generates_public_safe_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ledger_path = Path(tmpdir) / "product-source-ledger.json"
+            out_path = Path(tmpdir) / "outcome-contract.json"
+            source_resolution = factoryctl.build_source_resolution_packet(
+                signal_intake(),
+                intake_ref_public_safe="external:sanitized-universal-signal-intake",
+            )
+            ledger = factoryctl.build_product_source_ledger(
+                source_resolution,
+                source_ref_public_safe="external:sanitized-product-brief",
+            )
+            ledger_path.write_text(json.dumps(ledger), encoding="utf-8")
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "outcome-contract",
+                    "--source-ledger",
+                    str(ledger_path),
+                    "--out",
+                    str(out_path),
+                ]
+            )
+
+            outcome = json.loads(out_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(outcome["record_type"], "outcome_contract")
+        self.assertEqual(factoryctl.validate_outcome_contract(outcome), [])
+
+    def test_outcome_contract_for_bug_route_does_not_generate_product_sot(self) -> None:
+        intake = factoryctl.build_universal_signal_intake(
+            route_class="bug_repair",
+            request_type="bug",
+            signal_type="bug_report",
+            summary_public_safe="Representative bug signal should produce an outcome before reproduction.",
+            signal_ref_public_safe="external:sanitized-bug-signal",
+            target_surface="bug-target",
+            owner="factory-orchestrator",
+            source_class="operator_supplied",
+            sensitivity_class="public_safe",
+            freshness="fresh",
+            risk_initial="R2",
+            materiality="material",
+            created_at="2026-06-17T00:00:00+00:00",
+            intake_id="intake-bug-repair",
+        )
+        source_resolution = factoryctl.build_source_resolution_packet(
+            intake,
+            intake_ref_public_safe="external:sanitized-bug-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-bug-report",
+        )
+
+        outcome = factoryctl.build_outcome_contract(ledger)
+
+        self.assertFalse(outcome["source_signal"]["needs_product_sot"])
+        self.assertEqual(outcome["handoff"]["next_artifact"], "bug_reproduction")
+        self.assertFalse(outcome["acceptance"]["product_sot_generated"])
+        self.assertFalse(outcome["acceptance"]["execution_allowed"])
+
 
 if __name__ == "__main__":
     unittest.main()

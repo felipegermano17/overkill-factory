@@ -73,7 +73,7 @@
       "operator_visible_summary": "Factory is turning the material into a product outcome.",
       "maintainer_visible_details": "Outcome is still candidate until Product SOT approval or bounded acceptance.",
       "related_schema_refs": ["schemas/outcome-contract.schema.json"],
-      "related_command_refs": ["factoryctl validate-card"],
+      "related_command_refs": ["factoryctl outcome-contract", "factoryctl validate-outcome-contract", "factoryctl validate-card"],
       "related_issue_refs": ["#108", "#112"]
     },
     {

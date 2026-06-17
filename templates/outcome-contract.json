@@ -1,31 +1,84 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/outcome-contract.schema.json",
-  "outcome": "What concrete result should exist after this work?",
+  "record_type": "outcome_contract",
+  "contract_id": "outcome-contract-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "source_ledger_ref": "product-source-ledger-public-template",
+  "source_signal": {
+    "intake_id": "universal-signal-intake-public-template",
+    "signal_type": "product_paper",
+    "request_type": "product_new",
+    "route_class": "product_creation",
+    "target_surface": "complete-product-production",
+    "summary_public_safe": "Operator supplied product material must become a bounded outcome before Product SOT or execution starts.",
+    "signal_ref_public_safe": "external:source-card-product-brief",
+    "source_class": "operator_supplied",
+    "sensitivity_class": "public_safe",
+    "freshness": "bounded",
+    "risk_initial": "R2",
+    "materiality": "material",
+    "needs_product_sot": true
+  },
+  "outcome": "Create the complete requested product outcome from the source material after source claims are reviewed.",
   "users_or_actors": [
-    "target user or actor"
+    "target operator or product user"
   ],
-  "problem": "What problem is being solved?",
+  "problem": "The factory must define the desired result before Product SOT, planning or implementation.",
   "success_signals": [
-    "observable signal that the outcome worked"
+    "Outcome, user, problem, success and risk signals are explicit before Product SOT.",
+    "Execution remains blocked until Product SOT, method, readiness and gates pass."
   ],
   "non_goals": [
-    "what this work must not solve"
+    "Do not treat the input material as Product SOT.",
+    "Do not start implementation from a static template."
   ],
   "open_questions": [
-    "unknown that must be resolved or accepted"
+    "Worker-owned claim review must decide which source claims become scope."
   ],
   "evidence_refs": [
-    "source-ledger.md"
+    "templates/product-source-ledger.json",
+    "schemas/outcome-contract.schema.json"
   ],
-  "behavior_change": "What user, system or business behavior should change?",
+  "behavior_change": "The factory moves from source bookkeeping to a bounded product outcome without asking the operator to coordinate internal artifacts.",
   "risk_signals": [
-    "observable sign that the product may be unsafe, confusing or failing"
+    "Outcome is too vague to derive Product SOT.",
+    "Outcome asks for execution before required downstream gates pass."
   ],
   "assumptions": [
-    "assumption that must be proven, accepted or tracked"
+    "The source ledger contains public-safe refs and no raw private source.",
+    "Product SOT will be produced by the assigned factory worker, not by chat memory."
   ],
-  "human_questions": [
-    "question only a human/product owner can answer"
-  ],
-  "discovery_depth": "standard"
+  "human_questions": [],
+  "discovery_depth": "standard",
+  "blocking_rules": {
+    "source_ledger_required": true,
+    "product_sot_blocked_until_outcome_reviewed": true,
+    "execution_blocked_until_required_artifacts_pass": true,
+    "raw_private_evidence_must_stay_external": true,
+    "human_gate_only_for_authority_access_risk_or_preference": true
+  },
+  "handoff": {
+    "next_artifact": "product_sot",
+    "next_worker": "product-sot-planner",
+    "next_safe_action": "Produce Product SOT from the outcome contract and source ledger before planning or execution.",
+    "user_decision_required": false,
+    "factory_owned_next_step": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "operator_instance_may_hold_private_source": true
+  },
+  "acceptance": {
+    "outcome_contract_created": true,
+    "product_sot_generated": false,
+    "execution_allowed": false,
+    "blocked_reason": "Outcome contract exists, but execution remains blocked until Product SOT, method contract, readiness and gates pass.",
+    "evidence_refs": [
+      "schemas/outcome-contract.schema.json",
+      "templates/product-source-ledger.json"
+    ]
+  }
 }

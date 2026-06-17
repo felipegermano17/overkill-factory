@@ -46,6 +46,8 @@ factoryctl source-resolution --intake templates/universal-signal-intake.json --i
 factoryctl validate-source-resolution templates/source-resolution-packet.json
 factoryctl source-ledger --source-resolution templates/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json
 factoryctl validate-source-ledger templates/product-source-ledger.json
+factoryctl outcome-contract --source-ledger templates/product-source-ledger.json --out .tmp/outcome-contract.json
+factoryctl validate-outcome-contract templates/outcome-contract.json
 factoryctl validate-signal-corpus templates/universal-signal-golden-corpus.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl v1-completion-gate --release-preflight .tmp/factory-runs/release/release-integration-preflight.json --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
@@ -74,6 +76,8 @@ Product SOT ungenerated and execution blocked until the source ledger, route
 artifacts, gates and workers pass. `source-ledger` materializes that handoff as
 a product source ledger with public-safe refs, claim table, unresolved gaps and
 the next factory-owned artifact. It still does not generate Product SOT or allow
+execution. `outcome-contract` turns the source ledger into a bounded product or
+route outcome without treating the input as Product SOT and without allowing
 execution. `validate-signal-corpus` and `signal-coverage` prove that the public
 Golden Corpus covers every known route without treating contract coverage as
 production readiness.
