@@ -808,6 +808,16 @@ def history_contains_markers(payload: dict[str, Any], markers: list[str]) -> boo
     return False
 
 
+def task_has_ready_work_unit_release_record(payload: dict[str, Any]) -> bool:
+    return history_contains_markers(
+        payload,
+        READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS,
+    ) or task_has_unblocked_event(
+        payload,
+        required_markers=READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS,
+    )
+
+
 def worker_satisfied_by_reconciliation(plan: dict[str, Any], worker_id: str) -> bool:
     reconciliation = plan.get("completion_reconciliation")
     if not isinstance(reconciliation, dict):
@@ -1565,6 +1575,7 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
         runner=runner,
     )
     verified: list[tuple[dict[str, Any], str, str, str, str]] = []
+    post_release_blocked: dict[str, str] = {}
     for task in tasks:
         key = expected_ready_work_unit_key(task)
         matches = candidates.get(key) or []
@@ -1574,11 +1585,22 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
             )
         status = task_readback_status(matches[0])
         if status == "blocked":
-            task_id, packet_id, work_unit_id = verify_ready_work_unit_release_candidate(
-                payload=matches[0],
-                plan_task=task,
-                worker_assignee_prefix=args.worker_assignee_prefix,
-            )
+            if task_has_ready_work_unit_release_record(matches[0]):
+                task_id, packet_id, work_unit_id = verify_ready_work_unit_identity(
+                    payload=matches[0],
+                    plan_task=task,
+                    worker_assignee_prefix=args.worker_assignee_prefix,
+                )
+                if not task_has_blocked_event(matches[0]):
+                    raise RuntimeError(f"Hermes task {task_id} is post-release blocked but lacks a blocked event")
+                status = "blocked_after_release"
+                post_release_blocked[work_unit_id] = task_id
+            else:
+                task_id, packet_id, work_unit_id = verify_ready_work_unit_release_candidate(
+                    payload=matches[0],
+                    plan_task=task,
+                    worker_assignee_prefix=args.worker_assignee_prefix,
+                )
         elif status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
             task_id, packet_id, work_unit_id = verify_ready_work_unit_identity(
                 payload=matches[0],
@@ -1652,14 +1674,16 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
             "eligible_work_unit_ids": sorted(work_unit_id for _task, _task_id, _packet_id, work_unit_id, _status in eligible),
             "held_work_unit_ids": sorted(dependency_blockers.keys()),
             "satisfied_work_unit_ids": satisfied_work_unit_ids,
+            "post_release_blocked_work_unit_ids": sorted(post_release_blocked.keys()),
             "dependency_blockers": {key: dependency_blockers[key] for key in sorted(dependency_blockers)},
         },
         "runtime_gate": {
             **(plan.get("runtime_gate") if isinstance(plan.get("runtime_gate"), dict) else {}),
             "release_verified_task_count": len(verified),
             "release_eligible_task_count": len(eligible),
-            "release_held_task_count": len(dependency_blockers),
+            "release_held_task_count": len(dependency_blockers) + len(post_release_blocked),
             "release_satisfied_task_count": len(satisfied_work_unit_ids),
+            "post_release_blocked_task_count": len(post_release_blocked),
             "dispatch_allowed_by_this_step": False,
             "native_dispatch_required_next": bool(released_ready_work_unit_task_ids),
             "complete_product_claim_allowed": False,
