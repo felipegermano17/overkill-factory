@@ -30,24 +30,33 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_readme_is_external_user_entrypoint(self) -> None:
         readme = read_text("README.md")
         required_headings = [
-            "What It Is",
-            "Who It Is For",
-            "What It Does",
-            "What It Does Not Do",
-            "How Hermes Fits",
-            "Operator Path",
-            "Quickstart",
-            "First Value In 10 Minutes",
+            "Why This Exists",
+            "How The Factory Works",
+            "Hermes Runtime",
+            "First Run",
             "Repository Shape",
-            "Current Status",
-            "Documentation Map",
+            "Current Release State",
+            "Read Next",
+            "Validation",
+            "Public Boundary",
         ]
 
         for heading in required_headings:
             with self.subTest(heading=heading):
                 self.assertIn(f"## {heading}", readme)
 
+        self.assertIn("README.pt-BR.md", readme)
+        self.assertIn("Public map:", readme)
+        self.assertIn(
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html",
+            readme,
+        )
+        self.assertIn("full Product SOT scope coverage", readme)
+        self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
+        self.assertNotIn("## What It Does Not Do", readme)
+
         for rel in [
+            "README.pt-BR.md",
             "docs/getting-started/quickstart-hermes.md",
             "docs/governance/document-governance.md",
             "docs/concepts/factory-flow.md",
@@ -67,6 +76,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
             "examples/minimal-hermes-project/README.md",
+            "fixtures/README.md",
+            "ui/README.md",
             ".env.example",
             "CHANGELOG.md",
             "CONTRIBUTING.md",
@@ -78,6 +89,37 @@ class OpenSourceDocsTest(unittest.TestCase):
         for command in ["factoryctl doctor", "factoryctl init", "factoryctl run minimal"]:
             with self.subTest(command=command):
                 self.assertIn(command, readme)
+
+    def test_portuguese_readme_mirrors_public_entrypoint(self) -> None:
+        readme_pt = read_text("README.pt-BR.md")
+        required_headings = [
+            "Por Que Existe",
+            "Como A Fabrica Funciona",
+            "Runtime Hermes",
+            "Primeira Execucao",
+            "Estrutura Do Repositorio",
+            "Estado Atual De Release",
+            "Leia Depois",
+            "Validacao",
+            "Fronteira Publica",
+        ]
+
+        for heading in required_headings:
+            with self.subTest(heading=heading):
+                self.assertIn(f"## {heading}", readme_pt)
+
+        for expected in [
+            "[English](README.md)",
+            "Mapa publico:",
+            "nao um atalho de MVP",
+            "Hermes and Receipt Five remain the source of truth",
+            "fixtures/README.md",
+            "ui/README.md",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html",
+            "factoryctl run minimal",
+        ]:
+            with self.subTest(expected=expected):
+                self.assertIn(expected, readme_pt)
 
     def test_public_docs_skeleton_exists(self) -> None:
         required_paths = [
@@ -105,6 +147,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "examples/minimal-hermes-project/input-paper.md",
             "examples/minimal-hermes-project/expected-flow.md",
             "examples/minimal-hermes-project/expected-receipt-five.json",
+            "fixtures/README.md",
             ".env.example",
             "pyproject.toml",
             "CHANGELOG.md",
@@ -120,6 +163,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             ".github/ISSUE_TEMPLATE/feature_request.yml",
             ".github/ISSUE_TEMPLATE/config.yml",
             ".github/pull_request_template.md",
+            "README.pt-BR.md",
+            "ui/README.md",
         ]
 
         for rel in required_paths:
@@ -148,12 +193,15 @@ class OpenSourceDocsTest(unittest.TestCase):
             "agents/",
             "docs/",
             "examples/",
+            "fixtures/",
+            "planning-bundles/",
             "products/",
             "schemas/",
             "scripts/",
             "skills/",
             "templates/",
             "tests/",
+            "ui/",
         ]
 
         for rel in expected_public_dirs:
@@ -169,6 +217,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             "agents/README.md": ["worker registry", "Hermes bindings"],
             "docs/README.md": ["human guides", "public onboarding"],
             "examples/README.md": ["source examples", ".tmp/"],
+            "fixtures/README.md": ["regression", "public-safe"],
+            "ui/README.md": ["static public-safe UI", "read-only"],
             "products/README.md": ["public validation products", "not production approval"],
             "schemas/README.md": ["machine contracts", "JSON Schema"],
             "scripts/README.md": ["CLI", "validation"],
@@ -335,6 +385,17 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("site/", gitignore)
         self.assertIn("exclude_docs:", mkdocs)
         self.assertIn("not_in_nav:", mkdocs)
+
+    def test_public_repo_has_no_legacy_pilot_markdown_templates(self) -> None:
+        tracked_templates = {
+            path.relative_to(ROOT).as_posix()
+            for path in (ROOT / "templates").glob("*.md")
+        }
+
+        self.assertNotIn("templates/pilot-input-paper.md", tracked_templates)
+        self.assertNotIn("templates/v3-6-learning-record.md", tracked_templates)
+        self.assertIn("templates/product-sot.md", tracked_templates)
+        self.assertIn("templates/architecture-review-packet.md", tracked_templates)
 
     def test_published_surface_sync_has_manual_scheduled_workflow(self) -> None:
         workflow = read_text(".github/workflows/public-surface-published-sync.yml")

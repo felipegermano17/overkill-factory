@@ -1,128 +1,85 @@
 # Overkill Factory
 
-Overkill Factory is an open source production line for agentic product work.
-It helps a Hermes operator turn a product paper, idea, bug, incident, existing
-repo, release, research request or other work signal into a controlled sequence
-of signal intake, source resolution, planning, architecture, specialist work,
-evidence, review, gates and receipts.
+Language: English | [Portugues](README.pt-BR.md)
 
-The project is not a chat prompt. It is a set of public contracts, worker
-profiles, adapter hooks, examples and validation scripts that make agent work
-inspectable before it is allowed to move forward.
+Overkill Factory is an open-source production system for agentic product work.
+It turns rough product signals into controlled factory state: source intake,
+Product SOT, full-scope planning, method routing, worker packets, gates,
+evidence, review, release readiness and learnback.
 
-## What It Is
+It is built for operators who want agents to work without letting chat,
+enthusiasm or a partial demo become the source of truth.
 
-Overkill Factory gives Hermes a product-production method:
+Public map:
+https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html
+
+## Why This Exists
+
+Agentic work usually fails in the spaces between tasks:
+
+- a product paper becomes an informal summary;
+- a first slice quietly replaces the full product scope;
+- a worker says "done" without inspectable evidence;
+- a dashboard looks useful but is not the runtime source of truth;
+- a blocked path waits for the operator even when the factory should repair it.
+
+Overkill Factory makes those spaces explicit. A signal is routed through known
+contracts. Every important state has an owner, gate, next action and evidence
+shape. Non-human blocks are expected to return to factory-owned repair routes.
+Human gates remain human gates.
+
+## How The Factory Works
+
+The public method is a complete production line, not an MVP shortcut:
 
 ```text
-paper, bug, repo, incident, idea or research signal
--> universal signal intake
--> source resolution
+raw signal
+-> Universal Signal Intake
+-> source ledger and source resolution
+-> outcome and discovery
 -> Product SOT
--> architecture and risk routing
--> Hermes worker cards
--> specialist execution
--> evidence and Receipt Five
--> independent review and human gates
--> release readiness
+-> full Product SOT scope coverage
+-> method contract
+-> capability pack and risk routing
+-> architecture, security and access gates
+-> Product Creation Plan and work units
+-> Hermes worker packets
+-> execution, verification and independent review
+-> Receipt Five
+-> release/block decision
+-> monitoring, support and learnback
 ```
 
-The repository contains the public method, card and receipt schemas, worker
-registry, Hermes profile bindings, adapter scripts, tests and a small runnable
-example.
+The input can be a product paper, bug, idea, existing repository, incident,
+release request, research request, UX request, analytics request, integration,
+migration or agent/runtime change. The route registry and golden signal corpus
+make those paths inspectable instead of hidden in conversation.
 
-## Who It Is For
+The intended output is not "a good answer." It is a product or factory decision
+that can be audited: what was requested, what was planned, what was blocked,
+what was done, who or what had authority, and what evidence allows the next
+state.
 
-Use it when you already run, or want to run, product work with Hermes and need:
+## Hermes Runtime
 
-- repeatable gates instead of informal agent handoffs;
-- explicit worker roles for planning, building, security, proof and release;
-- receipts that make completion inspectable beyond a chat transcript;
-- a way to let agents work while still preserving human authority for high-risk
-  decisions.
+Hermes is the first supported factory floor.
 
-It is especially useful for product teams, solo builders and agent operators who
-want autonomous help without pretending that autonomy removes gates, access
-control, review or release responsibility.
+Overkill Factory provides the method, contracts, schemas, worker registry,
+Hermes bindings, adapter hooks, examples and validation tools. Hermes provides
+the durable Kanban runtime where cards, workers, comments, runs and state
+transitions live.
 
-## What It Does
+The practical boundary is simple:
 
-Overkill Factory provides:
+- `factoryctl`, schemas and tests validate public contracts.
+- Hermes Kanban is the runtime authority for real cards and transitions.
+- Receipt Five and worker results are the completion evidence.
+- Cockpits such as Discord or a local web UI can project state, but they do not
+  approve gates or replace Hermes.
 
-- a card contract for describing phase, risk, scope, runtime, security and done
-  evidence;
-- a Universal Signal Intake contract, Route Registry, Golden Corpus and signal
-  coverage scorecard for routing papers, bugs, repos, incidents, research,
-  UX, analytics and agent changes without chat-only state;
-- a worker registry and Hermes profile bindings for routing work to the right
-  role;
-- a capability pack registry for checking whether the product type has ready
-  specialist coverage before execution;
-- a single `factoryctl` CLI for install health, project init, local smoke,
-  card validation, gate reports and worker packets;
-- a Hermes adapter and transition hook that can block weak `ready` and `done`
-  transitions;
-- public-safe examples and receipt contracts;
-- safety scans for secrets and private/public boundary mistakes.
+## First Run
 
-## What It Does Not Do
-
-Overkill Factory does not automatically:
-
-- understand your business without source material;
-- approve architecture, security, release or human gates;
-- deploy to production;
-- move funds, sign transactions or handle real keys;
-- replace Codex Security, Auditor, Product Face proof, QA or human review;
-- require Discord as a source of truth;
-- make every registered worker run on every card;
-- pretend every product type already has executable specialists. If a paper
-  asks for mobile, desktop, game, AI/ML, fintech, regulated, analytics,
-  browser-extension or hardware work, capability-pack validation can block until
-  the matching pack is activated.
-
-Hermes and Receipt Five remain the source of truth. Discord or another Control
-Tower can be a cockpit, but it is not the evidence store.
-
-## How Hermes Fits
-
-Hermes is the first supported runtime. Overkill Factory supplies the factory
-method and contracts; Hermes supplies the Kanban floor where cards, workers and
-state transitions live.
-
-The adapter files are under `adapters/hermes/`:
-
-- `adapters/hermes/README.md` explains the patch and transition model.
-- `adapters/hermes/transition_hook.py` prepares worker routing and done-time
-  evidence reconciliation.
-- `agents/hermes-profile-bindings.public.json` maps public workers to Hermes
-  profile names, queues, skills and receipt fields.
-
-You can run local validation without Discord. Configure a Control Tower only
-after the local card, worker packet and receipt path is clear.
-
-## Operator Path
-
-For a person or AI installing the factory into their own Hermes, use the CLI
-path first and open dense contracts only when needed:
-
-```bash
-python -m pip install -e .
-factoryctl doctor
-factoryctl run minimal
-factoryctl init --out ../my-product-factory --project-name my-product
-factoryctl route-registry --route-class product_creation
-factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
-```
-
-Then read `docs/getting-started/install-in-hermes.md` and connect generated
-worker packets to your Hermes test runtime. The factory is easy to maintain
-when common user flows go through `factoryctl` and maintainer internals stay
-behind docs, schemas and tests.
-
-## Quickstart
-
-Three-command local smoke from a fresh checkout:
+From a clean checkout:
 
 ```bash
 git clone https://github.com/felipegermano17/overkill-factory.git
@@ -132,155 +89,142 @@ factoryctl doctor
 factoryctl run minimal
 ```
 
-The smoke writes `.tmp/quickstart-result.json` and required worker packets under
-`.tmp/minimal-worker-packets/`. Read
-`docs/getting-started/quickstart-hermes.md` for the same path with Hermes
-configuration notes.
+The minimal run writes local output under `.tmp/`, including a quickstart result
+and worker packets for the public example card.
 
-`python scripts/quickstart_smoke.py` and `overkill-quickstart` remain
-compatibility entrypoints, but `factoryctl run minimal` is the public operator
-path.
+Generated worker packets and gate reports belong in `.tmp/`, release artifacts
+or a private evidence store, not in the public repo.
 
-Installed package commands can run outside the checkout for `factoryctl doctor`,
-`factoryctl run minimal` and `factoryctl init`. Use a checkout when you need to
-inspect docs, patch Hermes, run maintainer scripts or contribute changes.
+Useful next commands:
 
-## First Value In 10 Minutes
+```bash
+factoryctl init --out ../my-product-factory --project-name my-product
+factoryctl route-registry --route-class product_creation
+factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
+factoryctl gate-report --card examples/minimal-hermes-project/card.md
+factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+```
 
-First value is binary: the quickstart prints `PASS`, writes
-`.tmp/quickstart-result.json` and generates worker packets in
-`.tmp/minimal-worker-packets/`.
-
-After that run, you should know:
-
-- whether the minimal card contract is valid;
-- which workers are required before execution;
-- whether the gate is ready for worker execution;
-- which packet files Hermes would receive next.
-
-Generated worker packets and gate reports belong in `.tmp/`, not in the public
-repository. Commit source examples, schemas, scripts and tests; regenerate run
-outputs locally.
+Read `docs/getting-started/quickstart-hermes.md` and
+`docs/getting-started/install-in-hermes.md` when connecting the factory to your
+own Hermes runtime.
 
 ## Repository Shape
 
-Every public directory below has a local README with its purpose, boundary,
-source of truth and validation path. Open that README before treating a folder
-as a place to add files.
+Every tracked top-level directory must justify why it exists, who opens it
+first, what its source of truth is and how drift is prevented.
 
-| Path | Public Purpose |
+| Path | Public purpose |
 | --- | --- |
-| `.github/` | CI, issue templates and pull request hygiene. |
-| `adapters/` | Runtime integrations, currently Hermes transition hooks and patches. See `adapters/README.md`. |
-| `agents/` | Public worker registry, profiles, permissions and Hermes bindings. See `agents/README.md`. |
-| `docs/` | Human guides for getting started, concepts, operations, agents and integrations. See `docs/README.md`. |
-| `examples/` | Small source examples and fixtures that teach or test the factory path. See `examples/README.md`. |
-| `planning-bundles/` | Public-safe planning protocols for creating candidate artifacts in web LLMs before factory validation. See `planning-bundles/README.md`. |
+| `.github/` | GitHub workflows, templates, Dependabot and repository hygiene. See `.github/PROJECT_SURFACE.md`. |
+| `adapters/` | Runtime integrations, currently Hermes hooks and patches. See `adapters/README.md`. |
+| `agents/` | Public worker registry, profiles, permissions, capability packs and Hermes bindings. See `agents/README.md`. |
+| `docs/` | Human guides for onboarding, concepts, operations, security and maintenance. See `docs/README.md`. |
+| `examples/` | Small public examples and source fixtures for the factory path. See `examples/README.md`. |
+| `fixtures/` | Minimal public-safe regression fixtures, not historical evidence. See `fixtures/README.md`. |
+| `planning-bundles/` | Public-safe planning protocols for candidate artifacts before factory validation. See `planning-bundles/README.md`. |
 | `products/` | Public validation products used by product-like and production-lane checks. See `products/README.md`. |
-| `schemas/` | Machine contracts for cards, receipts, worker outputs and gates. See `schemas/README.md`. |
+| `schemas/` | Machine contracts for cards, receipts, workers, gates and public artifacts. See `schemas/README.md`. |
 | `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. See `scripts/README.md`. |
-| `skills/` | Installable Codex skill material for operating the factory. See `skills/README.md`. |
-| `templates/` | Contract templates paired with schemas and tests. See `templates/README.md`. |
-| `tests/` | Regression coverage for the public contracts and quickstart path. See `tests/README.md`. |
+| `skills/` | Installable Codex skill material for operating the factory from a public clone. See `skills/README.md`. |
+| `templates/` | Starter contracts paired with schemas and tests. See `templates/README.md`. |
+| `tests/` | Regression coverage for public contracts, docs, adapters and examples. See `tests/README.md`. |
+| `ui/` | Static public-safe local UI surfaces that project fixture data only. See `ui/README.md`. |
 
-## Current Status
+Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
+`*.egg-info/` are not public product surfaces.
 
-Factory v1 is the public kernel release. The repository has validated schemas,
-worker profiles, Hermes profile bindings, adapter hooks, safety scans, a
-packaged CLI, a runnable public example, Product Face proof drivers,
-capability-pack activation checks, production worker graph contracts and public
-surface synchronization checks. The finish line for this public kernel is the
-Factory v1 Completion Gate: current route coverage, release preflight, GitHub
-checks, open PRs and open v1 blockers must pass before v1 can be closed.
-Remaining non-blocking findings must be explicitly classified as `vnext` or
-`not_planned`, not left as endless audit drift.
+## Current Release State
 
-The project is still not a hosted service and not a production launch for a
-user's product. A user must connect it to their own Hermes runtime, configure
-any real tools they want workers to use, and provide real approval records for
-high-risk work. Private runtime or cockpit production readiness evidence stays
-outside the public repo.
+Factory v1 is the current public kernel release. It includes:
 
-## Documentation Authority
+- Universal Signal Intake and route registry;
+- Golden Corpus and signal coverage checks;
+- Product SOT, full-scope planning and method contracts;
+- worker registry, Hermes bindings and permission classes;
+- capability-pack activation rules;
+- Product Face packet/result contracts;
+- release preflight, public-surface sync and safety scans;
+- Factory v1 Completion Gate.
 
-The current external-user path is this README, the quickstart, the concept flow,
-the operations checklist and the executable gates. Narrative validation history,
-old roadmaps, pilot writeups and research notes do not belong in the public
-onboarding path.
+That claim is intentionally scoped. Factory v1 means the public kernel is
+complete enough to install, inspect, validate and extend. A product built by the
+factory still needs its own source material, Product SOT, worker execution,
+evidence, reviews, human gates and production readiness proof.
 
-When documents disagree, use this order:
+## Read Next
 
-1. `scripts/factoryctl.py`, schemas, adapter hooks and tests.
-2. `README.md`, `docs/getting-started/quickstart-hermes.md`,
-   `docs/concepts/factory-flow.md`,
-   `docs/concepts/overkill-factory-method.md`,
-   `docs/concepts/operator-journey.md` and
-   `docs/operations/validation-and-release.md`.
-3. Agent, worker, capability, security and Product Face support docs.
-4. Generated local outputs under `.tmp/factory-runs/` only for the run that
-   produced them. They are not source authority and must not be committed.
-   Generated worker packets and gate reports belong in `.tmp/`.
-
-See `docs/governance/document-governance.md` for the document status rules. A
-task idea is not a runtime gate until it has a schema, script, test, worker,
-adapter rule or receipt contract.
-
-## Documentation Map
-
-- `docs/governance/document-governance.md`: what belongs in public docs versus
-  local/private evidence.
-- `docs/index.md`: docs home and navigation.
-- `docs/getting-started/quickstart-hermes.md`: first run with your own Hermes.
-- `docs/getting-started/install-in-hermes.md`: install and connect the factory
-  to an operator-owned Hermes runtime.
+- `docs/index.md`: documentation home.
+- `docs/getting-started/quickstart-hermes.md`: first run with Hermes context.
+- `docs/getting-started/install-in-hermes.md`: connect the factory to an
+  operator-owned Hermes runtime.
+- `docs/governance/document-governance.md`: document authority and public
+  boundary rules.
 - `docs/reference/cli.md`: supported `factoryctl` commands.
-- `docs/concepts/factory-flow.md`: core concepts and phase flow.
-- `docs/concepts/overkill-factory-method.md`: human-readable method guide.
-- `docs/concepts/operator-journey.md`: step-by-step operator journey.
-- `docs/visuals/README.md`: public visual-map boundary and validation rules.
-- Public visual map:
-  `https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html`.
-- `planning-bundles/README.md`: public-safe planning protocols for candidate
-  artifacts that must be imported and validated before execution.
-- `docs/agents/worker-profiles.md`: worker roles, inputs, outputs, limits and
-  evidence.
-- `agents/README.md`: human entrypoint for the agent contract directory.
-- `docs/agents/factory-stage-agent-map.md`: which worker owns each canonical
-  factory stage and what proof blocks the next step.
-- `docs/agents/capability-packs.md`: ready product coverage and pack activation
-  rules.
-- `docs/control-tower/open-source-setup.md`: optional Discord/Control Tower
-  setup.
-- `docs/operations/validation-and-release.md`: validation and release checklist.
-- `docs/operations/release-policy.md`: semantic versioning, release checks and
-  point-5 boundary.
-- `docs/operations/troubleshooting.md`: common failures and how to continue.
-- `docs/architecture/hermes-integration.md`: adapter and runtime integration.
-- `docs/examples/gallery.md`: which example to use for minimal, Product Face,
-  security and onchain paths.
-- `docs/security/oss-security.md`: repository security controls.
-- `docs/maintenance/repo-surface.md`: operator surface versus maintainer
-  internals and generated output.
-- `examples/minimal-hermes-project/README.md`: small public-safe example.
+- `docs/concepts/factory-flow.md`: the production line and state model.
+- `docs/concepts/overkill-factory-method.md`: method guide.
+- `docs/concepts/operator-journey.md`: operator journey.
+- `docs/visuals/README.md`: visual map boundary and validation.
+- `agents/README.md`: human entrypoint for the worker contract directory.
+- `docs/agents/worker-profiles.md`: worker roles, inputs, outputs and limits.
+- `docs/agents/factory-stage-agent-map.md`: stage-to-worker ownership map.
+- `docs/agents/capability-packs.md`: product-type coverage rules.
+- `docs/control-tower/open-source-setup.md`: optional Control Tower setup.
+- `docs/operations/validation-and-release.md`: release validation checklist.
+- `docs/operations/release-policy.md`: release and versioning policy.
+- `docs/operations/troubleshooting.md`: common failures and recovery path.
+- `docs/architecture/hermes-integration.md`: Hermes adapter architecture.
+- `docs/examples/gallery.md`: public examples.
+- `docs/security/oss-security.md`: security posture.
+- `docs/maintenance/repo-surface.md`: public surface maintenance rules.
+- `examples/minimal-hermes-project/README.md`: minimal runnable example.
 - `.env.example`: safe environment variable template.
 - `CHANGELOG.md`: public release history.
 - `CONTRIBUTING.md`: contribution rules and required checks.
 - `SECURITY.md`: security reporting and public-boundary policy.
 
-## Public Safety
+## Validation
 
-Public artifacts must not contain secrets, private source dumps, local absolute
-paths, private board links, raw logs or private operational history.
-
-Run these before publishing:
+Before publishing public changes:
 
 ```bash
 python scripts/validate_document_governance.py
-python scripts/secret_safety_scan.py
-python scripts/public_safety_scan.py
-python scripts/validate_planning_bundles.py
 python scripts/validate_public_json_artifacts.py
+python scripts/validate_worker_profiles.py
+python scripts/validate_planning_bundles.py
+python scripts/public_safety_scan.py
+python scripts/secret_safety_scan.py
+python scripts/validate_public_surface_sync.py --check-published
+python -m unittest discover -s tests -q
 ```
+
+For release readiness:
+
+```bash
+python scripts/release_integration_preflight.py
+python scripts/worktree_release_inventory.py
+factoryctl v1-completion-gate --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
+```
+
+The public map is validated by `scripts/validate_public_surface_sync.py`. It
+compares the tracked HTML against the published GCS object and checks that the
+visual does not claim runtime authority.
+
+## Public Boundary
+
+The repository is a public product surface. It must not contain secrets, raw
+private evidence, private board links, local absolute paths, private source
+dumps, screenshots from private runs, generated worker packets, historical proof
+archives or chat-derived authority.
+
+Narrative validation history, old release notes disguised as proof and internal
+audit trails do not belong in the public onboarding path. Public onboarding
+should point to current contracts, runnable examples, validators and concise
+operator guides.
+
+Hermes and Receipt Five remain the source of truth for real factory execution.
+This repo documents and validates the factory kernel; it is not a warehouse for
+private runtime history.
 
 ## License
 
