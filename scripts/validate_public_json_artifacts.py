@@ -1580,6 +1580,123 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "product_creation_plan":
+        for field in ("product_sot_ref", "method_contract_ref", "product_delivery_quality_profile_ref"):
+            reason = public_artifact_ref_error(data.get(field))
+            if reason:
+                errors.append(f"{at}.{field}: {reason}")
+        if data.get("complete_product_required") is not True:
+            errors.append(f"{at}.complete_product_required must be true")
+        for field in (
+            "complete_product_scope",
+            "production_readiness_scope",
+            "release_promotion_ladder_refs",
+            "complete_product_done_criteria",
+            "slice_done_criteria",
+            "stop_conditions",
+            "evidence_refs",
+        ):
+            if not (data.get(field) if isinstance(data.get(field), list) else []):
+                errors.append(f"{at}.{field} must be non-empty")
+        work_units = data.get("work_units") if isinstance(data.get("work_units"), list) else []
+        if not work_units:
+            errors.append(f"{at}.work_units must be non-empty")
+        unit_ids: set[str] = set()
+        for index, unit in enumerate(work_units):
+            if not isinstance(unit, dict):
+                continue
+            unit_id = str(unit.get("unit_id") or "").strip()
+            if not unit_id:
+                errors.append(f"{at}.work_units[{index}].unit_id is required")
+            elif unit_id in unit_ids:
+                errors.append(f"{at}.work_units[{index}].unit_id must be unique: {unit_id}")
+            else:
+                unit_ids.add(unit_id)
+            for field in (
+                "product_sot_requirement_refs",
+                "scope_in",
+                "scope_out",
+                "verification",
+                "proof_ids_required",
+                "capability_profile_refs",
+                "ready_rules",
+                "blocked_when",
+                "done_rules",
+                "stop_conditions",
+            ):
+                if not (unit.get(field) if isinstance(unit.get(field), list) else []):
+                    errors.append(f"{at}.work_units[{index}].{field} must be non-empty")
+            for field in ("owner_worker", "reviewer_role", "expected_result"):
+                if not str(unit.get(field) or "").strip():
+                    errors.append(f"{at}.work_units[{index}].{field} is required")
+            owner = str(unit.get("owner_worker") or "").strip()
+            reviewer = str(unit.get("reviewer_role") or "").strip()
+            blocker_owner = str(unit.get("blocker_owner") or "").strip()
+            if owner and owner not in public_worker_ids():
+                errors.append(f"{at}.work_units[{index}].owner_worker must be a registered worker: {owner}")
+            if reviewer and reviewer not in public_worker_ids():
+                errors.append(f"{at}.work_units[{index}].reviewer_role must be a registered worker: {reviewer}")
+            if blocker_owner and blocker_owner not in public_worker_ids():
+                errors.append(f"{at}.work_units[{index}].blocker_owner must be a registered worker: {blocker_owner}")
+            if str(unit.get("status") or "").strip() == "blocked":
+                for field in ("blocker_id", "blocker_owner", "next_action"):
+                    if not str(unit.get(field) or "").strip():
+                        errors.append(f"{at}.work_units[{index}].{field} is required when status is blocked")
+            for ref_field in ("product_sot_requirement_refs", "capability_profile_refs"):
+                refs = unit.get(ref_field) if isinstance(unit.get(ref_field), list) else []
+                for ref_index, ref in enumerate(refs):
+                    reason = public_artifact_ref_error(ref)
+                    if reason:
+                        errors.append(f"{at}.work_units[{index}].{ref_field}[{ref_index}]: {reason}")
+        execution_order = data.get("execution_order") if isinstance(data.get("execution_order"), list) else []
+        missing_order_refs = [unit_id for unit_id in execution_order if unit_id not in unit_ids]
+        if missing_order_refs:
+            errors.append(f"{at}.execution_order references unknown work_units: {', '.join(missing_order_refs)}")
+        runtime_boundary = data.get("runtime_boundary") if isinstance(data.get("runtime_boundary"), dict) else {}
+        if runtime_boundary.get("state_role") != "planning_only":
+            errors.append(f"{at}.runtime_boundary.state_role must be planning_only")
+        if runtime_boundary.get("runtime_authority") != "hermes_kanban":
+            errors.append(f"{at}.runtime_boundary.runtime_authority must be hermes_kanban")
+        if runtime_boundary.get("local_state_authority") is not False:
+            errors.append(f"{at}.runtime_boundary.local_state_authority must be false")
+        blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
+        for field in (
+            "product_sot_required",
+            "method_contract_required",
+            "product_implementation_readiness_required",
+            "execution_blocked_until_ready_gate",
+            "raw_private_evidence_must_stay_external",
+        ):
+            if blocking_rules.get(field) is not True:
+                errors.append(f"{at}.blocking_rules.{field} must be true")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        if handoff.get("next_artifact") != "product_implementation_readiness":
+            errors.append(f"{at}.handoff.next_artifact must be product_implementation_readiness")
+        if handoff.get("factory_owned_next_step") is not True:
+            errors.append(f"{at}: product_creation_plan.handoff.factory_owned_next_step must be true")
+        next_worker = str(handoff.get("next_worker") or "").strip()
+        if next_worker and next_worker not in public_worker_ids():
+            errors.append(f"{at}.handoff.next_worker must be a registered worker: {next_worker}")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: product_creation_plan requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: product_creation_plan must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: product_creation_plan private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("product_creation_plan_created") is not True:
+            errors.append(f"{at}: product_creation_plan acceptance.product_creation_plan_created must be true")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: product_creation_plan acceptance.execution_allowed must be false")
+        if acceptance.get("scope_reduction_detected") is not False:
+            errors.append(f"{at}: product_creation_plan acceptance.scope_reduction_detected must be false")
+        if acceptance.get("work_units_accounted") != len(work_units):
+            errors.append(f"{at}: product_creation_plan acceptance.work_units_accounted must match work_units length")
+        for index, ref in enumerate(acceptance.get("evidence_refs", []) if isinstance(acceptance.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_v1_completion_gate":

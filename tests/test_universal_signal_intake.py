@@ -31,6 +31,21 @@ def signal_intake() -> dict:
     return json.loads((ROOT / "templates" / "universal-signal-intake.json").read_text(encoding="utf-8"))
 
 
+def build_valid_method_contract() -> dict:
+    source_resolution = factoryctl.build_source_resolution_packet(
+        signal_intake(),
+        intake_ref_public_safe="external:sanitized-universal-signal-intake",
+    )
+    ledger = factoryctl.build_product_source_ledger(
+        source_resolution,
+        source_ref_public_safe="external:sanitized-product-brief",
+    )
+    outcome = factoryctl.build_outcome_contract(ledger)
+    product_sot = factoryctl.build_product_sot(outcome)
+    coverage = factoryctl.build_full_scope_coverage(product_sot)
+    return factoryctl.build_method_contract(coverage)
+
+
 class UniversalSignalIntakeTest(unittest.TestCase):
     def test_public_template_validates(self) -> None:
         errors = factoryctl.validate_universal_signal_intake(signal_intake())
@@ -743,6 +758,76 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertIn("Human Scope Gate", method_contract["required_gates"])
         self.assertTrue(method_contract["handoff"]["user_decision_required"])
         self.assertIn("human-gate-method-scope-001", method_contract["evidence_requirements"])
+
+    def test_product_creation_plan_from_method_contract_is_valid(self) -> None:
+        method_contract = build_valid_method_contract()
+
+        plan = factoryctl.build_product_creation_plan(method_contract)
+
+        self.assertEqual(factoryctl.validate_product_creation_plan(plan), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(plan, "$"), [])
+        self.assertEqual(plan["record_type"], "product_creation_plan")
+        self.assertEqual(plan["method_contract_ref"], method_contract["contract_id"])
+        self.assertTrue(plan["complete_product_required"])
+        self.assertIn("work-unit-001-scope-reconciliation", plan["execution_order"])
+        self.assertEqual(plan["handoff"]["next_artifact"], "product_implementation_readiness")
+        self.assertEqual(plan["handoff"]["next_worker"], "factory-orchestrator")
+        self.assertFalse(plan["acceptance"]["execution_allowed"])
+
+    def test_product_creation_plan_requires_valid_method_contract(self) -> None:
+        method_contract = build_valid_method_contract()
+        method_contract["acceptance"]["execution_allowed"] = True
+
+        with self.assertRaisesRegex(ValueError, "execution_allowed"):
+            factoryctl.build_product_creation_plan(method_contract)
+
+    def test_product_creation_plan_cli_generates_public_safe_plan(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            method_contract_path = Path(tmpdir) / "method-contract.json"
+            out_path = Path(tmpdir) / "product-creation-plan.json"
+            method_contract = build_valid_method_contract()
+            method_contract_path.write_text(json.dumps(method_contract), encoding="utf-8")
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "product-creation-plan",
+                    "--method-contract",
+                    str(method_contract_path),
+                    "--out",
+                    str(out_path),
+                ]
+            )
+
+            plan = json.loads(out_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(plan["record_type"], "product_creation_plan")
+        self.assertEqual(factoryctl.validate_product_creation_plan(plan), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(plan, "$"), [])
+
+    def test_product_creation_plan_preserves_human_scope_gate(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        outcome = factoryctl.build_outcome_contract(ledger)
+        product_sot = factoryctl.build_product_sot(outcome)
+        coverage = factoryctl.build_full_scope_coverage(product_sot)
+        coverage["requirement_coverage"][0]["status"] = "human_decision_required"
+        coverage["requirement_coverage"][0]["blocker_id"] = "human-gate-method-scope-001"
+        method_contract = factoryctl.build_method_contract(coverage)
+
+        plan = factoryctl.build_product_creation_plan(method_contract)
+
+        scope_unit = plan["work_units"][0]
+        self.assertTrue(plan["handoff"]["user_decision_required"])
+        self.assertEqual(scope_unit["status"], "blocked")
+        self.assertEqual(scope_unit["blocker_id"], "human-gate-method-scope-001")
+        self.assertEqual(scope_unit["blocker_owner"], "human-gate-clerk")
 
 
 if __name__ == "__main__":
