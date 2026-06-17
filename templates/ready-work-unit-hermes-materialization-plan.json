@@ -25,7 +25,7 @@
       "reviewer_role": "independent-reviewer",
       "title": "OF ready work unit work-unit-001: Deliver one safe execution slice without reducing the Product SOT scope.",
       "materialization_state": "planned_pending_hermes_runtime_gate",
-      "initial_status": "blocked",
+      "initial_status": "unassigned_pending_block",
       "body_format": "ready_work_unit_execution_request_json",
       "body_contract": {
         "packet_id": "ready-work-unit-packet-work-unit-001",
@@ -86,19 +86,23 @@
       "idempotency_key": "overkill:ready-work-unit-template:work-unit-001:0123456789abcdef",
       "create_policy": {
         "create_without_dispatch": true,
-        "create_with_assignee": true,
-        "documented_hermes_cli_shape": "hermes kanban create --assignee --initial-status blocked --json",
+        "create_with_assignee": false,
+        "assign_after_block_event_verified": true,
+        "no_spawn_protocol": "create-unassigned-default-block-assign-v2",
+        "documented_hermes_cli_shape": "hermes kanban create --json; hermes kanban block; hermes kanban assign",
         "target_assignee_profile": "implementation-worker"
       },
       "block_policy": {
         "initial_block_required": true,
         "block_event_required_before_dispatch": true,
+        "final_status_required": "blocked",
         "verify_command": "hermes kanban show --json",
         "blocked_reason": "Ready work unit starts blocked until Hermes readback proves a blocked event for this exact materialized task."
       },
       "dispatch_policy": {
         "dispatch_allowed_without_runtime_gate": false,
         "complete_product_claim_allowed": false,
+        "claim_or_spawn_forbidden_before_dispatch": true,
         "dispatch_precondition": "blocked_event_verified"
       },
       "public_private_boundary": {
@@ -137,7 +141,8 @@
   },
   "acceptance": {
     "task_count": 1,
-    "all_tasks_start_blocked": true,
+    "all_tasks_start_unassigned": true,
+    "all_tasks_materialized_blocked": true,
     "block_event_required_before_dispatch": true,
     "dispatch_allowed_without_runtime_gate": false,
     "live_hermes_mutated": false,

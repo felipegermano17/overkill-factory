@@ -124,7 +124,8 @@
       "type": "object",
       "required": [
         "task_count",
-        "all_tasks_start_blocked",
+        "all_tasks_start_unassigned",
+        "all_tasks_materialized_blocked",
         "block_event_required_before_dispatch",
         "dispatch_allowed_without_runtime_gate",
         "live_hermes_mutated",
@@ -133,7 +134,8 @@
       ],
       "properties": {
         "task_count": { "type": "integer", "minimum": 1 },
-        "all_tasks_start_blocked": { "const": true },
+        "all_tasks_start_unassigned": { "const": true },
+        "all_tasks_materialized_blocked": { "const": true },
         "block_event_required_before_dispatch": { "const": true },
         "dispatch_allowed_without_runtime_gate": { "const": false },
         "live_hermes_mutated": { "const": false },
@@ -184,7 +186,7 @@
         "reviewer_role": { "type": "string", "minLength": 3 },
         "title": { "type": "string", "minLength": 8 },
         "materialization_state": { "const": "planned_pending_hermes_runtime_gate" },
-        "initial_status": { "const": "blocked" },
+        "initial_status": { "const": "unassigned_pending_block" },
         "body_format": { "const": "ready_work_unit_execution_request_json" },
         "body_contract": { "type": "object" },
         "dependency_refs": {
@@ -213,13 +215,19 @@
           "required": [
             "create_without_dispatch",
             "create_with_assignee",
+            "assign_after_block_event_verified",
+            "no_spawn_protocol",
             "documented_hermes_cli_shape",
             "target_assignee_profile"
           ],
           "properties": {
             "create_without_dispatch": { "const": true },
-            "create_with_assignee": { "const": true },
-            "documented_hermes_cli_shape": { "const": "hermes kanban create --assignee --initial-status blocked --json" },
+            "create_with_assignee": { "const": false },
+            "assign_after_block_event_verified": { "const": true },
+            "no_spawn_protocol": { "const": "create-unassigned-default-block-assign-v2" },
+            "documented_hermes_cli_shape": {
+              "const": "hermes kanban create --json; hermes kanban block; hermes kanban assign"
+            },
             "target_assignee_profile": { "type": "string", "minLength": 3 }
           },
           "additionalProperties": false
@@ -229,12 +237,14 @@
           "required": [
             "initial_block_required",
             "block_event_required_before_dispatch",
+            "final_status_required",
             "verify_command",
             "blocked_reason"
           ],
           "properties": {
             "initial_block_required": { "const": true },
             "block_event_required_before_dispatch": { "const": true },
+            "final_status_required": { "const": "blocked" },
             "verify_command": { "const": "hermes kanban show --json" },
             "blocked_reason": { "type": "string", "minLength": 8 }
           },
@@ -245,11 +255,13 @@
           "required": [
             "dispatch_allowed_without_runtime_gate",
             "complete_product_claim_allowed",
+            "claim_or_spawn_forbidden_before_dispatch",
             "dispatch_precondition"
           ],
           "properties": {
             "dispatch_allowed_without_runtime_gate": { "const": false },
             "complete_product_claim_allowed": { "const": false },
+            "claim_or_spawn_forbidden_before_dispatch": { "const": true },
             "dispatch_precondition": { "const": "blocked_event_verified" }
           },
           "additionalProperties": false
