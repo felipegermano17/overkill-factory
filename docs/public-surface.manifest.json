@@ -293,6 +293,30 @@
       "expected_links": [
         "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html"
       ]
+    },
+    {
+      "surface_id": "root-readme-pt-br",
+      "path": "README.pt-BR.md",
+      "surface_type": "root_readme",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "README.md",
+        "docs/visuals/README.md",
+        "docs/public-surface.manifest.json",
+        "docs/visuals/overkill-factory-map-v0.1.0.html"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "expected_links",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Hermes and Receipt Five remain the source of truth"
+      ],
+      "expected_links": [
+        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html"
+      ]
     }
   ]
 }

@@ -1,0 +1,229 @@
+# Overkill Factory
+
+Idioma: [English](README.md) | Portugues
+
+Overkill Factory e um sistema open-source de producao para trabalho agentico de
+produto. Ela transforma sinais brutos em estado controlado de fabrica: intake de
+fonte, Product SOT, planejamento de escopo completo, roteamento de metodo,
+pacotes de worker, gates, evidencia, revisao, readiness de release e learnback.
+
+Ela existe para operadores que querem agentes trabalhando de verdade, sem deixar
+chat, entusiasmo ou demo parcial virar fonte de verdade.
+
+Mapa publico:
+https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v0.1.0.html
+
+## Por Que Existe
+
+Trabalho agentico costuma quebrar nos espacos entre tarefas:
+
+- um paper vira resumo informal;
+- uma primeira fatia substitui silenciosamente o escopo completo;
+- um worker diz "done" sem evidencia inspecionavel;
+- um dashboard parece util, mas nao e a fonte de verdade do runtime;
+- um bloqueio espera o operador mesmo quando a fabrica deveria reparar.
+
+Overkill Factory torna esses espacos explicitos. Cada sinal entra por contratos
+conhecidos. Cada estado importante tem dono, gate, proxima acao e formato de
+evidencia. Bloqueios nao humanos devem voltar para rotas de reparo da propria
+fabrica. Human gate continua sendo human gate.
+
+## Como A Fabrica Funciona
+
+O metodo publico e uma linha de producao completa, nao um atalho de MVP:
+
+```text
+sinal bruto
+-> Universal Signal Intake
+-> source ledger e source resolution
+-> outcome e discovery
+-> Product SOT
+-> cobertura completa do Product SOT
+-> method contract
+-> capability pack e roteamento de risco
+-> arquitetura, seguranca e gates de acesso
+-> Product Creation Plan e work units
+-> pacotes de worker no Hermes
+-> execucao, verificacao e revisao independente
+-> Receipt Five
+-> decisao de release ou bloqueio
+-> monitoramento, suporte e learnback
+```
+
+A entrada pode ser paper de produto, bug, ideia, repositorio existente,
+incidente, pedido de release, pesquisa, UX, analytics, integracao, migracao ou
+mudanca em agente/runtime. O route registry e o golden signal corpus tornam
+esses caminhos inspecionaveis em vez de escondidos na conversa.
+
+A saida esperada nao e "uma boa resposta". E um produto ou decisao de fabrica
+auditavel: o que foi pedido, o que foi planejado, o que bloqueou, o que foi
+feito, quem ou o que tinha autoridade, e qual evidencia permite o proximo
+estado.
+
+## Runtime Hermes
+
+Hermes e o primeiro chao de fabrica suportado.
+
+Overkill Factory fornece metodo, contratos, schemas, worker registry, bindings
+Hermes, adapter hooks, exemplos e ferramentas de validacao. Hermes fornece o
+runtime Kanban duravel onde cards, workers, comentarios, runs e transicoes de
+estado vivem.
+
+A fronteira pratica e simples:
+
+- `factoryctl`, schemas e testes validam contratos publicos.
+- Hermes Kanban e a autoridade de runtime para cards e transicoes reais.
+- Receipt Five e resultados de workers sao a evidencia de conclusao.
+- Cockpits como Discord ou uma UI web local podem projetar estado, mas nao
+  aprovam gates nem substituem o Hermes.
+
+## Primeira Execucao
+
+A partir de um checkout limpo:
+
+```bash
+git clone https://github.com/felipegermano17/overkill-factory.git
+cd overkill-factory
+python -m pip install -e .
+factoryctl doctor
+factoryctl run minimal
+```
+
+A execucao minima escreve saidas locais em `.tmp/`, incluindo o resultado do
+quickstart e pacotes de worker para o card publico de exemplo. Pacotes de worker
+e gate reports gerados pertencem a `.tmp/`, artefatos de release ou evidence
+store privado, nao ao repo publico.
+
+Comandos uteis na sequencia:
+
+```bash
+factoryctl init --out ../my-product-factory --project-name my-product
+factoryctl route-registry --route-class product_creation
+factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
+factoryctl gate-report --card examples/minimal-hermes-project/card.md
+factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
+```
+
+Leia `docs/getting-started/quickstart-hermes.md` e
+`docs/getting-started/install-in-hermes.md` para conectar a fabrica ao seu
+runtime Hermes.
+
+## Estrutura Do Repositorio
+
+Todo diretorio versionado de topo precisa justificar por que existe, quem abre
+primeiro, qual e sua fonte de verdade e como drift e evitado.
+
+| Caminho | Proposito publico |
+| --- | --- |
+| `.github/` | Workflows, templates, Dependabot e higiene do repositorio. Veja `.github/PROJECT_SURFACE.md`. |
+| `adapters/` | Integracoes de runtime, hoje hooks e patches Hermes. Veja `adapters/README.md`. |
+| `agents/` | Worker registry, profiles, permissoes, capability packs e bindings Hermes. Veja `agents/README.md`. |
+| `docs/` | Guias humanos para onboarding, conceitos, operacao, seguranca e manutencao. Veja `docs/README.md`. |
+| `examples/` | Exemplos publicos pequenos e fixtures de fonte para a esteira da fabrica. Veja `examples/README.md`. |
+| `fixtures/` | Fixtures publicas minimas de regressao, nao evidencia historica. Veja `fixtures/README.md`. |
+| `planning-bundles/` | Protocolos public-safe para artefatos candidatos antes da validacao da fabrica. Veja `planning-bundles/README.md`. |
+| `products/` | Produtos publicos de validacao usados em checks product-like e production-lane. Veja `products/README.md`. |
+| `schemas/` | Contratos de maquina para cards, receipts, workers, gates e artefatos publicos. Veja `schemas/README.md`. |
+| `scripts/` | CLI, ferramentas de validacao, helpers de prova e checks de manutencao. Veja `scripts/README.md`. |
+| `skills/` | Material instalavel de skill Codex para operar a fabrica a partir do clone publico. Veja `skills/README.md`. |
+| `templates/` | Contratos iniciais pareados com schemas e testes. Veja `templates/README.md`. |
+| `tests/` | Regressao para contratos publicos, docs, adapters e exemplos. Veja `tests/README.md`. |
+| `ui/` | Superficies locais estaticas e public-safe que projetam apenas dados de fixture. Veja `ui/README.md`. |
+
+Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
+`*.egg-info/` nao sao superficie publica de produto.
+
+## Estado Atual De Release
+
+Factory v1 e o release atual do kernel publico. Ele inclui:
+
+- Universal Signal Intake e route registry;
+- Golden Corpus e checks de cobertura de sinais;
+- Product SOT, planejamento de escopo completo e method contracts;
+- worker registry, bindings Hermes e permission classes;
+- regras de ativacao de capability packs;
+- contratos de Product Face packet/result;
+- release preflight, public-surface sync e safety scans;
+- Factory v1 Completion Gate.
+
+Esse claim e deliberadamente limitado. Factory v1 significa que o kernel
+publico esta completo o suficiente para instalar, inspecionar, validar e
+estender. Um produto criado pela fabrica ainda exige fonte real, Product SOT,
+execucao de workers, evidencia, revisoes, human gates e prova de production
+readiness propria.
+
+## Leia Depois
+
+- `docs/index.md`: home da documentacao.
+- `docs/getting-started/quickstart-hermes.md`: primeira execucao com contexto Hermes.
+- `docs/getting-started/install-in-hermes.md`: conectar a fabrica a um runtime Hermes do operador.
+- `docs/governance/document-governance.md`: autoridade documental e fronteira publica.
+- `docs/reference/cli.md`: comandos suportados do `factoryctl`.
+- `docs/concepts/factory-flow.md`: linha de producao e modelo de estado.
+- `docs/concepts/overkill-factory-method.md`: guia do metodo.
+- `docs/concepts/operator-journey.md`: jornada do operador.
+- `docs/visuals/README.md`: fronteira e validacao do mapa visual.
+- `agents/README.md`: entrada humana para o diretorio de contratos de workers.
+- `docs/agents/worker-profiles.md`: papeis, entradas, saidas e limites dos workers.
+- `docs/agents/factory-stage-agent-map.md`: mapa de dono por estagio.
+- `docs/agents/capability-packs.md`: regras de cobertura por tipo de produto.
+- `docs/control-tower/open-source-setup.md`: setup opcional de Control Tower.
+- `docs/operations/validation-and-release.md`: checklist de release.
+- `docs/operations/release-policy.md`: politica de versao e release.
+- `docs/operations/troubleshooting.md`: falhas comuns e caminho de recuperacao.
+- `docs/architecture/hermes-integration.md`: arquitetura do adapter Hermes.
+- `docs/examples/gallery.md`: exemplos publicos.
+- `docs/security/oss-security.md`: postura de seguranca.
+- `docs/maintenance/repo-surface.md`: regras de manutencao da superficie publica.
+- `examples/minimal-hermes-project/README.md`: exemplo minimo executavel.
+- `.env.example`: template seguro de variaveis de ambiente.
+- `CHANGELOG.md`: historico publico de release.
+- `CONTRIBUTING.md`: regras de contribuicao e checks obrigatorios.
+- `SECURITY.md`: reporte de seguranca e politica de fronteira publica.
+
+## Validacao
+
+Antes de publicar mudancas publicas:
+
+```bash
+python scripts/validate_document_governance.py
+python scripts/validate_public_json_artifacts.py
+python scripts/validate_worker_profiles.py
+python scripts/validate_planning_bundles.py
+python scripts/public_safety_scan.py
+python scripts/secret_safety_scan.py
+python scripts/validate_public_surface_sync.py --check-published
+python -m unittest discover -s tests -q
+```
+
+Para readiness de release:
+
+```bash
+python scripts/release_integration_preflight.py
+python scripts/worktree_release_inventory.py
+factoryctl v1-completion-gate --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
+```
+
+O mapa publico e validado por `scripts/validate_public_surface_sync.py`. O
+script compara o HTML versionado com o objeto publicado no GCS e verifica que o
+visual nao reivindica autoridade de runtime.
+
+## Fronteira Publica
+
+O repositorio e uma superficie publica de produto. Ele nao deve conter segredos,
+evidencia privada crua, links privados de board, caminhos absolutos locais,
+dumps de fonte privada, screenshots de runs privados, pacotes de worker
+gerados, arquivos historicos de prova ou autoridade derivada de chat.
+
+Historico narrativo de validacao, notas antigas tratadas como prova e trilhas
+internas de auditoria nao pertencem ao onboarding publico. O onboarding publico
+deve apontar para contratos atuais, exemplos executaveis, validadores e guias
+curtos para operador.
+
+Hermes and Receipt Five remain the source of truth for real factory execution.
+Este repo documenta e valida o kernel da fabrica; ele nao e deposito de
+historico privado de runtime.
+
+## Licenca
+
+MIT.
