@@ -37,6 +37,7 @@ Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 RECOVERY_ATTEMPT_MARKER = "factory_recovery_attempt"
 ACTIVE_OR_TERMINAL_STATUSES = {"ready", "running", "done", "complete", "completed"}
 READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES = {"done", "complete", "completed"}
+READY_WORK_UNIT_RELEASE_QUERY_STATUSES = ["blocked", "done"]
 HISTORY_SOURCE_KEYS = ("events", "history", "timeline", "comments", "runs")
 CONTRACT_DIGEST_ALGORITHM = "sha256"
 IDEMPOTENCY_DIGEST_LENGTH = 16
@@ -1560,7 +1561,7 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
     candidates = ready_work_unit_readbacks_by_status(
         hermes_bin=args.hermes_bin,
         board=board,
-        statuses=["blocked", *sorted(READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES)],
+        statuses=READY_WORK_UNIT_RELEASE_QUERY_STATUSES,
         runner=runner,
     )
     verified: list[tuple[dict[str, Any], str, str, str, str]] = []
