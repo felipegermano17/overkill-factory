@@ -109,7 +109,7 @@
       "operator_visible_summary": "Factory is choosing the safest production path.",
       "maintainer_visible_details": "The router records decisions; it does not hand method selection to the user.",
       "related_schema_refs": ["schemas/method-contract.schema.json"],
-      "related_command_refs": ["factoryctl gate-report"],
+      "related_command_refs": ["factoryctl method-contract", "factoryctl validate-method-contract", "factoryctl gate-report"],
       "related_issue_refs": ["#110", "#117"]
     },
     {

@@ -1498,6 +1498,88 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "method_contract":
+        reason = public_artifact_ref_error(data.get("full_product_sot_scope_coverage_ref"))
+        if reason:
+            errors.append(f"{at}.full_product_sot_scope_coverage_ref: {reason}")
+        if str(data.get("canonical_scope_source") or "").strip().lower() not in {
+            "approved product sot",
+            "product_sot",
+            "product sot",
+        }:
+            errors.append(f"{at}.canonical_scope_source must be approved Product SOT")
+        required_factory_artifacts = set(data.get("required_factory_artifacts") if isinstance(data.get("required_factory_artifacts"), list) else [])
+        for artifact in ("full_product_sot_scope_coverage", "product_creation_plan", "product_implementation_readiness"):
+            if artifact not in required_factory_artifacts:
+                errors.append(f"{at}.required_factory_artifacts must include {artifact}")
+        matrix = data.get("engineering_method_matrix") if isinstance(data.get("engineering_method_matrix"), list) else []
+        if not matrix:
+            errors.append(f"{at}.engineering_method_matrix is required")
+        for index, item in enumerate(matrix):
+            if not isinstance(item, dict):
+                continue
+            for field in ("surface_or_component", "methods", "reason", "required_artifacts", "evidence_required"):
+                if not item.get(field):
+                    errors.append(f"{at}.engineering_method_matrix[{index}].{field} is required")
+            for field in ("surface_or_component", "reason"):
+                if PRIVATE_MARKERS.search(str(item.get(field) or "")):
+                    errors.append(f"{at}.engineering_method_matrix[{index}].{field}: private local or runtime marker")
+        slice_policy = data.get("slice_execution_policy") if isinstance(data.get("slice_execution_policy"), dict) else {}
+        if slice_policy.get("slices_are_execution_units_only") is not True:
+            errors.append(f"{at}.slice_execution_policy.slices_are_execution_units_only must be true")
+        if slice_policy.get("canonical_scope_must_not_shrink") is not True:
+            errors.append(f"{at}.slice_execution_policy.canonical_scope_must_not_shrink must be true")
+        if not (data.get("selected_methods") if isinstance(data.get("selected_methods"), list) else []):
+            errors.append(f"{at}.selected_methods must be non-empty")
+        for field in ("required_workers", "reviewers"):
+            workers = data.get(field) if isinstance(data.get(field), list) else []
+            for index, worker in enumerate(workers):
+                if str(worker or "").strip() not in public_worker_ids():
+                    errors.append(f"{at}.{field}[{index}] must be a registered worker: {worker}")
+        for field in ("why_this_method", "production_route_decision", "authority_limit"):
+            if PRIVATE_MARKERS.search(str(data.get(field) or "")):
+                errors.append(f"{at}.{field}: private local or runtime marker")
+        for index, value in enumerate(data.get("evidence_requirements", []) if isinstance(data.get("evidence_requirements"), list) else []):
+            if PRIVATE_MARKERS.search(str(value or "")):
+                errors.append(f"{at}.evidence_requirements[{index}]: private local or runtime marker")
+        blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
+        for field in (
+            "full_scope_coverage_required",
+            "product_creation_plan_required",
+            "execution_blocked_until_ready_gate",
+            "raw_private_evidence_must_stay_external",
+            "operator_must_not_choose_internal_method",
+        ):
+            if blocking_rules.get(field) is not True:
+                errors.append(f"{at}.blocking_rules.{field} must be true")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        if handoff.get("next_artifact") != "product_creation_plan":
+            errors.append(f"{at}.handoff.next_artifact must be product_creation_plan")
+        if handoff.get("factory_owned_next_step") is not True:
+            errors.append(f"{at}: method_contract.handoff.factory_owned_next_step must be true")
+        next_worker = str(handoff.get("next_worker") or "").strip()
+        if next_worker and next_worker not in public_worker_ids():
+            errors.append(f"{at}.handoff.next_worker must be a registered worker: {next_worker}")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: method_contract requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: method_contract must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: method_contract private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("method_contract_created") is not True:
+            errors.append(f"{at}: method_contract acceptance.method_contract_created must be true")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: method_contract acceptance.execution_allowed must be false")
+        if acceptance.get("selected_method_is_factory_owned") is not True:
+            errors.append(f"{at}: method_contract acceptance.selected_method_is_factory_owned must be true")
+        if acceptance.get("scope_reduction_detected") is not False:
+            errors.append(f"{at}: method_contract acceptance.scope_reduction_detected must be false")
+        for index, ref in enumerate(acceptance.get("evidence_refs", []) if isinstance(acceptance.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "factory_readiness_scorecard":
         errors.extend(validate_factory_readiness_scorecard_domain(data, at))
     if data.get("record_type") == "factory_v1_completion_gate":

@@ -1,5 +1,10 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/method-contract.schema.json",
+  "record_type": "method_contract",
+  "contract_id": "method-contract-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "full_product_sot_scope_coverage_ref": "templates/full-product-sot-scope-coverage.json",
   "selected_method": "spec-first | test-first | behavior-first | discovery-first | prototype-first | legacy-diagnosis | incident-first",
   "why_this_method": "Explain in plain language why this method fits this work.",
   "risk_tier": "R2",
@@ -70,5 +75,35 @@
     "required artifacts exist",
     "required workers returned evidence",
     "Receipt Five ready"
-  ]
+  ],
+  "blocking_rules": {
+    "full_scope_coverage_required": true,
+    "product_creation_plan_required": true,
+    "execution_blocked_until_ready_gate": true,
+    "raw_private_evidence_must_stay_external": true,
+    "operator_must_not_choose_internal_method": true
+  },
+  "handoff": {
+    "next_artifact": "product_creation_plan",
+    "next_worker": "decomposition-planner",
+    "next_safe_action": "Create Product Creation Plan before work units or execution.",
+    "user_decision_required": false,
+    "factory_owned_next_step": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  },
+  "acceptance": {
+    "method_contract_created": true,
+    "execution_allowed": false,
+    "selected_method_is_factory_owned": true,
+    "scope_reduction_detected": false,
+    "blocked_reason": "Method contract exists, but execution remains blocked until product creation plan, readiness, required gates and workers pass.",
+    "evidence_refs": [
+      "templates/method-contract.json",
+      "templates/full-product-sot-scope-coverage.json"
+    ]
+  }
 }

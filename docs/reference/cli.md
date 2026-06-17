@@ -52,6 +52,8 @@ factoryctl product-sot --outcome-contract templates/outcome-contract.json --out 
 factoryctl validate-product-sot templates/product-sot.json
 factoryctl full-scope-coverage --product-sot templates/product-sot.json --out .tmp/full-product-sot-scope-coverage.json
 factoryctl validate-full-scope-coverage templates/full-product-sot-scope-coverage.json
+factoryctl method-contract --full-scope-coverage templates/full-product-sot-scope-coverage.json --out .tmp/method-contract.json
+factoryctl validate-method-contract templates/method-contract.json
 factoryctl validate-signal-corpus templates/universal-signal-golden-corpus.json
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
 factoryctl v1-completion-gate --release-preflight .tmp/factory-runs/release/release-integration-preflight.json --github-actions-result PASS --open-v1-blockers 0 --open-prs 0
@@ -86,7 +88,9 @@ execution. `product-sot` turns that outcome into the first Product SOT and keeps
 execution blocked until full scope coverage, method contract, readiness and gates
 pass. `full-scope-coverage` accounts for every Product SOT requirement before
 method routing, so execution slices cannot silently become scope cuts.
-`validate-signal-corpus` and `signal-coverage` prove that the public
+`method-contract` turns that coverage into factory-owned method, artifact,
+worker, gate and evidence requirements without handing DDD/BDD/spec choices to
+the operator. `validate-signal-corpus` and `signal-coverage` prove that the public
 Golden Corpus covers every known route without treating contract coverage as
 production readiness.
 
