@@ -37,17 +37,17 @@ class PublicSafetyScanTest(unittest.TestCase):
 
         self.assertEqual(public_safety_scan.scan_text("tests/example.py", line), [])
 
-    def test_negative_fixture_guard_allows_declared_issue84_sample_only(self) -> None:
+    def test_negative_fixture_guard_allows_declared_status_snapshot_sample_only(self) -> None:
         blocked_ref = '  "ref": "' + "C:" + "\\\\Users\\\\operator\\\\raw-evidence.json" + '"'
 
         self.assertEqual(
             public_safety_scan.scan_text(
-                "fixtures/issue-84/status-snapshot-v0/FX10-forbidden_evidence_ref_negative.json",
+                "fixtures/status-snapshot-v0/FX10-forbidden_evidence_ref_negative.json",
                 blocked_ref,
             ),
             [],
         )
-        self.assertTrue(public_safety_scan.scan_text("fixtures/issue-84/status-snapshot-v0/FX01-current_success_projection.json", blocked_ref))
+        self.assertTrue(public_safety_scan.scan_text("fixtures/status-snapshot-v0/FX01-current_success_projection.json", blocked_ref))
 
     def test_blocks_literal_whimsical_board_id_in_public_command(self) -> None:
         board_id = "XV" + "vfzk"
@@ -91,7 +91,7 @@ class PublicSafetyScanTest(unittest.TestCase):
             "Hermes task kanban:<redacted>",
         )
         self.assertEqual(
-            public_safety_scan.scan_text("docs/example.md", "tracked as kanban:<redacted> and github-issue-84"),
+            public_safety_scan.scan_text("docs/example.md", "tracked as kanban:<redacted> and github-issue-example"),
             [],
         )
 

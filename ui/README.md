@@ -27,12 +27,12 @@ Current surface:
 
 | Path | Purpose |
 | --- | --- |
-| `ui/issue-84-local-cockpit/` | Static local cockpit for StatusSnapshot fixture inspection. It is read-only and loopback-only. |
+| `ui/local-status-cockpit/` | Static local cockpit for StatusSnapshot fixture inspection. It is read-only and loopback-only. |
 
 ## How It Is Validated
 
 ```bash
-python scripts/issue84/build_local_cockpit_data.py --root . --out ui/issue-84-local-cockpit/data/status-cockpit.json
-python scripts/issue84/validate_status_snapshot_fixtures.py fixtures/issue-84/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed
-python -m unittest tests.test_issue84_local_cockpit_ui tests.test_issue84_readonly_status_adapter -q
+python scripts/status_snapshot/build_local_cockpit_data.py --root . --out ui/local-status-cockpit/data/status-cockpit.json
+python scripts/status_snapshot/validate_status_snapshot_fixtures.py fixtures/status-snapshot-v0 --schema schemas/factory-status-snapshot.schema.json --require-cases FX01,FX02,FX03,FX04,FX05,FX06,FX07,FX08,FX09,FX10,FX11,FX12,FX13,FX14,FX15,FX16,FX17,FX18 --fail-closed
+python -m unittest tests.test_local_status_cockpit_ui tests.test_status_snapshot_readonly_adapter -q
 ```

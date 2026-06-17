@@ -49,7 +49,7 @@ class DiscordControlTowerUxAuditTest(unittest.TestCase):
             "web cockpit",
             "#80",
             "#82",
-            "#84",
+            "local status cockpit",
             "Discord is optional projection",
             "not the source of truth",
         ]:
