@@ -3948,6 +3948,7 @@ def product_creation_closeout_next_action(
     *,
     product_creation_plan: dict[str, Any],
     release_readiness_ref: str | None,
+    product_delivery_ref: str | None,
     product_promotion_gate_ref: str | None,
     learnback_ref: str | None,
     blocker_decisions: list[str],
@@ -3960,6 +3961,8 @@ def product_creation_closeout_next_action(
         return "blocked_with_owner"
     if not release_readiness_ref and product_creation_plan.get("production_readiness_scope"):
         return "release_readiness_required"
+    if product_creation_plan.get("complete_product_required") is True and not product_delivery_ref:
+        return "material_product_execution_required"
     if not learnback_ref:
         return "learnback_required"
     if product_promotion_gate_ref:
@@ -4079,6 +4082,36 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                 "allowed_results": ["PASS", "BLOCK"],
                 "pass_requires": ["release readiness packet", "promotion blockers remain explicit"],
                 "block_requires": ["owner", "reason", "next_repair_action"],
+                "production_promotion_allowed": False,
+            },
+        }
+    if next_action == "material_product_execution_required":
+        return {
+            **common,
+            "done_definition": [
+                "route material product implementation before any promotion gate",
+                "create or repair executable product work units instead of treating planning readiness as product completion",
+                "require product delivery proof before learnback or product promotion can close the product",
+                "do not claim complete product, production release, deploy, or customer-ready status",
+            ],
+            "evidence_expected": [
+                "executable product artifact or product delivery proof bundle",
+                "Product Face Result for visible surfaces with states, journeys, screenshots and viewport evidence",
+                "implementation verification commands and results",
+                "public-safe evidence refs for product delivery proof",
+            ],
+            "output_contract": {
+                "receipt_field": "material_product_execution_result",
+                "allowed_results": ["PASS", "BLOCK"],
+                "pass_requires": [
+                    "product_delivery_ref",
+                    "executable product proof",
+                    "Product Face Result when visible surface exists",
+                    "verification evidence refs",
+                    "remaining release/promotion blockers acknowledged",
+                ],
+                "block_requires": ["owner", "reason", "next_repair_action"],
+                "complete_product_claim_allowed": False,
                 "production_promotion_allowed": False,
             },
         }
@@ -4224,6 +4257,7 @@ def close_product_creation_run(args: argparse.Namespace, runner: Runner = defaul
         board=board,
     )
     release_readiness_ref = ensure_public_safe_optional_ref(args.release_readiness_ref, field="release_readiness_ref")
+    product_delivery_ref = ensure_public_safe_optional_ref(args.product_delivery_ref, field="product_delivery_ref")
     product_promotion_gate_ref = ensure_public_safe_optional_ref(
         args.product_promotion_gate_ref,
         field="product_promotion_gate_ref",
@@ -4407,6 +4441,7 @@ def close_product_creation_run(args: argparse.Namespace, runner: Runner = defaul
     next_action = product_creation_closeout_next_action(
         product_creation_plan=product_creation_plan,
         release_readiness_ref=release_readiness_ref,
+        product_delivery_ref=product_delivery_ref,
         product_promotion_gate_ref=product_promotion_gate_ref,
         learnback_ref=learnback_ref,
         blocker_decisions=blocker_decisions,
@@ -4432,6 +4467,7 @@ def close_product_creation_run(args: argparse.Namespace, runner: Runner = defaul
         "proof_id_coverage": proof_id_coverage,
         "requirement_coverage": requirement_coverage,
         "release_readiness_ref": release_readiness_ref,
+        "product_delivery_ref": product_delivery_ref,
         "product_promotion_gate_ref": product_promotion_gate_ref,
         "learnback_ref": learnback_ref,
         "public_private_boundary": {
@@ -5371,6 +5407,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_close_product_run.add_argument("--hermes-bin", default="hermes")
     p_close_product_run.add_argument("--worker-assignee-prefix", default="")
     p_close_product_run.add_argument("--release-readiness-ref")
+    p_close_product_run.add_argument("--product-delivery-ref")
     p_close_product_run.add_argument("--product-promotion-gate-ref")
     p_close_product_run.add_argument("--learnback-ref")
     p_close_product_run.add_argument("--next-assignee")

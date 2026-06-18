@@ -32,6 +32,7 @@
       "enum": [
         "product_closeout_ready",
         "release_readiness_required",
+        "material_product_execution_required",
         "learnback_required",
         "product_promotion_gate_required",
         "repair_required",
@@ -43,6 +44,7 @@
       "enum": [
         "product_closeout_ready",
         "release_readiness_required",
+        "material_product_execution_required",
         "learnback_required",
         "product_promotion_gate_required",
         "repair_required",
@@ -144,6 +146,7 @@
       }
     },
     "release_readiness_ref": { "type": ["string", "null"] },
+    "product_delivery_ref": { "type": ["string", "null"] },
     "product_promotion_gate_ref": { "type": ["string", "null"] },
     "learnback_ref": { "type": ["string", "null"] },
     "public_private_boundary": {
