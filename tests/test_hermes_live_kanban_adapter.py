@@ -1426,6 +1426,35 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIn("product_delivery_ref", body["output_contract"]["pass_requires"])
         self.assertIn("Product Face Result", " ".join(body["evidence_expected"]))
         self.assertFalse(body["complete_product_claim_allowed"])
+        graph_contract = body["material_product_execution_graph_contract"]
+        self.assertEqual(graph_contract["materialization_protocol"], "create-unassigned-default-block-assign-v2")
+        self.assertTrue(graph_contract["deterministic_graph_required"])
+        self.assertTrue(graph_contract["blocked_event_required_before_any_worker_dispatch"])
+        self.assertEqual(
+            graph_contract["required_nodes"],
+            [
+                "execution_packet",
+                "implementation",
+                "product_face_result",
+                "qa_verification",
+                "public_safety_gate",
+                "appsec_gate",
+                "independent_review",
+                "delivery_handoff",
+            ],
+        )
+        self.assertIn(
+            {"from": "execution_packet", "to": "implementation"},
+            graph_contract["required_edges"],
+        )
+        self.assertIn(
+            {"from": "independent_review", "to": "delivery_handoff"},
+            graph_contract["required_edges"],
+        )
+        self.assertIn("blocked_dependency_graph_ref", body["output_contract"]["pass_requires"])
+        self.assertIn("no_spawn_readback_evidence", body["output_contract"]["pass_requires"])
+        self.assertIn("create_loose_material_product_tasks", body["forbidden_actions"])
+        self.assertIn("create_todo_or_ready_material_product_tasks", body["forbidden_actions"])
 
     def test_close_product_creation_run_blocks_when_work_unit_review_blocks(self) -> None:
         fake = FakeHermes()
