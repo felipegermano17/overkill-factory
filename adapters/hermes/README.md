@@ -316,6 +316,22 @@ is not enough to mutate the parent; the adapter reports
 blocked review route to repair and follow-up review without duplicate review
 tasks or operator inference.
 
+When reconciliation reaches `awaiting_retry_or_done_authority`, the adapter can
+route the missing decision explicitly without mutating the parent:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py reconcile-ready-work-units \
+  --plan path/to/ready-work-unit-hermes-plan.json \
+  --materialization-result path/to/live-ready-work-unit-materialization-result.json \
+  --route-readiness path/to/route-readiness.json \
+  --create-post-repair-authority-tasks \
+  --out path/to/reconciled-ready-work-units.json
+```
+
+The authority task must emit retry, done, human-gate or structured-block
+markers. Creating it does not dispatch, retry, complete, release or claim
+product completion.
+
 Use `--workspace` when the adapter runs outside the Hermes host. The workspace
 must be meaningful to the Hermes dispatcher, not merely to the machine that runs
 the adapter. Local operators can omit it and use the repo directory default;

@@ -80,6 +80,8 @@ READY_WORK_UNIT_RECONCILIATION_DONE_READBACK_MARKERS = [
 READY_WORK_UNIT_POST_REPAIR_REVIEW_REQUIRED_MARKER = "ready_work_unit_post_repair_review_required"
 READY_WORK_UNIT_POST_REPAIR_REVIEW_CREATED_MARKER = "ready_work_unit_post_repair_review_task_created"
 READY_WORK_UNIT_POST_REPAIR_REVIEW_RESULT_MARKER = "ready_work_unit_post_repair_review_result"
+READY_WORK_UNIT_POST_REPAIR_AUTHORITY_REQUIRED_MARKER = "ready_work_unit_post_repair_authority_required"
+READY_WORK_UNIT_POST_REPAIR_AUTHORITY_CREATED_MARKER = "ready_work_unit_post_repair_authority_task_created"
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -2052,6 +2054,169 @@ def existing_post_repair_review_task_ref(payload: dict[str, Any], *, work_unit_i
     return ""
 
 
+def existing_post_repair_authority_task_ref(payload: dict[str, Any], *, work_unit_id: str) -> str:
+    for comment in reversed(task_readback_comments(payload)):
+        marker = parse_json_object(comment.get("body") or comment.get("text") or comment.get("payload"))
+        if marker.get("marker") != READY_WORK_UNIT_POST_REPAIR_AUTHORITY_CREATED_MARKER:
+            continue
+        if str(marker.get("work_unit_id") or "").strip() != work_unit_id:
+            continue
+        authority_task_ref = str(marker.get("authority_task_ref") or "").strip()
+        if authority_task_ref:
+            return authority_task_ref
+    return ""
+
+
+def ready_work_unit_post_repair_authority_idempotency_key(
+    *,
+    plan_task: dict[str, Any],
+    parent_task_id: str,
+    review_task_ref: str,
+) -> str:
+    base = str(plan_task.get("idempotency_key") or "").strip()
+    if not base:
+        _packet_id, work_unit_id = expected_ready_work_unit_key(plan_task)
+        base = f"overkill:ready-work-unit:{work_unit_id}"
+    digest = idempotency_digest_fragment(
+        contract_digest(
+            {
+                "base_idempotency_key": base,
+                "parent_task_id": parent_task_id,
+                "review_task_ref": review_task_ref,
+                "route": "post_repair_authority",
+                "version": "v1",
+            }
+        )
+    )
+    return f"{base}:post-repair-authority:{digest}"
+
+
+def ready_work_unit_post_repair_authority_body(
+    *,
+    parent_task_id: str,
+    packet_id: str,
+    work_unit_id: str,
+    review_result: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "packet_type": "ready_work_unit_post_repair_authority_request",
+        "marker": READY_WORK_UNIT_POST_REPAIR_AUTHORITY_REQUIRED_MARKER,
+        "parent_packet_id": packet_id,
+        "parent_work_unit_id": work_unit_id,
+        "parent_task_ref": parent_task_id,
+        "review_task_ref": review_result.get("review_task_ref"),
+        "repair_task_ref": review_result.get("repair_task_ref"),
+        "review_result_marker": review_result.get("marker"),
+        "review_result_status": review_result.get("status"),
+        "authority_scope": "post_repair_retry_or_done_only",
+        "authority_must_choose_one": [
+            {
+                "markers": [
+                    "ready_work_unit_repair_review_passed",
+                    "ready_work_unit_retry_authorized",
+                ],
+                "meaning": "parent ready work unit may be retried by Hermes reconciliation",
+            },
+            {
+                "markers": [
+                    "ready_work_unit_repair_review_passed",
+                    "ready_work_unit_done_authorized",
+                    "ready_work_unit_done_definition_satisfied",
+                ],
+                "meaning": "parent ready work unit may be completed, not the whole product",
+            },
+            {
+                "markers": ["human_gate_required"],
+                "meaning": "stop automatic mutation until explicit human authority exists",
+            },
+            {
+                "markers": ["structured_block"],
+                "required_fields": ["owner", "reason", "next_authority_action"],
+                "meaning": "authority cannot be granted yet; route the next non-human action",
+            },
+        ],
+        "review_must_not_approve": [
+            "complete_product",
+            "release",
+            "deployment",
+            "customer_ready",
+            "security_gate",
+            "human_gate",
+        ],
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "complete_product_claim_allowed": False,
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+        },
+    }
+
+
+def create_post_repair_authority_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    plan_task: dict[str, Any],
+    parent_payload: dict[str, Any],
+    parent_task_id: str,
+    packet_id: str,
+    work_unit_id: str,
+    review_result: dict[str, Any],
+    worker_assignee_prefix: str,
+    workspace_ref: str,
+    runner: Runner = default_runner,
+) -> str:
+    body = ready_work_unit_post_repair_authority_body(
+        parent_task_id=parent_task_id,
+        packet_id=packet_id,
+        work_unit_id=work_unit_id,
+        review_result=review_result,
+    )
+    task_id = create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title=f"OF post-repair authority decision for ready work unit {work_unit_id}",
+        body=compact_json_argument(body),
+        assignee=worker_assignee_prefix + "independent-reviewer",
+        idempotency_key=ready_work_unit_post_repair_authority_idempotency_key(
+            plan_task=plan_task,
+            parent_task_id=parent_task_id,
+            review_task_ref=str(review_result.get("review_task_ref") or ""),
+        ),
+        created_by="overkill-factory",
+        workspace=workspace_ref or task_dispatcher_workspace_ref(parent_payload) or "scratch",
+        blocked=False,
+        runner=runner,
+    )
+    run_checked(hermes_kanban(hermes_bin, board, "link", task_id, parent_task_id), runner)
+    run_checked(
+        hermes_kanban(
+            hermes_bin,
+            board,
+            "comment",
+            "--author",
+            READY_WORK_UNIT_RECONCILIATION_AUTHOR,
+            parent_task_id,
+            compact_json_argument(
+                {
+                    "marker": READY_WORK_UNIT_POST_REPAIR_AUTHORITY_CREATED_MARKER,
+                    "work_unit_id": work_unit_id,
+                    "authority_task_ref": task_id,
+                    "review_task_ref": review_result.get("review_task_ref"),
+                    "repair_task_ref": review_result.get("repair_task_ref"),
+                    "authority_scope": "post_repair_retry_or_done_only",
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "complete_product_claim_allowed": False,
+                }
+            ),
+        ),
+        runner,
+    )
+    return task_id
+
+
 def no_forbidden_approvals_claimed(metadata: dict[str, Any]) -> bool:
     approvals = metadata.get("no_forbidden_approvals")
     if not isinstance(approvals, dict):
@@ -2283,8 +2448,11 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
     retry_candidates: list[tuple[dict[str, Any], str, str, str]] = []
     complete_candidates: list[tuple[dict[str, Any], str, str, str]] = []
     post_repair_review_candidates: list[tuple[dict[str, Any], dict[str, Any], str, str, str]] = []
+    post_repair_authority_candidates: list[tuple[dict[str, Any], dict[str, Any], str, str, str, dict[str, Any]]] = []
     post_repair_review_required_work_unit_ids: set[str] = set()
     existing_post_repair_review_task_ids: dict[str, str] = {}
+    post_repair_authority_required_work_unit_ids: set[str] = set()
+    existing_post_repair_authority_task_ids: dict[str, str] = {}
     post_release_blocked_count = 0
     human_gate_count = 0
     incomplete_count = 0
@@ -2310,6 +2478,15 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             existing_post_repair_review_task_ids[work_unit_id] = existing_review_task_id
         row["post_repair_review_task_ref"] = existing_review_task_id or None
         row["post_repair_review_task_exists"] = bool(existing_review_task_id)
+        existing_authority_task_id = ""
+        if row["decision"] == "awaiting_retry_or_done_authority":
+            post_repair_authority_required_work_unit_ids.add(work_unit_id)
+            existing_authority_task_id = existing_post_repair_authority_task_ref(payload, work_unit_id=work_unit_id)
+            if existing_authority_task_id:
+                existing_post_repair_authority_task_ids[work_unit_id] = existing_authority_task_id
+        row["post_repair_authority_required"] = row["decision"] == "awaiting_retry_or_done_authority"
+        row["post_repair_authority_task_ref"] = existing_authority_task_id or None
+        row["post_repair_authority_task_exists"] = bool(existing_authority_task_id)
         reconciliation[work_unit_id] = row
         if status == "blocked" and row["release_record_seen"]:
             post_release_blocked_count += 1
@@ -2328,6 +2505,10 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             complete_candidates.append((task, task_id, packet_id, work_unit_id))
         elif row["decision"] == "awaiting_repair_review" and not existing_review_task_id:
             post_repair_review_candidates.append((task, payload, task_id, packet_id, work_unit_id))
+        elif row["decision"] == "awaiting_retry_or_done_authority" and not existing_authority_task_id:
+            review_result = row.get("post_repair_review_result")
+            if isinstance(review_result, dict):
+                post_repair_authority_candidates.append((task, payload, task_id, packet_id, work_unit_id, review_result))
 
     if not args.dry_run and retry_candidates:
         required_workers = [
@@ -2344,11 +2525,22 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         )
         if readiness_blockers:
             raise RuntimeError("post-repair review route readiness blocked ready work-unit reconciliation: " + "; ".join(readiness_blockers))
+    if not args.dry_run and args.create_post_repair_authority_tasks and post_repair_authority_candidates:
+        readiness_blockers = route_readiness_blockers(
+            args.route_readiness,
+            [args.worker_assignee_prefix + "independent-reviewer"],
+        )
+        if readiness_blockers:
+            raise RuntimeError(
+                "post-repair authority route readiness blocked ready work-unit reconciliation: " + "; ".join(readiness_blockers)
+            )
 
     retry_ready_work_unit_task_ids: dict[str, str] = {}
     completed_ready_work_unit_task_ids: dict[str, str] = {}
     created_post_repair_review_task_ids: dict[str, str] = {}
     post_repair_review_task_ids: dict[str, str] = dict(existing_post_repair_review_task_ids)
+    created_post_repair_authority_task_ids: dict[str, str] = {}
+    post_repair_authority_task_ids: dict[str, str] = dict(existing_post_repair_authority_task_ids)
     retry_reason = str(
         args.reason
         or "ready_work_unit_retry_authorized; ready_work_unit_repair_review_passed; reconciliation_scope=post_release_ready_work_unit; dispatch_separate=true"
@@ -2371,6 +2563,24 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
                 )
                 post_repair_review_task_ids[work_unit_id] = review_task_id
                 created_post_repair_review_task_ids[work_unit_id] = review_task_id
+        if args.create_post_repair_authority_tasks:
+            workspace_ref = str(args.post_repair_authority_workspace or "").strip()
+            for task, payload, task_id, packet_id, work_unit_id, review_result in post_repair_authority_candidates:
+                authority_task_id = create_post_repair_authority_task(
+                    hermes_bin=args.hermes_bin,
+                    board=board,
+                    plan_task=task,
+                    parent_payload=payload,
+                    parent_task_id=task_id,
+                    packet_id=packet_id,
+                    work_unit_id=work_unit_id,
+                    review_result=review_result,
+                    worker_assignee_prefix=args.worker_assignee_prefix,
+                    workspace_ref=workspace_ref,
+                    runner=runner,
+                )
+                post_repair_authority_task_ids[work_unit_id] = authority_task_id
+                created_post_repair_authority_task_ids[work_unit_id] = authority_task_id
         for _task, task_id, _packet_id, work_unit_id in retry_candidates:
             unblock_task(
                 hermes_bin=args.hermes_bin,
@@ -2428,6 +2638,12 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         "post_repair_review_required_work_unit_ids": sorted(
             post_repair_review_required_work_unit_ids
         ),
+        "post_repair_authority_task_ids": post_repair_authority_task_ids,
+        "existing_post_repair_authority_task_ids": existing_post_repair_authority_task_ids,
+        "created_post_repair_authority_task_ids": created_post_repair_authority_task_ids,
+        "post_repair_authority_required_work_unit_ids": sorted(
+            post_repair_authority_required_work_unit_ids
+        ),
         "post_release_reconciliation": reconciliation,
         "release_wave": {
             "held_work_unit_ids": sorted(dependency_blockers.keys()),
@@ -2448,6 +2664,10 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             "post_repair_review_existing_task_count": len(existing_post_repair_review_task_ids),
             "post_repair_review_result_count": post_repair_review_result_count,
             "post_repair_review_task_created_count": len(created_post_repair_review_task_ids),
+            "post_repair_authority_required_count": len(post_repair_authority_required_work_unit_ids),
+            "post_repair_authority_missing_task_count": len(post_repair_authority_candidates),
+            "post_repair_authority_existing_task_count": len(existing_post_repair_authority_task_ids),
+            "post_repair_authority_task_created_count": len(created_post_repair_authority_task_ids),
             "retry_unblocked_task_count": len(retry_ready_work_unit_task_ids),
             "completed_task_count": len(completed_ready_work_unit_task_ids),
             "human_gate_required_count": human_gate_count,
@@ -3313,7 +3533,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_reconcile_ready.add_argument("--route-readiness", type=Path)
     p_reconcile_ready.add_argument("--reason")
     p_reconcile_ready.add_argument("--create-post-repair-review-tasks", action="store_true")
+    p_reconcile_ready.add_argument("--create-post-repair-authority-tasks", action="store_true")
     p_reconcile_ready.add_argument("--post-repair-review-workspace")
+    p_reconcile_ready.add_argument("--post-repair-authority-workspace")
     p_reconcile_ready.add_argument("--completion-result", default="Ready work-unit reconciliation satisfied.")
     p_reconcile_ready.add_argument(
         "--completion-summary",
