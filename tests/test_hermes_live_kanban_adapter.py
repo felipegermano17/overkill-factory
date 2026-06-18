@@ -1562,11 +1562,106 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             ]
             upstream_task["status"] = "todo"
             fifth = adapter.reconcile_ready_work_units(authority_args, runner=fake)
+            upstream_status_after_retry = str(fake.tasks[upstream_id].get("status") or "")
+            upstream_parents_after_retry = [str(parent_id) for parent_id in fake.tasks[upstream_id].get("parents", [])]
+            upstream_task["status"] = "blocked"
+            upstream_task.setdefault("events", []).append({"kind": "claimed"})
+            upstream_task.setdefault("events", []).append({"kind": "blocked", "reason": "post-retry review required"})
+            fake.tasks["review-fixture-v3"] = {
+                "id": "review-fixture-v3",
+                "status": "done",
+                "title": "OF independent review: post-retry owner result",
+                "assignee": "independent-reviewer",
+                "events": [],
+                "comments": [],
+                "runs": [
+                    {
+                        "id": 4,
+                        "profile": "independent-reviewer",
+                        "status": "done",
+                        "outcome": "completed",
+                        "ended_at": 40,
+                        "metadata": {
+                            "independent_review_result": {
+                                "verdict": "PASS_ACCEPT_WU1_POST_REPAIR_DECOMPOSITION_EVIDENCE_ONLY",
+                                "review_target": upstream_id,
+                                "blocking_findings": False,
+                                "remaining_risk": [
+                                    "review accepts owner evidence only",
+                                    "downstream execution still needs a fresh authority decision",
+                                ],
+                            },
+                        },
+                    }
+                ],
+            }
+            observe_after_new_review_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            sixth = adapter.reconcile_ready_work_units(observe_after_new_review_args, runner=fake)
+            seventh = adapter.reconcile_ready_work_units(authority_args, runner=fake)
+            _fresh_authority_task_id, fresh_authority_task = next(
+                (task_id, task)
+                for task_id, task in fake.tasks.items()
+                if json.loads(str(task.get("body") or "{}")).get("packet_type")
+                == "ready_work_unit_post_repair_authority_request"
+                and json.loads(str(task.get("body") or "{}")).get("review_task_ref") == "review-fixture-v3"
+            )
+            fresh_authority_task["status"] = "done"
+            fresh_authority_task["runs"] = [
+                {
+                    "id": 5,
+                    "profile": "independent-reviewer",
+                    "status": "done",
+                    "outcome": "completed",
+                    "ended_at": 50,
+                    "metadata": {
+                        "independent_review_result": {
+                            "verdict": "PASS_WU1_DONE_DEFINITION_SATISFIED_AUTHORITY_DONE_ONLY",
+                            "authority_decision": {
+                                "selected_markers": [
+                                    "ready_work_unit_done_authorized",
+                                    "ready_work_unit_done_definition_satisfied",
+                                ],
+                                "rejected_markers": [
+                                    "ready_work_unit_retry_authorized",
+                                    "human_gate_required",
+                                    "structured_block",
+                                ],
+                            },
+                        }
+                    },
+                }
+            ]
+            dry_after_fresh_authority_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--dry-run",
+                ]
+            )
+            eighth = adapter.reconcile_ready_work_units(dry_after_fresh_authority_args, runner=fake)
 
         assert_live_adapter_result_schema(self, second)
         assert_live_adapter_result_schema(self, third)
         assert_live_adapter_result_schema(self, fourth)
         assert_live_adapter_result_schema(self, fifth)
+        assert_live_adapter_result_schema(self, sixth)
+        assert_live_adapter_result_schema(self, seventh)
+        assert_live_adapter_result_schema(self, eighth)
         self.assertEqual(first["runtime_gate"]["post_repair_review_task_created_count"], 1)
         row = second["post_release_reconciliation"]["work-unit-001"]
         self.assertEqual(row["decision"], "awaiting_retry_or_done_authority")
@@ -1610,15 +1705,33 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             fifth["unlinked_superseded_post_repair_review_parent_task_ids"],
             {"work-unit-001": [adapter.PUBLIC_SAFE_KANBAN_REF]},
         )
-        self.assertEqual(fake.tasks[upstream_id]["status"], "ready")
-        self.assertNotIn(
-            stale_review_task_id,
-            [str(parent_id) for parent_id in fake.tasks[upstream_id].get("parents", [])],
-        )
-        self.assertIn(authority_task_id, [str(parent_id) for parent_id in fake.tasks[upstream_id].get("parents", [])])
+        self.assertEqual(upstream_status_after_retry, "ready")
+        self.assertNotIn(stale_review_task_id, upstream_parents_after_retry)
+        self.assertIn(authority_task_id, upstream_parents_after_retry)
         self.assertEqual(second["retry_ready_work_unit_task_ids"], {})
         self.assertEqual(second["completed_ready_work_unit_task_ids"], {})
         self.assertEqual(fifth["completed_ready_work_unit_task_ids"], {})
+        fresh_review_row = sixth["post_release_reconciliation"]["work-unit-001"]
+        self.assertEqual(fresh_review_row["decision"], "awaiting_retry_or_done_authority")
+        self.assertEqual(fresh_review_row["post_repair_review_task_ref"], "review-fixture-v3")
+        self.assertIsNone(fresh_review_row["post_repair_authority_task_ref"])
+        self.assertFalse(fresh_review_row["retry_authorized"])
+        self.assertFalse(fresh_review_row["done_authorized"])
+        self.assertEqual(sixth["retry_ready_work_unit_task_ids"], {})
+        self.assertEqual(sixth["completed_ready_work_unit_task_ids"], {})
+        self.assertEqual(sixth["existing_post_repair_authority_task_ids"], {})
+        self.assertEqual(sixth["runtime_gate"]["post_repair_authority_required_count"], 1)
+        self.assertEqual(sixth["runtime_gate"]["post_repair_authority_missing_task_count"], 1)
+        self.assertEqual(sixth["runtime_gate"]["post_repair_authority_result_count"], 0)
+        self.assertEqual(seventh["created_post_repair_authority_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        complete_row = eighth["post_release_reconciliation"]["work-unit-001"]
+        self.assertEqual(complete_row["decision"], "complete_parent")
+        self.assertTrue(complete_row["done_authorized"])
+        self.assertTrue(complete_row["done_definition_satisfied"])
+        self.assertEqual(complete_row["post_repair_authority_task_ref"], adapter.PUBLIC_SAFE_KANBAN_REF)
+        self.assertEqual(eighth["runtime_gate"]["post_repair_authority_result_count"], 1)
+        self.assertEqual(eighth["runtime_gate"]["complete_candidate_count"], 1)
+        self.assertEqual(eighth["completed_ready_work_unit_task_ids"], {})
         review_tasks = [
             task
             for task in fake.tasks.values()
@@ -1632,11 +1745,23 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             if json.loads(str(task.get("body") or "{}")).get("packet_type")
             == "ready_work_unit_post_repair_authority_request"
         ]
-        self.assertEqual(len(authority_tasks), 1)
-        self.assertEqual(authority_tasks[0]["assignee"], "independent-reviewer")
-        authority_body = json.loads(str(authority_tasks[0]["body"]))
+        self.assertEqual(len(authority_tasks), 2)
+        old_authority_tasks = [
+            task
+            for task in authority_tasks
+            if json.loads(str(task.get("body") or "{}")).get("review_task_ref") == "review-fixture-v2"
+        ]
+        self.assertEqual(len(old_authority_tasks), 1)
+        self.assertEqual(old_authority_tasks[0]["assignee"], "independent-reviewer")
+        authority_body = json.loads(str(old_authority_tasks[0]["body"]))
         self.assertEqual(authority_body["marker"], "ready_work_unit_post_repair_authority_required")
         self.assertEqual(authority_body["authority_scope"], "post_repair_retry_or_done_only")
+        fresh_authority_tasks = [
+            task
+            for task in authority_tasks
+            if json.loads(str(task.get("body") or "{}")).get("review_task_ref") == "review-fixture-v3"
+        ]
+        self.assertEqual(len(fresh_authority_tasks), 1)
 
     def test_reconcile_ready_work_units_requires_route_readiness_before_post_repair_review_task(self) -> None:
         fake = FakeHermes()

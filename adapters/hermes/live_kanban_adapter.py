@@ -2152,12 +2152,21 @@ def existing_post_repair_review_task_ref(payload: dict[str, Any], *, work_unit_i
     return ""
 
 
-def existing_post_repair_authority_task_ref(payload: dict[str, Any], *, work_unit_id: str) -> str:
+def existing_post_repair_authority_task_ref(
+    payload: dict[str, Any],
+    *,
+    work_unit_id: str,
+    review_task_ref: str | None = None,
+) -> str:
+    expected_review_task_ref = str(review_task_ref or "").strip()
     for comment in reversed(task_readback_comments(payload)):
         marker = parse_json_object(comment.get("body") or comment.get("text") or comment.get("payload"))
         if marker.get("marker") != READY_WORK_UNIT_POST_REPAIR_AUTHORITY_CREATED_MARKER:
             continue
         if str(marker.get("work_unit_id") or "").strip() != work_unit_id:
+            continue
+        marker_review_task_ref = str(marker.get("review_task_ref") or "").strip()
+        if expected_review_task_ref and marker_review_task_ref != expected_review_task_ref:
             continue
         authority_task_ref = str(marker.get("authority_task_ref") or "").strip()
         if authority_task_ref:
@@ -2346,11 +2355,20 @@ def post_repair_review_result_from_run(
     if metadata_work_unit and metadata_work_unit != work_unit_id:
         return None
 
+    nested_review = metadata.get("independent_review_result")
+    nested_review = nested_review if isinstance(nested_review, dict) else {}
+    nested_review_target = str(
+        nested_review.get("review_target")
+        or nested_review.get("reviewed_parent_card_id")
+        or nested_review.get("parent_task_ref")
+        or ""
+    ).strip()
+    nested_verdict = str(nested_review.get("verdict") or "").strip().upper()
     explicit_marker = metadata.get("marker") == READY_WORK_UNIT_POST_REPAIR_REVIEW_RESULT_MARKER
     reviewed_repair_card = str(metadata.get("reviewed_repair_card") or metadata.get("repair_task_ref") or "").strip()
     review_scope = str(metadata.get("review_scope") or "").strip().lower()
     run_profile = str(run.get("profile") or run.get("assignee") or "").strip()
-    if not explicit_marker and not reviewed_repair_card and "repair" not in review_scope:
+    if not explicit_marker and not reviewed_repair_card and "repair" not in review_scope and not nested_review_target:
         return None
     if run_profile and run_profile != "independent-reviewer":
         return None
@@ -2359,9 +2377,18 @@ def post_repair_review_result_from_run(
     outcome = str(run.get("outcome") or "").strip().lower()
     validation_result = str(metadata.get("validation_result") or metadata.get("result") or "").strip().upper()
     blocking_findings = metadata.get("blocking_findings")
-    human_gate_required = metadata.get("human_gate_required") is True
+    if blocking_findings is None:
+        blocking_findings = nested_review.get("blocking_findings")
+    human_gate_required = metadata.get("human_gate_required") is True or nested_review.get("human_gate_required") is True
 
     explicit_pass = metadata.get("ready_work_unit_repair_review_passed") is True
+    nested_pass = (
+        status in {"done", "complete", "completed"}
+        and outcome in {"", "completed", "done", "pass", "passed"}
+        and nested_verdict.startswith("PASS")
+        and blocking_findings is False
+        and nested_review_target == parent_task_id
+    )
     legacy_pass = (
         status in {"done", "complete", "completed"}
         and outcome in {"", "completed", "done", "pass", "passed"}
@@ -2377,7 +2404,7 @@ def post_repair_review_result_from_run(
         or status == "blocked"
         or outcome == "blocked"
     )
-    repair_review_passed = explicit_pass or legacy_pass
+    repair_review_passed = explicit_pass or legacy_pass or nested_pass
     if not repair_review_passed and not blocked and not human_gate_required:
         return None
 
@@ -2407,13 +2434,11 @@ def apply_post_repair_review_result(row: dict[str, Any], result: dict[str, Any] 
         return row
     merged = dict(row)
     merged["post_repair_review_result"] = result
-    merged["repair_review_passed"] = bool(merged.get("repair_review_passed")) or result.get("repair_review_passed") is True
-    merged["retry_authorized"] = bool(merged.get("retry_authorized")) or result.get("retry_authorized") is True
-    merged["done_authorized"] = bool(merged.get("done_authorized")) or result.get("done_authorized") is True
-    merged["done_definition_satisfied"] = (
-        bool(merged.get("done_definition_satisfied")) or result.get("done_definition_satisfied") is True
-    )
-    merged["human_gate_required"] = bool(merged.get("human_gate_required")) or result.get("human_gate_required") is True
+    merged["repair_review_passed"] = result.get("repair_review_passed") is True
+    merged["retry_authorized"] = result.get("retry_authorized") is True
+    merged["done_authorized"] = result.get("done_authorized") is True
+    merged["done_definition_satisfied"] = result.get("done_definition_satisfied") is True
+    merged["human_gate_required"] = result.get("human_gate_required") is True
 
     if merged["human_gate_required"]:
         merged["decision"] = "human_gate_required"
@@ -2493,15 +2518,20 @@ def post_repair_authority_result_from_run(
     authority_task_id: str,
     parent_task_id: str,
     work_unit_id: str,
+    review_task_ref: str,
 ) -> dict[str, Any] | None:
     metadata = run.get("metadata")
     if not isinstance(metadata, dict):
         return None
     review_result = metadata.get("independent_review_result")
     review_result = review_result if isinstance(review_result, dict) else {}
+    authority_decision = review_result.get("authority_decision")
+    authority_decision = authority_decision if isinstance(authority_decision, dict) else {}
     selected_markers = metadata.get("selected_markers")
     if not isinstance(selected_markers, list):
         selected_markers = review_result.get("selected_markers")
+    if not isinstance(selected_markers, list):
+        selected_markers = authority_decision.get("selected_markers")
     markers = {str(marker or "").strip() for marker in (selected_markers or []) if str(marker or "").strip()}
     if not markers:
         for marker_key in (
@@ -2522,10 +2552,14 @@ def post_repair_authority_result_from_run(
     retry_authorized = "ready_work_unit_retry_authorized" in markers
     done_authorized = "ready_work_unit_done_authorized" in markers
     done_definition_satisfied = "ready_work_unit_done_definition_satisfied" in markers
+    authority_verdict = str(review_result.get("verdict") or "").strip().upper()
+    if authority_verdict.startswith("PASS") and (retry_authorized or done_authorized or done_definition_satisfied):
+        repair_review_passed = True
     human_gate_required = "human_gate_required" in markers or metadata.get("human_gate_required") is True
     return {
         "marker": READY_WORK_UNIT_POST_REPAIR_AUTHORITY_RESULT_MARKER,
         "authority_task_ref": authority_task_id,
+        "review_task_ref": review_task_ref or None,
         "parent_task_ref": parent_task_id,
         "work_unit_id": work_unit_id,
         "source": "hermes_run_metadata",
@@ -2581,6 +2615,7 @@ def post_repair_authority_results_by_work_unit(
     hermes_bin: str,
     board: str,
     parent_task_ids_by_work_unit: dict[str, str],
+    review_task_refs_by_work_unit: dict[str, str] | None = None,
     worker_assignee_prefix: str,
     runner: Runner = default_runner,
 ) -> dict[str, dict[str, Any]]:
@@ -2608,6 +2643,10 @@ def post_repair_authority_results_by_work_unit(
             parent_task_id = str(body.get("parent_task_ref") or "").strip()
             if not work_unit_id or parent_task_ids_by_work_unit.get(work_unit_id) != parent_task_id:
                 continue
+            review_task_ref = str(body.get("review_task_ref") or "").strip()
+            expected_review_task_ref = str((review_task_refs_by_work_unit or {}).get(work_unit_id) or "").strip()
+            if expected_review_task_ref and review_task_ref != expected_review_task_ref:
+                continue
             try:
                 runs = task_run_records(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
             except RuntimeError:
@@ -2618,6 +2657,7 @@ def post_repair_authority_results_by_work_unit(
                     authority_task_id=task_id,
                     parent_task_id=parent_task_id,
                     work_unit_id=work_unit_id,
+                    review_task_ref=review_task_ref,
                 )
                 if not result:
                     continue
@@ -2723,6 +2763,11 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             work_unit_id: task_id
             for _task, _payload, task_id, _packet_id, work_unit_id, _status in verified
         },
+        review_task_refs_by_work_unit={
+            work_unit_id: str(result.get("review_task_ref") or "").strip()
+            for work_unit_id, result in review_results.items()
+            if str(result.get("review_task_ref") or "").strip()
+        },
         worker_assignee_prefix=args.worker_assignee_prefix,
         runner=runner,
     )
@@ -2784,7 +2829,11 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         existing_authority_task_id = ""
         if row["decision"] == "awaiting_retry_or_done_authority":
             post_repair_authority_required_work_unit_ids.add(work_unit_id)
-            existing_authority_task_id = existing_post_repair_authority_task_ref(payload, work_unit_id=work_unit_id)
+            existing_authority_task_id = existing_post_repair_authority_task_ref(
+                payload,
+                work_unit_id=work_unit_id,
+                review_task_ref=str((review_result or {}).get("review_task_ref") or "").strip(),
+            )
             if existing_authority_task_id:
                 existing_post_repair_authority_task_ids[work_unit_id] = existing_authority_task_id
         elif authority_result and authority_result.get("authority_task_ref"):
