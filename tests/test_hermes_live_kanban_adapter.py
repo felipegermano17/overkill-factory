@@ -430,6 +430,19 @@ def assert_route_readiness_schema(testcase: unittest.TestCase, result: dict[str,
     testcase.assertEqual(errors, [])
 
 
+def assert_product_creation_closeout_schema(testcase: unittest.TestCase, result: dict[str, object]) -> None:
+    schema = json.loads((ROOT / "schemas" / "product-creation-run-closeout.schema.json").read_text(encoding="utf-8"))
+    closeout = result["product_creation_run_closeout"]
+    errors = validator.validate_node(
+        schema,
+        closeout,
+        "$",
+        schemas={"product-creation-run-closeout.schema.json": schema},
+        root_schema=schema,
+    )
+    testcase.assertEqual(errors, [])
+
+
 def ready_work_unit_task_ids(fake: FakeHermes) -> list[str]:
     task_ids: list[str] = []
     for task_id, task in fake.tasks.items():
@@ -956,6 +969,238 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             self.assertEqual(result["runtime_gate"][expected_count], 1)
             self.assertEqual(result["completed_ready_work_unit_task_ids"], {})
             self.assertEqual(fake.tasks[parent_task_id]["status"], "blocked")
+
+    def test_close_product_creation_run_routes_release_readiness_without_product_claim(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            product_creation_plan_path = tmp_path / "product-creation-plan.json"
+            product_creation_plan_path.write_text(
+                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            parent_task_id = ready_work_unit_task_ids(fake)[0]
+            block_ready_work_unit_after_release(fake, parent_task_id)
+            add_ready_work_unit_review_run(
+                fake,
+                review_task_id="t_review_pass",
+                parent_task_id=parent_task_id,
+            )
+            close_reviewed_args = adapter.build_parser().parse_args(
+                [
+                    "close-reviewed-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                ]
+            )
+            adapter.close_reviewed_ready_work_units(close_reviewed_args, runner=fake)
+
+            dry_run_args = adapter.build_parser().parse_args(
+                [
+                    "close-product-creation-run",
+                    "--product-creation-plan",
+                    str(product_creation_plan_path),
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--dry-run",
+                ]
+            )
+            dry_run = adapter.close_product_creation_run(dry_run_args, runner=fake)
+            close_args = adapter.build_parser().parse_args(
+                [
+                    "close-product-creation-run",
+                    "--product-creation-plan",
+                    str(product_creation_plan_path),
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                ]
+            )
+            result = adapter.close_product_creation_run(close_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, dry_run)
+        assert_product_creation_closeout_schema(self, dry_run)
+        assert_live_adapter_result_schema(self, result)
+        assert_product_creation_closeout_schema(self, result)
+        self.assertEqual(dry_run["product_creation_run_closeout"]["next_action"], "release_readiness_required")
+        self.assertFalse(dry_run["product_creation_run_closeout"]["complete_product_claim_allowed"])
+        self.assertEqual(dry_run["product_creation_next_route_task_ids"], {})
+        self.assertEqual(result["product_creation_next_route_task_ids"], {"release_readiness_required": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(result["runtime_gate"]["next_route_task_created_count"], 1)
+        self.assertFalse(result["runtime_gate"]["dispatch_allowed_by_this_step"])
+        self.assertFalse(result["runtime_gate"]["complete_product_claim_allowed"])
+        route_tasks = [
+            task
+            for task in fake.tasks.values()
+            if "product_creation_run_closeout_next_action" in str(task.get("body") or "")
+        ]
+        self.assertEqual(len(route_tasks), 1)
+        self.assertEqual(route_tasks[0]["status"], "blocked")
+        closeout_create_calls = [
+            call
+            for call in fake.calls
+            if len(call) >= 5
+            and call[4] == "create"
+            and "OF product creation closeout next gate" in call[5]
+        ]
+        self.assertEqual(len(closeout_create_calls), 1)
+        self.assertNotIn("--assignee", closeout_create_calls[0])
+        closeout_assign_calls = [
+            call
+            for call in fake.calls
+            if len(call) >= 7 and call[4] == "assign" and call[6] == "release-ops-worker"
+        ]
+        self.assertEqual(len(closeout_assign_calls), 1)
+        dispatch_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "dispatch"]
+        self.assertEqual(dispatch_calls, [])
+
+    def test_close_product_creation_run_blocks_when_work_unit_review_blocks(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            product_creation_plan_path = tmp_path / "product-creation-plan.json"
+            product_creation_plan_path.write_text(
+                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            parent_task_id = ready_work_unit_task_ids(fake)[0]
+            block_ready_work_unit_after_release(fake, parent_task_id)
+            add_ready_work_unit_review_run(
+                fake,
+                review_task_id="t_review_block",
+                parent_task_id=parent_task_id,
+                verdict="BLOCK",
+                blocking_findings=True,
+            )
+
+            args = adapter.build_parser().parse_args(
+                [
+                    "close-product-creation-run",
+                    "--product-creation-plan",
+                    str(product_creation_plan_path),
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--dry-run",
+                ]
+            )
+            result = adapter.close_product_creation_run(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        assert_product_creation_closeout_schema(self, result)
+        self.assertEqual(result["product_creation_run_closeout"]["next_action"], "repair_required")
+        self.assertEqual(result["runtime_gate"]["blocker_count"], 1)
+        self.assertEqual(result["product_creation_run_closeout"]["work_units"]["work-unit-001"]["decision"], "repair_required")
+        self.assertEqual(result["product_creation_next_route_task_ids"], {})
+
+    def test_close_product_creation_run_fails_closed_on_ambiguous_duplicate_task(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, _readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            product_creation_plan_path = tmp_path / "product-creation-plan.json"
+            product_creation_plan_path.write_text(
+                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            original_task_id = ready_work_unit_task_ids(fake)[0]
+            duplicate = copy.deepcopy(fake.tasks[original_task_id])
+            duplicate["id"] = "t_duplicate"
+            duplicate["status"] = "done"
+            fake.tasks["t_duplicate"] = duplicate
+
+            args = adapter.build_parser().parse_args(
+                [
+                    "close-product-creation-run",
+                    "--product-creation-plan",
+                    str(product_creation_plan_path),
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--dry-run",
+                ]
+            )
+            result = adapter.close_product_creation_run(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        assert_product_creation_closeout_schema(self, result)
+        row = result["product_creation_run_closeout"]["work_units"]["work-unit-001"]
+        self.assertEqual(row["decision"], "blocked_with_owner")
+        self.assertEqual(row["active_task_count"], 2)
+        self.assertEqual(result["product_creation_run_closeout"]["next_action"], "blocked_with_owner")
+
+    def test_close_product_creation_run_rejects_private_release_ref(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, _readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            product_creation_plan_path = tmp_path / "product-creation-plan.json"
+            product_creation_plan_path.write_text(
+                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            private_ref = "C:" + "\\private\\release-readiness.json"
+            args = adapter.build_parser().parse_args(
+                [
+                    "close-product-creation-run",
+                    "--product-creation-plan",
+                    str(product_creation_plan_path),
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--release-readiness-ref",
+                    private_ref,
+                    "--dry-run",
+                ]
+            )
+            with self.assertRaisesRegex(RuntimeError, "release_readiness_ref must be public-safe"):
+                adapter.close_product_creation_run(args, runner=fake)
 
     def test_release_ready_work_units_rejects_pre_dispatch_activity(self) -> None:
         fake = FakeHermes()

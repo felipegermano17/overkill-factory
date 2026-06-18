@@ -1,0 +1,158 @@
+{
+  "$id": "https://overkill-factory.dev/schemas/product-creation-run-closeout.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Overkill Factory Product Creation Run Closeout",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "product_creation_plan_id",
+    "materialization_plan_id",
+    "decision",
+    "next_action",
+    "complete_product_claim_allowed",
+    "runtime_authority",
+    "local_state_authority",
+    "dispatch_allowed_by_this_step",
+    "work_unit_count",
+    "terminal_work_unit_count",
+    "review_passed_work_unit_count",
+    "blockers",
+    "work_units",
+    "proof_id_coverage",
+    "requirement_coverage",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/product-creation-run-closeout.schema.json" },
+    "record_type": { "const": "product_creation_run_closeout" },
+    "product_creation_plan_id": { "type": "string", "minLength": 3 },
+    "materialization_plan_id": { "type": "string", "minLength": 3 },
+    "decision": {
+      "enum": [
+        "product_closeout_ready",
+        "release_readiness_required",
+        "learnback_required",
+        "repair_required",
+        "human_gate_required",
+        "blocked_with_owner"
+      ]
+    },
+    "next_action": {
+      "enum": [
+        "product_closeout_ready",
+        "release_readiness_required",
+        "learnback_required",
+        "repair_required",
+        "human_gate_required",
+        "blocked_with_owner"
+      ]
+    },
+    "complete_product_claim_allowed": { "const": false },
+    "runtime_authority": { "const": "hermes_kanban" },
+    "local_state_authority": { "const": false },
+    "dispatch_allowed_by_this_step": { "const": false },
+    "work_unit_count": { "type": "integer", "minimum": 0 },
+    "terminal_work_unit_count": { "type": "integer", "minimum": 0 },
+    "review_passed_work_unit_count": { "type": "integer", "minimum": 0 },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["blocker_id", "owner", "reason", "next_repair_action"],
+        "properties": {
+          "blocker_id": { "type": "string", "minLength": 3 },
+          "owner": { "type": "string", "minLength": 3 },
+          "work_unit_id": { "type": "string", "minLength": 3 },
+          "reason": { "type": "string", "minLength": 3 },
+          "next_repair_action": { "type": "string", "minLength": 3 },
+          "work_unit_ids": { "type": "array", "items": { "type": "string", "minLength": 3 } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "work_units": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "work_unit_id",
+          "proof_ids_required",
+          "product_sot_requirement_refs",
+          "active_task_count",
+          "superseded_task_count",
+          "status",
+          "review_passed",
+          "terminal",
+          "decision",
+          "next_action"
+        ],
+        "properties": {
+          "work_unit_id": { "type": "string", "minLength": 3 },
+          "packet_id": { "type": "string" },
+          "task_ref": { "type": "string", "minLength": 3 },
+          "proof_ids_required": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "product_sot_requirement_refs": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "active_task_count": { "type": "integer", "minimum": 0 },
+          "superseded_task_count": { "type": "integer", "minimum": 0 },
+          "status": { "type": "string", "minLength": 3 },
+          "release_record_seen": { "type": "boolean" },
+          "review_passed": { "type": "boolean" },
+          "terminal": { "type": "boolean" },
+          "decision": {
+            "enum": [
+              "work_unit_closed",
+              "awaiting_review_readback",
+              "repair_required",
+              "human_gate_required",
+              "blocked_with_owner"
+            ]
+          },
+          "next_action": { "type": "string", "minLength": 3 },
+          "blocker_id": { "type": "string", "minLength": 3 },
+          "review_result": { "type": "object" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "proof_id_coverage": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["proof_id", "work_unit_ids", "status"],
+        "properties": {
+          "proof_id": { "type": "string", "minLength": 3 },
+          "work_unit_ids": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "status": { "enum": ["covered_by_review_pass", "blocked_or_unproven"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "requirement_coverage": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["requirement_ref", "work_unit_ids", "status"],
+        "properties": {
+          "requirement_ref": { "type": "string", "minLength": 3 },
+          "work_unit_ids": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "status": { "enum": ["covered_by_closed_work_unit", "blocked_or_unproven"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "release_readiness_ref": { "type": ["string", "null"] },
+    "product_promotion_gate_ref": { "type": ["string", "null"] },
+    "learnback_ref": { "type": ["string", "null"] },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["public_safe_refs_only", "raw_private_evidence_embedded"],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

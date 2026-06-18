@@ -90,6 +90,12 @@ READY_WORK_UNIT_REVIEW_CLOSEOUT_READBACK_MARKERS = [
     READY_WORK_UNIT_REVIEW_CLOSEOUT_MARKER,
     READY_WORK_UNIT_REVIEW_PASSED_MARKER,
 ]
+PRODUCT_CREATION_CLOSEOUT_MARKER = "product_creation_run_closeout"
+PRODUCT_CREATION_CLOSEOUT_NEXT_ROUTE_MARKER = "product_creation_closeout_next_route"
+PRODUCT_CREATION_CLOSEOUT_READBACK_MARKERS = [
+    PRODUCT_CREATION_CLOSEOUT_MARKER,
+    PRODUCT_CREATION_CLOSEOUT_NEXT_ROUTE_MARKER,
+]
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -1303,6 +1309,68 @@ def create_task(
     return task_id
 
 
+def create_blocked_task_before_assignment(
+    *,
+    hermes_bin: str,
+    board: str,
+    title: str,
+    body: str,
+    assignee: str,
+    idempotency_key: str,
+    created_by: str,
+    workspace: str,
+    blocked_reason: str,
+    runner: Runner = default_runner,
+) -> str:
+    ensure_non_empty_body(body)
+    task_id = parse_task_id(
+        run_checked(
+            hermes_kanban(
+                hermes_bin,
+                board,
+                "create",
+                title,
+                "--body",
+                body,
+                "--idempotency-key",
+                idempotency_key,
+                "--created-by",
+                created_by,
+                "--workspace",
+                workspace,
+                "--json",
+            ),
+            runner,
+        ).stdout
+    )
+    ensure_blocked_event(
+        hermes_bin=hermes_bin,
+        board=board,
+        task_id=task_id,
+        reason=blocked_reason,
+        runner=runner,
+    )
+    blocked_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    ensure_no_pre_dispatch_activity(blocked_task, task_id=task_id)
+    if task_readback_status(blocked_task) != "blocked":
+        raise RuntimeError(f"Hermes task {task_id} is not blocked before assignment")
+    run_checked(
+        hermes_kanban(
+            hermes_bin,
+            board,
+            "assign",
+            task_id,
+            assignee,
+        ),
+        runner,
+    )
+    assigned_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    ensure_no_pre_dispatch_activity(assigned_task, task_id=task_id)
+    if task_readback_status(assigned_task) != "blocked":
+        raise RuntimeError(f"Hermes task {task_id} is not blocked after assignment")
+    return task_id
+
+
 def ready_work_unit_create_body_and_chunks(body_contract: dict[str, Any]) -> tuple[str, list[str]]:
     full_body = compact_json_argument(body_contract)
     if len(full_body) <= READY_WORK_UNIT_DIRECT_BODY_LIMIT:
@@ -1377,6 +1445,26 @@ def load_ready_work_unit_materialization_plan(path: Path) -> dict[str, Any]:
     if errors:
         raise RuntimeError("invalid ready work-unit Hermes materialization plan: " + "; ".join(errors))
     return plan
+
+
+def load_product_creation_plan(path: Path) -> dict[str, Any]:
+    plan = load_json(path)
+    factoryctl = load_factoryctl()
+    errors = factoryctl.validate_product_creation_plan(plan)
+    if errors:
+        raise RuntimeError("invalid product creation plan: " + "; ".join(errors))
+    return plan
+
+
+def ensure_public_safe_optional_ref(value: str | None, *, field: str) -> str | None:
+    ref = str(value or "").strip()
+    if not ref:
+        return None
+    factoryctl = load_factoryctl()
+    _sanitized, redaction = factoryctl.sanitize_public_ref(ref)
+    if redaction is not None:
+        raise RuntimeError(f"{field} must be public-safe")
+    return ref
 
 
 def create_ready_work_unit_task(
@@ -2143,6 +2231,12 @@ def parse_json_object(value: Any) -> dict[str, Any]:
     except json.JSONDecodeError:
         return {}
     return parsed if isinstance(parsed, dict) else {}
+
+
+def string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item or "").strip()]
 
 
 def existing_post_repair_review_task_ref(payload: dict[str, Any], *, work_unit_id: str) -> str:
@@ -3471,6 +3565,465 @@ def close_reviewed_ready_work_units(args: argparse.Namespace, runner: Runner = d
     return public_envelope
 
 
+def active_product_creation_work_units(product_creation_plan: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    active: dict[str, dict[str, Any]] = {}
+    for unit in product_creation_plan.get("work_units", []):
+        if not isinstance(unit, dict):
+            continue
+        unit_id = str(unit.get("unit_id") or "").strip()
+        status = str(unit.get("status") or "").strip().lower()
+        if not unit_id or status in {"rejected", "superseded"}:
+            continue
+        active[unit_id] = unit
+    return active
+
+
+def work_unit_materialization_tasks_by_id(materialization_plan: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    tasks: dict[str, dict[str, Any]] = {}
+    for task in materialization_plan.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+        work_unit_id = str(task.get("work_unit_id") or "").strip()
+        if work_unit_id:
+            tasks[work_unit_id] = task
+    return tasks
+
+
+def product_creation_embedded_plan_ids(materialization_plan: dict[str, Any]) -> set[str]:
+    plan_ids: set[str] = set()
+    for task in materialization_plan.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+        body = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
+        packet = body.get("work_unit_context_packet") if isinstance(body.get("work_unit_context_packet"), dict) else {}
+        embedded = packet.get("embedded_payloads") if isinstance(packet.get("embedded_payloads"), dict) else {}
+        product_plan = embedded.get("product_creation_plan") if isinstance(embedded.get("product_creation_plan"), dict) else {}
+        plan_id = str(product_plan.get("plan_id") or "").strip()
+        if plan_id:
+            plan_ids.add(plan_id)
+    return plan_ids
+
+
+def product_creation_closeout_next_action(
+    *,
+    product_creation_plan: dict[str, Any],
+    release_readiness_ref: str | None,
+    product_promotion_gate_ref: str | None,
+    learnback_ref: str | None,
+    blocker_decisions: list[str],
+) -> str:
+    if any(decision == "human_gate_required" for decision in blocker_decisions):
+        return "human_gate_required"
+    if any(decision == "repair_required" for decision in blocker_decisions):
+        return "repair_required"
+    if blocker_decisions:
+        return "blocked_with_owner"
+    if not release_readiness_ref and product_creation_plan.get("production_readiness_scope"):
+        return "release_readiness_required"
+    if not learnback_ref:
+        return "learnback_required"
+    if product_promotion_gate_ref:
+        return "product_closeout_ready"
+    return "blocked_with_owner"
+
+
+def product_creation_closeout_next_assignee(next_action: str, override: str | None) -> str:
+    explicit = str(override or "").strip()
+    if explicit:
+        return explicit
+    if next_action == "release_readiness_required":
+        return "release-ops-worker"
+    if next_action == "learnback_required":
+        return "skill-eval-distiller"
+    return "factory-orchestrator"
+
+
+def product_creation_closeout_idempotency_key(
+    *,
+    product_creation_plan_id: str,
+    materialization_plan_id: str,
+    next_action: str,
+) -> str:
+    digest = idempotency_digest_fragment(
+        contract_digest(
+            {
+                "product_creation_plan_id": product_creation_plan_id,
+                "materialization_plan_id": materialization_plan_id,
+                "next_action": next_action,
+                "marker": PRODUCT_CREATION_CLOSEOUT_NEXT_ROUTE_MARKER,
+                "no_spawn_protocol": "create-unassigned-block-assign-v2",
+                "idempotency_version": "v2",
+            }
+        )
+    )
+    return f"overkill:product-creation-closeout:{product_creation_plan_id}:{next_action}:{digest}"
+
+
+def create_product_creation_closeout_next_task(
+    *,
+    args: argparse.Namespace,
+    board: str,
+    closeout: dict[str, Any],
+    runner: Runner,
+) -> str:
+    next_action = str(closeout.get("next_action") or "blocked_with_owner")
+    assignee = product_creation_closeout_next_assignee(next_action, args.next_assignee)
+    product_creation_plan_id = str(closeout.get("product_creation_plan_id") or "product-creation-plan")
+    materialization_plan_id = str(closeout.get("materialization_plan_id") or "ready-work-unit-plan")
+    body = compact_json_argument(
+        {
+            "packet_type": "product_creation_run_closeout_next_action",
+            "marker": PRODUCT_CREATION_CLOSEOUT_NEXT_ROUTE_MARKER,
+            "product_creation_plan_id": product_creation_plan_id,
+            "materialization_plan_id": materialization_plan_id,
+            "next_action": next_action,
+            "decision": closeout.get("decision"),
+            "work_unit_count": closeout.get("work_unit_count"),
+            "terminal_work_unit_count": closeout.get("terminal_work_unit_count"),
+            "review_passed_work_unit_count": closeout.get("review_passed_work_unit_count"),
+            "blocker_count": len(closeout.get("blockers") or []),
+            "blockers": closeout.get("blockers") or [],
+            "proof_id_coverage": closeout.get("proof_id_coverage") or {},
+            "requirement_coverage": closeout.get("requirement_coverage") or {},
+            "complete_product_claim_allowed": False,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "dispatch_allowed_by_this_step": False,
+        }
+    )
+    task_id = create_blocked_task_before_assignment(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        title=f"OF product creation closeout next gate: {next_action}",
+        body=body,
+        assignee=assignee,
+        idempotency_key=product_creation_closeout_idempotency_key(
+            product_creation_plan_id=product_creation_plan_id,
+            materialization_plan_id=materialization_plan_id,
+            next_action=next_action,
+        ),
+        created_by="overkill-factory",
+        workspace=str(args.workspace or "scratch"),
+        blocked_reason=(
+            "Product creation closeout next-route task starts blocked; "
+            "dispatch is forbidden until the next gate has explicit authority."
+        ),
+        runner=runner,
+    )
+    run_checked(
+        hermes_kanban(
+            args.hermes_bin,
+            board,
+            "comment",
+            "--author",
+            READY_WORK_UNIT_RECONCILIATION_AUTHOR,
+            task_id,
+            compact_json_argument(
+                {
+                    "marker": PRODUCT_CREATION_CLOSEOUT_MARKER,
+                    "next_route_marker": PRODUCT_CREATION_CLOSEOUT_NEXT_ROUTE_MARKER,
+                    "product_creation_plan_id": product_creation_plan_id,
+                    "materialization_plan_id": materialization_plan_id,
+                    "next_action": next_action,
+                    "complete_product_claim_allowed": False,
+                    "dispatch_allowed_by_this_step": False,
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                }
+            ),
+        ),
+        runner,
+    )
+    payload = show_task(hermes_bin=args.hermes_bin, board=board, task_id=task_id, runner=runner)
+    if task_readback_status(payload) != "blocked":
+        raise RuntimeError(f"product creation closeout next-route task {task_id} is not durably blocked")
+    if not history_contains_all_markers_anywhere(payload, PRODUCT_CREATION_CLOSEOUT_READBACK_MARKERS):
+        raise RuntimeError(f"product creation closeout next-route task {task_id} lacks closeout readback markers")
+    return task_id
+
+
+def close_product_creation_run(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    product_creation_plan = load_product_creation_plan(args.product_creation_plan.resolve())
+    materialization_plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
+    board = str(args.board or materialization_plan.get("board") or "").strip()
+    if not board:
+        raise RuntimeError("product creation closeout requires a board")
+    if str(materialization_plan.get("board") or "").strip() and board != str(materialization_plan.get("board") or "").strip():
+        raise RuntimeError("provided board does not match the ready work-unit materialization plan")
+    materialization_result = load_ready_work_unit_materialization_result(
+        args.materialization_result.resolve(),
+        plan=materialization_plan,
+        board=board,
+    )
+    release_readiness_ref = ensure_public_safe_optional_ref(args.release_readiness_ref, field="release_readiness_ref")
+    product_promotion_gate_ref = ensure_public_safe_optional_ref(
+        args.product_promotion_gate_ref,
+        field="product_promotion_gate_ref",
+    )
+    learnback_ref = ensure_public_safe_optional_ref(args.learnback_ref, field="learnback_ref")
+
+    product_creation_plan_id = str(product_creation_plan.get("plan_id") or "").strip()
+    materialization_plan_id = str(materialization_plan.get("plan_id") or "").strip()
+    embedded_plan_ids = product_creation_embedded_plan_ids(materialization_plan)
+    active_units = active_product_creation_work_units(product_creation_plan)
+    materialized_tasks = work_unit_materialization_tasks_by_id(materialization_plan)
+    expected_unit_ids = set(active_units)
+    materialized_unit_ids = set(materialized_tasks)
+
+    closeout_blockers: list[dict[str, Any]] = []
+    if embedded_plan_ids and product_creation_plan_id not in embedded_plan_ids:
+        closeout_blockers.append(
+            {
+                "blocker_id": "product_creation_plan_mismatch",
+                "owner": "factory-orchestrator",
+                "reason": "materialized ready work units embed a different Product Creation Plan id",
+                "next_repair_action": "refresh ready work-unit packets from the canonical Product Creation Plan",
+            }
+        )
+    missing_materialized_units = sorted(expected_unit_ids - materialized_unit_ids)
+    extra_materialized_units = sorted(materialized_unit_ids - expected_unit_ids)
+    if missing_materialized_units:
+        closeout_blockers.append(
+            {
+                "blocker_id": "missing_materialized_work_units",
+                "owner": "factory-orchestrator",
+                "reason": "not every active Product Creation Plan work unit was materialized",
+                "work_unit_ids": missing_materialized_units,
+                "next_repair_action": "materialize missing ready work units or refresh the Product Creation Plan",
+            }
+        )
+    if extra_materialized_units:
+        closeout_blockers.append(
+            {
+                "blocker_id": "extra_materialized_work_units",
+                "owner": "factory-orchestrator",
+                "reason": "materialization plan contains work units outside the active Product Creation Plan",
+                "work_unit_ids": extra_materialized_units,
+                "next_repair_action": "supersede stale runtime tasks or refresh the canonical Product Creation Plan",
+            }
+        )
+
+    all_candidates = ready_work_unit_readbacks_by_status(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        statuses=["blocked", "ready", "running", "todo", "done"],
+        include_superseded=True,
+        runner=runner,
+    )
+
+    unit_rows: dict[str, dict[str, Any]] = {}
+    verified_parent_task_ids: dict[str, str] = {}
+    for work_unit_id in sorted(expected_unit_ids):
+        unit = active_units[work_unit_id]
+        task = materialized_tasks.get(work_unit_id)
+        packet_id = str((task or {}).get("packet_id") or "").strip()
+        matches = all_candidates.get((packet_id, work_unit_id), []) if packet_id else []
+        active_matches = [payload for payload in matches if not task_has_ready_work_unit_supersession(payload)]
+        superseded_count = len(matches) - len(active_matches)
+        row: dict[str, Any] = {
+            "work_unit_id": work_unit_id,
+            "packet_id": packet_id,
+            "proof_ids_required": string_list(unit.get("proof_ids_required")),
+            "product_sot_requirement_refs": string_list(unit.get("product_sot_requirement_refs")),
+            "active_task_count": len(active_matches),
+            "superseded_task_count": superseded_count,
+            "status": "missing_runtime_task",
+            "review_passed": False,
+            "terminal": False,
+            "decision": "blocked_with_owner",
+            "next_action": "repair runtime materialization for this work unit",
+        }
+        if not task:
+            row["blocker_id"] = "not_in_materialization_plan"
+        elif len(active_matches) != 1:
+            row["blocker_id"] = "ambiguous_or_missing_active_ready_work_unit"
+            row["next_action"] = "ensure exactly one non-superseded Hermes task represents this work unit"
+        else:
+            payload = active_matches[0]
+            task_id, _packet_id, _work_unit_id = verify_ready_work_unit_identity(
+                payload=payload,
+                plan_task=task,
+                worker_assignee_prefix=args.worker_assignee_prefix,
+            )
+            status = task_readback_status(payload)
+            release_record_seen = task_has_ready_work_unit_release_record(payload)
+            row.update(
+                {
+                    "task_ref": task_id,
+                    "status": status,
+                    "release_record_seen": release_record_seen,
+                    "terminal": status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES,
+                }
+            )
+            if not release_record_seen:
+                row["blocker_id"] = "missing_release_record"
+                row["decision"] = "blocked_with_owner"
+                row["next_action"] = "route through release-ready-work-units before product closeout"
+            else:
+                verified_parent_task_ids[work_unit_id] = task_id
+                if status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+                    row["decision"] = "awaiting_review_readback"
+                    row["next_action"] = "verify exact independent-reviewer PASS metadata"
+                elif history_contains_any_marker(payload, READY_WORK_UNIT_HUMAN_GATE_MARKERS):
+                    row["decision"] = "human_gate_required"
+                    row["blocker_id"] = "human_gate_required"
+                    row["next_action"] = "wait for explicit human gate"
+                elif status == "blocked":
+                    row["decision"] = "repair_required"
+                    row["blocker_id"] = "work_unit_blocked"
+                    row["next_action"] = "route blocker to owner worker for repair/retry"
+                else:
+                    row["decision"] = "blocked_with_owner"
+                    row["blocker_id"] = "work_unit_not_terminal"
+                    row["next_action"] = "wait for Hermes terminal state or route repair"
+        unit_rows[work_unit_id] = row
+
+    review_results = ready_work_unit_review_results_by_work_unit(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        parent_task_ids_by_work_unit=verified_parent_task_ids,
+        worker_assignee_prefix=args.worker_assignee_prefix,
+        runner=runner,
+    )
+    for work_unit_id, review_result in review_results.items():
+        row = unit_rows.get(work_unit_id)
+        if not row:
+            continue
+        row["review_result"] = review_result
+        if review_result.get("human_gate_required") is True:
+            row["decision"] = "human_gate_required"
+            row["blocker_id"] = "human_gate_required"
+            row["next_action"] = "wait for explicit human gate"
+        elif review_result.get("blocked") is True:
+            row["decision"] = "repair_required"
+            row["blocker_id"] = "review_blocked"
+            row["next_action"] = "route independent-reviewer findings to owner worker"
+        elif row.get("terminal") is True and review_result.get("review_passed") is True:
+            row["review_passed"] = True
+            row["decision"] = "work_unit_closed"
+            row["next_action"] = "aggregate into product-level closeout only"
+
+    blocker_decisions: list[str] = []
+    proof_id_coverage: dict[str, dict[str, Any]] = {}
+    requirement_coverage: dict[str, dict[str, Any]] = {}
+    for work_unit_id, row in unit_rows.items():
+        decision = str(row.get("decision") or "")
+        if decision != "work_unit_closed":
+            blocker_decisions.append(decision or "blocked_with_owner")
+            closeout_blockers.append(
+                {
+                    "blocker_id": str(row.get("blocker_id") or f"{work_unit_id}_not_closed"),
+                    "owner": str(active_units.get(work_unit_id, {}).get("owner_worker") or "factory-orchestrator"),
+                    "work_unit_id": work_unit_id,
+                    "reason": str(row.get("next_action") or "work unit is not ready for product-level closeout"),
+                    "next_repair_action": str(row.get("next_action") or "route repair"),
+                }
+            )
+        for proof_id in row.get("proof_ids_required") or []:
+            proof_row = proof_id_coverage.setdefault(
+                proof_id,
+                {"proof_id": proof_id, "work_unit_ids": [], "status": "covered_by_review_pass"},
+            )
+            proof_row["work_unit_ids"].append(work_unit_id)
+            if decision != "work_unit_closed":
+                proof_row["status"] = "blocked_or_unproven"
+        for requirement_ref in row.get("product_sot_requirement_refs") or []:
+            req_row = requirement_coverage.setdefault(
+                requirement_ref,
+                {"requirement_ref": requirement_ref, "work_unit_ids": [], "status": "covered_by_closed_work_unit"},
+            )
+            req_row["work_unit_ids"].append(work_unit_id)
+            if decision != "work_unit_closed":
+                req_row["status"] = "blocked_or_unproven"
+
+    next_action = product_creation_closeout_next_action(
+        product_creation_plan=product_creation_plan,
+        release_readiness_ref=release_readiness_ref,
+        product_promotion_gate_ref=product_promotion_gate_ref,
+        learnback_ref=learnback_ref,
+        blocker_decisions=blocker_decisions,
+    )
+    terminal_count = sum(1 for row in unit_rows.values() if row.get("terminal") is True)
+    review_passed_count = sum(1 for row in unit_rows.values() if row.get("review_passed") is True)
+    closeout = {
+        "$schema": "https://overkill-factory.dev/schemas/product-creation-run-closeout.schema.json",
+        "record_type": "product_creation_run_closeout",
+        "product_creation_plan_id": product_creation_plan_id,
+        "materialization_plan_id": materialization_plan_id,
+        "decision": next_action,
+        "next_action": next_action,
+        "complete_product_claim_allowed": False,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "dispatch_allowed_by_this_step": False,
+        "work_unit_count": len(unit_rows),
+        "terminal_work_unit_count": terminal_count,
+        "review_passed_work_unit_count": review_passed_count,
+        "blockers": closeout_blockers,
+        "work_units": unit_rows,
+        "proof_id_coverage": proof_id_coverage,
+        "requirement_coverage": requirement_coverage,
+        "release_readiness_ref": release_readiness_ref,
+        "product_promotion_gate_ref": product_promotion_gate_ref,
+        "learnback_ref": learnback_ref,
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+        },
+    }
+
+    next_route_task_ids: dict[str, str] = {}
+    if not args.dry_run:
+        task_id = create_product_creation_closeout_next_task(
+            args=args,
+            board=board,
+            closeout=closeout,
+            runner=runner,
+        )
+        next_route_task_ids[next_action] = task_id
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "close-product-creation-run",
+        "dry_run": bool(args.dry_run),
+        "board": board,
+        "materialization_plan_id": materialization_plan_id,
+        "product_creation_plan_id": product_creation_plan_id,
+        "ready_work_unit_task_ids": {
+            work_unit_id: str(row.get("task_ref") or "")
+            for work_unit_id, row in unit_rows.items()
+            if row.get("task_ref")
+        },
+        "product_creation_run_closeout": closeout,
+        "product_creation_next_route_task_ids": next_route_task_ids,
+        "runtime_gate": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "work_unit_count": len(unit_rows),
+            "terminal_work_unit_count": terminal_count,
+            "review_passed_work_unit_count": review_passed_count,
+            "blocker_count": len(closeout_blockers),
+            "next_action": next_action,
+            "dispatch_allowed_by_this_step": False,
+            "native_dispatch_required_next": False,
+            "complete_product_claim_allowed": False,
+            "next_route_task_created_count": len(next_route_task_ids),
+        },
+        "hook": {
+            "product_creation_plan": product_creation_plan,
+            "materialization_plan": materialization_plan,
+            "materialization_result": materialization_result,
+            "no_shadow_dispatcher": True,
+            "local_state_authority": False,
+            "closeout_scope": "product_creation_run",
+        },
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
+
+
 def ready_work_unit_replacement_idempotency_key(
     *, plan_task: dict[str, Any], contaminated_task_ids: list[str]
 ) -> str:
@@ -4339,6 +4892,24 @@ def build_parser() -> argparse.ArgumentParser:
     p_close_reviewed_ready.add_argument("--dry-run", action="store_true")
     p_close_reviewed_ready.add_argument("--out", type=Path)
 
+    p_close_product_run = sub.add_parser(
+        "close-product-creation-run",
+        help="Aggregate terminal reviewed ready work units into the next product-level gate without dispatching.",
+    )
+    p_close_product_run.add_argument("--product-creation-plan", type=Path, required=True)
+    p_close_product_run.add_argument("--plan", type=Path, required=True)
+    p_close_product_run.add_argument("--materialization-result", type=Path, required=True)
+    p_close_product_run.add_argument("--board")
+    p_close_product_run.add_argument("--hermes-bin", default="hermes")
+    p_close_product_run.add_argument("--worker-assignee-prefix", default="")
+    p_close_product_run.add_argument("--release-readiness-ref")
+    p_close_product_run.add_argument("--product-promotion-gate-ref")
+    p_close_product_run.add_argument("--learnback-ref")
+    p_close_product_run.add_argument("--next-assignee")
+    p_close_product_run.add_argument("--workspace", default="scratch")
+    p_close_product_run.add_argument("--dry-run", action="store_true")
+    p_close_product_run.add_argument("--out", type=Path)
+
     p_route = sub.add_parser(
         "collect-route-readiness",
         help="Collect the public-safe Hermes worker route readiness manifest from read-only Hermes state.",
@@ -4392,6 +4963,8 @@ def main() -> int:
             envelope = reconcile_ready_work_units(args)
         elif args.command == "close-reviewed-ready-work-units":
             envelope = close_reviewed_ready_work_units(args)
+        elif args.command == "close-product-creation-run":
+            envelope = close_product_creation_run(args)
         elif args.command == "collect-route-readiness":
             envelope = collect_route_readiness(args)
         elif args.command == "enforce-done":

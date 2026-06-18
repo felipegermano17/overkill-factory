@@ -8,7 +8,7 @@
       "const": "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json"
     },
     "mode": {
-      "enum": ["materialize", "materialize-ready-work-units", "release-ready-work-units", "recover-ready-work-units", "reconcile-ready-work-units", "close-reviewed-ready-work-units", "enforce-done", "dispatch"]
+      "enum": ["materialize", "materialize-ready-work-units", "release-ready-work-units", "recover-ready-work-units", "reconcile-ready-work-units", "close-reviewed-ready-work-units", "close-product-creation-run", "enforce-done", "dispatch"]
     },
     "dry_run": {
       "type": "boolean"
@@ -46,6 +46,17 @@
       "additionalProperties": { "type": "string", "minLength": 3 }
     },
     "released_packet_task_ids": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 3 }
+    },
+    "product_creation_plan_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "product_creation_run_closeout": {
+      "type": "object"
+    },
+    "product_creation_next_route_task_ids": {
       "type": "object",
       "additionalProperties": { "type": "string", "minLength": 3 }
     },
