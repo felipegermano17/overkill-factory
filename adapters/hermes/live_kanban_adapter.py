@@ -77,6 +77,8 @@ READY_WORK_UNIT_RECONCILIATION_DONE_READBACK_MARKERS = [
     "ready_work_unit_done_authorized",
     "post_release_ready_work_unit",
 ]
+READY_WORK_UNIT_POST_REPAIR_REVIEW_REQUIRED_MARKER = "ready_work_unit_post_repair_review_required"
+READY_WORK_UNIT_POST_REPAIR_REVIEW_CREATED_MARKER = "ready_work_unit_post_repair_review_task_created"
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -1847,6 +1849,155 @@ def classify_ready_work_unit_post_release_reconciliation(payload: dict[str, Any]
     }
 
 
+def ready_work_unit_post_repair_review_idempotency_key(*, plan_task: dict[str, Any], parent_task_id: str) -> str:
+    base = str(plan_task.get("idempotency_key") or "").strip()
+    if not base:
+        _packet_id, work_unit_id = expected_ready_work_unit_key(plan_task)
+        base = f"overkill:ready-work-unit:{work_unit_id}"
+    digest = idempotency_digest_fragment(
+        contract_digest(
+            {
+                "base_idempotency_key": base,
+                "parent_task_id": parent_task_id,
+                "route": "post_repair_review",
+                "version": "v1",
+            }
+        )
+    )
+    return f"{base}:post-repair-review:{digest}"
+
+
+def ready_work_unit_post_repair_review_body(
+    *,
+    plan_task: dict[str, Any],
+    parent_task_id: str,
+    packet_id: str,
+    work_unit_id: str,
+) -> dict[str, Any]:
+    done_definition = {}
+    body_contract = plan_task.get("body_contract") if isinstance(plan_task.get("body_contract"), dict) else {}
+    if isinstance(body_contract.get("done_definition"), dict):
+        done_definition = body_contract["done_definition"]
+    elif isinstance(body_contract.get("work_unit_context_packet"), dict):
+        embedded_payloads = body_contract["work_unit_context_packet"].get("embedded_payloads", {})
+        embedded_payloads = embedded_payloads if isinstance(embedded_payloads, dict) else {}
+        current = embedded_payloads.get("current_work_unit", {})
+        if isinstance(current, dict) and isinstance(current.get("done_definition"), dict):
+            done_definition = current["done_definition"]
+    return {
+        "packet_type": "ready_work_unit_post_repair_review_request",
+        "marker": READY_WORK_UNIT_POST_REPAIR_REVIEW_REQUIRED_MARKER,
+        "parent_packet_id": packet_id,
+        "parent_work_unit_id": work_unit_id,
+        "parent_task_ref": parent_task_id,
+        "reviewer_role": "independent-reviewer",
+        "review_scope": "post_repair_result_only",
+        "review_must_not_approve": [
+            "complete_product",
+            "release",
+            "deployment",
+            "customer_ready",
+            "security_gate",
+            "human_gate",
+        ],
+        "required_positive_outcomes": [
+            {
+                "markers": [
+                    "ready_work_unit_repair_review_passed",
+                    "ready_work_unit_retry_authorized",
+                ],
+                "meaning": "repair is accepted and parent may be retried by Hermes reconciliation",
+            },
+            {
+                "markers": [
+                    "ready_work_unit_repair_review_passed",
+                    "ready_work_unit_done_authorized",
+                    "ready_work_unit_done_definition_satisfied",
+                ],
+                "meaning": "parent ready work unit may be completed, not the whole product",
+            },
+            {
+                "markers": ["human_gate_required"],
+                "meaning": "stop automatic mutation until explicit human authority exists",
+            },
+        ],
+        "blocked_outcome_required_fields": [
+            "owner",
+            "reason",
+            "next_repair_action",
+        ],
+        "done_definition": done_definition,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "complete_product_claim_allowed": False,
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+        },
+    }
+
+
+def create_post_repair_review_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    plan_task: dict[str, Any],
+    parent_payload: dict[str, Any],
+    parent_task_id: str,
+    packet_id: str,
+    work_unit_id: str,
+    worker_assignee_prefix: str,
+    workspace_ref: str,
+    runner: Runner = default_runner,
+) -> str:
+    body = ready_work_unit_post_repair_review_body(
+        plan_task=plan_task,
+        parent_task_id=parent_task_id,
+        packet_id=packet_id,
+        work_unit_id=work_unit_id,
+    )
+    task_id = create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title=f"OF post-repair review for ready work unit {work_unit_id}",
+        body=compact_json_argument(body),
+        assignee=worker_assignee_prefix + "independent-reviewer",
+        idempotency_key=ready_work_unit_post_repair_review_idempotency_key(
+            plan_task=plan_task,
+            parent_task_id=parent_task_id,
+        ),
+        created_by="overkill-factory",
+        workspace=workspace_ref or task_dispatcher_workspace_ref(parent_payload) or "scratch",
+        blocked=False,
+        runner=runner,
+    )
+    run_checked(hermes_kanban(hermes_bin, board, "link", task_id, parent_task_id), runner)
+    run_checked(
+        hermes_kanban(
+            hermes_bin,
+            board,
+            "comment",
+            "--author",
+            READY_WORK_UNIT_RECONCILIATION_AUTHOR,
+            parent_task_id,
+            compact_json_argument(
+                {
+                    "marker": READY_WORK_UNIT_POST_REPAIR_REVIEW_CREATED_MARKER,
+                    "work_unit_id": work_unit_id,
+                    "review_task_ref": task_id,
+                    "reviewer_role": "independent-reviewer",
+                    "reconciliation_scope": "post_release_ready_work_unit",
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "complete_product_claim_allowed": False,
+                }
+            ),
+        ),
+        runner,
+    )
+    return task_id
+
+
 def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
     plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
     board = str(args.board or plan.get("board") or "").strip()
@@ -1899,6 +2050,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
     reconciliation: dict[str, dict[str, Any]] = {}
     retry_candidates: list[tuple[dict[str, Any], str, str, str]] = []
     complete_candidates: list[tuple[dict[str, Any], str, str, str]] = []
+    post_repair_review_candidates: list[tuple[dict[str, Any], dict[str, Any], str, str, str]] = []
     post_release_blocked_count = 0
     human_gate_count = 0
     incomplete_count = 0
@@ -1907,6 +2059,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         row["task_ref"] = task_id
         row["packet_id"] = packet_id
         row["dependency_blockers"] = dependency_blockers.get(work_unit_id, [])
+        row["post_repair_review_required"] = row["decision"] == "awaiting_repair_review"
         reconciliation[work_unit_id] = row
         if status == "blocked" and row["release_record_seen"]:
             post_release_blocked_count += 1
@@ -1923,6 +2076,8 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             retry_candidates.append((task, task_id, packet_id, work_unit_id))
         elif row["decision"] == "complete_parent":
             complete_candidates.append((task, task_id, packet_id, work_unit_id))
+        elif row["decision"] == "awaiting_repair_review":
+            post_repair_review_candidates.append((task, payload, task_id, packet_id, work_unit_id))
 
     if not args.dry_run and retry_candidates:
         required_workers = [
@@ -1932,14 +2087,38 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         readiness_blockers = route_readiness_blockers(args.route_readiness, required_workers)
         if readiness_blockers:
             raise RuntimeError("pre-retry route readiness blocked ready work-unit reconciliation: " + "; ".join(readiness_blockers))
+    if not args.dry_run and args.create_post_repair_review_tasks and post_repair_review_candidates:
+        readiness_blockers = route_readiness_blockers(
+            args.route_readiness,
+            [args.worker_assignee_prefix + "independent-reviewer"],
+        )
+        if readiness_blockers:
+            raise RuntimeError("post-repair review route readiness blocked ready work-unit reconciliation: " + "; ".join(readiness_blockers))
 
     retry_ready_work_unit_task_ids: dict[str, str] = {}
     completed_ready_work_unit_task_ids: dict[str, str] = {}
+    post_repair_review_task_ids: dict[str, str] = {}
     retry_reason = str(
         args.reason
         or "ready_work_unit_retry_authorized; ready_work_unit_repair_review_passed; reconciliation_scope=post_release_ready_work_unit; dispatch_separate=true"
     )
     if not args.dry_run:
+        if args.create_post_repair_review_tasks:
+            workspace_ref = str(args.post_repair_review_workspace or "").strip()
+            for task, payload, task_id, packet_id, work_unit_id in post_repair_review_candidates:
+                review_task_id = create_post_repair_review_task(
+                    hermes_bin=args.hermes_bin,
+                    board=board,
+                    plan_task=task,
+                    parent_payload=payload,
+                    parent_task_id=task_id,
+                    packet_id=packet_id,
+                    work_unit_id=work_unit_id,
+                    worker_assignee_prefix=args.worker_assignee_prefix,
+                    workspace_ref=workspace_ref,
+                    runner=runner,
+                )
+                post_repair_review_task_ids[work_unit_id] = review_task_id
         for _task, task_id, _packet_id, work_unit_id in retry_candidates:
             unblock_task(
                 hermes_bin=args.hermes_bin,
@@ -1991,6 +2170,10 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         },
         "retry_ready_work_unit_task_ids": retry_ready_work_unit_task_ids,
         "completed_ready_work_unit_task_ids": completed_ready_work_unit_task_ids,
+        "post_repair_review_task_ids": post_repair_review_task_ids,
+        "post_repair_review_required_work_unit_ids": sorted(
+            work_unit_id for _task, _payload, _task_id, _packet_id, work_unit_id in post_repair_review_candidates
+        ),
         "post_release_reconciliation": reconciliation,
         "release_wave": {
             "held_work_unit_ids": sorted(dependency_blockers.keys()),
@@ -2006,6 +2189,8 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             "post_release_blocked_task_count": post_release_blocked_count,
             "retry_candidate_count": len(retry_candidates),
             "complete_candidate_count": len(complete_candidates),
+            "post_repair_review_required_count": len(post_repair_review_candidates),
+            "post_repair_review_task_created_count": len(post_repair_review_task_ids),
             "retry_unblocked_task_count": len(retry_ready_work_unit_task_ids),
             "completed_task_count": len(completed_ready_work_unit_task_ids),
             "human_gate_required_count": human_gate_count,
@@ -2870,6 +3055,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_reconcile_ready.add_argument("--worker-assignee-prefix", default="")
     p_reconcile_ready.add_argument("--route-readiness", type=Path)
     p_reconcile_ready.add_argument("--reason")
+    p_reconcile_ready.add_argument("--create-post-repair-review-tasks", action="store_true")
+    p_reconcile_ready.add_argument("--post-repair-review-workspace")
     p_reconcile_ready.add_argument("--completion-result", default="Ready work-unit reconciliation satisfied.")
     p_reconcile_ready.add_argument(
         "--completion-summary",
