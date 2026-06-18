@@ -74,8 +74,8 @@ The practical boundary is simple:
 - `factoryctl`, schemas and tests validate public contracts.
 - Hermes Kanban is the runtime authority for real cards and transitions.
 - Receipt Five and worker results are the completion evidence.
-- Cockpits such as Discord or a local web UI can project state, but they do not
-  approve gates or replace Hermes.
+- Cockpits and operator dashboards can project state, but they do not approve
+  gates or replace Hermes.
 
 ## First Run
 
@@ -140,7 +140,6 @@ first, what its source of truth is and how drift is prevented.
 | `skills/` | Installable Codex skill material for operating the factory from a public clone. See `skills/README.md`. |
 | `templates/` | Starter contracts paired with schemas and tests. See `templates/README.md`. |
 | `tests/` | Regression coverage for public contracts, docs, adapters and examples. See `tests/README.md`. |
-| `ui/` | Static public-safe local UI surfaces that project fixture data only. See `ui/README.md`. |
 
 Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 `*.egg-info/` are not public product surfaces.

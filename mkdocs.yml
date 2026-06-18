@@ -5,7 +5,7 @@ docs_dir: docs
 exclude_docs: |
   /README.md
 not_in_nav: |
-  operations/*local-status-cockpit-validation.md
+  README.md
 nav:
   - Operator Path: index.md
   - Quickstart With Hermes: getting-started/quickstart-hermes.md
