@@ -42,6 +42,8 @@ Before `done`, the adapter should:
 
 - inspect required worker results;
 - reject missing, failed or stale evidence;
+- reject metadata-only `external:kanban-artifact:` evidence unless the worker
+  result includes successful downstream `artifact_readback` proof;
 - compare worker results to Receipt Five;
 - enforce independent review and human gate requirements;
 - return an explicit block reason instead of silently closing.

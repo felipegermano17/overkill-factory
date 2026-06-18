@@ -137,6 +137,8 @@ This is separate from the gate report:
 - worker results prove what happened;
 - `scripts/evidence_reconciler.py` chooses the current result per receipt field,
   records superseded stale results and blocks unresolved current failures;
+- `external:kanban-artifact:` refs must include `artifact_readback` proof from a
+  separate worker context before they can satisfy Receipt Five closure;
 - closure summary explains the reconciled evidence set in human-readable form;
 - Receipt Five closes the Kanban transition.
 
@@ -214,6 +216,8 @@ At `done`, Hermes should:
 - run `scripts/evidence_reconciler.py` to produce the current evidence index,
   supersession ledger and `receipt_five_reconciliation_result`;
 - reconcile each result against its expected Receipt Five field;
+- reject `external:kanban-artifact:` refs without successful downstream
+  `artifact_readback` proof;
 - reject Hermes background subagent output unless a worker result explicitly
   marks it `reconciliation_state=reconciled`;
 - reject missing, failed, unsupported or preflight-only results;

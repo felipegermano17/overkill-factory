@@ -275,6 +275,70 @@ class EvidenceReconcilerTest(unittest.TestCase):
         self.assertEqual(result["result"], "BLOCKED")
         self.assertTrue(result["blocking_findings"])
 
+    def test_unreadable_effective_evidence_ref_blocks_receipt_five(self) -> None:
+        card = closure_card()
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            tmp_path = Path(tmp)
+            results_dir = tmp_path / "worker-results"
+            results_dir.mkdir()
+            write_results(card, results_dir)
+            security = result_for("codex-security", card, "2026-06-06T00:50:00+00:00")
+            security["evidence_refs"] = [
+                "external:kanban-artifact:t_fixture/artifacts/missing-security-proof.json"
+            ]
+            results_dir.joinpath("codex-security.json").write_text(
+                factoryctl.json.dumps(security, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            index = evidence_reconciler.reconcile(card, results_dir)
+
+        self.assertFalse(index["receipt_five_ready"])
+        self.assertIn(
+            "security_scan_result",
+            {item["record_type"] for item in index["blocking_current_results"]},
+        )
+        security_result = index["effective_results"]["security_scan_result"]
+        self.assertFalse(security_result["valid_for_closure"])
+        self.assertIn(
+            "unreadable evidence refs: external:kanban-artifact:t_fixture/artifacts/missing-security-proof.json",
+            security_result["validation_errors"],
+        )
+
+    def test_readable_kanban_artifact_refs_can_satisfy_receipt_five(self) -> None:
+        card = closure_card()
+        ref = "external:kanban-artifact:t_fixture/artifacts/security-proof.json"
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            tmp_path = Path(tmp)
+            results_dir = tmp_path / "worker-results"
+            results_dir.mkdir()
+            write_results(card, results_dir)
+            security = result_for("codex-security", card, "2026-06-06T00:50:00+00:00")
+            security["evidence_refs"] = [ref]
+            security["artifact_readback"] = {
+                "status": "PASS",
+                "checked_from": "separate_worker_context",
+                "refs": [
+                    {
+                        "ref": ref,
+                        "readable": True,
+                        "sha256": "sha256:" + "0" * 64,
+                    }
+                ],
+            }
+            results_dir.joinpath("codex-security.json").write_text(
+                factoryctl.json.dumps(security, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            index = evidence_reconciler.reconcile(card, results_dir)
+
+        self.assertTrue(index["receipt_five_ready"])
+        self.assertEqual(
+            index["effective_results"]["security_scan_result"]["validation_errors"],
+            [],
+        )
+
     def test_extra_result_path_is_indexed_with_worker_results(self) -> None:
         card = closure_card()
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
@@ -392,6 +456,15 @@ class EvidenceReconcilerTest(unittest.TestCase):
             "sdlc_feedback_loop_refs",
             schema["properties"]["receipt_five_reconciliation_result"]["properties"],
         )
+
+    def test_worker_result_schema_declares_artifact_readback(self) -> None:
+        schema = json.loads((ROOT / "schemas" / "worker-result.schema.json").read_text(encoding="utf-8"))
+
+        self.assertIn("artifact_readback", schema["properties"])
+        artifact_readback = schema["properties"]["artifact_readback"]
+        self.assertIn("status", artifact_readback["required"])
+        self.assertIn("checked_from", artifact_readback["required"])
+        self.assertIn("refs", artifact_readback["required"])
 
 
 if __name__ == "__main__":

@@ -31,6 +31,45 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def is_kanban_artifact_ref(ref: Any) -> bool:
+    value = str(ref or "").strip()
+    return value.startswith(("kanban-artifact:", "external:kanban-artifact:"))
+
+
+def artifact_readback_errors(data: dict[str, Any]) -> list[str]:
+    refs = [ref for ref in factoryctl.string_list(data.get("evidence_refs")) if is_kanban_artifact_ref(ref)]
+    if not refs:
+        return []
+
+    proof = data.get("artifact_readback")
+    if not isinstance(proof, dict):
+        return ["unreadable evidence refs: " + ", ".join(refs)]
+    if str(proof.get("status") or "").strip().upper() != "PASS":
+        return ["unreadable evidence refs: " + ", ".join(refs)]
+    if str(proof.get("checked_from") or "").strip() not in {
+        "separate_worker_context",
+        "downstream_worker_context",
+    }:
+        return ["artifact_readback.checked_from must prove separate downstream readback"]
+
+    raw_items = proof.get("refs")
+    if not isinstance(raw_items, list):
+        return ["unreadable evidence refs: " + ", ".join(refs)]
+    by_ref = {
+        str(item.get("ref") or "").strip(): item
+        for item in raw_items
+        if isinstance(item, dict)
+    }
+    unreadable = [
+        ref
+        for ref in refs
+        if not isinstance(by_ref.get(ref), dict) or by_ref[ref].get("readable") is not True
+    ]
+    if unreadable:
+        return ["unreadable evidence refs: " + ", ".join(unreadable)]
+    return []
+
+
 def result_entry(card: dict[str, Any], path: Path, data: dict[str, Any]) -> dict[str, Any]:
     record_type = str(data.get("record_type") or "").strip()
     worker_ref = data.get("worker") if isinstance(data.get("worker"), dict) else {}
@@ -42,6 +81,7 @@ def result_entry(card: dict[str, Any], path: Path, data: dict[str, Any]) -> dict
         card=card,
         evidence_root=ROOT,
     )
+    validation_errors.extend(artifact_readback_errors(data))
     authority = data.get("promotion_authority") if isinstance(data.get("promotion_authority"), dict) else {}
     superseded_by = data.get("superseded_by") or authority.get("superseded_by")
     evidence_ref = factoryctl.source_card_ref(path)
