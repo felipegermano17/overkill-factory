@@ -100,7 +100,14 @@ WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
 def default_runner(argv: list[str]) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.setdefault("HOME", str(Path.home()))
-    return subprocess.run(argv, text=True, capture_output=True, env=env)  # nosec B603
+    return subprocess.run(  # nosec B603
+        argv,
+        text=True,
+        capture_output=True,
+        env=env,
+        encoding="utf-8",
+        errors="replace",
+    )
 
 
 def safe_command_for_error(argv: list[str]) -> str:
