@@ -3991,12 +3991,109 @@ def product_creation_closeout_idempotency_key(
                 "materialization_plan_id": materialization_plan_id,
                 "next_action": next_action,
                 "marker": PRODUCT_CREATION_CLOSEOUT_NEXT_ROUTE_MARKER,
-                "no_spawn_protocol": "create-unassigned-block-assign-v2",
-                "idempotency_version": "v2",
+                "no_spawn_protocol": "create-unassigned-block-assign-v3",
+                "next_task_contract_version": "worker-consumable-v1",
+                "idempotency_version": "v3",
             }
         )
     )
     return f"overkill:product-creation-closeout:{product_creation_plan_id}:{next_action}:{digest}"
+
+
+def product_creation_next_route_contract(next_action: str, closeout: dict[str, Any]) -> dict[str, Any]:
+    product_creation_plan_id = str(closeout.get("product_creation_plan_id") or "product-creation-plan")
+    materialization_plan_id = str(closeout.get("materialization_plan_id") or "ready-work-unit-plan")
+    common = {
+        "source_refs": [
+            f"product-creation-plan:{product_creation_plan_id}",
+            f"ready-work-unit-materialization:{materialization_plan_id}",
+            f"product-creation-closeout:{next_action}",
+        ],
+        "forbidden_actions": [
+            "complete_product_claim",
+            "production_release_approval",
+            "customer_ready_claim",
+            "deploy",
+            "infrastructure_mutation",
+            "secret_access",
+            "private_evidence_publication",
+            "raw_dogfood_log_publication",
+            "local_path_publication",
+        ],
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_runtime_refs_must_be_summarized": True,
+        },
+    }
+    if next_action == "learnback_required":
+        return {
+            **common,
+            "done_definition": [
+                "classify dogfood outcomes into public-safe factory learnings",
+                "identify systemic gaps, rejected non-gaps, and already-fixed gaps",
+                "create or update public-safe improvement issues only when a real factory gap remains",
+                "leave product completion, production promotion, deploy, and customer-ready claims forbidden",
+                "complete only when learnback result includes owner, decision, evidence class, and next action",
+            ],
+            "evidence_expected": [
+                "product creation closeout summary",
+                "release readiness closeout summary",
+                "work-unit aggregate coverage",
+                "blocker and repair history classification",
+                "worker feedback and runtime contract gaps",
+                "public-safe issue/proposal refs for remaining factory improvements",
+            ],
+            "output_contract": {
+                "receipt_field": "learnback_result",
+                "allowed_results": ["PASS", "BLOCK"],
+                "pass_requires": [
+                    "public-safe learnback summary",
+                    "gap classification",
+                    "remaining issue refs or explicit no-new-gap rationale",
+                    "no private evidence embedded",
+                ],
+                "block_requires": ["owner", "reason", "missing_contract_fields", "next_repair_action"],
+                "may_create_public_safe_issue": True,
+            },
+        }
+    if next_action == "release_readiness_required":
+        return {
+            **common,
+            "done_definition": [
+                "prepare release readiness packet",
+                "state smoke, rollback, monitoring, support, human gate and promotion blockers",
+                "create independent review route when review is required",
+                "do not approve production promotion",
+            ],
+            "evidence_expected": [
+                "release plan",
+                "smoke result or reason blocked",
+                "rollback plan",
+                "monitoring/support plan",
+                "human promotion gate status",
+                "visible blockers with owner and next action",
+            ],
+            "output_contract": {
+                "receipt_field": "release_ops_result",
+                "allowed_results": ["PASS", "BLOCK"],
+                "pass_requires": ["release readiness packet", "promotion blockers remain explicit"],
+                "block_requires": ["owner", "reason", "next_repair_action"],
+                "production_promotion_allowed": False,
+            },
+        }
+    return {
+        **common,
+        "done_definition": [
+            "consume the product creation closeout next action",
+            "produce a public-safe result or block with owner, reason and next action",
+        ],
+        "evidence_expected": ["product creation closeout summary", "blocker inventory", "next action decision"],
+        "output_contract": {
+            "allowed_results": ["PASS", "BLOCK"],
+            "block_requires": ["owner", "reason", "next_repair_action"],
+        },
+    }
 
 
 def create_product_creation_closeout_next_task(
@@ -4029,6 +4126,7 @@ def create_product_creation_closeout_next_task(
             "runtime_authority": "hermes_kanban",
             "local_state_authority": False,
             "dispatch_allowed_by_this_step": False,
+            **product_creation_next_route_contract(next_action, closeout),
         }
     )
     task_id = create_blocked_task_before_assignment(
