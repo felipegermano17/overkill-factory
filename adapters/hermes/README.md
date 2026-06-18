@@ -305,6 +305,17 @@ That task is scoped only to the repair result. It must emit
 structured BLOCK with owner and next repair action. Creating the review task
 does not unblock or complete the parent.
 
+Post-repair review cycles are versioned by repair evidence, not only by the
+parent work unit. Reconciliation consumes structured parent markers first, and
+may also consume Hermes `runs --json` metadata from independent-reviewer tasks
+when the metadata identifies the parent task, reviewed repair card, validation
+result, blocking findings and forbidden-approval flags. A repair-review PASS
+without `ready_work_unit_retry_authorized` or `ready_work_unit_done_authorized`
+is not enough to mutate the parent; the adapter reports
+`awaiting_retry_or_done_authority` and keeps the work unit blocked. This lets a
+blocked review route to repair and follow-up review without duplicate review
+tasks or operator inference.
+
 Use `--workspace` when the adapter runs outside the Hermes host. The workspace
 must be meaningful to the Hermes dispatcher, not merely to the machine that runs
 the adapter. Local operators can omit it and use the repo directory default;
