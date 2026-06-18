@@ -396,6 +396,17 @@ def assert_route_readiness_schema(testcase: unittest.TestCase, result: dict[str,
 
 
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
+    def test_default_runner_decodes_utf8_terminal_output(self) -> None:
+        script = (
+            "import sys; "
+            "sys.stdout.buffer.write('OpenAI Codex  \u2713 logged in\\n'.encode('utf-8'))"
+        )
+        result = adapter.default_runner([sys.executable, "-c", script])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("OpenAI Codex", result.stdout)
+        self.assertIn("\u2713 logged in", result.stdout)
+
     def test_safe_command_for_error_redacts_body_and_large_args(self) -> None:
         unsafe_body = '{"private":"secret"}'
         unsafe_comment = "x" * 600
