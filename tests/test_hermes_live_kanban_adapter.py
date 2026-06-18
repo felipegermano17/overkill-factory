@@ -1483,10 +1483,50 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             )
             third = adapter.reconcile_ready_work_units(authority_args, runner=fake)
             fourth = adapter.reconcile_ready_work_units(authority_args, runner=fake)
+            authority_task_id, authority_task = next(
+                (task_id, task)
+                for task_id, task in fake.tasks.items()
+                if json.loads(str(task.get("body") or "{}")).get("packet_type")
+                == "ready_work_unit_post_repair_authority_request"
+            )
+            authority_task["status"] = "done"
+            authority_task["runs"] = [
+                {
+                    "id": 3,
+                    "profile": "independent-reviewer",
+                    "status": "done",
+                    "outcome": "completed",
+                    "ended_at": 30,
+                    "metadata": {
+                        "independent_review_result": {
+                            "verdict": "PASS_REPAIR_REVIEW_ACCEPTED_RETRY_AUTHORIZED_ONLY",
+                            "selected_markers": [
+                                "ready_work_unit_repair_review_passed",
+                                "ready_work_unit_retry_authorized",
+                            ],
+                            "not_authorized": [
+                                "ready_work_unit_done_authorized",
+                                "ready_work_unit_done_definition_satisfied",
+                                "complete_product_done",
+                                "implementation",
+                                "release",
+                                "deploy",
+                                "product_face",
+                                "security_onchain_waiver",
+                                "customer_ready",
+                                "mainnet_irreversible",
+                                "human_gate",
+                            ],
+                        }
+                    },
+                }
+            ]
+            fifth = adapter.reconcile_ready_work_units(authority_args, runner=fake)
 
         assert_live_adapter_result_schema(self, second)
         assert_live_adapter_result_schema(self, third)
         assert_live_adapter_result_schema(self, fourth)
+        assert_live_adapter_result_schema(self, fifth)
         self.assertEqual(first["runtime_gate"]["post_repair_review_task_created_count"], 1)
         row = second["post_release_reconciliation"]["work-unit-001"]
         self.assertEqual(row["decision"], "awaiting_retry_or_done_authority")
@@ -1508,8 +1548,23 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(fourth["existing_post_repair_authority_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
         self.assertEqual(fourth["runtime_gate"]["post_repair_authority_existing_task_count"], 1)
         self.assertEqual(fourth["runtime_gate"]["post_repair_authority_missing_task_count"], 0)
+        retry_row = fifth["post_release_reconciliation"]["work-unit-001"]
+        self.assertEqual(retry_row["decision"], "retry_parent")
+        self.assertEqual(retry_row["post_repair_authority_result"]["source"], "hermes_run_metadata")
+        self.assertTrue(retry_row["repair_review_passed"])
+        self.assertTrue(retry_row["retry_authorized"])
+        self.assertFalse(retry_row["done_authorized"])
+        self.assertEqual(retry_row["post_repair_authority_task_ref"], adapter.PUBLIC_SAFE_KANBAN_REF)
+        self.assertEqual(fifth["existing_post_repair_authority_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(fifth["runtime_gate"]["post_repair_authority_result_count"], 1)
+        self.assertEqual(fifth["runtime_gate"]["post_repair_authority_required_count"], 0)
+        self.assertEqual(fifth["runtime_gate"]["retry_candidate_count"], 1)
+        self.assertEqual(fifth["runtime_gate"]["retry_unblocked_task_count"], 1)
+        self.assertEqual(fifth["retry_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(fake.tasks[upstream_id]["status"], "ready")
         self.assertEqual(second["retry_ready_work_unit_task_ids"], {})
         self.assertEqual(second["completed_ready_work_unit_task_ids"], {})
+        self.assertEqual(fifth["completed_ready_work_unit_task_ids"], {})
         review_tasks = [
             task
             for task in fake.tasks.values()
