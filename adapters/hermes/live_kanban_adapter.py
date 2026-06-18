@@ -2005,6 +2005,34 @@ def create_post_repair_review_task(
     return task_id
 
 
+def parse_json_object(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, str):
+        return {}
+    text = value.strip()
+    if not text.startswith("{"):
+        return {}
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def existing_post_repair_review_task_ref(payload: dict[str, Any], *, work_unit_id: str) -> str:
+    for comment in reversed(task_readback_comments(payload)):
+        marker = parse_json_object(comment.get("body") or comment.get("text") or comment.get("payload"))
+        if marker.get("marker") != READY_WORK_UNIT_POST_REPAIR_REVIEW_CREATED_MARKER:
+            continue
+        if str(marker.get("work_unit_id") or "").strip() != work_unit_id:
+            continue
+        review_task_ref = str(marker.get("review_task_ref") or "").strip()
+        if review_task_ref:
+            return review_task_ref
+    return ""
+
+
 def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
     plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
     board = str(args.board or plan.get("board") or "").strip()
@@ -2058,6 +2086,8 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
     retry_candidates: list[tuple[dict[str, Any], str, str, str]] = []
     complete_candidates: list[tuple[dict[str, Any], str, str, str]] = []
     post_repair_review_candidates: list[tuple[dict[str, Any], dict[str, Any], str, str, str]] = []
+    post_repair_review_required_work_unit_ids: set[str] = set()
+    existing_post_repair_review_task_ids: dict[str, str] = {}
     post_release_blocked_count = 0
     human_gate_count = 0
     incomplete_count = 0
@@ -2067,6 +2097,14 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         row["packet_id"] = packet_id
         row["dependency_blockers"] = dependency_blockers.get(work_unit_id, [])
         row["post_repair_review_required"] = row["decision"] == "awaiting_repair_review"
+        existing_review_task_id = ""
+        if row["post_repair_review_required"]:
+            post_repair_review_required_work_unit_ids.add(work_unit_id)
+            existing_review_task_id = existing_post_repair_review_task_ref(payload, work_unit_id=work_unit_id)
+            if existing_review_task_id:
+                existing_post_repair_review_task_ids[work_unit_id] = existing_review_task_id
+        row["post_repair_review_task_ref"] = existing_review_task_id or None
+        row["post_repair_review_task_exists"] = bool(existing_review_task_id)
         reconciliation[work_unit_id] = row
         if status == "blocked" and row["release_record_seen"]:
             post_release_blocked_count += 1
@@ -2083,7 +2121,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             retry_candidates.append((task, task_id, packet_id, work_unit_id))
         elif row["decision"] == "complete_parent":
             complete_candidates.append((task, task_id, packet_id, work_unit_id))
-        elif row["decision"] == "awaiting_repair_review":
+        elif row["decision"] == "awaiting_repair_review" and not existing_review_task_id:
             post_repair_review_candidates.append((task, payload, task_id, packet_id, work_unit_id))
 
     if not args.dry_run and retry_candidates:
@@ -2104,7 +2142,8 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
 
     retry_ready_work_unit_task_ids: dict[str, str] = {}
     completed_ready_work_unit_task_ids: dict[str, str] = {}
-    post_repair_review_task_ids: dict[str, str] = {}
+    created_post_repair_review_task_ids: dict[str, str] = {}
+    post_repair_review_task_ids: dict[str, str] = dict(existing_post_repair_review_task_ids)
     retry_reason = str(
         args.reason
         or "ready_work_unit_retry_authorized; ready_work_unit_repair_review_passed; reconciliation_scope=post_release_ready_work_unit; dispatch_separate=true"
@@ -2126,6 +2165,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
                     runner=runner,
                 )
                 post_repair_review_task_ids[work_unit_id] = review_task_id
+                created_post_repair_review_task_ids[work_unit_id] = review_task_id
         for _task, task_id, _packet_id, work_unit_id in retry_candidates:
             unblock_task(
                 hermes_bin=args.hermes_bin,
@@ -2178,8 +2218,10 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         "retry_ready_work_unit_task_ids": retry_ready_work_unit_task_ids,
         "completed_ready_work_unit_task_ids": completed_ready_work_unit_task_ids,
         "post_repair_review_task_ids": post_repair_review_task_ids,
+        "existing_post_repair_review_task_ids": existing_post_repair_review_task_ids,
+        "created_post_repair_review_task_ids": created_post_repair_review_task_ids,
         "post_repair_review_required_work_unit_ids": sorted(
-            work_unit_id for _task, _payload, _task_id, _packet_id, work_unit_id in post_repair_review_candidates
+            post_repair_review_required_work_unit_ids
         ),
         "post_release_reconciliation": reconciliation,
         "release_wave": {
@@ -2196,8 +2238,10 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             "post_release_blocked_task_count": post_release_blocked_count,
             "retry_candidate_count": len(retry_candidates),
             "complete_candidate_count": len(complete_candidates),
-            "post_repair_review_required_count": len(post_repair_review_candidates),
-            "post_repair_review_task_created_count": len(post_repair_review_task_ids),
+            "post_repair_review_required_count": len(post_repair_review_required_work_unit_ids),
+            "post_repair_review_missing_task_count": len(post_repair_review_candidates),
+            "post_repair_review_existing_task_count": len(existing_post_repair_review_task_ids),
+            "post_repair_review_task_created_count": len(created_post_repair_review_task_ids),
             "retry_unblocked_task_count": len(retry_ready_work_unit_task_ids),
             "completed_task_count": len(completed_ready_work_unit_task_ids),
             "human_gate_required_count": human_gate_count,

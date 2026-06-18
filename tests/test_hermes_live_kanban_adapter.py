@@ -1285,6 +1285,86 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             any("ready_work_unit_post_repair_review_task_created" in str(comment.get("body")) for comment in parent_comments)
         )
 
+    def test_reconcile_ready_work_units_reuses_existing_post_repair_review_task(self) -> None:
+        fake = FakeHermes()
+        plan = two_step_ready_work_unit_plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            materialize_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            upstream_task = next(
+                task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001"
+            )
+            upstream_task["status"] = "blocked"
+            upstream_task.setdefault("events", []).append({"kind": "claimed"})
+            upstream_task.setdefault("events", []).append({"kind": "blocked", "reason": "repair required"})
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "factory-orchestrator",
+                    "body": json.dumps({"marker": "ready_work_unit_repair_completed"}),
+                }
+            )
+            reconcile_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--create-post-repair-review-tasks",
+                ]
+            )
+            first = adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+            second = adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, second)
+        self.assertEqual(first["runtime_gate"]["post_repair_review_task_created_count"], 1)
+        self.assertEqual(second["post_repair_review_required_work_unit_ids"], ["work-unit-001"])
+        self.assertEqual(second["post_repair_review_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(second["existing_post_repair_review_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(second["created_post_repair_review_task_ids"], {})
+        self.assertEqual(second["runtime_gate"]["post_repair_review_required_count"], 1)
+        self.assertEqual(second["runtime_gate"]["post_repair_review_missing_task_count"], 0)
+        self.assertEqual(second["runtime_gate"]["post_repair_review_existing_task_count"], 1)
+        self.assertEqual(second["runtime_gate"]["post_repair_review_task_created_count"], 0)
+        review_tasks = [
+            task
+            for task in fake.tasks.values()
+            if json.loads(str(task.get("body") or "{}")).get("packet_type")
+            == "ready_work_unit_post_repair_review_request"
+        ]
+        self.assertEqual(len(review_tasks), 1)
+
     def test_reconcile_ready_work_units_requires_route_readiness_before_post_repair_review_task(self) -> None:
         fake = FakeHermes()
         plan = two_step_ready_work_unit_plan()
