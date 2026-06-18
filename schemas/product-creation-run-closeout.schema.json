@@ -33,6 +33,7 @@
         "product_closeout_ready",
         "release_readiness_required",
         "learnback_required",
+        "product_promotion_gate_required",
         "repair_required",
         "human_gate_required",
         "blocked_with_owner"
@@ -43,6 +44,7 @@
         "product_closeout_ready",
         "release_readiness_required",
         "learnback_required",
+        "product_promotion_gate_required",
         "repair_required",
         "human_gate_required",
         "blocked_with_owner"
