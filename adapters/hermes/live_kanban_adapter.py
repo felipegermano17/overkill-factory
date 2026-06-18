@@ -82,6 +82,7 @@ READY_WORK_UNIT_POST_REPAIR_REVIEW_CREATED_MARKER = "ready_work_unit_post_repair
 READY_WORK_UNIT_POST_REPAIR_REVIEW_RESULT_MARKER = "ready_work_unit_post_repair_review_result"
 READY_WORK_UNIT_POST_REPAIR_AUTHORITY_REQUIRED_MARKER = "ready_work_unit_post_repair_authority_required"
 READY_WORK_UNIT_POST_REPAIR_AUTHORITY_CREATED_MARKER = "ready_work_unit_post_repair_authority_task_created"
+READY_WORK_UNIT_POST_REPAIR_AUTHORITY_RESULT_MARKER = "ready_work_unit_post_repair_authority_result"
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -2325,11 +2326,16 @@ def apply_post_repair_review_result(row: dict[str, Any], result: dict[str, Any] 
         merged["decision"] = "repair_review_blocked"
         merged["next_action"] = "post-repair review blocked; route a factory-owned repair attempt before retry"
         merged["actionable_by_adapter"] = False
-    elif merged["repair_completed"] and merged["repair_review_passed"] and merged["done_authorized"] and merged["done_definition_satisfied"]:
+    elif (
+        merged.get("repair_completed")
+        and merged["repair_review_passed"]
+        and merged["done_authorized"]
+        and merged["done_definition_satisfied"]
+    ):
         merged["decision"] = "complete_parent"
         merged["next_action"] = "complete the parent ready work unit through Hermes complete"
         merged["actionable_by_adapter"] = True
-    elif merged["repair_completed"] and merged["repair_review_passed"] and merged["retry_authorized"]:
+    elif merged.get("repair_completed") and merged["repair_review_passed"] and merged["retry_authorized"]:
         merged["decision"] = "retry_parent"
         merged["next_action"] = "unblock parent ready work unit for another Hermes worker attempt"
         merged["actionable_by_adapter"] = True
@@ -2384,6 +2390,149 @@ def post_repair_review_results_by_work_unit(
     return results
 
 
+def post_repair_authority_result_from_run(
+    *,
+    run: dict[str, Any],
+    authority_task_id: str,
+    parent_task_id: str,
+    work_unit_id: str,
+) -> dict[str, Any] | None:
+    metadata = run.get("metadata")
+    if not isinstance(metadata, dict):
+        return None
+    review_result = metadata.get("independent_review_result")
+    review_result = review_result if isinstance(review_result, dict) else {}
+    selected_markers = metadata.get("selected_markers")
+    if not isinstance(selected_markers, list):
+        selected_markers = review_result.get("selected_markers")
+    markers = {str(marker or "").strip() for marker in (selected_markers or []) if str(marker or "").strip()}
+    if not markers:
+        for marker_key in (
+            "ready_work_unit_repair_review_passed",
+            "ready_work_unit_retry_authorized",
+            "ready_work_unit_done_authorized",
+            "ready_work_unit_done_definition_satisfied",
+            "human_gate_required",
+        ):
+            if metadata.get(marker_key) is True or review_result.get(marker_key) is True:
+                markers.add(marker_key)
+    status = str(run.get("status") or "").strip().lower()
+    outcome = str(run.get("outcome") or "").strip().lower()
+    blocked = status == "blocked" or outcome == "blocked" or "structured_block" in markers
+    if not markers and not blocked:
+        return None
+    repair_review_passed = "ready_work_unit_repair_review_passed" in markers
+    retry_authorized = "ready_work_unit_retry_authorized" in markers
+    done_authorized = "ready_work_unit_done_authorized" in markers
+    done_definition_satisfied = "ready_work_unit_done_definition_satisfied" in markers
+    human_gate_required = "human_gate_required" in markers or metadata.get("human_gate_required") is True
+    return {
+        "marker": READY_WORK_UNIT_POST_REPAIR_AUTHORITY_RESULT_MARKER,
+        "authority_task_ref": authority_task_id,
+        "parent_task_ref": parent_task_id,
+        "work_unit_id": work_unit_id,
+        "source": "hermes_run_metadata",
+        "status": "human_gate_required" if human_gate_required else "passed" if repair_review_passed else "blocked",
+        "repair_review_passed": repair_review_passed,
+        "retry_authorized": retry_authorized,
+        "done_authorized": done_authorized,
+        "done_definition_satisfied": done_definition_satisfied,
+        "human_gate_required": human_gate_required,
+        "blocked": blocked and not repair_review_passed,
+        "complete_product_claim_allowed": False,
+    }
+
+
+def apply_post_repair_authority_result(row: dict[str, Any], result: dict[str, Any] | None) -> dict[str, Any]:
+    if not result:
+        return row
+    merged = dict(row)
+    merged["post_repair_authority_result"] = result
+    merged["repair_review_passed"] = bool(merged.get("repair_review_passed")) or result.get("repair_review_passed") is True
+    merged["retry_authorized"] = bool(merged.get("retry_authorized")) or result.get("retry_authorized") is True
+    merged["done_authorized"] = bool(merged.get("done_authorized")) or result.get("done_authorized") is True
+    merged["done_definition_satisfied"] = (
+        bool(merged.get("done_definition_satisfied")) or result.get("done_definition_satisfied") is True
+    )
+    merged["human_gate_required"] = bool(merged.get("human_gate_required")) or result.get("human_gate_required") is True
+    if merged["human_gate_required"]:
+        merged["decision"] = "human_gate_required"
+        merged["next_action"] = "wait for explicit human gate; no automatic retry or completion"
+        merged["actionable_by_adapter"] = False
+    elif result.get("blocked") is True:
+        merged["decision"] = "authority_blocked"
+        merged["next_action"] = "post-repair authority task blocked; route the declared next action before retry"
+        merged["actionable_by_adapter"] = False
+    elif (
+        merged.get("repair_completed")
+        and merged["repair_review_passed"]
+        and merged["done_authorized"]
+        and merged["done_definition_satisfied"]
+    ):
+        merged["decision"] = "complete_parent"
+        merged["next_action"] = "complete the parent ready work unit through Hermes complete"
+        merged["actionable_by_adapter"] = True
+    elif merged.get("repair_completed") and merged["repair_review_passed"] and merged["retry_authorized"]:
+        merged["decision"] = "retry_parent"
+        merged["next_action"] = "unblock parent ready work unit for another Hermes worker attempt"
+        merged["actionable_by_adapter"] = True
+    return merged
+
+
+def post_repair_authority_results_by_work_unit(
+    *,
+    hermes_bin: str,
+    board: str,
+    parent_task_ids_by_work_unit: dict[str, str],
+    worker_assignee_prefix: str,
+    runner: Runner = default_runner,
+) -> dict[str, dict[str, Any]]:
+    results: dict[str, dict[str, Any]] = {}
+    latest_sort_key: dict[str, tuple[int, int]] = {}
+    seen_task_ids: set[str] = set()
+    expected_assignee = worker_assignee_prefix + "independent-reviewer"
+    for status in ["done", "blocked", "running"]:
+        for record in list_tasks_by_status(hermes_bin=hermes_bin, board=board, status=status, runner=runner):
+            task_id = str(record.get("task_id") or record.get("id") or "").strip()
+            if not task_id or task_id in seen_task_ids:
+                continue
+            seen_task_ids.add(task_id)
+            assignee = str(record.get("assignee") or record.get("profile") or "").strip()
+            if assignee and assignee != expected_assignee:
+                continue
+            try:
+                payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+                body = parse_json_object(task_readback_body(payload))
+            except RuntimeError:
+                continue
+            if body.get("packet_type") != "ready_work_unit_post_repair_authority_request":
+                continue
+            work_unit_id = str(body.get("parent_work_unit_id") or "").strip()
+            parent_task_id = str(body.get("parent_task_ref") or "").strip()
+            if not work_unit_id or parent_task_ids_by_work_unit.get(work_unit_id) != parent_task_id:
+                continue
+            try:
+                runs = task_run_records(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+            except RuntimeError:
+                continue
+            for run in runs:
+                result = post_repair_authority_result_from_run(
+                    run=run,
+                    authority_task_id=task_id,
+                    parent_task_id=parent_task_id,
+                    work_unit_id=work_unit_id,
+                )
+                if not result:
+                    continue
+                run_id = int(run.get("id") or run.get("run_id") or 0)
+                ended_at = int(run.get("ended_at") or run.get("finished_at") or run.get("started_at") or 0)
+                sort_key = (ended_at, run_id)
+                if sort_key >= latest_sort_key.get(work_unit_id, (0, 0)):
+                    latest_sort_key[work_unit_id] = sort_key
+                    results[work_unit_id] = result
+    return results
+
+
 def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
     plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
     board = str(args.board or plan.get("board") or "").strip()
@@ -2429,6 +2578,16 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         worker_assignee_prefix=args.worker_assignee_prefix,
         runner=runner,
     )
+    authority_results = post_repair_authority_results_by_work_unit(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        parent_task_ids_by_work_unit={
+            work_unit_id: task_id
+            for _task, _payload, task_id, _packet_id, work_unit_id, _status in verified
+        },
+        worker_assignee_prefix=args.worker_assignee_prefix,
+        runner=runner,
+    )
 
     dependencies = ready_work_unit_dependencies(tasks)
     status_by_work_unit = {work_unit_id: status for _task, _payload, _task_id, _packet_id, work_unit_id, status in verified}
@@ -2457,6 +2616,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
     human_gate_count = 0
     incomplete_count = 0
     post_repair_review_result_count = 0
+    post_repair_authority_result_count = 0
     for task, payload, task_id, packet_id, work_unit_id, status in verified:
         row = classify_ready_work_unit_post_release_reconciliation(payload)
         row["task_ref"] = task_id
@@ -2466,6 +2626,10 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         if review_result:
             row = apply_post_repair_review_result(row, review_result)
             post_repair_review_result_count += 1
+        authority_result = authority_results.get(work_unit_id)
+        if authority_result:
+            row = apply_post_repair_authority_result(row, authority_result)
+            post_repair_authority_result_count += 1
         row["post_repair_review_required"] = row["decision"] == "awaiting_repair_review"
         existing_review_task_id = ""
         if row["post_repair_review_required"]:
@@ -2484,6 +2648,9 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             existing_authority_task_id = existing_post_repair_authority_task_ref(payload, work_unit_id=work_unit_id)
             if existing_authority_task_id:
                 existing_post_repair_authority_task_ids[work_unit_id] = existing_authority_task_id
+        elif authority_result and authority_result.get("authority_task_ref"):
+            existing_authority_task_id = str(authority_result["authority_task_ref"])
+            existing_post_repair_authority_task_ids[work_unit_id] = existing_authority_task_id
         row["post_repair_authority_required"] = row["decision"] == "awaiting_retry_or_done_authority"
         row["post_repair_authority_task_ref"] = existing_authority_task_id or None
         row["post_repair_authority_task_exists"] = bool(existing_authority_task_id)
@@ -2667,6 +2834,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             "post_repair_authority_required_count": len(post_repair_authority_required_work_unit_ids),
             "post_repair_authority_missing_task_count": len(post_repair_authority_candidates),
             "post_repair_authority_existing_task_count": len(existing_post_repair_authority_task_ids),
+            "post_repair_authority_result_count": post_repair_authority_result_count,
             "post_repair_authority_task_created_count": len(created_post_repair_authority_task_ids),
             "retry_unblocked_task_count": len(retry_ready_work_unit_task_ids),
             "completed_task_count": len(completed_ready_work_unit_task_ids),
