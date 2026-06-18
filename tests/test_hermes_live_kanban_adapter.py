@@ -1441,6 +1441,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 "appsec_gate",
                 "independent_review",
                 "delivery_handoff",
+                "post_handoff_closeout_reconciliation",
             ],
         )
         self.assertIn(
@@ -1449,6 +1450,10 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         )
         self.assertIn(
             {"from": "independent_review", "to": "delivery_handoff"},
+            graph_contract["required_edges"],
+        )
+        self.assertIn(
+            {"from": "delivery_handoff", "to": "post_handoff_closeout_reconciliation"},
             graph_contract["required_edges"],
         )
         implementation_authority = graph_contract["node_authority_rules"]["implementation"]
@@ -1462,6 +1467,87 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIn("no_spawn_readback_evidence", body["output_contract"]["pass_requires"])
         self.assertIn("create_loose_material_product_tasks", body["forbidden_actions"])
         self.assertIn("create_todo_or_ready_material_product_tasks", body["forbidden_actions"])
+
+    def test_material_product_execution_graph_requires_post_handoff_closeout_route(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            product_creation_plan_path = tmp_path / "product-creation-plan.json"
+            product_creation_plan_path.write_text(
+                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            parent_task_id = ready_work_unit_task_ids(fake)[0]
+            block_ready_work_unit_after_release(fake, parent_task_id)
+            add_ready_work_unit_review_run(
+                fake,
+                review_task_id="t_review_pass",
+                parent_task_id=parent_task_id,
+            )
+            close_reviewed_args = adapter.build_parser().parse_args(
+                [
+                    "close-reviewed-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                ]
+            )
+            adapter.close_reviewed_ready_work_units(close_reviewed_args, runner=fake)
+            close_args = adapter.build_parser().parse_args(
+                [
+                    "close-product-creation-run",
+                    "--product-creation-plan",
+                    str(product_creation_plan_path),
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--release-readiness-ref",
+                    "external:public-release-readiness-reviewed",
+                    "--learnback-ref",
+                    "external:public-learnback-reviewed",
+                ]
+            )
+            result = adapter.close_product_creation_run(close_args, runner=fake)
+
+        self.assertEqual(result["product_creation_run_closeout"]["next_action"], "material_product_execution_required")
+        route_task = next(
+            task
+            for task in fake.tasks.values()
+            if "product_creation_run_closeout_next_action" in str(task.get("body") or "")
+        )
+        body = json.loads(str(route_task["body"]))
+        graph_contract = body["material_product_execution_graph_contract"]
+        self.assertIn("post_handoff_closeout_reconciliation", graph_contract["required_nodes"])
+        self.assertIn(
+            {"from": "delivery_handoff", "to": "post_handoff_closeout_reconciliation"},
+            graph_contract["required_edges"],
+        )
+        self.assertIn(
+            "post_material_handoff_closeout_route_ref",
+            body["output_contract"]["pass_requires"],
+        )
+        self.assertIn(
+            "after material delivery handoff PASS, emit an explicit closeout next route",
+            body["done_definition"],
+        )
 
     def test_close_product_creation_run_blocks_when_work_unit_review_blocks(self) -> None:
         fake = FakeHermes()
