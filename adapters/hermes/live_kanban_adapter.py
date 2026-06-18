@@ -57,10 +57,25 @@ READY_WORK_UNIT_CONTEXT_CHUNK_AUTHOR = "overkill-factory-context"
 READY_WORK_UNIT_CONTEXT_CHUNK_SIZE = 5000
 READY_WORK_UNIT_SUPERSESSION_MARKER = "ready_work_unit_superseded"
 READY_WORK_UNIT_RECOVERY_AUTHOR = "overkill-factory-recovery"
+READY_WORK_UNIT_RECONCILIATION_AUTHOR = "overkill-factory-reconciliation"
 READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS = [
     "runtime_gate=blocked_event_verified_for_each_task",
     "release_scope=ready_work_units_only",
     "dispatch_separate=true",
+]
+READY_WORK_UNIT_REPAIR_COMPLETED_MARKERS = ["ready_work_unit_repair_completed", "repair completed"]
+READY_WORK_UNIT_REPAIR_REVIEW_PASSED_MARKERS = ["ready_work_unit_repair_review_passed"]
+READY_WORK_UNIT_RETRY_AUTHORIZED_MARKERS = ["ready_work_unit_retry_authorized"]
+READY_WORK_UNIT_DONE_AUTHORIZED_MARKERS = ["ready_work_unit_done_authorized"]
+READY_WORK_UNIT_DONE_DEFINITION_SATISFIED_MARKERS = ["ready_work_unit_done_definition_satisfied"]
+READY_WORK_UNIT_HUMAN_GATE_MARKERS = ["human_gate_required", "human-gate-required"]
+READY_WORK_UNIT_RECONCILIATION_RETRY_READBACK_MARKERS = [
+    "ready_work_unit_retry_authorized",
+    "post_release_ready_work_unit",
+]
+READY_WORK_UNIT_RECONCILIATION_DONE_READBACK_MARKERS = [
+    "ready_work_unit_done_authorized",
+    "post_release_ready_work_unit",
 ]
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
@@ -808,6 +823,14 @@ def history_contains_markers(payload: dict[str, Any], markers: list[str]) -> boo
     return False
 
 
+def history_contains_any_marker(payload: dict[str, Any], markers: list[str]) -> bool:
+    return any(history_contains_markers(payload, [marker]) for marker in markers if marker.strip())
+
+
+def history_contains_all_markers_anywhere(payload: dict[str, Any], markers: list[str]) -> bool:
+    return all(history_contains_any_marker(payload, [marker]) for marker in markers if marker.strip())
+
+
 def task_has_ready_work_unit_release_record(payload: dict[str, Any]) -> bool:
     return history_contains_markers(
         payload,
@@ -956,6 +979,52 @@ def unblock_task(
         raise RuntimeError("Hermes show --json did not return JSON while verifying unblock event") from exc
     if not isinstance(payload, dict) or not task_has_unblocked_event(payload, required_readback_markers):
         raise RuntimeError(f"Hermes task {task_id} is not durably unblocked after unblock command")
+
+
+def complete_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    result: str,
+    summary: str,
+    metadata: dict[str, Any],
+    required_readback_markers: list[str] | None = None,
+    runner: Runner = default_runner,
+) -> None:
+    if required_readback_markers:
+        run_checked(
+            hermes_kanban(
+                hermes_bin,
+                board,
+                "comment",
+                "--author",
+                READY_WORK_UNIT_RECONCILIATION_AUTHOR,
+                task_id,
+                compact_json_argument(metadata),
+            ),
+            runner,
+        )
+    run_checked(
+        hermes_kanban(
+            hermes_bin,
+            board,
+            "complete",
+            task_id,
+            "--result",
+            result,
+            "--summary",
+            summary,
+            "--metadata",
+            compact_json_argument(metadata),
+        ),
+        runner,
+    )
+    payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    if task_readback_status(payload) not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+        raise RuntimeError(f"Hermes task {task_id} is not durably completed after complete command")
+    if required_readback_markers and not history_contains_all_markers_anywhere(payload, required_readback_markers):
+        raise RuntimeError(f"Hermes task {task_id} completion readback lacks required reconciliation markers")
 
 
 def record_live_binding(
@@ -1675,6 +1744,8 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
             "held_work_unit_ids": sorted(dependency_blockers.keys()),
             "satisfied_work_unit_ids": satisfied_work_unit_ids,
             "post_release_blocked_work_unit_ids": sorted(post_release_blocked.keys()),
+            "post_release_reconciliation_required_next": bool(post_release_blocked),
+            "post_release_reconciliation_command": "reconcile-ready-work-units",
             "dependency_blockers": {key: dependency_blockers[key] for key in sorted(dependency_blockers)},
         },
         "runtime_gate": {
@@ -1694,6 +1765,259 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
             "plan": plan,
             "materialization_result": materialization_result,
             "release_reason": release_reason,
+            "no_shadow_dispatcher": True,
+            "local_state_authority": False,
+        },
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
+
+
+def ready_work_unit_post_release_reconciliation_flags(payload: dict[str, Any]) -> dict[str, bool]:
+    repair_completed = history_contains_any_marker(payload, READY_WORK_UNIT_REPAIR_COMPLETED_MARKERS)
+    repair_review_passed = history_contains_all_markers_anywhere(payload, READY_WORK_UNIT_REPAIR_REVIEW_PASSED_MARKERS)
+    retry_authorized = history_contains_all_markers_anywhere(payload, READY_WORK_UNIT_RETRY_AUTHORIZED_MARKERS)
+    done_authorized = history_contains_all_markers_anywhere(payload, READY_WORK_UNIT_DONE_AUTHORIZED_MARKERS)
+    done_definition_satisfied = history_contains_all_markers_anywhere(
+        payload,
+        READY_WORK_UNIT_DONE_DEFINITION_SATISFIED_MARKERS,
+    )
+    human_gate_required = history_contains_any_marker(payload, READY_WORK_UNIT_HUMAN_GATE_MARKERS)
+    return {
+        "repair_completed": repair_completed,
+        "repair_review_passed": repair_review_passed,
+        "retry_authorized": retry_authorized,
+        "done_authorized": done_authorized,
+        "done_definition_satisfied": done_definition_satisfied,
+        "human_gate_required": human_gate_required,
+    }
+
+
+def classify_ready_work_unit_post_release_reconciliation(payload: dict[str, Any]) -> dict[str, Any]:
+    status = task_readback_status(payload)
+    release_record_seen = task_has_ready_work_unit_release_record(payload)
+    flags = ready_work_unit_post_release_reconciliation_flags(payload)
+    decision = "not_post_release_blocked"
+    next_action = "release-ready-work-units must release the ready work unit before post-release reconciliation"
+    actionable = False
+
+    if status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+        decision = "already_satisfied"
+        next_action = "no reconciliation needed"
+    elif status != "blocked":
+        decision = "wait_for_runtime_state"
+        next_action = f"task is {status or 'unknown'}, not blocked"
+    elif not release_record_seen:
+        decision = "not_released_yet"
+        next_action = "run release-ready-work-units when dependency blockers are satisfied"
+    elif not task_has_blocked_event(payload):
+        decision = "invalid_blocked_readback"
+        next_action = "preserve task and repair missing Hermes blocked-event evidence before retry"
+    elif flags["human_gate_required"]:
+        decision = "human_gate_required"
+        next_action = "wait for explicit human gate; no automatic retry or completion"
+    elif flags["repair_completed"] and flags["repair_review_passed"] and flags["done_authorized"] and flags["done_definition_satisfied"]:
+        decision = "complete_parent"
+        next_action = "complete the parent ready work unit through Hermes complete"
+        actionable = True
+    elif flags["repair_completed"] and flags["repair_review_passed"] and flags["retry_authorized"]:
+        decision = "retry_parent"
+        next_action = "unblock parent ready work unit for another Hermes worker attempt"
+        actionable = True
+    elif flags["repair_completed"] and flags["repair_review_passed"]:
+        decision = "awaiting_retry_or_done_authority"
+        next_action = "repair review passed, but no explicit retry or done authority marker exists"
+    elif flags["repair_completed"]:
+        decision = "awaiting_repair_review"
+        next_action = "repair evidence exists, but independent repair review is not complete"
+    else:
+        decision = "awaiting_repair"
+        next_action = "create or wait for factory repair and independent review evidence"
+
+    return {
+        "status": status,
+        "release_record_seen": release_record_seen,
+        "decision": decision,
+        "next_action": next_action,
+        "actionable_by_adapter": actionable,
+        "complete_product_claim_allowed": False,
+        **flags,
+    }
+
+
+def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
+    board = str(args.board or plan.get("board") or "").strip()
+    if not board:
+        raise RuntimeError("ready work-unit reconciliation requires a board")
+    if str(plan.get("board") or "").strip() and board != str(plan.get("board") or "").strip():
+        raise RuntimeError("provided board does not match the ready work-unit materialization plan")
+    materialization_result = load_ready_work_unit_materialization_result(
+        args.materialization_result.resolve(),
+        plan=plan,
+        board=board,
+    )
+    tasks = expected_ready_work_unit_tasks(plan)
+    candidates = ready_work_unit_readbacks_by_status(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        statuses=["blocked", "ready", "running", "done"],
+        runner=runner,
+    )
+
+    verified: list[tuple[dict[str, Any], dict[str, Any], str, str, str, str]] = []
+    for task in tasks:
+        key = expected_ready_work_unit_key(task)
+        matches = candidates.get(key) or []
+        if len(matches) != 1:
+            raise RuntimeError(
+                f"ready work-unit reconciliation expected exactly one active Hermes task for packet {key[0]} / work unit {key[1]}, found {len(matches)}"
+            )
+        task_id, packet_id, work_unit_id = verify_ready_work_unit_identity(
+            payload=matches[0],
+            plan_task=task,
+            worker_assignee_prefix=args.worker_assignee_prefix,
+        )
+        verified.append((task, matches[0], task_id, packet_id, work_unit_id, task_readback_status(matches[0])))
+
+    dependencies = ready_work_unit_dependencies(tasks)
+    status_by_work_unit = {work_unit_id: status for _task, _payload, _task_id, _packet_id, work_unit_id, status in verified}
+    dependency_blockers: dict[str, list[str]] = {}
+    for _task, _payload, _task_id, _packet_id, work_unit_id, status in verified:
+        if status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+            continue
+        blockers = [
+            dep
+            for dep in dependencies.get(work_unit_id, [])
+            if status_by_work_unit.get(dep) not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES
+        ]
+        if blockers:
+            dependency_blockers[work_unit_id] = blockers
+
+    reconciliation: dict[str, dict[str, Any]] = {}
+    retry_candidates: list[tuple[dict[str, Any], str, str, str]] = []
+    complete_candidates: list[tuple[dict[str, Any], str, str, str]] = []
+    post_release_blocked_count = 0
+    human_gate_count = 0
+    incomplete_count = 0
+    for task, payload, task_id, packet_id, work_unit_id, status in verified:
+        row = classify_ready_work_unit_post_release_reconciliation(payload)
+        row["task_ref"] = task_id
+        row["packet_id"] = packet_id
+        row["dependency_blockers"] = dependency_blockers.get(work_unit_id, [])
+        reconciliation[work_unit_id] = row
+        if status == "blocked" and row["release_record_seen"]:
+            post_release_blocked_count += 1
+        if row["decision"] == "human_gate_required":
+            human_gate_count += 1
+        if row["decision"] in {
+            "awaiting_repair",
+            "awaiting_repair_review",
+            "awaiting_retry_or_done_authority",
+            "invalid_blocked_readback",
+        }:
+            incomplete_count += 1
+        if row["decision"] == "retry_parent":
+            retry_candidates.append((task, task_id, packet_id, work_unit_id))
+        elif row["decision"] == "complete_parent":
+            complete_candidates.append((task, task_id, packet_id, work_unit_id))
+
+    if not args.dry_run and retry_candidates:
+        required_workers = [
+            ready_work_unit_release_assignee(task, args.worker_assignee_prefix)
+            for task, _task_id, _packet_id, _work_unit_id in retry_candidates
+        ]
+        readiness_blockers = route_readiness_blockers(args.route_readiness, required_workers)
+        if readiness_blockers:
+            raise RuntimeError("pre-retry route readiness blocked ready work-unit reconciliation: " + "; ".join(readiness_blockers))
+
+    retry_ready_work_unit_task_ids: dict[str, str] = {}
+    completed_ready_work_unit_task_ids: dict[str, str] = {}
+    retry_reason = str(
+        args.reason
+        or "ready_work_unit_retry_authorized; ready_work_unit_repair_review_passed; reconciliation_scope=post_release_ready_work_unit; dispatch_separate=true"
+    )
+    if not args.dry_run:
+        for _task, task_id, _packet_id, work_unit_id in retry_candidates:
+            unblock_task(
+                hermes_bin=args.hermes_bin,
+                board=board,
+                task_id=task_id,
+                reason=retry_reason,
+                required_readback_markers=READY_WORK_UNIT_RECONCILIATION_RETRY_READBACK_MARKERS,
+                runner=runner,
+            )
+            retry_ready_work_unit_task_ids[work_unit_id] = task_id
+        for _task, task_id, packet_id, work_unit_id in complete_candidates:
+            metadata = {
+                "marker": "ready_work_unit_post_release_reconciliation",
+                "work_unit_id": work_unit_id,
+                "packet_id": packet_id,
+                "ready_work_unit_done_authorized": True,
+                "ready_work_unit_done_definition_satisfied": True,
+                "ready_work_unit_repair_review_passed": True,
+                "reconciliation_scope": "post_release_ready_work_unit",
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "complete_product_claim_allowed": False,
+            }
+            complete_task(
+                hermes_bin=args.hermes_bin,
+                board=board,
+                task_id=task_id,
+                result=args.completion_result,
+                summary=args.completion_summary,
+                metadata=metadata,
+                required_readback_markers=READY_WORK_UNIT_RECONCILIATION_DONE_READBACK_MARKERS,
+                runner=runner,
+            )
+            completed_ready_work_unit_task_ids[work_unit_id] = task_id
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "reconcile-ready-work-units",
+        "dry_run": bool(args.dry_run),
+        "board": board,
+        "materialization_plan_id": plan.get("plan_id"),
+        "ready_work_unit_task_ids": {
+            work_unit_id: task_id
+            for _task, _payload, task_id, _packet_id, work_unit_id, _status in verified
+        },
+        "packet_task_ids": {
+            packet_id: task_id
+            for _task, _payload, task_id, packet_id, _work_unit_id, _status in verified
+        },
+        "retry_ready_work_unit_task_ids": retry_ready_work_unit_task_ids,
+        "completed_ready_work_unit_task_ids": completed_ready_work_unit_task_ids,
+        "post_release_reconciliation": reconciliation,
+        "release_wave": {
+            "held_work_unit_ids": sorted(dependency_blockers.keys()),
+            "dependency_blockers": {key: dependency_blockers[key] for key in sorted(dependency_blockers)},
+            "release_ready_work_units_required_next": bool(
+                retry_ready_work_unit_task_ids or completed_ready_work_unit_task_ids
+            ),
+        },
+        "runtime_gate": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "reconciliation_verified_task_count": len(verified),
+            "post_release_blocked_task_count": post_release_blocked_count,
+            "retry_candidate_count": len(retry_candidates),
+            "complete_candidate_count": len(complete_candidates),
+            "retry_unblocked_task_count": len(retry_ready_work_unit_task_ids),
+            "completed_task_count": len(completed_ready_work_unit_task_ids),
+            "human_gate_required_count": human_gate_count,
+            "incomplete_repair_or_review_count": incomplete_count,
+            "dispatch_allowed_by_this_step": False,
+            "native_dispatch_required_next": bool(retry_ready_work_unit_task_ids),
+            "complete_product_claim_allowed": False,
+        },
+        "hook": {
+            "plan": plan,
+            "materialization_result": materialization_result,
+            "retry_reason": retry_reason,
             "no_shadow_dispatcher": True,
             "local_state_authority": False,
         },
@@ -2535,6 +2859,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_recover_ready.add_argument("--create-replacements", action="store_true")
     p_recover_ready.add_argument("--out", type=Path)
 
+    p_reconcile_ready = sub.add_parser(
+        "reconcile-ready-work-units",
+        help="Reconcile post-release blocked ready work units after repair/review evidence.",
+    )
+    p_reconcile_ready.add_argument("--plan", type=Path, required=True)
+    p_reconcile_ready.add_argument("--materialization-result", type=Path, required=True)
+    p_reconcile_ready.add_argument("--board")
+    p_reconcile_ready.add_argument("--hermes-bin", default="hermes")
+    p_reconcile_ready.add_argument("--worker-assignee-prefix", default="")
+    p_reconcile_ready.add_argument("--route-readiness", type=Path)
+    p_reconcile_ready.add_argument("--reason")
+    p_reconcile_ready.add_argument("--completion-result", default="Ready work-unit reconciliation satisfied.")
+    p_reconcile_ready.add_argument(
+        "--completion-summary",
+        default="Post-release repair/review evidence reconciled by Overkill Factory.",
+    )
+    p_reconcile_ready.add_argument("--dry-run", action="store_true")
+    p_reconcile_ready.add_argument("--out", type=Path)
+
     p_route = sub.add_parser(
         "collect-route-readiness",
         help="Collect the public-safe Hermes worker route readiness manifest from read-only Hermes state.",
@@ -2584,6 +2927,8 @@ def main() -> int:
             envelope = release_ready_work_units(args)
         elif args.command == "recover-ready-work-units":
             envelope = recover_ready_work_units(args)
+        elif args.command == "reconcile-ready-work-units":
+            envelope = reconcile_ready_work_units(args)
         elif args.command == "collect-route-readiness":
             envelope = collect_route_readiness(args)
         elif args.command == "enforce-done":

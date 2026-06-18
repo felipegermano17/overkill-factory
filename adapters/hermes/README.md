@@ -262,6 +262,30 @@ review and Receipt Five gates before any product completion claim. The recovery
 result is sanitized for public refs and always keeps
 `complete_product_claim_allowed=false`.
 
+After a legally released ready work unit executes and blocks, keep downstream
+work units held and run post-release reconciliation instead of manually deciding
+whether to retry or complete the parent:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py reconcile-ready-work-units \
+  --plan path/to/ready-work-unit-hermes-plan.json \
+  --materialization-result path/to/live-ready-work-unit-materialization-result.json \
+  --route-readiness path/to/route-readiness.json \
+  --dry-run \
+  --out path/to/reconciled-ready-work-units.json
+```
+
+The reconciliation path reads Hermes-authoritative task history and structured
+repair/review markers. It keeps the parent blocked when repair or review proof
+is incomplete, holds downstream dependencies until the parent is satisfied, and
+escalates explicit human gates without automatic mutation. Without `--dry-run`,
+it may unblock the parent only when review evidence carries
+`ready_work_unit_repair_completed`, `ready_work_unit_repair_review_passed` and
+`ready_work_unit_retry_authorized`; it may complete the parent only when the
+history also carries `ready_work_unit_done_authorized` and
+`ready_work_unit_done_definition_satisfied`. It still does not dispatch workers
+or claim product completion.
+
 Use `--workspace` when the adapter runs outside the Hermes host. The workspace
 must be meaningful to the Hermes dispatcher, not merely to the machine that runs
 the adapter. Local operators can omit it and use the repo directory default;

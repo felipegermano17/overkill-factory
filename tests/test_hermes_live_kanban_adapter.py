@@ -110,6 +110,17 @@ class FakeHermes:
             task["status"] = "ready"
             task.setdefault("events", []).append({"type": "unblocked", "payload": None})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"ready"}', stderr="")
+        if len(argv) >= 6 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "complete":
+            task = self.tasks.setdefault(argv[5], {"status": "ready", "events": []})
+            task["status"] = "done"
+            if "--result" in argv:
+                task["result"] = argv[argv.index("--result") + 1]
+            if "--summary" in argv:
+                task["summary"] = argv[argv.index("--summary") + 1]
+            if "--metadata" in argv:
+                task["metadata"] = argv[argv.index("--metadata") + 1]
+            task.setdefault("events", []).append({"type": "completed"})
+            return subprocess.CompletedProcess(argv, 0, stdout='{"status":"done"}', stderr="")
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "show":
             payload = self.tasks.get(argv[5], {"status": "blocked", "events": [{"type": "blocked", "reason": "gate"}]})
             return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(payload), stderr="")
@@ -1097,6 +1108,243 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(result["release_wave"]["held_work_unit_ids"], ["work-unit-002"])
         self.assertEqual(result["release_wave"]["dependency_blockers"], {"work-unit-002": ["work-unit-001"]})
         self.assertEqual(result["runtime_gate"]["post_release_blocked_task_count"], 1)
+        self.assertTrue(result["release_wave"]["post_release_reconciliation_required_next"])
+        self.assertEqual(result["release_wave"]["post_release_reconciliation_command"], "reconcile-ready-work-units")
+
+    def test_reconcile_ready_work_units_keeps_incomplete_repair_blocked(self) -> None:
+        fake = FakeHermes()
+        plan = two_step_ready_work_unit_plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            materialize_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            upstream_task = next(
+                task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001"
+            )
+            upstream_task["status"] = "blocked"
+            upstream_task.setdefault("events", []).append({"kind": "claimed"})
+            upstream_task.setdefault("events", []).append({"kind": "blocked", "reason": "repair required"})
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "factory-orchestrator",
+                    "body": json.dumps({"marker": "ready_work_unit_repair_completed"}),
+                }
+            )
+            unblock_calls_before = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+            reconcile_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--dry-run",
+                ]
+            )
+            result = adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["mode"], "reconcile-ready-work-units")
+        self.assertEqual(result["retry_ready_work_unit_task_ids"], {})
+        self.assertEqual(result["completed_ready_work_unit_task_ids"], {})
+        self.assertEqual(
+            result["post_release_reconciliation"]["work-unit-001"]["decision"],
+            "awaiting_repair_review",
+        )
+        self.assertEqual(result["release_wave"]["held_work_unit_ids"], ["work-unit-002"])
+        self.assertEqual(result["release_wave"]["dependency_blockers"], {"work-unit-002": ["work-unit-001"]})
+        self.assertEqual(result["runtime_gate"]["incomplete_repair_or_review_count"], 1)
+        unblock_calls_after = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(unblock_calls_after, unblock_calls_before)
+
+    def test_reconcile_ready_work_units_unblocks_retry_when_review_authorizes(self) -> None:
+        fake = FakeHermes()
+        plan = two_step_ready_work_unit_plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            materialize_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            upstream_task = next(
+                task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001"
+            )
+            upstream_task["status"] = "blocked"
+            upstream_task.setdefault("events", []).append({"kind": "claimed"})
+            upstream_task.setdefault("events", []).append({"kind": "blocked", "reason": "repair required"})
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "factory-orchestrator",
+                    "body": json.dumps({"marker": "ready_work_unit_repair_completed"}),
+                }
+            )
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "independent-reviewer",
+                    "body": json.dumps(
+                        {
+                            "marker": "ready_work_unit_repair_review_passed",
+                            "ready_work_unit_retry_authorized": True,
+                        }
+                    ),
+                }
+            )
+            reconcile_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            result = adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["retry_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(result["completed_ready_work_unit_task_ids"], {})
+        self.assertEqual(result["post_release_reconciliation"]["work-unit-001"]["decision"], "retry_parent")
+        self.assertEqual(result["runtime_gate"]["retry_unblocked_task_count"], 1)
+        released_task = next(task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001")
+        self.assertEqual(released_task["status"], "ready")
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(len(unblock_calls), 2)
+
+    def test_reconcile_ready_work_units_completes_when_done_definition_authorized(self) -> None:
+        fake = FakeHermes()
+        plan = two_step_ready_work_unit_plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            materialize_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            upstream_task = next(
+                task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001"
+            )
+            upstream_task["status"] = "blocked"
+            upstream_task.setdefault("events", []).append({"kind": "claimed"})
+            upstream_task.setdefault("events", []).append({"kind": "blocked", "reason": "repair required"})
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "factory-orchestrator",
+                    "body": json.dumps({"marker": "ready_work_unit_repair_completed"}),
+                }
+            )
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "independent-reviewer",
+                    "body": json.dumps(
+                        {
+                            "marker": "ready_work_unit_repair_review_passed",
+                            "ready_work_unit_done_authorized": True,
+                            "ready_work_unit_done_definition_satisfied": True,
+                        }
+                    ),
+                }
+            )
+            reconcile_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                ]
+            )
+            result = adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["retry_ready_work_unit_task_ids"], {})
+        self.assertEqual(result["completed_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(result["post_release_reconciliation"]["work-unit-001"]["decision"], "complete_parent")
+        self.assertEqual(result["runtime_gate"]["completed_task_count"], 1)
+        completed_task = next(task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001")
+        self.assertEqual(completed_task["status"], "done")
+        complete_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "complete"]
+        self.assertEqual(len(complete_calls), 1)
 
     def test_release_ready_work_units_rejects_ambiguous_matching_tasks(self) -> None:
         fake = FakeHermes()
