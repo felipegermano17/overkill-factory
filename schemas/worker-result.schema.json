@@ -140,6 +140,61 @@
         "type": "string"
       }
     },
+    "artifact_readback": {
+      "type": "object",
+      "description": "Proof that declared artifact refs were read from a separate downstream worker context before closure.",
+      "required": [
+        "status",
+        "checked_from",
+        "refs"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "PASS",
+            "BLOCKED"
+          ]
+        },
+        "checked_from": {
+          "enum": [
+            "separate_worker_context",
+            "downstream_worker_context"
+          ]
+        },
+        "refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "ref",
+              "readable"
+            ],
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 3
+              },
+              "readable": {
+                "type": "boolean"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "schema_valid": {
+                "type": "boolean"
+              },
+              "readback_error": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
     "operational_evidence_bundle_refs": {
       "type": "array",
       "items": {
