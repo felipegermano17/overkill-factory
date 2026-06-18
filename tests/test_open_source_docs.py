@@ -77,7 +77,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/maintenance/repo-surface.md",
             "examples/minimal-hermes-project/README.md",
             "fixtures/README.md",
-            "ui/README.md",
             ".env.example",
             "CHANGELOG.md",
             "CONTRIBUTING.md",
@@ -114,7 +113,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "nao um atalho de MVP",
             "Hermes and Receipt Five remain the source of truth",
             "fixtures/README.md",
-            "ui/README.md",
             "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
             "factoryctl run minimal",
         ]:
@@ -164,7 +162,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             ".github/ISSUE_TEMPLATE/config.yml",
             ".github/pull_request_template.md",
             "README.pt-BR.md",
-            "ui/README.md",
         ]
 
         for rel in required_paths:
@@ -201,7 +198,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "skills/",
             "templates/",
             "tests/",
-            "ui/",
         ]
 
         for rel in expected_public_dirs:
@@ -218,7 +214,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/README.md": ["human guides", "public onboarding"],
             "examples/README.md": ["source examples", ".tmp/"],
             "fixtures/README.md": ["regression", "public-safe"],
-            "ui/README.md": ["static public-safe UI", "read-only"],
             "products/README.md": ["public validation products", "not production approval"],
             "schemas/README.md": ["machine contracts", "JSON Schema"],
             "scripts/README.md": ["CLI", "validation"],

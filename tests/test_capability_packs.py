@@ -93,7 +93,6 @@ class CapabilityPacksTest(unittest.TestCase):
             "cli-tui-product-pack",
             "operator-onboarding-pack",
             "public-docs-knowledge-pack",
-            "local-web-cockpit-pack",
             "mobile-app-pack",
             "desktop-app-pack",
             "game-product-pack",
@@ -170,16 +169,6 @@ class CapabilityPacksTest(unittest.TestCase):
         errors = factoryctl.validate_capability_coverage(card)
 
         self.assertTrue(any("ambiguous capability surface 'mobile'" in error for error in errors), errors)
-
-    def test_local_web_cockpit_pack_covers_control_tower_without_discord_requirement(self) -> None:
-        packs = json.loads((ROOT / "agents" / "capability-packs.public.json").read_text(encoding="utf-8"))["packs"]
-        pack = packs["local-web-cockpit-pack"]
-
-        self.assertIn("control-tower", pack["covers_surfaces"])
-        self.assertIn("operator-cockpit", pack["covers_surfaces"])
-        self.assertIn("security", pack["covers_surfaces"])
-        self.assertIn("status snapshot", json.dumps(pack).lower())
-        self.assertIn("Discord is not required unless explicitly requested".lower(), json.dumps(pack).lower())
 
     def test_game_surface_blocks_without_activated_pack(self) -> None:
         card = base_card()

@@ -74,8 +74,8 @@ A fronteira pratica e simples:
 - `factoryctl`, schemas e testes validam contratos publicos.
 - Hermes Kanban e a autoridade de runtime para cards e transicoes reais.
 - Receipt Five e resultados de workers sao a evidencia de conclusao.
-- Cockpits como Discord ou uma UI web local podem projetar estado, mas nao
-  aprovam gates nem substituem o Hermes.
+- Cockpits e dashboards de operador podem projetar estado, mas nao aprovam
+  gates nem substituem o Hermes.
 
 ## Primeira Execucao
 
@@ -139,7 +139,6 @@ primeiro, qual e sua fonte de verdade e como drift e evitado.
 | `skills/` | Material instalavel de skill Codex para operar a fabrica a partir do clone publico. Veja `skills/README.md`. |
 | `templates/` | Contratos iniciais pareados com schemas e testes. Veja `templates/README.md`. |
 | `tests/` | Regressao para contratos publicos, docs, adapters e exemplos. Veja `tests/README.md`. |
-| `ui/` | Superficies locais estaticas e public-safe que projetam apenas dados de fixture. Veja `ui/README.md`. |
 
 Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 `*.egg-info/` nao sao superficie publica de produto.
