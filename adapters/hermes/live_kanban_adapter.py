@@ -84,6 +84,12 @@ READY_WORK_UNIT_POST_REPAIR_AUTHORITY_REQUIRED_MARKER = "ready_work_unit_post_re
 READY_WORK_UNIT_POST_REPAIR_AUTHORITY_CREATED_MARKER = "ready_work_unit_post_repair_authority_task_created"
 READY_WORK_UNIT_POST_REPAIR_AUTHORITY_RESULT_MARKER = "ready_work_unit_post_repair_authority_result"
 READY_WORK_UNIT_SUPERSEDED_PARENT_UNLINKED_MARKER = "ready_work_unit_superseded_parent_unlinked"
+READY_WORK_UNIT_REVIEW_CLOSEOUT_MARKER = "ready_work_unit_review_closeout"
+READY_WORK_UNIT_REVIEW_PASSED_MARKER = "ready_work_unit_review_passed"
+READY_WORK_UNIT_REVIEW_CLOSEOUT_READBACK_MARKERS = [
+    READY_WORK_UNIT_REVIEW_CLOSEOUT_MARKER,
+    READY_WORK_UNIT_REVIEW_PASSED_MARKER,
+]
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -2670,6 +2676,165 @@ def post_repair_authority_results_by_work_unit(
     return results
 
 
+def nested_string_values(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        values: list[str] = []
+        for item in value.values():
+            values.extend(nested_string_values(item))
+        return values
+    if isinstance(value, list):
+        values = []
+        for item in value:
+            values.extend(nested_string_values(item))
+        return values
+    return []
+
+
+def string_targets_task_ref(value: str, task_id: str) -> bool:
+    text = str(value or "").strip()
+    if not text or not task_id:
+        return False
+    exact_refs = {
+        task_id,
+        f"kanban:{task_id}",
+        f"workspace:{task_id}",
+    }
+    if text in exact_refs:
+        return True
+    return (
+        f"kanban:{task_id}" in text
+        or f"workspace:{task_id}" in text
+        or f"workspaces/{task_id}/" in text
+        or f"task_id={task_id}" in text
+    )
+
+
+def review_metadata_targets_task(metadata: dict[str, Any], *, task_id: str) -> bool:
+    review_result = metadata.get("independent_review_result")
+    review_result = review_result if isinstance(review_result, dict) else {}
+    explicit_fields = (
+        metadata.get("review_target"),
+        metadata.get("review_comment_task_id"),
+        metadata.get("parent_task_ref"),
+        review_result.get("review_target"),
+        review_result.get("review_comment_task_id"),
+        review_result.get("parent_task_ref"),
+        review_result.get("reviewed_parent_card_id"),
+    )
+    if any(string_targets_task_ref(str(value or ""), task_id) for value in explicit_fields):
+        return True
+    return any(string_targets_task_ref(value, task_id) for value in nested_string_values(metadata))
+
+
+def ready_work_unit_review_result_from_run(
+    *,
+    run: dict[str, Any],
+    review_task_id: str,
+    parent_task_id: str,
+    work_unit_id: str,
+    expected_assignee: str = "independent-reviewer",
+) -> dict[str, Any] | None:
+    metadata = run.get("metadata")
+    if not isinstance(metadata, dict):
+        return None
+    run_profile = str(run.get("profile") or run.get("assignee") or "").strip()
+    if run_profile and run_profile not in {"independent-reviewer", expected_assignee}:
+        return None
+    if not review_metadata_targets_task(metadata, task_id=parent_task_id):
+        return None
+    review_result = metadata.get("independent_review_result")
+    review_result = review_result if isinstance(review_result, dict) else {}
+    verdict = str(review_result.get("verdict") or metadata.get("verdict") or "").strip().upper()
+    status = str(run.get("status") or "").strip().lower()
+    outcome = str(run.get("outcome") or "").strip().lower()
+    required_fixes = review_result.get("required_fixes")
+    required_fixes = required_fixes if isinstance(required_fixes, list) else []
+    blocking_findings = metadata.get("blocking_findings")
+    if blocking_findings is None:
+        blocking_findings = review_result.get("blocking_findings")
+    human_gate_required = (
+        metadata.get("human_gate_required") is True
+        or review_result.get("human_gate_required") is True
+        or metadata.get("production_promotion_approved") == "human_gate_required"
+    )
+    pass_result = (
+        status in {"done", "complete", "completed"}
+        and outcome in {"", "completed", "done", "pass", "passed", "success", "succeeded"}
+        and verdict.startswith("PASS")
+        and blocking_findings is not True
+    )
+    blocked = (
+        blocking_findings is True
+        or status == "blocked"
+        or outcome == "blocked"
+        or verdict.startswith("BLOCK")
+        or bool(required_fixes)
+    )
+    if not pass_result and not blocked and not human_gate_required:
+        return None
+    return {
+        "marker": "ready_work_unit_review_result",
+        "review_task_ref": review_task_id,
+        "parent_task_ref": parent_task_id,
+        "work_unit_id": work_unit_id,
+        "source": "hermes_run_metadata",
+        "status": "human_gate_required" if human_gate_required else "passed" if pass_result else "blocked",
+        "verdict": verdict or None,
+        "review_passed": pass_result,
+        "blocked": blocked and not pass_result,
+        "human_gate_required": human_gate_required,
+        "required_fix_count": len(required_fixes),
+        "complete_product_claim_allowed": False,
+    }
+
+
+def ready_work_unit_review_results_by_work_unit(
+    *,
+    hermes_bin: str,
+    board: str,
+    parent_task_ids_by_work_unit: dict[str, str],
+    worker_assignee_prefix: str,
+    runner: Runner = default_runner,
+) -> dict[str, dict[str, Any]]:
+    results: dict[str, dict[str, Any]] = {}
+    latest_sort_key: dict[str, tuple[int, int]] = {}
+    seen_task_ids: set[str] = set()
+    expected_assignee = worker_assignee_prefix + "independent-reviewer"
+    for status in ["done", "blocked", "running"]:
+        for record in list_tasks_by_status(hermes_bin=hermes_bin, board=board, status=status, runner=runner):
+            task_id = str(record.get("task_id") or record.get("id") or "").strip()
+            if not task_id or task_id in seen_task_ids:
+                continue
+            seen_task_ids.add(task_id)
+            assignee = str(record.get("assignee") or record.get("profile") or "").strip()
+            if assignee and assignee != expected_assignee:
+                continue
+            try:
+                runs = task_run_records(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+            except RuntimeError:
+                continue
+            for run in runs:
+                for work_unit_id, parent_task_id in parent_task_ids_by_work_unit.items():
+                    result = ready_work_unit_review_result_from_run(
+                        run=run,
+                        review_task_id=task_id,
+                        parent_task_id=parent_task_id,
+                        work_unit_id=work_unit_id,
+                        expected_assignee=expected_assignee,
+                    )
+                    if not result:
+                        continue
+                    run_id = int(run.get("id") or run.get("run_id") or 0)
+                    ended_at = int(run.get("ended_at") or run.get("finished_at") or run.get("started_at") or 0)
+                    sort_key = (ended_at, run_id)
+                    if sort_key >= latest_sort_key.get(work_unit_id, (0, 0)):
+                        latest_sort_key[work_unit_id] = sort_key
+                        results[work_unit_id] = result
+    return results
+
+
 def superseded_post_repair_review_parent_ids(
     *,
     hermes_bin: str,
@@ -3121,6 +3286,183 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             "retry_reason": retry_reason,
             "no_shadow_dispatcher": True,
             "local_state_authority": False,
+        },
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
+
+
+def close_reviewed_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
+    board = str(args.board or plan.get("board") or "").strip()
+    if not board:
+        raise RuntimeError("reviewed ready work-unit closeout requires a board")
+    if str(plan.get("board") or "").strip() and board != str(plan.get("board") or "").strip():
+        raise RuntimeError("provided board does not match the ready work-unit materialization plan")
+    materialization_result = load_ready_work_unit_materialization_result(
+        args.materialization_result.resolve(),
+        plan=plan,
+        board=board,
+    )
+    tasks = expected_ready_work_unit_tasks(plan)
+    candidates = ready_work_unit_readbacks_by_status(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        statuses=["blocked", "done"],
+        runner=runner,
+    )
+
+    verified: list[tuple[dict[str, Any], dict[str, Any], str, str, str, str]] = []
+    for task in tasks:
+        key = expected_ready_work_unit_key(task)
+        matches = candidates.get(key) or []
+        if len(matches) != 1:
+            raise RuntimeError(
+                f"reviewed ready work-unit closeout expected exactly one active Hermes task for packet {key[0]} / work unit {key[1]}, found {len(matches)}"
+            )
+        task_id, packet_id, work_unit_id = verify_ready_work_unit_identity(
+            payload=matches[0],
+            plan_task=task,
+            worker_assignee_prefix=args.worker_assignee_prefix,
+        )
+        verified.append((task, matches[0], task_id, packet_id, work_unit_id, task_readback_status(matches[0])))
+
+    review_results = ready_work_unit_review_results_by_work_unit(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        parent_task_ids_by_work_unit={
+            work_unit_id: task_id
+            for _task, _payload, task_id, _packet_id, work_unit_id, _status in verified
+        },
+        worker_assignee_prefix=args.worker_assignee_prefix,
+        runner=runner,
+    )
+
+    closeout: dict[str, dict[str, Any]] = {}
+    complete_candidates: list[tuple[dict[str, Any], str, str, str, dict[str, Any]]] = []
+    human_gate_count = 0
+    blocked_review_count = 0
+    awaiting_review_count = 0
+    already_satisfied_count = 0
+    for task, payload, task_id, packet_id, work_unit_id, status in verified:
+        review_result = review_results.get(work_unit_id)
+        row: dict[str, Any] = {
+            "status": status,
+            "task_ref": task_id,
+            "packet_id": packet_id,
+            "work_unit_id": work_unit_id,
+            "release_record_seen": task_has_ready_work_unit_release_record(payload),
+            "complete_product_claim_allowed": False,
+            "review_result": review_result,
+            "decision": "awaiting_review",
+            "actionable_by_adapter": False,
+            "next_action": "wait for independent-reviewer PASS/BLOCK for this exact ready work unit",
+        }
+        if status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+            already_satisfied_count += 1
+            row["decision"] = "already_satisfied"
+            row["next_action"] = "no closeout needed"
+        elif status != "blocked":
+            row["decision"] = "wait_for_runtime_state"
+            row["next_action"] = f"task is {status or 'unknown'}, not blocked"
+        elif not row["release_record_seen"]:
+            row["decision"] = "not_released_yet"
+            row["next_action"] = "release-ready-work-units must release the task before review closeout"
+        elif not review_result:
+            awaiting_review_count += 1
+        elif review_result.get("human_gate_required") is True:
+            human_gate_count += 1
+            row["decision"] = "human_gate_required"
+            row["next_action"] = "wait for explicit human gate; no automatic closeout"
+        elif review_result.get("blocked") is True:
+            blocked_review_count += 1
+            row["decision"] = "review_blocked"
+            row["next_action"] = "route the independent-reviewer findings to the owning worker for repair"
+        elif review_result.get("review_passed") is True:
+            row["decision"] = "complete_parent"
+            row["actionable_by_adapter"] = True
+            row["next_action"] = "complete only this ready work unit through Hermes complete"
+            complete_candidates.append((task, task_id, packet_id, work_unit_id, review_result))
+        closeout[work_unit_id] = row
+
+    completed_ready_work_unit_task_ids: dict[str, str] = {}
+    if not args.dry_run:
+        for _task, task_id, packet_id, work_unit_id, review_result in complete_candidates:
+            metadata = {
+                "marker": READY_WORK_UNIT_REVIEW_CLOSEOUT_MARKER,
+                "work_unit_id": work_unit_id,
+                "packet_id": packet_id,
+                "ready_work_unit_review_passed": True,
+                "review_task_ref": review_result.get("review_task_ref"),
+                "review_verdict": review_result.get("verdict"),
+                "reconciliation_scope": "reviewed_ready_work_unit",
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "complete_product_claim_allowed": False,
+                "dispatch_allowed_by_this_step": False,
+            }
+            result = (
+                args.completion_result
+                or f"{READY_WORK_UNIT_REVIEW_PASSED_MARKER};work_unit_id={work_unit_id};scope=work_unit_only"
+            )
+            summary = (
+                args.completion_summary
+                or (
+                    f"Ready work unit {work_unit_id} completed after independent review "
+                    f"{review_result.get('review_task_ref') or 'review'} PASS; this grants no product/release/security/customer-ready/human-gate approval."
+                )
+            )
+            complete_task(
+                hermes_bin=args.hermes_bin,
+                board=board,
+                task_id=task_id,
+                result=result,
+                summary=summary,
+                metadata=metadata,
+                required_readback_markers=READY_WORK_UNIT_REVIEW_CLOSEOUT_READBACK_MARKERS,
+                runner=runner,
+            )
+            completed_ready_work_unit_task_ids[work_unit_id] = task_id
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "close-reviewed-ready-work-units",
+        "dry_run": bool(args.dry_run),
+        "board": board,
+        "materialization_plan_id": plan.get("plan_id"),
+        "ready_work_unit_task_ids": {
+            work_unit_id: task_id
+            for _task, _payload, task_id, _packet_id, work_unit_id, _status in verified
+        },
+        "packet_task_ids": {
+            packet_id: task_id
+            for _task, _payload, task_id, packet_id, _work_unit_id, _status in verified
+        },
+        "completed_ready_work_unit_task_ids": completed_ready_work_unit_task_ids,
+        "reviewed_ready_work_unit_closeout": closeout,
+        "runtime_gate": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "reviewed_task_count": len(verified),
+            "review_result_count": len(review_results),
+            "complete_candidate_count": len(complete_candidates),
+            "completed_task_count": len(completed_ready_work_unit_task_ids),
+            "already_satisfied_count": already_satisfied_count,
+            "awaiting_review_count": awaiting_review_count,
+            "blocked_review_count": blocked_review_count,
+            "human_gate_required_count": human_gate_count,
+            "dispatch_allowed_by_this_step": False,
+            "native_dispatch_required_next": False,
+            "complete_product_claim_allowed": False,
+        },
+        "hook": {
+            "plan": plan,
+            "materialization_result": materialization_result,
+            "no_shadow_dispatcher": True,
+            "local_state_authority": False,
+            "closeout_scope": "ready_work_unit_only",
         },
     }
     public_envelope = sanitize_public_refs(envelope)
@@ -3983,6 +4325,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_reconcile_ready.add_argument("--dry-run", action="store_true")
     p_reconcile_ready.add_argument("--out", type=Path)
 
+    p_close_reviewed_ready = sub.add_parser(
+        "close-reviewed-ready-work-units",
+        help="Complete blocked ready work units only after exact independent-reviewer PASS evidence.",
+    )
+    p_close_reviewed_ready.add_argument("--plan", type=Path, required=True)
+    p_close_reviewed_ready.add_argument("--materialization-result", type=Path, required=True)
+    p_close_reviewed_ready.add_argument("--board")
+    p_close_reviewed_ready.add_argument("--hermes-bin", default="hermes")
+    p_close_reviewed_ready.add_argument("--worker-assignee-prefix", default="")
+    p_close_reviewed_ready.add_argument("--completion-result")
+    p_close_reviewed_ready.add_argument("--completion-summary")
+    p_close_reviewed_ready.add_argument("--dry-run", action="store_true")
+    p_close_reviewed_ready.add_argument("--out", type=Path)
+
     p_route = sub.add_parser(
         "collect-route-readiness",
         help="Collect the public-safe Hermes worker route readiness manifest from read-only Hermes state.",
@@ -4034,6 +4390,8 @@ def main() -> int:
             envelope = recover_ready_work_units(args)
         elif args.command == "reconcile-ready-work-units":
             envelope = reconcile_ready_work_units(args)
+        elif args.command == "close-reviewed-ready-work-units":
+            envelope = close_reviewed_ready_work_units(args)
         elif args.command == "collect-route-readiness":
             envelope = collect_route_readiness(args)
         elif args.command == "enforce-done":

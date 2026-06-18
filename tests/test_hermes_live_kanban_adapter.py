@@ -430,6 +430,63 @@ def assert_route_readiness_schema(testcase: unittest.TestCase, result: dict[str,
     testcase.assertEqual(errors, [])
 
 
+def ready_work_unit_task_ids(fake: FakeHermes) -> list[str]:
+    task_ids: list[str] = []
+    for task_id, task in fake.tasks.items():
+        try:
+            body = json.loads(str(task.get("body") or "{}"))
+        except json.JSONDecodeError:
+            continue
+        if body.get("packet_type") == "ready_work_unit_execution_request":
+            task_ids.append(task_id)
+    return task_ids
+
+
+def block_ready_work_unit_after_release(fake: FakeHermes, task_id: str) -> None:
+    task = fake.tasks[task_id]
+    task["status"] = "blocked"
+    task.setdefault("events", []).append({"type": "blocked", "reason": "review-required"})
+
+
+def add_ready_work_unit_review_run(
+    fake: FakeHermes,
+    *,
+    review_task_id: str,
+    parent_task_id: str,
+    verdict: str = "PASS",
+    blocking_findings: bool = False,
+    human_gate_required: bool = False,
+    target_override: str | None = None,
+) -> None:
+    review_result = {
+        "verdict": verdict,
+        "review_comment_task_id": target_override or parent_task_id,
+        "blocking_findings": blocking_findings,
+        "required_fixes": ["fix required"] if blocking_findings else [],
+        "human_gate_required": human_gate_required,
+    }
+    fake.tasks[review_task_id] = {
+        "id": review_task_id,
+        "status": "done",
+        "assignee": "independent-reviewer",
+        "body": "{}",
+        "events": [],
+        "runs": [
+            {
+                "id": 1,
+                "status": "done",
+                "outcome": "completed",
+                "profile": "independent-reviewer",
+                "metadata": {
+                    "independent_review_result": review_result,
+                    "blocking_findings": blocking_findings,
+                    "human_gate_required": human_gate_required,
+                },
+            }
+        ],
+    }
+
+
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
     def test_default_runner_decodes_utf8_terminal_output(self) -> None:
         script = (
@@ -734,6 +791,171 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(fake.tasks[task_id]["status"], "blocked")
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertEqual(unblock_calls, [])
+
+    def test_close_reviewed_ready_work_units_completes_passed_reviewed_unit(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            parent_task_id = ready_work_unit_task_ids(fake)[0]
+            block_ready_work_unit_after_release(fake, parent_task_id)
+            add_ready_work_unit_review_run(
+                fake,
+                review_task_id="t_review_pass",
+                parent_task_id=parent_task_id,
+            )
+
+            dry_run_args = adapter.build_parser().parse_args(
+                [
+                    "close-reviewed-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--dry-run",
+                ]
+            )
+            dry_run = adapter.close_reviewed_ready_work_units(dry_run_args, runner=fake)
+            close_args = adapter.build_parser().parse_args(
+                [
+                    "close-reviewed-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                ]
+            )
+            result = adapter.close_reviewed_ready_work_units(close_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, dry_run)
+        assert_live_adapter_result_schema(self, result)
+        self.assertTrue(dry_run["dry_run"])
+        self.assertEqual(dry_run["runtime_gate"]["complete_candidate_count"], 1)
+        self.assertEqual(dry_run["completed_ready_work_unit_task_ids"], {})
+        self.assertEqual(result["mode"], "close-reviewed-ready-work-units")
+        self.assertEqual(result["completed_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(fake.tasks[parent_task_id]["status"], "done")
+        self.assertFalse(result["runtime_gate"]["dispatch_allowed_by_this_step"])
+        self.assertFalse(result["runtime_gate"]["complete_product_claim_allowed"])
+        complete_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "complete"]
+        dispatch_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "dispatch"]
+        self.assertEqual(len(complete_calls), 1)
+        self.assertEqual(dispatch_calls, [])
+
+    def test_close_reviewed_ready_work_units_ignores_stale_or_mismatched_review(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                fake=fake,
+                tmp_path=tmp_path,
+            )
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            parent_task_id = ready_work_unit_task_ids(fake)[0]
+            block_ready_work_unit_after_release(fake, parent_task_id)
+            add_ready_work_unit_review_run(
+                fake,
+                review_task_id="t_review_stale",
+                parent_task_id=parent_task_id,
+                target_override="t_other_parent",
+            )
+
+            args = adapter.build_parser().parse_args(
+                [
+                    "close-reviewed-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--dry-run",
+                ]
+            )
+            result = adapter.close_reviewed_ready_work_units(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["runtime_gate"]["complete_candidate_count"], 0)
+        self.assertEqual(result["runtime_gate"]["awaiting_review_count"], 1)
+        self.assertEqual(result["reviewed_ready_work_unit_closeout"]["work-unit-001"]["decision"], "awaiting_review")
+        self.assertEqual(fake.tasks[parent_task_id]["status"], "blocked")
+
+    def test_close_reviewed_ready_work_units_keeps_block_or_human_gate_blocked(self) -> None:
+        for review_task_id, verdict, blocking, human_gate, expected_count in [
+            ("t_review_block", "BLOCK", True, False, "blocked_review_count"),
+            ("t_review_human", "PASS", False, True, "human_gate_required_count"),
+        ]:
+            fake = FakeHermes()
+            with tempfile.TemporaryDirectory() as tmp:
+                tmp_path = Path(tmp)
+                _plan, plan_path, readiness_path, materialization_result_path = materialize_template_ready_work_unit(
+                    fake=fake,
+                    tmp_path=tmp_path,
+                )
+                release_args = adapter.build_parser().parse_args(
+                    [
+                        "release-ready-work-units",
+                        "--plan",
+                        str(plan_path),
+                        "--materialization-result",
+                        str(materialization_result_path),
+                        "--route-readiness",
+                        str(readiness_path),
+                    ]
+                )
+                adapter.release_ready_work_units(release_args, runner=fake)
+                parent_task_id = ready_work_unit_task_ids(fake)[0]
+                block_ready_work_unit_after_release(fake, parent_task_id)
+                add_ready_work_unit_review_run(
+                    fake,
+                    review_task_id=review_task_id,
+                    parent_task_id=parent_task_id,
+                    verdict=verdict,
+                    blocking_findings=blocking,
+                    human_gate_required=human_gate,
+                )
+
+                args = adapter.build_parser().parse_args(
+                    [
+                        "close-reviewed-ready-work-units",
+                        "--plan",
+                        str(plan_path),
+                        "--materialization-result",
+                        str(materialization_result_path),
+                        "--dry-run",
+                    ]
+                )
+                result = adapter.close_reviewed_ready_work_units(args, runner=fake)
+
+            assert_live_adapter_result_schema(self, result)
+            self.assertEqual(result["runtime_gate"]["complete_candidate_count"], 0)
+            self.assertEqual(result["runtime_gate"][expected_count], 1)
+            self.assertEqual(result["completed_ready_work_unit_task_ids"], {})
+            self.assertEqual(fake.tasks[parent_task_id]["status"], "blocked")
 
     def test_release_ready_work_units_rejects_pre_dispatch_activity(self) -> None:
         fake = FakeHermes()
