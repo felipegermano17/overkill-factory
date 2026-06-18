@@ -83,6 +83,7 @@ READY_WORK_UNIT_POST_REPAIR_REVIEW_RESULT_MARKER = "ready_work_unit_post_repair_
 READY_WORK_UNIT_POST_REPAIR_AUTHORITY_REQUIRED_MARKER = "ready_work_unit_post_repair_authority_required"
 READY_WORK_UNIT_POST_REPAIR_AUTHORITY_CREATED_MARKER = "ready_work_unit_post_repair_authority_task_created"
 READY_WORK_UNIT_POST_REPAIR_AUTHORITY_RESULT_MARKER = "ready_work_unit_post_repair_authority_result"
+READY_WORK_UNIT_SUPERSEDED_PARENT_UNLINKED_MARKER = "ready_work_unit_superseded_parent_unlinked"
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -617,6 +618,22 @@ def task_readback_comments(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return []
 
 
+def task_readback_parents(payload: dict[str, Any]) -> list[str]:
+    raw_parents = payload.get("parents")
+    if not isinstance(raw_parents, list):
+        task = payload.get("task")
+        raw_parents = task.get("parents") if isinstance(task, dict) else []
+    parents: list[str] = []
+    for parent in raw_parents if isinstance(raw_parents, list) else []:
+        if isinstance(parent, dict):
+            parent_id = str(parent.get("id") or parent.get("task_id") or "").strip()
+        else:
+            parent_id = str(parent or "").strip()
+        if parent_id:
+            parents.append(parent_id)
+    return parents
+
+
 def task_dispatcher_workspace_ref(payload: dict[str, Any]) -> str:
     task = task_readback_task(payload)
     kind = str(task.get("workspace_kind") or task.get("workspace") or "").strip()
@@ -1010,6 +1027,86 @@ def unblock_task(
         raise RuntimeError("Hermes show --json did not return JSON while verifying unblock event") from exc
     if not isinstance(payload, dict) or not task_has_unblocked_event(payload, required_readback_markers):
         raise RuntimeError(f"Hermes task {task_id} is not durably unblocked after unblock command")
+
+
+def promote_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    reason: str,
+    required_readback_markers: list[str] | None = None,
+    runner: Runner = default_runner,
+) -> None:
+    if required_readback_markers:
+        run_checked(
+            hermes_kanban(
+                hermes_bin,
+                board,
+                "comment",
+                "--author",
+                "overkill-factory",
+                task_id,
+                reason,
+            ),
+            runner,
+        )
+    run_checked(hermes_kanban(hermes_bin, board, "promote", task_id, reason), runner)
+    shown = run_checked(hermes_kanban(hermes_bin, board, "show", task_id, "--json"), runner)
+    try:
+        payload = json.loads(shown.stdout or "{}")
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Hermes show --json did not return JSON while verifying promote event") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("Hermes show --json did not return an object while verifying promote event")
+    status = task_readback_status(payload)
+    if status not in {"ready", "running", "done"}:
+        raise RuntimeError(f"Hermes task {task_id} was not promoted into an executable state")
+    if required_readback_markers and not history_contains_all_markers_anywhere(payload, required_readback_markers):
+        raise RuntimeError(f"Hermes task {task_id} promote readback is missing required retry markers")
+
+
+def unlink_task_dependency(
+    *,
+    hermes_bin: str,
+    board: str,
+    parent_task_id: str,
+    child_task_id: str,
+    work_unit_id: str,
+    authority_task_ref: str | None,
+    runner: Runner = default_runner,
+) -> bool:
+    child_payload = show_task(hermes_bin=hermes_bin, board=board, task_id=child_task_id, runner=runner)
+    if parent_task_id not in task_readback_parents(child_payload):
+        return False
+    run_checked(hermes_kanban(hermes_bin, board, "unlink", parent_task_id, child_task_id), runner)
+    run_checked(
+        hermes_kanban(
+            hermes_bin,
+            board,
+            "comment",
+            "--author",
+            READY_WORK_UNIT_RECONCILIATION_AUTHOR,
+            child_task_id,
+            compact_json_argument(
+                {
+                    "marker": READY_WORK_UNIT_SUPERSEDED_PARENT_UNLINKED_MARKER,
+                    "work_unit_id": work_unit_id,
+                    "superseded_parent_ref": parent_task_id,
+                    "authority_task_ref": authority_task_ref,
+                    "reason": "newer post-repair authority selected retry/done path; stale blocked review parent no longer owns execution gating",
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "complete_product_claim_allowed": False,
+                }
+            ),
+        ),
+        runner,
+    )
+    readback = show_task(hermes_bin=hermes_bin, board=board, task_id=child_task_id, runner=runner)
+    if parent_task_id in task_readback_parents(readback):
+        raise RuntimeError(f"Hermes task {child_task_id} still has superseded parent {parent_task_id} after unlink")
+    return True
 
 
 def complete_task(
@@ -2533,6 +2630,47 @@ def post_repair_authority_results_by_work_unit(
     return results
 
 
+def superseded_post_repair_review_parent_ids(
+    *,
+    hermes_bin: str,
+    board: str,
+    parent_payload: dict[str, Any],
+    parent_task_id: str,
+    work_unit_id: str,
+    authority_result: dict[str, Any] | None,
+    runner: Runner = default_runner,
+) -> list[str]:
+    if not authority_result:
+        return []
+    if not (authority_result.get("retry_authorized") is True or authority_result.get("done_authorized") is True):
+        return []
+    authority_task_ref = str(authority_result.get("authority_task_ref") or "").strip()
+    stale_parent_ids: list[str] = []
+    for candidate_parent_id in task_readback_parents(parent_payload):
+        if not candidate_parent_id or candidate_parent_id == authority_task_ref:
+            continue
+        try:
+            candidate_payload = show_task(
+                hermes_bin=hermes_bin,
+                board=board,
+                task_id=candidate_parent_id,
+                runner=runner,
+            )
+            candidate_body = parse_json_object(task_readback_body(candidate_payload))
+        except RuntimeError:
+            continue
+        if candidate_body.get("packet_type") != "ready_work_unit_post_repair_review_request":
+            continue
+        if str(candidate_body.get("parent_work_unit_id") or "").strip() != work_unit_id:
+            continue
+        if str(candidate_body.get("parent_task_ref") or "").strip() != parent_task_id:
+            continue
+        if task_readback_status(candidate_payload) != "blocked":
+            continue
+        stale_parent_ids.append(candidate_parent_id)
+    return stale_parent_ids
+
+
 def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
     plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
     board = str(args.board or plan.get("board") or "").strip()
@@ -2549,7 +2687,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
     candidates = ready_work_unit_readbacks_by_status(
         hermes_bin=args.hermes_bin,
         board=board,
-        statuses=["blocked", "ready", "running", "done"],
+        statuses=["todo", "blocked", "ready", "running", "done"],
         runner=runner,
     )
 
@@ -2604,10 +2742,11 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             dependency_blockers[work_unit_id] = blockers
 
     reconciliation: dict[str, dict[str, Any]] = {}
-    retry_candidates: list[tuple[dict[str, Any], str, str, str]] = []
+    retry_candidates: list[tuple[dict[str, Any], dict[str, Any], str, str, str, str]] = []
     complete_candidates: list[tuple[dict[str, Any], str, str, str]] = []
     post_repair_review_candidates: list[tuple[dict[str, Any], dict[str, Any], str, str, str]] = []
     post_repair_authority_candidates: list[tuple[dict[str, Any], dict[str, Any], str, str, str, dict[str, Any]]] = []
+    superseded_parent_candidates: dict[str, list[str]] = {}
     post_repair_review_required_work_unit_ids: set[str] = set()
     existing_post_repair_review_task_ids: dict[str, str] = {}
     post_repair_authority_required_work_unit_ids: set[str] = set()
@@ -2654,6 +2793,20 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         row["post_repair_authority_required"] = row["decision"] == "awaiting_retry_or_done_authority"
         row["post_repair_authority_task_ref"] = existing_authority_task_id or None
         row["post_repair_authority_task_exists"] = bool(existing_authority_task_id)
+        superseded_parent_ids = []
+        if row["decision"] in {"retry_parent", "complete_parent"}:
+            superseded_parent_ids = superseded_post_repair_review_parent_ids(
+                hermes_bin=args.hermes_bin,
+                board=board,
+                parent_payload=payload,
+                parent_task_id=task_id,
+                work_unit_id=work_unit_id,
+                authority_result=authority_result,
+                runner=runner,
+            )
+            if superseded_parent_ids:
+                superseded_parent_candidates[work_unit_id] = superseded_parent_ids
+        row["superseded_post_repair_review_parent_refs"] = superseded_parent_ids
         reconciliation[work_unit_id] = row
         if status == "blocked" and row["release_record_seen"]:
             post_release_blocked_count += 1
@@ -2667,7 +2820,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         }:
             incomplete_count += 1
         if row["decision"] == "retry_parent":
-            retry_candidates.append((task, task_id, packet_id, work_unit_id))
+            retry_candidates.append((task, payload, task_id, packet_id, work_unit_id, status))
         elif row["decision"] == "complete_parent":
             complete_candidates.append((task, task_id, packet_id, work_unit_id))
         elif row["decision"] == "awaiting_repair_review" and not existing_review_task_id:
@@ -2680,7 +2833,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
     if not args.dry_run and retry_candidates:
         required_workers = [
             ready_work_unit_release_assignee(task, args.worker_assignee_prefix)
-            for task, _task_id, _packet_id, _work_unit_id in retry_candidates
+            for task, _payload, _task_id, _packet_id, _work_unit_id, _status in retry_candidates
         ]
         readiness_blockers = route_readiness_blockers(args.route_readiness, required_workers)
         if readiness_blockers:
@@ -2703,11 +2856,14 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             )
 
     retry_ready_work_unit_task_ids: dict[str, str] = {}
+    unblocked_ready_work_unit_task_ids: dict[str, str] = {}
     completed_ready_work_unit_task_ids: dict[str, str] = {}
     created_post_repair_review_task_ids: dict[str, str] = {}
     post_repair_review_task_ids: dict[str, str] = dict(existing_post_repair_review_task_ids)
     created_post_repair_authority_task_ids: dict[str, str] = {}
     post_repair_authority_task_ids: dict[str, str] = dict(existing_post_repair_authority_task_ids)
+    unlinked_superseded_parent_task_ids: dict[str, list[str]] = {}
+    promoted_ready_work_unit_task_ids: dict[str, str] = {}
     retry_reason = str(
         args.reason
         or "ready_work_unit_retry_authorized; ready_work_unit_repair_review_passed; reconciliation_scope=post_release_ready_work_unit; dispatch_separate=true"
@@ -2748,17 +2904,72 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
                 )
                 post_repair_authority_task_ids[work_unit_id] = authority_task_id
                 created_post_repair_authority_task_ids[work_unit_id] = authority_task_id
-        for _task, task_id, _packet_id, work_unit_id in retry_candidates:
-            unblock_task(
-                hermes_bin=args.hermes_bin,
-                board=board,
-                task_id=task_id,
-                reason=retry_reason,
-                required_readback_markers=READY_WORK_UNIT_RECONCILIATION_RETRY_READBACK_MARKERS,
-                runner=runner,
-            )
-            retry_ready_work_unit_task_ids[work_unit_id] = task_id
+        for _task, _payload, task_id, _packet_id, work_unit_id, _status in retry_candidates:
+            unlinked_parent_ids: list[str] = []
+            authority_result = authority_results.get(work_unit_id)
+            authority_task_ref = None
+            if isinstance(authority_result, dict):
+                authority_task_ref = str(authority_result.get("authority_task_ref") or "").strip() or None
+            for superseded_parent_id in superseded_parent_candidates.get(work_unit_id, []):
+                if unlink_task_dependency(
+                    hermes_bin=args.hermes_bin,
+                    board=board,
+                    parent_task_id=superseded_parent_id,
+                    child_task_id=task_id,
+                    work_unit_id=work_unit_id,
+                    authority_task_ref=authority_task_ref,
+                    runner=runner,
+                ):
+                    unlinked_parent_ids.append(superseded_parent_id)
+            if unlinked_parent_ids:
+                unlinked_superseded_parent_task_ids[work_unit_id] = unlinked_parent_ids
+            current_payload = show_task(hermes_bin=args.hermes_bin, board=board, task_id=task_id, runner=runner)
+            current_status = task_readback_status(current_payload)
+            if current_status == "blocked":
+                unblock_task(
+                    hermes_bin=args.hermes_bin,
+                    board=board,
+                    task_id=task_id,
+                    reason=retry_reason,
+                    required_readback_markers=READY_WORK_UNIT_RECONCILIATION_RETRY_READBACK_MARKERS,
+                    runner=runner,
+                )
+                unblocked_ready_work_unit_task_ids[work_unit_id] = task_id
+                retry_ready_work_unit_task_ids[work_unit_id] = task_id
+            elif current_status == "todo":
+                promote_task(
+                    hermes_bin=args.hermes_bin,
+                    board=board,
+                    task_id=task_id,
+                    reason=retry_reason,
+                    required_readback_markers=READY_WORK_UNIT_RECONCILIATION_RETRY_READBACK_MARKERS,
+                    runner=runner,
+                )
+                promoted_ready_work_unit_task_ids[work_unit_id] = task_id
+                retry_ready_work_unit_task_ids[work_unit_id] = task_id
+            elif current_status in {"ready", "running", "done"}:
+                retry_ready_work_unit_task_ids[work_unit_id] = task_id
+            else:
+                raise RuntimeError(f"ready work-unit {work_unit_id} is not in a retryable state after supersession cleanup")
         for _task, task_id, packet_id, work_unit_id in complete_candidates:
+            unlinked_parent_ids = []
+            authority_result = authority_results.get(work_unit_id)
+            authority_task_ref = None
+            if isinstance(authority_result, dict):
+                authority_task_ref = str(authority_result.get("authority_task_ref") or "").strip() or None
+            for superseded_parent_id in superseded_parent_candidates.get(work_unit_id, []):
+                if unlink_task_dependency(
+                    hermes_bin=args.hermes_bin,
+                    board=board,
+                    parent_task_id=superseded_parent_id,
+                    child_task_id=task_id,
+                    work_unit_id=work_unit_id,
+                    authority_task_ref=authority_task_ref,
+                    runner=runner,
+                ):
+                    unlinked_parent_ids.append(superseded_parent_id)
+            if unlinked_parent_ids:
+                unlinked_superseded_parent_task_ids[work_unit_id] = unlinked_parent_ids
             metadata = {
                 "marker": "ready_work_unit_post_release_reconciliation",
                 "work_unit_id": work_unit_id,
@@ -2798,6 +3009,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             for _task, _payload, task_id, packet_id, _work_unit_id, _status in verified
         },
         "retry_ready_work_unit_task_ids": retry_ready_work_unit_task_ids,
+        "unblocked_ready_work_unit_task_ids": unblocked_ready_work_unit_task_ids,
         "completed_ready_work_unit_task_ids": completed_ready_work_unit_task_ids,
         "post_repair_review_task_ids": post_repair_review_task_ids,
         "existing_post_repair_review_task_ids": existing_post_repair_review_task_ids,
@@ -2808,9 +3020,12 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         "post_repair_authority_task_ids": post_repair_authority_task_ids,
         "existing_post_repair_authority_task_ids": existing_post_repair_authority_task_ids,
         "created_post_repair_authority_task_ids": created_post_repair_authority_task_ids,
+        "superseded_post_repair_review_parent_task_ids": superseded_parent_candidates,
+        "unlinked_superseded_post_repair_review_parent_task_ids": unlinked_superseded_parent_task_ids,
         "post_repair_authority_required_work_unit_ids": sorted(
             post_repair_authority_required_work_unit_ids
         ),
+        "promoted_ready_work_unit_task_ids": promoted_ready_work_unit_task_ids,
         "post_release_reconciliation": reconciliation,
         "release_wave": {
             "held_work_unit_ids": sorted(dependency_blockers.keys()),
@@ -2836,7 +3051,14 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             "post_repair_authority_existing_task_count": len(existing_post_repair_authority_task_ids),
             "post_repair_authority_result_count": post_repair_authority_result_count,
             "post_repair_authority_task_created_count": len(created_post_repair_authority_task_ids),
-            "retry_unblocked_task_count": len(retry_ready_work_unit_task_ids),
+            "superseded_post_repair_review_parent_count": sum(
+                len(parent_ids) for parent_ids in superseded_parent_candidates.values()
+            ),
+            "superseded_post_repair_review_parent_unlinked_count": sum(
+                len(parent_ids) for parent_ids in unlinked_superseded_parent_task_ids.values()
+            ),
+            "retry_unblocked_task_count": len(unblocked_ready_work_unit_task_ids),
+            "retry_promoted_task_count": len(promoted_ready_work_unit_task_ids),
             "completed_task_count": len(completed_ready_work_unit_task_ids),
             "human_gate_required_count": human_gate_count,
             "incomplete_repair_or_review_count": incomplete_count,
