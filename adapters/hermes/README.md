@@ -286,6 +286,25 @@ history also carries `ready_work_unit_done_authorized` and
 `ready_work_unit_done_definition_satisfied`. It still does not dispatch workers
 or claim product completion.
 
+If repair evidence exists but post-repair review markers are missing, the same
+route can create the missing independent-reviewer task explicitly:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py reconcile-ready-work-units \
+  --plan path/to/ready-work-unit-hermes-plan.json \
+  --materialization-result path/to/live-ready-work-unit-materialization-result.json \
+  --route-readiness path/to/route-readiness.json \
+  --create-post-repair-review-tasks \
+  --out path/to/reconciled-ready-work-units.json
+```
+
+That task is scoped only to the repair result. It must emit
+`ready_work_unit_repair_review_passed` plus either
+`ready_work_unit_retry_authorized`, or `ready_work_unit_done_authorized` with
+`ready_work_unit_done_definition_satisfied`, or `human_gate_required`, or a
+structured BLOCK with owner and next repair action. Creating the review task
+does not unblock or complete the parent.
+
 Use `--workspace` when the adapter runs outside the Hermes host. The workspace
 must be meaningful to the Hermes dispatcher, not merely to the machine that runs
 the adapter. Local operators can omit it and use the repo directory default;
