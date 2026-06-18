@@ -3964,7 +3964,7 @@ def product_creation_closeout_next_action(
         return "learnback_required"
     if product_promotion_gate_ref:
         return "product_closeout_ready"
-    return "blocked_with_owner"
+    return "product_promotion_gate_required"
 
 
 def product_creation_closeout_next_assignee(next_action: str, override: str | None) -> str:
@@ -4079,6 +4079,36 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                 "allowed_results": ["PASS", "BLOCK"],
                 "pass_requires": ["release readiness packet", "promotion blockers remain explicit"],
                 "block_requires": ["owner", "reason", "next_repair_action"],
+                "production_promotion_allowed": False,
+            },
+        }
+    if next_action == "product_promotion_gate_required":
+        return {
+            **common,
+            "done_definition": [
+                "obtain or record an explicit product promotion human gate",
+                "verify release readiness and learnback refs are present before asking for promotion",
+                "block with owner, reason, and next action if the human gate is absent or denied",
+                "do not claim complete product, production release, deploy, or customer-ready status",
+            ],
+            "evidence_expected": [
+                "product creation closeout summary",
+                "release readiness reviewed ref",
+                "learnback reviewed ref",
+                "explicit product promotion human gate decision",
+            ],
+            "output_contract": {
+                "receipt_field": "product_promotion_gate_result",
+                "allowed_results": ["PASS", "BLOCK"],
+                "pass_requires": [
+                    "product_promotion_gate_ref",
+                    "public-safe gate decision",
+                    "decision authority",
+                    "promotion scope",
+                    "remaining forbidden actions acknowledged",
+                ],
+                "block_requires": ["owner", "reason", "next_repair_action"],
+                "complete_product_claim_allowed": False,
                 "production_promotion_allowed": False,
             },
         }
