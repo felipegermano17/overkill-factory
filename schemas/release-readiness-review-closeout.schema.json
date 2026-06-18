@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://overkill-factory.dev/schemas/release-readiness-review-closeout.schema.json",
+  "title": "Release Readiness Review Closeout",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "$schema",
+    "record_type",
+    "parent_task_ref",
+    "review_task_ref",
+    "decision",
+    "next_action",
+    "parent_edge_present",
+    "parent_edge_repaired",
+    "production_promotion_allowed",
+    "complete_product_claim_allowed",
+    "dispatch_allowed_by_this_step",
+    "runtime_authority",
+    "local_state_authority",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/release-readiness-review-closeout.schema.json"
+    },
+    "record_type": {
+      "const": "release_readiness_review_closeout"
+    },
+    "parent_task_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "review_task_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "decision": {
+      "enum": [
+        "already_satisfied",
+        "awaiting_review",
+        "missing_durable_parent_edge",
+        "release_readiness_review_passed",
+        "repair_required",
+        "human_gate_required",
+        "forbidden_approval_claim"
+      ]
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 3
+    },
+    "parent_status": {
+      "type": "string"
+    },
+    "review_status": {
+      "type": "string"
+    },
+    "parent_edge_present": {
+      "type": "boolean"
+    },
+    "parent_edge_repaired": {
+      "type": "boolean"
+    },
+    "review_result": {
+      "type": ["object", "null"]
+    },
+    "production_promotion_allowed": {
+      "const": false
+    },
+    "complete_product_claim_allowed": {
+      "const": false
+    },
+    "dispatch_allowed_by_this_step": {
+      "const": false
+    },
+    "runtime_authority": {
+      "const": "hermes_kanban"
+    },
+    "local_state_authority": {
+      "const": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["public_safe_refs_only", "raw_private_evidence_embedded"],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false }
+      }
+    }
+  }
+}

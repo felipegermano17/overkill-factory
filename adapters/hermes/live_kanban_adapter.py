@@ -96,6 +96,14 @@ PRODUCT_CREATION_CLOSEOUT_READBACK_MARKERS = [
     PRODUCT_CREATION_CLOSEOUT_MARKER,
     PRODUCT_CREATION_CLOSEOUT_NEXT_ROUTE_MARKER,
 ]
+RELEASE_READINESS_REVIEW_CLOSEOUT_MARKER = "release_readiness_review_closeout"
+RELEASE_READINESS_REVIEW_PASSED_MARKER = "release_readiness_review_passed"
+RELEASE_READINESS_REVIEW_BLOCKED_MARKER = "release_readiness_review_blocked"
+RELEASE_READINESS_REVIEW_PARENT_EDGE_REPAIRED_MARKER = "release_readiness_review_parent_edge_repaired"
+RELEASE_READINESS_REVIEW_CLOSEOUT_READBACK_MARKERS = [
+    RELEASE_READINESS_REVIEW_CLOSEOUT_MARKER,
+    RELEASE_READINESS_REVIEW_PASSED_MARKER,
+]
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -644,6 +652,22 @@ def task_readback_parents(payload: dict[str, Any]) -> list[str]:
         if parent_id:
             parents.append(parent_id)
     return parents
+
+
+def task_readback_children(payload: dict[str, Any]) -> list[str]:
+    raw_children = payload.get("children")
+    if not isinstance(raw_children, list):
+        task = payload.get("task")
+        raw_children = task.get("children") if isinstance(task, dict) else []
+    children: list[str] = []
+    for child in raw_children if isinstance(raw_children, list) else []:
+        if isinstance(child, dict):
+            child_id = str(child.get("id") or child.get("task_id") or "").strip()
+        else:
+            child_id = str(child or "").strip()
+        if child_id:
+            children.append(child_id)
+    return children
 
 
 def task_dispatcher_workspace_ref(payload: dict[str, Any]) -> str:
@@ -3565,6 +3589,322 @@ def close_reviewed_ready_work_units(args: argparse.Namespace, runner: Runner = d
     return public_envelope
 
 
+def release_readiness_review_has_parent_edge(
+    *,
+    parent_payload: dict[str, Any],
+    review_payload: dict[str, Any],
+    parent_task_id: str,
+    review_task_id: str,
+) -> bool:
+    return (
+        review_task_id in task_readback_parents(parent_payload)
+        or review_task_id in task_readback_children(parent_payload)
+        or parent_task_id in task_readback_parents(review_payload)
+        or parent_task_id in task_readback_children(review_payload)
+    )
+
+
+def release_readiness_review_result_from_run(
+    *,
+    run: dict[str, Any],
+    parent_task_id: str,
+    review_task_id: str,
+    expected_assignee: str = "independent-reviewer",
+) -> dict[str, Any] | None:
+    metadata = run.get("metadata")
+    if not isinstance(metadata, dict):
+        return None
+    run_profile = str(run.get("profile") or run.get("assignee") or "").strip()
+    if run_profile and run_profile not in {"independent-reviewer", expected_assignee}:
+        return None
+    if not review_metadata_targets_task(metadata, task_id=parent_task_id):
+        return None
+    review_result = metadata.get("independent_review_result")
+    review_result = review_result if isinstance(review_result, dict) else {}
+    verdict = str(review_result.get("verdict") or metadata.get("verdict") or "").strip().upper()
+    status = str(run.get("status") or "").strip().lower()
+    outcome = str(run.get("outcome") or "").strip().lower()
+    required_fixes = review_result.get("required_fixes")
+    required_fixes = required_fixes if isinstance(required_fixes, list) else []
+    blocking_findings = metadata.get("blocking_findings")
+    if blocking_findings is None:
+        blocking_findings = review_result.get("blocking_findings")
+    production_promotion_allowed = (
+        metadata.get("production_promotion_allowed") is True
+        or metadata.get("production_promotion_approved") is True
+        or review_result.get("production_promotion_allowed") is True
+        or review_result.get("production_promotion_approved") is True
+    )
+    complete_product_claim_allowed = (
+        metadata.get("complete_product_claim_allowed") is True
+        or review_result.get("complete_product_claim_allowed") is True
+    )
+    human_gate_required = (
+        metadata.get("human_gate_required") is True
+        or review_result.get("human_gate_required") is True
+        or metadata.get("production_promotion_approved") == "human_gate_required"
+        or review_result.get("production_promotion_approved") == "human_gate_required"
+    )
+    pass_result = (
+        status in {"done", "complete", "completed"}
+        and outcome in {"", "completed", "done", "pass", "passed", "success", "succeeded"}
+        and verdict.startswith("PASS")
+        and blocking_findings is not True
+        and not required_fixes
+    )
+    blocked = (
+        blocking_findings is True
+        or status == "blocked"
+        or outcome == "blocked"
+        or verdict.startswith("BLOCK")
+        or bool(required_fixes)
+    )
+    if not pass_result and not blocked and not human_gate_required and not production_promotion_allowed and not complete_product_claim_allowed:
+        return None
+    return {
+        "marker": "release_readiness_review_result",
+        "review_task_ref": review_task_id,
+        "parent_task_ref": parent_task_id,
+        "source": "hermes_run_metadata",
+        "status": (
+            "forbidden_approval_claim"
+            if production_promotion_allowed or complete_product_claim_allowed
+            else "human_gate_required"
+            if human_gate_required
+            else "passed"
+            if pass_result
+            else "blocked"
+        ),
+        "verdict": verdict or None,
+        "review_passed": pass_result,
+        "blocked": blocked and not pass_result,
+        "human_gate_required": human_gate_required,
+        "required_fix_count": len(required_fixes),
+        "production_promotion_allowed": False,
+        "complete_product_claim_allowed": False,
+        "forbidden_approval_claim": production_promotion_allowed or complete_product_claim_allowed,
+    }
+
+
+def repair_release_readiness_review_parent_edge(
+    *,
+    hermes_bin: str,
+    board: str,
+    parent_task_id: str,
+    review_task_id: str,
+    runner: Runner = default_runner,
+) -> bool:
+    run_checked(hermes_kanban(hermes_bin, board, "link", review_task_id, parent_task_id), runner)
+    run_checked(
+        hermes_kanban(
+            hermes_bin,
+            board,
+            "comment",
+            "--author",
+            READY_WORK_UNIT_RECONCILIATION_AUTHOR,
+            parent_task_id,
+            compact_json_argument(
+                {
+                    "marker": RELEASE_READINESS_REVIEW_PARENT_EDGE_REPAIRED_MARKER,
+                    "review_task_ref": review_task_id,
+                    "parent_task_ref": parent_task_id,
+                    "reason": "release-readiness review relationship was explicit in review metadata but missing as a durable Hermes edge",
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "production_promotion_allowed": False,
+                    "complete_product_claim_allowed": False,
+                }
+            ),
+        ),
+        runner,
+    )
+    return True
+
+
+def close_release_readiness_review(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    board = str(args.board or "").strip()
+    parent_task_id = str(args.parent_task or "").strip()
+    review_task_id = str(args.review_task or "").strip()
+    if not board:
+        raise RuntimeError("release readiness review closeout requires a board")
+    if not parent_task_id:
+        raise RuntimeError("release readiness review closeout requires --parent-task")
+    if not review_task_id:
+        raise RuntimeError("release readiness review closeout requires --review-task")
+
+    parent_payload = show_task(hermes_bin=args.hermes_bin, board=board, task_id=parent_task_id, runner=runner)
+    review_payload = show_task(hermes_bin=args.hermes_bin, board=board, task_id=review_task_id, runner=runner)
+    parent_body = parse_json_object(task_readback_body(parent_payload))
+    if parent_body.get("next_action") != "release_readiness_required":
+        raise RuntimeError("parent task is not a release_readiness_required next-route task")
+
+    parent_edge_present = release_readiness_review_has_parent_edge(
+        parent_payload=parent_payload,
+        review_payload=review_payload,
+        parent_task_id=parent_task_id,
+        review_task_id=review_task_id,
+    )
+    review_runs = task_run_records(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        task_id=review_task_id,
+        runner=runner,
+    )
+    expected_assignee = str(args.worker_assignee_prefix or "") + "independent-reviewer"
+    review_result: dict[str, Any] | None = None
+    latest_sort_key = (0, 0)
+    for run in review_runs:
+        candidate = release_readiness_review_result_from_run(
+            run=run,
+            parent_task_id=parent_task_id,
+            review_task_id=review_task_id,
+            expected_assignee=expected_assignee,
+        )
+        if not candidate:
+            continue
+        run_id = int(run.get("id") or run.get("run_id") or 0)
+        ended_at = int(run.get("ended_at") or run.get("finished_at") or run.get("started_at") or 0)
+        sort_key = (ended_at, run_id)
+        if sort_key >= latest_sort_key:
+            latest_sort_key = sort_key
+            review_result = candidate
+
+    parent_edge_repaired = False
+    if not parent_edge_present and review_result and args.repair_missing_parent_edge and not args.dry_run:
+        repair_release_readiness_review_parent_edge(
+            hermes_bin=args.hermes_bin,
+            board=board,
+            parent_task_id=parent_task_id,
+            review_task_id=review_task_id,
+            runner=runner,
+        )
+        parent_payload = show_task(hermes_bin=args.hermes_bin, board=board, task_id=parent_task_id, runner=runner)
+        review_payload = show_task(hermes_bin=args.hermes_bin, board=board, task_id=review_task_id, runner=runner)
+        parent_edge_present = release_readiness_review_has_parent_edge(
+            parent_payload=parent_payload,
+            review_payload=review_payload,
+            parent_task_id=parent_task_id,
+            review_task_id=review_task_id,
+        )
+        parent_edge_repaired = parent_edge_present
+
+    parent_status = task_readback_status(parent_payload)
+    decision = "awaiting_review"
+    next_action = "wait for independent-reviewer PASS/BLOCK for this exact release-readiness packet"
+    actionable = False
+    blocked_review_count = 0
+    human_gate_count = 0
+    if parent_status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+        decision = "already_satisfied"
+        next_action = "no closeout needed"
+    elif not parent_edge_present:
+        decision = "missing_durable_parent_edge"
+        next_action = "repair durable Hermes parent/dependency edge before consuming review result"
+    elif not review_result:
+        decision = "awaiting_review"
+    elif review_result.get("forbidden_approval_claim") is True:
+        decision = "forbidden_approval_claim"
+        next_action = "reject review result that claims product completion or production promotion"
+        blocked_review_count = 1
+    elif review_result.get("human_gate_required") is True:
+        decision = "human_gate_required"
+        next_action = "wait for explicit human promotion gate; no automatic release closeout"
+        human_gate_count = 1
+    elif review_result.get("blocked") is True:
+        decision = "repair_required"
+        next_action = "route release-readiness packet back to release-ops-worker repair/retry"
+        blocked_review_count = 1
+    elif review_result.get("review_passed") is True:
+        decision = "release_readiness_review_passed"
+        next_action = "complete release-readiness packet only; production promotion remains separately blocked"
+        actionable = parent_status == "blocked"
+
+    completed_release_readiness_task_ids: dict[str, str] = {}
+    if actionable and not args.dry_run:
+        metadata = {
+            "marker": RELEASE_READINESS_REVIEW_CLOSEOUT_MARKER,
+            RELEASE_READINESS_REVIEW_PASSED_MARKER: True,
+            "review_task_ref": review_task_id,
+            "parent_task_ref": parent_task_id,
+            "review_result": review_result,
+            "release_readiness_scope": "packet_only",
+            "production_promotion_allowed": False,
+            "complete_product_claim_allowed": False,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "dispatch_allowed_by_this_step": False,
+        }
+        complete_task(
+            hermes_bin=args.hermes_bin,
+            board=board,
+            task_id=parent_task_id,
+            result=f"{RELEASE_READINESS_REVIEW_PASSED_MARKER};scope=release_readiness_packet_only",
+            summary=(
+                "Release readiness packet accepted after independent-reviewer PASS; "
+                "production/customer/mainnet promotion remains blocked and unapproved."
+            ),
+            metadata=metadata,
+            required_readback_markers=RELEASE_READINESS_REVIEW_CLOSEOUT_READBACK_MARKERS,
+            runner=runner,
+        )
+        completed_release_readiness_task_ids["release_readiness"] = parent_task_id
+
+    closeout = {
+        "$schema": "https://overkill-factory.dev/schemas/release-readiness-review-closeout.schema.json",
+        "record_type": "release_readiness_review_closeout",
+        "parent_task_ref": parent_task_id,
+        "review_task_ref": review_task_id,
+        "decision": decision,
+        "next_action": next_action,
+        "parent_status": parent_status,
+        "review_status": task_readback_status(review_payload),
+        "parent_edge_present": parent_edge_present,
+        "parent_edge_repaired": parent_edge_repaired,
+        "review_result": review_result,
+        "production_promotion_allowed": False,
+        "complete_product_claim_allowed": False,
+        "dispatch_allowed_by_this_step": False,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+        },
+    }
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "close-release-readiness-review",
+        "dry_run": bool(args.dry_run),
+        "board": board,
+        "release_readiness_review_closeout": closeout,
+        "completed_release_readiness_task_ids": completed_release_readiness_task_ids,
+        "runtime_gate": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "review_result_count": 1 if review_result else 0,
+            "complete_candidate_count": 1 if actionable else 0,
+            "completed_task_count": len(completed_release_readiness_task_ids),
+            "blocked_review_count": blocked_review_count,
+            "human_gate_required_count": human_gate_count,
+            "parent_edge_present": parent_edge_present,
+            "parent_edge_repaired": parent_edge_repaired,
+            "dispatch_allowed_by_this_step": False,
+            "native_dispatch_required_next": False,
+            "production_promotion_allowed": False,
+            "complete_product_claim_allowed": False,
+        },
+        "hook": {
+            "no_shadow_dispatcher": True,
+            "local_state_authority": False,
+            "closeout_scope": "release_readiness_review_only",
+        },
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
+
+
 def active_product_creation_work_units(product_creation_plan: dict[str, Any]) -> dict[str, dict[str, Any]]:
     active: dict[str, dict[str, Any]] = {}
     for unit in product_creation_plan.get("work_units", []):
@@ -4910,6 +5250,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_close_product_run.add_argument("--dry-run", action="store_true")
     p_close_product_run.add_argument("--out", type=Path)
 
+    p_close_release_readiness_review = sub.add_parser(
+        "close-release-readiness-review",
+        help="Consume an independent-reviewer release-readiness PASS/BLOCK without approving production release.",
+    )
+    p_close_release_readiness_review.add_argument("--board", required=True)
+    p_close_release_readiness_review.add_argument("--parent-task", required=True)
+    p_close_release_readiness_review.add_argument("--review-task", required=True)
+    p_close_release_readiness_review.add_argument("--hermes-bin", default="hermes")
+    p_close_release_readiness_review.add_argument("--worker-assignee-prefix", default="")
+    p_close_release_readiness_review.add_argument("--repair-missing-parent-edge", action="store_true")
+    p_close_release_readiness_review.add_argument("--dry-run", action="store_true")
+    p_close_release_readiness_review.add_argument("--out", type=Path)
+
     p_route = sub.add_parser(
         "collect-route-readiness",
         help="Collect the public-safe Hermes worker route readiness manifest from read-only Hermes state.",
@@ -4965,6 +5318,8 @@ def main() -> int:
             envelope = close_reviewed_ready_work_units(args)
         elif args.command == "close-product-creation-run":
             envelope = close_product_creation_run(args)
+        elif args.command == "close-release-readiness-review":
+            envelope = close_release_readiness_review(args)
         elif args.command == "collect-route-readiness":
             envelope = collect_route_readiness(args)
         elif args.command == "enforce-done":
