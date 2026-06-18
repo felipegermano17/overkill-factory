@@ -4116,6 +4116,7 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                     "appsec_gate",
                     "independent_review",
                     "delivery_handoff",
+                    "post_handoff_closeout_reconciliation",
                 ],
                 "required_edges": [
                     {"from": "execution_packet", "to": "implementation"},
@@ -4130,6 +4131,7 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                     {"from": "public_safety_gate", "to": "independent_review"},
                     {"from": "appsec_gate", "to": "independent_review"},
                     {"from": "independent_review", "to": "delivery_handoff"},
+                    {"from": "delivery_handoff", "to": "post_handoff_closeout_reconciliation"},
                 ],
                 "node_authority_rules": {
                     "implementation": {
@@ -4168,6 +4170,7 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                 "create the material execution graph with verified blocked/no-spawn readback before any worker dispatch",
                 "create or repair executable product work units instead of treating planning readiness as product completion",
                 "require product delivery proof before learnback or product promotion can close the product",
+                "after material delivery handoff PASS, emit an explicit closeout next route",
                 "do not claim complete product, production release, deploy, or customer-ready status",
             ],
             "evidence_expected": [
@@ -4186,6 +4189,7 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                     "verification evidence refs",
                     "blocked_dependency_graph_ref",
                     "no_spawn_readback_evidence",
+                    "post_material_handoff_closeout_route_ref",
                     "remaining release/promotion blockers acknowledged",
                 ],
                 "block_requires": ["owner", "reason", "next_repair_action"],
