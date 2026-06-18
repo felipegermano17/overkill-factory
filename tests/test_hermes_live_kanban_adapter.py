@@ -2396,6 +2396,42 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             any("ready_work_unit_post_repair_review_task_created" in str(comment.get("body")) for comment in parent_comments)
         )
 
+    def test_post_repair_tasks_include_explicit_phase_risk_and_surfaces_contract(self) -> None:
+        plan = two_step_ready_work_unit_plan()
+        plan_task = plan["tasks"][0]
+
+        review_body = adapter.ready_work_unit_post_repair_review_body(
+            plan_task=plan_task,
+            parent_task_id="t_parent",
+            packet_id="ready-work-unit-packet-work-unit-001",
+            work_unit_id="work-unit-001",
+        )
+        authority_body = adapter.ready_work_unit_post_repair_authority_body(
+            parent_task_id="t_parent",
+            packet_id="ready-work-unit-packet-work-unit-001",
+            work_unit_id="work-unit-001",
+            review_result={
+                "review_task_ref": "t_review",
+                "repair_task_ref": "t_repair",
+                "marker": "ready_work_unit_repair_review_passed",
+                "status": "PASS",
+            },
+            plan_task=plan_task,
+        )
+
+        for body in (review_body, authority_body):
+            self.assertEqual(body["phase"], "F12")
+            self.assertEqual(body["risk_effective"], "R2")
+            self.assertEqual(
+                body["surfaces"],
+                ["code", "release path", "rollback", "monitoring", "support", "customer readiness"],
+            )
+            self.assertEqual(body["route_repair_contract"]["phase"], "F12")
+            self.assertEqual(body["route_repair_contract"]["risk_effective"], "R2")
+            self.assertIn("phase", body["route_repair_contract"]["required_card_fields"])
+            self.assertIn("risk_effective", body["route_repair_contract"]["required_card_fields"])
+            self.assertIn("surfaces", body["route_repair_contract"]["required_card_fields"])
+
     def test_reconcile_ready_work_units_reuses_existing_post_repair_review_task(self) -> None:
         fake = FakeHermes()
         plan = two_step_ready_work_unit_plan()

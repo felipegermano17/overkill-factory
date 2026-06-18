@@ -2111,6 +2111,60 @@ def ready_work_unit_post_repair_review_idempotency_key(*, plan_task: dict[str, A
     return f"{base}:post-repair-review:{digest}"
 
 
+def ready_work_unit_route_repair_scope_contract(plan_task: dict[str, Any]) -> dict[str, Any]:
+    body_contract = plan_task.get("body_contract") if isinstance(plan_task.get("body_contract"), dict) else {}
+    context_packet = body_contract.get("work_unit_context_packet")
+    context_packet = context_packet if isinstance(context_packet, dict) else {}
+    embedded_payloads = context_packet.get("embedded_payloads")
+    embedded_payloads = embedded_payloads if isinstance(embedded_payloads, dict) else {}
+    current_work_unit = embedded_payloads.get("current_work_unit")
+    current_work_unit = current_work_unit if isinstance(current_work_unit, dict) else {}
+
+    def first_text(field: str) -> str:
+        for source in (body_contract, current_work_unit, plan_task):
+            value = source.get(field) if isinstance(source, dict) else None
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return ""
+
+    def first_list(field: str) -> list[str]:
+        for source in (body_contract, current_work_unit, plan_task):
+            value = source.get(field) if isinstance(source, dict) else None
+            if isinstance(value, list):
+                items = [str(item).strip() for item in value if str(item or "").strip()]
+                if items:
+                    return items
+        return []
+
+    phase = first_text("phase")
+    risk_effective = first_text("risk_effective")
+    surfaces = first_list("surfaces")
+    missing = [
+        field
+        for field, present in (
+            ("phase", bool(phase)),
+            ("risk_effective", bool(risk_effective)),
+            ("surfaces", bool(surfaces)),
+        )
+        if not present
+    ]
+    return {
+        "phase": phase,
+        "risk_effective": risk_effective,
+        "surfaces": surfaces,
+        "route_repair_contract": {
+            "required_card_fields": ["phase", "risk_effective", "surfaces"],
+            "phase": phase,
+            "risk_effective": risk_effective,
+            "surfaces": surfaces,
+            "source_contract_missing": missing,
+            "source_contract_status": "PASS" if not missing else "BLOCK",
+            "block_if_missing": True,
+            "authority_boundary": "route repair only; no product completion, release, deployment, customer-ready status, security waiver or human gate approval",
+        },
+    }
+
+
 def ready_work_unit_post_repair_review_body(
     *,
     plan_task: dict[str, Any],
@@ -2131,6 +2185,7 @@ def ready_work_unit_post_repair_review_body(
     return {
         "packet_type": "ready_work_unit_post_repair_review_request",
         "marker": READY_WORK_UNIT_POST_REPAIR_REVIEW_REQUIRED_MARKER,
+        **ready_work_unit_route_repair_scope_contract(plan_task),
         "parent_packet_id": packet_id,
         "parent_work_unit_id": work_unit_id,
         "parent_task_ref": parent_task_id,
@@ -2324,6 +2379,7 @@ def ready_work_unit_post_repair_authority_idempotency_key(
 
 def ready_work_unit_post_repair_authority_body(
     *,
+    plan_task: dict[str, Any],
     parent_task_id: str,
     packet_id: str,
     work_unit_id: str,
@@ -2332,6 +2388,7 @@ def ready_work_unit_post_repair_authority_body(
     return {
         "packet_type": "ready_work_unit_post_repair_authority_request",
         "marker": READY_WORK_UNIT_POST_REPAIR_AUTHORITY_REQUIRED_MARKER,
+        **ready_work_unit_route_repair_scope_contract(plan_task),
         "parent_packet_id": packet_id,
         "parent_work_unit_id": work_unit_id,
         "parent_task_ref": parent_task_id,
@@ -2399,6 +2456,7 @@ def create_post_repair_authority_task(
     runner: Runner = default_runner,
 ) -> str:
     body = ready_work_unit_post_repair_authority_body(
+        plan_task=plan_task,
         parent_task_id=parent_task_id,
         packet_id=packet_id,
         work_unit_id=work_unit_id,
