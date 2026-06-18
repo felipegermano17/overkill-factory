@@ -110,6 +110,19 @@ class FakeHermes:
             task["status"] = "ready"
             task.setdefault("events", []).append({"type": "unblocked", "payload": None})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"ready"}', stderr="")
+        if len(argv) >= 6 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "promote":
+            task = self.tasks.setdefault(argv[5], {"status": "todo", "events": []})
+            parents = [str(parent_id) for parent_id in task.get("parents", [])]
+            blocked_parents = [
+                parent_id
+                for parent_id in parents
+                if str(self.tasks.get(parent_id, {}).get("status") or "") not in {"done", "archived"}
+            ]
+            if blocked_parents and "--force" not in argv:
+                return subprocess.CompletedProcess(argv, 1, stdout="", stderr="parents not satisfied")
+            task["status"] = "ready"
+            task.setdefault("events", []).append({"type": "promoted", "reason": " ".join(argv[6:])})
+            return subprocess.CompletedProcess(argv, 0, stdout='{"status":"ready"}', stderr="")
         if len(argv) >= 6 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "complete":
             task = self.tasks.setdefault(argv[5], {"status": "ready", "events": []})
             task["status"] = "done"
@@ -127,8 +140,27 @@ class FakeHermes:
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "runs":
             payload = self.tasks.get(argv[5], {})
             return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(payload.get("runs") or []), stderr="")
-        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
+        if len(argv) >= 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
+            parent_id = argv[5]
+            child_id = argv[6]
+            parent = self.tasks.setdefault(parent_id, {"status": "blocked", "events": [], "body": "{}", "assignee": None})
+            child = self.tasks.setdefault(child_id, {"status": "todo", "events": [], "body": "{}", "assignee": None})
+            parent.setdefault("children", [])
+            child.setdefault("parents", [])
+            if child_id not in parent["children"]:
+                parent["children"].append(child_id)
+            if parent_id not in child["parents"]:
+                child["parents"].append(parent_id)
             return subprocess.CompletedProcess(argv, 0, stdout="linked", stderr="")
+        if len(argv) >= 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "unlink":
+            parent_id = argv[5]
+            child_id = argv[6]
+            parent = self.tasks.setdefault(parent_id, {"status": "blocked", "events": [], "body": "{}", "assignee": None})
+            child = self.tasks.setdefault(child_id, {"status": "todo", "events": [], "body": "{}", "assignee": None})
+            parent["children"] = [item for item in parent.get("children", []) if item != child_id]
+            child["parents"] = [item for item in child.get("parents", []) if item != parent_id]
+            child.setdefault("events", []).append({"type": "unlinked", "parent": parent_id})
+            return subprocess.CompletedProcess(argv, 0, stdout="unlinked", stderr="")
         return subprocess.CompletedProcess(argv, 1, stdout="", stderr="unexpected command")
 
 
@@ -1430,6 +1462,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 ]
             )
             first = adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+            stale_review_task_id = next(
+                task_id
+                for task_id, task in fake.tasks.items()
+                if json.loads(str(task.get("body") or "{}")).get("packet_type")
+                == "ready_work_unit_post_repair_review_request"
+            )
+            fake.tasks[stale_review_task_id]["status"] = "blocked"
             fake.tasks["review-fixture-v2"] = {
                 "id": "review-fixture-v2",
                 "status": "done",
@@ -1521,6 +1560,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     },
                 }
             ]
+            upstream_task["status"] = "todo"
             fifth = adapter.reconcile_ready_work_units(authority_args, runner=fake)
 
         assert_live_adapter_result_schema(self, second)
@@ -1558,10 +1598,24 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(fifth["existing_post_repair_authority_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
         self.assertEqual(fifth["runtime_gate"]["post_repair_authority_result_count"], 1)
         self.assertEqual(fifth["runtime_gate"]["post_repair_authority_required_count"], 0)
+        self.assertEqual(fifth["runtime_gate"]["superseded_post_repair_review_parent_count"], 1)
+        self.assertEqual(fifth["runtime_gate"]["superseded_post_repair_review_parent_unlinked_count"], 1)
         self.assertEqual(fifth["runtime_gate"]["retry_candidate_count"], 1)
-        self.assertEqual(fifth["runtime_gate"]["retry_unblocked_task_count"], 1)
+        self.assertEqual(fifth["runtime_gate"]["retry_unblocked_task_count"], 0)
+        self.assertEqual(fifth["runtime_gate"]["retry_promoted_task_count"], 1)
         self.assertEqual(fifth["retry_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(fifth["unblocked_ready_work_unit_task_ids"], {})
+        self.assertEqual(fifth["promoted_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(
+            fifth["unlinked_superseded_post_repair_review_parent_task_ids"],
+            {"work-unit-001": [adapter.PUBLIC_SAFE_KANBAN_REF]},
+        )
         self.assertEqual(fake.tasks[upstream_id]["status"], "ready")
+        self.assertNotIn(
+            stale_review_task_id,
+            [str(parent_id) for parent_id in fake.tasks[upstream_id].get("parents", [])],
+        )
+        self.assertIn(authority_task_id, [str(parent_id) for parent_id in fake.tasks[upstream_id].get("parents", [])])
         self.assertEqual(second["retry_ready_work_unit_task_ids"], {})
         self.assertEqual(second["completed_ready_work_unit_task_ids"], {})
         self.assertEqual(fifth["completed_ready_work_unit_task_ids"], {})
