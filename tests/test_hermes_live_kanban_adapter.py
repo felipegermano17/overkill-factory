@@ -1451,6 +1451,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             {"from": "independent_review", "to": "delivery_handoff"},
             graph_contract["required_edges"],
         )
+        implementation_authority = graph_contract["node_authority_rules"]["implementation"]
+        self.assertIn("build_or_repair_scoped_artifact", implementation_authority["allowed_after_runtime_gate"])
+        self.assertIn("implement_product", implementation_authority["forbidden_actions_must_not_include"])
+        self.assertEqual(
+            implementation_authority["replacement_for_broad_implementation_forbid"],
+            "implement_product_outside_scope",
+        )
         self.assertIn("blocked_dependency_graph_ref", body["output_contract"]["pass_requires"])
         self.assertIn("no_spawn_readback_evidence", body["output_contract"]["pass_requires"])
         self.assertIn("create_loose_material_product_tasks", body["forbidden_actions"])

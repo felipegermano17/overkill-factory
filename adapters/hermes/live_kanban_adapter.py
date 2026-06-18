@@ -4131,6 +4131,24 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                     {"from": "appsec_gate", "to": "independent_review"},
                     {"from": "independent_review", "to": "delivery_handoff"},
                 ],
+                "node_authority_rules": {
+                    "implementation": {
+                        "allowed_after_runtime_gate": ["build_or_repair_scoped_artifact"],
+                        "forbidden_actions_must_not_include": ["implement_product"],
+                        "replacement_for_broad_implementation_forbid": "implement_product_outside_scope",
+                        "forbidden_actions_still_required": [
+                            "complete_product_claim",
+                            "production_release_approval",
+                            "customer_ready_claim",
+                            "deploy",
+                            "infrastructure_mutation",
+                            "secret_access",
+                            "private_evidence_publication",
+                            "raw_dogfood_log_publication",
+                            "local_path_publication",
+                        ],
+                    }
+                },
                 "pass_requires": [
                     "blocked_dependency_graph_ref",
                     "no_spawn_readback_evidence",
