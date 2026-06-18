@@ -18,6 +18,11 @@ VALIDATOR_PATH = ROOT / "scripts" / "validate_public_json_artifacts.py"
 TEST_BOARD = "overkill-" + "factory-live-smoke"
 MAIN_TASK_ID = "t_" + "00000001"
 READY_TASK_ID = "t_" + "ready0001"
+RELEASE_PARENT_TASK_ID = "t_" + "aaaabbbb"
+RELEASE_REVIEW_PASS_TASK_ID = "t_" + "bbbb0001"
+RELEASE_REVIEW_ORPHAN_TASK_ID = "t_" + "bbbb0002"
+RELEASE_REVIEW_REPAIR_EDGE_TASK_ID = "t_" + "bbbb0003"
+RELEASE_REVIEW_BLOCK_TASK_ID = "t_" + "bbbb0004"
 sys.path.insert(0, str(ADAPTER_DIR))
 SPEC = importlib.util.spec_from_file_location("live_kanban_adapter", MODULE_PATH)
 assert SPEC is not None
@@ -443,6 +448,19 @@ def assert_product_creation_closeout_schema(testcase: unittest.TestCase, result:
     testcase.assertEqual(errors, [])
 
 
+def assert_release_readiness_closeout_schema(testcase: unittest.TestCase, result: dict[str, object]) -> None:
+    schema = json.loads((ROOT / "schemas" / "release-readiness-review-closeout.schema.json").read_text(encoding="utf-8"))
+    closeout = result["release_readiness_review_closeout"]
+    errors = validator.validate_node(
+        schema,
+        closeout,
+        "$",
+        schemas={"release-readiness-review-closeout.schema.json": schema},
+        root_schema=schema,
+    )
+    testcase.assertEqual(errors, [])
+
+
 def ready_work_unit_task_ids(fake: FakeHermes) -> list[str]:
     task_ids: list[str] = []
     for task_id, task in fake.tasks.items():
@@ -498,6 +516,103 @@ def add_ready_work_unit_review_run(
             }
         ],
     }
+
+
+def add_release_readiness_parent(fake: FakeHermes, task_id: str = RELEASE_PARENT_TASK_ID) -> str:
+    fake.tasks[task_id] = {
+        "id": task_id,
+        "status": "blocked",
+        "assignee": "release-ops-worker",
+        "body": json.dumps(
+            {
+                "packet_type": "product_creation_run_closeout_next_action",
+                "marker": "product_creation_closeout_next_route",
+                "next_action": "release_readiness_required",
+                "decision": "release_readiness_required",
+                "complete_product_claim_allowed": False,
+                "production_promotion_allowed": False,
+                "dispatch_allowed_by_this_step": False,
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+            }
+        ),
+        "events": [{"type": "blocked", "reason": "review-required"}],
+        "comments": [
+            {
+                "author": "release-ops-worker",
+                "body": json.dumps(
+                    {
+                        "marker": "release_readiness_packet_prepared",
+                        "review_required": True,
+                        "production_promotion_allowed": False,
+                        "complete_product_claim_allowed": False,
+                    }
+                ),
+            }
+        ],
+        "runs": [
+            {
+                "id": 1,
+                "status": "blocked",
+                "outcome": "blocked",
+                "profile": "release-ops-worker",
+                "metadata": {
+                    "release_ops_result": {
+                        "result": "PASS",
+                        "blocking_findings": False,
+                        "production_promotion_allowed": False,
+                        "complete_product_claim_allowed": False,
+                    }
+                },
+            }
+        ],
+    }
+    return task_id
+
+
+def add_release_readiness_review_run(
+    fake: FakeHermes,
+    *,
+    review_task_id: str,
+    parent_task_id: str,
+    verdict: str = "PASS",
+    blocking_findings: bool = False,
+    durable_edge: bool = True,
+) -> None:
+    fake.tasks[review_task_id] = {
+        "id": review_task_id,
+        "status": "done",
+        "title": f"Independent review: release readiness packet for {parent_task_id}",
+        "assignee": "independent-reviewer",
+        "body": f"Review release readiness packet for parent task {parent_task_id}",
+        "events": [],
+        "comments": [],
+        "runs": [
+            {
+                "id": 2,
+                "status": "done" if not blocking_findings else "blocked",
+                "outcome": "completed" if not blocking_findings else "blocked",
+                "profile": "independent-reviewer",
+                "ended_at": 20,
+                "metadata": {
+                    "independent_review_result": {
+                        "verdict": verdict,
+                        "review_target": parent_task_id,
+                        "blocking_findings": blocking_findings,
+                        "required_fixes": ["repair release readiness packet"] if blocking_findings else [],
+                        "production_promotion_approved": False,
+                        "complete_product_claim_allowed": False,
+                    },
+                    "blocking_findings": blocking_findings,
+                    "production_promotion_approved": False,
+                    "complete_product_claim_allowed": False,
+                },
+            }
+        ],
+    }
+    if durable_edge:
+        fake.tasks[parent_task_id].setdefault("parents", []).append(review_task_id)
+        fake.tasks[review_task_id].setdefault("children", []).append(parent_task_id)
 
 
 class HermesLiveKanbanAdapterTest(unittest.TestCase):
@@ -1201,6 +1316,141 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             )
             with self.assertRaisesRegex(RuntimeError, "release_readiness_ref must be public-safe"):
                 adapter.close_product_creation_run(args, runner=fake)
+
+    def test_close_release_readiness_review_pass_completes_parent_without_promotion(self) -> None:
+        fake = FakeHermes()
+        parent_id = add_release_readiness_parent(fake)
+        review_id = RELEASE_REVIEW_PASS_TASK_ID
+        add_release_readiness_review_run(fake, review_task_id=review_id, parent_task_id=parent_id)
+
+        dry_run_args = adapter.build_parser().parse_args(
+            [
+                "close-release-readiness-review",
+                "--board",
+                TEST_BOARD,
+                "--parent-task",
+                parent_id,
+                "--review-task",
+                review_id,
+                "--dry-run",
+            ]
+        )
+        dry_run = adapter.close_release_readiness_review(dry_run_args, runner=fake)
+        args = adapter.build_parser().parse_args(
+            [
+                "close-release-readiness-review",
+                "--board",
+                TEST_BOARD,
+                "--parent-task",
+                parent_id,
+                "--review-task",
+                review_id,
+            ]
+        )
+        result = adapter.close_release_readiness_review(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, dry_run)
+        assert_live_adapter_result_schema(self, result)
+        assert_release_readiness_closeout_schema(self, dry_run)
+        assert_release_readiness_closeout_schema(self, result)
+        self.assertEqual(dry_run["release_readiness_review_closeout"]["decision"], "release_readiness_review_passed")
+        self.assertEqual(dry_run["completed_release_readiness_task_ids"], {})
+        self.assertEqual(result["completed_release_readiness_task_ids"], {"release_readiness": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(fake.tasks[parent_id]["status"], "done")
+        self.assertFalse(result["release_readiness_review_closeout"]["production_promotion_allowed"])
+        self.assertFalse(result["release_readiness_review_closeout"]["complete_product_claim_allowed"])
+        self.assertFalse(result["runtime_gate"]["dispatch_allowed_by_this_step"])
+
+    def test_close_release_readiness_review_missing_parent_edge_fails_closed_by_default(self) -> None:
+        fake = FakeHermes()
+        parent_id = add_release_readiness_parent(fake)
+        review_id = RELEASE_REVIEW_ORPHAN_TASK_ID
+        add_release_readiness_review_run(
+            fake,
+            review_task_id=review_id,
+            parent_task_id=parent_id,
+            durable_edge=False,
+        )
+        args = adapter.build_parser().parse_args(
+            [
+                "close-release-readiness-review",
+                "--board",
+                TEST_BOARD,
+                "--parent-task",
+                parent_id,
+                "--review-task",
+                review_id,
+            ]
+        )
+        result = adapter.close_release_readiness_review(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        assert_release_readiness_closeout_schema(self, result)
+        self.assertEqual(result["release_readiness_review_closeout"]["decision"], "missing_durable_parent_edge")
+        self.assertEqual(result["completed_release_readiness_task_ids"], {})
+        self.assertEqual(fake.tasks[parent_id]["status"], "blocked")
+
+    def test_close_release_readiness_review_can_repair_missing_parent_edge_before_complete(self) -> None:
+        fake = FakeHermes()
+        parent_id = add_release_readiness_parent(fake)
+        review_id = RELEASE_REVIEW_REPAIR_EDGE_TASK_ID
+        add_release_readiness_review_run(
+            fake,
+            review_task_id=review_id,
+            parent_task_id=parent_id,
+            durable_edge=False,
+        )
+        args = adapter.build_parser().parse_args(
+            [
+                "close-release-readiness-review",
+                "--board",
+                TEST_BOARD,
+                "--parent-task",
+                parent_id,
+                "--review-task",
+                review_id,
+                "--repair-missing-parent-edge",
+            ]
+        )
+        result = adapter.close_release_readiness_review(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        assert_release_readiness_closeout_schema(self, result)
+        self.assertEqual(result["release_readiness_review_closeout"]["decision"], "release_readiness_review_passed")
+        self.assertTrue(result["release_readiness_review_closeout"]["parent_edge_repaired"])
+        self.assertIn(review_id, fake.tasks[parent_id].get("parents", []))
+        self.assertEqual(fake.tasks[parent_id]["status"], "done")
+
+    def test_close_release_readiness_review_block_keeps_parent_blocked_with_repair_route(self) -> None:
+        fake = FakeHermes()
+        parent_id = add_release_readiness_parent(fake)
+        review_id = RELEASE_REVIEW_BLOCK_TASK_ID
+        add_release_readiness_review_run(
+            fake,
+            review_task_id=review_id,
+            parent_task_id=parent_id,
+            verdict="BLOCK",
+            blocking_findings=True,
+        )
+        args = adapter.build_parser().parse_args(
+            [
+                "close-release-readiness-review",
+                "--board",
+                TEST_BOARD,
+                "--parent-task",
+                parent_id,
+                "--review-task",
+                review_id,
+            ]
+        )
+        result = adapter.close_release_readiness_review(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        assert_release_readiness_closeout_schema(self, result)
+        self.assertEqual(result["release_readiness_review_closeout"]["decision"], "repair_required")
+        self.assertEqual(result["runtime_gate"]["blocked_review_count"], 1)
+        self.assertEqual(result["completed_release_readiness_task_ids"], {})
+        self.assertEqual(fake.tasks[parent_id]["status"], "blocked")
 
     def test_release_ready_work_units_rejects_pre_dispatch_activity(self) -> None:
         fake = FakeHermes()
