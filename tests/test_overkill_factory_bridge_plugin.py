@@ -67,7 +67,7 @@ class OverkillFactoryBridgePluginTest(unittest.TestCase):
         hook = load_plugin_hook()
         with tempfile.TemporaryDirectory() as tmp:
             parent = Path(tmp)
-            factory = parent / "overkill-factory-product-profiles"
+            factory = parent / "overkill-factory-checkout"
             marketplace = factory / ".agents" / "plugins"
             inbox = factory / ".tmp" / "factory-runs" / "operator-inbox"
             marketplace.mkdir(parents=True)
