@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PLUGIN_ROOT = ROOT / ".agents" / "plugins" / "plugins" / "overkill-factory-bridge"
+
+
+def load_plugin_hook():
+    hook_path = PLUGIN_ROOT / "hooks" / "overkill_factory_bridge_hook.py"
+    spec = importlib.util.spec_from_file_location("overkill_factory_bridge_plugin_hook", hook_path)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    with patch.dict(os.environ, {"PLUGIN_ROOT": str(PLUGIN_ROOT)}):
+        sys.modules["overkill_factory_bridge_plugin_hook"] = module
+        spec.loader.exec_module(module)
+    return module
+
+
+class OverkillFactoryBridgePluginTest(unittest.TestCase):
+    def test_plugin_manifest_and_marketplace_are_repo_local(self) -> None:
+        manifest = json.loads((PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        marketplace = json.loads((ROOT / ".agents" / "plugins" / "marketplace.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(manifest["name"], "overkill-factory-bridge")
+        self.assertEqual(manifest["skills"], "./skills/")
+        self.assertNotIn("hooks", manifest)
+        self.assertEqual(marketplace["name"], "overkill-factory")
+        self.assertEqual(
+            marketplace["plugins"][0]["source"]["path"],
+            "./plugins/overkill-factory-bridge",
+        )
+
+    def test_plugin_packages_skill_reference_hooks_and_scripts(self) -> None:
+        skill = PLUGIN_ROOT / "skills" / "overkill-factory-bridge" / "SKILL.md"
+        reference = PLUGIN_ROOT / "skills" / "overkill-factory-bridge" / "references" / "overkill-factory-bridge.md"
+        hooks = json.loads((PLUGIN_ROOT / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+
+        self.assertTrue(skill.is_file())
+        self.assertTrue(reference.is_file())
+        self.assertTrue((PLUGIN_ROOT / "scripts" / "factory_bridge.py").is_file())
+        self.assertIn("SessionStart", hooks["hooks"])
+        self.assertIn("UserPromptSubmit", hooks["hooks"])
+        self.assertIn("${PLUGIN_ROOT}", json.dumps(hooks))
+        self.assertIn("do not approve human gates", (PLUGIN_ROOT / "README.md").read_text(encoding="utf-8"))
+
+    def test_plugin_hook_resolves_workspace_inbox_without_git_shell_dependency(self) -> None:
+        hook = load_plugin_hook()
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            (workspace / ".tmp").mkdir()
+
+            inbox = hook.default_inbox_dir({"cwd": str(workspace)})
+
+        self.assertEqual(inbox, workspace / ".tmp" / "factory-runs" / "operator-inbox")
+
+    def test_plugin_bridge_classifies_status_prompt_without_factory_authority(self) -> None:
+        hook = load_plugin_hook()
+        bridge = hook.load_bridge()
+        with tempfile.TemporaryDirectory() as tmp:
+            response = bridge.codex_hook_response(
+                {"hook_event_name": "UserPromptSubmit", "prompt": "status da fabrica"},
+                inbox_dir=Path(tmp) / "inbox",
+            )
+
+        context = response["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("status_bridge", context)
+        self.assertIn("must not close gates, execute factory work or auto-approve human gates", context)
+
+
+if __name__ == "__main__":
+    unittest.main()

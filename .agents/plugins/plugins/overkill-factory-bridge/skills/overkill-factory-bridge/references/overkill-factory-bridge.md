@@ -50,10 +50,6 @@ automation.
 
 Use hooks for wake-up context, not runtime ownership.
 
-The repo also ships a final-stage Codex plugin package for this bridge. See
-`docs/operator/overkill-factory-bridge-plugin.md` for install, hook trust and
-plugin validation.
-
 | Hook | Role | Why it is safe |
 | --- | --- | --- |
 | `SessionStart` | Summarize pending inbox events when Codex opens, resumes or compacts. | It reads local JSONL and adds context. |

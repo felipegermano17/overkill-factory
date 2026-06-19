@@ -14,6 +14,7 @@
     "docs/getting-started/quickstart-hermes.md",
     "docs/operations/validation-and-release.md",
     "docs/operator/overkill-factory-bridge.md",
+    "docs/operator/overkill-factory-bridge-plugin.md",
     "docs/reference/cli.md",
     "planning-bundles/manifest.json",
     "schemas/",
@@ -268,6 +269,31 @@
         "Codex hooks do not watch the machine while Codex is closed",
         "Factory Mechanic remains the self-improvement owner",
         "act as a factory worker"
+      ]
+    },
+    {
+      "surface_id": "overkill-factory-bridge-plugin",
+      "path": "docs/operator/overkill-factory-bridge-plugin.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        ".agents/plugins/marketplace.json",
+        ".agents/plugins/plugins/overkill-factory-bridge/.codex-plugin/plugin.json",
+        ".agents/plugins/plugins/overkill-factory-bridge/hooks/hooks.json",
+        ".agents/plugins/plugins/overkill-factory-bridge/hooks/overkill_factory_bridge_hook.py",
+        ".agents/plugins/plugins/overkill-factory-bridge/scripts/factory_bridge.py",
+        ".agents/plugins/plugins/overkill-factory-bridge/skills/overkill-factory-bridge/SKILL.md",
+        "tests/test_overkill_factory_bridge_plugin.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Plugin hooks require trust review before they run",
+        "They must not approve human gates",
+        "This supports queue catch-up when Codex was closed"
       ]
     },
     {

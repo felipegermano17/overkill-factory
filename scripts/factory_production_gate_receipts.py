@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -18,12 +19,22 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 
+PRIVATE_WINDOWS_PATH = "C:" + "\\\\" + "Users"
+PRIVATE_SYNC_ROOT = "One" + "Drive"
+PRIVATE_RE = re.compile(
+    re.escape(PRIVATE_WINDOWS_PATH)
+    + r"|"
+    + PRIVATE_SYNC_ROOT
+    + r"|token|password|secret|webhook|DISCORD_[A-Z_]*TOKEN|auth\.json",
+    re.IGNORECASE,
+)
+
 
 @dataclass(frozen=True)
 class GatePaths:
     prepilot_master: Path = ROOT / ".tmp" / "factory-runs" / "prepilot" / "master-task-readiness.json"
     runtime_status: Path = ROOT / ".tmp" / "factory-runs" / "hermes-live" / "factory-vfinal-runtime-status-check.json"
-    update_preflight: Path = ROOT / ".tmp" / "factory-runs" / "hermes-production-update-preflight" / "real-runtime-update-blocked.json"
+    update_preflight: Path = ROOT / ".tmp" / "factory-runs" / "hermes-production-update-preflight" / "real-runtime-update-preflight.json"
     control_tower: Path = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-production-readiness.json"
     control_tower_doctor: Path = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-private-evidence-doctor.json"
     release_preflight: Path = ROOT / ".tmp" / "factory-runs" / "release" / "release-integration-preflight.json"
@@ -50,6 +61,16 @@ def load_json(path: Path) -> dict[str, Any] | None:
     except (OSError, json.JSONDecodeError):
         return None
     return data if isinstance(data, dict) else None
+
+
+def public_safe(payload: dict[str, Any]) -> bool:
+    return PRIVATE_RE.search(json.dumps(payload, ensure_ascii=False, sort_keys=True)) is None
+
+
+def evidence_bool(evidence_payload: dict[str, Any] | None, key: str) -> bool:
+    if evidence_payload is None:
+        return False
+    return evidence_payload.get(key) is True
 
 
 def receipt_result(path: Path) -> str:
@@ -96,20 +117,44 @@ def status_from_result(result: str, pass_status: str) -> str:
     return "BLOCKED"
 
 
-def build_runtime_status(*, created_at: str | None = None) -> dict[str, Any]:
+def build_runtime_status(
+    *,
+    created_at: str | None = None,
+    live_evidence: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     worker_registry_present = (ROOT / "agents" / "worker-registry.public.json").is_file()
     worker_profiles_present = (ROOT / "docs" / "agents" / "worker-profiles.md").is_file()
+    evidence_is_public_safe = live_evidence is None or public_safe(live_evidence)
     checks = {
-        "hermes_status_readonly_passed": False,
-        "profile_list_readonly_passed": False,
-        "gateway_service_running": False,
-        "discord_configured": False,
-        "dedicated_gerente_gateway_running": False,
-        "private_product_profile_not_factory_gateway": False,
+        "hermes_status_readonly_passed": evidence_bool(live_evidence, "hermes_status_readonly_passed"),
+        "profile_list_readonly_passed": evidence_bool(live_evidence, "profile_list_readonly_passed"),
+        "gateway_service_running": evidence_bool(live_evidence, "gateway_service_running"),
+        "discord_configured": evidence_bool(live_evidence, "discord_configured"),
+        "dedicated_gerente_gateway_running": evidence_bool(live_evidence, "dedicated_gerente_gateway_running"),
+        "private_product_profile_not_factory_gateway": evidence_bool(
+            live_evidence,
+            "private_product_profile_not_factory_gateway",
+        ),
         "factory_worker_profiles_present": worker_registry_present and worker_profiles_present,
-        "factory_profile_set_has_no_conceptual_duplicates": False,
-        "raw_private_values_omitted": True,
+        "factory_profile_set_has_no_conceptual_duplicates": evidence_bool(
+            live_evidence,
+            "factory_profile_set_has_no_conceptual_duplicates",
+        ),
+        "raw_private_values_omitted": True
+        if live_evidence is None
+        else evidence_is_public_safe and evidence_bool(live_evidence, "raw_private_values_omitted"),
     }
+    evidence_refs = [
+        "agents/worker-registry.public.json",
+        "docs/agents/worker-profiles.md",
+        "docs/architecture/hermes-integration.md",
+    ]
+    if live_evidence is not None:
+        evidence_refs.extend(
+            str(ref)
+            for ref in live_evidence.get("evidence_refs", [])
+            if isinstance(ref, str) and ref.strip()
+        )
     return {
         "$schema": "https://overkill-factory.dev/schemas/hermes-vfinal-runtime-status-check.schema.json",
         "record_type": "hermes_vfinal_runtime_status_check",
@@ -117,11 +162,7 @@ def build_runtime_status(*, created_at: str | None = None) -> dict[str, Any]:
         "result": "PASS" if all(checks.values()) else "BLOCKED",
         "scope": "public-safe read-only Hermes vFinal runtime status",
         "checks": checks,
-        "evidence_refs": [
-            "agents/worker-registry.public.json",
-            "docs/agents/worker-profiles.md",
-            "docs/architecture/hermes-integration.md",
-        ],
+        "evidence_refs": sorted(set(evidence_refs)),
         "limits": [
             "This receipt is public-safe and intentionally omits raw Hermes status, profile, Discord and gateway values.",
             "The default materializer fails closed until a real read-only Hermes status and profile proof is supplied.",
@@ -364,8 +405,14 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
-def materialize(paths: GatePaths, *, no_write: bool = False) -> dict[str, Any]:
-    runtime = build_runtime_status()
+def materialize(
+    paths: GatePaths,
+    *,
+    no_write: bool = False,
+    runtime_status_evidence: Path | None = None,
+) -> dict[str, Any]:
+    runtime_evidence = load_json(runtime_status_evidence) if runtime_status_evidence else None
+    runtime = build_runtime_status(live_evidence=runtime_evidence)
     if not no_write:
         write_json(paths.runtime_status, runtime)
 
@@ -395,12 +442,17 @@ def materialize(paths: GatePaths, *, no_write: bool = False) -> dict[str, Any]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-write", action="store_true")
+    parser.add_argument("--runtime-status-evidence", type=Path)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    summary = materialize(GatePaths(), no_write=args.no_write)
+    summary = materialize(
+        GatePaths(),
+        no_write=args.no_write,
+        runtime_status_evidence=args.runtime_status_evidence,
+    )
     print(json.dumps(summary, indent=2))
     return 0
 

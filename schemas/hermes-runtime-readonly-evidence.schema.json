@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-runtime-readonly-evidence.schema.json",
+  "title": "Overkill Factory Hermes Runtime Read-only Evidence",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "checked_at",
+    "target_ref",
+    "hermes_status_readonly_passed",
+    "profile_list_readonly_passed",
+    "gateway_service_running",
+    "discord_configured",
+    "dedicated_gerente_gateway_running",
+    "private_product_profile_not_factory_gateway",
+    "factory_profile_set_has_no_conceptual_duplicates",
+    "raw_private_values_omitted",
+    "evidence_refs",
+    "limits"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/hermes-runtime-readonly-evidence.schema.json"
+    },
+    "record_type": {
+      "const": "hermes_runtime_readonly_evidence"
+    },
+    "checked_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "target_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "hermes_status_readonly_passed": { "type": "boolean" },
+    "profile_list_readonly_passed": { "type": "boolean" },
+    "gateway_service_running": { "type": "boolean" },
+    "discord_configured": { "type": "boolean" },
+    "dedicated_gerente_gateway_running": { "type": "boolean" },
+    "private_product_profile_not_factory_gateway": { "type": "boolean" },
+    "factory_profile_set_has_no_conceptual_duplicates": { "type": "boolean" },
+    "raw_private_values_omitted": { "type": "boolean" },
+    "observed": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["string", "number", "integer", "boolean"]
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": false
+}

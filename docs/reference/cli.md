@@ -205,6 +205,7 @@ Materializes the public-safe receipts consumed by
 
 ```bash
 python scripts/factory_production_gate_receipts.py
+python scripts/factory_production_gate_receipts.py --runtime-status-evidence .tmp/factory-runs/hermes-live/hermes-runtime-readonly-evidence.json
 python scripts/factory_production_gate_receipts.py --no-write
 ```
 

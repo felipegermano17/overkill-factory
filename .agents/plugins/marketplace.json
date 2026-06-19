@@ -1,0 +1,20 @@
+{
+  "name": "overkill-factory",
+  "interface": {
+    "displayName": "Overkill Factory"
+  },
+  "plugins": [
+    {
+      "name": "overkill-factory-bridge",
+      "source": {
+        "source": "local",
+        "path": "./plugins/overkill-factory-bridge"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

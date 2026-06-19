@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/overkill_factory_bridge_hook.py\"",
+            "command_windows": "python \"${PLUGIN_ROOT}\\hooks\\overkill_factory_bridge_hook.py\"",
+            "timeout": 30,
+            "statusMessage": "Reading Overkill Factory bridge inbox"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/overkill_factory_bridge_hook.py\"",
+            "command_windows": "python \"${PLUGIN_ROOT}\\hooks\\overkill_factory_bridge_hook.py\"",
+            "timeout": 30,
+            "statusMessage": "Classifying Overkill Factory bridge prompt"
+          }
+        ]
+      }
+    ]
+  }
+}

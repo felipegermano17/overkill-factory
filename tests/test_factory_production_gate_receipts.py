@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -41,6 +42,30 @@ class FactoryProductionGateReceiptsTest(unittest.TestCase):
         self.assertFalse(payload["checks"]["hermes_status_readonly_passed"])
         self.assertFalse(payload["checks"]["profile_list_readonly_passed"])
         self.assertTrue(payload["checks"]["raw_private_values_omitted"])
+        self.assert_schema_valid(payload)
+
+    def test_runtime_status_passes_with_public_safe_live_hermes_evidence(self) -> None:
+        payload = self.receipts.build_runtime_status(
+            created_at="2026-06-19T00:00:00Z",
+            live_evidence=self._runtime_evidence(),
+        )
+
+        self.assertEqual(payload["result"], "PASS")
+        self.assertTrue(all(payload["checks"].values()))
+        self.assertIn(".tmp/factory-runs/hermes-live/hermes-runtime-readonly-evidence.json", payload["evidence_refs"])
+        self.assert_schema_valid(payload)
+
+    def test_runtime_status_blocks_private_looking_live_evidence(self) -> None:
+        payload = self.receipts.build_runtime_status(
+            created_at="2026-06-19T00:00:00Z",
+            live_evidence={
+                **self._runtime_evidence(),
+                "raw_note": "token should never be copied into public receipts",
+            },
+        )
+
+        self.assertEqual(payload["result"], "BLOCKED")
+        self.assertFalse(payload["checks"]["raw_private_values_omitted"])
         self.assert_schema_valid(payload)
 
     def test_update_preflight_blocks_missing_required_proofs(self) -> None:
@@ -99,6 +124,48 @@ class FactoryProductionGateReceiptsTest(unittest.TestCase):
         self.assertEqual(summary["result"], "PASS")
         self.assertTrue(any("not that production gates passed" in limit for limit in summary["limits"]))
         self.assertIn("BLOCKED", {receipt["result"] for receipt in summary["receipts"]})
+
+    def test_materialization_can_use_runtime_evidence_path(self) -> None:
+        with TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            evidence_path = tmp_path / "runtime-evidence.json"
+            evidence_path.write_text(json.dumps(self._runtime_evidence()), encoding="utf-8")
+            paths = self.receipts.GatePaths(
+                prepilot_master=tmp_path / "prepilot.json",
+                runtime_status=tmp_path / "runtime.json",
+                update_preflight=tmp_path / "update.json",
+                control_tower=tmp_path / "tower.json",
+                control_tower_doctor=tmp_path / "doctor.json",
+                release_preflight=tmp_path / "release.json",
+            )
+            summary = self.receipts.materialize(
+                paths,
+                no_write=False,
+                runtime_status_evidence=evidence_path,
+            )
+
+            runtime = json.loads(paths.runtime_status.read_text(encoding="utf-8"))
+
+        self.assertEqual(summary["receipts"][0]["result"], "PASS")
+        self.assertEqual(runtime["result"], "PASS")
+        self.assert_schema_valid(runtime)
+
+    def _runtime_evidence(self) -> dict[str, object]:
+        return {
+            "$schema": "https://overkill-factory.dev/schemas/hermes-runtime-readonly-evidence.schema.json",
+            "record_type": "hermes_runtime_readonly_evidence",
+            "checked_at": "2026-06-19T00:00:00Z",
+            "target_ref": "tailscale:factory-runtime-peer",
+            "hermes_status_readonly_passed": True,
+            "profile_list_readonly_passed": True,
+            "gateway_service_running": True,
+            "discord_configured": True,
+            "dedicated_gerente_gateway_running": True,
+            "private_product_profile_not_factory_gateway": True,
+            "factory_profile_set_has_no_conceptual_duplicates": True,
+            "raw_private_values_omitted": True,
+            "evidence_refs": [".tmp/factory-runs/hermes-live/hermes-runtime-readonly-evidence.json"],
+        }
 
 
 if __name__ == "__main__":

@@ -423,25 +423,36 @@ def process_intake_messages(
             project_state["intake_thread_source"] = "manager_thread"
         bridge_result = bridge.project_bridge_apply(projection, client, config, state)
         operator_console_thread_id = (bridge_result.get("project_thread") or {}).get("thread_id")
+        intake_pointer_resolved = False
+        original_thread_id = thread_id
         if thread_id:
-            bridge.upsert_message(
-                client=client,
-                channel_id=thread_id,
-                payload=intake_message_payload(projection, operator_console_thread_id),
-                expected_marker=f"{INTAKE_MARKER_PREFIX}{project_id}",
-                state_ref=project_state,
-                state_field="intake_pointer_message_id",
-                apply=apply,
-            )
+            try:
+                pointer_result = bridge.upsert_message(
+                    client=client,
+                    channel_id=thread_id,
+                    payload=intake_message_payload(projection, operator_console_thread_id),
+                    expected_marker=f"{INTAKE_MARKER_PREFIX}{project_id}",
+                    state_ref=project_state,
+                    state_field="intake_pointer_message_id",
+                    apply=apply,
+                )
+                intake_pointer_resolved = bool(pointer_result.get("message_id")) or not apply
+            except RuntimeError as exc:
+                if not bridge.is_discord_not_found_error(exc):
+                    raise
+                project_state.pop("intake_thread_id", None)
+                project_state.pop("intake_pointer_message_id", None)
+                thread_id = ""
         if apply:
             state["intake"]["processed_messages"][message_id] = {
                 "project_id": project_id,
                 "processed_at": utc_now(),
             }
-            state["intake"]["processed_threads"][thread_id] = {
-                "project_id": project_id,
-                "processed_at": utc_now(),
-            }
+            if original_thread_id:
+                state["intake"]["processed_threads"][original_thread_id] = {
+                    "project_id": project_id,
+                    "processed_at": utc_now(),
+                }
         results.append(
             {
                 "project_id": project_id,
@@ -449,6 +460,7 @@ def process_intake_messages(
                 "thread_first": True,
                 "intake_thread_created": False,
                 "intake_thread_resolved": bool(thread_id),
+                "intake_pointer_resolved": intake_pointer_resolved,
                 "project_surface_resolved": bool(operator_console_thread_id),
             }
         )
@@ -972,7 +984,10 @@ def run_automation(args: argparse.Namespace) -> dict[str, Any]:
         results["intake"] = intake_result
         results["thread_first_project_intake_automated"] = True
         if intake_result["processed"] > 0:
-            results["active_bot_messages_threaded_or_linked"] = all(item["intake_thread_resolved"] for item in intake_result["results"])
+            results["active_bot_messages_threaded_or_linked"] = all(
+                item["intake_thread_resolved"] or item["project_surface_resolved"]
+                for item in intake_result["results"]
+            )
         else:
             results["active_bot_messages_threaded_or_linked"] = True
 

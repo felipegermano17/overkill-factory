@@ -56,6 +56,7 @@ class FakeDiscordClient:
         ]
         self.messages: dict[str, list[dict[str, Any]]] = {channel["id"]: [] for channel in self.channels}
         self.threads: list[dict[str, Any]] = []
+        self.post_not_found_channels: set[str] = set()
         self.next_message = 1
         self.next_thread = 1
 
@@ -100,6 +101,11 @@ class FakeDiscordClient:
         return list(reversed(self.messages.get(channel_id, [])))[:limit]
 
     def post_message(self, channel_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        if channel_id in self.post_not_found_channels:
+            raise RuntimeError(
+                f'Discord API POST /channels/{channel_id}/messages failed with HTTP 404: '
+                '{"message": "Unknown Channel", "code": 10003}'
+            )
         message = {"id": f"msg-{self.next_message}", "channel_id": channel_id, **payload}
         self.next_message += 1
         message.setdefault("author", {"id": "bot-user", "bot": True})
@@ -187,6 +193,28 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
         self.assertEqual(state["projects"]["pilot-front-jogo-fabrica"]["intake_thread_id"], intake_thread["id"])
         self.assertEqual(len([t for t in client.threads if t["parent_id"] == "forum-kanban"]), 1)
         self.assertIn("pilot-front-jogo-fabrica", state["projects"])
+
+    def test_intake_scan_recovers_when_source_thread_ref_is_stale(self) -> None:
+        client = FakeDiscordClient()
+        intake_thread, _ = client.seed_manager_thread_message(
+            "Paper do projeto: quero criar o front jogo da fabrica. "
+            "Este piloto precisa acompanhar a esteira da Overkill Factory com UX visual."
+        )
+        client.post_not_found_channels.add(intake_thread["id"])
+        state: dict[str, Any] = {"version": 1, "dashboard": {}, "projects": {}}
+        config = bridge.BridgeConfig(apply=True, guild_id=None, state_path=Path("private.json"))
+
+        result = automation.process_intake_messages(client, config, state, apply=True)
+
+        self.assertEqual(result["processed"], 1)
+        item = result["results"][0]
+        self.assertFalse(item["intake_thread_resolved"])
+        self.assertFalse(item["intake_pointer_resolved"])
+        self.assertTrue(item["project_surface_resolved"])
+        project_state = state["projects"]["pilot-front-jogo-fabrica"]
+        self.assertNotIn("intake_thread_id", project_state)
+        self.assertNotIn("intake_pointer_message_id", project_state)
+        self.assertIn(intake_thread["id"], state["intake"]["processed_threads"])
 
     def test_intake_scan_ignores_reception_messages_without_thread(self) -> None:
         client = FakeDiscordClient()

@@ -258,6 +258,16 @@ def load_env_file(path: Path | None) -> None:
         os.environ.setdefault(key, value)
 
 
+def is_discord_not_found_error(exc: Exception) -> bool:
+    text = str(exc)
+    return "HTTP 404" in text and (
+        "Unknown Channel" in text
+        or "Unknown Message" in text
+        or '"code": 10003' in text
+        or '"code": 10008' in text
+    )
+
+
 def normalize_name(value: str) -> str:
     normalized = unicodedata.normalize("NFKD", value)
     ascii_only = normalized.encode("ascii", "ignore").decode("ascii").lower()
@@ -639,9 +649,14 @@ def upsert_message(
         }
 
     if existing_id:
-        message = client.edit_message(channel_id, str(existing_id), payload)
-        state_ref[state_field] = str(message.get("id") or existing_id)
-        return {"changed": True, "created": False, "updated": True, "message_id": state_ref[state_field]}
+        try:
+            message = client.edit_message(channel_id, str(existing_id), payload)
+            state_ref[state_field] = str(message.get("id") or existing_id)
+            return {"changed": True, "created": False, "updated": True, "message_id": state_ref[state_field]}
+        except RuntimeError as exc:
+            if not is_discord_not_found_error(exc):
+                raise
+            state_ref.pop(state_field, None)
     message = client.post_message(channel_id, payload)
     state_ref[state_field] = str(message["id"])
     return {"changed": True, "created": True, "updated": False, "message_id": state_ref[state_field]}
@@ -681,8 +696,19 @@ def project_bridge_apply(
             channel_payload: dict[str, Any] = {"name": truncate(str(projection["name"]), 95)}
             if tag_ids:
                 channel_payload["applied_tags"] = tag_ids
-            client.edit_channel(str(thread["id"]), channel_payload)
-            thread_updated = True
+            try:
+                client.edit_channel(str(thread["id"]), channel_payload)
+                thread_updated = True
+            except RuntimeError as exc:
+                if not is_discord_not_found_error(exc):
+                    raise
+                project_state.pop("project_thread_id", None)
+                project_state.pop("operator_console_message_id", None)
+                thread = client.create_forum_thread(
+                    str(surfaces.kanban["id"]),
+                    initial_thread_payload(projection, tag_ids),
+                )
+                thread_created = True
     elif thread is None:
         thread_created = True
 

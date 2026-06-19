@@ -15,7 +15,7 @@ DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "factory-production-readiness" / 
 
 DEFAULT_PREPILOT_MASTER = ROOT / ".tmp" / "factory-runs" / "prepilot" / "master-task-readiness.json"
 DEFAULT_RUNTIME_STATUS = ROOT / ".tmp" / "factory-runs" / "hermes-live" / "factory-vfinal-runtime-status-check.json"
-DEFAULT_PREFLIGHT = ROOT / ".tmp" / "factory-runs" / "hermes-production-update-preflight" / "real-runtime-update-blocked.json"
+DEFAULT_PREFLIGHT = ROOT / ".tmp" / "factory-runs" / "hermes-production-update-preflight" / "real-runtime-update-preflight.json"
 DEFAULT_CONTROL_TOWER = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-production-readiness.json"
 DEFAULT_CONTROL_TOWER_DOCTOR = ROOT / ".tmp" / "factory-runs" / "control-tower" / "operator-control-tower-private-evidence-doctor.json"
 DEFAULT_WORKTREE_INVENTORY = ROOT / ".tmp" / "factory-runs" / "release" / "worktree-release-inventory.json"

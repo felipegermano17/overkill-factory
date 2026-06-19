@@ -79,7 +79,10 @@ class FakeDiscordClient:
                 message.clear()
                 message.update({"id": message_id, "channel_id": channel_id, **payload})
                 return message
-        raise AssertionError(f"missing message {message_id}")
+        raise RuntimeError(
+            f'Discord API PATCH /channels/{channel_id}/messages/{message_id} failed with HTTP 404: '
+            '{"message": "Unknown Message", "code": 10008}'
+        )
 
     def create_forum_thread(self, channel_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         thread = {
@@ -98,7 +101,10 @@ class FakeDiscordClient:
             if thread["id"] == channel_id:
                 thread.update(payload)
                 return thread
-        raise AssertionError(f"missing channel {channel_id}")
+        raise RuntimeError(
+            f'Discord API PATCH /channels/{channel_id} failed with HTTP 404: '
+            '{"message": "Unknown Channel", "code": 10003}'
+        )
 
 
 def sample_projection() -> dict[str, Any]:
@@ -210,6 +216,48 @@ class FactoryConciergeDiscordBridgeTest(unittest.TestCase):
         self.assertTrue(result["operator_console"]["updated"])
         self.assertEqual(len(client.messages[thread["id"]]), 1)
         self.assertIn("of-operator_console:pilot-front-jogo-fabrica", client.messages[thread["id"]][0]["embeds"][0]["footer"]["text"])
+
+    def test_bridge_recovers_stale_private_thread_and_message_refs(self) -> None:
+        client = FakeDiscordClient()
+        projection = sample_projection()
+        state: dict[str, Any] = {
+            "version": 1,
+            "dashboard": {},
+            "projects": {
+                projection["project_id"]: {
+                    "project_thread_id": "deleted-thread",
+                    "operator_console_message_id": "deleted-message",
+                }
+            },
+        }
+        config = bridge.BridgeConfig(apply=True, guild_id=None, state_path=Path("private-state.json"))
+
+        result = bridge.project_bridge_apply(projection, client, config, state)
+
+        self.assertTrue(result["project_thread"]["created"])
+        self.assertFalse(result["project_thread"]["updated"])
+        self.assertEqual(state["projects"][projection["project_id"]]["project_thread_id"], "thread-1")
+        self.assertEqual(len(client.threads), 1)
+        self.assertEqual(len(client.messages["thread-1"]), 1)
+        self.assertNotEqual(
+            state["projects"][projection["project_id"]]["operator_console_message_id"],
+            "deleted-message",
+        )
+
+    def test_bridge_recovers_stale_private_message_ref(self) -> None:
+        client = FakeDiscordClient()
+        projection = sample_projection()
+        state: dict[str, Any] = {
+            "version": 1,
+            "dashboard": {"message_id": "deleted-dashboard-message"},
+            "projects": {},
+        }
+        config = bridge.BridgeConfig(apply=True, guild_id=None, state_path=Path("private-state.json"))
+
+        result = bridge.project_bridge_apply(projection, client, config, state)
+
+        self.assertTrue(result["dashboard"]["created"])
+        self.assertEqual(state["dashboard"]["message_id"], "msg-1")
 
     def test_state_file_roundtrip_is_private_and_stable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

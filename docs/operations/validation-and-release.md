@@ -45,7 +45,8 @@ Run this before a public branch, release tag or pull request:
 
 ```bash
 python scripts/release_integration_preflight.py --out .tmp/release-check.json
-python scripts/factory_production_gate_receipts.py
+python scripts/factory_production_gate_receipts.py \
+  --runtime-status-evidence .tmp/factory-runs/hermes-live/hermes-runtime-readonly-evidence.json
 python scripts/factory_production_readiness.py --out .tmp/readiness-check.json
 python scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
 python scripts/validate_public_surface_sync.py --check-published
@@ -68,6 +69,10 @@ the aggregate production gate consumes. It may write `BLOCKED` receipts when
 Hermes runtime status, private Control Tower evidence or release integration is
 not ready. That is expected: the aggregate gate remains
 `factory_production_readiness.py`, not the materializer.
+
+For a live Hermes validation run, pass a public-safe runtime evidence JSON with
+`--runtime-status-evidence`. Running without that file intentionally fails the
+runtime status receipt closed.
 
 ## Factory v1 Completion Gate
 

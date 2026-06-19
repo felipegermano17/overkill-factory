@@ -1,0 +1,37 @@
+{
+  "name": "overkill-factory-bridge",
+  "version": "0.1.0",
+  "description": "Operate Overkill Factory from Codex as the human bridge, not as the factory runtime.",
+  "author": {
+    "name": "Overkill Factory maintainers",
+    "url": "https://github.com/felipegermano17/overkill-factory"
+  },
+  "homepage": "https://github.com/felipegermano17/overkill-factory/blob/main/docs/operator/overkill-factory-bridge.md",
+  "repository": "https://github.com/felipegermano17/overkill-factory",
+  "license": "MIT",
+  "keywords": [
+    "overkill-factory",
+    "codex",
+    "hermes",
+    "operator-bridge",
+    "hooks"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Overkill Factory Bridge",
+    "shortDescription": "Bridge Codex, Hermes and human factory gates.",
+    "longDescription": "Use Codex as the operator bridge for Overkill Factory: start from human signal, read the durable inbox, report status, collect gate decisions, and hand responses back without taking factory authority.",
+    "developerName": "Overkill Factory maintainers",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Local files",
+      "Lifecycle hooks"
+    ],
+    "defaultPrompt": [
+      "Use the Overkill Factory Bridge to check status.",
+      "Summarize pending factory gates from the bridge inbox.",
+      "Record my factory decision without approving it yourself."
+    ]
+  }
+}
