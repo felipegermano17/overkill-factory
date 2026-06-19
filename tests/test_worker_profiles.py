@@ -187,6 +187,7 @@ class WorkerProfilesTest(unittest.TestCase):
         tasks = {task["worker_id"]: task for task in plan["worker_tasks"]}
 
         self.assertEqual(tasks["solana-quasar-auditor"]["profile_binding"]["profile_id"], "solana-quasar-auditor.profile.v1")
+        self.assertIn("solana-ai-kit", tasks["solana-quasar-auditor"]["profile_binding"]["skill_refs"])
         self.assertEqual(tasks["codex-security"]["profile_binding"]["receipt_field"], "security_scan_result")
         self.assertEqual(tasks["supply-chain-gate"]["gate_timing_class"], "blocking-before-ready")
         self.assertEqual(tasks["supply-chain-gate"]["queue_class"], "blocking-before-ready")

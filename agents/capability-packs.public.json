@@ -135,18 +135,38 @@
       "structured_proofs_required": ["agent.eval-plan", "agent.permission-boundary", "agent.profile-binding"],
       "reference_sources": ["ring prompt-reviewer", "mattpocock/skills", "orca workflow/review"]
     },
-    "solana-quasar-core": {
-      "pack_id": "solana-quasar-core",
+    "solana-ai-kit-core": {
+      "pack_id": "solana-ai-kit-core",
       "status": "core_ready",
-      "plain_purpose": "Covers Quasar-first Solana program work, PDA/CPI/account maps, compute units, wallet transactions and onchain QA.",
-      "covers_surfaces": ["solana", "solana-quasar", "quasar", "onchain", "program", "instruction", "pda", "account-pda", "cpi", "compute-units", "simulation", "devnet", "wallet", "transaction", "transactions", "signing", "funds", "mainnet"],
-      "existing_workers": ["solana-quasar-builder", "solana-quasar-qa-engineer", "solana-quasar-auditor", "wallet-transaction-builder", "crypto-key-management-specialist", "codex-security"],
+      "plain_purpose": "Covers Solana AI Kit-backed Solana/onchain work, program architecture, PDA/CPI/account maps, compute units, wallet transactions, signer boundaries and onchain QA.",
+      "covers_surfaces": ["solana", "solana-quasar", "quasar", "anchor", "pinocchio", "onchain", "program", "instruction", "pda", "account-pda", "cpi", "compute-units", "simulation", "devnet", "wallet", "transaction", "transactions", "signing", "funds", "mainnet", "rpc", "solana-sdk", "web3.js", "spl-token", "token", "token-2022", "nft", "metaplex", "compressed-nft", "defi", "amm", "staking", "governance", "dao", "solana-pay", "helius", "jupiter", "orca", "raydium"],
+      "existing_workers": ["product-sot-planner", "product-architect", "decomposition-planner", "product-face", "implementation-worker", "backend-api-builder", "integration-builder", "test-automation-builder", "qa-verification-worker", "solana-quasar-builder", "solana-quasar-qa-engineer", "solana-quasar-auditor", "wallet-transaction-builder", "crypto-key-management-specialist", "security-orchestrator", "codex-security"],
       "missing_worker_templates": [],
       "required_before_execution": true,
-      "activation_rule": "Available for Quasar-first work only; Anchor or Pinocchio require a separate optional pack and human decision.",
-      "evidence_required": ["onchain work package", "Auditor result", "signer boundary", "Quasar proof"],
-      "structured_proofs_required": ["solana.work-package", "solana.auditor-result", "solana.devnet-proof", "solana.signer-boundary"],
-      "reference_sources": ["solanabr/solana-claude", "ring security-reviewer"]
+      "activation_rule": "Available when Factory routing declares or infers a Solana-domain surface and Solana AI Kit is the pinned domain-brain provider; Factory gates, signer rules and human approvals still override provider guidance.",
+      "evidence_required": ["Solana AI Kit usage receipt for each real PASS Solana-domain worker result", "onchain work package", "Auditor result", "signer boundary", "Quasar proof when Quasar is used"],
+      "structured_proofs_required": ["solana-ai-kit.usage-receipt", "solana.work-package", "solana.auditor-result", "solana.devnet-proof", "solana.signer-boundary"],
+      "official_brain_provider": {
+        "provider_id": "solana-ai-kit",
+        "source": "https://github.com/solanabr/solana-ai-kit",
+        "pinned_ref": "v2.0.2",
+        "required_before_execution": true,
+        "install_modes": ["pinned-checkout", "agents-install", "claude-code-plugin"],
+        "load_contract": [
+          "Load Solana AI Kit before Solana/onchain planning or execution.",
+          "Use Solana AI Kit agents, commands, skills and MCP guidance as the Solana domain brain.",
+          "Record provider version, loaded sections and deviations in worker result evidence.",
+          "Treat Factory gates, Hermes runtime state, Receipt Five, signer rules and human approvals as higher authority than provider guidance."
+        ],
+        "usage_receipt_required": true,
+        "precedence_policy": [
+          "Overkill Factory gates and human approvals override Solana AI Kit recommendations.",
+          "Hermes cards, worker results and Receipt Five remain the source of truth.",
+          "No Solana AI Kit command may deploy mainnet, read private keys, sign transactions or touch funds without explicit gated authority.",
+          "When provider guidance conflicts with Factory Solana policy, block and request review instead of improvising."
+        ]
+      },
+      "reference_sources": ["solanabr/solana-ai-kit@v2.0.2", "ring security-reviewer"]
     },
     "mobile-app-pack": {
       "pack_id": "mobile-app-pack",

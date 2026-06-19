@@ -18,6 +18,17 @@ sys.modules["transition_hook"] = transition_hook
 SPEC.loader.exec_module(transition_hook)
 
 
+def solana_ai_kit_usage_receipt() -> dict:
+    return {
+        "provider_id": "solana-ai-kit",
+        "source": "https://github.com/solanabr/solana-ai-kit",
+        "pinned_ref": "v2.0.2",
+        "loaded": True,
+        "loaded_components": ["agents", "skills", "commands"],
+        "evidence_refs": ["README.md"],
+    }
+
+
 class HermesTransitionHookTest(unittest.TestCase):
     def test_ready_hook_persists_worker_tasks_idempotently(self) -> None:
         card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
@@ -184,6 +195,7 @@ class HermesTransitionHookTest(unittest.TestCase):
                 next_action="continue",
             ),
         }
+        receipt_payload["security_orchestration_result"]["solana_ai_kit_usage_receipt"] = solana_ai_kit_usage_receipt()
 
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             tmp_path = Path(tmp)

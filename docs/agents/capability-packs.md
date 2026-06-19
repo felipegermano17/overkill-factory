@@ -13,12 +13,15 @@ controls and specialist executors.
 
 ## How It Works
 
-Every Factory card names its surfaces, such as `frontend`, `api`, `solana`,
-`game`, `ios`, `payment` or `hardware`. Use `responsive` or `mobile-web` for
-browser UI that adapts to mobile screens. Use `ios`, `android`,
-`react-native`, `expo` or `native-mobile` for native mobile work. The broad
-surface `mobile` is intentionally ambiguous and must be refined before
-execution.
+Every Factory card may name its surfaces, such as `frontend`, `api`, `solana`,
+`game`, `ios`, `payment` or `hardware`. `factoryctl` also infers effective
+surfaces from public card routing text, such as outcome, scope, method
+contracts and product/security packets. Worker packets expose this as
+`input_contract.surface_router` with declared, inferred and effective surfaces
+plus the matched route reasons. Use `responsive` or `mobile-web` for browser UI
+that adapts to mobile screens. Use `ios`, `android`, `react-native`, `expo` or
+`native-mobile` for native mobile work. The broad surface `mobile` is
+intentionally ambiguous and must be refined before execution.
 
 `scripts/factoryctl.py validate-card` checks those surfaces against
 `agents/capability-packs.public.json`.
@@ -50,9 +53,18 @@ These packs are ready in the public Factory:
 | `cli-tui-product-pack` | Executable CLI/TUI products with command contracts, terminal transcripts, help UX and package/release proof. |
 | `cloud-native-core` | CI/CD, runtime, deploy wiring, cloud security, observability and rollback planning. |
 | `agent-runtime-core` | Hermes, Factory adapter, profiles, skills, tools, memory, MCP and agentic workflow changes. |
-| `solana-quasar-core` | Quasar-first Solana/onchain program work, wallet transactions, signer boundaries and onchain QA. |
+| `solana-ai-kit-core` | Solana AI Kit-backed Solana/onchain work, wallet transactions, signer boundaries and onchain QA. |
 | `operator-onboarding-pack` | Fresh install, first local smoke, Hermes adapter handoff and first walkthrough. |
 | `public-docs-knowledge-pack` | Public-safe docs, examples, guides and repository navigation for external users. |
+
+For Solana/onchain cards, `solana-ai-kit-core` is the domain-brain pack. The
+Solana-sensitive planning, architecture, build, wallet, QA, integration and
+security workers receive Solana AI Kit from the pinned provider ref in their
+worker packet when declared or inferred Solana surfaces are present. A real
+`PASS` result from those workers must record a Solana AI Kit usage receipt
+before it can satisfy closure. Solana AI Kit guides the domain work; it does
+not replace Hermes, Receipt Five, Factory gates, signer rules or human
+approval.
 
 ## Template Packs
 
