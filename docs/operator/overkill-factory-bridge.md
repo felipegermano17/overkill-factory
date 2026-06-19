@@ -42,6 +42,11 @@ The inbox is deliberately local and boring. It survives Codex being closed
 because the events are files. Codex hooks do not watch the machine while Codex is closed. They only read the inbox when Codex starts, resumes or receives a
 prompt.
 
+If Codex opens from the parent workspace instead of the factory checkout, the
+Bridge plugin may resolve one nearby child checkout that contains the
+`overkill-factory` marketplace and operator inbox. Operators can make that
+resolution explicit with `OVERKILL_FACTORY_INBOX` or `OVERKILL_FACTORY_ROOT`.
+
 That means there is no 24/7 token burn. Hermes or deterministic scripts write
 events. Codex wakes only when the user opens it, prompts it or schedules an
 automation.

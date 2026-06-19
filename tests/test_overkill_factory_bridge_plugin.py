@@ -63,6 +63,34 @@ class OverkillFactoryBridgePluginTest(unittest.TestCase):
 
         self.assertEqual(inbox, workspace / ".tmp" / "factory-runs" / "operator-inbox")
 
+    def test_plugin_hook_resolves_single_child_factory_inbox_from_parent_workspace(self) -> None:
+        hook = load_plugin_hook()
+        with tempfile.TemporaryDirectory() as tmp:
+            parent = Path(tmp)
+            factory = parent / "overkill-factory-product-profiles"
+            marketplace = factory / ".agents" / "plugins"
+            inbox = factory / ".tmp" / "factory-runs" / "operator-inbox"
+            marketplace.mkdir(parents=True)
+            inbox.mkdir(parents=True)
+            (marketplace / "marketplace.json").write_text(
+                json.dumps({"name": "overkill-factory", "plugins": []}),
+                encoding="utf-8",
+            )
+            (inbox / "pending.jsonl").write_text("", encoding="utf-8")
+
+            resolved = hook.default_inbox_dir({"cwd": str(parent)})
+
+        self.assertEqual(resolved, inbox)
+
+    def test_plugin_hook_honors_explicit_factory_root(self) -> None:
+        hook = load_plugin_hook()
+        with tempfile.TemporaryDirectory() as tmp:
+            factory = Path(tmp) / "factory"
+            with patch.dict(os.environ, {"OVERKILL_FACTORY_ROOT": str(factory)}):
+                resolved = hook.default_inbox_dir({"cwd": str(Path(tmp) / "elsewhere")})
+
+        self.assertEqual(resolved, factory / ".tmp" / "factory-runs" / "operator-inbox")
+
     def test_plugin_bridge_classifies_status_prompt_without_factory_authority(self) -> None:
         hook = load_plugin_hook()
         bridge = hook.load_bridge()

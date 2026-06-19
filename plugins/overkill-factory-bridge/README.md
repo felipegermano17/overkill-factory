@@ -36,8 +36,11 @@ Discord the source of truth.
 The hook reads the inbox in this order:
 
 1. `OVERKILL_FACTORY_INBOX`, when explicitly set;
-2. `<current workspace>/.tmp/factory-runs/operator-inbox`;
-3. `PLUGIN_DATA/operator-inbox`;
-4. the plugin-local `.tmp` fallback.
+2. `OVERKILL_FACTORY_ROOT/.tmp/factory-runs/operator-inbox`, when explicitly set;
+3. `<current workspace>/.tmp/factory-runs/operator-inbox`;
+4. a single nearby child checkout with the `overkill-factory` marketplace and
+   operator inbox, when Codex was opened from the parent workspace;
+5. `PLUGIN_DATA/operator-inbox`;
+6. the plugin-local `.tmp` fallback.
 
 This lets Codex catch up after being closed without staying alive 24/7.

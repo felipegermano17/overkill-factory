@@ -14,6 +14,9 @@ from typing import Any
 
 ROOT = Path(os.environ.get("PLUGIN_ROOT") or Path(__file__).resolve().parents[1])
 BRIDGE_PATH = ROOT / "scripts" / "factory_bridge.py"
+INBOX_REL = Path(".tmp") / "factory-runs" / "operator-inbox"
+MARKETPLACE_REL = Path(".agents") / "plugins" / "marketplace.json"
+FACTORY_MARKETPLACE_NAME = "overkill-factory"
 
 
 def load_bridge() -> Any:
@@ -33,6 +36,42 @@ def read_payload() -> dict[str, Any]:
     return json.loads(raw)
 
 
+def has_operator_inbox(root: Path) -> bool:
+    inbox = root / INBOX_REL
+    return inbox.exists() or any((inbox / name).exists() for name in ("pending.jsonl", "events.jsonl", "acks.jsonl"))
+
+
+def has_factory_marketplace(root: Path) -> bool:
+    manifest = root / MARKETPLACE_REL
+    if not manifest.exists():
+        return False
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return data.get("name") == FACTORY_MARKETPLACE_NAME
+
+
+def is_likely_factory_checkout(root: Path) -> bool:
+    return (
+        has_factory_marketplace(root)
+        or (root / "scripts" / "factory_bridge.py").exists()
+        or (root / "plugins" / "overkill-factory-bridge").exists()
+    )
+
+
+def nearby_factory_roots(root: Path) -> list[Path]:
+    if not root.exists() or not root.is_dir():
+        return []
+    matches: list[Path] = []
+    for child in root.iterdir():
+        if not child.is_dir():
+            continue
+        if has_operator_inbox(child) and is_likely_factory_checkout(child):
+            matches.append(child)
+    return sorted(matches)
+
+
 def workspace_root(cwd: str | None) -> Path | None:
     if not cwd:
         return None
@@ -43,17 +82,36 @@ def workspace_root(cwd: str | None) -> Path | None:
     return current
 
 
+def factory_root(cwd: str | None) -> Path | None:
+    env_root = os.environ.get("OVERKILL_FACTORY_ROOT")
+    if env_root:
+        return Path(env_root).resolve()
+
+    root = workspace_root(cwd)
+    if root is None:
+        return None
+
+    if has_operator_inbox(root) or is_likely_factory_checkout(root):
+        return root
+
+    nearby = nearby_factory_roots(root)
+    if len(nearby) == 1:
+        return nearby[0]
+
+    return root
+
+
 def default_inbox_dir(payload: dict[str, Any]) -> Path:
     env_inbox = os.environ.get("OVERKILL_FACTORY_INBOX")
     if env_inbox:
         return Path(env_inbox)
-    root = workspace_root(payload.get("cwd"))
+    root = factory_root(payload.get("cwd"))
     if root is not None:
-        return root / ".tmp" / "factory-runs" / "operator-inbox"
+        return root / INBOX_REL
     plugin_data = os.environ.get("PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA")
     if plugin_data:
         return Path(plugin_data) / "operator-inbox"
-    return ROOT / ".tmp" / "factory-runs" / "operator-inbox"
+    return ROOT / INBOX_REL
 
 
 def main() -> int:

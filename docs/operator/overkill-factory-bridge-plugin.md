@@ -44,9 +44,12 @@ publish to GitHub or make Discord a source of truth.
 The plugin hook reads the Durable Operator Inbox in this order:
 
 1. `OVERKILL_FACTORY_INBOX`;
-2. `<current workspace>/.tmp/factory-runs/operator-inbox`;
-3. `PLUGIN_DATA/operator-inbox`;
-4. plugin-local `.tmp` fallback.
+2. `OVERKILL_FACTORY_ROOT/.tmp/factory-runs/operator-inbox`;
+3. `<current workspace>/.tmp/factory-runs/operator-inbox`;
+4. a single nearby child checkout with the `overkill-factory` marketplace and
+   operator inbox, when Codex was opened from the parent workspace;
+5. `PLUGIN_DATA/operator-inbox`;
+6. plugin-local `.tmp` fallback.
 
 This supports queue catch-up when Codex was closed without keeping Codex active
 24/7.
