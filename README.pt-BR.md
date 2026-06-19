@@ -187,7 +187,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 e a linha atual de release do kernel publico; a tag publica mais
-recente e v1.1.0. Ela inclui:
+recente e v1.1.1. Ela inclui:
 
 - Universal Signal Intake e route registry;
 - Golden Corpus e checks de cobertura de sinais;
@@ -196,6 +196,7 @@ recente e v1.1.0. Ela inclui:
 - regras de ativacao de capability packs;
 - roteamento Solana AI Kit como cerebro de dominio para trabalho Solana e
   on-chain;
+- remote proof e gates R4 para trabalho Solana/on-chain de alto risco;
 - docs e pacote do plugin Bridge do Codex para handoff operador-fabrica;
 - contratos de Product Face packet/result;
 - release preflight, public-surface sync e safety scans;

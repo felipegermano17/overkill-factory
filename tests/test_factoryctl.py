@@ -735,7 +735,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(report["workers"]["independent-reviewer"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["human-gate-clerk"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["autoreview-gate"]["status"], "requires_execution")
-        self.assertEqual(report["workers"]["remote-proof-runner"]["status"], "not_required_by_current_card")
+        self.assertEqual(report["workers"]["remote-proof-runner"]["status"], "requires_execution")
         self.assertEqual(report["workers"]["supply-chain-gate"]["status"], "requires_execution")
 
     def test_required_only_worker_packets_generate_only_triggered_workers(self) -> None:

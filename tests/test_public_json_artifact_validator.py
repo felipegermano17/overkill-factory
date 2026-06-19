@@ -159,6 +159,8 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         self.assertIn("agents/worker-contract.schema.json", schema_paths)
         self.assertIn("worker-contract.schema.json", schemas)
+        self.assertIn("quickstart-smoke-result.schema.json", schemas)
+        self.assertIn("factory-doctor-result.schema.json", schemas)
 
     def test_public_json_discovery_skips_runtime_operator_inbox(self) -> None:
         validator = load_validator()

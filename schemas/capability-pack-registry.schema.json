@@ -90,16 +90,19 @@
               "provider_id",
               "source",
               "pinned_ref",
+              "pinned_commit",
               "required_before_execution",
               "install_modes",
               "load_contract",
               "usage_receipt_required",
-              "precedence_policy"
+              "precedence_policy",
+              "supply_chain_policy"
             ],
             "properties": {
               "provider_id": { "type": "string", "minLength": 3 },
               "source": { "type": "string", "minLength": 3 },
               "pinned_ref": { "type": "string", "minLength": 1 },
+              "pinned_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
               "required_before_execution": { "type": "boolean" },
               "install_modes": {
                 "type": "array",
@@ -113,6 +116,11 @@
               },
               "usage_receipt_required": { "type": "boolean" },
               "precedence_policy": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 8 }
+              },
+              "supply_chain_policy": {
                 "type": "array",
                 "minItems": 1,
                 "items": { "type": "string", "minLength": 8 }

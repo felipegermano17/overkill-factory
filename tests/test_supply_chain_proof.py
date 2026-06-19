@@ -107,6 +107,13 @@ class SupplyChainProofTests(unittest.TestCase):
 
         self.assertEqual(refs, ["public.txt"])
 
+    def test_source_inventory_tolerates_missing_root(self):
+        with TemporaryDirectory() as tmpdir:
+            missing = Path(tmpdir) / "already-gone"
+
+        with mock.patch.object(proof, "ROOT", missing):
+            self.assertEqual(proof.iter_repo_files(), [])
+
     def test_dependency_manifest_requires_followup(self):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

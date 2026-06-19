@@ -7,6 +7,10 @@ public releases.
 
 ## Unreleased
 
+Nothing yet.
+
+## 1.1.1 - 2026-06-19
+
 - Document the v1.1.0 Codex Bridge plugin release surface in the public
   changelog and root READMEs.
 - Clarify that the v1.0.1 visual map is a supporting visual surface versioned
@@ -16,6 +20,17 @@ public releases.
   warnings.
 - Keep local generated build output and runtime bridge inbox records out of
   public validation discovery.
+- Pin the Solana AI Kit domain-brain provider to the resolved `v2.0.2` commit
+  and record the unsigned upstream tag as a supply-chain gate input.
+- Require `remote-proof-runner` for high-risk Solana/onchain cards even when a
+  card omits an explicit `runtime_contract.remote_proof_required=true`.
+- Extend the validation battery with Solana bank R4 routing scenarios covering
+  wallet, signing, funds, mainnet, Product Face, security, key-management,
+  release, remote proof and supply-chain gates.
+- Harden public-safety and SBOM/source inventory scans against transient local
+  paths that appear or disappear while validation is running.
+- Add public schemas for generated doctor and quickstart smoke result
+  artifacts so local audit output stays contract-validated.
 
 ## 1.1.0 - 2026-06-19
 

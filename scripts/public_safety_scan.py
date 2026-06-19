@@ -206,17 +206,43 @@ def build_summary(findings: list[str], *, git_ref: str | None = None, created_at
 def scan_worktree(root: Path = ROOT) -> list[str]:
     findings: list[str] = []
     scanner_path = Path(__file__).resolve()
-    for path in root.rglob("*"):
-        if not path.is_file():
+    stack = [root]
+    while stack:
+        directory = stack.pop()
+        try:
+            entries = list(directory.iterdir())
+        except (FileNotFoundError, PermissionError):
             continue
-        if path.resolve() == scanner_path:
-            continue
-        rel = path.relative_to(root).as_posix()
-        if is_text_rel(rel):
-            text = path.read_text(encoding="utf-8", errors="replace")
-            findings.extend(scan_text(rel, text))
-        elif is_binary_asset_rel(rel):
-            findings.extend(scan_binary(rel, path.read_bytes()))
+        for path in entries:
+            try:
+                if path.is_dir() and not path.is_symlink():
+                    rel_dir = path.relative_to(root).as_posix()
+                    rel_dir_path = PurePosixPath(rel_dir)
+                    if any(part in SKIP_PARTS for part in rel_dir_path.parts):
+                        continue
+                    if any(part.endswith(SKIP_PART_SUFFIXES) for part in rel_dir_path.parts):
+                        continue
+                    stack.append(path)
+                    continue
+                if not path.is_file():
+                    continue
+            except (FileNotFoundError, PermissionError):
+                continue
+            if path.resolve() == scanner_path:
+                continue
+            rel = path.relative_to(root).as_posix()
+            if is_text_rel(rel):
+                try:
+                    text = path.read_text(encoding="utf-8", errors="replace")
+                except (FileNotFoundError, PermissionError):
+                    continue
+                findings.extend(scan_text(rel, text))
+            elif is_binary_asset_rel(rel):
+                try:
+                    data = path.read_bytes()
+                except (FileNotFoundError, PermissionError):
+                    continue
+                findings.extend(scan_binary(rel, data))
     return findings
 
 

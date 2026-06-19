@@ -155,8 +155,10 @@ class CapabilityPacksTest(unittest.TestCase):
         self.assertEqual(provider["provider_id"], "solana-ai-kit")
         self.assertEqual(provider["source"], "https://github.com/solanabr/solana-ai-kit")
         self.assertEqual(provider["pinned_ref"], "v2.0.2")
+        self.assertEqual(provider["pinned_commit"], "4fb9d3d619467e068c1cf3120d3933aa933aeb21")
         self.assertTrue(provider["required_before_execution"])
         self.assertTrue(provider["usage_receipt_required"])
+        self.assertTrue(any("unsigned" in item for item in provider["supply_chain_policy"]))
         self.assertIn("solana-ai-kit.usage-receipt", pack["structured_proofs_required"])
         self.assertIn("solanabr/solana-ai-kit@v2.0.2", pack["reference_sources"])
         for surface in ["anchor", "pinocchio", "token-2022", "nft", "defi", "rpc", "solana-pay"]:

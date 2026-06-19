@@ -32,8 +32,9 @@ The HTML visualizations explain those contracts; they do not replace them.
 ## Version Boundary
 
 The current public map is `v1.0.1`. That is the visual surface version, not the
-repository release tag. Release `v1.1.0` adds Solana AI Kit routing and the
-Codex Bridge plugin without republishing the map.
+repository release tag. Release `v1.1.1` includes Solana AI Kit routing, the
+Codex Bridge plugin and Solana/on-chain R4 gate hardening without republishing
+the map.
 
 For Solana work, capability packs, `input_contract.surface_router`,
 `domain_brain_provider` and `solana_ai_kit_usage_receipt` are authoritative.

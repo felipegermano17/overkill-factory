@@ -328,6 +328,7 @@ def write_route_readiness(path: Path, extra_workers: list[str] | None = None) ->
         "qa-verification-worker",
         "autoreview-gate",
         "security-orchestrator",
+        "remote-proof-runner",
         "handoff-packer",
         "supply-chain-gate",
     ]

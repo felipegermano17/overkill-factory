@@ -12326,9 +12326,14 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "crypto/key/custody surface detected" if required else "no crypto/key trigger"
         return required, reason
     if worker_id == "remote-proof-runner":
-        required = runtime_contract.get("remote_proof_required") is True
+        high_risk_onchain = effective_risk in HIGH_RISK and bool(surfaces & (ONCHAIN_SURFACES | SOLANA_QA_SURFACES))
+        required = runtime_contract.get("remote_proof_required") is True or high_risk_onchain
         if required:
-            reason = "explicit remote proof required by runtime_contract"
+            reason = (
+                "high-risk Solana/onchain work requires remote proof"
+                if high_risk_onchain and runtime_contract.get("remote_proof_required") is not True
+                else "explicit remote proof required by runtime_contract"
+            )
         elif effective_risk in HIGH_RISK:
             reason = "high-risk card has remote proof as future/advisory gate unless runtime_contract.remote_proof_required=true"
         else:

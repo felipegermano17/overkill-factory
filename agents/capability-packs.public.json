@@ -150,6 +150,7 @@
         "provider_id": "solana-ai-kit",
         "source": "https://github.com/solanabr/solana-ai-kit",
         "pinned_ref": "v2.0.2",
+        "pinned_commit": "4fb9d3d619467e068c1cf3120d3933aa933aeb21",
         "required_before_execution": true,
         "install_modes": ["pinned-checkout", "agents-install", "claude-code-plugin"],
         "load_contract": [
@@ -164,6 +165,11 @@
           "Hermes cards, worker results and Receipt Five remain the source of truth.",
           "No Solana AI Kit command may deploy mainnet, read private keys, sign transactions or touch funds without explicit gated authority.",
           "When provider guidance conflicts with Factory Solana policy, block and request review instead of improvising."
+        ],
+        "supply_chain_policy": [
+          "Resolve pinned_ref to pinned_commit before material Solana execution.",
+          "Treat the upstream v2.0.2 tag as unsigned; do not upgrade or retarget without a Factory supply-chain gate.",
+          "Record provider checkout evidence in every material Solana worker handoff."
         ]
       },
       "reference_sources": ["solanabr/solana-ai-kit@v2.0.2", "ring security-reviewer"]
@@ -190,7 +196,7 @@
       "activation_rule": "Block material mobile execution until the pack is activated or explicitly waived with a human gate.",
       "evidence_required": ["mobile architecture packet", "device/simulator smoke", "mobile Product Face result"],
       "structured_proofs_required": ["mobile.architecture-packet", "mobile.device-smoke", "mobile.lifecycle-permissions", "mobile.product-face-result"],
-      "reference_sources": ["solana-claude mobile-engineer", "gstack ios-qa/ios-fix/ios-design-review"]
+      "reference_sources": ["solanabr/solana-ai-kit@v2.0.2 mobile guidance", "gstack ios-qa/ios-fix/ios-design-review"]
     },
     "desktop-app-pack": {
       "pack_id": "desktop-app-pack",
@@ -238,7 +244,7 @@
       "activation_rule": "Block game execution until the game pack is activated for 2D, 3D, web, mobile or onchain game scope.",
       "evidence_required": ["game design packet", "runtime choice", "playable smoke", "performance budget"],
       "structured_proofs_required": ["game.design-packet", "game.runtime-choice", "game.playable-smoke", "game.performance-budget", "game.playtest-review"],
-      "reference_sources": ["solana-claude game-architect/unity-engineer", "gstack design-shotgun/design-review/qa"]
+      "reference_sources": ["solanabr/solana-ai-kit@v2.0.2 game/unity guidance", "gstack design-shotgun/design-review/qa"]
     },
     "ai-ml-product-pack": {
       "pack_id": "ai-ml-product-pack",

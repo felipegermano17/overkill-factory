@@ -10,7 +10,7 @@ import re
 import sys
 import tomllib
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -53,15 +53,29 @@ def text(path: Path) -> str:
 
 def iter_repo_files() -> list[Path]:
     files: list[Path] = []
-    for path in ROOT.rglob("*"):
-        if not path.is_file():
+    stack = [ROOT]
+    while stack:
+        directory = stack.pop()
+        try:
+            entries = list(directory.iterdir())
+        except (FileNotFoundError, PermissionError):
             continue
-        rel = repo_ref(path)
-        if any(part in SKIP_PARTS for part in path.parts):
-            continue
-        if any(rel == part or rel.startswith(part + "/") for part in SKIP_OUTPUT_PARTS):
-            continue
-        files.append(path)
+        for path in entries:
+            try:
+                rel = repo_ref(path)
+                rel_parts = PurePosixPath(rel).parts
+                if any(part in SKIP_PARTS for part in rel_parts):
+                    continue
+                if any(rel == part or rel.startswith(part + "/") for part in SKIP_OUTPUT_PARTS):
+                    continue
+                if path.is_dir() and not path.is_symlink():
+                    stack.append(path)
+                    continue
+                if not path.is_file():
+                    continue
+            except (FileNotFoundError, PermissionError):
+                continue
+            files.append(path)
     return sorted(files, key=repo_ref)
 
 

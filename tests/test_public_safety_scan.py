@@ -118,6 +118,26 @@ class PublicSafetyScanTest(unittest.TestCase):
         self.assertFalse(public_safety_scan.is_text_rel("site/index.html"))
         self.assertFalse(public_safety_scan.is_binary_asset_rel("site/webfonts/fa-solid-900.woff2"))
 
+    def test_worktree_scan_checks_all_sibling_files_and_skips_tmp(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            (root / ".tmp").mkdir()
+            (root / "docs" / "a.md").write_text(PRIVATE_MARKER, encoding="utf-8")
+            (root / "docs" / "b.md").write_text(PRIVATE_MARKER, encoding="utf-8")
+            (root / ".tmp" / "ignored.md").write_text(PRIVATE_MARKER, encoding="utf-8")
+
+            findings = public_safety_scan.scan_worktree(root)
+
+        self.assertEqual(len(findings), 2)
+        self.assertTrue(all(finding.startswith("docs/") for finding in findings), findings)
+
+    def test_worktree_scan_tolerates_missing_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = Path(tmp) / "already-gone"
+
+        self.assertEqual(public_safety_scan.scan_worktree(missing), [])
+
     def test_git_ref_scan_checks_committed_tree(self) -> None:
         original_root = public_safety_scan.ROOT
         with tempfile.TemporaryDirectory() as tmp:
