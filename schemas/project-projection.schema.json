@@ -90,19 +90,47 @@
         "type": "object",
         "required": ["name", "status"],
         "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
           "name": {
             "type": "string",
             "minLength": 1
           },
           "status": {
-            "enum": ["done", "current", "pending", "blocked", "skipped"]
+            "enum": ["done", "current", "pending", "blocked", "skipped", "superseded"]
           },
           "summary": {
             "type": "string"
+          },
+          "source_ref": {
+            "type": "string",
+            "minLength": 3
           }
         },
         "additionalProperties": false
       }
+    },
+    "completion_basis": {
+      "type": "object",
+      "required": ["basis_type", "derived_from_board_counts"],
+      "properties": {
+        "basis_type": {
+          "enum": ["runtime_gate_projection", "manual_estimate"]
+        },
+        "derived_from_board_counts": {
+          "const": false
+        },
+        "runtime_state_ref": {
+          "type": "string",
+          "minLength": 3
+        },
+        "factory_method_remediation_excluded": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
     },
     "next_action": {
       "type": "string",
@@ -206,6 +234,24 @@
         }
       },
       "additionalProperties": false
+    },
+    "progress_boundary": {
+      "type": "object",
+      "properties": {
+        "product_progress_source": {
+          "enum": ["runtime_gates", "manual_estimate"]
+        },
+        "board_counts_are_authoritative": {
+          "const": false
+        },
+        "manual_estimate_supports_done_or_release": {
+          "const": false
+        },
+        "factory_method_remediation_separate": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
     }
   },
   "allOf": [

@@ -139,6 +139,10 @@ This is separate from the gate report:
   records superseded stale results and blocks unresolved current failures;
 - `external:kanban-artifact:` refs must include `artifact_readback` proof from a
   separate worker context before they can satisfy Receipt Five closure;
+- native `kanban-attachment:` refs must include readback proof for the
+  attachment row, blob existence, byte size, sha256, JSON parse status, public
+  safety scan, secret safety scan and held-card hydration when the attachment is
+  meant to update card state;
 - closure summary explains the reconciled evidence set in human-readable form;
 - Receipt Five closes the Kanban transition.
 
@@ -218,6 +222,8 @@ At `done`, Hermes should:
 - reconcile each result against its expected Receipt Five field;
 - reject `external:kanban-artifact:` refs without successful downstream
   `artifact_readback` proof;
+- reject native `kanban-attachment:` refs unless the worker result proves the
+  attachment survived durable readback and passed public/secret safety checks;
 - reject Hermes background subagent output unless a worker result explicitly
   marks it `reconciliation_state=reconciled`;
 - reject missing, failed, unsupported or preflight-only results;

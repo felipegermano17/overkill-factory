@@ -130,7 +130,10 @@ product success signals and autonomy risk.
 It is not product acceptance, customer readiness, release approval, security
 approval or a cockpit status. Non-passing dimensions require a remediation
 loop, and blocking dimensions must keep autonomous execution off until the
-scorecard is rerun with evidence.
+scorecard is rerun with evidence. A remediation loop is valid only when it has
+finite bounds: `max_remediation_attempts`, `timeout_minutes` and a
+`stop_condition`. Without those, bounded remediation can turn into an
+unreviewed execution loop and the scorecard must fail closed.
 
 `ready_with_bounds` is not the same as material autonomy. When any dimension is
 `REMEDIATION_REQUIRED`, the autonomy boundary may allow only bounded remediation

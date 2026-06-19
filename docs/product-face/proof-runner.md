@@ -189,7 +189,32 @@ comparison artifacts or to a bounded sanitized comparison manifest.
 an id, severity, owner, expiry, accepted scope and proof refs. Any warning in
 `usage_evidence_matrix` must point to one of those residual ids through
 `accepted_residual_ref`, otherwise the result cannot be consumed as a Product
-Face PASS.
+Face PASS. For final product completion, each residual also needs a
+`completion_disposition`. `repair_required` and `blocked_with_owner` keep final
+completion blocked. `accepted_by_human_gate` needs a public-safe
+`human_gate_ref`; `out_of_scope_with_rationale` needs a public-safe rationale.
+This lets Product Face record bounded review residuals without letting them
+become permanent caveats in a completed product.
+
+If a residual is `repair_required`, final completion also requires a
+materialized `repair_loop`: public-safe route ref, Hermes Kanban runtime
+authority, no local-state authority, registered nonhuman worker ids and
+`fresh_product_face_required=true`. A repair note without a routed worker loop
+is still only a blocker, not product completion.
+
+Source binding and scope coverage are separate checks. A Product Face result can
+point at the current authorized surface and still under-cover the active Product
+SOT. When active Product SOT scope exists, final completion requires
+`scope_coverage_matrix` entries for each approved SOT requirement. `covered`
+items need public-safe evidence refs. `partial` and `blocked` items fail final
+completion. `deferred_by_sot` and `out_of_scope_by_sot` require a public-safe
+SOT deferral or human-gate ref.
+
+Source authority is explicit. Final completion must bind the compared candidate
+surface to the active Product SOT and source-resolution packet through
+`source_authority_binding`. `reference_only`, `superseded`, `unrelated` and
+`rejected_stale_surface` candidates fail closed unless they are promoted by the
+SOT with a public-safe promotion ref.
 
 `templates/professional-design-process.json` is a starter contract. Its gates
 are intentionally `PENDING`; copying that template into a card is not

@@ -192,6 +192,27 @@ class FactoryReadinessScorecardTest(unittest.TestCase):
             errors,
         )
 
+    def test_remediation_loop_requires_finite_budget_when_required(self) -> None:
+        card = scorecard()
+        card["remediation_loop"].pop("max_remediation_attempts", None)
+        card["remediation_loop"].pop("timeout_minutes", None)
+        card["remediation_loop"].pop("stop_condition", None)
+
+        errors = factoryctl.validate_factory_readiness_scorecard(card)
+
+        self.assertIn(
+            "factory_readiness_scorecard remediation_loop.required=true requires max_remediation_attempts",
+            errors,
+        )
+        self.assertIn(
+            "factory_readiness_scorecard remediation_loop.required=true requires timeout_minutes",
+            errors,
+        )
+        self.assertIn(
+            "factory_readiness_scorecard remediation_loop.required=true requires stop_condition",
+            errors,
+        )
+
     def test_factoryctl_cli_validates_scorecard(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "scorecard.json"

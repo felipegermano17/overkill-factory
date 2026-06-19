@@ -132,7 +132,10 @@
     "loop_ref": "templates/factory-sdlc-feedback-loop.json",
     "rerun_required_before_unblock": true,
     "unblock_requires_evidence": true,
-    "auto_approve_human_gates": false
+    "auto_approve_human_gates": false,
+    "max_remediation_attempts": 2,
+    "timeout_minutes": 90,
+    "stop_condition": "Stop after two failed remediation attempts, missing evidence, scope expansion, or any human-gate ambiguity."
   },
   "autonomy_boundary": {
     "autonomous_execution_allowed": true,

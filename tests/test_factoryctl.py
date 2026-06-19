@@ -570,6 +570,13 @@ def product_face_result_fixture(**overrides: object) -> dict:
             "status": "pass",
             "basis": "The result covers the visible validation promise in the card."
         },
+        "source_authority_binding": {
+            "product_sot_ref": "card.product_sot",
+            "source_resolution_ref": "external:public-current-source-resolution",
+            "candidate_surface_ref": "external:public-current-product-surface",
+            "candidate_surface_classification": "current_source_bound",
+            "basis": "Fixture Product Face result is bound to the current product surface.",
+        },
         "design_fit_review": {
             "status": "pass",
             "basis": "The result matches the Product Face packet."
@@ -1036,6 +1043,130 @@ class FactoryCtlTest(unittest.TestCase):
         outputs = {worker.output_field for worker in factoryctl.WORKERS.values()}
 
         self.assertEqual(allowed, outputs | {"human_gate_record"})
+
+    def test_kanban_attachment_ref_requires_native_readback_contract(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = worker_result("qa_verification_result", source_card=card)
+        result["evidence_refs"] = ["kanban-attachment:task-123/artifacts/product-face.json"]
+        result["artifact_readback"] = {
+            "status": "PASS",
+            "checked_from": "downstream_worker_context",
+            "refs": [
+                {
+                    "ref": "kanban-attachment:task-123/artifacts/product-face.json",
+                    "readable": True,
+                    "sha256": "sha256:" + "1" * 64,
+                }
+            ],
+        }
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="qa_verification_result",
+            expected_worker_id="qa-verification-worker",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn(
+            "artifact_readback.refs[kanban-attachment:task-123/artifacts/product-face.json].attachment_row_seen must be true",
+            errors,
+        )
+
+    def test_kanban_attachment_ref_passes_with_full_native_readback_contract(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = worker_result("qa_verification_result", source_card=card)
+        ref = "kanban-attachment:task-123/artifacts/product-face.json"
+        result["evidence_refs"] = [ref]
+        result["evidence_kind"] = "real"
+        result["reusable_for_product"] = True
+        result["artifact_readback"] = {
+            "status": "PASS",
+            "checked_from": "downstream_worker_context",
+            "held_card_readback": {
+                "required": True,
+                "blocked_event_seen": True,
+                "hydration_complete": True,
+                "dispatcher_respects_hold": True,
+            },
+            "refs": [
+                {
+                    "ref": ref,
+                    "readable": True,
+                    "attachment_row_seen": True,
+                    "blob_exists": True,
+                    "size_bytes": 128,
+                    "sha256": "sha256:" + "1" * 64,
+                    "json_parse_status": "PASS",
+                    "schema_valid": True,
+                    "public_safety_scan": "PASS",
+                    "secret_safety_scan": "PASS",
+                }
+            ],
+        }
+
+        self.assertEqual(
+            factoryctl.validate_worker_result_record(
+                result,
+                expected_field="qa_verification_result",
+                expected_worker_id="qa-verification-worker",
+                card=card,
+                evidence_root=ROOT,
+            ),
+            [],
+        )
+
+    def test_project_process_projection_rejects_manual_completion_estimate_for_done_claim(self) -> None:
+        projection = factoryctl.load_json_like(ROOT / "templates" / "project-projection.json")
+        projection["status"] = "release_candidate"
+        projection["execution_started"] = True
+        projection["projection_freshness"] = "manual_estimate"
+        projection["source_of_truth"] = dict(projection["source_of_truth"], freshness="manual_estimate")
+        projection["completion_percent"] = 95
+        projection["completion_basis"] = {"basis_type": "manual_estimate", "derived_from_board_counts": False}
+
+        errors = factoryctl.validate_project_process_projection(projection)
+
+        self.assertIn(
+            "project_projection manual estimates cannot support release_candidate, production or closed status",
+            errors,
+        )
+
+    def test_project_process_projection_derives_completion_from_runtime_gates(self) -> None:
+        projection = factoryctl.build_product_process_projection(
+            {
+                "project_id": "factory-product-run",
+                "name": "Factory Product Run",
+                "risk": "R2",
+                "source_runtime": "hermes_kanban",
+                "source_board": "external:hermes-board-public-safe",
+                "source_ref": "reports/runtime/product-run-state.json",
+                "source_freshness": "runtime_fresh",
+                "gate_states": {
+                    "source_resolution": "done",
+                    "product_sot": "done",
+                    "method_route": "done",
+                    "decomposition": "done",
+                    "readiness_gates": "done",
+                    "execution": "done",
+                    "product_face": "blocked",
+                    "qa": "pending",
+                    "public_safety": "pending",
+                    "security": "pending",
+                    "independent_review": "pending",
+                    "release_readiness": "pending",
+                    "closeout": "pending",
+                    "learnback": "pending",
+                },
+                "blockers": ["Product Face residual repair required"],
+            }
+        )
+
+        self.assertEqual(factoryctl.validate_project_process_projection(projection), [])
+        self.assertEqual(projection["status"], "blocked")
+        self.assertEqual(projection["completion_basis"]["basis_type"], "runtime_gate_projection")
+        self.assertFalse(projection["completion_basis"]["derived_from_board_counts"])
+        self.assertLess(projection["completion_percent"], 100)
 
     def test_minimal_example_card_matches_hermes_ready_gate_constraints(self) -> None:
         card = factoryctl.load_json_like(ROOT / "examples" / "minimal-hermes-project" / "card.md")
@@ -1527,6 +1658,15 @@ class FactoryCtlTest(unittest.TestCase):
                     states=states,
                     viewports=viewports,
                 ),
+                scope_coverage_matrix=[
+                    {
+                        "scope_item_id": "product-sot#scope-in-001",
+                        "category": "sot_requirement",
+                        "status": "covered",
+                        "evidence_refs": ["reports/product-face/product-sot-scope-in-001.json"],
+                        "basis": "Product Face fixture covers the approved Product SOT scope-in requirement.",
+                    }
+                ],
             )
         )
 
@@ -2805,6 +2945,198 @@ class FactoryCtlTest(unittest.TestCase):
         errors = factoryctl.validate_product_face_result(result)
 
         self.assertEqual([], errors)
+
+    def test_product_face_residual_requires_completion_disposition_for_final_acceptance(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture(
+            visual_quality_result={
+                "status": "PASS_WITH_RESIDUALS",
+                "reviewer": "product-face-reviewer",
+                "basis": "Residual is bounded for narrow Product Face review but not yet resolved for final completion.",
+                "reference_quality_bar_checked": True,
+                "ai_generic_symptoms": [],
+                "residuals": [visual_quality_residual_fixture()],
+            }
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.visual_quality_result.residuals[0].completion_disposition is required for final product completion",
+            errors,
+        )
+
+    def test_product_face_completion_accepts_residual_with_human_gate_disposition(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture(
+            visual_quality_result={
+                "status": "PASS_WITH_RESIDUALS",
+                "reviewer": "product-face-reviewer",
+                "basis": "Residual is bounded and explicitly accepted by a human gate for this completion boundary.",
+                "reference_quality_bar_checked": True,
+                "ai_generic_symptoms": [],
+                "residuals": [
+                    visual_quality_residual_fixture(
+                        completion_disposition="accepted_by_human_gate",
+                        human_gate_ref="reports/human-gates/product-face-residual.json",
+                    )
+                ],
+            }
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
+    def test_product_face_repair_required_residual_requires_materialized_repair_loop(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        result = product_face_result_fixture(
+            visual_quality_result={
+                "status": "PASS_WITH_RESIDUALS",
+                "reviewer": "product-face-reviewer",
+                "basis": "Visible residual must route through repair before final completion.",
+                "reference_quality_bar_checked": True,
+                "ai_generic_symptoms": [],
+                "residuals": [
+                    visual_quality_residual_fixture(
+                        completion_disposition="repair_required",
+                        repair_loop_ref="reports/product-face/repair-loop/missing-route.json",
+                    )
+                ],
+            }
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.visual_quality_result.residuals[0].repair_loop must materialize deterministic repair routing",
+            errors,
+        )
+
+    def test_product_face_source_authority_rejects_unpromoted_reference_surface(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_sot"] = {
+            "sot_id": "active-product-sot",
+            "requirement_graph": [{"requirement_id": "current-control-room", "decision_state": "approved"}],
+        }
+        card["source_resolution_packet_ref"] = "reports/source-resolution/active-product.json"
+        result = product_face_result_fixture(
+            source_authority_binding={
+                "product_sot_ref": "card.product_sot",
+                "source_resolution_ref": "reports/source-resolution/active-product.json",
+                "candidate_surface_ref": "examples/legacy-cockpit/index.html",
+                "candidate_surface_classification": "reference_only",
+                "basis": "Legacy cockpit is useful as a reference but is not promoted by the active SOT.",
+            },
+            scope_coverage_matrix=[
+                {
+                    "scope_item_id": "current-control-room",
+                    "category": "surface",
+                    "status": "covered",
+                    "evidence_refs": ["reports/product-face/current-control-room.json"],
+                    "basis": "Current control room requirement is covered.",
+                }
+            ],
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.source_authority_binding candidate_surface_classification=reference_only cannot satisfy final product completion",
+            errors,
+        )
+
+    def test_product_face_source_authority_accepts_sot_promoted_prior_surface(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_sot"] = {
+            "sot_id": "active-product-sot",
+            "promoted_surface_refs": ["examples/legacy-cockpit/index.html"],
+            "requirement_graph": [{"requirement_id": "current-control-room", "decision_state": "approved"}],
+        }
+        card["source_resolution_packet_ref"] = "reports/source-resolution/active-product.json"
+        result = product_face_result_fixture(
+            source_authority_binding={
+                "product_sot_ref": "card.product_sot",
+                "source_resolution_ref": "reports/source-resolution/active-product.json",
+                "candidate_surface_ref": "examples/legacy-cockpit/index.html",
+                "candidate_surface_classification": "current_source_bound",
+                "promotion_ref": "card.product_sot.promoted_surface_refs",
+                "basis": "Active Product SOT promotes this prior surface for reuse.",
+            },
+            scope_coverage_matrix=[
+                {
+                    "scope_item_id": "current-control-room",
+                    "category": "surface",
+                    "status": "covered",
+                    "evidence_refs": ["reports/product-face/current-control-room.json"],
+                    "basis": "Current control room requirement is covered.",
+                }
+            ],
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
+
+    def test_product_face_completion_requires_active_sot_scope_coverage(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_sot"] = {
+            "requirement_graph": [
+                {"requirement_id": "sot-control-room", "decision_state": "approved"},
+                {"requirement_id": "sot-evidence-timeline", "decision_state": "approved"},
+            ]
+        }
+        result = product_face_result_fixture(
+            scope_coverage_matrix=[
+                {
+                    "scope_item_id": "sot-control-room",
+                    "category": "surface",
+                    "status": "covered",
+                    "evidence_refs": ["reports/product-face/control-room.json"],
+                    "basis": "Current Product Face surface covers the control room.",
+                },
+                {
+                    "scope_item_id": "sot-evidence-timeline",
+                    "category": "journey",
+                    "status": "partial",
+                    "evidence_refs": ["reports/product-face/evidence-timeline-partial.json"],
+                    "basis": "Only the current-bound surface was checked; the full timeline is not complete.",
+                },
+            ]
+        )
+
+        errors = factoryctl.validate_product_face_result_against_card(result, card)
+
+        self.assertIn(
+            "product_face_result.scope_coverage_matrix[sot-evidence-timeline].status=partial blocks final product completion",
+            errors,
+        )
+
+    def test_product_face_completion_accepts_sot_scope_coverage_with_authorized_deferral(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md")
+        card["product_sot"] = {
+            "requirement_graph": [
+                {"requirement_id": "sot-control-room", "decision_state": "approved"},
+                {"requirement_id": "sot-evidence-timeline", "decision_state": "approved"},
+            ]
+        }
+        result = product_face_result_fixture(
+            scope_coverage_matrix=[
+                {
+                    "scope_item_id": "sot-control-room",
+                    "category": "surface",
+                    "status": "covered",
+                    "evidence_refs": ["reports/product-face/control-room.json"],
+                    "basis": "Current Product Face surface covers the control room.",
+                },
+                {
+                    "scope_item_id": "sot-evidence-timeline",
+                    "category": "journey",
+                    "status": "deferred_by_sot",
+                    "sot_deferral_ref": "docs/product-sot/deferred-evidence-timeline.json",
+                    "evidence_refs": ["docs/product-sot/deferred-evidence-timeline.json"],
+                    "basis": "Active Product SOT explicitly defers the evidence timeline from this completion boundary.",
+                },
+            ]
+        )
+
+        self.assertEqual(factoryctl.validate_product_face_result_against_card(result, card), [])
 
     def test_product_face_waived_allows_pending_reference_quality(self) -> None:
         result = {

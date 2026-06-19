@@ -546,6 +546,67 @@
         "additionalProperties": true
       }
     },
+    "source_authority_binding": {
+      "type": "object",
+      "required": [
+        "product_sot_ref",
+        "source_resolution_ref",
+        "candidate_surface_ref",
+        "candidate_surface_classification",
+        "basis"
+      ],
+      "properties": {
+        "product_sot_ref": { "type": "string", "minLength": 3 },
+        "source_resolution_ref": { "type": "string", "minLength": 3 },
+        "candidate_surface_ref": { "type": "string", "minLength": 3 },
+        "candidate_surface_classification": {
+          "enum": [
+            "current_source_bound",
+            "reference_only",
+            "superseded",
+            "unrelated",
+            "rejected_stale_surface"
+          ]
+        },
+        "promotion_ref": { "type": "string", "minLength": 3 },
+        "basis": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "scope_coverage_matrix": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scope_item_id", "category", "status", "basis"],
+        "properties": {
+          "scope_item_id": { "type": "string", "minLength": 3 },
+          "category": {
+            "enum": [
+              "surface",
+              "journey",
+              "capability",
+              "language",
+              "evidence_state",
+              "gate",
+              "release_operations",
+              "non_functional",
+              "sot_requirement"
+            ]
+          },
+          "status": {
+            "enum": ["covered", "partial", "blocked", "deferred_by_sot", "out_of_scope_by_sot"]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "sot_deferral_ref": { "type": "string", "minLength": 3 },
+          "human_gate_ref": { "type": "string", "minLength": 3 },
+          "basis": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": true
+      }
+    },
     "usage_evidence_matrix": {
       "type": "array",
       "items": {
@@ -676,7 +737,32 @@
           "minItems": 1,
           "items": { "type": "string", "minLength": 3 }
         },
-        "blocks_full_acceptance": { "type": "boolean" }
+        "blocks_full_acceptance": { "type": "boolean" },
+        "completion_disposition": {
+          "enum": [
+            "repair_required",
+            "accepted_by_human_gate",
+            "blocked_with_owner",
+            "out_of_scope_with_rationale"
+          ]
+        },
+        "human_gate_ref": { "type": "string", "minLength": 3 },
+        "repair_loop_ref": { "type": "string", "minLength": 3 },
+        "repair_loop": {
+          "type": "object",
+          "properties": {
+            "route_ref": { "type": "string", "minLength": 3 },
+            "required_worker_ids": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 3 }
+            },
+            "fresh_product_face_required": { "type": "boolean" },
+            "runtime_authority": { "const": "hermes_kanban" },
+            "local_state_authority": { "const": false }
+          },
+          "additionalProperties": true
+        },
+        "out_of_scope_rationale": { "type": "string", "minLength": 3 }
       },
       "additionalProperties": true
     },
