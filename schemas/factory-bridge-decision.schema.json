@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-bridge-decision.schema.json",
+  "title": "Overkill Factory Bridge Decision",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "run_id",
+    "event_id",
+    "decision_type",
+    "decision",
+    "actor",
+    "summary",
+    "evidence_refs",
+    "created_at",
+    "authority"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-bridge-decision.schema.json"
+    },
+    "record_type": { "const": "factory_bridge_decision" },
+    "run_id": { "type": "string", "minLength": 3 },
+    "event_id": { "type": "string", "pattern": "^fbe_[a-f0-9]{18}$" },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "human_gate_response",
+        "scope_change",
+        "pause_resume",
+        "status_request",
+        "information_request",
+        "exception_response",
+        "handoff_request"
+      ]
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "rejected",
+        "changes_requested",
+        "acknowledged",
+        "pause",
+        "resume",
+        "needs_replan",
+        "needs_human_gate_record"
+      ]
+    },
+    "actor": { "type": "string", "minLength": 2 },
+    "summary": { "type": "string", "minLength": 3 },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "created_at": { "type": "string", "minLength": 10 },
+    "authority": {
+      "type": "object",
+      "required": [
+        "closes_factory_gate",
+        "requires_factory_record",
+        "requires_replan",
+        "forwards_to_factory"
+      ],
+      "properties": {
+        "closes_factory_gate": { "const": false },
+        "requires_factory_record": { "type": "boolean" },
+        "requires_replan": { "type": "boolean" },
+        "forwards_to_factory": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

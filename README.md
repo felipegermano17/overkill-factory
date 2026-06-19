@@ -127,6 +127,7 @@ first, what its source of truth is and how drift is prevented.
 
 | Path | Public purpose |
 | --- | --- |
+| `.codex/` | Project-local Codex hooks for the operator bridge. See `.codex/README.md`. |
 | `.github/` | GitHub workflows, templates, Dependabot and repository hygiene. See `.github/PROJECT_SURFACE.md`. |
 | `adapters/` | Runtime integrations, currently Hermes hooks and patches. See `adapters/README.md`. |
 | `agents/` | Public worker registry, profiles, permissions, capability packs and Hermes bindings. See `agents/README.md`. |

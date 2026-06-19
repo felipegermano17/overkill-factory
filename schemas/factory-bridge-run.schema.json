@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-bridge-run.schema.json",
+  "title": "Overkill Factory Bridge Run",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "run_id",
+    "goal",
+    "created_by",
+    "created_at",
+    "state",
+    "inbox_ref",
+    "authority"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-bridge-run.schema.json"
+    },
+    "record_type": { "const": "factory_bridge_run" },
+    "run_id": { "type": "string", "minLength": 3 },
+    "goal": { "type": "string", "minLength": 3 },
+    "created_by": { "type": "string", "minLength": 2 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "state": { "const": "operator_bridge_active" },
+    "inbox_ref": { "const": "external:operator:inbox" },
+    "authority": {
+      "type": "object",
+      "required": [
+        "can_close_gate",
+        "can_execute_factory_work",
+        "can_auto_approve_human_gate",
+        "can_mutate_hermes_state"
+      ],
+      "properties": {
+        "can_close_gate": { "const": false },
+        "can_execute_factory_work": { "const": false },
+        "can_auto_approve_human_gate": { "const": false },
+        "can_mutate_hermes_state": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

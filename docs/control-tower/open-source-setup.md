@@ -14,6 +14,10 @@ Discord messages, dashboards, webhooks and status summaries are operator views.
 They can notify, request approval or show progress, but they must not close work
 without the same receipts and gates.
 
+The same rule applies to the Overkill Factory Bridge. A bridge inbox event or
+Codex status response can wake the operator and carry an answer back, but it
+does not replace Hermes, worker results or Receipt Five.
+
 ## Product Process Projection
 
 A Control Tower may display `project-projection` artifacts, but the projection

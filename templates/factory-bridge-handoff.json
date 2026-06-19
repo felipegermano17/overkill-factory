@@ -1,0 +1,47 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-bridge-handoff.schema.json",
+  "record_type": "factory_bridge_handoff",
+  "run_id": "example-run",
+  "created_at": "2026-06-19T00:00:00Z",
+  "inbox_summary": {
+    "event_count": 1,
+    "ack_count": 0,
+    "pending_count": 1
+  },
+  "pending_operator_events": [
+    {
+      "$schema": "https://overkill-factory.dev/schemas/factory-bridge-event.schema.json",
+      "record_type": "factory_bridge_event",
+      "event_id": "fbe_0123456789abcdef01",
+      "run_id": "example-run",
+      "event_type": "human_gate_required",
+      "severity": "requires_user",
+      "source": "hermes_transition_hook",
+      "summary": "A human gate is required before the factory can continue.",
+      "refs": ["external:operator:example-gate"],
+      "requires_user": true,
+      "created_at": "2026-06-19T00:00:00Z",
+      "payload": {},
+      "factory_authority": {
+        "can_close_gate": false,
+        "can_execute_factory_work": false,
+        "can_auto_approve_human_gate": false,
+        "can_mutate_hermes_state": false
+      }
+    }
+  ],
+  "safe_next_actions": [
+    "read Hermes/card runtime state",
+    "record structured response"
+  ],
+  "forbidden_actions": [
+    "act as a factory worker",
+    "close Hermes card without Receipt Five"
+  ],
+  "authority": {
+    "can_close_gate": false,
+    "can_execute_factory_work": false,
+    "can_auto_approve_human_gate": false,
+    "can_mutate_hermes_state": false
+  }
+}

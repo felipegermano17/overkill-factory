@@ -147,6 +147,21 @@ internal evidence machinery.
 does not replace Hermes, card contracts, gate reports or Receipt Five as the
 source of truth.
 
+## Operator Bridge Commands
+
+`scripts/factory_bridge.py` is the secondary operator bridge helper. Use it when
+Codex or another assistant needs a durable operator inbox without acting as a
+factory worker.
+
+```bash
+python scripts/factory_bridge.py summarize-inbox --text
+python scripts/factory_bridge.py classify-prompt --prompt "status da fabrica"
+python scripts/factory_bridge.py handoff --run-id example-run --out .tmp/factory-runs/example/bridge-handoff.json
+```
+
+Bridge output is observability and operator response material. It does not
+replace Hermes, worker results, human gate records or Receipt Five.
+
 `recovery-plan` emits machine-readable recovery routes for blocked factory
 work. With `--receipt` or `--worker-results-dir`, it also turns `BLOCKED`
 worker/review results into semantic repair routes. It does not execute workers
@@ -182,6 +197,21 @@ traceable worker result.
 Scripts outside `factoryctl` are maintainer tools or compatibility entrypoints.
 Promote repeated operator flows into `factoryctl` instead of adding another
 script name to the public path.
+
+### `scripts/factory_production_gate_receipts.py`
+
+Materializes the public-safe receipts consumed by
+`scripts/factory_production_readiness.py`:
+
+```bash
+python scripts/factory_production_gate_receipts.py
+python scripts/factory_production_gate_receipts.py --no-write
+```
+
+Materialization success is not production approval. The script fails closed by
+writing `BLOCKED` receipts when live Hermes, private Control Tower evidence or
+release integration proof is not ready. The aggregate gate remains
+`factory_production_readiness.py`.
 
 ### `scripts/factory_self_improvement.py`
 

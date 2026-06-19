@@ -14,6 +14,7 @@ factory card
 -> worker result artifact
 -> Receipt Five reconciliation
 -> done or blocked transition
+-> optional operator bridge event
 ```
 
 ## Public Files
@@ -23,6 +24,7 @@ factory card
 | `adapters/hermes/README.md` | Human-readable adapter contract and patch notes. |
 | `adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch` | Kanban gate patch for Hermes. |
 | `adapters/hermes/transition_hook.py` | Transition planning and done-time reconciliation helper. |
+| `scripts/factory_bridge.py` | Operator inbox, Codex hook context and handoff helper. |
 | `agents/worker-registry.public.json` | Process role registry. |
 | `agents/worker-profiles.public.json` | Public agent identity, authority and evidence contract. |
 | `agents/hermes-profile-bindings.public.json` | Hermes profile name, skill refs, queue policy and receipt field. |
@@ -73,6 +75,17 @@ The adapter may create worker tasks and transition plans. It does not fake:
 - release or rollback proof.
 
 Those must come from the worker that actually ran.
+
+## Operator Bridge
+
+Hermes may call `transition_hook.py` with `--operator-inbox` so blocked
+transitions or operator-facing state changes become durable bridge events under
+`.tmp/factory-runs/operator-inbox/`.
+
+The bridge is a view and response channel. It is not a worker, not a human gate
+record and not a second source of truth. Codex hooks can read this inbox on
+`SessionStart` or `UserPromptSubmit` to brief the operator after Codex was
+closed.
 
 ## First Integration Path
 

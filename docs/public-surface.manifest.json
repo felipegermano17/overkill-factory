@@ -13,6 +13,7 @@
     "docs/concepts/overkill-factory-method.md",
     "docs/getting-started/quickstart-hermes.md",
     "docs/operations/validation-and-release.md",
+    "docs/operator/overkill-factory-bridge.md",
     "docs/reference/cli.md",
     "planning-bundles/manifest.json",
     "schemas/",
@@ -241,6 +242,32 @@
       "required_phrases": [
         "runtime state and receipts decide completion",
         "Done without evidence is only a claim"
+      ]
+    },
+    {
+      "surface_id": "overkill-factory-bridge",
+      "path": "docs/operator/overkill-factory-bridge.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "scripts/factory_bridge.py",
+        "adapters/hermes/transition_hook.py",
+        "docs/architecture/hermes-integration.md",
+        "schemas/factory-bridge-event.schema.json",
+        "schemas/factory-bridge-decision.schema.json",
+        "schemas/factory-bridge-handoff.schema.json",
+        "schemas/factory-bridge-run.schema.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Durable Operator Inbox",
+        "Codex hooks do not watch the machine while Codex is closed",
+        "Factory Mechanic remains the self-improvement owner",
+        "act as a factory worker"
       ]
     },
     {

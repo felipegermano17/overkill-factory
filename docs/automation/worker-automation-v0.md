@@ -189,6 +189,8 @@ python adapters/hermes/transition_hook.py \
   --from-status draft \
   --to-status ready \
   --ledger path/to/worker-ledger.json \
+  --operator-inbox .tmp/factory-runs/operator-inbox \
+  --operator-run-id example-run \
   --out path/to/ready-hook-result.json
 
 python adapters/hermes/transition_hook.py \
@@ -198,6 +200,8 @@ python adapters/hermes/transition_hook.py \
   --receipt path/to/receipt-five.json \
   --worker-results-dir path/to/worker-results \
   --ledger path/to/worker-ledger.json \
+  --operator-inbox .tmp/factory-runs/operator-inbox \
+  --operator-run-id example-run \
   --out path/to/done-hook-result.json \
   --enforce
 ```
@@ -248,6 +252,11 @@ The hook writes a durable worker ledger and returns a machine-readable action:
 `allow_and_create_worker_tasks`, `allow_done` or `block_transition`. With
 `--enforce`, blocked transitions return a non-zero exit code so Hermes cannot
 silently ignore the gate.
+
+When `--operator-inbox` is provided, the hook also writes a public-safe bridge
+event to the Durable Operator Inbox. That event is for Codex/operator
+observability only. It does not approve a gate, create worker proof, close a
+card or replace Receipt Five.
 
 ## What Integration Still Needs
 

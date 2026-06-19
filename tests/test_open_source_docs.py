@@ -81,6 +81,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "CHANGELOG.md",
             "CONTRIBUTING.md",
             "SECURITY.md",
+            ".codex/README.md",
         ]:
             with self.subTest(link=rel):
                 self.assertIn(rel.replace("\\", "/"), readme)
@@ -161,6 +162,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             ".github/ISSUE_TEMPLATE/feature_request.yml",
             ".github/ISSUE_TEMPLATE/config.yml",
             ".github/pull_request_template.md",
+            ".codex/README.md",
             "README.pt-BR.md",
         ]
 
@@ -185,6 +187,7 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_repository_shape_explains_every_public_top_level_folder(self) -> None:
         readme = read_text("README.md")
         expected_public_dirs = [
+            ".codex/",
             ".github/",
             "adapters/",
             "agents/",
@@ -208,6 +211,7 @@ class OpenSourceDocsTest(unittest.TestCase):
 
     def test_high_noise_public_directories_have_entrypoint_guides(self) -> None:
         required_entrypoints = {
+            ".codex/README.md": ["Codex", "hooks"],
             "adapters/README.md": ["runtime integrations", "Hermes"],
             ".github/PROJECT_SURFACE.md": ["GitHub project surface", "Dependabot"],
             "agents/README.md": ["worker registry", "Hermes bindings"],
@@ -566,11 +570,13 @@ class OpenSourceDocsTest(unittest.TestCase):
         for expected in [
             "[tool.setuptools.data-files]",
             "share/overkill-factory/agents",
+            "share/overkill-factory/docs/operator",
             "share/overkill-factory/examples/minimal-hermes-project",
             "share/overkill-factory/schemas",
             "share/overkill-factory/templates",
             "share/overkill-factory/adapters/hermes",
             "share/overkill-factory/skills/codex/overkill-factory",
+            "share/overkill-factory/skills/codex/overkill-factory-bridge",
         ]:
             with self.subTest(expected=expected):
                 self.assertIn(expected, pyproject)

@@ -322,6 +322,31 @@ class HermesTransitionHookTest(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
 
+    def test_hook_can_emit_operator_bridge_event_without_gate_authority(self) -> None:
+        card = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            tmp_path = Path(tmp)
+            inbox = tmp_path / "operator-inbox"
+            result = transition_hook.build_hook_result(
+                card_path=card,
+                from_status="draft",
+                to_status="ready",
+                receipt_path=None,
+                worker_results_dir=None,
+                ledger_path=tmp_path / "worker-ledger.json",
+                operator_inbox_dir=inbox,
+                operator_run_id="run-alpha",
+            )
+            events = [json.loads(line) for line in (inbox / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual(result["operator_bridge"]["inbox_ref"], "external:operator:inbox")
+        self.assertEqual(result["operator_bridge"]["event_type"], "transition_blocked")
+        self.assertFalse(result["operator_bridge"]["factory_authority"]["can_close_gate"])
+        self.assertFalse(result["operator_bridge"]["factory_authority"]["can_execute_factory_work"])
+        self.assertEqual(events[0]["event_type"], "transition_blocked")
+        self.assertEqual(events[0]["source"], "hermes_transition_hook")
+        self.assertTrue(events[0]["requires_user"])
+
 
 if __name__ == "__main__":
     unittest.main()

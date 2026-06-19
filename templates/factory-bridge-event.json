@@ -1,0 +1,22 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-bridge-event.schema.json",
+  "record_type": "factory_bridge_event",
+  "event_id": "fbe_0123456789abcdef01",
+  "run_id": "example-run",
+  "event_type": "human_gate_required",
+  "severity": "requires_user",
+  "source": "hermes_transition_hook",
+  "summary": "A human gate is required before the factory can continue.",
+  "refs": ["external:operator:example-gate"],
+  "requires_user": true,
+  "created_at": "2026-06-19T00:00:00Z",
+  "payload": {
+    "gate_type": "R3"
+  },
+  "factory_authority": {
+    "can_close_gate": false,
+    "can_execute_factory_work": false,
+    "can_auto_approve_human_gate": false,
+    "can_mutate_hermes_state": false
+  }
+}

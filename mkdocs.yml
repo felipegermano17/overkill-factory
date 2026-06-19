@@ -37,6 +37,8 @@ nav:
       - Parallel Execution And Status: operations/parallel-execution-and-status.md
       - Release Policy: operations/release-policy.md
       - Troubleshooting: operations/troubleshooting.md
+  - Operator:
+      - Overkill Factory Bridge: operator/overkill-factory-bridge.md
   - Control Tower:
       - Discord Control Tower OS: control-tower/discord-control-tower-os.md
       - Discord Control Tower Setup: control-tower/discord-control-tower-setup-pt-br.md

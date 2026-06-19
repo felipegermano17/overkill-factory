@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-bridge-event.schema.json",
+  "title": "Overkill Factory Bridge Event",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "event_id",
+    "run_id",
+    "event_type",
+    "severity",
+    "source",
+    "summary",
+    "refs",
+    "requires_user",
+    "created_at",
+    "factory_authority"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-bridge-event.schema.json"
+    },
+    "record_type": { "const": "factory_bridge_event" },
+    "event_id": { "type": "string", "pattern": "^fbe_[a-f0-9]{18}$" },
+    "run_id": { "type": "string", "minLength": 3 },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "intake_received",
+        "run_started",
+        "status_update",
+        "transition_blocked",
+        "human_gate_required",
+        "decision_requested",
+        "change_requested",
+        "exception_detected",
+        "handoff_requested",
+        "learnback_forwarded",
+        "factory_question",
+        "worker_attention_required",
+        "receipt_ready",
+        "run_completed"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "notice", "warning", "blocked", "failed", "requires_user"]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "automation",
+        "bridge",
+        "codex_hook",
+        "factoryctl",
+        "hermes_transition_hook",
+        "human",
+        "operator",
+        "worker"
+      ]
+    },
+    "summary": { "type": "string", "minLength": 3 },
+    "refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "requires_user": { "type": "boolean" },
+    "created_at": { "type": "string", "minLength": 10 },
+    "payload": { "type": "object" },
+    "factory_authority": {
+      "type": "object",
+      "required": [
+        "can_close_gate",
+        "can_execute_factory_work",
+        "can_auto_approve_human_gate",
+        "can_mutate_hermes_state"
+      ],
+      "properties": {
+        "can_close_gate": { "const": false },
+        "can_execute_factory_work": { "const": false },
+        "can_auto_approve_human_gate": { "const": false },
+        "can_mutate_hermes_state": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

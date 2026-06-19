@@ -5,6 +5,8 @@ Scripts provide the public CLI path, validation tools and maintainer checks.
 ## What Belongs Here
 
 - CLI entrypoints such as `factoryctl.py`.
+- Operator bridge helpers such as `factory_bridge.py` when they stay
+  public-safe and do not replace factory gates.
 - Validation scripts for cards, schemas, worker profiles, public safety and
   release readiness.
 - Small maintainer utilities that are documented and covered by tests.
@@ -30,5 +32,6 @@ Run the script-facing bundle:
 python scripts/quickstart_smoke.py
 python scripts/validate_worker_profiles.py
 python scripts/validate_public_json_artifacts.py
+python scripts/factory_production_gate_receipts.py --no-write
 python -m unittest discover -s tests -p "test_*.py" -q
 ```

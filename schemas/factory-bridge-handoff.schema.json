@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-bridge-handoff.schema.json",
+  "title": "Overkill Factory Bridge Handoff",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "run_id",
+    "created_at",
+    "inbox_summary",
+    "pending_operator_events",
+    "safe_next_actions",
+    "forbidden_actions",
+    "authority"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-bridge-handoff.schema.json"
+    },
+    "record_type": { "const": "factory_bridge_handoff" },
+    "run_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "inbox_summary": {
+      "type": "object",
+      "required": ["event_count", "ack_count", "pending_count"],
+      "properties": {
+        "event_count": { "type": "integer", "minimum": 0 },
+        "ack_count": { "type": "integer", "minimum": 0 },
+        "pending_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "pending_operator_events": {
+      "type": "array",
+      "items": { "$ref": "https://overkill-factory.dev/schemas/factory-bridge-event.schema.json" }
+    },
+    "safe_next_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "forbidden_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "authority": {
+      "type": "object",
+      "required": [
+        "can_close_gate",
+        "can_execute_factory_work",
+        "can_auto_approve_human_gate",
+        "can_mutate_hermes_state"
+      ],
+      "properties": {
+        "can_close_gate": { "const": false },
+        "can_execute_factory_work": { "const": false },
+        "can_auto_approve_human_gate": { "const": false },
+        "can_mutate_hermes_state": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

@@ -126,6 +126,7 @@ primeiro, qual e sua fonte de verdade e como drift e evitado.
 
 | Caminho | Proposito publico |
 | --- | --- |
+| `.codex/` | Hooks locais do Codex para a ponte de operador. Veja `.codex/README.md`. |
 | `.github/` | Workflows, templates, Dependabot e higiene do repositorio. Veja `.github/PROJECT_SURFACE.md`. |
 | `adapters/` | Integracoes de runtime, hoje hooks e patches Hermes. Veja `adapters/README.md`. |
 | `agents/` | Worker registry, profiles, permissoes, capability packs e bindings Hermes. Veja `agents/README.md`. |

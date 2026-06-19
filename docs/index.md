@@ -46,6 +46,9 @@ release.
 Use `operations/parallel-execution-and-status.md` before scaling agents,
 splitting work across branches/worktrees or presenting a operator console/status view.
 
+Use `operator/overkill-factory-bridge.md` when Codex or another assistant is
+bridging a human operator to the factory without acting as a factory worker.
+
 ## Maintainer Internals
 
 Use `maintenance/repo-surface.md` to decide whether a file belongs in the

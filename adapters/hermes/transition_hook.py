@@ -23,6 +23,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 FACTORYCTL_PATH = ROOT / "scripts" / "factoryctl.py"
+BRIDGE_PATH = ROOT / "scripts" / "factory_bridge.py"
 HOOK_SCHEMA = "https://overkill-factory.dev/schemas/hermes-transition-hook.schema.json"
 ACTION_CREATE_WORKERS = "allow_and_create_worker_tasks"
 ACTION_BLOCK_TRANSITION = "block_transition"
@@ -35,6 +36,16 @@ def load_factoryctl() -> Any:
         raise RuntimeError(f"cannot load factoryctl from {FACTORYCTL_PATH}")
     module = importlib.util.module_from_spec(spec)
     sys.modules["overkill_factoryctl"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_factory_bridge() -> Any:
+    spec = importlib.util.spec_from_file_location("overkill_factory_bridge", BRIDGE_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load factory bridge from {BRIDGE_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["overkill_factory_bridge"] = module
     spec.loader.exec_module(module)
     return module
 
@@ -62,6 +73,70 @@ def task_id(card_id: str, worker_id: str) -> str:
 
 def is_blocking_action(action: str) -> bool:
     return action.startswith("block")
+
+
+def operator_event_type_for_action(action: str) -> tuple[str, str, bool]:
+    if is_blocking_action(action):
+        return ("transition_blocked", "blocked", True)
+    if action == ACTION_CREATE_WORKERS:
+        return ("worker_attention_required", "notice", False)
+    if action == "allow_done":
+        return ("receipt_ready", "notice", False)
+    if action == "allow_review_ready":
+        return ("worker_attention_required", "notice", False)
+    return ("status_update", "info", False)
+
+
+def emit_operator_bridge_event(
+    *,
+    result: dict[str, Any],
+    card_path: Path,
+    ledger_path: Path,
+    inbox_dir: Path,
+    run_id: str | None,
+) -> dict[str, Any]:
+    bridge = load_factory_bridge()
+    plan = result.get("plan", {})
+    event = plan.get("event", {})
+    action = str(result.get("transition_action") or "unknown")
+    event_type, severity, requires_user = operator_event_type_for_action(action)
+    card_id = str(event.get("card_id") or card_path.stem or "factory-card")
+    blocked_reasons = result.get("blocked_reasons") or []
+    if blocked_reasons:
+        first_reason = str(blocked_reasons[0])
+        summary = f"Hermes transition blocked for {card_id}: {first_reason}"
+    elif action == "allow_done":
+        summary = f"Hermes transition can close for {card_id} after Receipt Five reconciliation."
+    elif action == ACTION_CREATE_WORKERS:
+        summary = f"Hermes transition for {card_id} requires worker task materialization."
+    else:
+        summary = f"Hermes transition for {card_id} returned {action}."
+    emitted = bridge.emit_event(
+        inbox_dir=inbox_dir,
+        run_id=run_id or card_id,
+        event_type=event_type,
+        severity=severity,
+        source="hermes_transition_hook",
+        summary=summary,
+        refs=[public_path_ref(card_path), public_path_ref(ledger_path)],
+        requires_user=requires_user,
+        payload={
+            "transition_action": action,
+            "blocked_reasons": blocked_reasons,
+            "from_status": event.get("from_status"),
+            "to_status": event.get("to_status"),
+            "card_id": card_id,
+        },
+    )
+    return {
+        "enabled": True,
+        "inbox_ref": "external:operator:inbox",
+        "event_id": emitted["event_id"],
+        "event_type": emitted["event_type"],
+        "severity": emitted["severity"],
+        "requires_user": emitted["requires_user"],
+        "factory_authority": emitted["factory_authority"],
+    }
 
 
 def load_ledger(path: Path) -> dict[str, Any]:
@@ -221,6 +296,8 @@ def build_hook_result(
     receipt_path: Path | None,
     worker_results_dir: Path | None,
     ledger_path: Path,
+    operator_inbox_dir: Path | None = None,
+    operator_run_id: str | None = None,
 ) -> dict[str, Any]:
     factoryctl = load_factoryctl()
     card = factoryctl.load_json_like(card_path)
@@ -234,7 +311,7 @@ def build_hook_result(
         worker_results_dir=worker_results_dir,
     )
     ledger_result = persist_worker_tasks(plan, ledger_path)
-    return {
+    result = {
         "$schema": HOOK_SCHEMA,
         "hook_type": "overkill_factory_hermes_transition_hook",
         "transition_action": plan["transition_action"],
@@ -244,6 +321,15 @@ def build_hook_result(
         "plan": plan,
         "ledger": ledger_result,
     }
+    if operator_inbox_dir:
+        result["operator_bridge"] = emit_operator_bridge_event(
+            result=result,
+            card_path=card_path,
+            ledger_path=ledger_path,
+            inbox_dir=operator_inbox_dir,
+            run_id=operator_run_id,
+        )
+    return result
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -255,6 +341,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--worker-results-dir", type=Path)
     parser.add_argument("--ledger", type=Path, required=True)
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--operator-inbox", type=Path)
+    parser.add_argument("--operator-run-id")
     parser.add_argument("--enforce", action="store_true", help="Deprecated; blocked transitions are fail-closed by default.")
     parser.add_argument("--report-only", action="store_true", help="Write the hook result without failing blocked transitions.")
     return parser
@@ -269,6 +357,8 @@ def main() -> int:
         receipt_path=args.receipt,
         worker_results_dir=args.worker_results_dir,
         ledger_path=args.ledger,
+        operator_inbox_dir=args.operator_inbox,
+        operator_run_id=args.operator_run_id,
     )
     if args.out:
         write_json(args.out, result)

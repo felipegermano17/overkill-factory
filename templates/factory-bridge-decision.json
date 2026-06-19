@@ -1,0 +1,18 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-bridge-decision.schema.json",
+  "record_type": "factory_bridge_decision",
+  "run_id": "example-run",
+  "event_id": "fbe_0123456789abcdef01",
+  "decision_type": "human_gate_response",
+  "decision": "changes_requested",
+  "actor": "product_owner",
+  "summary": "Operator requires rollback evidence before approval.",
+  "evidence_refs": ["external:operator:example-decision"],
+  "created_at": "2026-06-19T00:00:00Z",
+  "authority": {
+    "closes_factory_gate": false,
+    "requires_factory_record": true,
+    "requires_replan": true,
+    "forwards_to_factory": true
+  }
+}

@@ -45,6 +45,7 @@ Run this before a public branch, release tag or pull request:
 
 ```bash
 python scripts/release_integration_preflight.py --out .tmp/release-check.json
+python scripts/factory_production_gate_receipts.py
 python scripts/factory_production_readiness.py --out .tmp/readiness-check.json
 python scripts/worktree_release_inventory.py --out .tmp/inventory-check.json
 python scripts/validate_public_surface_sync.py --check-published
@@ -61,6 +62,12 @@ materialization; stale files cannot support a release `PASS`.
 map to the published public object. Run it only after the public object has been
 published or refreshed; before publication it may correctly report the remote
 map as out of sync.
+
+`factory_production_gate_receipts.py` materializes the public-safe receipts that
+the aggregate production gate consumes. It may write `BLOCKED` receipts when
+Hermes runtime status, private Control Tower evidence or release integration is
+not ready. That is expected: the aggregate gate remains
+`factory_production_readiness.py`, not the materializer.
 
 ## Factory v1 Completion Gate
 
@@ -140,6 +147,7 @@ factoryctl doctor
 factoryctl run minimal
 python -m unittest discover -s tests -p "test_*.py" -q
 python scripts\release_integration_preflight.py --out .tmp\release-check.json
+python scripts\factory_production_gate_receipts.py
 python scripts\factory_production_readiness.py --out .tmp\readiness-check.json
 python scripts\worktree_release_inventory.py --out .tmp\inventory-check.json
 ```

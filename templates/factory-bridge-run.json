@@ -1,0 +1,16 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-bridge-run.schema.json",
+  "record_type": "factory_bridge_run",
+  "run_id": "example-run",
+  "goal": "Bridge a human operator to an autonomous Overkill Factory run.",
+  "created_by": "operator",
+  "created_at": "2026-06-19T00:00:00Z",
+  "state": "operator_bridge_active",
+  "inbox_ref": "external:operator:inbox",
+  "authority": {
+    "can_close_gate": false,
+    "can_execute_factory_work": false,
+    "can_auto_approve_human_gate": false,
+    "can_mutate_hermes_state": false
+  }
+}
