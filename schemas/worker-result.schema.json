@@ -185,12 +185,41 @@
               "schema_valid": {
                 "type": "boolean"
               },
+              "attachment_row_seen": {
+                "type": "boolean"
+              },
+              "blob_exists": {
+                "type": "boolean"
+              },
+              "size_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "json_parse_status": {
+                "enum": ["PASS", "NOT_JSON", "FAIL"]
+              },
+              "public_safety_scan": {
+                "enum": ["PASS", "FAIL", "NOT_RUN"]
+              },
+              "secret_safety_scan": {
+                "enum": ["PASS", "FAIL", "NOT_RUN"]
+              },
               "readback_error": {
                 "type": "string"
               }
             },
             "additionalProperties": true
           }
+        },
+        "held_card_readback": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "blocked_event_seen": { "type": "boolean" },
+            "hydration_complete": { "type": "boolean" },
+            "dispatcher_respects_hold": { "type": "boolean" }
+          },
+          "additionalProperties": true
         }
       },
       "additionalProperties": true

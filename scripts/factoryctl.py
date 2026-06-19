@@ -1556,6 +1556,8 @@ def classify_artifact_ref(ref: Any) -> dict[str, Any]:
         return {"ref": value, "artifact_class": "invalid", "public_safe": False, "reason": "empty artifact ref"}
     if contains_private_kanban_task_marker(value):
         return {"ref": value, "artifact_class": "private_run_evidence", "public_safe": False, "reason": "raw private Kanban task id"}
+    if value.startswith("kanban-attachment:"):
+        return {"ref": value, "artifact_class": "kanban_attachment", "public_safe": True, "reason": "native Kanban attachment logical ref"}
     if value.startswith("external:"):
         return {"ref": value, "artifact_class": "sanitized_report", "public_safe": True, "reason": "explicit external/sanitized ref"}
     if value.startswith(("http://", "https://", "file://")) or Path(value).is_absolute() or ":" in normalized.split("/", 1)[0]:
@@ -5454,6 +5456,142 @@ def validate_factory_sdlc_lifecycle_state(state: dict[str, Any]) -> list[str]:
     if projection.get("dashboard_visibility_is_evidence") is not False:
         errors.append("factory_sdlc_lifecycle_state dashboard visibility must not be evidence")
 
+    return errors
+
+
+PRODUCT_PROCESS_PROJECTION_STAGES = [
+    ("source_resolution", "Source Resolution"),
+    ("product_sot", "Product SOT"),
+    ("method_route", "Method Route"),
+    ("decomposition", "Decomposition"),
+    ("readiness_gates", "Readiness Gates"),
+    ("execution", "Execution"),
+    ("product_face", "Product Face"),
+    ("qa", "QA"),
+    ("public_safety", "Public Safety"),
+    ("security", "Security"),
+    ("independent_review", "Independent Review"),
+    ("release_readiness", "Release Readiness"),
+    ("closeout", "Closeout"),
+    ("learnback", "Learnback"),
+]
+
+
+def _projection_stage_status(value: Any) -> str:
+    status = str(value or "").strip().lower().replace("-", "_")
+    aliases = {
+        "pass": "done",
+        "complete": "done",
+        "in_progress": "current",
+        "not_started": "pending",
+        "waiting": "pending",
+        "superseded_repair": "superseded",
+        "needs_repair": "blocked",
+    }
+    return aliases.get(status, status if status in {"done", "current", "pending", "blocked", "skipped", "superseded"} else "pending")
+
+
+def build_product_process_projection(runtime_state: dict[str, Any]) -> dict[str, Any]:
+    gate_states = runtime_state.get("gate_states") if isinstance(runtime_state.get("gate_states"), dict) else {}
+    pipeline_stages: list[dict[str, Any]] = []
+    complete_count = 0
+    blocking = False
+    current_phase = "intake"
+    for stage_id, label in PRODUCT_PROCESS_PROJECTION_STAGES:
+        status = _projection_stage_status(gate_states.get(stage_id))
+        if status in {"done", "skipped"}:
+            complete_count += 1
+        if status == "blocked":
+            blocking = True
+        if status in {"current", "blocked"} and current_phase == "intake":
+            current_phase = label
+        pipeline_stages.append(
+            {
+                "id": stage_id,
+                "name": label,
+                "status": status,
+                "source_ref": str(runtime_state.get("source_ref") or "external:runtime-state"),
+            }
+        )
+    if current_phase == "intake":
+        for stage in pipeline_stages:
+            if stage["status"] == "pending":
+                current_phase = str(stage["name"])
+                break
+    completion_percent = round((complete_count / len(PRODUCT_PROCESS_PROJECTION_STAGES)) * 100)
+    blockers = _list_items(runtime_state.get("blockers"))
+    freshness = str(runtime_state.get("source_freshness") or "runtime_fresh").strip()
+    source_runtime = str(runtime_state.get("source_runtime") or "hermes_kanban").strip()
+    status = "blocked" if blocking or blockers else "executing" if complete_count else "planning"
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/project-projection.schema.json",
+        "project_id": str(runtime_state.get("project_id") or "project-run"),
+        "name": str(runtime_state.get("name") or "Product Run"),
+        "phase": current_phase,
+        "status": status,
+        "execution_started": complete_count > 0 or status in {"executing", "blocked"},
+        "risk": str(runtime_state.get("risk") or "R1"),
+        "forecast_confidence": "blocked" if status == "blocked" else "medium",
+        "completion_percent": completion_percent,
+        "completion_basis": {
+            "basis_type": "runtime_gate_projection",
+            "derived_from_board_counts": False,
+            "runtime_state_ref": str(runtime_state.get("source_ref") or "external:runtime-state"),
+            "factory_method_remediation_excluded": True,
+        },
+        "pipeline_stages": pipeline_stages,
+        "next_action": str(runtime_state.get("next_action") or (blockers[0] if blockers else "advance the next pending factory gate")),
+        "projection_freshness": freshness,
+        "current_blockers": blockers,
+        "pending_access": _list_items(runtime_state.get("pending_access")),
+        "pending_approvals": _list_items(runtime_state.get("pending_approvals")),
+        "next_steps": _list_items(runtime_state.get("next_steps")) or ["advance the next pending factory gate"],
+        "evidence_refs": _list_items(runtime_state.get("evidence_refs")) or [str(runtime_state.get("source_ref") or "external:runtime-state")],
+        "source_runtime": source_runtime,
+        "source_board": str(runtime_state.get("source_board") or "external:runtime-board"),
+        "last_synced_at": str(runtime_state.get("last_synced_at") or utc_now()),
+        "planned_summary": _list_items(runtime_state.get("planned_summary")) or ["Projection derived from runtime gate states."],
+        "missing_items": [str(stage["name"]) for stage in pipeline_stages if stage["status"] in {"pending", "blocked"}],
+        "forecast_risks": _list_items(runtime_state.get("forecast_risks")) or blockers,
+        "human_decisions_required": _list_items(runtime_state.get("human_decisions_required")),
+        "truth_source_available": freshness == "runtime_fresh",
+        "source_of_truth": {
+            "runtime": source_runtime,
+            "ref": str(runtime_state.get("source_ref") or "external:runtime-state"),
+            "owner": str(runtime_state.get("source_owner") or "factory-orchestrator"),
+            "freshness": freshness,
+            "discord_is_source_of_truth": False,
+        },
+        "progress_boundary": {
+            "product_progress_source": "runtime_gates",
+            "board_counts_are_authoritative": False,
+            "manual_estimate_supports_done_or_release": False,
+            "factory_method_remediation_separate": True,
+        },
+    }
+
+
+def validate_project_process_projection(projection: dict[str, Any]) -> list[str]:
+    schemas = bundled_schemas()
+    schema = schemas.get("project-projection.schema.json")
+    errors = validate_node(schema, projection, "project_projection", schemas=schemas, root_schema=schema) if schema else []
+    freshness = str(projection.get("projection_freshness") or "").strip()
+    status = str(projection.get("status") or "").strip()
+    basis = projection.get("completion_basis") if isinstance(projection.get("completion_basis"), dict) else {}
+    basis_type = str(basis.get("basis_type") or "").strip()
+    if status in {"release_candidate", "production", "closed"} and freshness != "runtime_fresh":
+        errors.append("project_projection manual estimates cannot support release_candidate, production or closed status")
+    if status in {"release_candidate", "production", "closed"} and basis_type != "runtime_gate_projection":
+        errors.append("project_projection release/production/closed status requires runtime_gate_projection completion_basis")
+    if basis.get("derived_from_board_counts") is not False:
+        errors.append("project_projection completion_percent must not be inferred from board counts alone")
+    if basis_type == "manual_estimate" and int(projection.get("completion_percent") or 0) >= 100:
+        errors.append("project_projection manual estimates cannot claim 100 percent completion")
+    source = projection.get("source_of_truth") if isinstance(projection.get("source_of_truth"), dict) else {}
+    if source.get("discord_is_source_of_truth") is not False:
+        errors.append("project_projection Discord/cockpit must not be source of truth")
+    if freshness == "runtime_fresh" and source.get("freshness") != "runtime_fresh":
+        errors.append("project_projection source_of_truth.freshness must match runtime_fresh projection")
     return errors
 
 
@@ -9993,6 +10131,23 @@ def validate_factory_readiness_scorecard(scorecard: dict[str, Any]) -> list[str]
     bounded_remediation_allowed = autonomy.get("bounded_remediation_allowed") is True
     material_autonomy_allowed = autonomy.get("material_autonomous_execution_allowed") is True
     remediation_required = remediation_loop.get("required") is True
+    max_remediation_attempts = remediation_loop.get("max_remediation_attempts")
+    timeout_minutes = remediation_loop.get("timeout_minutes")
+    stop_condition = str(remediation_loop.get("stop_condition") or "").strip()
+
+    if remediation_required:
+        if not isinstance(max_remediation_attempts, int):
+            errors.append("factory_readiness_scorecard remediation_loop.required=true requires max_remediation_attempts")
+        elif not 1 <= max_remediation_attempts <= 3:
+            errors.append("factory_readiness_scorecard remediation_loop.max_remediation_attempts must be between 1 and 3")
+        if not isinstance(timeout_minutes, int):
+            errors.append("factory_readiness_scorecard remediation_loop.required=true requires timeout_minutes")
+        elif not 1 <= timeout_minutes <= 240:
+            errors.append("factory_readiness_scorecard remediation_loop.timeout_minutes must be between 1 and 240")
+        if not stop_condition:
+            errors.append("factory_readiness_scorecard remediation_loop.required=true requires stop_condition")
+        elif not public_safe_text(stop_condition):
+            errors.append("factory_readiness_scorecard remediation_loop.stop_condition must be public-safe")
 
     if non_pass_statuses and not remediation_required:
         errors.append("factory_readiness_scorecard non-PASS dimensions require remediation_loop.required=true")
@@ -10838,6 +10993,219 @@ def validate_usage_evidence_matrix_against_card(result: dict[str, Any], card: di
     return errors
 
 
+def validate_visual_quality_residuals_for_final_completion(result: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    visual_quality = result.get("visual_quality_result") if isinstance(result.get("visual_quality_result"), dict) else {}
+    residuals = _visual_quality_residual_records(visual_quality)
+    if not residuals:
+        return errors
+
+    allowed_completion_dispositions = {"accepted_by_human_gate", "out_of_scope_with_rationale"}
+    blocking_completion_dispositions = {"repair_required", "blocked_with_owner"}
+    known_dispositions = allowed_completion_dispositions | blocking_completion_dispositions
+    for index, residual in enumerate(residuals):
+        at = f"product_face_result.visual_quality_result.residuals[{index}]"
+        disposition = str(residual.get("completion_disposition") or "").strip()
+        if not disposition:
+            errors.append(f"{at}.completion_disposition is required for final product completion")
+            continue
+        if disposition not in known_dispositions:
+            errors.append(
+                f"{at}.completion_disposition must be repair_required, accepted_by_human_gate, "
+                "blocked_with_owner or out_of_scope_with_rationale"
+            )
+            continue
+        if disposition == "repair_required":
+            errors.append(f"{at}.completion_disposition=repair_required blocks final product completion")
+            repair_loop_ref = str(residual.get("repair_loop_ref") or "").strip()
+            if not repair_loop_ref:
+                errors.append(f"{at}.repair_loop_ref is required when completion_disposition=repair_required")
+            else:
+                _validate_public_ref(repair_loop_ref, f"{at}.repair_loop_ref", errors)
+            repair_loop = residual.get("repair_loop") if isinstance(residual.get("repair_loop"), dict) else {}
+            if not repair_loop:
+                errors.append(f"{at}.repair_loop must materialize deterministic repair routing")
+            else:
+                required_workers = registered_nonhuman_worker_ids(repair_loop.get("required_worker_ids"))
+                if not required_workers:
+                    errors.append(f"{at}.repair_loop.required_worker_ids must include at least one registered nonhuman worker")
+                if repair_loop.get("fresh_product_face_required") is not True:
+                    errors.append(f"{at}.repair_loop.fresh_product_face_required must be true")
+                if repair_loop.get("runtime_authority") != "hermes_kanban":
+                    errors.append(f"{at}.repair_loop.runtime_authority must be hermes_kanban")
+                if repair_loop.get("local_state_authority") is not False:
+                    errors.append(f"{at}.repair_loop.local_state_authority must be false")
+                route_ref = str(repair_loop.get("route_ref") or repair_loop_ref).strip()
+                if route_ref:
+                    _validate_public_ref(route_ref, f"{at}.repair_loop.route_ref", errors)
+        if disposition == "blocked_with_owner":
+            errors.append(f"{at}.completion_disposition=blocked_with_owner blocks final product completion")
+        if disposition == "accepted_by_human_gate":
+            human_gate_ref = str(residual.get("human_gate_ref") or "").strip()
+            if not human_gate_ref:
+                errors.append(f"{at}.human_gate_ref is required when completion_disposition=accepted_by_human_gate")
+            else:
+                _validate_public_ref(human_gate_ref, f"{at}.human_gate_ref", errors)
+        if disposition == "out_of_scope_with_rationale":
+            rationale = str(residual.get("out_of_scope_rationale") or "").strip()
+            if not rationale:
+                errors.append(
+                    f"{at}.out_of_scope_rationale is required when completion_disposition=out_of_scope_with_rationale"
+                )
+            elif not public_safe_text(rationale):
+                errors.append(f"{at}.out_of_scope_rationale must be public-safe")
+    return errors
+
+
+def validate_product_face_source_authority_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    product_sot = card.get("product_sot") if isinstance(card.get("product_sot"), dict) else {}
+    if not product_sot and not card.get("source_resolution_packet_ref"):
+        return errors
+
+    binding = result.get("source_authority_binding") if isinstance(result.get("source_authority_binding"), dict) else {}
+    if not binding:
+        return ["product_face_result.source_authority_binding is required when active Product SOT/source resolution exists"]
+
+    for field in ("product_sot_ref", "source_resolution_ref", "candidate_surface_ref", "candidate_surface_classification", "basis"):
+        if not str(binding.get(field) or "").strip():
+            errors.append(f"product_face_result.source_authority_binding.{field} is required")
+    for field in ("product_sot_ref", "source_resolution_ref", "candidate_surface_ref", "promotion_ref"):
+        value = str(binding.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"product_face_result.source_authority_binding.{field}", errors)
+    basis = str(binding.get("basis") or "").strip()
+    if basis and not public_safe_text(basis):
+        errors.append("product_face_result.source_authority_binding.basis must be public-safe")
+
+    classification = str(binding.get("candidate_surface_classification") or "").strip()
+    allowed = {"current_source_bound", "reference_only", "superseded", "unrelated", "rejected_stale_surface"}
+    if classification not in allowed:
+        errors.append(
+            "product_face_result.source_authority_binding.candidate_surface_classification must be "
+            "current_source_bound, reference_only, superseded, unrelated or rejected_stale_surface"
+        )
+        return errors
+    if classification != "current_source_bound":
+        errors.append(
+            f"product_face_result.source_authority_binding candidate_surface_classification={classification} "
+            "cannot satisfy final product completion"
+        )
+    promoted_refs = set(_list_items(product_sot.get("promoted_surface_refs")))
+    candidate = str(binding.get("candidate_surface_ref") or "").strip()
+    promotion_ref = str(binding.get("promotion_ref") or "").strip()
+    if candidate and promoted_refs and candidate in promoted_refs and not promotion_ref:
+        errors.append("product_face_result.source_authority_binding.promotion_ref is required for promoted prior surface reuse")
+    if classification == "current_source_bound" and candidate and promoted_refs and candidate not in promoted_refs:
+        errors.append("product_face_result.source_authority_binding current_source_bound candidate is not promoted by active Product SOT")
+    expected_source = str(card.get("source_resolution_packet_ref") or "").strip()
+    actual_source = str(binding.get("source_resolution_ref") or "").strip()
+    if expected_source and actual_source and expected_source != actual_source:
+        errors.append("product_face_result.source_authority_binding.source_resolution_ref must match active card source_resolution_packet_ref")
+    return errors
+
+
+def _required_product_sot_scope_item_ids(card: dict[str, Any]) -> list[str]:
+    ids: list[str] = []
+    product_sot = card.get("product_sot") if isinstance(card.get("product_sot"), dict) else {}
+    for requirement in product_sot.get("requirement_graph", []) if isinstance(product_sot.get("requirement_graph"), list) else []:
+        if not isinstance(requirement, dict):
+            continue
+        if _normalized_usage_value(requirement.get("decision_state")) != "approved":
+            continue
+        requirement_id = _normalized_usage_value(requirement.get("requirement_id"))
+        if requirement_id:
+            ids.append(requirement_id)
+
+    full_coverage = (
+        card.get("full_product_sot_scope_coverage")
+        if isinstance(card.get("full_product_sot_scope_coverage"), dict)
+        else {}
+    )
+    coverage_records = full_coverage.get("requirement_coverage")
+    for coverage in coverage_records if isinstance(coverage_records, list) else []:
+        if not isinstance(coverage, dict):
+            continue
+        if _normalized_usage_value(coverage.get("status")) == "out_of_scope":
+            continue
+        requirement_ref = _normalized_usage_value(coverage.get("requirement_ref"))
+        if requirement_ref:
+            ids.append(requirement_ref)
+    return sorted(set(ids))
+
+
+def validate_product_face_scope_coverage_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    required_ids = _required_product_sot_scope_item_ids(card)
+    if not required_ids:
+        return errors
+
+    matrix = result.get("scope_coverage_matrix")
+    if not isinstance(matrix, list) or not matrix:
+        return ["product_face_result.scope_coverage_matrix is required when active Product SOT scope exists"]
+
+    entries_by_id: dict[str, dict[str, Any]] = {}
+    for index, entry in enumerate(matrix):
+        at = f"product_face_result.scope_coverage_matrix[{index}]"
+        if not isinstance(entry, dict):
+            errors.append(f"{at} must be an object")
+            continue
+        scope_item_id = _normalized_usage_value(entry.get("scope_item_id"))
+        if not scope_item_id:
+            errors.append(f"{at}.scope_item_id is required")
+            continue
+        if scope_item_id in entries_by_id:
+            errors.append(f"product_face_result.scope_coverage_matrix[{scope_item_id}] is duplicated")
+        entries_by_id[scope_item_id] = entry
+
+        status = _normalized_usage_value(entry.get("status"))
+        if status not in {"covered", "partial", "blocked", "deferred_by_sot", "out_of_scope_by_sot"}:
+            errors.append(
+                f"product_face_result.scope_coverage_matrix[{scope_item_id}].status must be "
+                "covered, partial, blocked, deferred_by_sot or out_of_scope_by_sot"
+            )
+            continue
+        basis = str(entry.get("basis") or "").strip()
+        if not basis:
+            errors.append(f"product_face_result.scope_coverage_matrix[{scope_item_id}].basis is required")
+        elif not public_safe_text(basis):
+            errors.append(f"product_face_result.scope_coverage_matrix[{scope_item_id}].basis must be public-safe")
+
+        evidence_refs = _list_items(entry.get("evidence_refs"))
+        for ref_index, ref in enumerate(evidence_refs):
+            _validate_public_ref(ref, f"product_face_result.scope_coverage_matrix[{scope_item_id}].evidence_refs[{ref_index}]", errors)
+
+        if status == "covered" and not evidence_refs:
+            errors.append(f"product_face_result.scope_coverage_matrix[{scope_item_id}].evidence_refs are required when status=covered")
+        if status in {"partial", "blocked"}:
+            errors.append(f"product_face_result.scope_coverage_matrix[{scope_item_id}].status={status} blocks final product completion")
+        if status in {"deferred_by_sot", "out_of_scope_by_sot"}:
+            sot_deferral_ref = str(entry.get("sot_deferral_ref") or "").strip()
+            human_gate_ref = str(entry.get("human_gate_ref") or "").strip()
+            if not sot_deferral_ref and not human_gate_ref:
+                errors.append(
+                    f"product_face_result.scope_coverage_matrix[{scope_item_id}] "
+                    "requires sot_deferral_ref or human_gate_ref for deferred/out-of-scope status"
+                )
+            if sot_deferral_ref:
+                _validate_public_ref(
+                    sot_deferral_ref,
+                    f"product_face_result.scope_coverage_matrix[{scope_item_id}].sot_deferral_ref",
+                    errors,
+                )
+            if human_gate_ref:
+                _validate_public_ref(
+                    human_gate_ref,
+                    f"product_face_result.scope_coverage_matrix[{scope_item_id}].human_gate_ref",
+                    errors,
+                )
+
+    missing_ids = [scope_id for scope_id in required_ids if scope_id not in entries_by_id]
+    if missing_ids:
+        errors.append("product_face_result.scope_coverage_matrix missing Product SOT scope coverage: " + ", ".join(missing_ids))
+    return errors
+
+
 def validate_product_face_result_against_card(result: dict[str, Any], card: dict[str, Any]) -> list[str]:
     errors = validate_product_face_result(result)
     errors.extend(_surface_evidence_profile_route_errors_for_card(card))
@@ -10875,6 +11243,9 @@ def validate_product_face_result_against_card(result: dict[str, Any], card: dict
     if missing_states:
         errors.append("product_face_result missing states promised by Product Face Packet/Experience Plan: " + ", ".join(missing_states))
     errors.extend(validate_usage_evidence_matrix_against_card(result, card))
+    errors.extend(validate_visual_quality_residuals_for_final_completion(result))
+    errors.extend(validate_product_face_source_authority_against_card(result, card))
+    errors.extend(validate_product_face_scope_coverage_against_card(result, card))
 
     proofs = _required_product_proofs(card)
     viewports = " ".join(_list_items(result.get("viewports"))).lower()
@@ -12374,6 +12745,8 @@ def _evidence_ref_errors(refs: list[str], evidence_root: Path | None) -> list[st
     errors: list[str] = []
     for ref in refs:
         normalized = ref.strip().replace("\\", "/")
+        if normalized.startswith("kanban-attachment:"):
+            continue
         if normalized.startswith(("http://", "https://", "external:", "repo://")):
             continue
         if normalized.startswith("file://") or Path(ref).is_absolute() or ":" in normalized.split("/", 1)[0]:
@@ -12388,6 +12761,74 @@ def _evidence_ref_errors(refs: list[str], evidence_root: Path | None) -> list[st
                 continue
             if not candidate.exists():
                 errors.append(f"evidence ref does not exist: {ref}")
+    return errors
+
+
+def is_native_kanban_attachment_ref(ref: Any) -> bool:
+    return str(ref or "").strip().startswith("kanban-attachment:")
+
+
+def _artifact_readback_ref_errors(item: dict[str, Any], ref: str) -> list[str]:
+    errors: list[str] = []
+    at = f"artifact_readback.refs[{ref}]"
+    if item.get("readable") is not True:
+        errors.append(f"{at}.readable must be true")
+    if is_native_kanban_attachment_ref(ref):
+        required_true_fields = (
+            "attachment_row_seen",
+            "blob_exists",
+        )
+        for field in required_true_fields:
+            if item.get(field) is not True:
+                errors.append(f"{at}.{field} must be true")
+        size = item.get("size_bytes")
+        if not isinstance(size, int) or size <= 0:
+            errors.append(f"{at}.size_bytes must be a positive integer")
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", str(item.get("sha256") or "")):
+            errors.append(f"{at}.sha256 must be sha256:<64 lowercase hex chars>")
+        if str(item.get("json_parse_status") or "").strip().upper() not in {"PASS", "NOT_JSON"}:
+            errors.append(f"{at}.json_parse_status must be PASS or NOT_JSON")
+        if item.get("schema_valid") is not True:
+            errors.append(f"{at}.schema_valid must be true")
+        if str(item.get("public_safety_scan") or "").strip().upper() != "PASS":
+            errors.append(f"{at}.public_safety_scan must be PASS")
+        if str(item.get("secret_safety_scan") or "").strip().upper() != "PASS":
+            errors.append(f"{at}.secret_safety_scan must be PASS")
+    return errors
+
+
+def artifact_readback_contract_errors(data: dict[str, Any]) -> list[str]:
+    refs = [
+        ref
+        for ref in string_list(data.get("evidence_refs"))
+        if is_native_kanban_attachment_ref(ref) or ref.startswith(("kanban-artifact:", "external:kanban-artifact:"))
+    ]
+    if not refs:
+        return []
+    errors: list[str] = []
+    proof = data.get("artifact_readback")
+    if not isinstance(proof, dict):
+        return ["artifact_readback is required for Kanban artifact evidence refs"]
+    if str(proof.get("status") or "").strip().upper() != "PASS":
+        errors.append("artifact_readback.status must be PASS")
+    if str(proof.get("checked_from") or "").strip() not in {"separate_worker_context", "downstream_worker_context"}:
+        errors.append("artifact_readback.checked_from must prove separate downstream readback")
+    items = proof.get("refs")
+    if not isinstance(items, list):
+        return errors + ["artifact_readback.refs must contain readback records"]
+    by_ref = {str(item.get("ref") or "").strip(): item for item in items if isinstance(item, dict)}
+    for ref in refs:
+        item = by_ref.get(ref)
+        if not isinstance(item, dict):
+            errors.append(f"artifact_readback.refs[{ref}] is required")
+            continue
+        errors.extend(_artifact_readback_ref_errors(item, ref))
+    if any(is_native_kanban_attachment_ref(ref) for ref in refs):
+        held = proof.get("held_card_readback") if isinstance(proof.get("held_card_readback"), dict) else {}
+        if held.get("required") is True:
+            for field in ("blocked_event_seen", "hydration_complete", "dispatcher_respects_hold"):
+                if held.get(field) is not True:
+                    errors.append(f"artifact_readback.held_card_readback.{field} must be true")
     return errors
 
 
@@ -12638,6 +13079,7 @@ def validate_worker_result_record(
         errors.append("evidence_refs must contain at least one artifact ref")
     else:
         errors.extend(_evidence_ref_errors(evidence_refs, evidence_root))
+        errors.extend(artifact_readback_contract_errors(data))
     contract = data.get("artifact_contract")
     if isinstance(contract, dict) and contract.get("public_safe") is False and data.get("reusable_for_product") is True:
         errors.append("private artifact_contract cannot be reusable_for_product=true")

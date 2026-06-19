@@ -14,6 +14,19 @@ Discord messages, dashboards, webhooks and status summaries are operator views.
 They can notify, request approval or show progress, but they must not close work
 without the same receipts and gates.
 
+## Product Process Projection
+
+A Control Tower may display `project-projection` artifacts, but the projection
+is read-only. Completion percent must be derived from runtime gates and worker
+result freshness, not from manual estimates, board-card counts, Discord status
+text or cockpit optimism.
+
+The projection must keep product progress separate from factory remediation.
+For example, a product can have implementation gates passing while factory
+readiness remains blocked by security, Product Face, release or repair-loop
+requirements. A `release_candidate`, `production` or `closed` state requires a
+runtime-gate completion basis; manual `100%` claims fail closed.
+
 ## Run Without Discord First
 
 Start with local validation:

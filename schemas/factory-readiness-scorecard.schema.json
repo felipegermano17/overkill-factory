@@ -196,6 +196,20 @@
         },
         "auto_approve_human_gates": {
           "const": false
+        },
+        "max_remediation_attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "timeout_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 240
+        },
+        "stop_condition": {
+          "type": "string",
+          "minLength": 3
         }
       },
       "additionalProperties": false

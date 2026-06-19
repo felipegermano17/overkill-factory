@@ -339,6 +339,35 @@ class EvidenceReconcilerTest(unittest.TestCase):
             [],
         )
 
+    def test_native_kanban_attachment_ref_requires_full_readback(self) -> None:
+        card = closure_card()
+        ref = "kanban-attachment:t_fixture/artifacts/security-proof.json"
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            tmp_path = Path(tmp)
+            results_dir = tmp_path / "worker-results"
+            results_dir.mkdir()
+            write_results(card, results_dir)
+            security = result_for("codex-security", card, "2026-06-06T00:50:00+00:00")
+            security["evidence_refs"] = [ref]
+            security["artifact_readback"] = {
+                "status": "PASS",
+                "checked_from": "downstream_worker_context",
+                "refs": [{"ref": ref, "readable": True, "sha256": "sha256:" + "0" * 64}],
+            }
+            results_dir.joinpath("codex-security.json").write_text(
+                factoryctl.json.dumps(security, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+            index = evidence_reconciler.reconcile(card, results_dir)
+
+        security_result = index["effective_results"]["security_scan_result"]
+        self.assertFalse(security_result["valid_for_closure"])
+        self.assertIn(
+            "artifact_readback.refs[kanban-attachment:t_fixture/artifacts/security-proof.json].attachment_row_seen must be true",
+            security_result["validation_errors"],
+        )
+
     def test_extra_result_path_is_indexed_with_worker_results(self) -> None:
         card = closure_card()
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
