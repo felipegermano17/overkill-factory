@@ -49,6 +49,9 @@ SCAN_DIRS = [
     ROOT / "planning-bundles",
     ROOT / "fixtures" / "product-validation",
 ]
+RUNTIME_LOCAL_JSON_DIRS = [
+    ROOT / ".tmp" / "factory-runs" / "operator-inbox",
+]
 
 SCHEMA_OPTIONAL = {
     ".tmp/factory-runs/product-face/console.json",
@@ -2238,11 +2241,22 @@ def validate_public_ref_hygiene(value: Any, at: str = "$") -> list[str]:
     return errors
 
 
+def is_runtime_local_json(path: Path) -> bool:
+    resolved_path = path.resolve()
+    for directory in RUNTIME_LOCAL_JSON_DIRS:
+        try:
+            resolved_path.relative_to(directory.resolve())
+        except ValueError:
+            continue
+        return True
+    return False
+
+
 def iter_public_json() -> list[Path]:
     paths: list[Path] = []
     for directory in SCAN_DIRS:
         if directory.exists():
-            paths.extend(sorted(directory.rglob("*.json")))
+            paths.extend(path for path in sorted(directory.rglob("*.json")) if not is_runtime_local_json(path))
     return paths
 
 

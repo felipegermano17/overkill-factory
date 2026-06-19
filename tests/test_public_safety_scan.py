@@ -115,6 +115,8 @@ class PublicSafetyScanTest(unittest.TestCase):
     def test_generated_local_build_metadata_is_not_scanned(self) -> None:
         self.assertFalse(public_safety_scan.is_text_rel("overkill_factory.egg-info/PKG-INFO"))
         self.assertFalse(public_safety_scan.is_text_rel(".tmp/quickstart-result.json"))
+        self.assertFalse(public_safety_scan.is_text_rel("site/index.html"))
+        self.assertFalse(public_safety_scan.is_binary_asset_rel("site/webfonts/fa-solid-900.woff2"))
 
     def test_git_ref_scan_checks_committed_tree(self) -> None:
         original_root = public_safety_scan.ROOT

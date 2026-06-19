@@ -187,13 +187,16 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 
 ## Current Release State
 
-Factory v1 is the current public kernel release. It includes:
+Factory v1 is the current public kernel release line; the latest public tag is
+v1.1.0. It includes:
 
 - Universal Signal Intake and route registry;
 - Golden Corpus and signal coverage checks;
 - Product SOT, full-scope planning and method contracts;
 - worker registry, Hermes bindings and permission classes;
 - capability-pack activation rules;
+- Solana AI Kit domain-brain routing for Solana and on-chain work;
+- Codex Bridge plugin docs and package for operator-to-factory handoff;
 - Product Face packet/result contracts;
 - release preflight, public-surface sync and safety scans;
 - Factory v1 Completion Gate.

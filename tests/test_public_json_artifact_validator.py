@@ -4,6 +4,7 @@ import importlib.util
 import json
 import sys
 import unittest
+import uuid
 from pathlib import Path
 
 
@@ -158,6 +159,21 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         self.assertIn("agents/worker-contract.schema.json", schema_paths)
         self.assertIn("worker-contract.schema.json", schemas)
+
+    def test_public_json_discovery_skips_runtime_operator_inbox(self) -> None:
+        validator = load_validator()
+        inbox = ROOT / ".tmp" / "factory-runs" / "operator-inbox"
+        ack_name = f"local-validator-test-{uuid.uuid4().hex}-ack-without-schema.json"
+        ack = inbox / ack_name
+        inbox.mkdir(parents=True, exist_ok=True)
+        ack.write_text(json.dumps({"record_type": "factory_bridge_ack"}), encoding="utf-8")
+
+        try:
+            public_json_paths = {path.relative_to(ROOT).as_posix() for path in validator.iter_public_json()}
+        finally:
+            ack.unlink(missing_ok=True)
+
+        self.assertNotIn(f".tmp/factory-runs/operator-inbox/{ack_name}", public_json_paths)
 
     def test_factory_card_schema_rejects_absurd_required_field_shapes(self) -> None:
         validator = load_validator()

@@ -7,10 +7,22 @@ public releases.
 
 ## Unreleased
 
-- No unreleased public changes.
+- Document the v1.1.0 Codex Bridge plugin release surface in the public
+  changelog and root READMEs.
+- Clarify that the v1.0.1 visual map is a supporting visual surface versioned
+  separately from the release tag and that Solana AI Kit routing is authoritative
+  in capability packs, worker packets and validation.
+- Mark intentional maintainer/audit pages as excluded from MkDocs navigation
+  warnings.
+- Keep local generated build output and runtime bridge inbox records out of
+  public validation discovery.
 
 ## 1.1.0 - 2026-06-19
 
+- Shipped the public Overkill Factory Bridge Codex plugin package, including
+  install docs, inbox resolution, hook trust boundaries and the rule that the
+  plugin acts only as an operator bridge, not as Hermes, the factory runtime,
+  a gate approver or Receipt Five evidence.
 - Replaced the legacy Solana core pack with `solana-ai-kit-core`, backed by
   `solanabr/solana-ai-kit@v2.0.2` as the official Solana domain-brain provider.
 - Added deterministic Solana surface inference to worker routing. Worker

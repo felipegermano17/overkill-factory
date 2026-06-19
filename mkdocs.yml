@@ -6,6 +6,9 @@ exclude_docs: |
   /README.md
 not_in_nav: |
   README.md
+  maintenance/implacability-audit-2026-06-19.md
+  superpowers/plans/2026-06-19-overkill-implacavel-audit.md
+  superpowers/plans/2026-06-19-overkill-open-issues-closeout.md
 nav:
   - Operator Path: index.md
   - Quickstart With Hermes: getting-started/quickstart-hermes.md
