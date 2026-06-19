@@ -126,14 +126,18 @@ git diff --check
 
 Expected: PASS.
 
-- [ ] **Step 2: Commit and merge locally**
+- [x] **Step 2: Commit and merge locally**
 
 Commit the closeout on the feature branch, switch to `main`, merge the feature branch, and rerun complete verification on `main`.
 
-- [ ] **Step 3: Close GitHub issues**
+- [x] **Step 3: Close GitHub issues**
 
 Close issues #382, #385, #386, #387, and #389 only after the merged `main` state verifies.
 
-- [ ] **Step 4: Cleanup**
+- [x] **Step 4: Cleanup**
 
 Delete the merged local feature branch if safe, prune stale worktrees if any, and report exact final state.
+
+Cleanup note: the feature branch is still checked out by the primary worktree,
+so it was preserved instead of deleting or force-switching that worktree. The
+merged `main` worktree is clean and ahead of `origin/main`.
