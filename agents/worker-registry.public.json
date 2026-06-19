@@ -281,6 +281,7 @@
         "risk_effective"
       ],
       "tools": [
+        "Solana AI Kit",
         "solanabr/Auditor",
         "Quasar-aware review"
       ],
@@ -292,6 +293,7 @@
         "missing signer boundary"
       ],
       "evidence_required": [
+        "Solana AI Kit usage receipt",
         "Auditor report",
         "PDA/signers/CPI/CU checks",
         "waiver if not run"
@@ -1002,6 +1004,7 @@
         "done_definition"
       ],
       "tools": [
+        "Solana AI Kit",
         "Quasar toolchain",
         "Solana devnet",
         "Rust tests"
@@ -1014,6 +1017,7 @@
         "mainnet or key access requested"
       ],
       "evidence_required": [
+        "Solana AI Kit usage receipt",
         "diff refs",
         "Quasar build/test refs",
         "PDA/signer map"
@@ -1044,6 +1048,7 @@
         "done_definition"
       ],
       "tools": [
+        "Solana AI Kit",
         "devnet",
         "Quasar tests",
         "simulation",
@@ -1057,6 +1062,7 @@
         "Auditor bypass"
       ],
       "evidence_required": [
+        "Solana AI Kit usage receipt",
         "test logs",
         "devnet/local refs",
         "negative test matrix"

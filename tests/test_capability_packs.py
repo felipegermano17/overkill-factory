@@ -139,6 +139,72 @@ class CapabilityPacksTest(unittest.TestCase):
                 self.assertTrue(pack["local_smoke_path"].startswith("python scripts/"))
                 self.assertNotIn(".tmp/", json.dumps(pack))
 
+    def test_solana_ai_kit_is_the_official_solana_core_pack(self) -> None:
+        raw_registry = (ROOT / "agents" / "capability-packs.public.json").read_text(encoding="utf-8")
+        packs = json.loads(raw_registry)["packs"]
+        legacy_pack_id = "solana-" + "quasar-core"
+        legacy_reference_source = "solanabr/" + "solana-" + "claude"
+
+        self.assertIn("solana-ai-kit-core", packs)
+        self.assertNotIn(legacy_pack_id, packs)
+        self.assertNotIn(legacy_reference_source, raw_registry)
+
+        pack = packs["solana-ai-kit-core"]
+        provider = pack["official_brain_provider"]
+        self.assertEqual(pack["pack_id"], "solana-ai-kit-core")
+        self.assertEqual(provider["provider_id"], "solana-ai-kit")
+        self.assertEqual(provider["source"], "https://github.com/solanabr/solana-ai-kit")
+        self.assertEqual(provider["pinned_ref"], "v2.0.2")
+        self.assertTrue(provider["required_before_execution"])
+        self.assertTrue(provider["usage_receipt_required"])
+        self.assertIn("solana-ai-kit.usage-receipt", pack["structured_proofs_required"])
+        self.assertIn("solanabr/solana-ai-kit@v2.0.2", pack["reference_sources"])
+        for surface in ["anchor", "pinocchio", "token-2022", "nft", "defi", "rpc", "solana-pay"]:
+            self.assertIn(surface, pack["covers_surfaces"])
+        for worker_id in ["product-architect", "wallet-transaction-builder", "crypto-key-management-specialist", "codex-security"]:
+            self.assertIn(worker_id, pack["existing_workers"])
+
+    def test_solana_surface_router_infers_solana_from_card_text_without_declared_surface(self) -> None:
+        card = base_card()
+        card["surfaces"] = ["backend"]
+        card["outcome"] = "Build a wallet flow with @solana/web3.js, Token-2022 mint authority and Phantom wallet signing."
+        card["scope_in"] = [
+            "Create the associated token account path.",
+            "Simulate transaction before broadcast.",
+        ]
+
+        surfaces = factoryctl.normalized_surfaces(card)
+
+        self.assertIn("solana", surfaces)
+        self.assertIn("web3.js", surfaces)
+        self.assertIn("token-2022", surfaces)
+        self.assertIn("wallet", surfaces)
+        self.assertEqual(factoryctl.validate_capability_coverage(card), [])
+
+    def test_solana_surface_router_avoids_generic_anchor_link_false_positive(self) -> None:
+        card = base_card()
+        card["surfaces"] = ["frontend"]
+        card["outcome"] = "Add anchor links to the docs navigation."
+        card["scope_in"] = ["HTML anchor link focus state", "Improve table-of-contents scrolling."]
+
+        surfaces = factoryctl.normalized_surfaces(card)
+
+        self.assertNotIn("solana", surfaces)
+        self.assertNotIn("anchor", surfaces)
+
+    def test_solana_surface_router_does_not_infer_from_excluded_scope_only(self) -> None:
+        card = base_card()
+        card["surfaces"] = ["frontend"]
+        card["outcome"] = "Build a public docs landing page."
+        card["scope_in"] = ["Static docs page and navigation."]
+        card["scope_out"] = ["Do not build Solana wallet flows."]
+        card["forbidden_actions"] = ["solana signing", "mainnet write"]
+
+        surfaces = factoryctl.normalized_surfaces(card)
+
+        self.assertNotIn("solana", surfaces)
+        self.assertNotIn("wallet", surfaces)
+
     def test_ready_core_surfaces_pass_capability_coverage(self) -> None:
         card = base_card()
 

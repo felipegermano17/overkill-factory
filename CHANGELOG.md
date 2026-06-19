@@ -9,6 +9,24 @@ public releases.
 
 - No unreleased public changes.
 
+## 1.1.0 - 2026-06-19
+
+- Replaced the legacy Solana core pack with `solana-ai-kit-core`, backed by
+  `solanabr/solana-ai-kit@v2.0.2` as the official Solana domain-brain provider.
+- Added deterministic Solana surface inference to worker routing. Worker
+  packets now expose `input_contract.surface_router` with declared, inferred
+  and effective surfaces plus route reasons.
+- Added `domain_brain_provider` to Solana-domain worker packets and dynamically
+  inject `solana-ai-kit` into relevant planning, architecture, build, wallet,
+  QA, integration and security workers.
+- Require `solana_ai_kit_usage_receipt` for real `PASS` results from
+  Solana-domain workers, including cases where Solana was inferred from card
+  content instead of declared in `surfaces`.
+- Expanded public Solana coverage across Anchor, Pinocchio, Token-2022, SPL,
+  NFT, Metaplex, DeFi, AMM, staking, governance, RPC, wallet and transaction
+  surfaces while keeping Factory gates, Hermes state, Receipt Five, signer
+  rules and human approvals above provider guidance.
+
 ## 1.0.0 - 2026-06-16
 
 - Added the operator-first CLI path: `factoryctl doctor`, `factoryctl init` and

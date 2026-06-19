@@ -162,6 +162,60 @@
             "object",
             "null"
           ]
+        },
+        "surface_router": {
+          "type": "object",
+          "required": [
+            "declared_surfaces",
+            "inferred_surfaces",
+            "effective_surfaces",
+            "inference_routes"
+          ],
+          "properties": {
+            "declared_surfaces": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 2
+              }
+            },
+            "inferred_surfaces": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 2
+              }
+            },
+            "effective_surfaces": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 2
+              }
+            },
+            "inference_routes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "surface",
+                  "reason"
+                ],
+                "properties": {
+                  "surface": {
+                    "type": "string",
+                    "minLength": 2
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 6
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": true
@@ -340,6 +394,46 @@
     },
     "agent_runtime_hardening_profile": {
       "type": ["object", "null"]
+    },
+    "domain_brain_provider": {
+      "type": "object",
+      "required": [
+        "pack_id",
+        "provider_id",
+        "source",
+        "pinned_ref",
+        "required_before_execution",
+        "install_modes",
+        "load_contract",
+        "usage_receipt_required",
+        "usage_receipt_field",
+        "precedence_policy"
+      ],
+      "properties": {
+        "pack_id": { "type": "string", "minLength": 3 },
+        "provider_id": { "type": "string", "minLength": 3 },
+        "source": { "type": "string", "minLength": 3 },
+        "pinned_ref": { "type": "string", "minLength": 1 },
+        "required_before_execution": { "type": "boolean" },
+        "install_modes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "load_contract": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 8 }
+        },
+        "usage_receipt_required": { "type": "boolean" },
+        "usage_receipt_field": { "type": "string", "minLength": 3 },
+        "precedence_policy": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 8 }
+        }
+      },
+      "additionalProperties": false
     },
     "status": {
       "enum": [

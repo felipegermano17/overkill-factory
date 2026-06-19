@@ -84,6 +84,42 @@
             "items": { "type": "string", "minLength": 3 }
           },
           "local_smoke_path": { "type": "string", "minLength": 3 },
+          "official_brain_provider": {
+            "type": "object",
+            "required": [
+              "provider_id",
+              "source",
+              "pinned_ref",
+              "required_before_execution",
+              "install_modes",
+              "load_contract",
+              "usage_receipt_required",
+              "precedence_policy"
+            ],
+            "properties": {
+              "provider_id": { "type": "string", "minLength": 3 },
+              "source": { "type": "string", "minLength": 3 },
+              "pinned_ref": { "type": "string", "minLength": 1 },
+              "required_before_execution": { "type": "boolean" },
+              "install_modes": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 3 }
+              },
+              "load_contract": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 8 }
+              },
+              "usage_receipt_required": { "type": "boolean" },
+              "precedence_policy": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 8 }
+              }
+            },
+            "additionalProperties": false
+          },
           "reference_sources": {
             "type": "array",
             "minItems": 1,

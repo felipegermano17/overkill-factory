@@ -218,6 +218,289 @@ SECRET_DELIVERY_SAFE_MODES = {
     "external_service",
 }
 SECRET_DELIVERY_EXCEPTION_MODES = {"startup_env", "runtime_file"}
+SOLANA_AI_KIT_PACK_ID = "solana-ai-kit-core"
+SOLANA_AI_KIT_USAGE_RECEIPT_FIELD = "solana_ai_kit_usage_receipt"
+SOLANA_DOMAIN_BRAIN_WORKERS = {
+    "backend-api-builder",
+    "codex-security",
+    "crypto-key-management-specialist",
+    "decomposition-planner",
+    "implementation-worker",
+    "integration-builder",
+    "product-architect",
+    "product-face",
+    "product-sot-planner",
+    "qa-verification-worker",
+    "security-orchestrator",
+    "solana-quasar-auditor",
+    "solana-quasar-builder",
+    "solana-quasar-qa-engineer",
+    "test-automation-builder",
+    "wallet-transaction-builder",
+}
+SOLANA_DOMAIN_BRAIN_OUTPUT_FIELDS = {
+    "architecture_result",
+    "backend_api_build_result",
+    "crypto_key_management_result",
+    "decomposition_result",
+    "implementation_result",
+    "integration_build_result",
+    "product_face_result",
+    "product_sot_result",
+    "qa_verification_result",
+    "security_orchestration_result",
+    "security_scan_result",
+    "auditor_result",
+    "solana_quasar_build_result",
+    "solana_quasar_qa_result",
+    "test_automation_result",
+    "wallet_transaction_result",
+}
+SOLANA_DOMAIN_SURFACES = {
+    "account-pda",
+    "anchor",
+    "amm",
+    "compressed-nft",
+    "compute-units",
+    "cpi",
+    "dao",
+    "defi",
+    "devnet",
+    "funds",
+    "governance",
+    "helius",
+    "instruction",
+    "jupiter",
+    "mainnet",
+    "metaplex",
+    "nft",
+    "onchain",
+    "orca",
+    "pda",
+    "pinocchio",
+    "program",
+    "quasar",
+    "raydium",
+    "rpc",
+    "signing",
+    "simulation",
+    "solana",
+    "solana-pay",
+    "solana-sdk",
+    "solana-quasar",
+    "spl-token",
+    "staking",
+    "token",
+    "token-2022",
+    "transaction",
+    "transactions",
+    "wallet",
+    "web3.js",
+}
+SOLANA_SURFACE_ROUTER_ALIASES = {
+    "solana": [
+        "@solana/",
+        "solana",
+        "solana labs",
+        "solana ai kit",
+        "solana-agent-kit",
+    ],
+    "solana-quasar": [
+        "quasar svm",
+        "quasar solana",
+        "quasar program",
+        "quasar toolchain",
+    ],
+    "anchor": [
+        "anchor framework",
+        "anchor program",
+        "anchor_lang",
+        "anchor lang",
+        "anchor.toml",
+    ],
+    "pinocchio": [
+        "pinocchio program",
+        "pinocchio framework",
+        "pinocchio crate",
+    ],
+    "onchain": [
+        "on-chain",
+        "onchain",
+        "sealevel",
+        "sbf program",
+        "bpf loader",
+        "upgrade authority",
+        "program id",
+    ],
+    "program": [
+        "solana program",
+        "onchain program",
+        "program account",
+        "program derived address",
+    ],
+    "instruction": [
+        "solana instruction",
+        "transaction instruction",
+        "instruction data",
+    ],
+    "account-pda": [
+        "program derived address",
+        "program-derived address",
+        "account pda",
+        "pda account",
+    ],
+    "pda": [
+        "program derived address",
+        "program-derived address",
+        "pda",
+    ],
+    "cpi": [
+        "cross program invocation",
+        "cross-program invocation",
+        "cpi account",
+        "cpi instruction",
+    ],
+    "compute-units": [
+        "compute unit",
+        "compute units",
+        "compute budget instruction",
+        "cu budget",
+    ],
+    "devnet": [
+        "solana devnet",
+        "devnet transaction",
+        "devnet program",
+    ],
+    "mainnet": [
+        "mainnet-beta",
+        "mainnet beta",
+        "solana mainnet",
+    ],
+    "wallet": [
+        "@solana/wallet-adapter",
+        "wallet adapter",
+        "phantom wallet",
+        "solflare",
+        "backpack wallet",
+    ],
+    "wallet-ui": [
+        "wallet connect button",
+        "wallet adapter ui",
+    ],
+    "transaction": [
+        "solana transaction",
+        "versioned transaction",
+        "transaction message",
+    ],
+    "transactions": [
+        "solana transactions",
+        "versioned transactions",
+    ],
+    "signing": [
+        "signer boundary",
+        "transaction signer",
+        "signing prompt",
+    ],
+    "funds": [
+        "lamports",
+        "native sol",
+    ],
+    "rpc": [
+        "solana rpc",
+        "getlatestblockhash",
+        "simulate transaction",
+    ],
+    "solana-sdk": [
+        "solana sdk",
+        "solana-client",
+        "solana-program",
+    ],
+    "web3.js": [
+        "@solana/web3.js",
+        "solana web3.js",
+        "connection.confirmtransaction",
+    ],
+    "spl-token": [
+        "spl token",
+        "spl-token",
+        "associated token account",
+        "ata account",
+    ],
+    "token": [
+        "token account",
+        "mint authority",
+        "token mint",
+    ],
+    "token-2022": [
+        "token-2022",
+        "token 2022",
+        "transfer hook",
+        "confidential transfer",
+    ],
+    "nft": [
+        "solana nft",
+        "metadata account",
+    ],
+    "compressed-nft": [
+        "compressed nft",
+        "compressed-nft",
+        "bubblegum",
+        "merkle tree nft",
+    ],
+    "metaplex": [
+        "metaplex",
+        "mpl token metadata",
+        "token metadata program",
+    ],
+    "defi": [
+        "solana defi",
+        "raydium",
+        "jupiter swap",
+        "orca whirlpool",
+    ],
+    "amm": [
+        "automated market maker",
+        "amm pool",
+        "raydium pool",
+        "orca pool",
+    ],
+    "staking": [
+        "stake account",
+        "stake pool",
+        "validator stake",
+    ],
+    "governance": [
+        "spl governance",
+        "governance proposal",
+        "realms",
+    ],
+    "dao": [
+        "dao treasury",
+        "dao governance",
+        "realms dao",
+    ],
+    "solana-pay": [
+        "solana pay",
+        "solana-pay",
+    ],
+    "helius": [
+        "helius",
+        "helius webhook",
+    ],
+    "jupiter": [
+        "jupiter swap",
+        "jupiter quote",
+        "jup.ag",
+    ],
+    "orca": [
+        "orca whirlpool",
+        "orca pool",
+    ],
+    "raydium": [
+        "raydium",
+        "raydium pool",
+    ],
+}
 SECRET_DELIVERY_FORBIDDEN_MODES = {"prompt_context"}
 SECRET_POLICY_FORBIDDEN_KEYS = {
     "secret",
@@ -332,12 +615,29 @@ SOLANA_BUILD_SURFACES = {
     "solana",
     "solana-quasar",
     "quasar",
+    "anchor",
+    "pinocchio",
     "onchain",
     "program",
     "instruction",
     "pda",
     "cpi",
     "account-pda",
+    "rpc",
+    "solana-sdk",
+    "web3.js",
+    "spl-token",
+    "token",
+    "token-2022",
+    "nft",
+    "compressed-nft",
+    "metaplex",
+    "defi",
+    "amm",
+    "staking",
+    "governance",
+    "dao",
+    "solana-pay",
 }
 SOLANA_QA_SURFACES = SOLANA_BUILD_SURFACES | {
     "solana-test",
@@ -369,13 +669,32 @@ ONCHAIN_SURFACES = {
     "solana",
     "solana-quasar",
     "quasar",
+    "anchor",
+    "pinocchio",
     "onchain",
+    "program",
+    "instruction",
     "account-pda",
     "pda",
     "cpi",
     "compute-units",
     "funds",
     "mainnet",
+    "rpc",
+    "solana-sdk",
+    "web3.js",
+    "spl-token",
+    "token",
+    "token-2022",
+    "nft",
+    "compressed-nft",
+    "metaplex",
+    "defi",
+    "amm",
+    "staking",
+    "governance",
+    "dao",
+    "solana-pay",
 }
 SECURITY_SURFACES = {
     "security",
@@ -390,6 +709,18 @@ SECURITY_SURFACES = {
     "onchain",
     "solana",
     "solana-quasar",
+    "anchor",
+    "pinocchio",
+    "pda",
+    "cpi",
+    "signing",
+    "transaction",
+    "transactions",
+    "spl-token",
+    "token-2022",
+    "defi",
+    "staking",
+    "governance",
 }
 PRODUCT_FACE_RESULT_PHASES = {"F11", "F13", "F14", "F15", "F16", "F17"}
 HIGH_RISK = {"R3", "R4"}
@@ -3397,11 +3728,106 @@ def card_parallel_lane_contracts(card: dict[str, Any]) -> list[dict[str, Any]]:
     return [item for item in raw if isinstance(item, dict)]
 
 
-def normalized_surfaces(card: dict[str, Any]) -> set[str]:
+def declared_surfaces(card: dict[str, Any]) -> set[str]:
     raw = card.get("surfaces", [])
     if not isinstance(raw, list):
         return set()
     return {str(value).strip().lower() for value in raw if str(value).strip()}
+
+
+def _surface_router_text_fragments(value: Any, *, depth: int = 0) -> list[str]:
+    if depth > 6 or value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, (int, float)):
+        return [str(value)]
+    if isinstance(value, list):
+        fragments: list[str] = []
+        for item in value:
+            fragments.extend(_surface_router_text_fragments(item, depth=depth + 1))
+        return fragments
+    if isinstance(value, dict):
+        fragments = []
+        for key, item in value.items():
+            if str(key).lower() in {"private", "secret", "raw_secret", "credential", "access_token", "api_key", "authorization"}:
+                continue
+            fragments.append(str(key))
+            fragments.extend(_surface_router_text_fragments(item, depth=depth + 1))
+        return fragments
+    return []
+
+
+def _surface_alias_matches(haystack: str, normalized_haystack: str, alias: str) -> bool:
+    alias_lower = alias.lower().strip()
+    if not alias_lower:
+        return False
+    if any(char in alias_lower for char in "@/._"):
+        return alias_lower in haystack
+    normalized_alias = alias_lower.replace("-", " ").replace("_", " ")
+    pattern = r"(?<![a-z0-9])" + re.escape(normalized_alias).replace(r"\ ", r"[\s_-]+") + r"(?![a-z0-9])"
+    return re.search(pattern, normalized_haystack) is not None
+
+
+def inferred_surface_routes(card: dict[str, Any]) -> list[dict[str, str]]:
+    fragments = _surface_router_text_fragments({
+        "title": card.get("title"),
+        "summary": card.get("summary"),
+        "description": card.get("description"),
+        "body": card.get("body"),
+        "notes": card.get("notes"),
+        "source_refs": card.get("source_refs"),
+        "outcome": card.get("outcome"),
+        "acceptance_criteria": card.get("acceptance_criteria"),
+        "scope_in": card.get("scope_in"),
+        "done_definition": card.get("done_definition"),
+        "request_type": card.get("request_type"),
+        "method_contract": card.get("method_contract"),
+        "outcome_contract": card.get("outcome_contract"),
+        "product_sot": card.get("product_sot"),
+        "product_context_packet": card.get("product_context_packet"),
+        "product_creation_plan": card.get("product_creation_plan"),
+        "product_implementation_readiness": card.get("product_implementation_readiness"),
+        "security_contract": card.get("security_contract"),
+        "security_architecture_plan": card.get("security_architecture_plan"),
+        "runtime_contract": card.get("runtime_contract"),
+        "universal_signal_intake": card.get("universal_signal_intake"),
+    })
+    haystack = "\n".join(fragment.lower() for fragment in fragments if str(fragment).strip())
+    normalized_haystack = re.sub(r"[^a-z0-9@/._-]+", " ", haystack)
+    routes: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for surface, aliases in SOLANA_SURFACE_ROUTER_ALIASES.items():
+        for alias in aliases:
+            if _surface_alias_matches(haystack, normalized_haystack, alias):
+                key = f"{surface}:{alias.lower()}"
+                if key not in seen:
+                    routes.append({"surface": surface, "reason": f"matched {alias!r} in card routing text"})
+                    seen.add(key)
+                break
+    inferred_surfaces = {route["surface"] for route in routes}
+    if inferred_surfaces & SOLANA_DOMAIN_SURFACES and "solana" not in inferred_surfaces:
+        routes.append({"surface": "solana", "reason": "derived from Solana-domain surface inference"})
+    return routes
+
+
+def inferred_surfaces(card: dict[str, Any]) -> set[str]:
+    return {route["surface"] for route in inferred_surface_routes(card)}
+
+
+def surface_router_summary(card: dict[str, Any]) -> dict[str, Any]:
+    declared = declared_surfaces(card)
+    inferred = inferred_surface_routes(card)
+    return {
+        "declared_surfaces": sorted(declared),
+        "inferred_surfaces": sorted({route["surface"] for route in inferred} - declared),
+        "effective_surfaces": sorted(declared | {route["surface"] for route in inferred}),
+        "inference_routes": inferred,
+    }
+
+
+def normalized_surfaces(card: dict[str, Any]) -> set[str]:
+    return declared_surfaces(card) | inferred_surfaces(card)
 
 
 def _surface_profile_tokens(card: dict[str, Any]) -> set[str]:
@@ -12047,6 +12473,29 @@ def runtime_decision_profile(card: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def domain_brain_provider_for_worker(worker_id: str, card: dict[str, Any]) -> dict[str, Any] | None:
+    if worker_id not in SOLANA_DOMAIN_BRAIN_WORKERS:
+        return None
+    if not (normalized_surfaces(card) & SOLANA_DOMAIN_SURFACES):
+        return None
+    pack = load_capability_packs().get(SOLANA_AI_KIT_PACK_ID)
+    provider = pack.get("official_brain_provider") if isinstance(pack, dict) else None
+    if not isinstance(provider, dict):
+        return None
+    return {
+        "pack_id": SOLANA_AI_KIT_PACK_ID,
+        "provider_id": provider.get("provider_id"),
+        "source": provider.get("source"),
+        "pinned_ref": provider.get("pinned_ref"),
+        "required_before_execution": provider.get("required_before_execution") is True,
+        "install_modes": _list_items(provider.get("install_modes")),
+        "load_contract": _list_items(provider.get("load_contract")),
+        "usage_receipt_required": provider.get("usage_receipt_required") is True,
+        "usage_receipt_field": SOLANA_AI_KIT_USAGE_RECEIPT_FIELD,
+        "precedence_policy": _list_items(provider.get("precedence_policy")),
+    }
+
+
 def required_worker_ids(card: dict[str, Any]) -> list[str]:
     return [worker_id for worker_id in WORKERS if worker_required(worker_id, card)[0]]
 
@@ -12064,6 +12513,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
         status = "blocked_missing_inputs"
     if required and missing_profile_binding:
         status = "blocked_missing_profile_binding"
+    domain_brain_provider = domain_brain_provider_for_worker(worker_id, card)
 
     packet = {
         "$schema": "https://overkill-factory.dev/schemas/worker-packet.schema.json",
@@ -12095,6 +12545,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "required_fields": list(worker.required_inputs),
             "missing_fields": missing_inputs,
             "unblock_guidance": unblock_guidance(missing_inputs),
+            "surface_router": surface_router_summary(card),
             "target_repo_paths": card.get("target_repo_paths", []),
             "authority_max": card.get("authority_max"),
             "forbidden_actions": card.get("forbidden_actions", []),
@@ -12159,13 +12610,23 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
         },
         "status": status,
     }
+    if domain_brain_provider:
+        packet["domain_brain_provider"] = domain_brain_provider
+        packet["input_contract"]["domain_brain_provider_ref"] = (
+            f"agents/capability-packs.public.json#packs.{SOLANA_AI_KIT_PACK_ID}.official_brain_provider"
+        )
+        packet["output_contract"]["domain_brain_usage_receipt_required"] = True
+        packet["output_contract"]["domain_brain_usage_receipt_field"] = SOLANA_AI_KIT_USAGE_RECEIPT_FIELD
     if profile_binding:
+        skill_refs = _list_items(profile_binding.get("skill_refs"))
+        if domain_brain_provider and "solana-ai-kit" not in skill_refs:
+            skill_refs.append("solana-ai-kit")
         packet["profile_binding"] = {
             "profile_id": profile_binding.get("profile_id"),
             "hermes_profile_name": profile_binding.get("hermes_profile_name"),
             "factory_gate_timing_policy": profile_binding.get("factory_gate_timing_policy"),
             "gate_timing_source": "worker_task.gate_timing_class",
-            "skill_refs": profile_binding.get("skill_refs", []),
+            "skill_refs": skill_refs,
             "result_schema": profile_binding.get("result_schema"),
             "receipt_field": profile_binding.get("receipt_field"),
             "can_mutate_card_state": profile_binding.get("can_mutate_card_state", False),
@@ -12909,6 +13370,53 @@ def _waiver_errors(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _solana_ai_kit_usage_receipt_errors(
+    data: dict[str, Any],
+    card: dict[str, Any] | None,
+    evidence_root: Path | None,
+) -> list[str]:
+    record_type = str(data.get("record_type") or "").strip()
+    if record_type not in SOLANA_DOMAIN_BRAIN_OUTPUT_FIELDS:
+        return []
+    if str(data.get("result") or "").strip() != "PASS":
+        return []
+    if str(data.get("evidence_kind") or "").strip() != "real":
+        return []
+
+    record_card_ref = data.get("card_ref") if isinstance(data.get("card_ref"), dict) else {}
+    record_surfaces = normalized_surfaces({"surfaces": record_card_ref.get("surfaces", [])})
+    card_surfaces = normalized_surfaces(card) if isinstance(card, dict) else set()
+    if not ((record_surfaces | card_surfaces) & SOLANA_DOMAIN_SURFACES):
+        return []
+
+    receipt = data.get(SOLANA_AI_KIT_USAGE_RECEIPT_FIELD)
+    if not isinstance(receipt, dict):
+        return [f"{SOLANA_AI_KIT_USAGE_RECEIPT_FIELD} object is required for real PASS Solana worker results"]
+
+    errors: list[str] = []
+    expected_values = {
+        "provider_id": "solana-ai-kit",
+        "source": "https://github.com/solanabr/solana-ai-kit",
+        "pinned_ref": "v2.0.2",
+    }
+    for field, expected in expected_values.items():
+        if receipt.get(field) != expected:
+            errors.append(f"{SOLANA_AI_KIT_USAGE_RECEIPT_FIELD}.{field} must be {expected}")
+    if receipt.get("loaded") is not True:
+        errors.append(f"{SOLANA_AI_KIT_USAGE_RECEIPT_FIELD}.loaded must be true")
+    if not string_list(receipt.get("loaded_components")):
+        errors.append(f"{SOLANA_AI_KIT_USAGE_RECEIPT_FIELD}.loaded_components must contain at least one item")
+    receipt_refs = string_list(receipt.get("evidence_refs"))
+    if not receipt_refs:
+        errors.append(f"{SOLANA_AI_KIT_USAGE_RECEIPT_FIELD}.evidence_refs must contain at least one artifact ref")
+    else:
+        errors.extend(
+            f"{SOLANA_AI_KIT_USAGE_RECEIPT_FIELD}.evidence_refs: {error}"
+            for error in _evidence_ref_errors(receipt_refs, evidence_root)
+        )
+    return errors
+
+
 def _record_specific_errors(data: dict[str, Any], evidence_kind: str) -> list[str]:
     record_type = str(data.get("record_type") or "").strip()
     errors: list[str] = []
@@ -13108,6 +13616,7 @@ def validate_worker_result_record(
         if "synthetic" not in source_text and "validation" not in source_text:
             errors.append("synthetic evidence can only satisfy synthetic/validation cards")
     errors.extend(_waiver_errors(data))
+    errors.extend(_solana_ai_kit_usage_receipt_errors(data, card, evidence_root))
     errors.extend(_record_specific_errors(data, evidence_kind))
     if record_type == "product_face_result" and card is not None:
         errors.extend(validate_product_face_result_against_card(data, card))

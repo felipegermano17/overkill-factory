@@ -79,10 +79,12 @@ def worker_result(
         "source_ledger_result": "source-ledger-worker",
         "security_orchestration_result": "security-orchestrator",
         "crypto_key_management_result": "crypto-key-management-specialist",
+        "backend_api_build_result": "backend-api-builder",
         "remote_proof_result": "remote-proof-runner",
         "handoff_packet_result": "handoff-packer",
         "solana_quasar_build_result": "solana-quasar-builder",
         "solana_quasar_qa_result": "solana-quasar-qa-engineer",
+        "wallet_transaction_result": "wallet-transaction-builder",
         "supply_chain_result": "supply-chain-gate",
     }.get(record_type, "fixture-worker")
     card_id = str((source_card or {}).get("card_id") or "VAL-SOLANA-QUASAR-R3")
@@ -185,6 +187,17 @@ def worker_result(
             "evidence_refs": ["README.md"],
         }
     return payload
+
+
+def solana_ai_kit_usage_receipt() -> dict:
+    return {
+        "provider_id": "solana-ai-kit",
+        "source": "https://github.com/solanabr/solana-ai-kit",
+        "pinned_ref": "v2.0.2",
+        "loaded": True,
+        "loaded_components": ["agents", "skills", "commands"],
+        "evidence_refs": ["README.md"],
+    }
 
 
 def human_gate_record(source_card: dict | None = None) -> dict:
@@ -775,6 +788,148 @@ class FactoryCtlTest(unittest.TestCase):
                 "game.playtest-review",
                 "game.runtime-choice",
             ],
+        )
+
+    def test_solana_worker_packet_carries_solana_ai_kit_domain_brain(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = factoryctl.load_json_like(card_path)
+
+        packet = factoryctl.build_worker_packet("solana-quasar-auditor", card, card_path)
+
+        provider = packet["domain_brain_provider"]
+        self.assertEqual(provider["pack_id"], "solana-ai-kit-core")
+        self.assertEqual(provider["provider_id"], "solana-ai-kit")
+        self.assertEqual(provider["source"], "https://github.com/solanabr/solana-ai-kit")
+        self.assertEqual(provider["pinned_ref"], "v2.0.2")
+        self.assertTrue(provider["required_before_execution"])
+        self.assertTrue(provider["usage_receipt_required"])
+        self.assertEqual(provider["usage_receipt_field"], "solana_ai_kit_usage_receipt")
+        self.assertIn("solana-ai-kit", packet["profile_binding"]["skill_refs"])
+        self.assertTrue(packet["output_contract"]["domain_brain_usage_receipt_required"])
+        self.assertEqual(
+            packet["input_contract"]["domain_brain_provider_ref"],
+            "agents/capability-packs.public.json#packs.solana-ai-kit-core.official_brain_provider",
+        )
+
+    def test_solana_domain_brain_reaches_lifecycle_wallet_and_security_workers(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+        card["surfaces"] = ["solana", "wallet", "token-2022", "defi"]
+
+        for worker_id in [
+            "product-sot-planner",
+            "product-architect",
+            "decomposition-planner",
+            "product-face",
+            "wallet-transaction-builder",
+            "crypto-key-management-specialist",
+            "codex-security",
+            "security-orchestrator",
+            "backend-api-builder",
+            "integration-builder",
+            "test-automation-builder",
+        ]:
+            with self.subTest(worker_id=worker_id):
+                packet = factoryctl.build_worker_packet(worker_id, card, card_path)
+                self.assertEqual(packet["domain_brain_provider"]["provider_id"], "solana-ai-kit")
+                self.assertIn("solana-ai-kit", packet["profile_binding"]["skill_refs"])
+
+    def test_solana_domain_brain_uses_inferred_surfaces_when_declared_surface_is_generic(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+        card["surfaces"] = ["backend"]
+        card["outcome"] = "Build a Token-2022 backend using @solana/web3.js and Phantom wallet signing."
+        card["scope_in"] = [
+            "Create associated token account flow.",
+            "Simulate transaction before broadcast.",
+        ]
+
+        packet = factoryctl.build_worker_packet("backend-api-builder", card, card_path)
+
+        self.assertEqual(packet["domain_brain_provider"]["provider_id"], "solana-ai-kit")
+        self.assertIn("solana-ai-kit", packet["profile_binding"]["skill_refs"])
+        self.assertIn("solana", packet["input_contract"]["surface_router"]["inferred_surfaces"])
+        self.assertIn("token-2022", packet["input_contract"]["surface_router"]["effective_surfaces"])
+        self.assertEqual(
+            packet["input_contract"]["domain_brain_provider_ref"],
+            "agents/capability-packs.public.json#packs.solana-ai-kit-core.official_brain_provider",
+        )
+
+    def test_real_solana_worker_result_requires_solana_ai_kit_usage_receipt(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        result = worker_result("solana_quasar_build_result", source_card=card)
+        result["evidence_kind"] = "real"
+        result["reusable_for_product"] = True
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="solana_quasar_build_result",
+            expected_worker_id="solana-quasar-builder",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn(
+            "solana_ai_kit_usage_receipt object is required for real PASS Solana worker results",
+            errors,
+        )
+
+    def test_real_solana_worker_result_requires_receipt_from_inferred_surfaces(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["surfaces"] = ["backend"]
+        card["outcome"] = "Build a Token-2022 backend using @solana/web3.js and Phantom wallet signing."
+        result = worker_result("backend_api_build_result", source_card=card)
+        result["evidence_kind"] = "real"
+        result["reusable_for_product"] = True
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="backend_api_build_result",
+            expected_worker_id="backend-api-builder",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn(
+            "solana_ai_kit_usage_receipt object is required for real PASS Solana worker results",
+            errors,
+        )
+
+    def test_real_solana_worker_result_accepts_valid_solana_ai_kit_usage_receipt(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        result = worker_result("solana_quasar_build_result", source_card=card)
+        result["evidence_kind"] = "real"
+        result["reusable_for_product"] = True
+        result["solana_ai_kit_usage_receipt"] = solana_ai_kit_usage_receipt()
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="solana_quasar_build_result",
+            expected_worker_id="solana-quasar-builder",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertEqual(errors, [])
+
+    def test_real_wallet_worker_result_requires_solana_ai_kit_usage_receipt_on_solana_card(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["surfaces"] = ["solana", "wallet", "transaction"]
+        result = worker_result("wallet_transaction_result", source_card=card)
+        result["evidence_kind"] = "real"
+        result["reusable_for_product"] = True
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="wallet_transaction_result",
+            expected_worker_id="wallet-transaction-builder",
+            card=card,
+            evidence_root=ROOT,
+        )
+
+        self.assertIn(
+            "solana_ai_kit_usage_receipt object is required for real PASS Solana worker results",
+            errors,
         )
 
     def test_worker_packet_carries_sdlc_feedback_loop_ref(self) -> None:
@@ -3782,6 +3937,7 @@ class FactoryCtlTest(unittest.TestCase):
             findings_summary="No blocking finding.",
             next_action="continue",
         )
+        result["solana_ai_kit_usage_receipt"] = solana_ai_kit_usage_receipt()
 
         with tempfile.TemporaryDirectory() as tmp:
             results_dir = Path(tmp)

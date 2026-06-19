@@ -60,7 +60,7 @@ Ready packs:
 | `cli-tui-product-pack` | CLI/TUI command products, terminal UX, transcripts, install/run and package/release proof. |
 | `cloud-native-core` | CI/CD, runtime, cloud, monitoring, rollback and production operations boundaries. |
 | `agent-runtime-core` | Hermes, Factory, profiles, skills, memory, tools, MCP and autonomous workflow changes. |
-| `solana-quasar-core` | Quasar-first Solana/onchain program work, wallet transaction boundaries and onchain QA. |
+| `solana-ai-kit-core` | Solana AI Kit-backed Solana/onchain program work, wallet transaction boundaries and onchain QA. |
 
 Template packs that must be activated before execution:
 
@@ -77,6 +77,15 @@ Template packs that must be activated before execution:
 | `hardware-iot-pack` | hardware/IoT specialist with physical safety proof. |
 
 See `docs/agents/capability-packs.md` for the full rule.
+
+For Solana/onchain work, Solana AI Kit is loaded as the official domain brain
+through `solana-ai-kit-core`. The worker profile still decides authority,
+queueing and receipt fields; Solana-sensitive planning, architecture, build,
+wallet, QA, integration and security worker packets add `solana-ai-kit`
+dynamically when declared or inferred Solana surfaces are present. The packet
+also carries `input_contract.surface_router` so the worker can see why the
+Factory routed it that way. Real `PASS` results require a Solana AI Kit usage
+receipt.
 
 ## How To Read The Table
 

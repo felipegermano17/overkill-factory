@@ -44,6 +44,17 @@ sys.modules["public_json_validator_live_test"] = validator
 VALIDATOR_SPEC.loader.exec_module(validator)
 
 
+def solana_ai_kit_usage_receipt() -> dict:
+    return {
+        "provider_id": "solana-ai-kit",
+        "source": "https://github.com/solanabr/solana-ai-kit",
+        "pinned_ref": "v2.0.2",
+        "loaded": True,
+        "loaded_components": ["agents", "skills", "commands"],
+        "evidence_refs": ["README.md"],
+    }
+
+
 class FakeHermes:
     def __init__(self) -> None:
         self.calls: list[list[str]] = []
@@ -3645,6 +3656,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 next_action="continue",
             ),
         }
+        receipt_payload["security_orchestration_result"]["solana_ai_kit_usage_receipt"] = solana_ai_kit_usage_receipt()
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             readiness = tmp_path / "route-readiness.json"
@@ -4088,6 +4100,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 next_action="continue",
             ),
         }
+        receipt_payload["security_orchestration_result"]["solana_ai_kit_usage_receipt"] = solana_ai_kit_usage_receipt()
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             readiness = tmp_path / "route-readiness.json"
