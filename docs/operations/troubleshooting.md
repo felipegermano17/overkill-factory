@@ -112,7 +112,7 @@ and Receipt Five evidence.
 
 ## Discord Shows Progress But Repo Evidence Is Missing
 
-Trust the repo evidence. Discord is only a cockpit. Rebuild the missing worker
+Trust the repo evidence. Discord is only a operator console. Rebuild the missing worker
 result, human gate record or Receipt Five artifact, then point the Control Tower
 message to that repo-relative ref.
 

@@ -74,7 +74,7 @@ A fronteira pratica e simples:
 - `factoryctl`, schemas e testes validam contratos publicos.
 - Hermes Kanban e a autoridade de runtime para cards e transicoes reais.
 - Receipt Five e resultados de workers sao a evidencia de conclusao.
-- Cockpits e dashboards de operador podem projetar estado, mas nao aprovam
+- Operator Consoles e dashboards de operador podem projetar estado, mas nao aprovam
   gates nem substituem o Hermes.
 
 ## Primeira Execucao

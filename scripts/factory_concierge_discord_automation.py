@@ -368,8 +368,8 @@ def ensure_thread_from_message(
     return {"thread_id": str(thread["id"]), "created": False, "updated": True}
 
 
-def intake_message_payload(projection: dict[str, Any], cockpit_thread_id: str | None) -> dict[str, Any]:
-    cockpit = f"<#{cockpit_thread_id}>" if cockpit_thread_id else "cockpit pendente"
+def intake_message_payload(projection: dict[str, Any], operator_console_thread_id: str | None) -> dict[str, Any]:
+    operator_console = f"<#{operator_console_thread_id}>" if operator_console_thread_id else "operator_console pendente"
     return {
         "content": "",
         "embeds": [
@@ -378,7 +378,7 @@ def intake_message_payload(projection: dict[str, Any], cockpit_thread_id: str | 
                 "description": f"**{bridge.truncate(str(projection['name']), 180)}**",
                 "color": 0x3498DB,
                 "fields": [
-                    {"name": "Cockpit visual", "value": cockpit, "inline": True},
+                    {"name": "OperatorConsole visual", "value": operator_console, "inline": True},
                     {"name": "Proxima acao", "value": bridge.truncate(str(projection["next_action"]), 1024), "inline": False},
                 ],
                 "footer": {"text": f"{INTAKE_MARKER_PREFIX}{projection['project_id']}"},
@@ -422,12 +422,12 @@ def process_intake_messages(
             project_state["intake_thread_id"] = thread_id
             project_state["intake_thread_source"] = "manager_thread"
         bridge_result = bridge.project_bridge_apply(projection, client, config, state)
-        cockpit_thread_id = (bridge_result.get("project_thread") or {}).get("thread_id")
+        operator_console_thread_id = (bridge_result.get("project_thread") or {}).get("thread_id")
         if thread_id:
             bridge.upsert_message(
                 client=client,
                 channel_id=thread_id,
-                payload=intake_message_payload(projection, cockpit_thread_id),
+                payload=intake_message_payload(projection, operator_console_thread_id),
                 expected_marker=f"{INTAKE_MARKER_PREFIX}{project_id}",
                 state_ref=project_state,
                 state_field="intake_pointer_message_id",
@@ -449,7 +449,7 @@ def process_intake_messages(
                 "thread_first": True,
                 "intake_thread_created": False,
                 "intake_thread_resolved": bool(thread_id),
-                "project_surface_resolved": bool(cockpit_thread_id),
+                "project_surface_resolved": bool(operator_console_thread_id),
             }
         )
     return {
@@ -474,7 +474,7 @@ def event_payload(event: dict[str, Any], project_thread_id: str | None = None) -
         {"name": "Fonte", "value": str(event["source"]), "inline": True},
     ]
     if project_thread_id:
-        fields.append({"name": "Cockpit do projeto", "value": f"<#{project_thread_id}>", "inline": False})
+        fields.append({"name": "OperatorConsole do projeto", "value": f"<#{project_thread_id}>", "inline": False})
     if event.get("details"):
         fields.append({"name": "Detalhe", "value": bridge.truncate(str(event["details"]), 1024), "inline": False})
     return {
@@ -858,7 +858,7 @@ def post_health(
         payload=health_payload(
             checks,
             [
-                "Discord e cockpit, nao fonte da verdade.",
+                "Discord e operator_console, nao fonte da verdade.",
                 "IDs reais ficam no estado privado.",
                 "Aprovacoes so valem depois de evento valido no runtime.",
             ],
@@ -906,7 +906,7 @@ def build_public_receipt(results: dict[str, Any], *, applied: bool) -> dict[str,
             "external:discord-control-tower-automation-proof",
         ],
         "limits": [
-            "Discord remains the owner cockpit only; Hermes remains the durable source of truth.",
+            "Discord remains the owner operator_console only; Hermes remains the durable source of truth.",
             "This receipt redacts Discord ids, private paths, credentials and logs.",
             "Real production approvals still require a real owner interaction or signed runtime event.",
         ],

@@ -75,7 +75,7 @@ def is_negative_test_guard(path_parts: tuple[str, ...], line: str) -> bool:
 
 
 def is_declared_negative_fixture_guard(path_parts: tuple[str, ...], line: str) -> bool:
-    """Allow the Local Status Cockpit negative EvidenceRef fixture to carry the blocked sample.
+    """Allow the Local Status OperatorConsole negative EvidenceRef fixture to carry the blocked sample.
 
     The fixture is itself public proof that the EvidenceRef validator rejects
     local/private refs. Keep the exemption narrow: only the named negative

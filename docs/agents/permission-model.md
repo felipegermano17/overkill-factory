@@ -4,7 +4,7 @@ The Factory is modular, but modular does not mean every agent can do
 everything.
 
 Hermes Kanban remains the durable source of truth. Discord is the operator
-cockpit. Workers produce bounded results. State changes, release decisions and
+operator console. Workers produce bounded results. State changes, release decisions and
 human gates must go through explicit runtime contracts.
 
 Machine-readable matrix:
@@ -34,7 +34,7 @@ state. The adapter and Hermes gates own durable state transitions.
 | `human_record` | Records explicit human decisions. |
 | `discord_interface` | Talks to the human operator through Discord. |
 | `bridge` | Maps Hermes and Discord events without deciding product direction. |
-| `read_only_projection` | Projects runtime state into a human-readable cockpit. |
+| `read_only_projection` | Projects runtime state into a human-readable operator console. |
 
 ## Boundary
 

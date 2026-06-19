@@ -5,7 +5,7 @@
   "fixture_id": "FX03",
   "fixture_name": "loading snapshot refresh in progress",
   "kind": "fixture",
-  "title": "Local Status Cockpit StatusSnapshot v0 - loading snapshot refresh in progress",
+  "title": "Local Status Operator Console StatusSnapshot v0 - loading snapshot refresh in progress",
   "phase": "F12/F13 first safe slice",
   "risk_effective": "R2",
   "observed_at": "2026-06-14T03:30:00Z",
@@ -81,7 +81,7 @@
     "status": "present",
     "reviewer_required": true,
     "reviewer_result": "review pending for future implementation",
-    "changed": "StatusSnapshot v0 projection fixture for Local Status Cockpit.",
+    "changed": "StatusSnapshot v0 projection fixture for Local Status Operator Console.",
     "artifact_paths": [
       "fixtures/status-snapshot-v0/FX03-loading_snapshot_refresh_in_progress.json",
       "schemas/factory-status-snapshot.schema.json"

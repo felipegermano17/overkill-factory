@@ -5,8 +5,8 @@ The bridge is deliberately narrow:
 
 - Hermes or another runtime remains the source of truth.
 - The input is a project-projection JSON contract.
-- Discord is updated as an owner cockpit: dashboard, project registry,
-  project forum topic and project cockpit message.
+- Discord is updated as an owner operator_console: dashboard, project registry,
+  project forum topic and project operator_console message.
 - The private state file can contain Discord ids; public receipts never do.
 """
 
@@ -40,7 +40,7 @@ API_BASE = "https://discord.com/api/v10"
 PROJECT_MARKER_PREFIX = "of-project:"
 DASHBOARD_MARKER = "of-dashboard:factory"
 REGISTRY_MARKER_PREFIX = "of-registry:"
-COCKPIT_MARKER_PREFIX = "of-cockpit:"
+OPERATOR_CONSOLE_MARKER_PREFIX = "of-operator_console:"
 
 CHANNEL_NAMES = {
     "dashboard": "torre-de-controle",
@@ -303,8 +303,8 @@ def marker(kind: str, project_id: str | None = None) -> str:
         return DASHBOARD_MARKER
     if kind == "registry" and project_id:
         return f"{REGISTRY_MARKER_PREFIX}{project_id}"
-    if kind == "cockpit" and project_id:
-        return f"{COCKPIT_MARKER_PREFIX}{project_id}"
+    if kind == "operator_console" and project_id:
+        return f"{OPERATOR_CONSOLE_MARKER_PREFIX}{project_id}"
     if kind == "project" and project_id:
         return f"{PROJECT_MARKER_PREFIX}{project_id}"
     raise ValueError(f"unknown marker kind: {kind}")
@@ -495,13 +495,13 @@ def dashboard_embed(projection: dict[str, Any], state: dict[str, Any]) -> dict[s
 def registry_embed(projection: dict[str, Any], thread_id: str | None) -> dict[str, Any]:
     status = STATUS_PT.get(str(projection["status"]), str(projection["status"]))
     freshness = FRESHNESS_PT.get(str(projection["projection_freshness"]), str(projection["projection_freshness"]))
-    cockpit = f"<#{thread_id}>" if thread_id else "cockpit pendente"
+    operator_console = f"<#{thread_id}>" if thread_id else "operator_console pendente"
     return {
         "title": f"Projeto recebido - {truncate(str(projection['name']), 180)}",
-        "description": "Registro operacional. A conversa e o acompanhamento ficam no cockpit do projeto.",
+        "description": "Registro operacional. A conversa e o acompanhamento ficam no operator_console do projeto.",
         "color": 0x2ECC71,
         "fields": [
-            {"name": "Cockpit", "value": cockpit, "inline": True},
+            {"name": "OperatorConsole", "value": operator_console, "inline": True},
             {"name": "Estado", "value": status, "inline": True},
             {"name": "Conclusao", "value": f"{projection['completion_percent']}%", "inline": True},
             {"name": "Proxima acao", "value": truncate(str(projection["next_action"]), 1024), "inline": False},
@@ -513,7 +513,7 @@ def registry_embed(projection: dict[str, Any], thread_id: str | None) -> dict[st
     }
 
 
-def cockpit_embed(projection: dict[str, Any]) -> dict[str, Any]:
+def operator_console_embed(projection: dict[str, Any]) -> dict[str, Any]:
     status = STATUS_PT.get(str(projection["status"]), str(projection["status"]))
     confidence = FORECAST_PT.get(str(projection["forecast_confidence"]), str(projection["forecast_confidence"]))
     freshness = FRESHNESS_PT.get(str(projection["projection_freshness"]), str(projection["projection_freshness"]))
@@ -566,7 +566,7 @@ def cockpit_embed(projection: dict[str, Any]) -> dict[str, Any]:
             },
         ],
         "footer": {
-            "text": f"{marker('cockpit', str(projection['project_id']))} | fonte: {projection.get('source_runtime', 'runtime')} | {projection['last_synced_at']}",
+            "text": f"{marker('operator_console', str(projection['project_id']))} | fonte: {projection.get('source_runtime', 'runtime')} | {projection['last_synced_at']}",
         },
     }
 
@@ -585,17 +585,17 @@ def registry_payload(projection: dict[str, Any], thread_id: str | None) -> dict[
     }
 
 
-def cockpit_payload(projection: dict[str, Any]) -> dict[str, Any]:
+def operator_console_payload(projection: dict[str, Any]) -> dict[str, Any]:
     return {
         "content": "",
-        "embeds": [cockpit_embed(projection)],
+        "embeds": [operator_console_embed(projection)],
     }
 
 
 def initial_thread_payload(projection: dict[str, Any], tag_ids: list[str]) -> dict[str, Any]:
     content = (
         f"Projeto **{truncate(str(projection['name']), 120)}**.\n"
-        "Este topico e o cockpit operacional do projeto. "
+        "Este topico e o operator_console operacional do projeto. "
         "Hermes continua sendo a fonte da verdade.\n"
         f"`{marker('project', str(projection['project_id']))}`"
     )
@@ -710,15 +710,15 @@ def project_bridge_apply(
         apply=config.apply,
     )
     if not thread_id:
-        cockpit_result = {"changed": True, "created": True, "updated": False, "message_id": None}
+        operator_console_result = {"changed": True, "created": True, "updated": False, "message_id": None}
     else:
-        cockpit_result = upsert_message(
+        operator_console_result = upsert_message(
             client=client,
             channel_id=thread_id,
-            payload=cockpit_payload(projection),
-            expected_marker=marker("cockpit", project_id),
+            payload=operator_console_payload(projection),
+            expected_marker=marker("operator_console", project_id),
             state_ref=project_state,
-            state_field="cockpit_message_id",
+            state_field="operator_console_message_id",
             apply=config.apply,
         )
 
@@ -737,7 +737,7 @@ def project_bridge_apply(
             "thread_id": thread_id,
             "tag_count": len(tag_ids),
         },
-        "cockpit": cockpit_result,
+        "operator_console": operator_console_result,
         "state_saved": config.state_path is not None,
     }
 
@@ -760,7 +760,7 @@ def build_bridge_health_receipt(
         "project_thread_resolved": bool((result.get("project_thread") or {}).get("thread_id")) or not applied,
         "dashboard_upserted": bool((result.get("dashboard") or {}).get("changed") or (result.get("dashboard") or {}).get("message_id")),
         "registry_upserted": bool((result.get("registry") or {}).get("changed") or (result.get("registry") or {}).get("message_id")),
-        "cockpit_upserted": bool((result.get("cockpit") or {}).get("changed") or (result.get("cockpit") or {}).get("message_id")) or not applied,
+        "operator_console_upserted": bool((result.get("operator_console") or {}).get("changed") or (result.get("operator_console") or {}).get("message_id")) or not applied,
         "private_state_path_used": state_path is not None,
     }
     public_refs = [
@@ -770,7 +770,7 @@ def build_bridge_health_receipt(
         public_receipt_ref((result.get("project_thread") or {}).get("thread_id"), "project-thread"),
         public_receipt_ref((result.get("dashboard") or {}).get("message_id"), "dashboard-message"),
         public_receipt_ref((result.get("registry") or {}).get("message_id"), "registry-message"),
-        public_receipt_ref((result.get("cockpit") or {}).get("message_id"), "cockpit-message"),
+        public_receipt_ref((result.get("operator_console") or {}).get("message_id"), "operator_console-message"),
     ]
     receipt = {
         "$schema": "https://overkill-factory.dev/schemas/operator-control-tower-bridge-health.schema.json",
@@ -783,7 +783,7 @@ def build_bridge_health_receipt(
         "checks": checks,
         "evidence_refs": public_refs,
         "limits": [
-            "Discord is the owner cockpit only; Hermes remains the source of truth.",
+            "Discord is the owner operator_console only; Hermes remains the source of truth.",
             "The public receipt redacts Discord ids and private file paths.",
             "Structured approval buttons and inbound approval registration are separate contracts.",
         ],

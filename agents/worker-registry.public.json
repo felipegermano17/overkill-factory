@@ -1845,7 +1845,7 @@
         "bridge health schema"
       ],
       "output_contract": "control_tower_bridge_result",
-      "authority_max": "deliver cockpit messages and register structured responses; cannot approve gates or mutate card state directly",
+      "authority_max": "deliver operator console messages and register structured responses; cannot approve gates or mutate card state directly",
       "veto_conditions": [
         "approval is free-form chat only",
         "runtime registration path is missing",

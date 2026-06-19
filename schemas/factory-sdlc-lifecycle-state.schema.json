@@ -396,12 +396,12 @@
     "projection_policy": {
       "type": "object",
       "required": [
-        "cockpit_is_source_of_truth",
+        "operator_console_is_source_of_truth",
         "dashboard_visibility_is_evidence",
         "consumer_role"
       ],
       "properties": {
-        "cockpit_is_source_of_truth": {
+        "operator_console_is_source_of_truth": {
           "const": false
         },
         "dashboard_visibility_is_evidence": {

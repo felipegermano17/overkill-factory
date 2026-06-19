@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Diagnose private Operator Control Tower evidence without leaking it.
 
-The production proof reads real Discord or cockpit evidence from outside the
+The production proof reads real Discord or operator_console evidence from outside the
 public repository. This helper gives a public-safe preflight for those private
 files: it reports which proof inputs are missing or malformed, but never writes
 raw ids, URLs, paths, tokens or logs to the repository.

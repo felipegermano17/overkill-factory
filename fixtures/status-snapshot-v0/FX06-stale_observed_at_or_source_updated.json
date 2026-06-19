@@ -5,7 +5,7 @@
   "fixture_id": "FX06",
   "fixture_name": "stale observed or source-updated timestamp",
   "kind": "fixture",
-  "title": "Local Status Cockpit StatusSnapshot v0 - stale observed or source-updated timestamp",
+  "title": "Local Status Operator Console StatusSnapshot v0 - stale observed or source-updated timestamp",
   "phase": "F12/F13 first safe slice",
   "risk_effective": "R2",
   "observed_at": "2026-06-14T03:30:00Z",
@@ -92,7 +92,7 @@
     "status": "present",
     "reviewer_required": true,
     "reviewer_result": "review pending for future implementation",
-    "changed": "StatusSnapshot v0 projection fixture for Local Status Cockpit.",
+    "changed": "StatusSnapshot v0 projection fixture for Local Status Operator Console.",
     "artifact_paths": [
       "fixtures/status-snapshot-v0/FX06-stale_observed_at_or_source_updated.json",
       "schemas/factory-status-snapshot.schema.json"

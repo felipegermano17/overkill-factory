@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Create a public-safe Control Tower approval registration smoke receipt.
 
-This proves the owner cockpit only turns a structured response into a
+This proves the owner operator_console only turns a structured response into a
 runtime-registerable event when the approval id, role, scope and expiry all
 match the original request.
 """

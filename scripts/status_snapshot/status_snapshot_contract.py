@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""StatusSnapshot v0 contract helpers for the local status cockpit fixtures.
+"""StatusSnapshot v0 contract helpers for the local status operator_console fixtures.
 
 This module intentionally uses only Python stdlib. The JSON Schema file is the
 public artifact; these helpers implement the fail-closed domain checks that are

@@ -7,7 +7,7 @@ It prevents two common failures:
 - leaving a stage with no named owner, proof, or blocker.
 
 Hermes remains the runtime source of truth. Discord, when configured, is only
-the operator cockpit.
+the operator operator console.
 
 ## Reading Rule
 
@@ -40,7 +40,7 @@ the operator cockpit.
 | 16. Loop Plan | `decomposition-planner` | `test-automation-builder`, `remote-proof-runner`, `independent-reviewer`, `handoff-packer` | Define lanes, order, timeouts, evidence, stop criteria and isolation. | Loop Plan, work-unit contracts, reviewer selection. | Parallel work starts without lane/worktree boundaries. |
 | 17. Autonomy Readiness Packet | `factory-orchestrator` | `infra-devops-builder`, `human-gate-clerk`, `supply-chain-gate`, `cloud-infra-security-specialist`, `release-ops-worker` | List required repo, cloud, billing, APIs, secrets refs, runtime, owners and approvals. | Autonomy readiness packet. | Material execution requires access that is not granted. |
 | 18. Ready Gate | `factory-orchestrator` | `supply-chain-gate`, `security-orchestrator`, `human-gate-clerk`, `public-safety-gate` | Decide if the line is allowed to start execution. | Ready gate verdict and blocked reason list. | Any required artifact, access, gate or worker is missing. |
-| 19. Control Tower Projection | `control-tower-projection-worker` | `discord-control-tower-bridge`, `factory-orchestrator`, `human-gate-clerk` | Show phase, blockers, next steps, approvals and evidence in simple operator language. | Project Projection with source state and staleness note. | Cockpit hides blocked work or becomes source of truth. |
+| 19. Control Tower Projection | `control-tower-projection-worker` | `discord-control-tower-bridge`, `factory-orchestrator`, `human-gate-clerk` | Show phase, blockers, next steps, approvals and evidence in simple operator language. | Project Projection with source state and staleness note. | Operator Console hides blocked work or becomes source of truth. |
 | 20. Execution | surface builder selected by `factory-orchestrator` | `implementation-worker`, `frontend-builder`, `backend-api-builder`, `data-persistence-builder`, `solana-quasar-builder`, `wallet-transaction-builder`, `integration-builder`, `infra-devops-builder`, `agent-runtime-builder` | Build the scoped work only inside worker authority. | Diffs, command output, artifacts and bounded handoff. | Generic builder replaces a more specific specialist. |
 | 21. Worker Result | each assigned worker | `evidence-reconciler`, `handoff-packer` | Return PASS/FAIL/WAIVED/PENDING/BLOCKED with evidence. | Worker result artifact matching the receipt field. | Result has no evidence or mismatched receipt field. |
 | 22. Verification | `qa-verification-worker` | `test-automation-builder`, `remote-proof-runner`, `product-face`, security workers by surface | Prove behavior with tests, screenshots, scans, logs, evals or release smoke. | QA result and mode coverage matrix. | Done is claimed from implementation output alone. |

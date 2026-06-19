@@ -38,7 +38,6 @@ nav:
       - Release Policy: operations/release-policy.md
       - Troubleshooting: operations/troubleshooting.md
   - Control Tower:
-      - Discord UX Study Gate: control-tower/discord-cockpit-ux-study-gate.md
       - Discord Control Tower OS: control-tower/discord-control-tower-os.md
       - Discord Control Tower Setup: control-tower/discord-control-tower-setup-pt-br.md
       - Open Source Setup: control-tower/open-source-setup.md

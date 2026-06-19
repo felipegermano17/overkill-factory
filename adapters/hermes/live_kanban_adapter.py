@@ -4078,7 +4078,7 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
             "infrastructure_mutation",
             "secret_access",
             "private_evidence_publication",
-            "raw_dogfood_log_publication",
+            "raw_self_validation_log_publication",
             "local_path_publication",
         ],
         "public_private_boundary": {
@@ -4091,7 +4091,7 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
         return {
             **common,
             "done_definition": [
-                "classify dogfood outcomes into public-safe factory learnings",
+                "classify self-validation outcomes into public-safe factory learnings",
                 "identify systemic gaps, rejected non-gaps, and already-fixed gaps",
                 "create or update public-safe improvement issues only when a real factory gap remains",
                 "leave product completion, production promotion, deploy, and customer-ready claims forbidden",
@@ -4204,7 +4204,7 @@ def product_creation_next_route_contract(next_action: str, closeout: dict[str, A
                             "infrastructure_mutation",
                             "secret_access",
                             "private_evidence_publication",
-                            "raw_dogfood_log_publication",
+                            "raw_self_validation_log_publication",
                             "local_path_publication",
                         ],
                     }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the local status cockpit StatusSnapshot v0 fixture inventory."""
+"""Validate the local status operator_console StatusSnapshot v0 fixture inventory."""
 
 from __future__ import annotations
 

@@ -2203,10 +2203,10 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         study_gate = data.get("study_gate") if isinstance(data.get("study_gate"), dict) else {}
         if study_gate.get("discord_is_source_of_truth") is not False:
             errors.append(f"{at}: Discord UX audit must keep Discord out of source-of-truth role")
-        if study_gate.get("recommended_role") == "primary_operator_cockpit_after_proof":
+        if study_gate.get("recommended_role") == "primary_operator_operator_console_after_proof":
             proof = data.get("proof_pack_contract") if isinstance(data.get("proof_pack_contract"), dict) else {}
             if proof.get("required_before_acceptance") is not True:
-                errors.append(f"{at}: primary Discord cockpit recommendation requires proof pack")
+                errors.append(f"{at}: primary Discord operator_console recommendation requires proof pack")
         required_checks = [
             "official_discord_primitives_studied",
             "rate_limits_and_retry_behavior_studied",
@@ -2215,7 +2215,7 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             "staleness_and_idempotency_checks_defined",
             "approval_ambiguity_checks_defined",
             "notification_load_checks_defined",
-            "web_cockpit_boundary_defined",
+            "web_operator_console_boundary_defined",
         ]
         checks = data.get("checks") if isinstance(data.get("checks"), dict) else {}
         for field in required_checks:

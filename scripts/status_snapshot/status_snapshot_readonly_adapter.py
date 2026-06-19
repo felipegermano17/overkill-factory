@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only StatusSnapshot importer for the local status cockpit.
+"""Read-only StatusSnapshot importer for the local status operator_console.
 
 The adapter consumes checked-in StatusSnapshot fixtures or structured public
 factory receipts and returns a projection object only. It never calls Hermes,
@@ -479,7 +479,7 @@ def _missing_snapshot(path: Path) -> dict[str, Any]:
     snapshot = _base_snapshot(
         fixture_id="ADAPTER-MISSING",
         fixture_name="missing adapter input",
-        title="Local Status Cockpit StatusSnapshot adapter missing input",
+        title="Local Status OperatorConsole StatusSnapshot adapter missing input",
         source_refs=[source, "STATUS-SNAPSHOT"],
     )
     snapshot["freshness_state"] = "missing"
@@ -543,7 +543,7 @@ def _import_status_snapshot(data: dict[str, Any], *, source_path: Path, resolver
         snapshot["current_state"] = "security_negative"
         snapshot["next_safe_action"] = {
             "action_type": "block",
-            "label": "Block unsafe EvidenceRef values before cockpit projection.",
+            "label": "Block unsafe EvidenceRef values before operator_console projection.",
             "source_refs": snapshot.get("source_refs") or ["STATUS-SNAPSHOT"],
             "forbidden_action_taken": False,
         }
@@ -629,7 +629,7 @@ def _report_snapshot(data: dict[str, Any], *, source_path: Path, resolver: Resol
     snapshot = _base_snapshot(
         fixture_id=escape_text(str(data.get("task_ref") or source_path.stem or "ADAPTER-REPORT"))[:64],
         fixture_name="readonly adapter report projection",
-        title=data.get("title") or "Local Status Cockpit read-only StatusSnapshot adapter projection",
+        title=data.get("title") or "Local Status OperatorConsole read-only StatusSnapshot adapter projection",
         source_refs=source_refs,
     )
     snapshot["kind"] = "run"
@@ -699,7 +699,7 @@ def _report_snapshot(data: dict[str, Any], *, source_path: Path, resolver: Resol
     if all_blocked_refs:
         current_state = "security_negative"
         action_type = "block"
-        action_label = "Block unsafe ref-bearing report fields before cockpit projection."
+        action_label = "Block unsafe ref-bearing report fields before operator_console projection."
     elif _is_contradictory(data):
         freshness_state = "contradictory"
         current_state = "contradictory"
@@ -714,7 +714,7 @@ def _report_snapshot(data: dict[str, Any], *, source_path: Path, resolver: Resol
         freshness_state = "stale"
         current_state = "stale"
         action_type = "refresh"
-        action_label = "Refresh stale source export before cockpit projection."
+        action_label = "Refresh stale source export before operator_console projection."
     elif receipt_status == "missing":
         freshness_state = "missing"
         current_state = "missing"
@@ -792,7 +792,7 @@ def import_source(path: str | Path, resolver: Resolver | None = None) -> dict[st
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Local Status Cockpit read-only StatusSnapshot importer")
+    parser = argparse.ArgumentParser(description="Local Status OperatorConsole read-only StatusSnapshot importer")
     subparsers = parser.add_subparsers(dest="command", required=True)
     import_parser = subparsers.add_parser("import", help="project a fixture or report into StatusSnapshot JSON")
     import_parser.add_argument("input", type=Path)

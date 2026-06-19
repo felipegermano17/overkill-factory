@@ -953,7 +953,7 @@ const STAGES = [
   { id: "loop", n: "16", layer: "risk", x: 304, y: 574, w: 148, title: "Plano de Loops", mini: "lanes controladas", body: "Define lanes, ordem, agentes, timeouts, budget, evidências, parada, bloqueio e isolamento quando houver paralelismo.", output: ["Lanes de agentes", "Dependências entre trabalhos", "Critérios de bloqueio"] },
   { id: "autonomy", n: "17", layer: "risk", x: 470, y: 574, w: 188, title: "Prontidão de Autonomia", mini: "acesso antes da ação", body: "Checa GitHub, cloud, billing, banco, storage, domínios, APIs, secrets, runtime, observabilidade, donos e canal humano.", output: ["Acessos concedidos", "Acessos pendentes", "Bloqueios de execução"], gate: true },
   { id: "ready", n: "18", layer: "risk", x: 676, y: 574, w: 128, title: "Product Implementation Readiness", mini: "pode executar?", body: "Confere SOT, método, pesquisa, arquitetura, experiência, work units, packs, acessos, dependências, budget, agentes e plano de evidência.", output: ["Execução liberada", "Bloqueado com motivo", "Lista de correção"], gate: true },
-  { id: "controltower", n: "19", layer: "risk", x: 822, y: 574, w: 198, title: "Projeção da Control Tower", mini: "estado visível", body: "Mostra fase atual, bloqueios, acessos, aprovações, confiança da previsão, riscos e evidências. Discord pode ser cockpit; Hermes segue como fonte da verdade.", output: ["Projeção do trabalho", "Caixa de aprovações", "Registro no Hermes"], bridge: true, gate: true },
+  { id: "controltower", n: "19", layer: "risk", x: 822, y: 574, w: 198, title: "Projeção da Control Tower", mini: "estado visível", body: "Mostra fase atual, bloqueios, acessos, aprovações, confiança da previsão, riscos e evidências. Discord pode ser operator console; Hermes segue como fonte da verdade.", output: ["Projeção do trabalho", "Caixa de aprovações", "Registro no Hermes"], bridge: true, gate: true },
   { id: "humangate", n: "24", layer: "risk", x: 1038, y: 574, w: 150, title: "Gate Humano", mini: "decisão material", body: "Obrigatório para produção, signing, fundos, custody, mainnet, release R4, waiver bloqueante, custo material, risco legal ou acesso material ausente.", output: ["Aprovado", "Rejeitado", "Pedir ajuste", "Bloqueado"], gate: true },
 
   { id: "runtime", n: "20", layer: "exec", x: 96, y: 782, w: 142, title: "Runtime Hermes", mini: "chão de fábrica", body: "Hermes é o adaptador de referência: quadros, tasks, dependências, lanes, worktrees, comentários, eventos, bloqueios, conclusões e referências de evidência.", output: ["Trabalho instanciado", "Agentes em execução", "Eventos registrados"] },
@@ -1058,7 +1058,7 @@ const WORKER_GROUPS = [
   {
     title: "Control Tower",
     workers: [
-      ["control-tower-projection-worker", "Projeta estado Hermes para o cockpit do operador sem decidir gates ou mutar cards."],
+      ["control-tower-projection-worker", "Projeta estado Hermes para o operator console do operador sem decidir gates ou mutar cards."],
       ["discord-control-tower-bridge", "Mapeia eventos Hermes/Discord, health da bridge e respostas do operador via runtime."]
     ]
   }
@@ -1261,7 +1261,7 @@ const STAGE_DETAILS = {
   controltower: {
     plain: ["A Control Tower é a visão humana da fábrica: fase, bloqueio, risco, aprovação, previsão e evidência em um lugar legível.", "Ela mostra o estado; não substitui o runtime que guarda a verdade operacional."],
     decision: ["O que o operador precisa ver agora para aprovar, desbloquear, esperar ou corrigir rota."],
-    inside: ["Projeta fase, bloqueios, risco, acesso, aprovação, previsão e evidências para o dono.", "Quando Discord é cockpit, precisa mostrar a fábrica sem substituir Hermes como fonte de verdade."],
+    inside: ["Projeta fase, bloqueios, risco, acesso, aprovação, previsão e evidências para o dono.", "Quando Discord é operator console, precisa mostrar a fábrica sem substituir Hermes como fonte de verdade."],
     blocks: ["Execução material invisível para o dono.", "Aprovação perdida em mensagem solta."],
     proof: ["Projeção do trabalho, caixa de aprovações e registro no Hermes."],
     worker: "control-tower-projection-worker + discord-control-tower-bridge"

@@ -2,7 +2,7 @@
 
 > Document status: CURRENT SUPPORTING GUIDE.
 > Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
-> Runtime boundary: Este guia configura cockpit; placeholders de setup nao sao prova de runtime nem aprovacao de release.
+> Runtime boundary: Este guia configura operator console; placeholders de setup nao sao prova de runtime nem aprovacao de release.
 
 Este guia explica como transformar o Discord no painel de controle da Overkill
 Factory sem deixar o Discord virar a fonte da verdade.
@@ -230,7 +230,7 @@ O GERENTE deve usar `discord.require_mention=true`,
 menciona uma vez na portaria, o Hermes abre a thread, e dentro dela o dono nao
 precisa ficar mencionando o bot a cada resposta.
 
-Os canais de cockpit precisam ser protegidos por politica de canal. O runtime
+Os canais de operator console precisam ser protegidos por politica de canal. O runtime
 deve deixar `DISCORD_FREE_RESPONSE_CHANNELS` e `DISCORD_NO_THREAD_CHANNELS`
 vazios, permitir conversa apenas na portaria e na lane de aprovacao formal, e
 colocar as superficies de painel/registro em `DISCORD_IGNORED_CHANNELS`. Isso
@@ -264,7 +264,7 @@ O Discord nao deve ser apenas um chat. O modelo recomendado e:
 - mensagem fixada curta em cada canal operacional explicando quando usar;
 - botoes de atalho para os canais principais;
 - forum como indice limpo de projetos, com um topico por projeto;
-- cockpit detalhado dentro de cada topico de projeto;
+- operator console detalhado dentro de cada topico de projeto;
 - intake thread-first: paper ou briefing nasce dentro da thread de atendimento;
 - tags de fase no forum;
 - `#aprovacoes-formais` para decisoes formais;
@@ -283,7 +283,7 @@ Projeto | etapa | porcentagem | alerta | proxima acao
 
 O detalhe mora dentro do topico de cada projeto.
 
-## Cockpit por projeto
+## Operator Console por projeto
 
 Cada topico de projeto precisa ter um painel de esteira.
 
@@ -396,7 +396,7 @@ Ela cobre:
 
 - thread de atendimento do GERENTE vira intake quando contem paper/projeto;
 - mensagem solta no `#falar-com-gerente` nao vira projeto automaticamente;
-- projeto vira topico/cockpit no `kanban-da-fabrica`;
+- projeto vira topico/operator console no `kanban-da-fabrica`;
 - eventos de acesso, bloqueio, prova, release e health vao para os canais
   certos;
 - mensagem ativa cria thread ou aponta para thread existente;
@@ -447,4 +447,4 @@ O Discord da fabrica esta pronto quando:
 - o recibo final da atualizacao deixa de estar bloqueado.
 
 Antes disso, a fabrica pode estar bem encaminhada, mas ainda nao deve ser
-tratada como 100% pronta para producao com cockpit Discord.
+tratada como 100% pronta para producao com operator console Discord.

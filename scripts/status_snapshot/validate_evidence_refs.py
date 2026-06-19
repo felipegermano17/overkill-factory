@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate public-safe EvidenceRef values for the local status cockpit StatusSnapshot fixtures.
+"""Validate public-safe EvidenceRef values for the local status operator_console StatusSnapshot fixtures.
 
 The full fixture suite contains one deliberate negative fixture (FX10). This
 validator passes the suite only when all positive fixtures are clean and the

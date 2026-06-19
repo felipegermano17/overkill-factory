@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assert the local status cockpit StatusSnapshot v0 negative states fail closed."""
+"""Assert the local status operator_console StatusSnapshot v0 negative states fail closed."""
 
 from __future__ import annotations
 
