@@ -22,7 +22,15 @@ QUASAR_SOURCE_REF = QUASAR_SOURCE_HEAD
 RUST_CONTAINER_IMAGE = "rust:1.91.0-bookworm@sha256:e187887ec511b3d93e45c0231d2f0fd59f1347526c58aa86343aa83c74f3e1a9"
 SOLANA_RELEASE = "v4.0.2"
 SOLANA_INSTALL_URL = f"https://release.anza.xyz/{SOLANA_RELEASE}/install"
-PUBLIC_QVG_SOURCE_DIR = ROOT / "products" / "qvg-public-validation-product" / "onchain" / "quasar" / "src"
+PUBLIC_QVG_SOURCE_DIR = (
+    ROOT
+    / "fixtures"
+    / "product-validation"
+    / "qvg-public-validation-product"
+    / "onchain"
+    / "quasar"
+    / "src"
+)
 PROJECT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{2,63}$")
 
 
@@ -220,7 +228,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--evidence-boundary",
         default=(
-            "Proves a public product-like QVG Quasar target can build and test in a clean Docker container. "
+            "Proves the public-safe QVG Quasar fixture can build and test in a clean Docker container. "
             "It does not prove production safety, deploy readiness, funds handling or mainnet/devnet authority."
         ),
     )

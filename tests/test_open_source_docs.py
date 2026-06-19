@@ -33,6 +33,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Why This Exists",
             "How The Factory Works",
             "Hermes Runtime",
+            "Use With The Codex Bridge Plugin",
             "First Run",
             "Repository Shape",
             "Current Release State",
@@ -52,11 +53,16 @@ class OpenSourceDocsTest(unittest.TestCase):
             readme,
         )
         self.assertIn("full Product SOT scope coverage", readme)
+        self.assertIn("Hermes Kanban remains the source of truth", readme)
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
         self.assertNotIn("## What It Does Not Do", readme)
 
         for rel in [
             "README.pt-BR.md",
+            ".agents/README.md",
+            "plugins/README.md",
+            "docs/operator/overkill-factory-bridge.md",
+            "docs/operator/overkill-factory-bridge-plugin.md",
             "docs/getting-started/quickstart-hermes.md",
             "docs/governance/document-governance.md",
             "docs/concepts/factory-flow.md",
@@ -86,7 +92,13 @@ class OpenSourceDocsTest(unittest.TestCase):
             with self.subTest(link=rel):
                 self.assertIn(rel.replace("\\", "/"), readme)
 
-        for command in ["factoryctl doctor", "factoryctl init", "factoryctl run minimal"]:
+        for command in [
+            "factoryctl doctor",
+            "factoryctl init",
+            "factoryctl run minimal",
+            "codex plugin marketplace add .",
+            "codex plugin add overkill-factory-bridge@overkill-factory",
+        ]:
             with self.subTest(command=command):
                 self.assertIn(command, readme)
 
@@ -96,6 +108,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Por Que Existe",
             "Como A Fabrica Funciona",
             "Runtime Hermes",
+            "Usar Com O Plugin Bridge Do Codex",
             "Primeira Execucao",
             "Estrutura Do Repositorio",
             "Estado Atual De Release",
@@ -112,7 +125,12 @@ class OpenSourceDocsTest(unittest.TestCase):
             "[English](README.md)",
             "Mapa publico:",
             "nao um atalho de MVP",
-            "Hermes and Receipt Five remain the source of truth",
+            "Hermes Kanban continua sendo a fonte de verdade",
+            "Hermes e Receipt Five continuam sendo a fonte de verdade",
+            "codex plugin marketplace add .",
+            "codex plugin add overkill-factory-bridge@overkill-factory",
+            "docs/operator/overkill-factory-bridge.md",
+            "docs/operator/overkill-factory-bridge-plugin.md",
             "fixtures/README.md",
             "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
             "factoryctl run minimal",
@@ -147,6 +165,9 @@ class OpenSourceDocsTest(unittest.TestCase):
             "examples/minimal-hermes-project/expected-flow.md",
             "examples/minimal-hermes-project/expected-receipt-five.json",
             "fixtures/README.md",
+            "fixtures/product-validation/README.md",
+            "fixtures/product-validation/qvg-public-validation-product/README.md",
+            "fixtures/product-validation/devnet-receipt-pass/README.md",
             ".env.example",
             "pyproject.toml",
             "CHANGELOG.md",
@@ -162,7 +183,13 @@ class OpenSourceDocsTest(unittest.TestCase):
             ".github/ISSUE_TEMPLATE/feature_request.yml",
             ".github/ISSUE_TEMPLATE/config.yml",
             ".github/pull_request_template.md",
+            ".agents/README.md",
+            ".agents/plugins/marketplace.json",
             ".codex/README.md",
+            "plugins/README.md",
+            "plugins/overkill-factory-bridge/README.md",
+            "docs/operator/overkill-factory-bridge.md",
+            "docs/operator/overkill-factory-bridge-plugin.md",
             "README.pt-BR.md",
         ]
 
@@ -187,6 +214,7 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_repository_shape_explains_every_public_top_level_folder(self) -> None:
         readme = read_text("README.md")
         expected_public_dirs = [
+            ".agents/",
             ".codex/",
             ".github/",
             "adapters/",
@@ -195,7 +223,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "examples/",
             "fixtures/",
             "planning-bundles/",
-            "products/",
+            "plugins/",
             "schemas/",
             "scripts/",
             "skills/",
@@ -211,6 +239,7 @@ class OpenSourceDocsTest(unittest.TestCase):
 
     def test_high_noise_public_directories_have_entrypoint_guides(self) -> None:
         required_entrypoints = {
+            ".agents/README.md": ["Codex plugin marketplace", "Bridge plugin"],
             ".codex/README.md": ["Codex", "hooks"],
             "adapters/README.md": ["runtime integrations", "Hermes"],
             ".github/PROJECT_SURFACE.md": ["GitHub project surface", "Dependabot"],
@@ -218,7 +247,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/README.md": ["human guides", "public onboarding"],
             "examples/README.md": ["source examples", ".tmp/"],
             "fixtures/README.md": ["regression", "public-safe"],
-            "products/README.md": ["public validation products", "not production approval"],
+            "fixtures/product-validation/README.md": ["product-shaped fixtures", "not public products"],
+            "plugins/README.md": ["Codex plugin packages", "Bridge plugin"],
             "schemas/README.md": ["machine contracts", "JSON Schema"],
             "scripts/README.md": ["CLI", "validation"],
             "skills/README.md": ["Codex skill", "public-safe"],
@@ -293,18 +323,20 @@ class OpenSourceDocsTest(unittest.TestCase):
                         f"generated evidence command should write to a temp or external path: {line}",
                     )
 
-    def test_products_readme_sets_public_validation_boundary(self) -> None:
-        products = read_text("products/README.md")
+    def test_product_validation_fixtures_are_not_public_products(self) -> None:
+        fixtures = read_text("fixtures/product-validation/README.md")
 
-        self.assertIn("public validation products", products)
-        self.assertIn("not production approval", products)
-        self.assertIn("No private product material", products)
+        self.assertIn("product-shaped fixtures", fixtures)
+        self.assertIn("not public products", fixtures)
+        self.assertIn("not onboarding examples", fixtures)
+        self.assertIn("Private product material", fixtures)
 
-    def test_public_json_validator_scans_public_product_artifacts(self) -> None:
+    def test_public_json_validator_scans_product_validation_fixtures(self) -> None:
         validator = load_public_json_validator()
         scan_dirs = {path.relative_to(ROOT).as_posix() for path in validator.SCAN_DIRS}
 
-        self.assertIn("products", scan_dirs)
+        self.assertIn("fixtures/product-validation", scan_dirs)
+        self.assertNotIn("products", scan_dirs)
 
     def test_public_codex_skill_covers_open_source_stewardship(self) -> None:
         skill = read_text("skills/codex/overkill-factory/SKILL.md")
@@ -572,6 +604,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "share/overkill-factory/agents",
             "share/overkill-factory/docs/operator",
             "share/overkill-factory/examples/minimal-hermes-project",
+            "share/overkill-factory/fixtures/product-validation",
             "share/overkill-factory/schemas",
             "share/overkill-factory/templates",
             "share/overkill-factory/adapters/hermes",

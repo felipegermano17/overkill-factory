@@ -125,7 +125,7 @@ def remote_proof_scope_is_valid(data: dict[str, Any]) -> bool:
         return False
     if target.get("product_id") != "qvg-public-validation-product":
         return False
-    if target.get("source_ref") != "products/qvg-public-validation-product":
+    if target.get("source_ref") != "fixtures/product-validation/qvg-public-validation-product":
         return False
     if len(str(target.get("source_sha256") or "")) != 64:
         return False
@@ -199,7 +199,7 @@ def cu_svm_economic_scope_is_valid(data: dict[str, Any]) -> bool:
         return False
     source_ref = str(target.get("source_ref") or "")
     source_sha256 = str(target.get("source_sha256") or "")
-    if not source_ref.startswith("products/") or len(source_sha256) != 64:
+    if not source_ref.startswith("fixtures/product-validation/") or len(source_sha256) != 64:
         return False
     if data.get("source_target") != source_ref or data.get("source_sha256") != source_sha256:
         return False
@@ -312,7 +312,7 @@ def reusable_product_scope_is_valid(data: dict[str, Any], *, record_type: str | 
             return False
         source_ref = str(target.get("source_ref") or "")
         source_sha256 = str(target.get("source_sha256") or "")
-        if not source_ref.startswith("products/") or len(source_sha256) != 64:
+        if not source_ref.startswith("fixtures/product-validation/") or len(source_sha256) != 64:
             return False
         toolchain = data.get("quasar_toolchain_proof") or {}
         if toolchain.get("source_target") != source_ref:

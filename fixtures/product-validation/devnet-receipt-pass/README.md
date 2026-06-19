@@ -1,13 +1,18 @@
 # Devnet Receipt Pass
 
-Devnet Receipt Pass is a small validation product for the factory line.
+Devnet Receipt Pass is an advanced product-shaped validation fixture for the
+factory line.
 
 It proves that the factory can take a raw product paper, create a source of
 truth, design an architecture, produce a visible product face, prepare an
 onchain Quasar work package, run worker packets, collect evidence and close
 with Receipt Five metadata.
 
-The product intentionally uses read-only Solana devnet access. It does not
+It is not a public product surface, not an onboarding example and not a private
+product pipeline. The fixture remains here only because several validators need
+a realistic read-only devnet shape.
+
+The fixture intentionally uses read-only Solana devnet access. It does not
 sign, deploy, write to devnet, write to mainnet, move funds, store keys or claim
 a production onchain audit.
 

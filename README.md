@@ -62,7 +62,9 @@ state.
 
 ## Hermes Runtime
 
-Hermes is the first supported factory floor.
+Hermes is the first supported factory floor. The factory does not replace
+Hermes; the normal execution path today is Hermes Kanban plus Overkill Factory
+contracts.
 
 Overkill Factory provides the method, contracts, schemas, worker registry,
 Hermes bindings, adapter hooks, examples and validation tools. Hermes provides
@@ -76,6 +78,43 @@ The practical boundary is simple:
 - Receipt Five and worker results are the completion evidence.
 - Operator Consoles and operator dashboards can project state, but they do not approve
   gates or replace Hermes.
+
+## Use With The Codex Bridge Plugin
+
+There are two public operating paths:
+
+- direct: use `factoryctl` and connect generated packets to your Hermes runtime;
+- bridged: install the Codex Bridge plugin so Codex can act as the human
+  operator bridge.
+
+The plugin does not run the factory. It helps the operator collect the initial
+signal, start an approved factory run, read the Durable Operator Inbox, report
+pending human gates, record the operator's answer and hand that answer back to
+the factory.
+
+Hermes Kanban remains the source of truth. Worker results and Receipt Five
+still decide completion. The plugin is only the bridge between the operator and
+the runtime.
+
+Install from the repo root:
+
+```bash
+codex plugin marketplace add .
+codex plugin add overkill-factory-bridge@overkill-factory
+```
+
+Start a new Codex thread after installation and review/trust the plugin hooks.
+The hooks run when Codex starts or when the operator submits a prompt. They do
+not keep Codex active 24/7, approve gates, mutate Hermes, run workers or
+replace Receipt Five.
+
+Use the bridge when you want to ask for factory status, start an approved run,
+see what is blocked, answer a human gate or request a scoped change without
+letting chat become the source of truth.
+
+Read `docs/operator/overkill-factory-bridge.md` for the bridge architecture and
+`docs/operator/overkill-factory-bridge-plugin.md` for install, inbox resolution
+and hook trust.
 
 ## First Run
 
@@ -127,15 +166,16 @@ first, what its source of truth is and how drift is prevented.
 
 | Path | Public purpose |
 | --- | --- |
+| `.agents/` | Repo-local Codex plugin marketplace for installing the bridge. See `.agents/README.md`. |
 | `.codex/` | Project-local Codex hooks for the operator bridge. See `.codex/README.md`. |
 | `.github/` | GitHub workflows, templates, Dependabot and repository hygiene. See `.github/PROJECT_SURFACE.md`. |
 | `adapters/` | Runtime integrations, currently Hermes hooks and patches. See `adapters/README.md`. |
 | `agents/` | Public worker registry, profiles, permissions, capability packs and Hermes bindings. See `agents/README.md`. |
 | `docs/` | Human guides for onboarding, concepts, operations, security and maintenance. See `docs/README.md`. |
 | `examples/` | Small public examples and source fixtures for the factory path. See `examples/README.md`. |
-| `fixtures/` | Minimal public-safe regression fixtures, not historical evidence. See `fixtures/README.md`. |
+| `fixtures/` | Minimal public-safe regression fixtures, including advanced product-shaped validation fixtures when scripts need them. See `fixtures/README.md`. |
 | `planning-bundles/` | Public-safe planning protocols for candidate artifacts before factory validation. See `planning-bundles/README.md`. |
-| `products/` | Public validation products used by product-like and production-lane checks. See `products/README.md`. |
+| `plugins/` | Public Codex plugin packages, currently the Overkill Factory Bridge. See `plugins/README.md`. |
 | `schemas/` | Machine contracts for cards, receipts, workers, gates and public artifacts. See `schemas/README.md`. |
 | `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. See `scripts/README.md`. |
 | `skills/` | Installable Codex skill material for operating the factory from a public clone. See `skills/README.md`. |
@@ -185,9 +225,13 @@ evidence, reviews, human gates and production readiness proof.
 - `docs/operations/release-policy.md`: release and versioning policy.
 - `docs/operations/troubleshooting.md`: common failures and recovery path.
 - `docs/architecture/hermes-integration.md`: Hermes adapter architecture.
+- `docs/operator/overkill-factory-bridge.md`: Codex/operator bridge architecture.
+- `docs/operator/overkill-factory-bridge-plugin.md`: Codex plugin install and hook trust.
 - `docs/examples/gallery.md`: public examples.
 - `docs/security/oss-security.md`: security posture.
 - `docs/maintenance/repo-surface.md`: public surface maintenance rules.
+- `.agents/README.md`: repo-local Codex plugin marketplace boundary.
+- `plugins/README.md`: public plugin package boundary.
 - `examples/minimal-hermes-project/README.md`: minimal runnable example.
 - `.env.example`: safe environment variable template.
 - `CHANGELOG.md`: public release history.

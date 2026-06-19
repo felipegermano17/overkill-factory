@@ -49,6 +49,10 @@ splitting work across branches/worktrees or presenting a operator console/status
 Use `operator/overkill-factory-bridge.md` when Codex or another assistant is
 bridging a human operator to the factory without acting as a factory worker.
 
+Use `operator/overkill-factory-bridge-plugin.md` when installing the Codex
+Bridge plugin, reviewing hook trust or checking how inbox catch-up works after
+Codex was closed.
+
 ## Maintainer Internals
 
 Use `maintenance/repo-surface.md` to decide whether a file belongs in the

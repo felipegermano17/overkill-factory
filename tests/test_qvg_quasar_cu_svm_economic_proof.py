@@ -35,9 +35,15 @@ class QvgQuasarCuSvmEconomicProofTests(unittest.TestCase):
         self.assertFalse(markers["required_markers_present"])
         self.assertFalse(markers["all_cu_within_budget"])
 
-    def test_current_product_source_has_no_economic_mutation_surface(self):
+    def test_current_fixture_source_has_no_economic_mutation_surface(self):
         surface = proof.scan_source_economic_surface(
-            proof.ROOT / "products" / "qvg-public-validation-product" / "onchain" / "quasar" / "src"
+            proof.ROOT
+            / "fixtures"
+            / "product-validation"
+            / "qvg-public-validation-product"
+            / "onchain"
+            / "quasar"
+            / "src"
         )
 
         self.assertEqual(surface["cpi_markers_found"], [])

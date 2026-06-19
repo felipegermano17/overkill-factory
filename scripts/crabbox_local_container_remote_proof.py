@@ -17,7 +17,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "remote-proof" / "managed-testbox-result.json"
 DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "remote-proof" / "managed-testbox-result.md"
-PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
+PRODUCT_SOURCE = ROOT / "fixtures" / "product-validation" / "qvg-public-validation-product"
 MARKER_PREFIX = "OF_REMOTE_PROOF_CHECK"
 REQUIRED_PROOF_CHECKS = (
     ("public_json_artifacts", "python3 scripts/validate_public_json_artifacts.py"),
@@ -168,7 +168,7 @@ def build_result(
         },
         "card_ref": {
             "card_id": "QVG-PRODUCTION-REMOTE-PROOF",
-            "slice_id": "QVG_PUBLIC_VALIDATION_PRODUCT",
+            "slice_id": "QVG_PRODUCT_VALIDATION_FIXTURE",
             "phase": "F16",
             "risk_effective": "R3",
             "surfaces": ["remote-proof", "crabbox", "container", "public-product"],
@@ -177,9 +177,9 @@ def build_result(
         },
         "product_target": {
             "product_id": "qvg-public-validation-product",
-            "source_ref": "products/qvg-public-validation-product",
+            "source_ref": "fixtures/product-validation/qvg-public-validation-product",
             "source_sha256": source_sha256(),
-            "approval_scope": "Reusable only for the public Quasar Vault Guard validation product and this repository state.",
+            "approval_scope": "Reusable only for the QVG product-shaped validation fixture and this repository state.",
             "environment_class": "crabbox-local-container-production-validation",
         },
         "result": "PASS" if pass_status else "FAIL",
@@ -226,7 +226,7 @@ def build_result(
             "those paths still require their own credentials if a project policy mandates that exact provider."
         ),
         "next_action": (
-            "Use this as the product remote-proof lane for the public validation product. "
+            "Use this as the remote-proof lane for the QVG product-shaped validation fixture. "
             "Escalate to brokered cloud or Blacksmith only when the product policy requires provider parity beyond ephemeral container isolation."
         ),
     }

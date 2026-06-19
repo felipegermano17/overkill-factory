@@ -62,7 +62,9 @@ estado.
 
 ## Runtime Hermes
 
-Hermes e o primeiro chao de fabrica suportado.
+Hermes e o primeiro chao de fabrica suportado. A fabrica nao substitui o
+Hermes; o caminho normal de execucao hoje e Hermes Kanban mais contratos da
+Overkill Factory.
 
 Overkill Factory fornece metodo, contratos, schemas, worker registry, bindings
 Hermes, adapter hooks, exemplos e ferramentas de validacao. Hermes fornece o
@@ -76,6 +78,43 @@ A fronteira pratica e simples:
 - Receipt Five e resultados de workers sao a evidencia de conclusao.
 - Operator Consoles e dashboards de operador podem projetar estado, mas nao aprovam
   gates nem substituem o Hermes.
+
+## Usar Com O Plugin Bridge Do Codex
+
+Existem dois caminhos publicos de operacao:
+
+- direto: use `factoryctl` e conecte os pacotes gerados ao seu runtime Hermes;
+- com ponte: instale o plugin Bridge do Codex para o Codex agir como ponte do
+  operador humano.
+
+O plugin nao roda a fabrica. Ele ajuda o operador a coletar o sinal inicial,
+iniciar uma run aprovada, ler o Durable Operator Inbox, reportar human gates
+pendentes, registrar a resposta do operador e devolver essa resposta para a
+fabrica.
+
+Hermes Kanban continua sendo a fonte de verdade. Resultados de workers e
+Receipt Five continuam decidindo conclusao. O plugin e apenas a ponte entre o
+operador e o runtime.
+
+Instale a partir da raiz do repo:
+
+```bash
+codex plugin marketplace add .
+codex plugin add overkill-factory-bridge@overkill-factory
+```
+
+Depois da instalacao, abra uma nova thread do Codex e revise/confie nos hooks
+do plugin. Os hooks rodam quando o Codex inicia ou quando o operador envia um
+prompt. Eles nao mantem o Codex ativo 24/7, nao aprovam gates, nao mutam
+Hermes, nao rodam workers e nao substituem Receipt Five.
+
+Use a ponte quando quiser pedir status da fabrica, iniciar uma run aprovada,
+ver o que esta bloqueado, responder um human gate ou pedir uma mudanca com
+escopo definido sem deixar chat virar fonte de verdade.
+
+Leia `docs/operator/overkill-factory-bridge.md` para a arquitetura da ponte e
+`docs/operator/overkill-factory-bridge-plugin.md` para instalacao, resolucao do
+inbox e confianca dos hooks.
 
 ## Primeira Execucao
 
@@ -126,15 +165,16 @@ primeiro, qual e sua fonte de verdade e como drift e evitado.
 
 | Caminho | Proposito publico |
 | --- | --- |
+| `.agents/` | Marketplace local de plugins Codex para instalar a ponte. Veja `.agents/README.md`. |
 | `.codex/` | Hooks locais do Codex para a ponte de operador. Veja `.codex/README.md`. |
 | `.github/` | Workflows, templates, Dependabot e higiene do repositorio. Veja `.github/PROJECT_SURFACE.md`. |
 | `adapters/` | Integracoes de runtime, hoje hooks e patches Hermes. Veja `adapters/README.md`. |
 | `agents/` | Worker registry, profiles, permissoes, capability packs e bindings Hermes. Veja `agents/README.md`. |
 | `docs/` | Guias humanos para onboarding, conceitos, operacao, seguranca e manutencao. Veja `docs/README.md`. |
 | `examples/` | Exemplos publicos pequenos e fixtures de fonte para a esteira da fabrica. Veja `examples/README.md`. |
-| `fixtures/` | Fixtures publicas minimas de regressao, nao evidencia historica. Veja `fixtures/README.md`. |
+| `fixtures/` | Fixtures publicas minimas de regressao, incluindo validacoes avancadas com formato de produto quando scripts precisam delas. Veja `fixtures/README.md`. |
 | `planning-bundles/` | Protocolos public-safe para artefatos candidatos antes da validacao da fabrica. Veja `planning-bundles/README.md`. |
-| `products/` | Produtos publicos de validacao usados em checks product-like e production-lane. Veja `products/README.md`. |
+| `plugins/` | Pacotes publicos de plugin Codex, hoje o Overkill Factory Bridge. Veja `plugins/README.md`. |
 | `schemas/` | Contratos de maquina para cards, receipts, workers, gates e artefatos publicos. Veja `schemas/README.md`. |
 | `scripts/` | CLI, ferramentas de validacao, helpers de prova e checks de manutencao. Veja `scripts/README.md`. |
 | `skills/` | Material instalavel de skill Codex para operar a fabrica a partir do clone publico. Veja `skills/README.md`. |
@@ -183,9 +223,13 @@ readiness propria.
 - `docs/operations/release-policy.md`: politica de versao e release.
 - `docs/operations/troubleshooting.md`: falhas comuns e caminho de recuperacao.
 - `docs/architecture/hermes-integration.md`: arquitetura do adapter Hermes.
+- `docs/operator/overkill-factory-bridge.md`: arquitetura da ponte Codex/operador.
+- `docs/operator/overkill-factory-bridge-plugin.md`: instalacao do plugin Codex e confianca dos hooks.
 - `docs/examples/gallery.md`: exemplos publicos.
 - `docs/security/oss-security.md`: postura de seguranca.
 - `docs/maintenance/repo-surface.md`: regras de manutencao da superficie publica.
+- `.agents/README.md`: fronteira do marketplace local de plugins Codex.
+- `plugins/README.md`: fronteira dos pacotes publicos de plugin.
 - `examples/minimal-hermes-project/README.md`: exemplo minimo executavel.
 - `.env.example`: template seguro de variaveis de ambiente.
 - `CHANGELOG.md`: historico publico de release.
@@ -231,7 +275,7 @@ internas de auditoria nao pertencem ao onboarding publico. O onboarding publico
 deve apontar para contratos atuais, exemplos executaveis, validadores e guias
 curtos para operador.
 
-Hermes and Receipt Five remain the source of truth for real factory execution.
+Hermes e Receipt Five continuam sendo a fonte de verdade da execucao real da fabrica.
 Este repo documenta e valida o kernel da fabrica; ele nao e deposito de
 historico privado de runtime.
 

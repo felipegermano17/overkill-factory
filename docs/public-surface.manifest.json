@@ -435,6 +435,10 @@
       "surface_type": "root_readme",
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
+        ".agents/README.md",
+        "plugins/README.md",
+        "docs/operator/overkill-factory-bridge.md",
+        "docs/operator/overkill-factory-bridge-plugin.md",
         "docs/visuals/README.md",
         "docs/public-surface.manifest.json",
         "docs/visuals/overkill-factory-map-v1.0.1.html"
@@ -459,6 +463,10 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "README.md",
+        ".agents/README.md",
+        "plugins/README.md",
+        "docs/operator/overkill-factory-bridge.md",
+        "docs/operator/overkill-factory-bridge-plugin.md",
         "docs/visuals/README.md",
         "docs/public-surface.manifest.json",
         "docs/visuals/overkill-factory-map-v1.0.1.html"
@@ -470,7 +478,7 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Hermes and Receipt Five remain the source of truth"
+        "Hermes e Receipt Five continuam sendo a fonte de verdade"
       ],
       "expected_links": [
         "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html"

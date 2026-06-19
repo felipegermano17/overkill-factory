@@ -233,7 +233,7 @@ approve gates. They prepare public-safe plans and candidates for review.
 ### `scripts/production_full_product_worker_graph.py`
 
 Builds a production-scoped worker graph from a product contract. Use the default
-QVG contract for the public validation product, or pass `--graph-contract` for a
+QVG contract for the product-shaped validation fixture, or pass `--graph-contract` for a
 different Product SOT/capability-pack set.
 
 ```bash

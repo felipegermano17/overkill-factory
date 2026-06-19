@@ -166,8 +166,8 @@ def validate_reusable_product_scope(
     toolchain = result.get("quasar_toolchain_proof") or {}
     source_ref = str(toolchain.get("source_target") or "")
     source_sha256 = str(toolchain.get("source_sha256") or "")
-    if not source_ref.startswith("products/"):
-        raise ValueError("reusable production Auditor evidence must target source under products/")
+    if not source_ref.startswith("fixtures/product-validation/"):
+        raise ValueError("reusable production Auditor evidence must target source under fixtures/product-validation/")
     if len(source_sha256) != 64:
         raise ValueError("reusable production Auditor evidence requires a 64-char source_sha256")
     if toolchain.get("build_status") != "PASS" or toolchain.get("test_status") != "PASS":
@@ -204,14 +204,14 @@ def apply_product_reuse_scope(
         "production_validation": source_environment_class == "production-validation-quasar-source",
         "deployed_production": source_environment_class == "production-quasar-source",
         "reusability_boundary": (
-            "Reusable only for the named product's Quasar Auditor lane and source hash; "
+            "Reusable only for this fixture id's Quasar Auditor lane and source hash; "
             "CU/SVM/economic proof, deploy, release, human gates and other products must rerun their own evidence."
         ),
     }
     result["reusable_for_product"] = True
-    result["next_action"] = "Attach this product-specific Auditor result to the production Quasar Auditor lane."
+    result["next_action"] = "Attach this fixture-specific Auditor result to the production Quasar Auditor lane."
     result["boundary"] = (
-        "Reusable Auditor code-audit evidence for the named public validation product source only. "
+        "Reusable Auditor code-audit evidence for the named product-shaped validation fixture source only. "
         "This does not clear CU/SVM/economic proof, managed remote proof, release or human gates."
     )
 
@@ -322,7 +322,7 @@ def build_result(
         "evidence_kind": "real",
         "reusable_for_product": False,
         "next_action": "Rerun this same Auditor code-audit plus real CU/SVM/fuzz/property path when production Quasar source changes.",
-        "boundary": "Real code-audit contract over a public Quasar target. CU profile is static/symbolic and remains a separate production gate.",
+        "boundary": "Real code-audit contract over a public-safe Quasar fixture. CU profile is static/symbolic and remains a separate production gate.",
     }
     if property_proof:
         property_ref = repo_ref(property_proof_path) if property_proof_path else "external:missing-property-proof"

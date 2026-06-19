@@ -99,7 +99,7 @@ finish line.
 ## Full Product Worker Graph
 
 Production completion uses a product-scoped worker graph. The default contract
-is the public QVG validation product:
+is the QVG product-shaped validation fixture:
 
 ```bash
 python scripts/production_full_product_worker_graph.py --no-write

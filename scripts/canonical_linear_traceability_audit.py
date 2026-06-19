@@ -504,8 +504,16 @@ def refs_factory_flow() -> list[dict[str, str]]:
 
 def refs_private_product_pack() -> list[dict[str, str]]:
     return [
-        ref("product_artifact", "products/qvg-public-validation-product/README.md", "public validation product"),
-        ref("product_artifact", "products/devnet-receipt-pass/README.md", "public product pilot artifact"),
+        ref(
+            "product_artifact",
+            "fixtures/product-validation/qvg-public-validation-product/README.md",
+            "advanced product-shaped validation fixture",
+        ),
+        ref(
+            "product_artifact",
+            "fixtures/product-validation/devnet-receipt-pass/README.md",
+            "advanced devnet receipt validation fixture",
+        ),
         ref("validation_artifact", ".tmp/factory-runs/product-specific/qvg-full-product-worker-graph.json", "product-specific worker graph"),
         ref("validation_artifact", ".tmp/factory-runs/production/full-product-worker-graph.json", "production worker graph proof"),
         ref("validation_artifact", ".tmp/factory-runs/production/product-face/product-face-result.json", "bounded product face proof"),

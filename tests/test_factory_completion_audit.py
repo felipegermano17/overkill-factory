@@ -76,9 +76,9 @@ class FactoryCompletionAuditTests(unittest.TestCase):
             "provider_kind": "crabbox_ephemeral_container",
             "product_target": {
                 "product_id": "qvg-public-validation-product",
-                "source_ref": "products/qvg-public-validation-product",
+                "source_ref": "fixtures/product-validation/qvg-public-validation-product",
                 "source_sha256": "a" * 64,
-                "approval_scope": "Reusable only for the public validation product.",
+                "approval_scope": "Reusable only for the QVG product-shaped validation fixture.",
             },
             "cleanup_evidence": {
                 "lease_stopped": True,
@@ -138,9 +138,9 @@ class FactoryCompletionAuditTests(unittest.TestCase):
             "provider_kind": "crabbox_ephemeral_container",
             "product_target": {
                 "product_id": "qvg-public-validation-product",
-                "source_ref": "products/qvg-public-validation-product",
+                "source_ref": "fixtures/product-validation/qvg-public-validation-product",
                 "source_sha256": "a" * 64,
-                "approval_scope": "Reusable only for the public validation product.",
+                "approval_scope": "Reusable only for the QVG product-shaped validation fixture.",
             },
             "cleanup_evidence": {
                 "lease_stopped": True,

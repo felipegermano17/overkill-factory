@@ -39,6 +39,7 @@ nav:
       - Troubleshooting: operations/troubleshooting.md
   - Operator:
       - Overkill Factory Bridge: operator/overkill-factory-bridge.md
+      - Bridge Plugin: operator/overkill-factory-bridge-plugin.md
   - Control Tower:
       - Discord Control Tower OS: control-tower/discord-control-tower-os.md
       - Discord Control Tower Setup: control-tower/discord-control-tower-setup-pt-br.md

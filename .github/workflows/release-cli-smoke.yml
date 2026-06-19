@@ -9,6 +9,7 @@ on:
       - "agents/**"
       - "docs/**"
       - "examples/**"
+      - "fixtures/**"
       - "schemas/**"
       - "scripts/**"
       - "skills/**"

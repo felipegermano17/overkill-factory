@@ -12,7 +12,15 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PUBLIC_QVG_SOURCE_DIR = ROOT / "products" / "qvg-public-validation-product" / "onchain" / "quasar" / "src"
+PUBLIC_QVG_SOURCE_DIR = (
+    ROOT
+    / "fixtures"
+    / "product-validation"
+    / "qvg-public-validation-product"
+    / "onchain"
+    / "quasar"
+    / "src"
+)
 
 
 def utc_now() -> str:
@@ -143,7 +151,7 @@ def build_compute_profile() -> dict[str, Any]:
         "profile_kind": "static_symbolic_upper_bound",
         "real_solana_cu_measured": False,
         "why_not_real_cu": (
-            "The public QVG target has no production deployment or live SVM transaction harness. "
+            "The public-safe QVG fixture has no production deployment or live SVM transaction harness. "
             "This proof records a static upper bound and requires real CU profiling again on production source."
         ),
         "instruction_profile": instruction_profile,

@@ -257,7 +257,7 @@ python scripts/product_face_proof.py \
   --reusable-for-product \
   --product-id qvg-public-validation-product \
   --environment-class production-like-static-artifact \
-  --approval-scope "Product Face lane for the QVG public validation product only"
+  --approval-scope "Product Face lane for the QVG product-shaped validation fixture only"
 ```
 
 ## Local Runner

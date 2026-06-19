@@ -1,7 +1,7 @@
 # Fixtures
 
 Fixtures are minimal public-safe regression inputs. They are not historical
-evidence, runtime exports or proof archives.
+evidence, runtime exports, proof archives or public product source trees.
 
 ## What Belongs Here
 
@@ -9,12 +9,16 @@ evidence, runtime exports or proof archives.
 - Domain-neutral cases that prove one contract behavior without private data.
 - Public-safe negative fixtures that keep scanners and fail-closed behavior
   honest.
+- Advanced product-shaped fixtures when strict production-lane validators need
+  realistic structure.
 
 ## What Does Not Belong Here
 
 - Generated worker packets, gate reports, receipts or run summaries.
 - Screenshots, private board exports, raw logs, local paths or old pilot proof.
 - Large fixture archives when a small case can prove the same rule.
+- Product source-of-truth trees, operator onboarding examples or private product
+  pipeline material.
 
 ## Source Of Truth
 
@@ -25,6 +29,7 @@ Current fixture family:
 
 | Path | Purpose |
 | --- | --- |
+| `fixtures/product-validation/` | Advanced product-shaped validation fixtures for production/onchain lanes. Quasar/Solana appears here only as a regression target, not as the default public product path. |
 | `fixtures/status-snapshot-v0/` | Public-safe StatusSnapshot v0 cases for the local operator console fail-closed/read-only contract. |
 
 ## How It Is Validated

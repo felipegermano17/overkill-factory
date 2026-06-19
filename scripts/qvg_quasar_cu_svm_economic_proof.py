@@ -528,7 +528,7 @@ def build_result(
             "environment_class": "production-validation-quasar-svm",
             "source_ref": repo_ref(source_dir),
             "source_sha256": source_hash,
-            "approval_scope": "Production-validation CU/SVM/economic lane for the named public QVG product source only.",
+            "approval_scope": "Production-validation CU/SVM/economic lane for the named QVG product-shaped validation fixture only.",
             "reusability_boundary": (
                 "Reusable only while product_id, source_ref and source_sha256 match. "
                 "It does not approve deploy, devnet/mainnet, custody, signing authority or release."
@@ -674,7 +674,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--source-dir",
         type=Path,
-        default=ROOT / "products" / "qvg-public-validation-product" / "onchain" / "quasar" / "src",
+        default=ROOT
+        / "fixtures"
+        / "product-validation"
+        / "qvg-public-validation-product"
+        / "onchain"
+        / "quasar"
+        / "src",
     )
     parser.add_argument(
         "--runtime-proof",

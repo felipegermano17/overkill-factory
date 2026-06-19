@@ -216,7 +216,7 @@ def build_graph() -> dict[str, Any]:
         "created_at": utc_now(),
         "graph_kind": "product_specific_public_validation_graph",
         "product_id": "qvg-public-validation-product",
-        "product_name": "Quasar Vault Guard public validation product",
+        "product_name": "QVG product-shaped validation fixture",
         "result": "PASS" if all_pass else "FAIL",
         "blocking_findings": not all_pass,
         "evidence_kind": "real",
@@ -232,7 +232,7 @@ def build_graph() -> dict[str, Any]:
         "production_blockers": PRODUCTION_BLOCKERS,
         "evidence_refs": [str(lane["path"]) for lane in LANES],
         "policy_decision": (
-            "This proves product-specific worker-graph reconciliation for the public QVG validation product, "
+            "This proves product-specific worker-graph reconciliation for the QVG product-shaped validation fixture, "
             "including reusable Quasar Auditor and CU/SVM/economic lanes. The Product Face lane is not reusable until "
             "packet comparison, source-promise coverage, design-fit review and professional-design-process comparison "
             "are recorded as pass."

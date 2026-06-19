@@ -16,7 +16,7 @@ DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "full-product-work
 DEFAULT_MD_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "full-product-worker-graph.md"
 DEFAULT_GRAPH_CONTRACT = ROOT / "templates" / "production-full-product-graph-qvg.contract.json"
 DEFAULT_PRODUCT_ID = "qvg-public-validation-product"
-DEFAULT_PRODUCT_SOURCE_REF = "products/qvg-public-validation-product"
+DEFAULT_PRODUCT_SOURCE_REF = "fixtures/product-validation/qvg-public-validation-product"
 DEFAULT_RELEASE_GATE_UPSTREAM_EXCLUDED_LANES = {"human_gate", "release_ops"}
 
 
@@ -102,9 +102,9 @@ def default_contract() -> dict[str, Any]:
         "$schema": "https://overkill-factory.dev/schemas/production-full-product-graph-contract.schema.json",
         "record_type": "production_full_product_graph_contract",
         "product_id": DEFAULT_PRODUCT_ID,
-        "product_name": "Quasar Vault Guard public validation product",
+        "product_name": "QVG product-shaped validation fixture",
         "source_ref": DEFAULT_PRODUCT_SOURCE_REF,
-        "product_sot_ref": "products/qvg-public-validation-product/README.md",
+        "product_sot_ref": "fixtures/product-validation/qvg-public-validation-product/README.md",
         "selected_capability_pack_refs": [
             "capability-packs/product-face.json",
             "capability-packs/solana-quasar.json",
@@ -113,7 +113,7 @@ def default_contract() -> dict[str, Any]:
         "product_delivery_quality_profile_ref": "quality-profiles/production-public-validation.json",
         "risk_class": "R4",
         "promotion_ladder_ref": "promotion-ladders/public-repository-production.json",
-        "approval_scope": "Full reusable worker graph for the public Quasar Vault Guard validation product.",
+        "approval_scope": "Full reusable worker graph for the QVG product-shaped validation fixture.",
         "environment_class": "public-production-validation-graph",
         "graph_kind": "production_full_product_worker_graph",
         "release_gate_upstream_excluded_lanes": sorted(DEFAULT_RELEASE_GATE_UPSTREAM_EXCLUDED_LANES),
@@ -233,7 +233,7 @@ def legacy_product_target() -> dict[str, Any]:
         "product_id": DEFAULT_PRODUCT_ID,
         "source_ref": DEFAULT_PRODUCT_SOURCE_REF,
         "source_sha256": source_sha256(ROOT / DEFAULT_PRODUCT_SOURCE_REF),
-        "approval_scope": "Full reusable worker graph for the public Quasar Vault Guard validation product.",
+        "approval_scope": "Full reusable worker graph for the QVG product-shaped validation fixture.",
         "environment_class": "public-production-validation-graph",
     }
 

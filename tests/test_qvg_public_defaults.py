@@ -20,7 +20,10 @@ class QvgPublicDefaultsTests(unittest.TestCase):
 
         self.assertEqual(args.source_dir, container_proof.PUBLIC_QVG_SOURCE_DIR)
         self.assertTrue(args.source_dir.exists())
-        self.assertEqual(args.source_dir.relative_to(ROOT).as_posix(), "products/qvg-public-validation-product/onchain/quasar/src")
+        self.assertEqual(
+            args.source_dir.relative_to(ROOT).as_posix(),
+            "fixtures/product-validation/qvg-public-validation-product/onchain/quasar/src",
+        )
         self.assertEqual(args.project_name, "qvg-public-validation-product")
 
     def test_cu_fuzz_property_defaults_use_existing_public_source(self):
@@ -28,7 +31,10 @@ class QvgPublicDefaultsTests(unittest.TestCase):
 
         self.assertEqual(args.source_dir, property_proof.PUBLIC_QVG_SOURCE_DIR)
         self.assertTrue(args.source_dir.exists())
-        self.assertEqual(args.source_dir.relative_to(ROOT).as_posix(), "products/qvg-public-validation-product/onchain/quasar/src")
+        self.assertEqual(
+            args.source_dir.relative_to(ROOT).as_posix(),
+            "fixtures/product-validation/qvg-public-validation-product/onchain/quasar/src",
+        )
 
     def test_auditor_result_default_card_uses_existing_public_fixture(self):
         with TemporaryDirectory() as tmpdir:
@@ -104,7 +110,7 @@ class QvgPublicDefaultsTests(unittest.TestCase):
                 "solana_release": container_proof.SOLANA_RELEASE,
                 "solana_install_url": container_proof.SOLANA_INSTALL_URL,
                 "install_source": container_proof.QUASAR_SOURCE,
-                "source_target": "products/qvg-public-validation-product/onchain/quasar/src",
+                "source_target": "fixtures/product-validation/qvg-public-validation-product/onchain/quasar/src",
                 "source_sha256": "1" * 64,
                 "rustc": "rustc 1.91.0",
                 "cargo": "cargo 1.91.0",

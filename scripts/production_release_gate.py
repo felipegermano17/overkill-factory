@@ -14,7 +14,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PRODUCT_SOURCE = ROOT / "products" / "qvg-public-validation-product"
+PRODUCT_SOURCE = ROOT / "fixtures" / "product-validation" / "qvg-public-validation-product"
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "production" / "release"
 VALIDATION_COMMANDS = [
     [sys.executable, "scripts/validate_public_json_artifacts.py"],
@@ -112,9 +112,9 @@ def git_value(*args: str) -> str:
 def product_target() -> dict[str, str]:
     return {
         "product_id": "qvg-public-validation-product",
-        "source_ref": "products/qvg-public-validation-product",
+        "source_ref": "fixtures/product-validation/qvg-public-validation-product",
         "source_sha256": source_sha256(),
-        "approval_scope": "Reusable for the public Quasar Vault Guard validation product release-control lane.",
+        "approval_scope": "Reusable for the QVG product-shaped validation fixture release-control lane.",
         "environment_class": "public-repository-production-validation",
     }
 
@@ -123,7 +123,7 @@ def evidence_provenance(*, created_at: str, producer: str, artifact_refs: list[s
     return {
         "producer": producer,
         "captured_at": created_at,
-        "source_refs": ["products/qvg-public-validation-product"],
+        "source_refs": ["fixtures/product-validation/qvg-public-validation-product"],
         "artifact_refs": artifact_refs,
         "integrity": {
             "product_source_sha256": source_sha256(),
@@ -204,7 +204,7 @@ def build_release_ops(
         },
         "card_ref": {
             "card_id": "QVG-PRODUCTION-RELEASE-GATE",
-            "slice_id": "QVG_PUBLIC_VALIDATION_PRODUCT",
+            "slice_id": "QVG_PRODUCT_VALIDATION_FIXTURE",
             "phase": "F16",
             "risk_effective": "R4",
             "surfaces": ["release", "public-repository", "rollback", "monitoring"],
@@ -215,7 +215,7 @@ def build_release_ops(
         "result": "PASS" if validation_passed else "FAIL",
         "blocking_findings": not validation_passed,
         "findings_summary": (
-            "Release-control validation passed for the public validation product and current public branch state."
+            "Release-control validation passed for the product-shaped validation fixture and current public branch state."
             if validation_passed
             else "Release-control validation failed; see command evidence and human gate validation."
         ),

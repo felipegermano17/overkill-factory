@@ -37,7 +37,7 @@ PUBLIC_SCHEMA_DIRS = [
     ROOT / "docs",
     ROOT / "examples",
     ROOT / "planning-bundles",
-    ROOT / "products",
+    ROOT / "fixtures" / "product-validation",
     ROOT / "templates",
 ]
 SCAN_DIRS = [
@@ -47,7 +47,7 @@ SCAN_DIRS = [
     ROOT / "templates",
     ROOT / "docs",
     ROOT / "planning-bundles",
-    ROOT / "products",
+    ROOT / "fixtures" / "product-validation",
 ]
 
 SCHEMA_OPTIONAL = {

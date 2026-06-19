@@ -423,7 +423,7 @@ class ProductFaceProofTest(unittest.TestCase):
                     reusable_for_product=True,
                     product_id="qvg-public-validation-product",
                     environment_class="production-like-static-artifact",
-                    approval_scope="Product Face lane for the QVG public validation product",
+                    approval_scope="Product Face lane for the QVG product-shaped validation fixture",
                 )
 
     def test_reusable_for_product_scope_adds_target_hash(self) -> None:
@@ -482,7 +482,7 @@ class ProductFaceProofTest(unittest.TestCase):
                 target_path=html_path,
                 product_id="qvg-public-validation-product",
                 environment_class="production-like-static-artifact",
-                approval_scope="Product Face lane for the QVG public validation product",
+                approval_scope="Product Face lane for the QVG product-shaped validation fixture",
             )
 
         self.assertTrue(result["reusable_for_product"])
@@ -590,7 +590,7 @@ class ProductFaceProofTest(unittest.TestCase):
                 target_path=ROOT / "pilots" / "quasar-vault-guard-test" / "product-face" / "prototype.html",
                 product_id="qvg-public-validation-product",
                 environment_class="production-like-static-artifact",
-                approval_scope="Product Face lane for the QVG public validation product",
+                approval_scope="Product Face lane for the QVG product-shaped validation fixture",
             )
 
     def test_reusable_for_product_requires_scope_metadata(self) -> None:
@@ -609,7 +609,7 @@ class ProductFaceProofTest(unittest.TestCase):
                 target_path=ROOT / "pilots" / "quasar-vault-guard-test" / "product-face" / "prototype.html",
                 product_id=None,
                 environment_class="production-like-static-artifact",
-                approval_scope="Product Face lane for the QVG public validation product",
+                approval_scope="Product Face lane for the QVG product-shaped validation fixture",
             )
 
 

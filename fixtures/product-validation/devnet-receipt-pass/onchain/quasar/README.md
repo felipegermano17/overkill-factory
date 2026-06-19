@@ -1,7 +1,7 @@
 # Quasar Work Package
 
 This package is a Quasar-oriented source outline for the Devnet Receipt Pass
-pilot. It is not compiled in this validation environment because Rust, Solana
+fixture. It is not compiled in this validation environment because Rust, Solana
 CLI and Quasar are intentionally not assumed to exist.
 
 The factory must treat this as an onchain work package, not as a deployed
