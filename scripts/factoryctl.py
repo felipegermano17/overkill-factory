@@ -692,7 +692,7 @@ SURFACE_EVIDENCE_PROFILE_ROUTES = {
     "mobile_web": ("web_visual_ui", "supported", "Mobile web is proven through the web visual profile with mobile viewport evidence."),
     "mobile-web": ("web_visual_ui", "supported", "Mobile web is proven through the web visual profile with mobile viewport evidence."),
     "local_web_app": ("web_visual_ui", "supported", "Local web app UI is proven through rendered visual evidence."),
-    "local_web_cockpit": ("web_visual_ui", "supported", "Local web cockpit UI is proven through rendered visual evidence."),
+    "local_web_operator_console": ("web_visual_ui", "supported", "Local web operator_console UI is proven through rendered visual evidence."),
     "cli": ("cli_tui", "supported", "CLI surfaces are proven through command transcript evidence."),
     "tui": ("cli_tui", "supported", "TUI surfaces are proven through command transcript evidence."),
     "terminal": ("cli_tui", "supported", "Terminal surfaces are proven through command transcript evidence."),
@@ -1177,7 +1177,7 @@ WORKERS: dict[str, WorkerDefinition] = {
         tool_required="Hermes readback plus project projection renderer",
         timing="when owner-facing visibility is active and before material work becomes invisible",
         blocking_policy=(
-            "The owner-facing cockpit must mirror runtime state. Projection work cannot invent "
+            "The owner-facing operator_console must mirror runtime state. Projection work cannot invent "
             "status, hide blockers, or become the source of truth."
         ),
         required_inputs=("runtime_state_ref", "project_projection", "done_definition"),
@@ -1190,7 +1190,7 @@ WORKERS: dict[str, WorkerDefinition] = {
         tool_required="Discord mapping, runtime event bridge and bridge health contract",
         timing="when a Discord Control Tower must show state or register owner responses",
         blocking_policy=(
-            "Discord is a cockpit only. Structured owner responses must be registered in the "
+            "Discord is a operator_console only. Structured owner responses must be registered in the "
             "runtime and rejected when malformed, expired, wrong-role, or out of scope."
         ),
         required_inputs=("discord_control_tower_mapping", "control_tower_event", "runtime_registration_path"),
@@ -5449,8 +5449,8 @@ def validate_factory_sdlc_lifecycle_state(state: dict[str, Any]) -> list[str]:
         errors.append("factory_sdlc_lifecycle_state runtime_proven cannot be true for contract/static proof")
 
     projection = state.get("projection_policy") if isinstance(state.get("projection_policy"), dict) else {}
-    if projection.get("cockpit_is_source_of_truth") is not False:
-        errors.append("factory_sdlc_lifecycle_state cockpit must not be source of truth")
+    if projection.get("operator_console_is_source_of_truth") is not False:
+        errors.append("factory_sdlc_lifecycle_state operator_console must not be source of truth")
     if projection.get("dashboard_visibility_is_evidence") is not False:
         errors.append("factory_sdlc_lifecycle_state dashboard visibility must not be evidence")
 
@@ -11592,7 +11592,7 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         control_tower_surfaces = {
             "control-tower",
             "operator",
-            "operator-cockpit",
+            "operator-operator_console",
             "discord",
             "projection",
             "status",

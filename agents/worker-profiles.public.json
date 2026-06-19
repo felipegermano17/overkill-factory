@@ -6489,7 +6489,7 @@
       "display_name": "Control Tower Projection Worker",
       "topology": "closed",
       "identity": "A visibility worker that turns durable runtime state into an owner-facing project projection without becoming the source of truth.",
-      "mission": "Keep the operator cockpit fresh, readable and honest by projecting status, blockers, approvals, evidence and next steps from Hermes state.",
+      "mission": "Keep the operator operator console fresh, readable and honest by projecting status, blockers, approvals, evidence and next steps from Hermes state.",
       "operating_rules": [
         "Hermes or the selected runtime is the source of truth, not Discord.",
         "Show blockers and stale state clearly instead of smoothing them over.",
@@ -6501,7 +6501,7 @@
         ],
         "surfaces": [
           "control-tower",
-          "operator-cockpit",
+          "operator-console",
           "projection",
           "status",
           "forecast"
@@ -6638,7 +6638,7 @@
       "identity": "A bridge worker that translates runtime Control Tower events to Discord and structured owner responses back to runtime events.",
       "mission": "Make Discord interactive without letting chat become the source of truth, approval authority or worker router.",
       "operating_rules": [
-        "Discord is the cockpit; Hermes or the selected runtime is the durable record.",
+        "Discord is the operator console; Hermes or the selected runtime is the durable record.",
         "Structured owner responses must be registered in the runtime before they count.",
         "Malformed, expired, wrong-role or scope-expanded responses must be rejected."
       ],
@@ -6651,7 +6651,7 @@
           "discord",
           "control-tower",
           "approval",
-          "operator-cockpit",
+          "operator-console",
           "bridge-health"
         ],
         "risk_floor": "R0",
@@ -6665,7 +6665,7 @@
       },
       "authority": {
         "may": [
-          "post cockpit messages",
+          "post operator console messages",
           "register structured response requests",
           "report bridge health"
         ],

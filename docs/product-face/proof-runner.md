@@ -56,7 +56,7 @@ Product Face evidence profile still has to be supported or explicitly blocked.
 Supported routes:
 
 - `web`, `web_app`, `website`, `frontend`, `ux`, `screen`, `component`,
-  `browser`, `mobile_web` and local web cockpit/app surfaces route to
+  `browser`, `mobile_web` and local web operator console/app surfaces route to
   `web_visual_ui`.
 - `cli`, `tui`, `terminal`, `console` and `command_line` route to `cli_tui`.
 - `docs`, `documentation`, `onboarding`, `quickstart` and `guide` route to

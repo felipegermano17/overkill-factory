@@ -161,12 +161,12 @@ class FactoryConciergeDiscordBridgeTest(unittest.TestCase):
         self.assertEqual(len(client.messages["thread-1"]), 1)
         self.assertEqual(first["dashboard"]["message_id"], second["dashboard"]["message_id"])
         self.assertEqual(first["registry"]["message_id"], second["registry"]["message_id"])
-        self.assertEqual(first["cockpit"]["message_id"], second["cockpit"]["message_id"])
+        self.assertEqual(first["operator_console"]["message_id"], second["operator_console"]["message_id"])
         self.assertEqual(client.threads[0]["applied_tags"], ["tag-entrada"])
 
-        cockpit_embed = client.messages["thread-1"][0]["embeds"][0]
-        self.assertEqual(cockpit_embed["title"], "Painel de Esteira do Projeto")
-        self.assertIn("transformar paper em Product SOT", json.dumps(cockpit_embed, ensure_ascii=False))
+        operator_console_embed = client.messages["thread-1"][0]["embeds"][0]
+        self.assertEqual(operator_console_embed["title"], "Painel de Esteira do Projeto")
+        self.assertIn("transformar paper em Product SOT", json.dumps(operator_console_embed, ensure_ascii=False))
 
     def test_public_receipt_redacts_private_discord_identifiers(self) -> None:
         client = FakeDiscordClient()
@@ -184,14 +184,14 @@ class FactoryConciergeDiscordBridgeTest(unittest.TestCase):
         self.assertNotIn("chan-dashboard", text)
         self.assertIn("external:discord-project-thread-present", receipt["evidence_refs"])
 
-    def test_bridge_reuses_existing_cockpit_embed_without_marker(self) -> None:
+    def test_bridge_reuses_existing_operator_console_embed_without_marker(self) -> None:
         client = FakeDiscordClient()
         projection = sample_projection()
         thread = client.create_forum_thread(
             "forum-kanban",
             {
                 "name": projection["name"],
-                "message": {"content": "manual cockpit starter"},
+                "message": {"content": "manual operator_console starter"},
                 "applied_tags": ["tag-entrada"],
             },
         )
@@ -207,9 +207,9 @@ class FactoryConciergeDiscordBridgeTest(unittest.TestCase):
 
         result = bridge.project_bridge_apply(projection, client, config, state)
 
-        self.assertTrue(result["cockpit"]["updated"])
+        self.assertTrue(result["operator_console"]["updated"])
         self.assertEqual(len(client.messages[thread["id"]]), 1)
-        self.assertIn("of-cockpit:pilot-front-jogo-fabrica", client.messages[thread["id"]][0]["embeds"][0]["footer"]["text"])
+        self.assertIn("of-operator_console:pilot-front-jogo-fabrica", client.messages[thread["id"]][0]["embeds"][0]["footer"]["text"])
 
     def test_state_file_roundtrip_is_private_and_stable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

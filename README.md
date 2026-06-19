@@ -74,7 +74,7 @@ The practical boundary is simple:
 - `factoryctl`, schemas and tests validate public contracts.
 - Hermes Kanban is the runtime authority for real cards and transitions.
 - Receipt Five and worker results are the completion evidence.
-- Cockpits and operator dashboards can project state, but they do not approve
+- Operator Consoles and operator dashboards can project state, but they do not approve
   gates or replace Hermes.
 
 ## First Run

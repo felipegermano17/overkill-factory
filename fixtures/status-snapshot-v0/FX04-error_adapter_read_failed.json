@@ -5,7 +5,7 @@
   "fixture_id": "FX04",
   "fixture_name": "adapter read error",
   "kind": "fixture",
-  "title": "Local Status Cockpit StatusSnapshot v0 - adapter read error",
+  "title": "Local Status Operator Console StatusSnapshot v0 - adapter read error",
   "phase": "F12/F13 first safe slice",
   "risk_effective": "R2",
   "observed_at": "2026-06-14T03:30:00Z",
@@ -92,7 +92,7 @@
     "status": "present",
     "reviewer_required": true,
     "reviewer_result": "review pending for future implementation",
-    "changed": "StatusSnapshot v0 projection fixture for Local Status Cockpit.",
+    "changed": "StatusSnapshot v0 projection fixture for Local Status Operator Console.",
     "artifact_paths": [
       "fixtures/status-snapshot-v0/FX04-error_adapter_read_failed.json",
       "schemas/factory-status-snapshot.schema.json"

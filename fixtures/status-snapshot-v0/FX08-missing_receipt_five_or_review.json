@@ -5,7 +5,7 @@
   "fixture_id": "FX08",
   "fixture_name": "worker done without Receipt Five or review",
   "kind": "fixture",
-  "title": "Local Status Cockpit StatusSnapshot v0 - worker done without Receipt Five or review",
+  "title": "Local Status Operator Console StatusSnapshot v0 - worker done without Receipt Five or review",
   "phase": "F12/F13 first safe slice",
   "risk_effective": "R2",
   "observed_at": "2026-06-14T03:30:00Z",
@@ -92,7 +92,7 @@
     "status": "missing",
     "reviewer_required": true,
     "reviewer_result": "missing review result blocks acceptance",
-    "changed": "StatusSnapshot v0 projection fixture for Local Status Cockpit.",
+    "changed": "StatusSnapshot v0 projection fixture for Local Status Operator Console.",
     "artifact_paths": [
       "fixtures/status-snapshot-v0/FX08-missing_receipt_five_or_review.json",
       "schemas/factory-status-snapshot.schema.json"

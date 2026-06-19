@@ -7,7 +7,7 @@
     "No public worker may directly approve its own output.",
     "No public worker may directly mutate final card state; state changes go through Hermes adapter gates and durable events.",
     "No public worker may touch production, signing authority, funds, secrets, cloud IAM, DNS, KMS or destructive cleanup without the matching human or runtime gate.",
-    "Discord is an operator cockpit only; it may request, display and record decisions, but Hermes remains authoritative.",
+    "Discord is an operator operator console only; it may request, display and record decisions, but Hermes remains authoritative.",
     "Evidence must be public-safe before it is written to this repository."
   ],
   "classes": {
@@ -94,7 +94,7 @@
     },
     "discord_interface": {
       "label": "Discord Interface",
-      "plain_purpose": "Talks to the human operator and presents the cockpit.",
+      "plain_purpose": "Talks to the human operator and presents the operator console.",
       "may": ["explain state", "receive input", "ask for decisions", "send public-safe status"],
       "must_not": ["choose specialists outside Kanban", "mark work done", "store Discord as source of truth"],
       "evidence_required": ["message intent", "Hermes event ref when applicable", "public-safe summary"],
@@ -112,7 +112,7 @@
     },
     "read_only_projection": {
       "label": "Read-only Projection",
-      "plain_purpose": "Turns runtime state into a human-readable cockpit view.",
+      "plain_purpose": "Turns runtime state into a human-readable operator console view.",
       "may": ["read state", "summarize status", "forecast next visible steps"],
       "must_not": ["change status", "approve gates", "hide blocked work"],
       "evidence_required": ["source state ref", "projection result", "staleness note"],

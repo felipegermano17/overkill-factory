@@ -30,7 +30,7 @@ runtime treats them differently:
 | Reviewer/proof runner | Verifies, challenges or packages work done by another operator. | `independent-reviewer`, `autoreview-gate`, `remote-proof-runner` |
 | Specialist gate | Blocks a risk surface until evidence exists. | `codex-security`, `appsec-owasp-specialist`, `supply-chain-gate` |
 | Human-support gate | Records a real human decision. | `human-gate-clerk` |
-| Interface profile | Talks to the human and mirrors cockpit state without executing product work. | `overkill-factory-gerente` |
+| Interface profile | Talks to the human and mirrors operator console state without executing product work. | `overkill-factory-gerente` |
 
 This distinction matters. A gate can be operable without being a builder, and a
 builder can be autonomous without being allowed to approve itself.

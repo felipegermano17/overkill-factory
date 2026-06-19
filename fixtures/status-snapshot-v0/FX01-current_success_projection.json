@@ -5,7 +5,7 @@
   "fixture_id": "FX01",
   "fixture_name": "current success projection",
   "kind": "fixture",
-  "title": "Local Status Cockpit StatusSnapshot v0 - current success projection",
+  "title": "Local Status Operator Console StatusSnapshot v0 - current success projection",
   "phase": "F12/F13 first safe slice",
   "risk_effective": "R2",
   "observed_at": "2026-06-14T03:30:00Z",
@@ -81,7 +81,7 @@
     "status": "present",
     "reviewer_required": true,
     "reviewer_result": "independent review passed for fixture semantics",
-    "changed": "StatusSnapshot v0 projection fixture for Local Status Cockpit.",
+    "changed": "StatusSnapshot v0 projection fixture for Local Status Operator Console.",
     "artifact_paths": [
       "fixtures/status-snapshot-v0/FX01-current_success_projection.json",
       "schemas/factory-status-snapshot.schema.json"

@@ -144,7 +144,7 @@ def build_readiness(
     component_status = {item["id"]: item["status"] for item in components}
     next_required_actions: list[str] = []
     if component_status.get("operator_control_tower_private_evidence_doctor") != "PASS":
-        next_required_actions.append("replace private Control Tower placeholders with real cockpit/runtime evidence")
+        next_required_actions.append("replace private Control Tower placeholders with real operator_console/runtime evidence")
         next_required_actions.append("rerun operator_control_tower_private_evidence_doctor.py until it passes")
     if component_status.get("prepilot_master_task_readiness") != "PASS":
         next_required_actions.append("complete the 9-task prepilot readiness receipt")

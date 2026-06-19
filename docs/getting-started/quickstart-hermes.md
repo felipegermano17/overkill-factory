@@ -10,7 +10,7 @@ bundle.
 - Python 3.11 or newer
 - Hermes only when you are ready to route real cards
 
-Discord is optional cockpit UI. It is not the source of truth.
+Discord is optional operator console UI. It is not the source of truth.
 
 ## Three Commands
 

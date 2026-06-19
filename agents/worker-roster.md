@@ -28,7 +28,7 @@ The roster has 40 public-safe operators:
 - 6 proof/review/handoff/closure workers.
 - 10 security/onchain/release-safety workers.
 - 4 human, release, memory and learning support workers.
-- 2 Control Tower cockpit workers.
+- 2 Control Tower operator console workers.
 
 The Discord gateway profile `overkill-factory-gerente` is official, but it is
 not counted as a worker. It is an interface profile: it talks to the operator
@@ -121,7 +121,7 @@ the card.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `control-tower-projection-worker` | read-only projection | F19 | Projects Hermes state into the operator cockpit without deciding gates or mutating cards. |
+| `control-tower-projection-worker` | read-only projection | F19 | Projects Hermes state into the operator operator console without deciding gates or mutating cards. |
 | `discord-control-tower-bridge` | bridge | F19/F29 | Maps Hermes and Discord events, emits bridge health and records operator responses through the runtime contract. |
 
 ## Non-Executable Critical Roles

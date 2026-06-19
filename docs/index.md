@@ -44,7 +44,7 @@ Use `operations/release-policy.md` before tagging, packaging or publishing a
 release.
 
 Use `operations/parallel-execution-and-status.md` before scaling agents,
-splitting work across branches/worktrees or presenting a cockpit/status view.
+splitting work across branches/worktrees or presenting a operator console/status view.
 
 ## Maintainer Internals
 

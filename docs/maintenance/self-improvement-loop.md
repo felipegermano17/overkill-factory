@@ -128,7 +128,7 @@ public/private evidence hygiene, observability/incident/rollback, security,
 product success signals and autonomy risk.
 
 It is not product acceptance, customer readiness, release approval, security
-approval or a cockpit status. Non-passing dimensions require a remediation
+approval or a operator console status. Non-passing dimensions require a remediation
 loop, and blocking dimensions must keep autonomous execution off until the
 scorecard is rerun with evidence.
 

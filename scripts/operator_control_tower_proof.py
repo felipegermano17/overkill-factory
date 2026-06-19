@@ -243,7 +243,7 @@ def build_production_proof(readiness_ref: str, evidence_refs: list[str], created
         "evidence_refs": [readiness_ref, *evidence_refs],
         "limits": [
             "This proof is public-safe and does not store real Discord ids, runtime ids, private URLs, credentials or raw logs.",
-            "Discord remains the human cockpit only; Hermes or the selected runtime remains the durable source of truth.",
+            "Discord remains the human operator_console only; Hermes or the selected runtime remains the durable source of truth.",
             "Future channels, roles, approval kinds or bridge behavior changes need a fresh Control Tower proof.",
         ],
         "decision": {

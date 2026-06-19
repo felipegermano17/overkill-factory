@@ -5,7 +5,7 @@
   "fixture_id": "FX05",
   "fixture_name": "blocked waiting on human or reviewer",
   "kind": "fixture",
-  "title": "Local Status Cockpit StatusSnapshot v0 - blocked waiting on human or reviewer",
+  "title": "Local Status Operator Console StatusSnapshot v0 - blocked waiting on human or reviewer",
   "phase": "F12/F13 first safe slice",
   "risk_effective": "R2",
   "observed_at": "2026-06-14T03:30:00Z",
@@ -92,7 +92,7 @@
     "status": "present",
     "reviewer_required": true,
     "reviewer_result": "review pending for future implementation",
-    "changed": "StatusSnapshot v0 projection fixture for Local Status Cockpit.",
+    "changed": "StatusSnapshot v0 projection fixture for Local Status Operator Console.",
     "artifact_paths": [
       "fixtures/status-snapshot-v0/FX05-blocked_waiting_human_or_reviewer.json",
       "schemas/factory-status-snapshot.schema.json"

@@ -166,7 +166,7 @@ unblocked.
 
 ## Ready Work Unit Materialization Plan
 
-Product dogfooding can reach a validated `ready_work_unit_packet_manifest`
+Product self-validation can reach a validated `ready_work_unit_packet_manifest`
 before a legacy/card transition exists. In that case, build the Hermes
 materialization plan first:
 

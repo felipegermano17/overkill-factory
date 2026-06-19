@@ -4,7 +4,7 @@
 This creates the private JSON files expected by
 operator_control_tower_proof.py and the owner setup doctor. It refuses to write inside the public
 repository and intentionally leaves placeholder values that the doctor will
-block until replaced with real cockpit/runtime evidence.
+block until replaced with real operator_console/runtime evidence.
 """
 
 from __future__ import annotations
@@ -149,7 +149,7 @@ def readme_text() -> str:
 
 This folder is intentionally outside the public repository.
 
-Fill these files from the real cockpit/runtime evidence:
+Fill these files from the real operator_console/runtime evidence:
 
 - `discord-owner-setup.json`
 - `discord-control-tower-mapping.json`

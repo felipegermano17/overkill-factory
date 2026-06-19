@@ -80,7 +80,7 @@ No merge happens by title, summary or agent confidence alone.
 
 ## Status Snapshot
 
-`factory_status_snapshot` is a cockpit projection. It is not a source of truth.
+`factory_status_snapshot` is a operator console projection. It is not a source of truth.
 It links back to card, gate, lane and evidence refs so another operator can
 continue without reading chat history.
 

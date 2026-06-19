@@ -25,7 +25,7 @@
     "interaction_style": "Describe how the user should move through the surface."
   },
   "visual_quality_bar": {
-    "reference_quality_bar": "State the relevant quality bar: existing product conventions, best-in-class references, or professional cockpit/UI standard.",
+    "reference_quality_bar": "State the relevant quality bar: existing product conventions, best-in-class references, or professional operator console/UI standard.",
     "anti_generic_criteria": [
       "avoid generic AI dashboard composition",
       "avoid excessive explanatory copy",

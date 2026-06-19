@@ -25,7 +25,7 @@ Current fixture family:
 
 | Path | Purpose |
 | --- | --- |
-| `fixtures/status-snapshot-v0/` | Public-safe StatusSnapshot v0 cases for the local cockpit fail-closed/read-only contract. |
+| `fixtures/status-snapshot-v0/` | Public-safe StatusSnapshot v0 cases for the local operator console fail-closed/read-only contract. |
 
 ## How It Is Validated
 

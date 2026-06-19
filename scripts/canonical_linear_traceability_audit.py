@@ -688,7 +688,7 @@ def title_record(checkpoint: Checkpoint) -> dict[str, Any]:
         return checkpoint_record(
             checkpoint,
             status="bounded_public_proof",
-            obligation="The human cockpit must mirror durable runtime truth and register approvals as durable events.",
+            obligation="The human operator_console must mirror durable runtime truth and register approvals as durable events.",
             refs=refs_control_tower(),
         )
 

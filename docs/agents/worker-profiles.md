@@ -30,7 +30,7 @@ ownership groups:
 | Proof and review | QA, AutoReview, remote proof, evidence reconciliation, independent review and handoff. |
 | Security and release safety | AppSec, agentic AI security, cloud, key management, supply chain, public safety and monitoring. |
 | Human authority | human gate records and release authority boundaries. |
-| Control Tower | read-only cockpit projection and Discord/Hermes bridge behavior. |
+| Control Tower | read-only operator console projection and Discord/Hermes bridge behavior. |
 | Learning | skill and eval distillation after repeated evidence. |
 
 This is phase coverage, not a promise that every product type is already
@@ -128,7 +128,7 @@ See `docs/agents/capability-packs.md` for the full rule.
 | `public-safety-gate` | Blocks private or secret residue before public release. | F16-F17. | paths, forbidden actions, done definition. | `public_safety_result`. | Approve product risk. | public safety scan, redaction notes. | `public_safety_scan.py`. |
 | `memory-steward` | Classifies memory and context as a trust surface. | F0-F1 and F18. | source refs, source state, security contract. | `memory_steward_result`. | Turn memory into truth. | trust tier, freshness, source refs, poisoning controls. | memory review workflow. |
 | `skill-eval-distiller` | Owns Agent Quality, Learnback and Factory Maturity audits, then turns repeated success or failure into skills, evals, templates, checklists or pack/worker changes. | F8, F18, F26 and F27. | expected evidence, done definition, source refs, agent eval plan, factory maturity scorecard, worker coverage map. | `skill_eval_result`. | Promote one-off work as a closed skill, ignore blind spots or grant broad authority. | agent quality plan, repetition evidence, eval cases, before/after result, factory maturity scorecard, missing coverage register, permission class. | skill and eval workflow. |
-| `control-tower-projection-worker` | Projects Hermes state into the operator cockpit. | F19. | runtime state, projection contract, staleness boundary. | `project_projection_result`. | Change state, approve gates or hide blocked work. | projection result, source state ref, staleness note. | Control Tower projection contract. |
+| `control-tower-projection-worker` | Projects Hermes state into the operator operator console. | F19. | runtime state, projection contract, staleness boundary. | `project_projection_result`. | Change state, approve gates or hide blocked work. | projection result, source state ref, staleness note. | Control Tower projection contract. |
 | `discord-control-tower-bridge` | Maps Hermes and Discord events. | F19 and F29. | mapping, runtime event, bridge health contract. | `control_tower_bridge_result`. | Decide product direction, execute workers or mutate cards directly. | mapping proof, round-trip proof, bridge health. | Discord Control Tower bridge. |
 
 ## Runtime Rule

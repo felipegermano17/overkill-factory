@@ -105,7 +105,7 @@ def lifecycle_state(**overrides: object) -> dict:
             "private_runtime_evidence_stays_local": True
         },
         "projection_policy": {
-            "cockpit_is_source_of_truth": False,
+            "operator_console_is_source_of_truth": False,
             "dashboard_visibility_is_evidence": False,
             "consumer_role": "projection_only"
         },

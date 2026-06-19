@@ -30,7 +30,7 @@ public releases.
   map can be verified against the repository source of truth.
 
 Known boundary: the public repository release validates the factory kernel,
-schemas, docs, CLI, examples and public safety. Private runtime/cockpit
+schemas, docs, CLI, examples and public safety. Private runtime/operator console
 production readiness still requires operator-owned Hermes evidence and real
 approval records outside the public repo.
 

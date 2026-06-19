@@ -324,7 +324,7 @@
         "no_runtime_proof_claim"
       ],
       "required_phrases": [
-        "Discord is optional cockpit UI. It is not the source of truth.",
+        "Discord is optional operator console UI. It is not the source of truth.",
         "Attach worker results and Receipt Five before any `done` transition."
       ],
       "expected_links": [

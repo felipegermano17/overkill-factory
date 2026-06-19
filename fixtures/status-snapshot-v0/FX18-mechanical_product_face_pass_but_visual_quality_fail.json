@@ -5,7 +5,7 @@
   "fixture_id": "FX18",
   "fixture_name": "mechanical Product Face pass but visual quality fail",
   "kind": "fixture",
-  "title": "Local Status Cockpit StatusSnapshot v0 - mechanical Product Face pass but visual quality fail",
+  "title": "Local Status Operator Console StatusSnapshot v0 - mechanical Product Face pass but visual quality fail",
   "phase": "F12/F13 first safe slice",
   "risk_effective": "R2",
   "observed_at": "2026-06-14T03:30:00Z",
@@ -30,7 +30,7 @@
       "label": "Product Face visual quality result",
       "state": "failed",
       "owner": "factory-operator",
-      "unblock_condition": "redesign to meet professional cockpit reference bar",
+      "unblock_condition": "redesign to meet professional operator console reference bar",
       "source_refs": [
         "PRODUCT-FACE"
       ]
@@ -72,7 +72,7 @@
     "status": "present",
     "reviewer_required": true,
     "reviewer_result": "review pending for future implementation",
-    "changed": "StatusSnapshot v0 projection fixture for Local Status Cockpit.",
+    "changed": "StatusSnapshot v0 projection fixture for Local Status Operator Console.",
     "artifact_paths": [
       "fixtures/status-snapshot-v0/FX18-mechanical_product_face_pass_but_visual_quality_fail.json",
       "schemas/factory-status-snapshot.schema.json"

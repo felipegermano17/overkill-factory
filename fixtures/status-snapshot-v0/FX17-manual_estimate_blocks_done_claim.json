@@ -5,7 +5,7 @@
   "fixture_id": "FX17",
   "fixture_name": "manual estimate blocks done claim",
   "kind": "fixture",
-  "title": "Local Status Cockpit StatusSnapshot v0 - manual estimate blocks done claim",
+  "title": "Local Status Operator Console StatusSnapshot v0 - manual estimate blocks done claim",
   "phase": "F12/F13 first safe slice",
   "risk_effective": "R2",
   "observed_at": "2026-06-14T03:30:00Z",
@@ -92,7 +92,7 @@
     "status": "present",
     "reviewer_required": true,
     "reviewer_result": "review pending for future implementation",
-    "changed": "StatusSnapshot v0 projection fixture for Local Status Cockpit.",
+    "changed": "StatusSnapshot v0 projection fixture for Local Status Operator Console.",
     "artifact_paths": [
       "fixtures/status-snapshot-v0/FX17-manual_estimate_blocks_done_claim.json",
       "schemas/factory-status-snapshot.schema.json"

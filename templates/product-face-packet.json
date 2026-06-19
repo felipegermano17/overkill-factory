@@ -26,7 +26,7 @@
   "visual_quality_bar": {
     "reference_quality_bar": "Name the product-specific quality bar or reference class this surface must meet.",
     "anti_generic_criteria": [
-      "no generic dashboard composition when the product needs a tailored cockpit",
+      "no generic dashboard composition when the product needs a tailored operator console",
       "no excessive explanatory copy where structure and interaction should carry meaning",
       "no templated visual language disconnected from the product audience"
     ],

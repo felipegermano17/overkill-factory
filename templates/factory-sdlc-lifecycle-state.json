@@ -31,7 +31,7 @@
         "schemas/factory-sdlc-lifecycle-state.schema.json",
         "tests/test_factory_sdlc_lifecycle.py"
       ],
-      "next_safe_action": "Validate lifecycle state before any cockpit projection consumes it.",
+      "next_safe_action": "Validate lifecycle state before any operator console projection consumes it.",
       "human_gate": {
         "required": false,
         "classification": "not_required",
@@ -83,7 +83,7 @@
     "private_runtime_evidence_stays_local": true
   },
   "projection_policy": {
-    "cockpit_is_source_of_truth": false,
+    "operator_console_is_source_of_truth": false,
     "dashboard_visibility_is_evidence": false,
     "consumer_role": "projection_only"
   },

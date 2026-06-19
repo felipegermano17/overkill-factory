@@ -159,7 +159,7 @@ def approval_request() -> dict[str, Any]:
         "consequence": "A fabrica pode registrar a decisao, mas ainda precisa do Ready Gate.",
         "not_authorized": ["deploy em producao", "gasto sem limite"],
         "requested_by": "factory-concierge",
-        "evidence_refs": ["external:pilot-cockpit"],
+        "evidence_refs": ["external:pilot-operator_console"],
         "expires_at": "2026-06-12T00:00:00Z",
         "created_at": "2026-06-11T08:00:00Z",
     }

@@ -2,7 +2,7 @@
 
 > Document status: CURRENT SUPPORTING GUIDE.
 > Current authority: `scripts/factoryctl.py`, schemas, tests and current public guides.
-> Runtime boundary: This guide describes the optional cockpit; Discord does not replace Hermes state, receipts or runtime gates.
+> Runtime boundary: This guide describes the optional operator console layer; Discord does not replace Hermes state, receipts or runtime gates.
 
 Discord Control Tower OS is the owner-facing control layer for Overkill
 Factory.
@@ -10,19 +10,10 @@ Factory.
 It makes the factory understandable and operable without turning Discord into
 the source of truth.
 
-Discord is not accepted as a cockpit because it can post messages. Before any
-Discord cockpit implementation is treated as product-ready, it must pass the
-mandatory UX study gate in:
-
-```text
-docs/control-tower/discord-cockpit-ux-study-gate.md
-```
-
-The gate requires a study of Discord primitives, limits, permissions,
-notifications, threads, commands, components, modals, webhooks, mobile/desktop
-behavior, rate limits, failure modes and operator comprehension. If the proof
-does not show near-zero avoidable friction, Discord remains a secondary layer
-and dense control moves to the local web cockpit.
+Discord is not accepted as a production operator console because it can post
+messages. Any visible operator surface must pass the current Product Face and
+runtime proof gates for the product being built. Historical Discord/Operator Console
+study material is intentionally not part of the public source of truth.
 
 For the practical Portuguese production setup guide, see:
 
@@ -31,14 +22,14 @@ docs/control-tower/discord-control-tower-setup-pt-br.md
 ```
 
 Dynamic behavior belongs in the bridge scripts, schemas and current setup guide,
-not in a separate historical study. UX acceptance belongs in the Discord
-Cockpit UX Study Gate and its proof pack, not in setup screenshots or manual
-channel layout alone.
+not in a separate historical study. UX acceptance belongs in the current
+Product Face and runtime proof gates, not in setup screenshots or manual channel
+layout alone.
 
 ## Decision
 
 ```text
-Discord = human cockpit
+Discord = human operator console
 Hermes or selected runtime = durable source of truth
 Overkill Factory = method, gates, workers and evidence
 Factory Concierge = official owner-facing voice
@@ -119,14 +110,14 @@ The practical contract is:
   in the attendance/project thread;
 - `#torre-de-controle` is the global portfolio view, not a message dump;
 - `kanban-da-fabrica` is the project index, not the place for every detail;
-- each project topic is the project cockpit;
+- each project topic is the project operator console;
 - `#projetos-recebidos` is an operational registry, not a second owner intake
   door;
 - approvals, access, blockers, evidence and releases each have their own lane;
 - every operational channel has a short pinned Portuguese guide;
 - the Kanban forum has guide/status tags that distinguish a real project from
   help content;
-- every project cockpit shows the factory pipeline, progress, blockers,
+- every project operator console shows the factory pipeline, progress, blockers,
   missing gates, next action and forecast;
 - retries must not create duplicate project threads, forum cards, approvals or
   blocker messages.
@@ -142,13 +133,13 @@ internals. The GERENTE explains, routes and points to the visual surface.
 | `#falar-com-gerente` | "Talk to the factory" | Reception only: a mention opens an attendance thread; work continues there. |
 | `#projetos-recebidos` | "What entered?" | Registry of received projects; points to the project thread/card. |
 | `kanban-da-fabrica` | "Which projects exist?" | One topic per project; it is an index, not a detailed task board. |
-| project topic | "Where is this project, exactly?" | Project cockpit with pipeline, percent, blockers and next action. |
+| project topic | "Where is this project, exactly?" | Project operator console with pipeline, percent, blockers and next action. |
 | `#aprovacoes-formais` | "My decisions" | Approvals must carry scope, risk, deadline and runtime registration. |
 | `#acessos-pendentes` | "What do I need to grant?" | Shows missing accounts, permissions and impact without exposing secrets. |
 | `#bloqueios-reais` | "Why did it stop?" | Shows only blockers that materially stop or limit progress. |
 | `#provas-e-evidencias` | "What was proven?" | Mirrors receipts, tests and validation references without becoming canonical. |
 | `#producao-e-releases` | "Can this go live?" | Shows readiness, rollback and production decision state. |
-| `#saude-do-bot` | "Is the cockpit alive?" | Shows bot, Hermes, gateway and bridge health. |
+| `#saude-do-bot` | "Is the operator console alive?" | Shows bot, Hermes, gateway and bridge health. |
 
 ## Thread Rule
 
@@ -197,7 +188,7 @@ as a project index, not as the full project workspace:
 - retries update the existing topic instead of creating duplicates.
 
 Without idempotent project mapping, the Kanban is only a manual visual aid, not
-a production-ready multi-project cockpit.
+a production-ready multi-project operator console.
 
 The current public implementation for that mapping is:
 
@@ -206,7 +197,7 @@ scripts/factory_concierge_discord_bridge.py
 ```
 
 It receives a `project-projection.json`, updates the global dashboard, the
-project registry, the project forum topic and the project cockpit, then stores
+project registry, the project forum topic and the project operator console, then stores
 real Discord ids only in a private state file outside the public repository.
 
 The forum must stay clean. It should answer:
@@ -219,9 +210,9 @@ which project needs attention?
 
 It should not show every microtask from every project at once.
 
-## Project Cockpit and Predictability
+## Project Operator Console and Predictability
 
-The project topic is the detailed cockpit for one project.
+The project topic is the detailed operator console for one project.
 
 Every active project topic must have a pinned or easily findable pipeline panel
 that shows:
@@ -240,7 +231,7 @@ that shows:
 - forecast confidence;
 - source/runtime freshness note.
 
-The factory pipeline is predictable, so the cockpit must make that visible. The
+The factory pipeline is predictable, so the operator console must make that visible. The
 owner should never need to infer progress from scattered messages.
 
 Recommended pipeline display:
@@ -274,7 +265,7 @@ The Discord UX follows this hierarchy:
 #falar-com-gerente = one human door
 #torre-de-controle = global portfolio dashboard
 kanban-da-fabrica = project index
-project topic = project cockpit and pipeline progress
+project topic = project operator console and pipeline progress
 decision/access/blocker/evidence/release channels = alert lanes with links back
 ```
 
@@ -353,7 +344,7 @@ It composes the projector with the remaining Control Tower behavior:
 
 - scan GERENTE attendance threads under `#falar-com-gerente`;
 - ignore raw project-like messages left directly in the reception channel;
-- create or reuse the project forum topic and cockpit;
+- create or reuse the project forum topic and operator console;
 - project runtime events into the correct operational lane;
 - create threads for active events such as access, blockers and approvals;
 - render Portuguese approval buttons with scoped `custom_id` values and a short
@@ -511,7 +502,7 @@ The server can become richer later, but the factory should not require a large
 Discord bureaucracy to start.
 
 The dashboard should be updated in place when possible. The Control Tower is a
-human cockpit over runtime state, not a message dump.
+human operator console over runtime state, not a message dump.
 
 ## Human Setup Boundary
 
