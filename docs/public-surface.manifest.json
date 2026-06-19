@@ -278,11 +278,11 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         ".agents/plugins/marketplace.json",
-        ".agents/plugins/plugins/overkill-factory-bridge/.codex-plugin/plugin.json",
-        ".agents/plugins/plugins/overkill-factory-bridge/hooks/hooks.json",
-        ".agents/plugins/plugins/overkill-factory-bridge/hooks/overkill_factory_bridge_hook.py",
-        ".agents/plugins/plugins/overkill-factory-bridge/scripts/factory_bridge.py",
-        ".agents/plugins/plugins/overkill-factory-bridge/skills/overkill-factory-bridge/SKILL.md",
+        "plugins/overkill-factory-bridge/.codex-plugin/plugin.json",
+        "plugins/overkill-factory-bridge/hooks/hooks.json",
+        "plugins/overkill-factory-bridge/hooks/overkill_factory_bridge_hook.py",
+        "plugins/overkill-factory-bridge/scripts/factory_bridge.py",
+        "plugins/overkill-factory-bridge/skills/overkill-factory-bridge/SKILL.md",
         "tests/test_overkill_factory_bridge_plugin.py"
       ],
       "claim_checks": [

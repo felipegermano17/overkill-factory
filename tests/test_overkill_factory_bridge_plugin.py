@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN_ROOT = ROOT / ".agents" / "plugins" / "plugins" / "overkill-factory-bridge"
+PLUGIN_ROOT = ROOT / "plugins" / "overkill-factory-bridge"
 
 
 def load_plugin_hook():

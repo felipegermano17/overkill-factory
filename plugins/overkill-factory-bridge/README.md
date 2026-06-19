@@ -15,7 +15,7 @@ It packages:
 From the repo root:
 
 ```bash
-codex plugin marketplace add .agents/plugins
+codex plugin marketplace add .
 codex plugin add overkill-factory-bridge@overkill-factory
 ```
 

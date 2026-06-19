@@ -18,7 +18,7 @@ results, Receipt Five and production-readiness receipts remain authoritative.
 From the repository root:
 
 ```bash
-codex plugin marketplace add .agents/plugins
+codex plugin marketplace add .
 codex plugin add overkill-factory-bridge@overkill-factory
 ```
 
@@ -56,7 +56,7 @@ This supports queue catch-up when Codex was closed without keeping Codex active
 Run:
 
 ```bash
-python /path/to/plugin-creator/scripts/validate_plugin.py .agents/plugins/plugins/overkill-factory-bridge
+python /path/to/plugin-creator/scripts/validate_plugin.py plugins/overkill-factory-bridge
 python -m unittest tests.test_overkill_factory_bridge_plugin -q
 ```
 
