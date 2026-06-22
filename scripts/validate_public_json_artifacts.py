@@ -64,6 +64,7 @@ PRODUCT_FACE_ALIGNMENT_FIELDS = (
     "packet_comparison",
     "source_promise_coverage",
     "design_fit_review",
+    "project_design_system_comparison",
     "professional_design_process_comparison",
     "reference_quality_comparison",
 )
@@ -104,6 +105,7 @@ RESEARCH_RECORD_TYPES = {
     "product_context_packet",
     "product_creation_plan",
     "product_implementation_readiness",
+    "project_design_system",
 }
 RAW_RESEARCH_FIELDS = {
     "raw_notes",
@@ -1986,6 +1988,8 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
     if data.get("record_type") == "product_face_result" and data.get("reusable_for_product") is True:
         if not str(data.get("packet_ref") or "").strip():
             errors.append(f"{at}: reusable product_face_result requires packet_ref")
+        if not str(data.get("project_design_system_ref") or "").strip():
+            errors.append(f"{at}: reusable product_face_result requires project_design_system_ref")
         if not str(data.get("professional_design_process_ref") or "").strip():
             errors.append(f"{at}: reusable product_face_result requires professional_design_process_ref")
         for field in PRODUCT_FACE_ALIGNMENT_FIELDS:
@@ -2117,6 +2121,49 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         comparative_status = str((data.get("comparative_review_gate") or {}).get("status") or "").strip().upper()
         if comparative_status == "PASS" and "independent" not in reviewer_role:
             errors.append(f"{at}: professional_design_process comparative_review_gate requires an independent reviewer")
+    if data.get("record_type") == "project_design_system":
+        source_contracts = data.get("source_contracts") if isinstance(data.get("source_contracts"), dict) else {}
+        for field in (
+            "product_experience_plan_ref",
+            "product_face_packet_ref",
+            "professional_design_process_ref",
+            "reference_quality_packet_ref",
+        ):
+            reason = public_artifact_ref_error(source_contracts.get(field))
+            if reason:
+                errors.append(f"{at}.source_contracts.{field}: {reason}")
+        tokens = data.get("tokens") if isinstance(data.get("tokens"), dict) else {}
+        palette_policy = tokens.get("palette_policy") if isinstance(tokens.get("palette_policy"), dict) else {}
+        if palette_policy.get("semantic_roles_required") is not True:
+            errors.append(f"{at}: project_design_system requires semantic_roles_required=true")
+        if palette_policy.get("not_one_hue_theme") is not True:
+            errors.append(f"{at}: project_design_system requires not_one_hue_theme=true")
+        if len(tokens.get("color_roles") if isinstance(tokens.get("color_roles"), list) else []) < 5:
+            errors.append(f"{at}: project_design_system requires at least 5 color roles")
+        if len(tokens.get("typography_roles") if isinstance(tokens.get("typography_roles"), list) else []) < 3:
+            errors.append(f"{at}: project_design_system requires at least 3 typography roles")
+        if len(data.get("component_contracts") if isinstance(data.get("component_contracts"), list) else []) < 3:
+            errors.append(f"{at}: project_design_system requires at least 3 component contracts")
+        quality = data.get("quality_bar") if isinstance(data.get("quality_bar"), dict) else {}
+        for index, ref in enumerate(text_items(quality.get("reference_refs"))):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.quality_bar.reference_refs[{index}]: {reason}")
+        proof = data.get("proof_contract") if isinstance(data.get("proof_contract"), dict) else {}
+        if proof.get("must_be_compared_in_product_face_result") is not True:
+            errors.append(f"{at}: project_design_system must require Product Face comparison")
+        export = data.get("design_md_export") if isinstance(data.get("design_md_export"), dict) else {}
+        if export.get("required") is not True:
+            errors.append(f"{at}: project_design_system requires DESIGN.md export")
+        if export.get("must_match_contract") is not True:
+            errors.append(f"{at}: project_design_system DESIGN.md export must match contract")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: project_design_system requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: project_design_system must not embed raw private evidence")
+        if boundary.get("no_private_screenshots_in_repo") is not True:
+            errors.append(f"{at}: project_design_system must not commit private screenshots")
     if data.get("record_type") == "factory_learning_proposal":
         serialized_refs = "\n".join(str(ref) for ref in data.get("source_evidence_refs", []))
         if PRIVATE_MARKERS.search(serialized_refs):

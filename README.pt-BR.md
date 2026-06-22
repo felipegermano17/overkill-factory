@@ -60,6 +60,10 @@ auditavel: o que foi pedido, o que foi planejado, o que bloqueou, o que foi
 feito, quem ou o que tinha autoridade, e qual evidencia permite o proximo
 estado.
 
+Para trabalho com superficie de produto, a rota tambem precisa criar o contrato
+de design system do projeto e o `DESIGN.md` legivel por IA antes de builders de
+frontend ou prova de Product Face passarem.
+
 ## Runtime Hermes
 
 Hermes e o primeiro chao de fabrica suportado. A fabrica nao substitui o
@@ -198,7 +202,8 @@ recente e v1.1.1. Ela inclui:
   on-chain;
 - remote proof e gates R4 para trabalho Solana/on-chain de alto risco;
 - docs e pacote do plugin Bridge do Codex para handoff operador-fabrica;
-- contratos de Product Face packet/result;
+- contratos de Product Face packet/result mais gate de design system do projeto
+  / `DESIGN.md`;
 - release preflight, public-surface sync e safety scans;
 - Factory v1 Completion Gate.
 

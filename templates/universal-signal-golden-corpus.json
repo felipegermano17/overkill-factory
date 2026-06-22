@@ -143,7 +143,7 @@
       "request_type": "ux_ui",
       "route_class": "ux_product_experience",
       "expected_method_family": "design_first",
-      "expected_required_artifact_types": ["product_experience_plan", "product_face_packet", "professional_design_process", "product_face_result"],
+      "expected_required_artifact_types": ["product_experience_plan", "product_face_packet", "project_design_system", "professional_design_process", "product_face_result"],
       "expected_required_worker_ids": ["product-face", "frontend-builder", "qa-verification-worker"],
       "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
       "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},

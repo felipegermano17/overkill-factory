@@ -19,6 +19,20 @@ Templates are starter contract files paired with schemas and tests.
 Templates are examples of valid shape. Schemas and validation scripts decide
 whether an artifact is acceptable.
 
+## Frontend And Product Surfaces
+
+For product-facing/frontend work, start from:
+
+- `product-experience-plan.json` for user, job, states and proof needs.
+- `product-face-packet.json` for visible surface coverage.
+- `project-design-system.json` for the project-level design contract.
+- `DESIGN.md` as the AI-readable export that coding agents can consume.
+- `professional-design-process.json` for reference research, gates and review.
+
+`DESIGN.md` is not an approval by itself. It must match
+`project_design_system`, and Product Face still has to prove the rendered
+surface against the packet, design system and professional design process.
+
 ## Public Runtime Refs
 
 Public templates and generated public artifacts must never contain raw Hermes

@@ -129,6 +129,11 @@
     "status": "pass",
     "basis": "Template includes design-fit review shape for Product Face completion."
   },
+  "project_design_system_ref": "templates/project-design-system.json",
+  "project_design_system_comparison": {
+    "status": "pass",
+    "basis": "Template demonstrates comparison against the public project design system contract."
+  },
   "professional_design_process_ref": "templates/professional-design-process.json",
   "professional_design_process_comparison": {
     "status": "pass",

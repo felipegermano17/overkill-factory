@@ -750,6 +750,7 @@
         "required": [
           "product_experience_plan",
           "product_face_packet",
+          "project_design_system",
           "professional_design_process",
           "target_repo_paths",
           "acceptance_criteria"
@@ -757,6 +758,7 @@
         "refuse_if_missing": [
           "product_experience_plan",
           "product_face_packet",
+          "project_design_system",
           "professional_design_process",
           "target_repo_paths"
         ]
@@ -5053,6 +5055,7 @@
         "required": [
           "product_experience_plan",
           "product_face_packet",
+          "project_design_system",
           "professional_design_process",
           "scope_in",
           "scope_out",
@@ -5061,6 +5064,7 @@
         "refuse_if_missing": [
           "product_experience_plan",
           "product_face_packet",
+          "project_design_system",
           "professional_design_process",
           "scope_in"
         ]

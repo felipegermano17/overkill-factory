@@ -3,6 +3,7 @@
   "surface": "web_app",
   "mode": "greenfield",
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
+  "project_design_system_ref": "templates/project-design-system.json",
   "domain_proof_required": ["generic.operator-usability"],
   "surface_evidence_profile": "web_visual_ui",
   "user": "Primary external or internal user.",
@@ -56,6 +57,7 @@
     "mobile screenshot when mobile is in scope",
     "states evidence",
     "Product Face Result comparison to packet",
+    "Product Face Result comparison to project_design_system",
     "Product Face Result comparison to professional_design_process",
     "visual_quality_result verdict"
   ],
@@ -68,6 +70,7 @@
     "result covers required flows and states",
     "result includes evidence for required viewports",
     "review confirms result fits the product promise and visual direction",
+    "review confirms result satisfies the project_design_system",
     "review confirms result satisfies the professional_design_process",
     "visual_quality_result is PASS or PASS_WITH_RESIDUALS with reviewer basis"
   ],

@@ -30,6 +30,10 @@ Product Face Packet is required for:
 - `mobile`
 - `wallet-ui`
 
+For product-facing vFinal cards, the card also needs a project design system /
+`DESIGN.md` contract before implementation. Product Face Result proof must
+compare the finished surface against that contract.
+
 Onchain Work Package is required for Solana/Quasar/account/PDA/CPI/CU/funds
 surfaces.
 

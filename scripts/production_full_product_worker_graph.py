@@ -262,6 +262,7 @@ def validate_lane(lane: dict[str, Any], contract: dict[str, Any] | None = None) 
                 "packet_comparison",
                 "source_promise_coverage",
                 "design_fit_review",
+                "project_design_system_comparison",
                 "professional_design_process_comparison",
                 "reference_quality_comparison",
             ):
@@ -270,6 +271,8 @@ def validate_lane(lane: dict[str, Any], contract: dict[str, Any] | None = None) 
                     errors.append(f"strict Product Face lane requires {field}.status=pass")
             if not str(data.get("packet_ref") or "").strip():
                 errors.append("strict Product Face lane requires packet_ref")
+            if not str(data.get("project_design_system_ref") or "").strip():
+                errors.append("strict Product Face lane requires project_design_system_ref")
             if not str(data.get("professional_design_process_ref") or "").strip():
                 errors.append("strict Product Face lane requires professional_design_process_ref")
         target = data.get("product_target")

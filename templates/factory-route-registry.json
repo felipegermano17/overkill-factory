@@ -305,7 +305,7 @@
       "signal_types": ["ux_ui_request", "feature_idea", "product_paper"],
       "scope_intents": ["child_slice", "full_product"],
       "selected_method_family": "design_first",
-      "required_artifacts": ["product_experience_plan", "product_face_packet", "professional_design_process", "product_face_result"],
+      "required_artifacts": ["product_experience_plan", "product_face_packet", "project_design_system", "professional_design_process", "product_face_result"],
       "required_gates": ["Product Experience Gate", "Product Face Gate", "Independent Design Review Gate"],
       "required_workers": ["product-face", "frontend-builder", "qa-verification-worker"],
       "quality_profile_refs": ["templates/product-delivery-quality-profile.json"],

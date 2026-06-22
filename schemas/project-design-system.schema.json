@@ -1,0 +1,364 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/project-design-system.schema.json",
+  "title": "Overkill Factory Project Design System",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "design_system_id",
+    "surface_scope",
+    "source_contracts",
+    "design_positioning",
+    "tokens",
+    "layout_contract",
+    "component_contracts",
+    "state_contract",
+    "implementation_contract",
+    "quality_bar",
+    "proof_contract",
+    "design_md_export",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/project-design-system.schema.json"
+    },
+    "record_type": {
+      "const": "project_design_system"
+    },
+    "design_system_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "surface_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 },
+      "uniqueItems": true
+    },
+    "source_contracts": {
+      "type": "object",
+      "required": [
+        "product_experience_plan_ref",
+        "product_face_packet_ref",
+        "professional_design_process_ref",
+        "reference_quality_packet_ref"
+      ],
+      "properties": {
+        "product_experience_plan_ref": { "type": "string", "minLength": 3 },
+        "product_face_packet_ref": { "type": "string", "minLength": 3 },
+        "professional_design_process_ref": { "type": "string", "minLength": 3 },
+        "reference_quality_packet_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "design_positioning": {
+      "type": "object",
+      "required": [
+        "product_personality",
+        "audience_context",
+        "trust_posture",
+        "density_posture",
+        "interaction_posture",
+        "anti_generic_position"
+      ],
+      "properties": {
+        "product_personality": { "type": "string", "minLength": 3 },
+        "audience_context": { "type": "string", "minLength": 3 },
+        "trust_posture": { "type": "string", "minLength": 3 },
+        "density_posture": { "type": "string", "minLength": 3 },
+        "interaction_posture": { "type": "string", "minLength": 3 },
+        "anti_generic_position": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "tokens": {
+      "type": "object",
+      "required": [
+        "palette_policy",
+        "color_roles",
+        "typography_roles",
+        "spacing_scale",
+        "radius_scale",
+        "elevation_scale"
+      ],
+      "properties": {
+        "palette_policy": {
+          "type": "object",
+          "required": ["semantic_roles_required", "not_one_hue_theme", "dark_light_policy"],
+          "properties": {
+            "semantic_roles_required": { "const": true },
+            "not_one_hue_theme": { "const": true },
+            "dark_light_policy": { "type": "string", "minLength": 3 }
+          },
+          "additionalProperties": true
+        },
+        "color_roles": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "required": ["role", "token", "usage", "avoid"],
+            "properties": {
+              "role": { "type": "string", "minLength": 2 },
+              "token": { "type": "string", "minLength": 2 },
+              "value_hint": { "type": "string" },
+              "usage": { "type": "string", "minLength": 3 },
+              "avoid": { "type": "string", "minLength": 3 }
+            },
+            "additionalProperties": true
+          }
+        },
+        "typography_roles": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["role", "token", "usage", "constraints"],
+            "properties": {
+              "role": { "type": "string", "minLength": 2 },
+              "token": { "type": "string", "minLength": 2 },
+              "usage": { "type": "string", "minLength": 3 },
+              "constraints": { "type": "string", "minLength": 3 }
+            },
+            "additionalProperties": true
+          }
+        },
+        "spacing_scale": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "radius_scale": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "elevation_scale": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "layout_contract": {
+      "type": "object",
+      "required": ["grid", "responsive_rules", "density_rules", "stable_dimensions", "forbidden_layouts"],
+      "properties": {
+        "grid": { "type": "string", "minLength": 3 },
+        "responsive_rules": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "density_rules": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "stable_dimensions": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "forbidden_layouts": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "component_contracts": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "component_id",
+          "purpose",
+          "anatomy",
+          "states",
+          "interaction_rules",
+          "accessibility_notes",
+          "implementation_notes"
+        ],
+        "properties": {
+          "component_id": { "type": "string", "minLength": 2 },
+          "purpose": { "type": "string", "minLength": 3 },
+          "anatomy": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "states": {
+            "type": "array",
+            "minItems": 3,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "interaction_rules": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "accessibility_notes": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "implementation_notes": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "state_contract": {
+      "type": "object",
+      "required": ["required_states", "feedback_rules", "empty_loading_error_rules", "risk_or_destructive_action_rules"],
+      "properties": {
+        "required_states": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "feedback_rules": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "empty_loading_error_rules": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "risk_or_destructive_action_rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "implementation_contract": {
+      "type": "object",
+      "required": ["tailwind_or_css_variables", "style_entrypoints", "component_entrypoints", "forbidden_shortcuts"],
+      "properties": {
+        "tailwind_or_css_variables": {
+          "enum": ["tailwind", "css_variables", "both", "native_platform_tokens"]
+        },
+        "style_entrypoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "component_entrypoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "forbidden_shortcuts": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "quality_bar": {
+      "type": "object",
+      "required": ["reference_refs", "do_rules", "dont_rules", "review_checklist"],
+      "properties": {
+        "reference_refs": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "do_rules": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "dont_rules": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "review_checklist": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "proof_contract": {
+      "type": "object",
+      "required": [
+        "consumed_by",
+        "must_be_compared_in_product_face_result",
+        "screenshot_and_state_requirements",
+        "product_face_result_must_include"
+      ],
+      "properties": {
+        "consumed_by": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 2 }
+        },
+        "must_be_compared_in_product_face_result": { "const": true },
+        "screenshot_and_state_requirements": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "product_face_result_must_include": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "design_md_export": {
+      "type": "object",
+      "required": ["required", "path", "must_match_contract", "audience"],
+      "properties": {
+        "required": { "const": true },
+        "path": { "type": "string", "minLength": 3 },
+        "must_match_contract": { "const": true },
+        "audience": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "no_private_screenshots_in_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "no_private_screenshots_in_repo": { "const": true }
+      },
+      "additionalProperties": true
+    },
+    "human_gate": {
+      "type": "object",
+      "required": ["required", "reason"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "approver": { "type": "string" },
+        "reason": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

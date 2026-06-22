@@ -28,6 +28,8 @@ show:
 
 - source and Product SOT work before implementation claims;
 - Product Face evidence before visible product completion;
+- project design-system contract through `templates/project-design-system.json`
+  and the AI-readable `templates/DESIGN.md` export;
 - security and public-safety gates when the card requires them;
 - independent review before completion when review is required;
 - Receipt Five before `done`.

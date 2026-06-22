@@ -8,10 +8,11 @@ flow.
 1. Source is compiled from `input-paper.md`.
 2. Product SOT and scope boundaries are visible in the card.
 3. Product Face packet exists because this is a visible product surface.
-4. Hermes can create required worker cards from the gate report.
-5. Completion blocks until Product Face evidence exists.
-6. Completion blocks until Receipt Five points to current evidence.
-7. Independent review is required before completion because the card asks for
+4. Project design system / `DESIGN.md` contract exists before frontend-style work.
+5. Hermes can create required worker cards from the gate report.
+6. Completion blocks until Product Face evidence exists.
+7. Completion blocks until Receipt Five points to current evidence.
+8. Independent review is required before completion because the card asks for
    it.
 
 ## Expected Agents

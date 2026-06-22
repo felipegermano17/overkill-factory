@@ -281,6 +281,7 @@ class FactorySelfImprovementTest(unittest.TestCase):
 
         self.assertEqual(packet["input_contract"]["reasoning_policy"]["record_type"], "reasoning_policy")
         self.assertEqual(packet["input_contract"]["reference_quality_packet"]["record_type"], "reference_quality_packet")
+        self.assertEqual(packet["input_contract"]["project_design_system"]["record_type"], "project_design_system")
         self.assertEqual(packet["input_contract"]["professional_design_process"]["record_type"], "professional_design_process")
         self.assertEqual(packet["input_contract"]["learning_proposal_refs"], ["templates/factory-learning-proposal.json"])
 

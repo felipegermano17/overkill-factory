@@ -60,6 +60,10 @@ that can be audited: what was requested, what was planned, what was blocked,
 what was done, who or what had authority, and what evidence allows the next
 state.
 
+For product-facing work, the route must also create a project design-system
+contract and AI-readable `DESIGN.md` before frontend builders or Product Face
+proof can pass.
+
 ## Hermes Runtime
 
 Hermes is the first supported factory floor. The factory does not replace
@@ -198,7 +202,8 @@ v1.1.1. It includes:
 - Solana AI Kit domain-brain routing for Solana and on-chain work;
 - high-risk Solana/on-chain remote proof and R4 routing gates;
 - Codex Bridge plugin docs and package for operator-to-factory handoff;
-- Product Face packet/result contracts;
+- Product Face packet/result contracts plus project design-system / `DESIGN.md`
+  gating;
 - release preflight, public-surface sync and safety scans;
 - Factory v1 Completion Gate.
 

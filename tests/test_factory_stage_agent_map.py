@@ -68,6 +68,7 @@ class FactoryStageAgentMapTest(unittest.TestCase):
         for artifact in [
             "product_experience_plan",
             "product_face_packet",
+            "project_design_system",
             "professional_design_process",
             "surface_evidence_profile",
             "product_delivery_quality_profile",
