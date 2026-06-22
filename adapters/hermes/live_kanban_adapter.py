@@ -63,6 +63,20 @@ READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS = [
     "release_scope=ready_work_units_only",
     "dispatch_separate=true",
 ]
+BRIDGE_START_BLOCK_REASON = (
+    "factory_bridge_start_request materialized by factory start path; "
+    "verified blocked event before first factory dispatch."
+)
+BRIDGE_START_RELEASE_REASON = (
+    "factory_bridge_start_release source_resolution product_sot_candidate: "
+    "start request validated; release factory-orchestrator for source resolution "
+    "and Product SOT candidate. Normal factory start is not a human gate."
+)
+BRIDGE_START_RELEASE_READBACK_MARKERS = [
+    "factory_bridge_start_release",
+    "source_resolution",
+    "product_sot_candidate",
+]
 READY_WORK_UNIT_REPAIR_COMPLETED_MARKERS = ["ready_work_unit_repair_completed", "repair completed"]
 READY_WORK_UNIT_REPAIR_REVIEW_PASSED_MARKERS = ["ready_work_unit_repair_review_passed"]
 READY_WORK_UNIT_RETRY_AUTHORIZED_MARKERS = ["ready_work_unit_retry_authorized"]
@@ -1059,7 +1073,7 @@ def unblock_task(
             ),
             runner,
         )
-    run_checked(hermes_kanban(hermes_bin, board, "unblock", task_id, reason), runner)
+    run_checked(hermes_kanban(hermes_bin, board, "unblock", task_id, "--reason", reason), runner)
     shown = run_checked(hermes_kanban(hermes_bin, board, "show", task_id, "--json"), runner)
     try:
         payload = json.loads(shown.stdout or "{}")
@@ -1471,8 +1485,11 @@ def bridge_start_root_body(
             "factory_start_path_created_runtime_state": True,
         },
         "initial_gate": {
-            "status": "blocked",
-            "block_event_required_before_dispatch": True,
+            "status": "blocked_then_released_by_default",
+            "block_event_required_before_release": True,
+            "release_after_start_validation": True,
+            "dispatch_factory_orchestrator_by_default": True,
+            "human_gate_required_for_normal_start": False,
             "dispatch_allowed_without_source_resolution": False,
             "complete_product_claim_allowed": False,
         },
@@ -1501,6 +1518,8 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
         raise RuntimeError("new_project bridge start must materialize into a fresh non-default board")
     if project_mode == "existing_project" and not args.board:
         raise RuntimeError("existing_project bridge start requires an explicit --board")
+    hold_start = bool(getattr(args, "hold_start", False))
+    no_dispatch = bool(getattr(args, "no_dispatch", False))
 
     body = bridge_start_root_body(
         start_request=start_request,
@@ -1512,6 +1531,9 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
     title = str(args.title or f"Factory start: {run_id}").strip()
     board_created = False
     main_task_id: str | None = None
+    start_released = False
+    dispatch_requested = False
+    dispatch_result: dict[str, Any] | None = None
     if not args.dry_run:
         if not args.no_ensure_board:
             board_created = ensure_board(
@@ -1533,12 +1555,30 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
             idempotency_key=idempotency_key,
             created_by="overkill-factory",
             workspace=args.workspace,
-            blocked_reason=(
-                "factory_bridge_start_request materialized by factory start path; "
-                "source resolution/Product SOT must run through factory gates before dispatch."
-            ),
+            blocked_reason=BRIDGE_START_BLOCK_REASON,
             runner=runner,
         )
+        if not hold_start:
+            unblock_task(
+                hermes_bin=args.hermes_bin,
+                board=board,
+                task_id=main_task_id,
+                reason=BRIDGE_START_RELEASE_REASON,
+                required_readback_markers=BRIDGE_START_RELEASE_READBACK_MARKERS,
+                runner=runner,
+            )
+            start_released = True
+            if not no_dispatch:
+                dispatch_args = argparse.Namespace(
+                    board=board,
+                    hermes_bin=args.hermes_bin,
+                    dry_run=False,
+                    max=1,
+                    failure_limit=None,
+                    out=None,
+                )
+                dispatch_result = dispatch(dispatch_args, runner=runner)
+                dispatch_requested = True
 
     envelope = {
         "$schema": LIVE_ADAPTER_SCHEMA,
@@ -1557,19 +1597,35 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
             "idempotency_key": idempotency_key,
         },
         "runtime_gate": {
-            "initial_status": "blocked",
+            "initial_status": "blocked_then_released" if start_released else "blocked",
             "blocked_event_verified": main_task_id is not None and not args.dry_run,
+            "start_release_verified": start_released,
+            "hold_start": hold_start,
+            "dispatch_requested": dispatch_requested,
             "dispatch_allowed_without_runtime_gate": False,
             "complete_product_claim_allowed": False,
             "bridge_mutated_hermes": False,
             "factory_start_path_mutated_hermes": not args.dry_run,
+        },
+        "start_release": {
+            "held": hold_start,
+            "released": start_released,
+            "no_dispatch": no_dispatch,
+            "dispatch_requested": dispatch_requested,
+            "dispatch_max": 1 if dispatch_requested else 0,
+            "release_reason": BRIDGE_START_RELEASE_REASON,
+            "dispatch_result": dispatch_result,
         },
         "hook": {
             "runtime_authority": "hermes_kanban",
             "local_state_authority": False,
             "factory_start_path": True,
             "bridge_boundary_preserved": True,
-            "next_action": "factory-orchestrator performs source resolution from the sealed source envelope",
+            "next_action": (
+                "factory-orchestrator dispatched for source resolution from the sealed source envelope"
+                if dispatch_requested
+                else "factory-orchestrator awaits dispatch for source resolution from the sealed source envelope"
+            ),
         },
     }
     public_envelope = sanitize_public_refs(envelope)
@@ -5655,6 +5711,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_bridge_start.add_argument("--hermes-bin", default="hermes")
     p_bridge_start.add_argument("--dry-run", action="store_true")
     p_bridge_start.add_argument("--no-ensure-board", action="store_true")
+    p_bridge_start.add_argument(
+        "--hold-start",
+        action="store_true",
+        help="Create and verify the blocked root card but intentionally do not release the factory start.",
+    )
+    p_bridge_start.add_argument(
+        "--no-dispatch",
+        action="store_true",
+        help="Release the start root card to ready but do not invoke native Hermes dispatch.",
+    )
     p_bridge_start.add_argument("--out", type=Path)
 
     p_ready = sub.add_parser(

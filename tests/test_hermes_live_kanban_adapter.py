@@ -121,11 +121,45 @@ class FakeHermes:
             task.setdefault("comments", []).append({"author": author, "body": body})
             task.setdefault("events", []).append({"type": "commented", "author": author})
             return subprocess.CompletedProcess(argv, 0, stdout="commented", stderr="")
-        if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "unblock":
+        if len(argv) >= 6 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "unblock":
             task = self.tasks.setdefault(argv[5], {"status": "blocked", "events": []})
             task["status"] = "ready"
             task.setdefault("events", []).append({"type": "unblocked", "payload": None})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"ready"}', stderr="")
+        if len(argv) >= 6 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "dispatch":
+            max_count = int(argv[argv.index("--max") + 1]) if "--max" in argv else len(self.tasks)
+            spawned = []
+            for task_id, task in self.tasks.items():
+                if len(spawned) >= max_count:
+                    break
+                if task.get("status") != "ready":
+                    continue
+                task["status"] = "running"
+                task["current_run_id"] = len(spawned) + 1
+                task["worker_pid"] = 10000 + len(spawned)
+                spawned.append(
+                    {
+                        "task_id": task_id,
+                        "assignee": task.get("assignee"),
+                        "workspace": task.get("workspace_kind") or "scratch",
+                    }
+                )
+            return subprocess.CompletedProcess(
+                argv,
+                0,
+                stdout=json.dumps(
+                    {
+                        "reclaimed": 0,
+                        "crashed": [],
+                        "timed_out": [],
+                        "stale": [],
+                        "auto_blocked": [],
+                        "promoted": 0,
+                        "spawned": spawned,
+                    }
+                ),
+                stderr="",
+            )
         if len(argv) >= 6 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "promote":
             task = self.tasks.setdefault(argv[5], {"status": "todo", "events": []})
             parents = [str(parent_id) for parent_id in task.get("parents", [])]
@@ -715,7 +749,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(result["result"], "BLOCKED")
         self.assertIn("credential_not_proven", result["checks"][0]["blocked_reasons"])
 
-    def test_materialize_bridge_start_creates_fresh_blocked_root_without_dispatch(self) -> None:
+    def test_materialize_bridge_start_releases_and_dispatches_root_by_default(self) -> None:
         fake = FakeHermes()
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -790,23 +824,48 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 ]
             )
             result = adapter.materialize_bridge_start(args, runner=fake)
+            hold_fake = FakeHermes()
+            hold_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-bridge-start",
+                    "--start-request",
+                    str(start_path),
+                    "--source-envelope",
+                    str(envelope_path),
+                    "--hold-start",
+                ]
+            )
+            hold_result = adapter.materialize_bridge_start(hold_args, runner=hold_fake)
 
         assert_live_adapter_result_schema(self, result)
         self.assertEqual(result["mode"], "materialize-bridge-start")
         self.assertEqual(result["board"], "sample-new-project-20260622-161302")
         self.assertTrue(result["board_created"])
         self.assertEqual(result["main_task_id"], "kanban:<redacted>")
-        self.assertEqual(result["runtime_gate"]["initial_status"], "blocked")
+        self.assertEqual(result["runtime_gate"]["initial_status"], "blocked_then_released")
         self.assertTrue(result["runtime_gate"]["blocked_event_verified"])
-        self.assertFalse(any(call[4] == "dispatch" for call in fake.calls if len(call) > 4))
+        self.assertTrue(result["runtime_gate"]["start_release_verified"])
+        self.assertTrue(result["runtime_gate"]["dispatch_requested"])
+        self.assertTrue(any(call[4] == "dispatch" for call in fake.calls if len(call) > 4))
         self.assertIn(["hermes", "kanban", "boards", "create", "sample-new-project-20260622-161302"], [call[:5] for call in fake.calls])
         task = fake.tasks["t_" + "00000001"]
-        self.assertEqual(task["status"], "blocked")
+        self.assertEqual(task["status"], "running")
         self.assertEqual(task["assignee"], "factory-orchestrator")
         body = json.loads(str(task["body"]))
         self.assertEqual(body["task_type"], "factory_bridge_start_root")
+        self.assertEqual(body["initial_gate"]["status"], "blocked_then_released_by_default")
+        self.assertFalse(body["initial_gate"]["human_gate_required_for_normal_start"])
         self.assertFalse(body["bridge_boundary"]["bridge_created_hermes_board"])
         self.assertTrue(body["bridge_boundary"]["factory_start_path_created_runtime_state"])
+        assert_live_adapter_result_schema(self, hold_result)
+        self.assertEqual(hold_result["runtime_gate"]["initial_status"], "blocked")
+        self.assertTrue(hold_result["runtime_gate"]["hold_start"])
+        self.assertFalse(hold_result["runtime_gate"]["start_release_verified"])
+        self.assertFalse(hold_result["runtime_gate"]["dispatch_requested"])
+        self.assertFalse(any(call[4] == "dispatch" for call in hold_fake.calls if len(call) > 4))
+        hold_task = hold_fake.tasks["t_" + "00000001"]
+        self.assertEqual(hold_task["status"], "blocked")
+        self.assertEqual(hold_task["assignee"], "factory-orchestrator")
 
     def test_materialize_bridge_start_refuses_default_board_for_new_project(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -3903,9 +3962,9 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(fake.tasks[handoff_task_id]["status"], "ready")
         self.assertEqual(fake.tasks[MAIN_TASK_ID]["status"], "blocked")
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
-        self.assertTrue(any(call[5] == handoff_task_id and "downstream remains gated" in call[6] for call in unblock_calls))
-        self.assertTrue(any(call[5] == handoff_task_id and "factory_recovery_attempt" in call[6] for call in unblock_calls))
-        self.assertTrue(any(call[5] == handoff_task_id and "attempt_number=1 max_attempts=10" in call[6] for call in unblock_calls))
+        self.assertTrue(any(call[5] == handoff_task_id and "downstream remains gated" in call[-1] for call in unblock_calls))
+        self.assertTrue(any(call[5] == handoff_task_id and "factory_recovery_attempt" in call[-1] for call in unblock_calls))
+        self.assertTrue(any(call[5] == handoff_task_id and "attempt_number=1 max_attempts=10" in call[-1] for call in unblock_calls))
 
     def test_materialize_keeps_recovery_task_blocked_after_retry_limit(self) -> None:
         fake = FakeHermes()
@@ -4270,12 +4329,12 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(
             any(
                 call[5] == qa_task["runtime_refs"]["hermes_task_ref"]
-                and "Fresh PASS review authorized exact downstream worker" in call[6]
-                and "authorized_worker_id=qa-verification-worker" in call[6]
-                and f"requirement_id={requirement['requirement_id']}" in call[6]
-                and "review_evidence_ref=receipt:review" in call[6]
-                and f"recovery_route_ref={route_ref}" in call[6]
-                and f"recovery_route_digest={route_digest}" in call[6]
+                and "Fresh PASS review authorized exact downstream worker" in call[-1]
+                and "authorized_worker_id=qa-verification-worker" in call[-1]
+                and f"requirement_id={requirement['requirement_id']}" in call[-1]
+                and "review_evidence_ref=receipt:review" in call[-1]
+                and f"recovery_route_ref={route_ref}" in call[-1]
+                and f"recovery_route_digest={route_digest}" in call[-1]
                 for call in unblock_calls
             )
         )

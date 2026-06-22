@@ -148,7 +148,10 @@ This is not bridge work. It is the factory/Hermes adapter consuming the
 `factory_bridge_start_request`. For `new_project`, it creates or verifies the
 fresh board, creates one root start card, blocks it with a durable Hermes block
 event, verifies the block event, and only then assigns the root card to
-`factory-orchestrator`. It must not dispatch workers.
+`factory-orchestrator`. It then releases the start card and invokes native Hermes
+dispatch for one orchestrator run by default. Use `--hold-start` only for an
+intentional diagnostic hold, or `--no-dispatch` when another runtime component
+will dispatch immediately.
 
 ## Learnback Boundary
 
