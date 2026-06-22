@@ -191,7 +191,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 e a linha atual de release do kernel publico; a tag publica mais
-recente e v1.1.1. Ela inclui:
+recente e v1.2.0. Ela inclui:
 
 - Universal Signal Intake e route registry;
 - Golden Corpus e checks de cobertura de sinais;
