@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -122,8 +123,131 @@ class FactoryBridgeTest(unittest.TestCase):
         self.assertIn("transition_blocked", session_context)
         self.assertIn("Durable Operator Inbox", session_context)
         self.assertIn("Codex hooks are wake-up/context hooks", session_context)
+        self.assertIn("factory_bridge_start_request", session_context)
+        self.assertIn("the bridge must not create Hermes boards or cards", session_context)
         self.assertIn("status_bridge", prompt_context)
         self.assertEqual(prompt_response["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
+
+    def test_new_project_bridge_contract_addresses_factory_without_creating_board(self) -> None:
+        bridge = load_bridge()
+
+        envelope = bridge.build_source_envelope(
+            run_id="run-alpha",
+            operator_goal="Start a new product project from source material.",
+            project_mode="new_project",
+            source_refs=["external:operator:brief", "C:/private/source.xlsx"],
+        )
+        start = bridge.build_start_request(
+            run_id="run-alpha",
+            operator_goal="Start a new product project from source material.",
+            project_mode="new_project",
+            source_envelope_ref="external:operator:source-envelope",
+            run_record_ref="external:operator:bridge-run",
+        )
+        run = bridge.build_run_record(
+            run_id="run-alpha",
+            goal="Start a new product project from source material.",
+            project_mode="new_project",
+            source_envelope_ref="external:operator:source-envelope",
+            start_request_ref="external:operator:start-request",
+        )
+
+        self.assertEqual(envelope["record_type"], "factory_bridge_source_envelope")
+        self.assertEqual(envelope["source_items"][0]["received_as"], "opaque_ref")
+        self.assertFalse(envelope["source_items"][0]["bridge_summary_created"])
+        self.assertFalse(envelope["source_items"][0]["bridge_interpretation_created"])
+        self.assertEqual(envelope["target_board_policy"]["policy"], "factory_must_create_new_board")
+        self.assertIsNone(envelope["target_board_policy"]["existing_board_ref"])
+        self.assertFalse(envelope["handoff_to_factory"]["bridge_may_create_hermes_board"])
+        self.assertEqual(envelope["handoff_to_factory"]["gateway_profile"], "overkill-factory-gerente")
+        self.assertEqual(envelope["handoff_to_factory"]["orchestrator_worker"], "factory-orchestrator")
+        self.assertTrue(start["bridge_limits"]["bridge_must_not_create_hermes_board"])
+        self.assertTrue(start["bridge_limits"]["bridge_must_not_create_hermes_cards"])
+        self.assertEqual(start["requested_factory_action"]["owner"], "factory-orchestrator")
+        self.assertEqual(run["target_board_policy"]["board_creation_owner"], "factory_start_path")
+
+        with self.assertRaises(ValueError):
+            bridge.build_start_request(
+                run_id="run-alpha",
+                operator_goal="Start a new product project from source material.",
+                project_mode="new_project",
+                source_envelope_ref="external:operator:source-envelope",
+                existing_board_ref="kanban:old-board",
+            )
+
+    def test_existing_project_requires_explicit_board_reference(self) -> None:
+        bridge = load_bridge()
+
+        with self.assertRaises(ValueError):
+            bridge.build_run_record(
+                run_id="run-beta",
+                goal="Continue existing factory run.",
+                project_mode="existing_project",
+            )
+
+        run = bridge.build_run_record(
+            run_id="run-beta",
+            goal="Continue existing factory run.",
+            project_mode="existing_project",
+            existing_board_ref="kanban:existing-board",
+        )
+
+        self.assertEqual(run["target_board_policy"]["policy"], "use_explicit_existing_board")
+        self.assertEqual(run["target_board_policy"]["existing_board_ref"], "kanban:existing-board")
+        self.assertFalse(run["target_board_policy"]["requires_new_hermes_board"])
+
+    def test_source_envelope_and_start_request_cli_emit_bridge_only_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            envelope_path = Path(tmp) / "source-envelope.json"
+            start_path = Path(tmp) / "start-request.json"
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(MODULE_PATH),
+                    "source-envelope",
+                    "--run-id",
+                    "run-cli",
+                    "--project-mode",
+                    "new_project",
+                    "--operator-goal",
+                    "Start a new product project.",
+                    "--source-ref",
+                    "external:operator:brief",
+                    "--out",
+                    str(envelope_path),
+                ],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(MODULE_PATH),
+                    "start-request",
+                    "--run-id",
+                    "run-cli",
+                    "--project-mode",
+                    "new_project",
+                    "--operator-goal",
+                    "Start a new product project.",
+                    "--source-envelope-ref",
+                    "external:operator:source-envelope",
+                    "--out",
+                    str(start_path),
+                ],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+
+            envelope = json.loads(envelope_path.read_text(encoding="utf-8"))
+            start = json.loads(start_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(envelope["record_type"], "factory_bridge_source_envelope")
+        self.assertEqual(start["record_type"], "factory_bridge_start_request")
+        self.assertTrue(start["bridge_limits"]["bridge_must_not_create_hermes_board"])
+        self.assertEqual(start["handoff_to_factory"]["gateway_profile"], "overkill-factory-gerente")
 
     def test_decision_and_handoff_packets_preserve_operator_boundary(self) -> None:
         bridge = load_bridge()
@@ -175,9 +299,13 @@ class FactoryBridgeTest(unittest.TestCase):
                 self.assertIn(expected, architecture)
 
         self.assertIn("must not act as a factory worker", skill)
+        self.assertIn("factory_bridge_start_request", skill)
+        self.assertIn("overkill-factory-gerente", skill)
+        self.assertIn("factory-orchestrator", skill)
         self.assertIn("Durable Operator Inbox", architecture)
         self.assertIn("Codex hooks do not watch the machine while Codex is closed", architecture)
         self.assertIn("Factory Mechanic remains the self-improvement owner", architecture)
+        self.assertIn("The bridge does not create Hermes boards or cards", architecture)
 
 
 if __name__ == "__main__":

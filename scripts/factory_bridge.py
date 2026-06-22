@@ -24,6 +24,10 @@ EVENT_SCHEMA = "https://overkill-factory.dev/schemas/factory-bridge-event.schema
 DECISION_SCHEMA = "https://overkill-factory.dev/schemas/factory-bridge-decision.schema.json"
 HANDOFF_SCHEMA = "https://overkill-factory.dev/schemas/factory-bridge-handoff.schema.json"
 RUN_SCHEMA = "https://overkill-factory.dev/schemas/factory-bridge-run.schema.json"
+SOURCE_ENVELOPE_SCHEMA = "https://overkill-factory.dev/schemas/factory-bridge-source-envelope.schema.json"
+START_REQUEST_SCHEMA = "https://overkill-factory.dev/schemas/factory-bridge-start-request.schema.json"
+FACTORY_GATEWAY_PROFILE = "overkill-factory-gerente"
+FACTORY_ORCHESTRATOR_WORKER = "factory-orchestrator"
 
 EVENTS_FILE = "events.jsonl"
 PENDING_FILE = "pending.jsonl"
@@ -75,6 +79,7 @@ DECISIONS = {
     "needs_replan",
     "needs_human_gate_record",
 }
+PROJECT_MODES = {"new_project", "existing_project"}
 
 PRIVATE_SYNC_ROOT = "One" + "Drive"
 PRIVATE_MARKER = re.compile(
@@ -108,6 +113,16 @@ def prompt_authority() -> dict[str, bool]:
     }
 
 
+def source_envelope_authority() -> dict[str, bool]:
+    return {
+        "bridge_may_summarize_source_material": False,
+        "bridge_may_interpret_source_material": False,
+        "bridge_may_select_scope": False,
+        "factory_owns_source_resolution": True,
+        "factory_owns_product_sot": True,
+    }
+
+
 def safe_ref(ref: str) -> str:
     value = str(ref or "").strip()
     if not value:
@@ -129,6 +144,70 @@ def safe_refs(refs: list[str] | None) -> list[str]:
 def validate_choice(name: str, value: str, choices: set[str]) -> None:
     if value not in choices:
         raise ValueError(f"{name} must be one of {', '.join(sorted(choices))}: {value}")
+
+
+def normalized_project_mode(project_mode: str) -> str:
+    value = str(project_mode or "").strip()
+    validate_choice("project_mode", value, PROJECT_MODES)
+    return value
+
+
+def build_target_board_policy(project_mode: str, existing_board_ref: str | None = None) -> dict[str, Any]:
+    mode = normalized_project_mode(project_mode)
+    raw_existing = str(existing_board_ref or "").strip()
+    if mode == "new_project":
+        if raw_existing:
+            raise ValueError("new_project must not provide existing_board_ref; the factory start path creates a fresh board")
+        return {
+            "policy": "factory_must_create_new_board",
+            "requires_new_hermes_board": True,
+            "existing_board_ref": None,
+            "requires_explicit_existing_board_ref": False,
+            "board_creation_owner": "factory_start_path",
+            "factory_start_path_required": True,
+            "bridge_may_select_existing_board": False,
+            "bridge_may_mutate_board": False,
+        }
+    if not raw_existing:
+        raise ValueError("existing_project requires an explicit existing_board_ref")
+    return {
+        "policy": "use_explicit_existing_board",
+        "requires_new_hermes_board": False,
+        "existing_board_ref": safe_ref(raw_existing),
+        "requires_explicit_existing_board_ref": True,
+        "board_creation_owner": "existing_runtime",
+        "factory_start_path_required": True,
+        "bridge_may_select_existing_board": False,
+        "bridge_may_mutate_board": False,
+    }
+
+
+def factory_start_recipient() -> dict[str, Any]:
+    return {
+        "gateway_profile": FACTORY_GATEWAY_PROFILE,
+        "orchestrator_worker": FACTORY_ORCHESTRATOR_WORKER,
+        "handoff_contract": "factory_bridge_start_request",
+        "bridge_may_execute_recipient_work": False,
+        "bridge_may_create_hermes_board": False,
+        "factory_start_path_required": True,
+    }
+
+
+def source_items(source_refs: list[str] | None) -> list[dict[str, Any]]:
+    clean_refs = safe_refs(source_refs)
+    if not clean_refs:
+        raise ValueError("source_refs requires at least one operator-supplied source reference")
+    return [
+        {
+            "source_ref": ref,
+            "source_role": "operator_supplied_material",
+            "received_as": "opaque_ref",
+            "content_embedded": False,
+            "bridge_summary_created": False,
+            "bridge_interpretation_created": False,
+        }
+        for ref in clean_refs
+    ]
 
 
 def stable_event_id(
@@ -324,6 +403,13 @@ def format_hook_context(summary: dict[str, Any], classification: dict[str, Any] 
         "Codex hooks do not watch the machine while Codex is closed.",
         "Hermes, worker results and Receipt Five remain the source of truth.",
         "The bridge must not close gates, execute factory work or auto-approve human gates.",
+        "For intake_bridge, create or point to a sealed source envelope; do not summarize or interpret source material.",
+        (
+            "For start_bridge, hand a factory_bridge_start_request to "
+            f"{FACTORY_GATEWAY_PROFILE}/{FACTORY_ORCHESTRATOR_WORKER}; the bridge must not create Hermes boards or cards."
+        ),
+        "For new_project, the factory start path must create a fresh Hermes board.",
+        "For existing_project, use only an explicit existing board or run reference.",
     ]
     if classification:
         lines.append(f"Bridge mode: {classification['bridge_mode']} ({classification['reason']}).")
@@ -432,12 +518,14 @@ def build_handoff_packet(*, run_id: str, inbox_dir: Path | str | None = None) ->
         "safe_next_actions": [
             "read Hermes/card runtime state",
             "read worker results and Receipt Five",
+            f"forward factory start requests to {FACTORY_GATEWAY_PROFILE}/{FACTORY_ORCHESTRATOR_WORKER}",
             "record structured response",
             "forward learnback to Factory Mechanic as candidate input",
             "ask the human when a gate requires human authority",
         ],
         "forbidden_actions": [
             "act as a factory worker",
+            "create Hermes boards or cards directly as the bridge",
             "close Hermes card without Receipt Five",
             "auto-approve human gate",
             "execute material factory work from a status request",
@@ -447,17 +535,125 @@ def build_handoff_packet(*, run_id: str, inbox_dir: Path | str | None = None) ->
     }
 
 
-def build_run_record(*, run_id: str, goal: str, created_by: str = "operator", created_at: str | None = None) -> dict[str, Any]:
+def build_source_envelope(
+    *,
+    run_id: str,
+    operator_goal: str,
+    project_mode: str,
+    source_refs: list[str] | None,
+    existing_board_ref: str | None = None,
+    created_by: str = "operator",
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    mode = normalized_project_mode(project_mode)
     return {
+        "$schema": SOURCE_ENVELOPE_SCHEMA,
+        "record_type": "factory_bridge_source_envelope",
+        "run_id": run_id,
+        "operator_goal": operator_goal,
+        "project_mode": mode,
+        "created_by": created_by,
+        "created_at": created_at or utc_now(),
+        "source_items": source_items(source_refs),
+        "source_handling": {
+            "sealed_raw_materials": True,
+            "bridge_summarized_material": False,
+            "bridge_interpreted_material": False,
+            "bridge_selected_scope": False,
+            "factory_owns_source_resolution": True,
+            "factory_owns_product_sot": True,
+        },
+        "target_board_policy": build_target_board_policy(mode, existing_board_ref),
+        "handoff_to_factory": factory_start_recipient(),
+        "start_readiness": {
+            "ready_to_request_factory_start": True,
+            "blocked_reasons": [],
+        },
+        "forbidden_bridge_actions": [
+            "summarize source material as product truth",
+            "interpret source material into Product SOT",
+            "select product scope for the factory",
+            "create Hermes board directly",
+            "create Hermes cards directly",
+            "dispatch workers",
+        ],
+        "authority": source_envelope_authority(),
+    }
+
+
+def build_start_request(
+    *,
+    run_id: str,
+    operator_goal: str,
+    project_mode: str,
+    source_envelope_ref: str,
+    existing_board_ref: str | None = None,
+    run_record_ref: str | None = None,
+    created_by: str = "operator",
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    mode = normalized_project_mode(project_mode)
+    return {
+        "$schema": START_REQUEST_SCHEMA,
+        "record_type": "factory_bridge_start_request",
+        "run_id": run_id,
+        "operator_goal": operator_goal,
+        "project_mode": mode,
+        "created_by": created_by,
+        "created_at": created_at or utc_now(),
+        "source_envelope_ref": safe_ref(source_envelope_ref),
+        "run_record_ref": safe_ref(run_record_ref or "external:operator:bridge-run-record"),
+        "handoff_to_factory": factory_start_recipient(),
+        "target_board_policy": build_target_board_policy(mode, existing_board_ref),
+        "bridge_limits": {
+            "bridge_must_not_create_hermes_board": True,
+            "bridge_must_not_create_hermes_cards": True,
+            "bridge_must_not_dispatch_workers": True,
+            "bridge_must_not_choose_runtime_board": True,
+            "bridge_only_registers_operator_intent": True,
+        },
+        "requested_factory_action": {
+            "action": "start_factory_run",
+            "owner": FACTORY_ORCHESTRATOR_WORKER,
+            "gateway_profile": FACTORY_GATEWAY_PROFILE,
+            "factory_must_materialize_runtime_state": True,
+        },
+        "authority": bridge_authority(),
+    }
+
+
+def build_run_record(
+    *,
+    run_id: str,
+    goal: str,
+    project_mode: str = "new_project",
+    existing_board_ref: str | None = None,
+    source_envelope_ref: str | None = None,
+    start_request_ref: str | None = None,
+    created_by: str = "operator",
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    mode = normalized_project_mode(project_mode)
+    record: dict[str, Any] = {
         "$schema": RUN_SCHEMA,
         "record_type": "factory_bridge_run",
         "run_id": run_id,
         "goal": goal,
+        "project_mode": mode,
         "created_by": created_by,
         "created_at": created_at or utc_now(),
         "state": "operator_bridge_active",
         "inbox_ref": "external:operator:inbox",
+        "target_board_policy": build_target_board_policy(mode, existing_board_ref),
+        "handoff_to_factory": factory_start_recipient(),
         "authority": bridge_authority(),
+    }
+    if source_envelope_ref:
+        record["source_envelope_ref"] = safe_ref(source_envelope_ref)
+    if start_request_ref:
+        record["start_request_ref"] = safe_ref(start_request_ref)
+    return {
+        **record,
     }
 
 
@@ -469,7 +665,42 @@ def read_stdin_json() -> dict[str, Any]:
 
 
 def command_init_run(args: argparse.Namespace) -> int:
-    record = build_run_record(run_id=args.run_id, goal=args.goal, created_by=args.created_by)
+    record = build_run_record(
+        run_id=args.run_id,
+        goal=args.goal,
+        project_mode=args.project_mode,
+        existing_board_ref=args.existing_board_ref,
+        source_envelope_ref=args.source_envelope_ref,
+        start_request_ref=args.start_request_ref,
+        created_by=args.created_by,
+    )
+    write_json(args.out, record)
+    return 0
+
+
+def command_source_envelope(args: argparse.Namespace) -> int:
+    record = build_source_envelope(
+        run_id=args.run_id,
+        operator_goal=args.operator_goal,
+        project_mode=args.project_mode,
+        source_refs=args.source_ref,
+        existing_board_ref=args.existing_board_ref,
+        created_by=args.created_by,
+    )
+    write_json(args.out, record)
+    return 0
+
+
+def command_start_request(args: argparse.Namespace) -> int:
+    record = build_start_request(
+        run_id=args.run_id,
+        operator_goal=args.operator_goal,
+        project_mode=args.project_mode,
+        source_envelope_ref=args.source_envelope_ref,
+        existing_board_ref=args.existing_board_ref,
+        run_record_ref=args.run_record_ref,
+        created_by=args.created_by,
+    )
     write_json(args.out, record)
     return 0
 
@@ -552,9 +783,37 @@ def build_parser() -> argparse.ArgumentParser:
     init_run = subparsers.add_parser("init-run", help="Create a bridge run record.")
     init_run.add_argument("--run-id", required=True)
     init_run.add_argument("--goal", required=True)
+    init_run.add_argument("--project-mode", required=True, choices=sorted(PROJECT_MODES))
+    init_run.add_argument("--existing-board-ref")
+    init_run.add_argument("--source-envelope-ref")
+    init_run.add_argument("--start-request-ref")
     init_run.add_argument("--created-by", default="operator")
     init_run.add_argument("--out", type=Path)
     init_run.set_defaults(func=command_init_run)
+
+    envelope = subparsers.add_parser("source-envelope", help="Create a sealed source envelope for factory intake.")
+    envelope.add_argument("--run-id", required=True)
+    envelope.add_argument("--operator-goal", required=True)
+    envelope.add_argument("--project-mode", required=True, choices=sorted(PROJECT_MODES))
+    envelope.add_argument("--source-ref", action="append", default=[], required=True)
+    envelope.add_argument("--existing-board-ref")
+    envelope.add_argument("--created-by", default="operator")
+    envelope.add_argument("--out", type=Path)
+    envelope.set_defaults(func=command_source_envelope)
+
+    start_request = subparsers.add_parser(
+        "start-request",
+        help="Create a start request addressed to the factory gateway/orchestrator.",
+    )
+    start_request.add_argument("--run-id", required=True)
+    start_request.add_argument("--operator-goal", required=True)
+    start_request.add_argument("--project-mode", required=True, choices=sorted(PROJECT_MODES))
+    start_request.add_argument("--source-envelope-ref", required=True)
+    start_request.add_argument("--existing-board-ref")
+    start_request.add_argument("--run-record-ref")
+    start_request.add_argument("--created-by", default="operator")
+    start_request.add_argument("--out", type=Path)
+    start_request.set_defaults(func=command_start_request)
 
     emit = subparsers.add_parser("emit-event", help="Append an idempotent operator event.")
     emit.add_argument("--inbox-dir", type=Path, default=DEFAULT_INBOX)

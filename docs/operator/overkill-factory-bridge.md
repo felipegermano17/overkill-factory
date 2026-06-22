@@ -14,6 +14,11 @@ surface human gates, record the operator's answer and hand that answer back to
 the factory. It can intervene only for operational exceptions such as a broken
 hook, malformed artifact or missing bridge file.
 
+The bridge does not create Hermes boards or cards for a new project. For a new
+project, it creates a sealed source envelope and a `factory_bridge_start_request`
+addressed to the factory gateway/orchestrator. The factory start path then owns
+board creation, card creation, worker routing and blocking state.
+
 ## One-Line Architecture
 
 ```text
@@ -21,6 +26,9 @@ human prompt
 -> bridge skill
 -> factory_bridge.py
 -> Durable Operator Inbox
+-> sealed source envelope
+-> factory_bridge_start_request
+-> overkill-factory-gerente / factory-orchestrator
 -> Hermes/factory transition hooks
 -> Codex SessionStart/UserPromptSubmit context
 -> operator response artifact
@@ -90,8 +98,8 @@ the schedule.
 
 | Mode | Trigger | Allowed action |
 | --- | --- | --- |
-| `intake_bridge` | The operator brings a new product/request/signal. | Collect source, scope and start packet for the factory. |
-| `start_bridge` | The operator says to start an approved run. | Create a bridge run record and call the normal factory start path. |
+| `intake_bridge` | The operator brings a new product/request/signal. | Create or update a sealed source envelope. Do not summarize, interpret, scope or select truth for the factory. |
+| `start_bridge` | The operator says to start an approved run. | Create a bridge run record plus `factory_bridge_start_request` for `overkill-factory-gerente` / `factory-orchestrator`. Do not create Hermes boards/cards directly. |
 | `resume_bridge` | Codex restarts or the operator returns later. | Read the inbox and summarize pending state. |
 | `status_bridge` | "Como esta?", "quanto falta?", "status". | Read Hermes/factory artifacts and separate proved, inferred, blocked and next action. |
 | `question_bridge` | "Por que bloqueou?", "qual worker falhou?". | Explain from artifacts without mutating runtime state. |
@@ -100,6 +108,30 @@ the schedule.
 | `exception_bridge` | Hook/script/runtime bridge failure. | Repair the bridge layer or create an incident-style event. |
 | `handoff_bridge` | Another agent/session must continue. | Create a replayable handoff packet. |
 | `learnback_forwarding` | Operator says "learn from this". | Forward a candidate learning signal only. |
+
+## Start Contract
+
+There are two start modes:
+
+| Project mode | Required behavior |
+| --- | --- |
+| `new_project` | The bridge must mark `factory_must_create_new_board`. It must not provide or select an existing board. Board creation belongs to the factory start path. |
+| `existing_project` | The bridge must require an explicit existing board or run reference from the operator/runtime. It must not guess a board from nearby state. |
+
+The canonical handoff is:
+
+```text
+operator material
+-> factory_bridge_source_envelope
+-> factory_bridge_run
+-> factory_bridge_start_request
+-> overkill-factory-gerente / factory-orchestrator
+-> factory start path materializes Hermes board/cards
+```
+
+`overkill-factory-gerente` is the interface/gateway profile. `factory-orchestrator`
+is the factory routing worker. The bridge may address them, but it must not do
+their work.
 
 ## Learnback Boundary
 
@@ -162,6 +194,8 @@ The bridge exposes these machine contracts:
 | `schemas/factory-bridge-decision.schema.json` | Operator response forwarding record. |
 | `schemas/factory-bridge-handoff.schema.json` | Replayable continuation packet. |
 | `schemas/factory-bridge-run.schema.json` | Bridge run record. |
+| `schemas/factory-bridge-source-envelope.schema.json` | Sealed source refs for factory-owned source resolution. |
+| `schemas/factory-bridge-start-request.schema.json` | Request addressed to the factory gateway/orchestrator. |
 
 Templates live under `templates/factory-bridge-*.json`.
 
@@ -171,6 +205,10 @@ The bridge must not:
 
 - act as a factory worker;
 - run specialist scans by itself;
+- summarize or interpret source material as Product SOT;
+- select or reuse an old board for a new project;
+- create Hermes boards or cards directly;
+- dispatch workers;
 - approve human gates;
 - close Hermes cards;
 - replace Receipt Five;

@@ -257,7 +257,9 @@
         "schemas/factory-bridge-event.schema.json",
         "schemas/factory-bridge-decision.schema.json",
         "schemas/factory-bridge-handoff.schema.json",
-        "schemas/factory-bridge-run.schema.json"
+        "schemas/factory-bridge-run.schema.json",
+        "schemas/factory-bridge-source-envelope.schema.json",
+        "schemas/factory-bridge-start-request.schema.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -268,6 +270,9 @@
         "Durable Operator Inbox",
         "Codex hooks do not watch the machine while Codex is closed",
         "Factory Mechanic remains the self-improvement owner",
+        "factory_bridge_start_request",
+        "overkill-factory-gerente",
+        "factory-orchestrator",
         "act as a factory worker"
       ]
     },
@@ -293,6 +298,9 @@
       "required_phrases": [
         "Plugin hooks require trust review before they run",
         "They must not approve human gates",
+        "factory_bridge_start_request",
+        "overkill-factory-gerente",
+        "factory-orchestrator",
         "This supports queue catch-up when Codex was closed"
       ]
     },

@@ -6,8 +6,8 @@ factory runtime.
 It packages:
 
 - the `overkill-factory-bridge` skill;
-- `scripts/factory_bridge.py` for durable inbox summaries, decisions and
-  handoff packets;
+- `scripts/factory_bridge.py` for sealed source envelopes, start requests,
+  durable inbox summaries, decisions and handoff packets;
 - Codex lifecycle hooks in `hooks/hooks.json` for wake-up context.
 
 ## Install From This Repo Marketplace
@@ -30,6 +30,11 @@ and trust the hook definitions through Codex before expecting `SessionStart` or
 The hooks only read the durable operator inbox and classify the operator prompt.
 They do not approve human gates, close cards, mutate Hermes, run workers or make
 Discord the source of truth.
+
+For a new project, the plugin must hand a `factory_bridge_start_request` to
+`overkill-factory-gerente` / `factory-orchestrator`. The bridge must not create
+Hermes boards or cards directly. For an existing project, the operator/runtime
+must provide the explicit board or run reference.
 
 ## Inbox Resolution
 

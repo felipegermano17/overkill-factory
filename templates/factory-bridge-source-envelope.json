@@ -1,0 +1,64 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-bridge-source-envelope.schema.json",
+  "record_type": "factory_bridge_source_envelope",
+  "run_id": "example-run",
+  "operator_goal": "Start a new product project in the factory from operator-supplied material.",
+  "project_mode": "new_project",
+  "created_by": "operator",
+  "created_at": "2026-06-19T00:00:00Z",
+  "source_items": [
+    {
+      "source_ref": "external:operator:brief",
+      "source_role": "operator_supplied_material",
+      "received_as": "opaque_ref",
+      "content_embedded": false,
+      "bridge_summary_created": false,
+      "bridge_interpretation_created": false
+    }
+  ],
+  "source_handling": {
+    "sealed_raw_materials": true,
+    "bridge_summarized_material": false,
+    "bridge_interpreted_material": false,
+    "bridge_selected_scope": false,
+    "factory_owns_source_resolution": true,
+    "factory_owns_product_sot": true
+  },
+  "target_board_policy": {
+    "policy": "factory_must_create_new_board",
+    "requires_new_hermes_board": true,
+    "existing_board_ref": null,
+    "requires_explicit_existing_board_ref": false,
+    "board_creation_owner": "factory_start_path",
+    "factory_start_path_required": true,
+    "bridge_may_select_existing_board": false,
+    "bridge_may_mutate_board": false
+  },
+  "handoff_to_factory": {
+    "gateway_profile": "overkill-factory-gerente",
+    "orchestrator_worker": "factory-orchestrator",
+    "handoff_contract": "factory_bridge_start_request",
+    "bridge_may_execute_recipient_work": false,
+    "bridge_may_create_hermes_board": false,
+    "factory_start_path_required": true
+  },
+  "start_readiness": {
+    "ready_to_request_factory_start": true,
+    "blocked_reasons": []
+  },
+  "forbidden_bridge_actions": [
+    "summarize source material as product truth",
+    "interpret source material into Product SOT",
+    "select product scope for the factory",
+    "create Hermes board directly",
+    "create Hermes cards directly",
+    "dispatch workers"
+  ],
+  "authority": {
+    "bridge_may_summarize_source_material": false,
+    "bridge_may_interpret_source_material": false,
+    "bridge_may_select_scope": false,
+    "factory_owns_source_resolution": true,
+    "factory_owns_product_sot": true
+  }
+}

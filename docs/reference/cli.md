@@ -156,6 +156,8 @@ factory worker.
 ```bash
 python scripts/factory_bridge.py summarize-inbox --text
 python scripts/factory_bridge.py classify-prompt --prompt "status da fabrica"
+python scripts/factory_bridge.py source-envelope --run-id example-run --project-mode new_project --operator-goal "Start a new product project." --source-ref external:operator:brief --out .tmp/factory-runs/example/source-envelope.json
+python scripts/factory_bridge.py start-request --run-id example-run --project-mode new_project --operator-goal "Start a new product project." --source-envelope-ref external:operator:source-envelope --out .tmp/factory-runs/example/start-request.json
 python scripts/factory_bridge.py handoff --run-id example-run --out .tmp/factory-runs/example/bridge-handoff.json
 ```
 

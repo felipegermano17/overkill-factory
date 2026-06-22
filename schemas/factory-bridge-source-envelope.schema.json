@@ -1,39 +1,81 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://overkill-factory.dev/schemas/factory-bridge-run.schema.json",
-  "title": "Overkill Factory Bridge Run",
+  "$id": "https://overkill-factory.dev/schemas/factory-bridge-source-envelope.schema.json",
+  "title": "Overkill Factory Bridge Source Envelope",
   "type": "object",
   "required": [
     "$schema",
     "record_type",
     "run_id",
-    "goal",
+    "operator_goal",
     "project_mode",
     "created_by",
     "created_at",
-    "state",
-    "inbox_ref",
+    "source_items",
+    "source_handling",
     "target_board_policy",
     "handoff_to_factory",
+    "start_readiness",
+    "forbidden_bridge_actions",
     "authority"
   ],
   "properties": {
     "$schema": {
-      "const": "https://overkill-factory.dev/schemas/factory-bridge-run.schema.json"
+      "const": "https://overkill-factory.dev/schemas/factory-bridge-source-envelope.schema.json"
     },
-    "record_type": { "const": "factory_bridge_run" },
+    "record_type": { "const": "factory_bridge_source_envelope" },
     "run_id": { "type": "string", "minLength": 3 },
-    "goal": { "type": "string", "minLength": 3 },
+    "operator_goal": { "type": "string", "minLength": 3 },
     "project_mode": {
       "type": "string",
       "enum": ["new_project", "existing_project"]
     },
     "created_by": { "type": "string", "minLength": 2 },
     "created_at": { "type": "string", "minLength": 10 },
-    "state": { "const": "operator_bridge_active" },
-    "inbox_ref": { "const": "external:operator:inbox" },
-    "source_envelope_ref": { "type": "string", "minLength": 3 },
-    "start_request_ref": { "type": "string", "minLength": 3 },
+    "source_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "source_ref",
+          "source_role",
+          "received_as",
+          "content_embedded",
+          "bridge_summary_created",
+          "bridge_interpretation_created"
+        ],
+        "properties": {
+          "source_ref": { "type": "string", "minLength": 1 },
+          "source_role": { "const": "operator_supplied_material" },
+          "received_as": { "const": "opaque_ref" },
+          "content_embedded": { "const": false },
+          "bridge_summary_created": { "const": false },
+          "bridge_interpretation_created": { "const": false }
+        },
+        "additionalProperties": false
+      }
+    },
+    "source_handling": {
+      "type": "object",
+      "required": [
+        "sealed_raw_materials",
+        "bridge_summarized_material",
+        "bridge_interpreted_material",
+        "bridge_selected_scope",
+        "factory_owns_source_resolution",
+        "factory_owns_product_sot"
+      ],
+      "properties": {
+        "sealed_raw_materials": { "const": true },
+        "bridge_summarized_material": { "const": false },
+        "bridge_interpreted_material": { "const": false },
+        "bridge_selected_scope": { "const": false },
+        "factory_owns_source_resolution": { "const": true },
+        "factory_owns_product_sot": { "const": true }
+      },
+      "additionalProperties": false
+    },
     "target_board_policy": {
       "type": "object",
       "required": [
@@ -84,19 +126,37 @@
       },
       "additionalProperties": false
     },
+    "start_readiness": {
+      "type": "object",
+      "required": ["ready_to_request_factory_start", "blocked_reasons"],
+      "properties": {
+        "ready_to_request_factory_start": { "type": "boolean" },
+        "blocked_reasons": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "forbidden_bridge_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
     "authority": {
       "type": "object",
       "required": [
-        "can_close_gate",
-        "can_execute_factory_work",
-        "can_auto_approve_human_gate",
-        "can_mutate_hermes_state"
+        "bridge_may_summarize_source_material",
+        "bridge_may_interpret_source_material",
+        "bridge_may_select_scope",
+        "factory_owns_source_resolution",
+        "factory_owns_product_sot"
       ],
       "properties": {
-        "can_close_gate": { "const": false },
-        "can_execute_factory_work": { "const": false },
-        "can_auto_approve_human_gate": { "const": false },
-        "can_mutate_hermes_state": { "const": false }
+        "bridge_may_summarize_source_material": { "const": false },
+        "bridge_may_interpret_source_material": { "const": false },
+        "bridge_may_select_scope": { "const": false },
+        "factory_owns_source_resolution": { "const": true },
+        "factory_owns_product_sot": { "const": true }
       },
       "additionalProperties": false
     }

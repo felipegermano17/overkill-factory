@@ -14,19 +14,23 @@ responses and hands those responses back to the factory through normal gates.
 1. Read `docs/operator/overkill-factory-bridge.md` when the request touches
    hooks, automations, queueing, authority, handoff or learnback.
 2. Use `scripts/factory_bridge.py` for durable inbox events, summaries,
-   prompt classification, decision records and handoff packets.
+   prompt classification, sealed source envelopes, start requests, decision
+   records and handoff packets.
 3. Treat Hermes state, worker results and Receipt Five as the source of truth.
 4. Separate proved facts, inference, pending human decisions and next safe
    action.
 5. Never close gates, approve human records, run specialist work or mutate
    Hermes as the bridge.
+6. For `new_project`, do not create Hermes boards or cards as the bridge. Create
+   `factory_bridge_source_envelope` and `factory_bridge_start_request` for
+   `overkill-factory-gerente` / `factory-orchestrator`.
 
 ## Bridge Modes
 
 | Mode | Use when | Do |
 | --- | --- | --- |
-| `intake_bridge` | The operator brings a new request or signal. | Collect source, scope and start-ready inputs. |
-| `start_bridge` | The operator explicitly starts an approved factory run. | Create a bridge run record, then call the normal factory start path. |
+| `intake_bridge` | The operator brings a new request or signal. | Create a sealed source envelope. Do not summarize, interpret, scope or decide truth for the factory. |
+| `start_bridge` | The operator explicitly starts an approved factory run. | Create a bridge run record and `factory_bridge_start_request` for `overkill-factory-gerente` / `factory-orchestrator`. Do not create Hermes boards/cards directly. |
 | `resume_bridge` | Codex starts/resumes or the operator returns. | Read the Durable Operator Inbox and summarize pending work. |
 | `status_bridge` | The operator asks for status or progress. | Report proved, inferred, blocked and next action. |
 | `question_bridge` | The operator asks why something happened. | Explain from Hermes, worker results, Receipt Five or inbox events. |
@@ -42,6 +46,28 @@ Summarize pending operator work:
 
 ```bash
 python scripts/factory_bridge.py summarize-inbox --text
+```
+
+Create a sealed source envelope for a new project:
+
+```bash
+python scripts/factory_bridge.py source-envelope \
+  --run-id example-run \
+  --project-mode new_project \
+  --operator-goal "Start a new product project from operator material." \
+  --source-ref external:operator:brief \
+  --out .tmp/factory-runs/example/source-envelope.json
+```
+
+Create a factory start request for the gateway/orchestrator:
+
+```bash
+python scripts/factory_bridge.py start-request \
+  --run-id example-run \
+  --project-mode new_project \
+  --operator-goal "Start a new product project from operator material." \
+  --source-envelope-ref external:operator:source-envelope \
+  --out .tmp/factory-runs/example/start-request.json
 ```
 
 Record a human decision response:
@@ -71,6 +97,10 @@ python scripts/factory_bridge.py handoff \
 - A bridge decision is not a human gate record.
 - A bridge event is not runtime evidence.
 - A status summary is not Receipt Five.
+- A source envelope is not Product SOT.
+- A start request is not a Hermes board.
+- `new_project` requires the factory start path to create the board.
+- `existing_project` requires an explicit existing board or run reference.
 - `learnback_forwarding` is not Factory Mechanic activation.
 - Codex hooks wake the bridge with context; they do not watch the machine while
   Codex is closed.

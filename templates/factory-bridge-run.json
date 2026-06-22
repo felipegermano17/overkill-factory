@@ -3,10 +3,31 @@
   "record_type": "factory_bridge_run",
   "run_id": "example-run",
   "goal": "Bridge a human operator to an autonomous Overkill Factory run.",
+  "project_mode": "new_project",
   "created_by": "operator",
   "created_at": "2026-06-19T00:00:00Z",
   "state": "operator_bridge_active",
   "inbox_ref": "external:operator:inbox",
+  "source_envelope_ref": "external:operator:source-envelope-example",
+  "start_request_ref": "external:operator:start-request-example",
+  "target_board_policy": {
+    "policy": "factory_must_create_new_board",
+    "requires_new_hermes_board": true,
+    "existing_board_ref": null,
+    "requires_explicit_existing_board_ref": false,
+    "board_creation_owner": "factory_start_path",
+    "factory_start_path_required": true,
+    "bridge_may_select_existing_board": false,
+    "bridge_may_mutate_board": false
+  },
+  "handoff_to_factory": {
+    "gateway_profile": "overkill-factory-gerente",
+    "orchestrator_worker": "factory-orchestrator",
+    "handoff_contract": "factory_bridge_start_request",
+    "bridge_may_execute_recipient_work": false,
+    "bridge_may_create_hermes_board": false,
+    "factory_start_path_required": true
+  },
   "authority": {
     "can_close_gate": false,
     "can_execute_factory_work": false,

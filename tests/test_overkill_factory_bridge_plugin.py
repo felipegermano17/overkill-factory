@@ -52,6 +52,9 @@ class OverkillFactoryBridgePluginTest(unittest.TestCase):
         self.assertIn("UserPromptSubmit", hooks["hooks"])
         self.assertIn("${PLUGIN_ROOT}", json.dumps(hooks))
         self.assertIn("do not approve human gates", (PLUGIN_ROOT / "README.md").read_text(encoding="utf-8"))
+        self.assertIn("factory_bridge_start_request", skill.read_text(encoding="utf-8"))
+        self.assertIn("overkill-factory-gerente", reference.read_text(encoding="utf-8"))
+        self.assertIn("The bridge does not create Hermes boards or cards", reference.read_text(encoding="utf-8"))
 
     def test_plugin_hook_resolves_workspace_inbox_without_git_shell_dependency(self) -> None:
         hook = load_plugin_hook()
@@ -103,6 +106,25 @@ class OverkillFactoryBridgePluginTest(unittest.TestCase):
         context = response["hookSpecificOutput"]["additionalContext"]
         self.assertIn("status_bridge", context)
         self.assertIn("must not close gates, execute factory work or auto-approve human gates", context)
+        self.assertIn("factory_bridge_start_request", context)
+        self.assertIn("the bridge must not create Hermes boards or cards", context)
+
+    def test_plugin_bridge_new_project_contract_is_gateway_handoff_only(self) -> None:
+        hook = load_plugin_hook()
+        bridge = hook.load_bridge()
+
+        start = bridge.build_start_request(
+            run_id="plugin-run",
+            operator_goal="Start a new product project.",
+            project_mode="new_project",
+            source_envelope_ref="external:operator:source-envelope",
+        )
+
+        self.assertEqual(start["handoff_to_factory"]["gateway_profile"], "overkill-factory-gerente")
+        self.assertEqual(start["handoff_to_factory"]["orchestrator_worker"], "factory-orchestrator")
+        self.assertTrue(start["bridge_limits"]["bridge_must_not_create_hermes_board"])
+        self.assertTrue(start["bridge_limits"]["bridge_must_not_create_hermes_cards"])
+        self.assertEqual(start["target_board_policy"]["policy"], "factory_must_create_new_board")
 
 
 if __name__ == "__main__":
