@@ -410,6 +410,10 @@ def format_hook_context(summary: dict[str, Any], classification: dict[str, Any] 
         ),
         "For new_project, the factory start path must create a fresh Hermes board.",
         "For existing_project, use only an explicit existing board or run reference.",
+        (
+            "For status_bridge, resolve the explicit factory runtime target before reading Hermes; "
+            "do not treat an ambient/default Hermes store as proof that a run is missing."
+        ),
     ]
     if classification:
         lines.append(f"Bridge mode: {classification['bridge_mode']} ({classification['reason']}).")
@@ -516,7 +520,7 @@ def build_handoff_packet(*, run_id: str, inbox_dir: Path | str | None = None) ->
         },
         "pending_operator_events": summary["pending_events"],
         "safe_next_actions": [
-            "read Hermes/card runtime state",
+            "resolve the explicit factory runtime target, then read Hermes/card runtime state",
             "read worker results and Receipt Five",
             f"forward factory start requests to {FACTORY_GATEWAY_PROFILE}/{FACTORY_ORCHESTRATOR_WORKER}",
             "record structured response",

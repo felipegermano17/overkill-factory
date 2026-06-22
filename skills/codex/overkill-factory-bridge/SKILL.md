@@ -24,6 +24,9 @@ responses and hands those responses back to the factory through normal gates.
 6. For `new_project`, do not create Hermes boards or cards as the bridge. Create
    `factory_bridge_source_envelope` and `factory_bridge_start_request` for
    `overkill-factory-gerente` / `factory-orchestrator`.
+7. For `status_bridge`, resolve the explicit factory runtime target before
+   reading Hermes. Do not treat an ambient/default Hermes store as proof that
+   a run is missing.
 
 ## Bridge Modes
 
@@ -113,6 +116,8 @@ python scripts/factory_bridge.py handoff \
 - A status summary is not Receipt Five.
 - A source envelope is not Product SOT.
 - A start request is not a Hermes board.
+- A default or ambient Hermes store is not proof that another configured runtime
+  target is empty.
 - `new_project` requires the factory start path to create the board.
 - `existing_project` requires an explicit existing board or run reference.
 - `learnback_forwarding` is not Factory Mechanic activation.

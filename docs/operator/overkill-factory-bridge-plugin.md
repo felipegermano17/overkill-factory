@@ -60,6 +60,10 @@ This command is not bridge work. It is the factory/Hermes adapter consuming the
 start request. It creates the fresh `new_project` board/card, verifies a blocked
 root card and leaves dispatch to later factory gates.
 
+For status requests, the plugin must resolve the explicit runtime target for the
+run before reading Hermes. An ambient/default Hermes store is not proof that a
+configured remote or project-specific Hermes runtime is empty.
+
 ## Inbox
 
 The plugin hook reads the Durable Operator Inbox in this order:

@@ -170,6 +170,10 @@ answer from the strongest available source:
 5. `factoryctl` projections and gate reports.
 6. Explicit inference, labeled as inference.
 
+Before reading Hermes for a status answer, resolve the explicit factory runtime
+target for the run. A default Hermes store, shell default, or unrelated
+workspace is not proof that a run is missing in the configured runtime.
+
 For change requests, the bridge classifies the request before acting:
 
 | Classification | Meaning |

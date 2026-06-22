@@ -126,6 +126,8 @@ class FactoryBridgeTest(unittest.TestCase):
         self.assertIn("factory_bridge_start_request", session_context)
         self.assertIn("the bridge must not create Hermes boards or cards", session_context)
         self.assertIn("status_bridge", prompt_context)
+        self.assertIn("explicit factory runtime target", prompt_context)
+        self.assertIn("ambient/default Hermes store", prompt_context)
         self.assertEqual(prompt_response["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
 
     def test_new_project_bridge_contract_addresses_factory_without_creating_board(self) -> None:
@@ -304,6 +306,7 @@ class FactoryBridgeTest(unittest.TestCase):
         self.assertIn("factory-orchestrator", skill)
         self.assertIn("Durable Operator Inbox", architecture)
         self.assertIn("Codex hooks do not watch the machine while Codex is closed", architecture)
+        self.assertIn("default Hermes store", architecture)
         self.assertIn("Factory Mechanic remains the self-improvement owner", architecture)
         self.assertIn("The bridge does not create Hermes boards or cards", architecture)
 

@@ -49,6 +49,10 @@ That command is the factory/Hermes adapter consuming the bridge request. It
 creates the fresh board/card for `new_project`, verifies a blocked root card and
 does not dispatch workers.
 
+For status requests, the bridge must resolve the explicit runtime target for the
+run before reading Hermes. Do not use an ambient/default Hermes store as proof
+that a configured remote or project-specific Hermes runtime is empty.
+
 ## Inbox Resolution
 
 The hook reads the inbox in this order:

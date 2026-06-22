@@ -105,6 +105,8 @@ class OverkillFactoryBridgePluginTest(unittest.TestCase):
 
         context = response["hookSpecificOutput"]["additionalContext"]
         self.assertIn("status_bridge", context)
+        self.assertIn("explicit factory runtime target", context)
+        self.assertIn("ambient/default Hermes store", context)
         self.assertIn("must not close gates, execute factory work or auto-approve human gates", context)
         self.assertIn("factory_bridge_start_request", context)
         self.assertIn("the bridge must not create Hermes boards or cards", context)
