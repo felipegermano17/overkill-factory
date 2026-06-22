@@ -594,6 +594,11 @@ def product_face_result_fixture(**overrides: object) -> dict:
             "status": "pass",
             "basis": "The result matches the Product Face packet."
         },
+        "project_design_system_ref": "examples/cards/v35_valid_product_face.md#project_design_system",
+        "project_design_system_comparison": {
+            "status": "pass",
+            "basis": "The result satisfies the project design system contract."
+        },
         "professional_design_process_ref": "examples/cards/v35_valid_product_face.md#professional_design_process",
         "professional_design_process_comparison": {
             "status": "pass",
@@ -996,6 +1001,8 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("customer_readiness_gate", input_properties)
         self.assertIn("scale_slo_readiness_gate_ref", input_properties)
         self.assertIn("scale_slo_readiness_gate", input_properties)
+        self.assertIn("project_design_system_ref", input_properties)
+        self.assertIn("project_design_system", input_properties)
 
     def test_worker_result_carries_sdlc_feedback_loop_ref(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
@@ -1768,6 +1775,17 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_packet.surface is required", errors)
         self.assertIn("product_face_packet.design_direction is required", errors)
 
+    def test_vfinal_product_surface_requires_project_design_system_contract(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["surfaces"] = ["frontend", "product-face"]
+        card["capability_pack_contract"] = dict(card["capability_pack_contract"])
+        card["capability_pack_contract"]["covered_surfaces"] = ["frontend", "product-face"]
+        card.pop("project_design_system", None)
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("project_design_system required for vFinal product-facing surfaces", errors)
+
     def test_vfinal_product_experience_surfaces_route_to_product_face(self) -> None:
         for surface in ("website", "desktop", "extension", "docs", "agentic_interface", "ai_interface", "design_system"):
             with self.subTest(surface=surface):
@@ -1886,6 +1904,18 @@ class FactoryCtlTest(unittest.TestCase):
                 errors = factoryctl.validate_card(card)
 
                 self.assertIn(expected_error, errors)
+
+    def test_project_design_system_runtime_enforces_professional_design_contract(self) -> None:
+        contract = factoryctl.load_json_like(ROOT / "templates" / "project-design-system.json")
+        contract["tokens"]["color_roles"] = contract["tokens"]["color_roles"][:2]
+        contract["component_contracts"] = contract["component_contracts"][:1]
+        contract["design_md_export"]["must_match_contract"] = False
+
+        errors = factoryctl.validate_project_design_system(contract)
+
+        self.assertIn("project_design_system.tokens.color_roles requires at least 5 semantic roles", errors)
+        self.assertIn("project_design_system.component_contracts requires at least 3 components", errors)
+        self.assertIn("project_design_system.design_md_export.must_match_contract must be true", errors)
 
     def test_data_metrics_plan_rejects_prose_only_or_empty_delivery_proof(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
@@ -2884,6 +2914,8 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn("product_face_result.packet_comparison is required for product-facing completion", errors)
         self.assertIn("product_face_result.source_promise_coverage is required for product-facing completion", errors)
         self.assertIn("product_face_result.design_fit_review is required for product-facing completion", errors)
+        self.assertIn("product_face_result.project_design_system_comparison is required for product-facing completion", errors)
+        self.assertIn("product_face_result.project_design_system_ref is required for PASS", errors)
         self.assertIn("product_face_result.professional_design_process_comparison is required for product-facing completion", errors)
         self.assertIn("product_face_result.reference_quality_comparison is required for product-facing completion", errors)
         self.assertIn("product_face_result.professional_design_process_ref is required for PASS", errors)
@@ -2934,6 +2966,11 @@ class FactoryCtlTest(unittest.TestCase):
                 "design_fit_review": {
                     "status": "pass",
                     "basis": "Mechanical layout and state checks passed."
+                },
+                "project_design_system_ref": "examples/cards/v35_valid_product_face.md#project_design_system",
+                "project_design_system_comparison": {
+                    "status": "pass",
+                    "basis": "Mechanical proof claims the project design system was followed, but visual quality review blocks it."
                 },
                 "professional_design_process_ref": "examples/cards/v35_valid_product_face.md#professional_design_process",
                 "professional_design_process_comparison": {
@@ -3308,6 +3345,8 @@ class FactoryCtlTest(unittest.TestCase):
             "packet_comparison": {"status": "pending", "basis": "Pending proof."},
             "source_promise_coverage": {"status": "pending", "basis": "Pending proof."},
             "design_fit_review": {"status": "pending", "basis": "Pending proof."},
+            "project_design_system_ref": "",
+            "project_design_system_comparison": {"status": "pending", "basis": "Pending proof."},
             "professional_design_process_ref": "",
             "professional_design_process_comparison": {"status": "pending", "basis": "Pending proof."},
             "reference_quality_comparison": {

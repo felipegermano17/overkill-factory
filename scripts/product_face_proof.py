@@ -26,6 +26,7 @@ PRODUCT_ALIGNMENT_FIELDS = (
     "packet_comparison",
     "source_promise_coverage",
     "design_fit_review",
+    "project_design_system_comparison",
     "professional_design_process_comparison",
     "reference_quality_comparison",
 )
@@ -796,6 +797,11 @@ def base_result(
             "status": "pending",
             "basis": "Visual/product-fit review must be recorded by Product Face reviewer before promotion.",
         },
+        "project_design_system_ref": "",
+        "project_design_system_comparison": {
+            "status": "pending",
+            "basis": "Product Face proof must compare the result against the project design system before promotion.",
+        },
         "professional_design_process_ref": "",
         "professional_design_process_comparison": {
             "status": "pending",
@@ -855,8 +861,9 @@ def validate_reusable_product_scope(
     if not product_alignment_passes(result):
         raise ValueError(
             "--reusable-for-product requires Product Face alignment: packet_ref, "
-            "packet_comparison=pass, source_promise_coverage=pass, design_fit_review=pass and "
-            "professional_design_process_comparison=pass, reference_quality_comparison=pass"
+            "packet_comparison=pass, source_promise_coverage=pass, design_fit_review=pass, "
+            "project_design_system_comparison=pass, professional_design_process_comparison=pass, "
+            "reference_quality_comparison=pass"
         )
     visual_quality = result.get("visual_quality_result") if isinstance(result.get("visual_quality_result"), dict) else {}
     if visual_quality.get("status") not in VISUAL_QUALITY_PASS_RESULTS or visual_quality.get("reference_quality_bar_checked") is not True:
@@ -867,6 +874,8 @@ def validate_reusable_product_scope(
 
 def product_alignment_passes(result: dict[str, Any]) -> bool:
     if not str(result.get("packet_ref") or "").strip():
+        return False
+    if not str(result.get("project_design_system_ref") or "").strip():
         return False
     for field in PRODUCT_ALIGNMENT_FIELDS:
         value = result.get(field)
@@ -1017,6 +1026,8 @@ def apply_product_alignment(
     packet_comparison_basis: str | None,
     source_promise_coverage_basis: str | None,
     design_fit_review_basis: str | None,
+    project_design_system_ref: str | None,
+    project_design_system_comparison_basis: str | None,
     professional_design_process_ref: str | None,
     professional_design_process_comparison_basis: str | None,
     reference_quality_ref: str | None,
@@ -1030,6 +1041,8 @@ def apply_product_alignment(
         "packet_comparison": packet_comparison_basis,
         "source_promise_coverage": source_promise_coverage_basis,
         "design_fit_review": design_fit_review_basis,
+        "project_design_system_ref": project_design_system_ref,
+        "project_design_system_comparison": project_design_system_comparison_basis,
         "professional_design_process_ref": professional_design_process_ref,
         "professional_design_process_comparison": professional_design_process_comparison_basis,
         "reference_quality_ref": reference_quality_ref,
@@ -1070,6 +1083,11 @@ def apply_product_alignment(
     result["design_fit_review"] = {
         "status": "pass",
         "basis": str(design_fit_review_basis).strip(),
+    }
+    result["project_design_system_ref"] = str(project_design_system_ref).strip()
+    result["project_design_system_comparison"] = {
+        "status": "pass",
+        "basis": str(project_design_system_comparison_basis).strip(),
     }
     result["professional_design_process_ref"] = str(professional_design_process_ref).strip()
     result["professional_design_process_comparison"] = {
@@ -1528,6 +1546,8 @@ def build_product_face_proof(
     packet_comparison_basis: str | None = None,
     source_promise_coverage_basis: str | None = None,
     design_fit_review_basis: str | None = None,
+    project_design_system_ref: str | None = None,
+    project_design_system_comparison_basis: str | None = None,
     professional_design_process_ref: str | None = None,
     professional_design_process_comparison_basis: str | None = None,
     reference_quality_ref: str | None = None,
@@ -1603,6 +1623,8 @@ def build_product_face_proof(
         packet_comparison_basis=packet_comparison_basis,
         source_promise_coverage_basis=source_promise_coverage_basis,
         design_fit_review_basis=design_fit_review_basis,
+        project_design_system_ref=project_design_system_ref,
+        project_design_system_comparison_basis=project_design_system_comparison_basis,
         professional_design_process_ref=professional_design_process_ref,
         professional_design_process_comparison_basis=professional_design_process_comparison_basis,
         reference_quality_ref=reference_quality_ref,
@@ -1666,6 +1688,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--packet-comparison-basis", help="Why this proof matches the Product Face Packet.")
     parser.add_argument("--source-promise-coverage-basis", help="Why this proof covers the source/product promise.")
     parser.add_argument("--design-fit-review-basis", help="Why this proof fits the intended product/design direction.")
+    parser.add_argument("--project-design-system-ref", help="Project design system / DESIGN.md contract used for Product Face approval.")
+    parser.add_argument("--project-design-system-comparison-basis", help="Why this proof satisfies the project design system contract.")
     parser.add_argument("--professional-design-process-ref", help="Professional Design Process packet used for Product Face approval.")
     parser.add_argument("--professional-design-process-comparison-basis", help="Why this proof satisfies the professional design process.")
     parser.add_argument("--reference-quality-ref", help="Reference research packet/set used for dimensioned Product Face comparison.")
@@ -1733,6 +1757,8 @@ def main(argv: list[str] | None = None) -> int:
             packet_comparison_basis=args.packet_comparison_basis,
             source_promise_coverage_basis=args.source_promise_coverage_basis,
             design_fit_review_basis=args.design_fit_review_basis,
+            project_design_system_ref=args.project_design_system_ref,
+            project_design_system_comparison_basis=args.project_design_system_comparison_basis,
             professional_design_process_ref=args.professional_design_process_ref,
             professional_design_process_comparison_basis=args.professional_design_process_comparison_basis,
             reference_quality_ref=args.reference_quality_ref,

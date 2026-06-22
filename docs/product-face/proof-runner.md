@@ -47,6 +47,27 @@ proof. User-facing agentic products must be classified separately from internal
 agent runtime infrastructure and carry task, control, permission, memory/data,
 abuse and recovery proof.
 
+## Project DESIGN.md Contract
+
+Product-facing vFinal cards must include `project_design_system`, backed by
+`schemas/project-design-system.schema.json`. This is the structured source for
+a project-level `DESIGN.md` export that AI coding agents and frontend workers
+can read before implementation.
+
+The contract records:
+
+- positioning, trust posture, density and anti-generic rules;
+- color, typography, spacing, radius and elevation tokens;
+- layout rules, stable dimensions and forbidden compositions;
+- component contracts with states, interaction rules and accessibility notes;
+- implementation entrypoints for CSS variables, Tailwind or native tokens;
+- Product Face proof requirements.
+
+`DESIGN.md` is not a separate approval path. It must match the structured
+`project_design_system`, and Product Face proof still has to compare the
+rendered surface against the Product Face Packet, project design system,
+professional design process and reference-quality bar.
+
 ## Surface Taxonomy
 
 Product Experience OS routes surface families before Product Face PASS. The
@@ -131,6 +152,9 @@ Useful options:
 - `--packet-ref`, `--packet-comparison-basis`,
   `--source-promise-coverage-basis` and `--design-fit-review-basis` to record
   product approval alignment.
+- `--project-design-system-ref` and
+  `--project-design-system-comparison-basis` to record comparison against the
+  project `DESIGN.md` contract.
 - `--visual-quality-status`, `--visual-quality-reviewer` and
   `--visual-quality-basis` to record the professional visual quality verdict.
 - `--visual-quality-residual` only when the verdict is
@@ -238,6 +262,8 @@ python scripts/product_face_proof.py \
   --packet-comparison-basis "Screens, states and viewports match the Product Face Packet." \
   --source-promise-coverage-basis "The checked journey covers the stated product promise." \
   --design-fit-review-basis "The reviewer confirmed fit to the requested product direction." \
+  --project-design-system-ref templates/project-design-system.json \
+  --project-design-system-comparison-basis "The checked surface satisfies the project DESIGN.md contract." \
   --professional-design-process-ref examples/minimal-hermes-project/card.md#professional_design_process \
   --professional-design-process-comparison-basis "The checked surface satisfies the professional design process." \
   --reference-quality-ref examples/minimal-hermes-project/card.md#professional_design_process.reference_research \

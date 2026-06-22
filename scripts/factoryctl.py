@@ -802,6 +802,23 @@ PRODUCT_FACE_PACKET_REQUIRED_FIELDS = (
     "done_definition",
     "human_gate",
 )
+PROJECT_DESIGN_SYSTEM_REQUIRED_FIELDS = (
+    "record_type",
+    "design_system_id",
+    "surface_scope",
+    "source_contracts",
+    "design_positioning",
+    "tokens",
+    "layout_contract",
+    "component_contracts",
+    "state_contract",
+    "implementation_contract",
+    "quality_bar",
+    "proof_contract",
+    "design_md_export",
+    "public_private_boundary",
+)
+PROJECT_DESIGN_SYSTEM_SCHEMA_NAME = "project-design-system.schema.json"
 REFERENCE_QUALITY_REQUIRED_FIELDS = (
     "record_type",
     "experience_category",
@@ -899,6 +916,7 @@ PRODUCT_FACE_RESULT_ALIGNMENT_FIELDS = (
     "packet_comparison",
     "source_promise_coverage",
     "design_fit_review",
+    "project_design_system_comparison",
     "professional_design_process_comparison",
     "reference_quality_comparison",
 )
@@ -1111,7 +1129,10 @@ WORKERS: dict[str, WorkerDefinition] = {
         factory_phase="F5/F13",
         output_field="product_face_result",
         tool_required="browser screenshot/a11y/mobile validation runner",
-        timing="after product_experience_plan, product_face_packet and professional_design_process, before product-facing done",
+        timing=(
+            "after product_experience_plan, product_face_packet, project_design_system "
+            "and professional_design_process, before product-facing done"
+        ),
         blocking_policy=(
             "Frontend, UX, mobile, wallet UI, or visible product work cannot be "
             "declared complete without screen/state/mobile/a11y evidence."
@@ -1119,6 +1140,7 @@ WORKERS: dict[str, WorkerDefinition] = {
         required_inputs=(
             "product_experience_plan",
             "product_face_packet",
+            "project_design_system",
             "professional_design_process",
             "target_repo_paths",
             "acceptance_criteria",
@@ -1254,6 +1276,7 @@ WORKERS: dict[str, WorkerDefinition] = {
         required_inputs=(
             "product_experience_plan",
             "product_face_packet",
+            "project_design_system",
             "professional_design_process",
             "scope_in",
             "scope_out",
@@ -3985,6 +4008,86 @@ def validate_product_experience_plan(plan: dict[str, Any]) -> list[str]:
     return list(dict.fromkeys(errors))
 
 
+def _format_project_design_system_schema_error(error: str) -> str:
+    missing = re.fullmatch(r"(project_design_system(?:\.[^:]+)?): missing required field ([A-Za-z0-9_]+)", error)
+    if missing:
+        return f"{missing.group(1)}.{missing.group(2)} is required"
+    expected_type = re.fullmatch(r"(project_design_system(?:\.[^:]+)?): expected type ([A-Za-z0-9_]+)", error)
+    if expected_type:
+        return f"{expected_type.group(1)} must be {expected_type.group(2)}"
+    return error
+
+
+def validate_project_design_system_schema(contract: dict[str, Any]) -> list[str]:
+    schemas = bundled_schemas()
+    schema = schemas.get(PROJECT_DESIGN_SYSTEM_SCHEMA_NAME)
+    if not isinstance(schema, dict):
+        return [f"{PROJECT_DESIGN_SYSTEM_SCHEMA_NAME} is unavailable for project_design_system validation"]
+    errors = validate_node(schema, contract, "project_design_system", schemas=schemas, root_schema=schema)
+    return [_format_project_design_system_schema_error(error) for error in errors]
+
+
+def validate_project_design_system(contract: dict[str, Any]) -> list[str]:
+    errors: list[str] = validate_project_design_system_schema(contract)
+    for field in PROJECT_DESIGN_SYSTEM_REQUIRED_FIELDS:
+        value = contract.get(field)
+        if isinstance(value, list):
+            if not _list_items(value):
+                errors.append(f"project_design_system.{field} must be a non-empty array")
+        elif isinstance(value, dict):
+            if not value:
+                errors.append(f"project_design_system.{field} must be a non-empty object")
+        elif not _non_empty_text(value):
+            errors.append(f"project_design_system.{field} is required")
+
+    if contract.get("record_type") not in (None, "project_design_system"):
+        errors.append("project_design_system.record_type must be project_design_system")
+
+    tokens = contract.get("tokens") if isinstance(contract.get("tokens"), dict) else {}
+    palette_policy = tokens.get("palette_policy") if isinstance(tokens.get("palette_policy"), dict) else {}
+    if palette_policy.get("semantic_roles_required") is not True:
+        errors.append("project_design_system.tokens.palette_policy.semantic_roles_required must be true")
+    if palette_policy.get("not_one_hue_theme") is not True:
+        errors.append("project_design_system.tokens.palette_policy.not_one_hue_theme must be true")
+    if len(tokens.get("color_roles") if isinstance(tokens.get("color_roles"), list) else []) < 5:
+        errors.append("project_design_system.tokens.color_roles requires at least 5 semantic roles")
+    if len(tokens.get("typography_roles") if isinstance(tokens.get("typography_roles"), list) else []) < 3:
+        errors.append("project_design_system.tokens.typography_roles requires at least 3 roles")
+
+    component_contracts = contract.get("component_contracts") if isinstance(contract.get("component_contracts"), list) else []
+    if len(component_contracts) < 3:
+        errors.append("project_design_system.component_contracts requires at least 3 components")
+    for index, component in enumerate(component_contracts):
+        if not isinstance(component, dict):
+            errors.append(f"project_design_system.component_contracts[{index}] must be an object")
+            continue
+        for field in ("component_id", "purpose"):
+            if not _non_empty_text(component.get(field)):
+                errors.append(f"project_design_system.component_contracts[{index}].{field} is required")
+        if len(_list_items(component.get("states"))) < 3:
+            errors.append(f"project_design_system.component_contracts[{index}].states requires at least 3 states")
+
+    proof = contract.get("proof_contract") if isinstance(contract.get("proof_contract"), dict) else {}
+    if proof.get("must_be_compared_in_product_face_result") is not True:
+        errors.append("project_design_system.proof_contract.must_be_compared_in_product_face_result must be true")
+
+    export = contract.get("design_md_export") if isinstance(contract.get("design_md_export"), dict) else {}
+    if export.get("required") is not True:
+        errors.append("project_design_system.design_md_export.required must be true")
+    if export.get("must_match_contract") is not True:
+        errors.append("project_design_system.design_md_export.must_match_contract must be true")
+
+    boundary = contract.get("public_private_boundary") if isinstance(contract.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("project_design_system.public_private_boundary.public_safe_refs_only must be true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("project_design_system.public_private_boundary.raw_private_evidence_embedded must be false")
+    if boundary.get("no_private_screenshots_in_repo") is not True:
+        errors.append("project_design_system.public_private_boundary.no_private_screenshots_in_repo must be true")
+
+    return list(dict.fromkeys(errors))
+
+
 
 
 def validate_product_delivery_quality_profile(profile: dict[str, Any]) -> list[str]:
@@ -4956,6 +5059,10 @@ def validate_card(data: dict[str, Any]) -> list[str]:
             else:
                 errors.extend(validate_professional_design_process(data["professional_design_process"]))
                 errors.extend(professional_design_process_gate_blockers(data["professional_design_process"]))
+            if not isinstance(data.get("project_design_system"), dict):
+                errors.append("project_design_system required for vFinal product-facing surfaces")
+            else:
+                errors.extend(validate_project_design_system(data["project_design_system"]))
     phase = str(data.get("phase", "")).upper()
     if product_face_result_required(data):
         product_face_result = data.get("product_face_result")
@@ -5652,8 +5759,17 @@ def validate_product_face_result(result: dict[str, Any]) -> list[str]:
                 is_pass=is_pass,
             )
         )
+    project_design_system_comparison = result.get("project_design_system_comparison")
     professional_comparison = result.get("professional_design_process_comparison")
     if is_pass:
+        if not _non_empty_text(result.get("project_design_system_ref")):
+            errors.append("product_face_result.project_design_system_ref is required for PASS")
+        if not isinstance(project_design_system_comparison, dict) or not project_design_system_comparison:
+            errors.append("product_face_result.project_design_system_comparison is required for PASS")
+        elif _status_value(project_design_system_comparison) != "pass":
+            errors.append("product_face_result.project_design_system_comparison.status must be pass")
+        elif not _non_empty_text(project_design_system_comparison.get("basis")):
+            errors.append("product_face_result.project_design_system_comparison.basis is required")
         if not _non_empty_text(result.get("professional_design_process_ref")):
             errors.append("product_face_result.professional_design_process_ref is required for PASS")
         if not isinstance(professional_comparison, dict) or not professional_comparison:
@@ -6275,6 +6391,7 @@ DEFAULT_ARTIFACT_REFS = {
     "specialist_decision_packet": "templates/specialist-decision-packet.json",
     "product_experience_plan": "templates/product-experience-plan.json",
     "product_face_packet": "templates/product-face-packet.json",
+    "project_design_system": "templates/project-design-system.json",
     "professional_design_process": "templates/professional-design-process.json",
     "product_face_result": "templates/product-face-result.json",
     "production_readiness_plan": "templates/production-readiness-plan.json",
@@ -6297,6 +6414,7 @@ DEFAULT_ARTIFACT_OWNERS = {
     "specialist_decision_packet": "product-architect",
     "product_experience_plan": "product-face",
     "product_face_packet": "product-face",
+    "project_design_system": "product-face",
     "professional_design_process": "product-face",
     "product_face_result": "qa-verification-worker",
     "production_readiness_plan": "release-ops-worker",
@@ -6322,6 +6440,7 @@ ARTIFACT_REQUIRED_BEFORE = {
     "specialist_decision_packet": "method_contract",
     "product_experience_plan": "execution",
     "product_face_packet": "execution",
+    "project_design_system": "execution",
     "professional_design_process": "execution",
     "product_face_result": "completion",
     "production_readiness_plan": "release",
@@ -9173,7 +9292,13 @@ def _ready_work_unit_profile_input_value(
         return owner_worker
     if input_name == "reviewer_identity":
         return str(unit.get("reviewer_role") or "").strip()
-    if input_name in {"security_scan_packet", "product_face_packet", "product_experience_plan", "professional_design_process"}:
+    if input_name in {
+        "security_scan_packet",
+        "product_face_packet",
+        "product_experience_plan",
+        "project_design_system",
+        "professional_design_process",
+    }:
         return {
             "input_name": input_name,
             "resolution_status": "resolved_from_work_unit_context_packet",
@@ -11684,6 +11809,9 @@ def validate_product_face_result_against_card(result: dict[str, Any], card: dict
     packet_ref = str(result.get("packet_ref") or "").strip()
     if strict_product_experience_required(card) and not packet_ref:
         errors.append("product_face_result.packet_ref is required for vFinal product-facing completion")
+    project_design_system_ref = str(result.get("project_design_system_ref") or "").strip()
+    if strict_product_experience_required(card) and not project_design_system_ref:
+        errors.append("product_face_result.project_design_system_ref is required for vFinal product-facing completion")
     professional_ref = str(result.get("professional_design_process_ref") or "").strip()
     if strict_product_experience_required(card) and not professional_ref:
         errors.append("product_face_result.professional_design_process_ref is required for vFinal product-facing completion")
@@ -12557,6 +12685,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "parallel_lane_contracts": lane_contracts,
             "reasoning_policy": card.get("reasoning_policy"),
             "reference_quality_packet": card.get("reference_quality_packet"),
+            "project_design_system": card.get("project_design_system"),
             "professional_design_process": card.get("professional_design_process"),
             "learning_proposal_refs": card.get("learning_proposal_refs", []),
             "universal_signal_intake_ref": card.get("universal_signal_intake_ref")
@@ -14778,6 +14907,11 @@ def build_worker_result(
                     "status": "pass" if not blocking_findings else "fail",
                     "basis": "Design fit reviewed by Product Face validator for this bounded card.",
                 },
+                "project_design_system_ref": "card.project_design_system",
+                "project_design_system_comparison": {
+                    "status": "pass" if not blocking_findings else "fail",
+                    "basis": "Product Face evidence is explicitly compared to the project design system.",
+                },
                 "professional_design_process_ref": "card.professional_design_process",
                 "professional_design_process_comparison": {
                     "status": "pass" if not blocking_findings else "fail",
@@ -15212,11 +15346,14 @@ def product_experience_planning_gap(card: dict[str, Any], validation_errors: lis
         return True
     if not isinstance(card.get("product_face_packet"), dict):
         return True
+    if strict_product_experience_required(card) and not isinstance(card.get("project_design_system"), dict):
+        return True
     if strict_product_experience_required(card) and not isinstance(card.get("professional_design_process"), dict):
         return True
     markers = (
         "product_experience_plan",
         "product_face_packet",
+        "project_design_system",
         "professional_design_process",
         "reference_quality_packet",
         "surface_evidence_profile",
@@ -15248,8 +15385,8 @@ def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], pha
     if product_experience_planning_gap(card, errors):
         return {
             "owner": "factory",
-            "action": "create or repair the Product Experience Plan, Product Face Packet and professional design process before implementation",
-            "why": "Product-facing work needs named surface states, surface pack, proof profile and design-quality bar before builders run.",
+            "action": "create or repair the Product Experience Plan, Product Face Packet, project design system and professional design process before implementation",
+            "why": "Product-facing work needs named surface states, surface pack, project-level design contract, proof profile and design-quality bar before builders run.",
             "command_refs": command_refs,
         }
     if any("product_sot" in error.lower() for error in errors):

@@ -155,6 +155,7 @@
       "required_artifacts": [
         "product_experience_plan",
         "product_face_packet",
+        "project_design_system",
         "professional_design_process",
         "surface_evidence_profile",
         "product_delivery_quality_profile"
@@ -162,7 +163,7 @@
       "optional_artifacts": ["reference_quality_waiver"],
       "required_gates": ["Product Experience Gate", "Surface Pack Gate"],
       "required_workers": ["product-face", "factory-orchestrator"],
-      "allowed_next_actions": ["create Product Experience Plan", "create Product Face Packet", "select surface evidence profile"],
+      "allowed_next_actions": ["create Product Experience Plan", "create Product Face Packet", "create Project DESIGN.md contract", "select surface evidence profile"],
       "blocked_actions": [
         "start product-facing implementation before surface state coverage",
         "treat generic UI proof as Product Experience proof",
@@ -171,12 +172,14 @@
       "output_locations": [
         "card.product_experience_plan",
         "card.product_face_packet",
+        "card.project_design_system",
         "card.professional_design_process",
         "card.product_delivery_quality_profile_ref"
       ],
       "completion_detection": [
         "product_experience_plan exists and names surface_pack",
         "product_face_packet exists and names required states and proof",
+        "project_design_system exists and exports an AI-readable DESIGN.md contract",
         "surface_evidence_profile or surface_evidence_profiles are declared",
         "product_delivery_quality_profile_ref or product_delivery_quality_profile is declared",
         "professional_design_process exists before product-facing implementation"
@@ -186,6 +189,7 @@
       "related_schema_refs": [
         "schemas/product-experience-plan.schema.json",
         "schemas/product-face-packet.schema.json",
+        "schemas/project-design-system.schema.json",
         "schemas/professional-design-process.schema.json",
         "schemas/product-delivery-quality-profile.schema.json"
       ],

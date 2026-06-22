@@ -163,6 +163,19 @@
             "null"
           ]
         },
+        "project_design_system": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "project_design_system_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 3
+        },
         "surface_router": {
           "type": "object",
           "required": [

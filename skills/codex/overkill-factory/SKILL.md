@@ -78,12 +78,13 @@ Block or revise cards when:
 - `OVERKILL_VFINAL` cards lack `outcome_contract`, `method_contract`, or
   `loop_plan`.
 - Product-facing vFinal cards lack Product Experience routing, Product Face
-  Packet, or Product Face Result proof.
+  Packet, project design system / `DESIGN.md` contract, professional design
+  process, or Product Face Result proof.
 - Material vFinal execution lacks ready `access_capability` or
   `autonomy_readiness_packet`.
 - R3/R4 or security-sensitive vFinal work lacks `security_architecture_plan`.
 - Product-facing surfaces lack Product Experience routing, Product Face Packet,
-  or Product Face Result proof.
+  project design system / `DESIGN.md` contract, or Product Face Result proof.
 - Onchain/Solana/Quasar work lacks an Onchain Work Package.
 - R3/R4 onchain work lacks Auditor or human waiver.
 - R3/R4/security/onchain work lacks a Codex Security/Cybersecurity scan packet.
@@ -187,6 +188,9 @@ running on the Hermes adapter.
   profile with skill refs, result schema and evidence policy.
 - Do not treat a worker name as an agent configuration. Agent configuration
   lives in the worker profile and Hermes binding.
+- Project design system / `DESIGN.md` is the project-level visual and
+  interaction contract. Frontend and Product Face workers must consume it before
+  product-facing implementation or proof.
 - Product Face Packet is planning; `product_face_result` is proof.
   Product-facing completion needs screenshots, viewports, checked states,
   journeys, accessibility, overlap, performance note and evidence refs.

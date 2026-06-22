@@ -389,6 +389,26 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
             any("selected_source_ids" in error and "duplicate id 21st-dev-components" in error for error in validator.validate_domain_rules(duplicated, "$"))
         )
 
+    def test_project_design_system_schema_and_public_validator(self) -> None:
+        validator = load_validator()
+        schemas = validator.load_schemas()
+        schema = schemas["project-design-system.schema.json"]
+        contract = json.loads((ROOT / "templates" / "project-design-system.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(validator.validate_node(schema, contract, "$", schemas=schemas, root_schema=schema), [])
+        self.assertEqual(validator.validate_domain_rules(contract, "$"), [])
+
+        weak = json.loads(json.dumps(contract))
+        weak["tokens"]["palette_policy"]["not_one_hue_theme"] = False
+        weak["component_contracts"] = weak["component_contracts"][:1]
+        weak["design_md_export"]["required"] = False
+
+        errors = validator.validate_domain_rules(weak, "$")
+
+        self.assertTrue(any("not_one_hue_theme=true" in error for error in errors), errors)
+        self.assertTrue(any("at least 3 component contracts" in error for error in errors), errors)
+        self.assertTrue(any("requires DESIGN.md export" in error for error in errors), errors)
+
     def test_resolves_internal_defs_refs(self) -> None:
         validator = load_validator()
         schema = {

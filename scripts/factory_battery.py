@@ -204,6 +204,7 @@ def solana_bank_r4_card(factoryctl: Any, *, phase: str) -> dict[str, Any]:
     )
     card["product_experience_plan"] = minimal_card["product_experience_plan"]
     card["product_face_packet"] = minimal_card["product_face_packet"]
+    card["project_design_system"] = minimal_card["project_design_system"]
     card["professional_design_process"] = minimal_card["professional_design_process"]
     card["onchain_work_package"]["auditor_tool_ref"] = "solanabr/solana-ai-kit@v2.0.2 + solanabr/Auditor"
     card["security_scan_packet"]["required_tools"] = [

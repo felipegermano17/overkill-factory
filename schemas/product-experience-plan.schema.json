@@ -39,6 +39,10 @@
       "type": "string",
       "minLength": 3
     },
+    "project_design_system_ref": {
+      "type": "string",
+      "minLength": 3
+    },
     "domain_proof_required": {
       "type": "array",
       "items": { "type": "string", "minLength": 3 },

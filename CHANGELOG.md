@@ -7,7 +7,9 @@ public releases.
 
 ## Unreleased
 
-Nothing yet.
+- Require a project-level design-system / `DESIGN.md` contract for
+  product-facing frontend work, wire it into Product Face validation, worker
+  packets, public templates, schemas and examples.
 
 ## 1.1.1 - 2026-06-19
 

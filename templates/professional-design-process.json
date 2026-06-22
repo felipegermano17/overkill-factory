@@ -443,6 +443,8 @@
       "reference evidence policy"
     ],
     "product_face_result_must_include": [
+      "project_design_system_ref",
+      "project_design_system_comparison.status=pass",
       "professional_design_process_ref",
       "professional_design_process_comparison.status=pass",
       "reference_quality_comparison.status=pass"
