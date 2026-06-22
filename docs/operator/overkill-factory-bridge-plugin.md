@@ -47,6 +47,19 @@ For `new_project`, the plugin creates a `factory_bridge_source_envelope` and a
 `existing_project`, the operator/runtime must provide an explicit existing board
 or run reference.
 
+Inside the public factory repository, the deterministic factory start path is:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
+  --start-request .tmp/factory-runs/<run-id>/start-request.json \
+  --source-envelope .tmp/factory-runs/<run-id>/source-envelope.json \
+  --out .tmp/factory-runs/<run-id>/hermes-start-result.json
+```
+
+This command is not bridge work. It is the factory/Hermes adapter consuming the
+start request. It creates the fresh `new_project` board/card, verifies a blocked
+root card and leaves dispatch to later factory gates.
+
 ## Inbox
 
 The plugin hook reads the Durable Operator Inbox in this order:

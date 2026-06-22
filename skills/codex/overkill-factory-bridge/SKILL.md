@@ -70,6 +70,20 @@ python scripts/factory_bridge.py start-request \
   --out .tmp/factory-runs/example/start-request.json
 ```
 
+When operating inside the public factory repository and the operator explicitly
+asked to start, hand the request to the factory/Hermes start path:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
+  --start-request .tmp/factory-runs/example/start-request.json \
+  --source-envelope .tmp/factory-runs/example/source-envelope.json \
+  --out .tmp/factory-runs/example/hermes-start-result.json
+```
+
+This command is the factory adapter path, not bridge work. It creates the fresh
+Hermes board/card for `new_project`, blocks the root card with a verified Hermes
+block event, and leaves dispatch to later factory gates.
+
 Record a human decision response:
 
 ```bash

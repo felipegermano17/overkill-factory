@@ -36,6 +36,19 @@ For a new project, the plugin must hand a `factory_bridge_start_request` to
 Hermes boards or cards directly. For an existing project, the operator/runtime
 must provide the explicit board or run reference.
 
+Inside the public factory repository, the deterministic factory start path is:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
+  --start-request .tmp/factory-runs/<run-id>/start-request.json \
+  --source-envelope .tmp/factory-runs/<run-id>/source-envelope.json \
+  --out .tmp/factory-runs/<run-id>/hermes-start-result.json
+```
+
+That command is the factory/Hermes adapter consuming the bridge request. It
+creates the fresh board/card for `new_project`, verifies a blocked root card and
+does not dispatch workers.
+
 ## Inbox Resolution
 
 The hook reads the inbox in this order:

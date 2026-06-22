@@ -29,6 +29,7 @@ human prompt
 -> sealed source envelope
 -> factory_bridge_start_request
 -> overkill-factory-gerente / factory-orchestrator
+-> adapters/hermes/live_kanban_adapter.py materialize-bridge-start
 -> Hermes/factory transition hooks
 -> Codex SessionStart/UserPromptSubmit context
 -> operator response artifact
@@ -132,6 +133,22 @@ operator material
 `overkill-factory-gerente` is the interface/gateway profile. `factory-orchestrator`
 is the factory routing worker. The bridge may address them, but it must not do
 their work.
+
+When running inside the public factory repository, the deterministic factory
+start path is:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
+  --start-request .tmp/factory-runs/<run-id>/start-request.json \
+  --source-envelope .tmp/factory-runs/<run-id>/source-envelope.json \
+  --out .tmp/factory-runs/<run-id>/hermes-start-result.json
+```
+
+This is not bridge work. It is the factory/Hermes adapter consuming the
+`factory_bridge_start_request`. For `new_project`, it creates or verifies the
+fresh board, creates one root start card, blocks it with a durable Hermes block
+event, verifies the block event, and only then assigns the root card to
+`factory-orchestrator`. It must not dispatch workers.
 
 ## Learnback Boundary
 

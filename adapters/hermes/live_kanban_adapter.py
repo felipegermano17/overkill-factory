@@ -104,6 +104,10 @@ RELEASE_READINESS_REVIEW_CLOSEOUT_READBACK_MARKERS = [
     RELEASE_READINESS_REVIEW_CLOSEOUT_MARKER,
     RELEASE_READINESS_REVIEW_PASSED_MARKER,
 ]
+BRIDGE_START_RECORD_TYPE = "factory_bridge_start_request"
+BRIDGE_START_ROOT_TASK_TYPE = "factory_bridge_start_root"
+BRIDGE_START_DEFAULT_ASSIGNEE = "factory-orchestrator"
+BRIDGE_START_FORBIDDEN_BOARD_SLUGS = {"default"}
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 WORKER_MATERIALIZATION_CONTRACT_FIELDS = (
     "task_type",
@@ -1251,6 +1255,10 @@ def ensure_board(
     hermes_bin: str,
     board: str,
     default_workdir: str | None,
+    name: str = "Overkill Factory Live Smoke",
+    description: str = "Isolated board for Overkill Factory adapter validation.",
+    icon: str = "O",
+    color: str = "#0f766e",
     runner: Runner = default_runner,
 ) -> bool:
     listed = run_checked([hermes_bin, "kanban", "boards", "list", "--json"], runner)
@@ -1264,13 +1272,13 @@ def ensure_board(
         "create",
         board,
         "--name",
-        "Overkill Factory Live Smoke",
+        name,
         "--description",
-        "Isolated board for Overkill Factory adapter validation.",
+        description,
         "--icon",
-        "O",
+        icon,
         "--color",
-        "#0f766e",
+        color,
     ]
     if default_workdir:
         args.extend(["--default-workdir", default_workdir])
@@ -1393,6 +1401,181 @@ def create_blocked_task_before_assignment(
     if task_readback_status(assigned_task) != "blocked":
         raise RuntimeError(f"Hermes task {task_id} is not blocked after assignment")
     return task_id
+
+
+def bridge_start_board_slug(run_id: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", str(run_id or "").strip().lower()).strip("-")
+    if len(slug) < 3:
+        slug = "factory-start"
+    return slug[:80].strip("-") or "factory-start"
+
+
+def load_bridge_start_request(path: Path) -> dict[str, Any]:
+    request = load_json(path)
+    if request.get("record_type") != BRIDGE_START_RECORD_TYPE:
+        raise RuntimeError(f"bridge start request must have record_type={BRIDGE_START_RECORD_TYPE}")
+    run_id = str(request.get("run_id") or "").strip()
+    if not run_id:
+        raise RuntimeError("bridge start request requires run_id")
+    recipient = request.get("handoff_to_factory")
+    if not isinstance(recipient, dict):
+        raise RuntimeError("bridge start request requires handoff_to_factory")
+    if recipient.get("orchestrator_worker") != BRIDGE_START_DEFAULT_ASSIGNEE:
+        raise RuntimeError("bridge start request must be addressed to factory-orchestrator")
+    limits = request.get("bridge_limits") if isinstance(request.get("bridge_limits"), dict) else {}
+    for field in ("bridge_must_not_create_hermes_board", "bridge_must_not_create_hermes_cards", "bridge_must_not_dispatch_workers"):
+        if limits.get(field) is not True:
+            raise RuntimeError(f"bridge start request must keep {field}=true")
+    action = request.get("requested_factory_action") if isinstance(request.get("requested_factory_action"), dict) else {}
+    if action.get("action") != "start_factory_run":
+        raise RuntimeError("bridge start request must request start_factory_run")
+    return request
+
+
+def load_optional_source_envelope(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    envelope = load_json(path)
+    if envelope.get("record_type") != "factory_bridge_source_envelope":
+        raise RuntimeError("source envelope must have record_type=factory_bridge_source_envelope")
+    return envelope
+
+
+def bridge_start_root_body(
+    *,
+    start_request: dict[str, Any],
+    source_envelope: dict[str, Any] | None,
+    start_request_ref: str,
+    source_envelope_ref: str | None,
+) -> str:
+    body = {
+        "task_type": BRIDGE_START_ROOT_TASK_TYPE,
+        "packet_type": BRIDGE_START_ROOT_TASK_TYPE,
+        "run_id": start_request["run_id"],
+        "project_mode": start_request.get("project_mode"),
+        "operator_goal": start_request.get("operator_goal"),
+        "factory_bridge_start_request_ref": start_request_ref,
+        "factory_bridge_source_envelope_ref": source_envelope_ref or start_request.get("source_envelope_ref"),
+        "factory_bridge_start_request": start_request,
+        "source_envelope": source_envelope,
+        "runtime_boundary": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "materialized_by": "overkill_factory_hermes_live_adapter",
+            "bridge_authority_preserved": True,
+        },
+        "bridge_boundary": {
+            "bridge_created_hermes_board": False,
+            "bridge_created_hermes_cards": False,
+            "bridge_dispatched_workers": False,
+            "factory_start_path_created_runtime_state": True,
+        },
+        "initial_gate": {
+            "status": "blocked",
+            "block_event_required_before_dispatch": True,
+            "dispatch_allowed_without_source_resolution": False,
+            "complete_product_claim_allowed": False,
+        },
+        "next_factory_actions": [
+            "read sealed source envelope",
+            "perform source resolution",
+            "create source ledger",
+            "prepare Product SOT candidate",
+            "ask the human only for explicit gates",
+        ],
+    }
+    return compact_json_argument(body)
+
+
+def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    start_path = args.start_request.resolve()
+    source_path = args.source_envelope.resolve() if args.source_envelope else None
+    start_request = load_bridge_start_request(start_path)
+    source_envelope = load_optional_source_envelope(source_path)
+    run_id = str(start_request["run_id"])
+    project_mode = str(start_request.get("project_mode") or "").strip()
+    board = str(args.board or bridge_start_board_slug(run_id)).strip()
+    if not board:
+        raise RuntimeError("bridge start materialization requires a board")
+    if project_mode == "new_project" and board in BRIDGE_START_FORBIDDEN_BOARD_SLUGS:
+        raise RuntimeError("new_project bridge start must materialize into a fresh non-default board")
+    if project_mode == "existing_project" and not args.board:
+        raise RuntimeError("existing_project bridge start requires an explicit --board")
+
+    body = bridge_start_root_body(
+        start_request=start_request,
+        source_envelope=source_envelope,
+        start_request_ref=public_safe_workspace_ref(str(start_path)),
+        source_envelope_ref=public_safe_workspace_ref(str(source_path)) if source_path else None,
+    )
+    idempotency_key = f"overkill:bridge-start:{bridge_start_board_slug(run_id)}:{idempotency_digest_fragment(contract_digest(start_request))}"
+    title = str(args.title or f"Factory start: {run_id}").strip()
+    board_created = False
+    main_task_id: str | None = None
+    if not args.dry_run:
+        if not args.no_ensure_board:
+            board_created = ensure_board(
+                hermes_bin=args.hermes_bin,
+                board=board,
+                default_workdir=args.default_workdir,
+                name=str(args.board_name or title),
+                description="Factory start board materialized from a factory_bridge_start_request.",
+                icon="F",
+                color="#047857",
+                runner=runner,
+            )
+        main_task_id = create_blocked_task_before_assignment(
+            hermes_bin=args.hermes_bin,
+            board=board,
+            title=title,
+            body=body,
+            assignee=args.assignee,
+            idempotency_key=idempotency_key,
+            created_by="overkill-factory",
+            workspace=args.workspace,
+            blocked_reason=(
+                "factory_bridge_start_request materialized by factory start path; "
+                "source resolution/Product SOT must run through factory gates before dispatch."
+            ),
+            runner=runner,
+        )
+
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "materialize-bridge-start",
+        "dry_run": bool(args.dry_run),
+        "board": board,
+        "board_created": board_created,
+        "main_task_id": main_task_id,
+        "worker_task_ids": {},
+        "bridge_start": {
+            "run_id": run_id,
+            "project_mode": project_mode,
+            "start_request_ref": public_safe_workspace_ref(str(start_path)),
+            "source_envelope_ref": public_safe_workspace_ref(str(source_path)) if source_path else None,
+            "target_assignee": args.assignee,
+            "idempotency_key": idempotency_key,
+        },
+        "runtime_gate": {
+            "initial_status": "blocked",
+            "blocked_event_verified": main_task_id is not None and not args.dry_run,
+            "dispatch_allowed_without_runtime_gate": False,
+            "complete_product_claim_allowed": False,
+            "bridge_mutated_hermes": False,
+            "factory_start_path_mutated_hermes": not args.dry_run,
+        },
+        "hook": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "factory_start_path": True,
+            "bridge_boundary_preserved": True,
+            "next_action": "factory-orchestrator performs source resolution from the sealed source envelope",
+        },
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
 
 
 def ready_work_unit_create_body_and_chunks(body_contract: dict[str, Any]) -> tuple[str, list[str]]:
@@ -5457,6 +5640,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_mat.add_argument("--route-readiness", type=Path)
     p_mat.add_argument("--out", type=Path)
 
+    p_bridge_start = sub.add_parser(
+        "materialize-bridge-start",
+        help="Create the fresh blocked Hermes start board/card from a factory_bridge_start_request.",
+    )
+    p_bridge_start.add_argument("--start-request", type=Path, required=True)
+    p_bridge_start.add_argument("--source-envelope", type=Path)
+    p_bridge_start.add_argument("--board")
+    p_bridge_start.add_argument("--board-name")
+    p_bridge_start.add_argument("--title")
+    p_bridge_start.add_argument("--assignee", default=BRIDGE_START_DEFAULT_ASSIGNEE)
+    p_bridge_start.add_argument("--workspace", default="scratch")
+    p_bridge_start.add_argument("--default-workdir")
+    p_bridge_start.add_argument("--hermes-bin", default="hermes")
+    p_bridge_start.add_argument("--dry-run", action="store_true")
+    p_bridge_start.add_argument("--no-ensure-board", action="store_true")
+    p_bridge_start.add_argument("--out", type=Path)
+
     p_ready = sub.add_parser(
         "materialize-ready-work-units",
         help="Create blocked Hermes tasks from a ready work-unit materialization plan.",
@@ -5611,6 +5811,8 @@ def main() -> int:
     try:
         if args.command == "materialize":
             envelope = materialize(args)
+        elif args.command == "materialize-bridge-start":
+            envelope = materialize_bridge_start(args)
         elif args.command == "materialize-ready-work-units":
             envelope = materialize_ready_work_units(args)
         elif args.command == "release-ready-work-units":

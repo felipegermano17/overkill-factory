@@ -715,6 +715,128 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(result["result"], "BLOCKED")
         self.assertIn("credential_not_proven", result["checks"][0]["blocked_reasons"])
 
+    def test_materialize_bridge_start_creates_fresh_blocked_root_without_dispatch(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            start_path = tmp_path / "start-request.json"
+            envelope_path = tmp_path / "source-envelope.json"
+            start_path.write_text(
+                json.dumps(
+                    {
+                        "record_type": "factory_bridge_start_request",
+                        "run_id": "sample-new-project-20260622-161302",
+                        "operator_goal": "Start a new sample product project.",
+                        "project_mode": "new_project",
+                        "source_envelope_ref": "external:operator:source-envelope",
+                        "handoff_to_factory": {
+                            "gateway_profile": "overkill-factory-gerente",
+                            "orchestrator_worker": "factory-orchestrator",
+                            "handoff_contract": "factory_bridge_start_request",
+                            "bridge_may_execute_recipient_work": False,
+                            "bridge_may_create_hermes_board": False,
+                            "factory_start_path_required": True,
+                        },
+                        "target_board_policy": {
+                            "policy": "factory_must_create_new_board",
+                            "requires_new_hermes_board": True,
+                            "existing_board_ref": None,
+                            "requires_explicit_existing_board_ref": False,
+                            "board_creation_owner": "factory_start_path",
+                            "factory_start_path_required": True,
+                            "bridge_may_select_existing_board": False,
+                            "bridge_may_mutate_board": False,
+                        },
+                        "bridge_limits": {
+                            "bridge_must_not_create_hermes_board": True,
+                            "bridge_must_not_create_hermes_cards": True,
+                            "bridge_must_not_dispatch_workers": True,
+                            "bridge_must_not_choose_runtime_board": True,
+                            "bridge_only_registers_operator_intent": True,
+                        },
+                        "requested_factory_action": {
+                            "action": "start_factory_run",
+                            "owner": "factory-orchestrator",
+                            "gateway_profile": "overkill-factory-gerente",
+                            "factory_must_materialize_runtime_state": True,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            envelope_path.write_text(
+                json.dumps(
+                    {
+                        "record_type": "factory_bridge_source_envelope",
+                        "run_id": "sample-new-project-20260622-161302",
+                        "source_items": [
+                            {
+                                "source_ref": "external:operator:sample-brief",
+                                "source_role": "operator_supplied_material",
+                                "received_as": "opaque_ref",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-bridge-start",
+                    "--start-request",
+                    str(start_path),
+                    "--source-envelope",
+                    str(envelope_path),
+                ]
+            )
+            result = adapter.materialize_bridge_start(args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["mode"], "materialize-bridge-start")
+        self.assertEqual(result["board"], "sample-new-project-20260622-161302")
+        self.assertTrue(result["board_created"])
+        self.assertEqual(result["main_task_id"], "kanban:<redacted>")
+        self.assertEqual(result["runtime_gate"]["initial_status"], "blocked")
+        self.assertTrue(result["runtime_gate"]["blocked_event_verified"])
+        self.assertFalse(any(call[4] == "dispatch" for call in fake.calls if len(call) > 4))
+        self.assertIn(["hermes", "kanban", "boards", "create", "sample-new-project-20260622-161302"], [call[:5] for call in fake.calls])
+        task = fake.tasks["t_" + "00000001"]
+        self.assertEqual(task["status"], "blocked")
+        self.assertEqual(task["assignee"], "factory-orchestrator")
+        body = json.loads(str(task["body"]))
+        self.assertEqual(body["task_type"], "factory_bridge_start_root")
+        self.assertFalse(body["bridge_boundary"]["bridge_created_hermes_board"])
+        self.assertTrue(body["bridge_boundary"]["factory_start_path_created_runtime_state"])
+
+    def test_materialize_bridge_start_refuses_default_board_for_new_project(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            start_path = Path(tmp) / "start-request.json"
+            start_path.write_text(
+                json.dumps(
+                    {
+                        "record_type": "factory_bridge_start_request",
+                        "run_id": "run-alpha",
+                        "project_mode": "new_project",
+                        "handoff_to_factory": {
+                            "gateway_profile": "overkill-factory-gerente",
+                            "orchestrator_worker": "factory-orchestrator",
+                        },
+                        "bridge_limits": {
+                            "bridge_must_not_create_hermes_board": True,
+                            "bridge_must_not_create_hermes_cards": True,
+                            "bridge_must_not_dispatch_workers": True,
+                        },
+                        "requested_factory_action": {"action": "start_factory_run"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            args = adapter.build_parser().parse_args(
+                ["materialize-bridge-start", "--start-request", str(start_path), "--board", "default"]
+            )
+            with self.assertRaisesRegex(RuntimeError, "fresh non-default board"):
+                adapter.materialize_bridge_start(args, runner=FakeHermes())
+
     def test_materialize_ready_work_units_creates_blocked_tasks_without_dispatch(self) -> None:
         fake = FakeHermes()
         plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
