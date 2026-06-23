@@ -197,7 +197,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line; the latest public tag is
-v1.2.1. It includes:
+v1.3.0. It includes:
 
 - Universal Signal Intake and route registry;
 - Golden Corpus and signal coverage checks;

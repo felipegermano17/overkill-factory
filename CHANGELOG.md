@@ -7,6 +7,10 @@ public releases.
 
 ## Unreleased
 
+Nothing yet.
+
+## 1.3.0 - 2026-06-23
+
 - Add Fast Autonomy Lane contracts: `fast_autonomy` for reversible low-risk
   work and `yolo_sandbox` for disposable R0/R1 diagnostics, both blocked from
   production, mainnet, funds, signing, secrets, billing, destructive actions

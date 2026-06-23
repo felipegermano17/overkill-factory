@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "overkill-factory"
-version = "1.2.1"
+version = "1.3.0"
 description = "Gated production line for Hermes-powered agentic product work."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -50,6 +50,7 @@ include = ["scripts*"]
 "share/overkill-factory/docs" = ["docs/index.md", "docs/README.md"]
 "share/overkill-factory/docs/getting-started" = ["docs/getting-started/*.md"]
 "share/overkill-factory/docs/operator" = ["docs/operator/*.md"]
+"share/overkill-factory/docs/operations" = ["docs/operations/*.md"]
 "share/overkill-factory/docs/reference" = ["docs/reference/*.md"]
 "share/overkill-factory/examples" = ["examples/README.md"]
 "share/overkill-factory/examples/minimal-hermes-project" = ["examples/minimal-hermes-project/*"]
