@@ -1254,10 +1254,222 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "operator_understanding_confirmation":
+        reason = public_artifact_ref_error(data.get("source_ledger_ref"))
+        if reason:
+            errors.append(f"{at}.source_ledger_ref: {reason}")
+        source_signal = data.get("source_signal") if isinstance(data.get("source_signal"), dict) else {}
+        signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
+        reason = public_artifact_ref_error(signal_ref)
+        if reason:
+            errors.append(f"{at}.source_signal.signal_ref_public_safe: {reason}")
+        for index, source in enumerate(data.get("material_inventory", []) if isinstance(data.get("material_inventory"), list) else []):
+            if not isinstance(source, dict):
+                continue
+            reason = public_artifact_ref_error(source.get("source_ref_public_safe"))
+            if reason:
+                errors.append(f"{at}.material_inventory[{index}].source_ref_public_safe: {reason}")
+        understanding = data.get("product_understanding") if isinstance(data.get("product_understanding"), dict) else {}
+        for field in (
+            "what_the_factory_understands",
+            "target_user_understanding",
+            "business_or_success_understanding",
+            "non_negotiables_understood",
+            "open_uncertainties",
+        ):
+            values = understanding.get(field)
+            if isinstance(values, list):
+                for value_index, value in enumerate(values):
+                    if PRIVATE_MARKERS.search(str(value or "")):
+                        errors.append(f"{at}.product_understanding.{field}[{value_index}]: private local or runtime marker")
+            elif PRIVATE_MARKERS.search(str(values or "")):
+                errors.append(f"{at}.product_understanding.{field}: private local or runtime marker")
+        questions = data.get("operator_questions") if isinstance(data.get("operator_questions"), list) else []
+        if not questions:
+            errors.append(f"{at}: operator_understanding_confirmation requires at least one operator question")
+        if len(questions) > 5:
+            errors.append(f"{at}: operator_understanding_confirmation must keep Telegram questions <= 5")
+        for index, question in enumerate(questions):
+            if not isinstance(question, dict):
+                continue
+            if question.get("required_before_product_sot") is not True:
+                errors.append(f"{at}.operator_questions[{index}].required_before_product_sot must be true")
+        state = data.get("confirmation_state") if isinstance(data.get("confirmation_state"), dict) else {}
+        response_ref = str(state.get("operator_response_ref") or "").strip()
+        if response_ref:
+            reason = public_artifact_ref_error(response_ref)
+            if reason and not response_ref.startswith("pending:"):
+                errors.append(f"{at}.confirmation_state.operator_response_ref: {reason}")
+        status = str(state.get("status") or "").strip()
+        product_sot_allowed = state.get("product_sot_allowed") is True
+        if status == "confirmed" and response_ref.startswith("pending:"):
+            errors.append(f"{at}: operator_understanding_confirmation confirmed status requires a real operator_response_ref")
+        if status == "confirmed" and not product_sot_allowed:
+            errors.append(f"{at}: operator_understanding_confirmation confirmed status requires product_sot_allowed=true")
+        if status != "confirmed" and product_sot_allowed:
+            errors.append(f"{at}: operator_understanding_confirmation product_sot_allowed=true requires confirmed status")
+        rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
+        if rules.get("product_sot_blocked_until_operator_understanding_confirmed") is not True:
+            errors.append(f"{at}: operator_understanding_confirmation must block Product SOT until confirmed")
+        max_questions = rules.get("max_operator_questions_for_telegram")
+        if not isinstance(max_questions, int) or isinstance(max_questions, bool) or max_questions < 1 or max_questions > 5:
+            errors.append(f"{at}: operator_understanding_confirmation max_operator_questions_for_telegram must be 1..5")
+        if rules.get("summarize_sources_do_not_dump") is not True:
+            errors.append(f"{at}: operator_understanding_confirmation must summarize sources instead of dumping them")
+        if rules.get("understanding_confirmation_is_not_execution_approval") is not True:
+            errors.append(f"{at}: operator_understanding_confirmation must not be execution approval")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        if status == "confirmed" and handoff.get("next_artifact") != "outcome_contract":
+            errors.append(f"{at}: operator_understanding_confirmation confirmed handoff must go to outcome_contract")
+        if status != "confirmed" and handoff.get("user_decision_required") is not True:
+            errors.append(f"{at}: operator_understanding_confirmation pending handoff requires user_decision_required=true")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: operator_understanding_confirmation requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: operator_understanding_confirmation must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: operator_understanding_confirmation private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("understanding_confirmation_created") is not True:
+            errors.append(f"{at}: operator_understanding_confirmation acceptance.understanding_confirmation_created must be true")
+        if acceptance.get("product_sot_allowed") is not product_sot_allowed:
+            errors.append(f"{at}: operator_understanding_confirmation acceptance.product_sot_allowed must match confirmation state")
+        if acceptance.get("product_sot_generated") is not False:
+            errors.append(f"{at}: operator_understanding_confirmation must not claim Product SOT was generated")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: operator_understanding_confirmation acceptance.execution_allowed must be false")
+        for index, ref in enumerate(acceptance.get("evidence_refs", []) if isinstance(acceptance.get("evidence_refs"), list) else []):
+            reason = public_artifact_ref_error(ref)
+            if reason:
+                errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "operator_interface_profile":
+        capabilities = data.get("interface_capabilities") if isinstance(data.get("interface_capabilities"), dict) else {}
+        if capabilities.get("supports_push_notifications") is not True:
+            errors.append(f"{at}: operator_interface_profile must support proactive notifications")
+        if data.get("primary_interface") == "telegram":
+            formats = set(text_items(capabilities.get("supported_attachment_formats")))
+            if not {"markdown", "pdf"}.issubset(formats):
+                errors.append(f"{at}: telegram interface must support markdown and pdf attachments")
+        conversation = data.get("conversation_policy") if isinstance(data.get("conversation_policy"), dict) else {}
+        if conversation.get("status_polling_required") is not False:
+            errors.append(f"{at}: operator_interface_profile must not require status polling")
+        if conversation.get("operator_not_required_to_poll") is not True:
+            errors.append(f"{at}: operator_interface_profile operator_not_required_to_poll must be true")
+        proactive = data.get("proactive_notification_policy") if isinstance(data.get("proactive_notification_policy"), dict) else {}
+        if proactive.get("enabled") is not True or proactive.get("operator_polling_required") is not False:
+            errors.append(f"{at}: operator_interface_profile proactive notifications must be enabled and polling-free")
+        notify_on = set(text_items(proactive.get("notify_on")))
+        missing_notify = sorted({"decision_required", "gate_blocked", "worker_batch_completed", "idle_timeout_detected"} - notify_on)
+        if missing_notify:
+            errors.append(f"{at}: operator_interface_profile missing notify_on triggers: " + ", ".join(missing_notify))
+        delivery = data.get("artifact_delivery_policy") if isinstance(data.get("artifact_delivery_policy"), dict) else {}
+        if delivery.get("summary_only_forbidden_when_decision_required") is not True:
+            errors.append(f"{at}: operator_interface_profile must forbid summary-only decision packages")
+        required_formats = set(text_items(delivery.get("required_attachment_formats")))
+        if not {"markdown", "pdf"}.issubset(required_formats):
+            errors.append(f"{at}: operator_interface_profile required_attachment_formats must include markdown and pdf")
+        send_for = set(text_items(delivery.get("send_for_artifact_types")))
+        missing_deep = sorted({"operator_understanding_confirmation", "product_sot", "architecture_candidate"} - send_for)
+        if missing_deep:
+            errors.append(f"{at}: operator_interface_profile missing deep artifact types: " + ", ".join(missing_deep))
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True or boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: operator_interface_profile must keep public/private boundary strict")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("operator_polling_required") is not False:
+            errors.append(f"{at}: operator_interface_profile acceptance.operator_polling_required must be false")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: operator_interface_profile must not allow execution")
+    if data.get("record_type") == "factory_start_conversation":
+        for field in ("primary_interface_ref", "source_envelope_ref"):
+            reason = public_artifact_ref_error(data.get(field))
+            if reason:
+                errors.append(f"{at}.{field}: {reason}")
+        loop = data.get("product_understanding_loop") if isinstance(data.get("product_understanding_loop"), dict) else {}
+        confirmed_ref = str(loop.get("confirmed_understanding_ref") or "").strip()
+        if confirmed_ref and not confirmed_ref.startswith("pending:"):
+            reason = public_artifact_ref_error(confirmed_ref)
+            if reason:
+                errors.append(f"{at}.product_understanding_loop.confirmed_understanding_ref: {reason}")
+        boundary = data.get("factory_start_boundary") if isinstance(data.get("factory_start_boundary"), dict) else {}
+        for field in (
+            "factory_start_forbidden_until_understanding_confirmed",
+            "manager_compiles_conversation_before_start",
+            "new_project_creates_fresh_hermes_board",
+            "bridge_does_not_create_cards",
+            "execution_forbidden_at_start_conversation",
+        ):
+            if boundary.get(field) is not True:
+                errors.append(f"{at}.factory_start_boundary.{field} must be true")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("factory_start_allowed") is True and confirmed_ref.startswith("pending:"):
+            errors.append(f"{at}: factory start cannot be allowed while understanding confirmation is pending")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        start_request_ref = str(handoff.get("factory_bridge_start_request_ref") or "").strip()
+        if acceptance.get("factory_start_allowed") is True:
+            if start_request_ref.startswith(("pending:", "not-created")):
+                errors.append(f"{at}: factory start cannot be allowed without a real factory start request ref")
+            else:
+                reason = public_artifact_ref_error(start_request_ref)
+                if reason:
+                    errors.append(f"{at}.handoff.factory_bridge_start_request_ref: {reason}")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: factory_start_conversation must not allow execution")
+        if acceptance.get("operator_polling_required") is not False:
+            errors.append(f"{at}: factory_start_conversation operator_polling_required must be false")
+    if data.get("record_type") == "operator_briefing_package":
+        primary_ref = str(data.get("primary_interface_ref") or "").strip()
+        if primary_ref:
+            reason = public_artifact_ref_error(primary_ref)
+            if reason:
+                errors.append(f"{at}.primary_interface_ref: {reason}")
+        target = data.get("target_artifact") if isinstance(data.get("target_artifact"), dict) else {}
+        reason = public_artifact_ref_error(target.get("artifact_ref"))
+        if reason:
+            errors.append(f"{at}.target_artifact.artifact_ref: {reason}")
+        assets = data.get("delivery_assets") if isinstance(data.get("delivery_assets"), list) else []
+        asset_kinds = {
+            str(asset.get("kind") or "").strip()
+            for asset in assets
+            if isinstance(asset, dict)
+        }
+        for index, asset in enumerate(assets):
+            if not isinstance(asset, dict):
+                continue
+            reason = public_artifact_ref_error(asset.get("asset_ref"))
+            if reason:
+                errors.append(f"{at}.delivery_assets[{index}].asset_ref: {reason}")
+        if not {"markdown_document", "pdf_document"}.issubset(asset_kinds):
+            errors.append(f"{at}: operator_briefing_package must include markdown_document and pdf_document")
+        if target.get("decision_required") is True:
+            required_assets = {
+                str(asset.get("kind") or "").strip()
+                for asset in assets
+                if isinstance(asset, dict) and asset.get("required_for_operator_decision") is True
+            }
+            if not {"markdown_document", "pdf_document"}.issubset(required_assets):
+                errors.append(f"{at}: decision briefings require markdown and pdf assets")
+        boundary = data.get("decision_boundary") if isinstance(data.get("decision_boundary"), dict) else {}
+        if boundary.get("briefing_is_not_source_of_truth") is not True:
+            errors.append(f"{at}: briefing must not replace source of truth")
+        if boundary.get("execution_not_allowed_from_briefing") is not True:
+            errors.append(f"{at}: briefing must not allow execution")
+        proactive = data.get("proactive_delivery") if isinstance(data.get("proactive_delivery"), dict) else {}
+        if proactive.get("push_required") is not True or proactive.get("operator_polling_required") is not False:
+            errors.append(f"{at}: briefing must be pushed proactively without operator polling")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("summary_only") is not False:
+            errors.append(f"{at}: operator_briefing_package summary_only must be false")
+        if acceptance.get("execution_allowed") is not False:
+            errors.append(f"{at}: operator_briefing_package must not allow execution")
     if data.get("record_type") == "outcome_contract":
         reason = public_artifact_ref_error(data.get("source_ledger_ref"))
         if reason:
             errors.append(f"{at}.source_ledger_ref: {reason}")
+        reason = public_artifact_ref_error(data.get("operator_understanding_confirmation_ref"))
+        if reason:
+            errors.append(f"{at}.operator_understanding_confirmation_ref: {reason}")
         source_signal = data.get("source_signal") if isinstance(data.get("source_signal"), dict) else {}
         signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
         reason = public_artifact_ref_error(signal_ref)
@@ -1298,6 +1510,14 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
                 errors.append(f"{at}.blocking_rules.{field} must be true")
         if not isinstance(blocking_rules.get("product_sot_blocked_until_outcome_reviewed"), bool):
             errors.append(f"{at}.blocking_rules.product_sot_blocked_until_outcome_reviewed must be boolean")
+        if source_signal.get("needs_product_sot") is True:
+            understanding_ref = str(data.get("operator_understanding_confirmation_ref") or "").strip()
+            if not understanding_ref:
+                errors.append(f"{at}: outcome_contract requires operator_understanding_confirmation_ref before Product SOT")
+            if understanding_ref.startswith("pending/"):
+                errors.append(f"{at}: outcome_contract operator_understanding_confirmation_ref is still pending")
+            if blocking_rules.get("operator_understanding_confirmation_required") is not True:
+                errors.append(f"{at}: outcome_contract must require operator understanding confirmation when Product SOT is required")
         handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
         next_worker = str(handoff.get("next_worker") or "").strip()
         if handoff.get("factory_owned_next_step") is not True:
@@ -1323,10 +1543,15 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "product_sot":
-        for field in ("outcome_contract_ref", "source_ledger_ref", "full_product_sot_scope_coverage_ref"):
+        for field in ("outcome_contract_ref", "source_ledger_ref", "operator_understanding_confirmation_ref", "full_product_sot_scope_coverage_ref"):
             reason = public_artifact_ref_error(data.get(field))
             if reason:
                 errors.append(f"{at}.{field}: {reason}")
+        understanding_ref = str(data.get("operator_understanding_confirmation_ref") or "").strip()
+        if not understanding_ref:
+            errors.append(f"{at}: product_sot requires operator_understanding_confirmation_ref")
+        if understanding_ref.startswith("pending/"):
+            errors.append(f"{at}: product_sot operator_understanding_confirmation_ref is still pending")
         source_signal = data.get("source_signal") if isinstance(data.get("source_signal"), dict) else {}
         signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
         reason = public_artifact_ref_error(signal_ref)
@@ -1372,6 +1597,7 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
         for field in (
             "outcome_contract_required",
+            "operator_understanding_confirmation_required",
             "full_scope_coverage_required",
             "method_contract_required",
             "execution_blocked_until_required_artifacts_pass",

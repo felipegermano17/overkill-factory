@@ -8,6 +8,7 @@
     "target_users",
     "why_it_matters",
     "outcome",
+    "operator_understanding_confirmation_ref",
     "scope_in",
     "scope_out",
     "risks",
@@ -31,6 +32,7 @@
     "factory_method_version": { "const": "OVERKILL_VFINAL" },
     "outcome_contract_ref": { "type": "string", "minLength": 3 },
     "source_ledger_ref": { "type": "string", "minLength": 3 },
+    "operator_understanding_confirmation_ref": { "type": "string", "minLength": 3 },
     "source_signal": {
       "type": "object",
       "additionalProperties": true
@@ -95,6 +97,7 @@
       "type": "object",
       "required": [
         "outcome_contract_required",
+        "operator_understanding_confirmation_required",
         "full_scope_coverage_required",
         "method_contract_required",
         "execution_blocked_until_required_artifacts_pass",
@@ -103,6 +106,7 @@
       ],
       "properties": {
         "outcome_contract_required": { "const": true },
+        "operator_understanding_confirmation_required": { "const": true },
         "full_scope_coverage_required": { "const": true },
         "method_contract_required": { "const": true },
         "execution_blocked_until_required_artifacts_pass": { "const": true },

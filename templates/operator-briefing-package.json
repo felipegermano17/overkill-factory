@@ -1,0 +1,93 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-briefing-package.schema.json",
+  "record_type": "operator_briefing_package",
+  "briefing_id": "operator-briefing-product-sot-public-template",
+  "created_at": "2026-06-23T00:00:00+00:00",
+  "primary_interface_ref": "operator-interface-telegram",
+  "primary_interface": "telegram",
+  "target_artifact": {
+    "artifact_type": "product_sot",
+    "artifact_ref": "templates/product-sot.json",
+    "stage": "planning",
+    "decision_required": true
+  },
+  "briefing_depth": {
+    "depth": "deep_decision_package",
+    "source_document_required": true,
+    "pdf_required": true,
+    "summary_only_forbidden_when_decision_required": true
+  },
+  "delivery_assets": [
+    {
+      "kind": "short_message",
+      "asset_ref": "external:operator-briefing-caption-product-sot-public-template",
+      "required_for_operator_decision": false,
+      "purpose": "short channel projection"
+    },
+    {
+      "kind": "markdown_document",
+      "asset_ref": "reports/product-sot-public-template/briefing.md",
+      "required_for_operator_decision": true,
+      "purpose": "deep readable source document"
+    },
+    {
+      "kind": "pdf_document",
+      "asset_ref": "reports/product-sot-public-template/briefing.pdf",
+      "required_for_operator_decision": true,
+      "purpose": "Telegram friendly review attachment"
+    },
+    {
+      "kind": "diagram",
+      "asset_ref": "reports/product-sot-public-template/diagram.png",
+      "required_for_operator_decision": false,
+      "purpose": "optional visual explanation"
+    },
+    {
+      "kind": "video_explainer",
+      "asset_ref": "reports/product-sot-public-template/explainer.mp4",
+      "required_for_operator_decision": false,
+      "purpose": "optional Manim or HyperFrames explainer"
+    },
+    {
+      "kind": "audio_explainer",
+      "asset_ref": "reports/product-sot-public-template/explainer.mp3",
+      "required_for_operator_decision": false,
+      "purpose": "optional spoken walkthrough"
+    }
+  ],
+  "interface_projection": {
+    "short_caption": "Documento profundo preparado; leia o anexo antes de confirmar, corrigir ou rejeitar.",
+    "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer", "audio_explainer"],
+    "fallback_when_attachment_fails": "send markdown document and public-safe artifact refs, then retry PDF asynchronously",
+    "max_questions_after_delivery": 5
+  },
+  "decision_boundary": {
+    "briefing_is_not_source_of_truth": true,
+    "approval_requires_human_gate_when_authority_risk_access_release": true,
+    "operator_can_request_changes": true,
+    "execution_not_allowed_from_briefing": true
+  },
+  "proactive_delivery": {
+    "push_required": true,
+    "operator_polling_required": false,
+    "notify_when_ready": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "operator_instance_may_hold_private_source": true
+  },
+  "acceptance": {
+    "briefing_package_created": true,
+    "deep_document_attached": true,
+    "pdf_attached_or_required": true,
+    "summary_only": false,
+    "execution_allowed": false,
+    "operator_polling_required": false,
+    "evidence_refs": [
+      "schemas/operator-briefing-package.schema.json",
+      "schemas/operator-interface-profile.schema.json"
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-start-conversation.schema.json",
+  "record_type": "factory_start_conversation",
+  "conversation_id": "factory-start-telegram-public-template",
+  "created_at": "2026-06-23T00:00:00+00:00",
+  "primary_interface_ref": "operator-interface-telegram",
+  "primary_interface": "telegram",
+  "source_envelope_ref": "external:operator-source-envelope",
+  "start_mode": "conversational_intake_before_factory_start",
+  "conversation_state": {
+    "status": "clarifying",
+    "rounds_completed": 0,
+    "open_questions": [
+      "Confirma que esse entendimento descreve o produto certo antes da fabrica iniciar?"
+    ],
+    "max_questions_next_turn": 5
+  },
+  "product_understanding_loop": {
+    "operator_understanding_confirmation_required": true,
+    "raw_material_not_assumed_complete": true,
+    "dynamic_questions_allowed": true,
+    "max_questions_per_turn": 5,
+    "confirmed_understanding_ref": "pending:operator-understanding-confirmation"
+  },
+  "factory_start_boundary": {
+    "factory_start_forbidden_until_understanding_confirmed": true,
+    "manager_compiles_conversation_before_start": true,
+    "new_project_creates_fresh_hermes_board": true,
+    "bridge_does_not_create_cards": true,
+    "execution_forbidden_at_start_conversation": true
+  },
+  "handoff": {
+    "next_artifact": "operator_understanding_confirmation",
+    "next_worker": "factory-orchestrator",
+    "factory_bridge_start_request_ref": "not-created-before-confirmation",
+    "next_safe_action": "Continue the conversational start until understanding is confirmed or corrected.",
+    "user_decision_required": true,
+    "factory_owned_next_step": false
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "operator_instance_may_hold_private_source": true
+  },
+  "acceptance": {
+    "start_conversation_created": true,
+    "factory_start_allowed": false,
+    "execution_allowed": false,
+    "operator_polling_required": false,
+    "blocked_reason": "Factory start is blocked until the operator confirms or corrects the product understanding.",
+    "evidence_refs": [
+      "schemas/factory-start-conversation.schema.json",
+      "schemas/operator-interface-profile.schema.json"
+    ]
+  }
+}

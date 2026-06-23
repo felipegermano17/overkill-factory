@@ -6,6 +6,7 @@
   "factory_method_version": "OVERKILL_VFINAL",
   "outcome_contract_ref": "templates/outcome-contract.json",
   "source_ledger_ref": "templates/product-source-ledger.json",
+  "operator_understanding_confirmation_ref": "templates/operator-understanding-confirmation.json",
   "source_signal": {
     "intake_id": "universal-signal-intake-public-template",
     "signal_type": "product_paper",
@@ -53,10 +54,12 @@
   "evidence_refs": [
     "templates/outcome-contract.json",
     "templates/product-source-ledger.json",
+    "templates/operator-understanding-confirmation.json",
     "schemas/product-sot.schema.json"
   ],
   "blocking_rules": {
     "outcome_contract_required": true,
+    "operator_understanding_confirmation_required": true,
     "full_scope_coverage_required": true,
     "method_contract_required": true,
     "execution_blocked_until_required_artifacts_pass": true,

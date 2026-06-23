@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operator-interface-profile.schema.json",
+  "title": "Overkill Factory Operator Interface Profile",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "profile_id",
+    "created_at",
+    "primary_interface",
+    "primary_language",
+    "interface_capabilities",
+    "conversation_policy",
+    "proactive_notification_policy",
+    "artifact_delivery_policy",
+    "public_private_boundary",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/operator-interface-profile.schema.json" },
+    "record_type": { "const": "operator_interface_profile" },
+    "profile_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "primary_interface": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+    "primary_language": { "type": "string", "minLength": 2 },
+    "interface_capabilities": {
+      "type": "object",
+      "required": [
+        "max_short_message_chars",
+        "supports_file_attachments",
+        "supports_push_notifications",
+        "supports_threads",
+        "supports_buttons",
+        "supported_attachment_formats"
+      ],
+      "properties": {
+        "max_short_message_chars": { "type": "integer", "minimum": 500, "maximum": 10000 },
+        "supports_file_attachments": { "type": "boolean" },
+        "supports_push_notifications": { "const": true },
+        "supports_threads": { "type": "boolean" },
+        "supports_buttons": { "type": "boolean" },
+        "supported_attachment_formats": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "html", "link"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "conversation_policy": {
+      "type": "object",
+      "required": [
+        "start_mode",
+        "max_questions_per_message",
+        "batch_nonurgent_questions",
+        "status_polling_required",
+        "operator_not_required_to_poll",
+        "internal_coordination_hidden",
+        "short_message_is_projection_only"
+      ],
+      "properties": {
+        "start_mode": { "const": "conversational_intake_before_factory_start" },
+        "max_questions_per_message": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "batch_nonurgent_questions": { "const": true },
+        "status_polling_required": { "const": false },
+        "operator_not_required_to_poll": { "const": true },
+        "internal_coordination_hidden": { "const": true },
+        "short_message_is_projection_only": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "proactive_notification_policy": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "operator_polling_required",
+        "max_silent_minutes_when_running",
+        "notify_on",
+        "batch_without_waking_for"
+      ],
+      "properties": {
+        "enabled": { "const": true },
+        "operator_polling_required": { "const": false },
+        "max_silent_minutes_when_running": { "type": "integer", "minimum": 5, "maximum": 120 },
+        "notify_on": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "factory_started",
+              "decision_required",
+              "gate_blocked",
+              "worker_batch_completed",
+              "review_required",
+              "release_or_risk_approval_required",
+              "idle_timeout_detected"
+            ]
+          }
+        },
+        "batch_without_waking_for": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact_delivery_policy": {
+      "type": "object",
+      "required": [
+        "deep_artifacts_required",
+        "decision_artifacts_need_attachments",
+        "required_attachment_formats",
+        "optional_explainer_formats",
+        "optional_renderer_slots",
+        "send_for_artifact_types",
+        "summary_only_forbidden_when_decision_required"
+      ],
+      "properties": {
+        "deep_artifacts_required": { "const": true },
+        "decision_artifacts_need_attachments": { "const": true },
+        "required_attachment_formats": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "enum": ["markdown", "pdf"] }
+        },
+        "optional_explainer_formats": {
+          "type": "array",
+          "items": { "enum": ["diagram_png", "video_mp4", "audio_mp3", "html"] }
+        },
+        "optional_renderer_slots": {
+          "type": "array",
+          "items": { "enum": ["manim_animation", "hyperframes_html_video", "audio_narration"] }
+        },
+        "send_for_artifact_types": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "summary_only_forbidden_when_decision_required": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo",
+        "operator_instance_may_hold_private_source"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true },
+        "operator_instance_may_hold_private_source": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "interface_profile_created",
+        "telegram_ready",
+        "proactive_notifications_required",
+        "operator_polling_required",
+        "execution_allowed",
+        "evidence_refs"
+      ],
+      "properties": {
+        "interface_profile_created": { "const": true },
+        "telegram_ready": { "type": "boolean" },
+        "proactive_notifications_required": { "const": true },
+        "operator_polling_required": { "const": false },
+        "execution_allowed": { "const": false },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

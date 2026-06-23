@@ -70,6 +70,14 @@
       "blocks_execution_when_missing": true
     },
     {
+      "artifact_type": "operator_understanding_confirmation",
+      "artifact_ref": "templates/operator-understanding-confirmation.json",
+      "required_before": "product_sot",
+      "owner_worker": "factory-orchestrator",
+      "status": "pending_factory_worker",
+      "blocks_execution_when_missing": true
+    },
+    {
       "artifact_type": "outcome_contract",
       "artifact_ref": "templates/vfinal-factory-card.json#outcome_contract",
       "required_before": "product_sot",

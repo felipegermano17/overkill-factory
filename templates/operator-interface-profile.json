@@ -1,0 +1,77 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-interface-profile.schema.json",
+  "record_type": "operator_interface_profile",
+  "profile_id": "operator-interface-telegram",
+  "created_at": "2026-06-23T00:00:00+00:00",
+  "primary_interface": "telegram",
+  "primary_language": "pt-BR",
+  "interface_capabilities": {
+    "max_short_message_chars": 3200,
+    "supports_file_attachments": true,
+    "supports_push_notifications": true,
+    "supports_threads": false,
+    "supports_buttons": true,
+    "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "link"]
+  },
+  "conversation_policy": {
+    "start_mode": "conversational_intake_before_factory_start",
+    "max_questions_per_message": 5,
+    "batch_nonurgent_questions": true,
+    "status_polling_required": false,
+    "operator_not_required_to_poll": true,
+    "internal_coordination_hidden": true,
+    "short_message_is_projection_only": true
+  },
+  "proactive_notification_policy": {
+    "enabled": true,
+    "operator_polling_required": false,
+    "max_silent_minutes_when_running": 30,
+    "notify_on": [
+      "factory_started",
+      "decision_required",
+      "gate_blocked",
+      "worker_batch_completed",
+      "review_required",
+      "release_or_risk_approval_required",
+      "idle_timeout_detected"
+    ],
+    "batch_without_waking_for": [
+      "internal_worker_handoff",
+      "schema_validation_pass",
+      "informational_progress_without_state_change"
+    ]
+  },
+  "artifact_delivery_policy": {
+    "deep_artifacts_required": true,
+    "decision_artifacts_need_attachments": true,
+    "required_attachment_formats": ["markdown", "pdf"],
+    "optional_explainer_formats": ["diagram_png", "video_mp4", "audio_mp3", "html"],
+    "optional_renderer_slots": ["manim_animation", "hyperframes_html_video", "audio_narration"],
+    "send_for_artifact_types": [
+      "architecture_candidate",
+      "method_contract",
+      "operator_understanding_confirmation",
+      "product_sot",
+      "release_decision",
+      "security_architecture_plan"
+    ],
+    "summary_only_forbidden_when_decision_required": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "operator_instance_may_hold_private_source": true
+  },
+  "acceptance": {
+    "interface_profile_created": true,
+    "telegram_ready": true,
+    "proactive_notifications_required": true,
+    "operator_polling_required": false,
+    "execution_allowed": false,
+    "evidence_refs": [
+      "schemas/operator-interface-profile.schema.json",
+      "templates/operator-interface-profile.json"
+    ]
+  }
+}

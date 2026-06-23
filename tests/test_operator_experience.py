@@ -124,10 +124,123 @@ class OperatorExperienceTest(unittest.TestCase):
         help_text = run_factoryctl("--help").stdout
         run_help = run_factoryctl("run", "--help").stdout
 
-        for command in ["doctor", "init", "run", "unblock-plan", "recovery-plan", "help-next"]:
+        for command in [
+            "doctor",
+            "init",
+            "run",
+            "operator-interface",
+            "start-conversation",
+            "briefing-package",
+            "unblock-plan",
+            "recovery-plan",
+            "help-next",
+        ]:
             with self.subTest(command=command):
                 self.assertIn(command, help_text)
         self.assertIn("minimal", run_help)
+
+    def test_telegram_interface_contract_requires_proactive_deep_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "operator-interface.json"
+            run_factoryctl(
+                "operator-interface",
+                "--primary-interface",
+                "telegram",
+                "--out",
+                str(out),
+            )
+            profile = json.loads(out.read_text(encoding="utf-8"))
+
+        self.assertEqual(profile["primary_interface"], "telegram")
+        self.assertFalse(profile["conversation_policy"]["status_polling_required"])
+        self.assertTrue(profile["conversation_policy"]["operator_not_required_to_poll"])
+        self.assertIn("decision_required", profile["proactive_notification_policy"]["notify_on"])
+        self.assertIn("idle_timeout_detected", profile["proactive_notification_policy"]["notify_on"])
+        self.assertEqual(profile["artifact_delivery_policy"]["required_attachment_formats"], ["markdown", "pdf"])
+        self.assertIn("product_sot", profile["artifact_delivery_policy"]["send_for_artifact_types"])
+
+    def test_start_conversation_blocks_factory_start_until_understanding_confirmed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            interface = tmp / "operator-interface.json"
+            pending = tmp / "start-pending.json"
+            confirmed = tmp / "start-confirmed.json"
+            run_factoryctl("operator-interface", "--primary-interface", "telegram", "--out", str(interface))
+            run_factoryctl(
+                "start-conversation",
+                "--operator-interface",
+                str(interface),
+                "--source-envelope-ref",
+                "external:operator-source-envelope",
+                "--out",
+                str(pending),
+            )
+            run_factoryctl(
+                "start-conversation",
+                "--operator-interface",
+                str(interface),
+                "--source-envelope-ref",
+                "external:operator-source-envelope",
+                "--confirmed",
+                "--confirmed-understanding-ref",
+                "external:sanitized-operator-understanding-confirmed",
+                "--factory-start-request-ref",
+                "external:operator-factory-start-request",
+                "--out",
+                str(confirmed),
+            )
+            missing_start_request = run_factoryctl_blocking_ok(
+                "start-conversation",
+                "--operator-interface",
+                str(interface),
+                "--source-envelope-ref",
+                "external:operator-source-envelope",
+                "--confirmed",
+                "--confirmed-understanding-ref",
+                "external:sanitized-operator-understanding-confirmed",
+                "--out",
+                str(tmp / "missing-start-request.json"),
+            )
+            pending_payload = json.loads(pending.read_text(encoding="utf-8"))
+            confirmed_payload = json.loads(confirmed.read_text(encoding="utf-8"))
+
+        self.assertFalse(pending_payload["acceptance"]["factory_start_allowed"])
+        self.assertTrue(pending_payload["handoff"]["user_decision_required"])
+        self.assertTrue(confirmed_payload["acceptance"]["factory_start_allowed"])
+        self.assertEqual(confirmed_payload["handoff"]["next_artifact"], "factory_bridge_start_request")
+        self.assertFalse(confirmed_payload["acceptance"]["execution_allowed"])
+        self.assertNotEqual(missing_start_request.returncode, 0)
+        self.assertIn("factory_start_request_ref is required", missing_start_request.stderr)
+
+    def test_briefing_package_requires_pdf_markdown_and_push_delivery_for_decisions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            interface = tmp / "operator-interface.json"
+            briefing = tmp / "briefing.json"
+            run_factoryctl("operator-interface", "--primary-interface", "telegram", "--out", str(interface))
+            run_factoryctl(
+                "briefing-package",
+                "--operator-interface",
+                str(interface),
+                "--artifact-type",
+                "architecture_candidate",
+                "--artifact-ref",
+                "external:sanitized-architecture-candidate",
+                "--decision-required",
+                "--out",
+                str(briefing),
+            )
+            payload = json.loads(briefing.read_text(encoding="utf-8"))
+
+        required_assets = {
+            asset["kind"]
+            for asset in payload["delivery_assets"]
+            if asset["required_for_operator_decision"]
+        }
+        self.assertTrue({"markdown_document", "pdf_document"}.issubset(required_assets))
+        self.assertTrue(payload["proactive_delivery"]["push_required"])
+        self.assertFalse(payload["proactive_delivery"]["operator_polling_required"])
+        self.assertFalse(payload["acceptance"]["summary_only"])
 
     def test_unblock_plan_emits_semantic_recovery_contract(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

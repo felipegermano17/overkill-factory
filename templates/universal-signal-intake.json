@@ -26,11 +26,21 @@
   },
   "normalization": {
     "source_resolution_required": true,
+    "operator_understanding_confirmation_required": true,
     "outcome_discovery_required": true,
     "dedupe_key": "public-template-product-paper",
     "conflict_policy": "Conflicting or stale source claims stay blocked until source resolution assigns an owner and next action.",
     "missing_info_policy": "Discoverable missing information is resolved by the factory; only authority, access, risk or preference gates reach the user.",
     "no_chat_only_state": true
+  },
+  "domain_routing": {
+    "detected_surfaces": [],
+    "inference_routes": [],
+    "capability_pack_ids": [],
+    "official_brain_provider_required": false,
+    "official_brain_provider_ref": "not_required",
+    "required_workers_before_execution": [],
+    "product_sot_must_include_domain_brain": false
   },
   "route_decision": {
     "method_contract_ref": "templates/method-contract.json",
@@ -55,6 +65,14 @@
       "artifact_ref": "templates/reference-source-registry.json",
       "required_before": "source_resolution",
       "owner_worker": "source-ledger-worker",
+      "status": "required",
+      "blocks_execution_when_missing": true
+    },
+    {
+      "artifact_type": "operator_understanding_confirmation",
+      "artifact_ref": "templates/operator-understanding-confirmation.json",
+      "required_before": "product_sot",
+      "owner_worker": "factory-orchestrator",
       "status": "required",
       "blocks_execution_when_missing": true
     },

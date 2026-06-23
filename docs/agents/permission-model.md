@@ -3,9 +3,10 @@
 The Factory is modular, but modular does not mean every agent can do
 everything.
 
-Hermes Kanban remains the durable source of truth. Discord is the operator
-operator console. Workers produce bounded results. State changes, release decisions and
-human gates must go through explicit runtime contracts.
+Hermes Kanban remains the durable source of truth. Telegram, Discord and Cockpit
+are operator interfaces, not source-of-truth layers. Workers produce bounded
+results. State changes, release decisions and human gates must go through
+explicit runtime contracts.
 
 Machine-readable matrix:
 
@@ -32,8 +33,8 @@ state. The adapter and Hermes gates own durable state transitions.
 | `remote_proof` | Runs bounded proof in controlled environments. |
 | `release_operator` | Prepares release, rollback and production readiness. |
 | `human_record` | Records explicit human decisions. |
-| `discord_interface` | Talks to the human operator through Discord. |
-| `bridge` | Maps Hermes and Discord events without deciding product direction. |
+| `operator_interface` | Talks to the human operator through the selected primary interface. |
+| `bridge` | Maps Hermes and operator-interface events without deciding product direction. |
 | `read_only_projection` | Projects runtime state into a human-readable operator console. |
 
 ## Boundary

@@ -5,6 +5,7 @@
   "created_at": "2026-06-17T00:00:00+00:00",
   "factory_method_version": "OVERKILL_VFINAL",
   "source_ledger_ref": "product-source-ledger-public-template",
+  "operator_understanding_confirmation_ref": "templates/operator-understanding-confirmation.json",
   "source_signal": {
     "intake_id": "universal-signal-intake-public-template",
     "signal_type": "product_paper",
@@ -34,7 +35,8 @@
     "Do not start implementation from a static template."
   ],
   "open_questions": [
-    "Worker-owned claim review must decide which source claims become scope."
+    "Worker-owned claim review must decide which source claims become scope.",
+    "Operator understanding confirmation must be resolved before Product SOT can be promoted."
   ],
   "evidence_refs": [
     "templates/product-source-ledger.json",
@@ -53,6 +55,7 @@
   "discovery_depth": "standard",
   "blocking_rules": {
     "source_ledger_required": true,
+    "operator_understanding_confirmation_required": true,
     "product_sot_blocked_until_outcome_reviewed": true,
     "execution_blocked_until_required_artifacts_pass": true,
     "raw_private_evidence_must_stay_external": true,
@@ -75,7 +78,7 @@
     "outcome_contract_created": true,
     "product_sot_generated": false,
     "execution_allowed": false,
-    "blocked_reason": "Outcome contract exists, but execution remains blocked until Product SOT, method contract, readiness and gates pass.",
+    "blocked_reason": "Outcome contract exists, but execution remains blocked until operator understanding confirmation, Product SOT, method contract, readiness and gates pass.",
     "evidence_refs": [
       "schemas/outcome-contract.schema.json",
       "templates/product-source-ledger.json"

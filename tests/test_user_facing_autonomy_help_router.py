@@ -125,6 +125,25 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
             errors,
         )
 
+    def test_product_intent_confirmation_is_user_visible_without_execution_approval(self) -> None:
+        card = load_vfinal_card()
+        card["user_facing_autonomy_contract"]["user_questions"] = [
+            {
+                "question": "Confirma que esse entendimento descreve o produto certo antes do Product SOT?",
+                "class": "product_intent_confirmation",
+                "factory_resolution_path": "operator understanding confirmation packet",
+            }
+        ]
+
+        errors = factoryctl.validate_card(card)
+        payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
+
+        self.assertEqual(errors, [])
+        decision = payload["user_decision_required"][0]
+        self.assertEqual(decision["decision_type"], "product_intent_confirmation")
+        self.assertIn("confirm, correct or reject", decision["user_action"])
+        self.assertNotIn("approve", decision["user_action"].lower())
+
 
 if __name__ == "__main__":
     unittest.main()

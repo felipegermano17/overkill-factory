@@ -4,8 +4,9 @@ Language: English | [Portugues](README.pt-BR.md)
 
 Overkill Factory is an open-source production system for agentic product work.
 It turns rough product signals into controlled factory state: source intake,
-Product SOT, full-scope planning, method routing, worker packets, gates,
-evidence, review, release readiness and learnback.
+operator understanding confirmation, Product SOT, full-scope planning, method
+routing, worker packets, gates, evidence, review, release readiness and
+learnback.
 
 It is built for operators who want agents to work without letting chat,
 enthusiasm or a partial demo become the source of truth.
@@ -36,6 +37,7 @@ The public method is a complete production line, not an MVP shortcut:
 raw signal
 -> Universal Signal Intake
 -> source ledger and source resolution
+-> operator understanding confirmation
 -> outcome and discovery
 -> Product SOT
 -> full Product SOT scope coverage
@@ -147,11 +149,15 @@ Useful next commands:
 
 ```bash
 factoryctl init --out ../my-product-factory --project-name my-product
+factoryctl operator-interface --primary-interface telegram --out .tmp/operator-interface-profile.json
+factoryctl start-conversation --operator-interface .tmp/operator-interface-profile.json --source-envelope-ref external:operator-source-envelope --out .tmp/factory-start-conversation.json
 factoryctl route-registry --route-class product_creation
 factoryctl intake --route-class product_creation --request-type product_new --signal-type product_paper --summary "Public product brief enters the complete product-creation route." --source-ref external:source-card-product-brief --out .tmp/product-intake.json
 factoryctl source-resolution --intake .tmp/product-intake.json --intake-ref external:sanitized-product-intake --out .tmp/source-resolution-packet.json
 factoryctl source-ledger --source-resolution .tmp/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json
-factoryctl outcome-contract --source-ledger .tmp/product-source-ledger.json --out .tmp/outcome-contract.json
+factoryctl understanding-confirmation --source-ledger .tmp/product-source-ledger.json --operator-response-ref external:sanitized-operator-understanding-confirmed --confirmed --out .tmp/operator-understanding-confirmation.json
+factoryctl briefing-package --operator-interface .tmp/operator-interface-profile.json --artifact-type product_sot --artifact-ref templates/product-sot.json --decision-required --out .tmp/operator-briefing-package.json
+factoryctl outcome-contract --source-ledger .tmp/product-source-ledger.json --operator-understanding-confirmation-ref operator-understanding-intake-product-creation-external-source-card-product-brief --out .tmp/outcome-contract.json
 factoryctl product-sot --outcome-contract .tmp/outcome-contract.json --out .tmp/product-sot.json
 factoryctl full-scope-coverage --product-sot .tmp/product-sot.json --out .tmp/full-product-sot-scope-coverage.json
 factoryctl method-contract --full-scope-coverage .tmp/full-product-sot-scope-coverage.json --out .tmp/method-contract.json
@@ -201,6 +207,11 @@ v1.3.0. It includes:
 
 - Universal Signal Intake and route registry;
 - Golden Corpus and signal coverage checks;
+- operator interface profiles for Telegram, Discord, Cockpit and bridge use;
+- conversational start before a factory start request is created;
+- operator understanding confirmation before Product SOT for product creation;
+- deep operator briefing packages with document/PDF attachments for important
+  decisions;
 - Product SOT, full-scope planning and method contracts;
 - worker registry, Hermes bindings and permission classes;
 - capability-pack activation rules;

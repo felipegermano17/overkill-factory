@@ -12,6 +12,7 @@
     "signal",
     "classification",
     "normalization",
+    "domain_routing",
     "route_decision",
     "required_artifacts",
     "required_gates",
@@ -215,6 +216,7 @@
       "type": "object",
       "required": [
         "source_resolution_required",
+        "operator_understanding_confirmation_required",
         "outcome_discovery_required",
         "dedupe_key",
         "conflict_policy",
@@ -224,6 +226,9 @@
       "properties": {
         "source_resolution_required": {
           "const": true
+        },
+        "operator_understanding_confirmation_required": {
+          "type": "boolean"
         },
         "outcome_discovery_required": {
           "type": "boolean"
@@ -243,6 +248,51 @@
         "no_chat_only_state": {
           "const": true
         }
+      },
+      "additionalProperties": false
+    },
+    "domain_routing": {
+      "type": "object",
+      "required": [
+        "detected_surfaces",
+        "inference_routes",
+        "capability_pack_ids",
+        "official_brain_provider_required",
+        "official_brain_provider_ref",
+        "required_workers_before_execution",
+        "product_sot_must_include_domain_brain"
+      ],
+      "properties": {
+        "detected_surfaces": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        },
+        "inference_routes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["surface", "reason"],
+            "properties": {
+              "surface": { "type": "string", "minLength": 3 },
+              "reason": { "type": "string", "minLength": 6 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "capability_pack_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        },
+        "official_brain_provider_required": { "type": "boolean" },
+        "official_brain_provider_ref": { "type": "string", "minLength": 3 },
+        "required_workers_before_execution": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        },
+        "product_sot_must_include_domain_brain": { "type": "boolean" }
       },
       "additionalProperties": false
     },

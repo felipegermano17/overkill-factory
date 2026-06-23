@@ -176,7 +176,15 @@ COMPLETION_SOT_STATUSES = {"DONE", "BLOCKED", "DEFERRED_WITH_OWNER", "OUT_OF_SCO
 COMPLETION_METHOD_STATUSES = {"EXECUTED", "WAIVED", "BLOCKED"}
 COMPLETION_ACCEPTANCE_DECISIONS = {"scope_accounted", "done_with_owner", "production_complete", "customer_ready"}
 PRODUCTION_ACCEPTANCE_DECISIONS = {"production_complete", "customer_ready"}
-USER_QUESTION_CLASSES = {"discoverable", "preference", "authority_required", "access_required", "risk_acceptance", "blocked"}
+USER_QUESTION_CLASSES = {
+    "discoverable",
+    "product_intent_confirmation",
+    "preference",
+    "authority_required",
+    "access_required",
+    "risk_acceptance",
+    "blocked",
+}
 ALLOWED_USER_QUESTION_CLASSES = USER_QUESTION_CLASSES - {"discoverable"}
 INTERNAL_COORDINATION_TERMS = {
     "worker packet",
@@ -220,6 +228,15 @@ SECRET_DELIVERY_SAFE_MODES = {
 SECRET_DELIVERY_EXCEPTION_MODES = {"startup_env", "runtime_file"}
 SOLANA_AI_KIT_PACK_ID = "solana-ai-kit-core"
 SOLANA_AI_KIT_USAGE_RECEIPT_FIELD = "solana_ai_kit_usage_receipt"
+PRIMARY_OPERATOR_INTERFACES = {"telegram", "discord", "cockpit", "codex_bridge", "cli", "api"}
+OPERATOR_BRIEFING_DECISION_ARTIFACTS = {
+    "operator_understanding_confirmation",
+    "product_sot",
+    "architecture_candidate",
+    "security_architecture_plan",
+    "method_contract",
+    "release_decision",
+}
 SOLANA_DOMAIN_BRAIN_WORKERS = {
     "backend-api-builder",
     "codex-security",
@@ -3332,8 +3349,11 @@ def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
         if interrupt_policy.get("default_behavior") != "do_not_interrupt_operator":
             errors.append("user_facing_autonomy_contract.operator_interrupt_policy.default_behavior must be do_not_interrupt_operator")
         ask_now = set(_list_items(interrupt_policy.get("ask_immediately_when")))
-        if not {"authority_required", "access_required", "risk_acceptance"}.issubset(ask_now):
-            errors.append("user_facing_autonomy_contract.operator_interrupt_policy.ask_immediately_when must include authority_required, access_required and risk_acceptance")
+        if not {"product_intent_confirmation", "authority_required", "access_required", "risk_acceptance"}.issubset(ask_now):
+            errors.append(
+                "user_facing_autonomy_contract.operator_interrupt_policy.ask_immediately_when must include "
+                "product_intent_confirmation, authority_required, access_required and risk_acceptance"
+            )
         auto_resolve = " ".join(_list_items(interrupt_policy.get("auto_resolve_when"))).lower()
         for required in ("discoverable", "internal coordination", "worker evidence", "non-human"):
             if required not in auto_resolve:
@@ -6429,8 +6449,37 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
     normalization = intake.get("normalization") if isinstance(intake.get("normalization"), dict) else {}
     if normalization.get("source_resolution_required") is not True:
         errors.append("universal_signal_intake.source_resolution_required must be true")
+    if route_class == "product_creation" and normalization.get("operator_understanding_confirmation_required") is not True:
+        errors.append(
+            "universal_signal_intake.product_creation requires operator_understanding_confirmation before Product SOT"
+        )
     if normalization.get("no_chat_only_state") is not True:
         errors.append("universal_signal_intake.no_chat_only_state must be true")
+
+    domain = intake.get("domain_routing") if isinstance(intake.get("domain_routing"), dict) else {}
+    detected_surfaces = {str(surface).strip().lower() for surface in _list_items(domain.get("detected_surfaces"))}
+    capability_pack_ids = {str(pack).strip() for pack in _list_items(domain.get("capability_pack_ids"))}
+    domain_workers = {str(worker).strip() for worker in _list_items(domain.get("required_workers_before_execution"))}
+    if detected_surfaces & SOLANA_DOMAIN_SURFACES:
+        if SOLANA_AI_KIT_PACK_ID not in capability_pack_ids:
+            errors.append("universal_signal_intake Solana/onchain domain requires solana-ai-kit-core capability pack")
+        if domain.get("official_brain_provider_required") is not True:
+            errors.append("universal_signal_intake Solana/onchain domain requires official_brain_provider_required=true")
+        if f"packs.{SOLANA_AI_KIT_PACK_ID}.official_brain_provider" not in str(
+            domain.get("official_brain_provider_ref") or ""
+        ):
+            errors.append("universal_signal_intake Solana/onchain domain must reference the Solana AI Kit official brain provider")
+        if domain.get("product_sot_must_include_domain_brain") is not True:
+            errors.append("universal_signal_intake Solana/onchain Product SOT must include the domain brain")
+        missing_domain_workers = sorted({"product-sot-planner", "product-architect", "solana-quasar-auditor"} - domain_workers)
+        if route_class == "product_creation" and missing_domain_workers:
+            errors.append(
+                "universal_signal_intake Solana/onchain product route missing domain workers: "
+                + ", ".join(missing_domain_workers)
+            )
+    else:
+        if domain.get("official_brain_provider_required") is True:
+            errors.append("universal_signal_intake official_brain_provider_required=true requires detected Solana/onchain surfaces")
 
     route = intake.get("route_decision") if isinstance(intake.get("route_decision"), dict) else {}
     selected_method_family = str(route.get("selected_method_family") or "").strip()
@@ -6500,6 +6549,13 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
             f"universal_signal_intake {route_class} route missing required workers: "
             + ", ".join(missing_workers)
         )
+    if route_class == "product_creation" and detected_surfaces & SOLANA_DOMAIN_SURFACES:
+        missing_domain_required_workers = sorted(domain_workers - intake_worker_ids)
+        if missing_domain_required_workers:
+            errors.append(
+                "universal_signal_intake required_workers missing Solana/onchain domain workers: "
+                + ", ".join(missing_domain_required_workers)
+            )
     for index, worker in enumerate(required_workers):
         if not isinstance(worker, dict):
             continue
@@ -6531,7 +6587,11 @@ def validate_universal_signal_intake(intake: dict[str, Any]) -> list[str]:
 
 
 DEFAULT_ARTIFACT_REFS = {
+    "operator_interface_profile": "templates/operator-interface-profile.json",
+    "factory_start_conversation": "templates/factory-start-conversation.json",
     "source_ledger": "templates/reference-source-registry.json",
+    "operator_understanding_confirmation": "templates/operator-understanding-confirmation.json",
+    "operator_briefing_package": "templates/operator-briefing-package.json",
     "outcome_contract": "templates/outcome-contract.json",
     "product_sot": "templates/product-sot.json",
     "full_product_sot_scope_coverage": "templates/full-product-sot-scope-coverage.json",
@@ -6554,7 +6614,11 @@ DEFAULT_ARTIFACT_REFS = {
 }
 
 DEFAULT_ARTIFACT_OWNERS = {
+    "operator_interface_profile": "factory-orchestrator",
+    "factory_start_conversation": "factory-orchestrator",
     "source_ledger": "source-ledger-worker",
+    "operator_understanding_confirmation": "factory-orchestrator",
+    "operator_briefing_package": "factory-orchestrator",
     "outcome_contract": "product-sot-planner",
     "product_sot": "product-sot-planner",
     "full_product_sot_scope_coverage": "product-sot-planner",
@@ -6580,7 +6644,11 @@ DEFAULT_ARTIFACT_OWNERS = {
 }
 
 ARTIFACT_REQUIRED_BEFORE = {
+    "operator_interface_profile": "intake",
+    "factory_start_conversation": "intake",
     "source_ledger": "source_resolution",
+    "operator_understanding_confirmation": "product_sot",
+    "operator_briefing_package": "operator_decision",
     "outcome_contract": "product_sot",
     "product_sot": "method_contract",
     "full_product_sot_scope_coverage": "method_contract",
@@ -6655,6 +6723,23 @@ def build_universal_signal_intake(
     source_slug = slug_for_ref(signal_ref_public_safe)
     selected_method_family = str(route.get("selected_method_family") or "spec_first")
     first_worker = route_workers[0] if route_workers else "factory-orchestrator"
+    routing_probe = {
+        "summary": summary_public_safe,
+        "target_surface": target_surface,
+        "source_ref": signal_ref_public_safe,
+        "signal_type": signal_type,
+        "request_type": request_type,
+    }
+    domain_routes = inferred_surface_routes(routing_probe)
+    domain_surfaces = sorted({route["surface"] for route in domain_routes})
+    solana_domain = bool(set(domain_surfaces) & SOLANA_DOMAIN_SURFACES)
+    domain_capability_packs = [SOLANA_AI_KIT_PACK_ID] if solana_domain else []
+    domain_workers = (
+        ["product-sot-planner", "product-architect", "solana-quasar-auditor"]
+        if solana_domain and route_class in {"product_creation", "feature_delivery", "research_validation"}
+        else []
+    )
+    route_workers = _dedupe_preserve_order([*route_workers, *domain_workers])
 
     return {
         "$schema": "https://overkill-factory.dev/schemas/universal-signal-intake.schema.json",
@@ -6684,11 +6769,29 @@ def build_universal_signal_intake(
         },
         "normalization": {
             "source_resolution_required": True,
+            "operator_understanding_confirmation_required": route_class == "product_creation",
             "outcome_discovery_required": route_class in {"product_creation", "feature_delivery", "research_validation"},
             "dedupe_key": f"{route_class}:{source_slug}",
             "conflict_policy": "Conflicting or stale source claims stay blocked until source resolution assigns an owner and next action.",
-            "missing_info_policy": "Discoverable missing information is resolved by the factory; only authority, access, risk or preference gates reach the user.",
+            "missing_info_policy": (
+                "Discoverable missing information is resolved by the factory; for new products the operator receives "
+                "one short understanding confirmation before Product SOT; only authority, access, risk or preference "
+                "gates interrupt after that."
+            ),
             "no_chat_only_state": True,
+        },
+        "domain_routing": {
+            "detected_surfaces": domain_surfaces,
+            "inference_routes": domain_routes,
+            "capability_pack_ids": domain_capability_packs,
+            "official_brain_provider_required": solana_domain,
+            "official_brain_provider_ref": (
+                f"agents/capability-packs.public.json#packs.{SOLANA_AI_KIT_PACK_ID}.official_brain_provider"
+                if solana_domain
+                else "not_required"
+            ),
+            "required_workers_before_execution": domain_workers,
+            "product_sot_must_include_domain_brain": solana_domain,
         },
         "route_decision": {
             "method_contract_ref": "templates/method-contract.json",
@@ -7165,6 +7268,9 @@ def build_product_source_ledger(
             "next_artifact": next_artifact_type,
             "next_worker": next_worker,
             "next_safe_action": (
+                "Summarize the factory understanding for Telegram and confirm with the operator before Product SOT."
+                if next_artifact_type == "operator_understanding_confirmation"
+                else
                 "Review source claims and produce the outcome contract before Product SOT."
                 if next_artifact_type == "outcome_contract"
                 else f"Review source claims and produce {next_artifact_type} before execution."
@@ -7296,6 +7402,699 @@ def validate_product_source_ledger(ledger: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _operator_understanding_confirmation_id(source_ledger: dict[str, Any]) -> str:
+    source_signal = source_ledger.get("source_signal") if isinstance(source_ledger.get("source_signal"), dict) else {}
+    seed = str(source_signal.get("intake_id") or source_ledger.get("ledger_id") or "source-ledger")
+    return f"operator-understanding-{slug_for_ref(seed)}"
+
+
+def build_operator_understanding_confirmation(
+    source_ledger: dict[str, Any],
+    *,
+    confirmed: bool = False,
+    operator_response_ref: str | None = None,
+    created_at: str | None = None,
+    confirmation_id: str | None = None,
+) -> dict[str, Any]:
+    ledger_errors = validate_product_source_ledger(source_ledger)
+    if ledger_errors:
+        raise ValueError("; ".join(ledger_errors))
+
+    source_signal = copy.deepcopy(source_ledger.get("source_signal") or {})
+    ledger_id = str(source_ledger.get("ledger_id") or "product-source-ledger")
+    final_id = confirmation_id or _operator_understanding_confirmation_id(source_ledger)
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    response_ref = operator_response_ref or ("external:operator-understanding-confirmed" if confirmed else "pending:operator-reply")
+    status = "confirmed" if confirmed else "pending_operator_confirmation"
+    product_sot_allowed = confirmed
+    target_surface = str(source_signal.get("target_surface") or "target product")
+    summary = str(source_signal.get("summary_public_safe") or "Operator supplied product signal.")
+
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/operator-understanding-confirmation.schema.json",
+        "record_type": "operator_understanding_confirmation",
+        "confirmation_id": final_id,
+        "created_at": created,
+        "factory_method_version": "OVERKILL_VFINAL",
+        "source_ledger_ref": ledger_id,
+        "source_signal": source_signal,
+        "material_inventory": [
+            {
+                "source_id": "source-001",
+                "source_ref_public_safe": str(source_ledger.get("source_ref_public_safe") or "external:source-material"),
+                "interpreted_role": "operator-supplied product source material",
+                "confidence": "bounded",
+            }
+        ],
+        "product_understanding": {
+            "what_the_factory_understands": f"The operator wants a product outcome for {target_surface}: {summary}",
+            "target_user_understanding": ["to be confirmed with the operator before Product SOT"],
+            "business_or_success_understanding": ["source metrics and success criteria must be reflected before SOT"],
+            "non_negotiables_understood": ["raw private source stays outside public artifacts"],
+            "open_uncertainties": [
+                "Does this capture the product you intend to build?",
+                "Which supplied source should override conflicts if materials disagree?",
+                "Which business metric is the strongest success signal for v1?",
+            ],
+            "confidence": "bounded_until_operator_confirms",
+        },
+        "operator_questions": [
+            {
+                "question_id": "understanding-confirmation-001",
+                "question": "Confirma que esse entendimento descreve o produto certo antes da fábrica criar o Product SOT?",
+                "question_class": "product_intent_confirmation",
+                "required_before_product_sot": True,
+            }
+        ],
+        "confirmation_state": {
+            "status": status,
+            "operator_response_ref": response_ref,
+            "changes_required": [],
+            "product_sot_allowed": product_sot_allowed,
+        },
+        "blocking_rules": {
+            "product_sot_blocked_until_operator_understanding_confirmed": True,
+            "max_operator_questions_for_telegram": 5,
+            "summarize_sources_do_not_dump": True,
+            "human_gate_only_for_authority_access_risk_or_preference": True,
+            "understanding_confirmation_is_not_execution_approval": True,
+        },
+        "handoff": {
+            "next_artifact": "outcome_contract" if product_sot_allowed else "operator_understanding_confirmation",
+            "next_worker": "product-sot-planner" if product_sot_allowed else "factory-orchestrator",
+            "next_safe_action": (
+                "Produce outcome contract and Product SOT from confirmed understanding."
+                if product_sot_allowed
+                else "Ask the operator the concise understanding confirmation in Telegram before Product SOT."
+            ),
+            "user_decision_required": not product_sot_allowed,
+            "factory_owned_next_step": product_sot_allowed,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "understanding_confirmation_created": True,
+            "product_sot_allowed": product_sot_allowed,
+            "product_sot_generated": False,
+            "execution_allowed": False,
+            "blocked_reason": (
+                "Operator understanding is confirmed; Product SOT may be drafted but execution remains blocked."
+                if product_sot_allowed
+                else "Product SOT is blocked until the operator confirms or corrects the factory understanding."
+            ),
+            "evidence_refs": [
+                ledger_id,
+                "schemas/operator-understanding-confirmation.schema.json",
+                "schemas/product-source-ledger.schema.json",
+            ],
+        },
+    }
+
+
+def validate_operator_understanding_confirmation(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("operator-understanding-confirmation.schema.json")
+    if not schema:
+        return ["operator_understanding_confirmation schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            packet,
+            "operator_understanding_confirmation",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+    for field in ("source_ledger_ref",):
+        value = str(packet.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"operator_understanding_confirmation.{field}", errors)
+    source_signal = packet.get("source_signal") if isinstance(packet.get("source_signal"), dict) else {}
+    signal_ref = str(source_signal.get("signal_ref_public_safe") or "").strip()
+    if signal_ref:
+        _validate_public_ref(signal_ref, "operator_understanding_confirmation.source_signal.signal_ref_public_safe", errors)
+    for index, item in enumerate(packet.get("material_inventory", []) if isinstance(packet.get("material_inventory"), list) else []):
+        if not isinstance(item, dict):
+            continue
+        ref = str(item.get("source_ref_public_safe") or "").strip()
+        if ref:
+            _validate_public_ref(ref, f"operator_understanding_confirmation.material_inventory[{index}].source_ref_public_safe", errors)
+    state = packet.get("confirmation_state") if isinstance(packet.get("confirmation_state"), dict) else {}
+    status = str(state.get("status") or "").strip()
+    allowed = state.get("product_sot_allowed") is True
+    response_ref = str(state.get("operator_response_ref") or "").strip()
+    if response_ref and not response_ref.startswith("pending:"):
+        _validate_public_ref(response_ref, "operator_understanding_confirmation.confirmation_state.operator_response_ref", errors)
+    if status == "confirmed" and response_ref.startswith("pending:"):
+        errors.append("operator_understanding_confirmation confirmed status requires a real operator_response_ref")
+    if status == "confirmed" and not allowed:
+        errors.append("operator_understanding_confirmation confirmed status requires product_sot_allowed=true")
+    if status != "confirmed" and allowed:
+        errors.append("operator_understanding_confirmation product_sot_allowed=true requires confirmed status")
+    questions = packet.get("operator_questions") if isinstance(packet.get("operator_questions"), list) else []
+    required_questions = [
+        question
+        for question in questions
+        if isinstance(question, dict) and question.get("required_before_product_sot") is True
+    ]
+    if status != "confirmed" and not required_questions:
+        errors.append("operator_understanding_confirmation pending state requires at least one required operator question")
+    rules = packet.get("blocking_rules") if isinstance(packet.get("blocking_rules"), dict) else {}
+    if rules.get("product_sot_blocked_until_operator_understanding_confirmed") is not True:
+        errors.append("operator_understanding_confirmation must block Product SOT until operator understanding is confirmed")
+    if rules.get("summarize_sources_do_not_dump") is not True:
+        errors.append("operator_understanding_confirmation must summarize sources instead of dumping them to Telegram")
+    if rules.get("understanding_confirmation_is_not_execution_approval") is not True:
+        errors.append("operator_understanding_confirmation must not act as execution approval")
+    handoff = packet.get("handoff") if isinstance(packet.get("handoff"), dict) else {}
+    if allowed and handoff.get("next_artifact") != "outcome_contract":
+        errors.append("operator_understanding_confirmation confirmed handoff must go to outcome_contract")
+    if not allowed and handoff.get("user_decision_required") is not True:
+        errors.append("operator_understanding_confirmation pending handoff requires user_decision_required=true")
+    boundary = packet.get("public_private_boundary") if isinstance(packet.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("operator_understanding_confirmation requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("operator_understanding_confirmation must not embed raw private evidence")
+    acceptance = packet.get("acceptance") if isinstance(packet.get("acceptance"), dict) else {}
+    if acceptance.get("understanding_confirmation_created") is not True:
+        errors.append("operator_understanding_confirmation acceptance.understanding_confirmation_created must be true")
+    if acceptance.get("product_sot_allowed") is not allowed:
+        errors.append("operator_understanding_confirmation acceptance.product_sot_allowed must match confirmation_state")
+    if acceptance.get("product_sot_generated") is not False:
+        errors.append("operator_understanding_confirmation must not claim Product SOT was generated")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("operator_understanding_confirmation execution_allowed must be false")
+    return errors
+
+
+def _ensure_public_ref(ref: str, at: str) -> None:
+    _, redaction = sanitize_public_ref(ref)
+    if redaction is not None:
+        raise ValueError(f"{at} must be public-safe")
+
+
+def build_operator_interface_profile(
+    *,
+    primary_interface: str,
+    language: str = "pt-BR",
+    created_at: str | None = None,
+    profile_id: str | None = None,
+) -> dict[str, Any]:
+    interface = primary_interface.strip().lower()
+    if interface not in PRIMARY_OPERATOR_INTERFACES:
+        raise ValueError("primary_interface must be one of: " + ", ".join(sorted(PRIMARY_OPERATOR_INTERFACES)))
+
+    channel_defaults: dict[str, dict[str, Any]] = {
+        "telegram": {
+            "max_short_message_chars": 3200,
+            "supports_file_attachments": True,
+            "supports_threads": False,
+            "supports_buttons": True,
+            "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "link"],
+        },
+        "discord": {
+            "max_short_message_chars": 1800,
+            "supports_file_attachments": True,
+            "supports_threads": True,
+            "supports_buttons": True,
+            "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "link"],
+        },
+        "cockpit": {
+            "max_short_message_chars": 5000,
+            "supports_file_attachments": True,
+            "supports_threads": True,
+            "supports_buttons": True,
+            "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "html", "link"],
+        },
+        "codex_bridge": {
+            "max_short_message_chars": 3500,
+            "supports_file_attachments": True,
+            "supports_threads": True,
+            "supports_buttons": False,
+            "supported_attachment_formats": ["markdown", "pdf", "json", "link"],
+        },
+        "cli": {
+            "max_short_message_chars": 8000,
+            "supports_file_attachments": False,
+            "supports_threads": False,
+            "supports_buttons": False,
+            "supported_attachment_formats": ["markdown", "json", "link"],
+        },
+        "api": {
+            "max_short_message_chars": 8000,
+            "supports_file_attachments": True,
+            "supports_threads": False,
+            "supports_buttons": False,
+            "supported_attachment_formats": ["markdown", "pdf", "json", "html", "link"],
+        },
+    }
+    capabilities = channel_defaults[interface]
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/operator-interface-profile.schema.json",
+        "record_type": "operator_interface_profile",
+        "profile_id": profile_id or f"operator-interface-{interface}",
+        "created_at": created_at or utc_now(),
+        "primary_interface": interface,
+        "primary_language": language,
+        "interface_capabilities": {
+            **capabilities,
+            "supports_push_notifications": True,
+        },
+        "conversation_policy": {
+            "start_mode": "conversational_intake_before_factory_start",
+            "max_questions_per_message": 5,
+            "batch_nonurgent_questions": True,
+            "status_polling_required": False,
+            "operator_not_required_to_poll": True,
+            "internal_coordination_hidden": True,
+            "short_message_is_projection_only": True,
+        },
+        "proactive_notification_policy": {
+            "enabled": True,
+            "operator_polling_required": False,
+            "max_silent_minutes_when_running": 30,
+            "notify_on": [
+                "factory_started",
+                "decision_required",
+                "gate_blocked",
+                "worker_batch_completed",
+                "review_required",
+                "release_or_risk_approval_required",
+                "idle_timeout_detected",
+            ],
+            "batch_without_waking_for": [
+                "internal_worker_handoff",
+                "schema_validation_pass",
+                "informational_progress_without_state_change",
+            ],
+        },
+        "artifact_delivery_policy": {
+            "deep_artifacts_required": True,
+            "decision_artifacts_need_attachments": True,
+            "required_attachment_formats": ["markdown", "pdf"],
+            "optional_explainer_formats": ["diagram_png", "video_mp4", "audio_mp3", "html"],
+            "optional_renderer_slots": ["manim_animation", "hyperframes_html_video", "audio_narration"],
+            "send_for_artifact_types": sorted(OPERATOR_BRIEFING_DECISION_ARTIFACTS),
+            "summary_only_forbidden_when_decision_required": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "interface_profile_created": True,
+            "telegram_ready": interface == "telegram",
+            "proactive_notifications_required": True,
+            "operator_polling_required": False,
+            "execution_allowed": False,
+            "evidence_refs": [
+                "schemas/operator-interface-profile.schema.json",
+                "templates/operator-interface-profile.json",
+            ],
+        },
+    }
+
+
+def validate_operator_interface_profile(profile: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("operator-interface-profile.schema.json")
+    if not schema:
+        return ["operator_interface_profile schema is not bundled"]
+    errors.extend(validate_node(schema, profile, "operator_interface_profile", schemas=schemas, root_schema=schema))
+
+    interface = str(profile.get("primary_interface") or "").strip()
+    capabilities = profile.get("interface_capabilities") if isinstance(profile.get("interface_capabilities"), dict) else {}
+    if interface == "telegram":
+        if capabilities.get("supports_file_attachments") is not True:
+            errors.append("operator_interface_profile.telegram must support file attachments")
+        formats = set(_list_items(capabilities.get("supported_attachment_formats")))
+        if not {"markdown", "pdf"}.issubset(formats):
+            errors.append("operator_interface_profile.telegram must support markdown and pdf attachments")
+    if capabilities.get("supports_push_notifications") is not True:
+        errors.append("operator_interface_profile must support push/proactive notifications")
+
+    conversation = profile.get("conversation_policy") if isinstance(profile.get("conversation_policy"), dict) else {}
+    if conversation.get("start_mode") != "conversational_intake_before_factory_start":
+        errors.append("operator_interface_profile start_mode must be conversational_intake_before_factory_start")
+    if conversation.get("status_polling_required") is not False:
+        errors.append("operator_interface_profile status polling must not be required")
+    if conversation.get("operator_not_required_to_poll") is not True:
+        errors.append("operator_interface_profile operator_not_required_to_poll must be true")
+    if conversation.get("internal_coordination_hidden") is not True:
+        errors.append("operator_interface_profile internal coordination must be hidden from the operator")
+
+    proactive = profile.get("proactive_notification_policy") if isinstance(profile.get("proactive_notification_policy"), dict) else {}
+    if proactive.get("enabled") is not True:
+        errors.append("operator_interface_profile proactive notifications must be enabled")
+    if proactive.get("operator_polling_required") is not False:
+        errors.append("operator_interface_profile proactive policy must not require operator polling")
+    notify_on = set(_list_items(proactive.get("notify_on")))
+    missing_notify = sorted({"decision_required", "gate_blocked", "worker_batch_completed", "idle_timeout_detected"} - notify_on)
+    if missing_notify:
+        errors.append("operator_interface_profile missing proactive notification triggers: " + ", ".join(missing_notify))
+
+    delivery = profile.get("artifact_delivery_policy") if isinstance(profile.get("artifact_delivery_policy"), dict) else {}
+    if delivery.get("deep_artifacts_required") is not True:
+        errors.append("operator_interface_profile deep artifacts must be required")
+    if delivery.get("decision_artifacts_need_attachments") is not True:
+        errors.append("operator_interface_profile decision artifacts must need attachments")
+    required_formats = set(_list_items(delivery.get("required_attachment_formats")))
+    if not {"markdown", "pdf"}.issubset(required_formats):
+        errors.append("operator_interface_profile required attachment formats must include markdown and pdf")
+    send_for = set(_list_items(delivery.get("send_for_artifact_types")))
+    missing_artifacts = sorted({"operator_understanding_confirmation", "product_sot", "architecture_candidate"} - send_for)
+    if missing_artifacts:
+        errors.append("operator_interface_profile must send deep briefings for: " + ", ".join(missing_artifacts))
+
+    boundary = profile.get("public_private_boundary") if isinstance(profile.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("operator_interface_profile requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("operator_interface_profile must not embed raw private evidence")
+
+    acceptance = profile.get("acceptance") if isinstance(profile.get("acceptance"), dict) else {}
+    if acceptance.get("operator_polling_required") is not False:
+        errors.append("operator_interface_profile acceptance.operator_polling_required must be false")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("operator_interface_profile acceptance.execution_allowed must be false")
+    return errors
+
+
+def build_factory_start_conversation(
+    interface_profile: dict[str, Any],
+    *,
+    source_envelope_ref: str,
+    confirmed: bool = False,
+    confirmed_understanding_ref: str | None = None,
+    factory_start_request_ref: str | None = None,
+    created_at: str | None = None,
+    conversation_id: str | None = None,
+) -> dict[str, Any]:
+    profile_errors = validate_operator_interface_profile(interface_profile)
+    if profile_errors:
+        raise ValueError("; ".join(profile_errors))
+    _ensure_public_ref(source_envelope_ref, "source_envelope_ref")
+    if confirmed_understanding_ref:
+        _ensure_public_ref(confirmed_understanding_ref, "confirmed_understanding_ref")
+    if factory_start_request_ref:
+        _ensure_public_ref(factory_start_request_ref, "factory_start_request_ref")
+
+    profile_id = str(interface_profile.get("profile_id") or "operator-interface")
+    start_allowed = bool(confirmed and confirmed_understanding_ref)
+    if start_allowed and not factory_start_request_ref:
+        raise ValueError("factory_start_request_ref is required once understanding is confirmed for factory start")
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-start-conversation.schema.json",
+        "record_type": "factory_start_conversation",
+        "conversation_id": conversation_id or f"factory-start-{slug_for_ref(profile_id)}",
+        "created_at": created_at or utc_now(),
+        "primary_interface_ref": profile_id,
+        "primary_interface": str(interface_profile.get("primary_interface") or ""),
+        "source_envelope_ref": source_envelope_ref,
+        "start_mode": "conversational_intake_before_factory_start",
+        "conversation_state": {
+            "status": "confirmed_for_factory_start" if start_allowed else "clarifying",
+            "rounds_completed": 0,
+            "open_questions": [
+                "Confirma que esse entendimento descreve o produto certo antes da fabrica iniciar?"
+            ] if not start_allowed else [],
+            "max_questions_next_turn": 5,
+        },
+        "product_understanding_loop": {
+            "operator_understanding_confirmation_required": True,
+            "raw_material_not_assumed_complete": True,
+            "dynamic_questions_allowed": True,
+            "max_questions_per_turn": 5,
+            "confirmed_understanding_ref": confirmed_understanding_ref or "pending:operator-understanding-confirmation",
+        },
+        "factory_start_boundary": {
+            "factory_start_forbidden_until_understanding_confirmed": True,
+            "manager_compiles_conversation_before_start": True,
+            "new_project_creates_fresh_hermes_board": True,
+            "bridge_does_not_create_cards": True,
+            "execution_forbidden_at_start_conversation": True,
+        },
+        "handoff": {
+            "next_artifact": "factory_bridge_start_request" if start_allowed else "operator_understanding_confirmation",
+            "next_worker": "overkill-factory-gerente" if start_allowed else "factory-orchestrator",
+            "factory_bridge_start_request_ref": factory_start_request_ref or "not-created-before-confirmation",
+            "next_safe_action": (
+                "Hand the compiled confirmed conversation to the factory start request."
+                if start_allowed
+                else "Continue the conversational start until understanding is confirmed or corrected."
+            ),
+            "user_decision_required": not start_allowed,
+            "factory_owned_next_step": start_allowed,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "start_conversation_created": True,
+            "factory_start_allowed": start_allowed,
+            "execution_allowed": False,
+            "operator_polling_required": False,
+            "blocked_reason": (
+                "Factory start is allowed from confirmed understanding."
+                if start_allowed
+                else "Factory start is blocked until the operator confirms or corrects the product understanding."
+            ),
+            "evidence_refs": [
+                "schemas/factory-start-conversation.schema.json",
+                "schemas/operator-interface-profile.schema.json",
+            ],
+        },
+    }
+
+
+def validate_factory_start_conversation(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-start-conversation.schema.json")
+    if not schema:
+        return ["factory_start_conversation schema is not bundled"]
+    errors.extend(validate_node(schema, packet, "factory_start_conversation", schemas=schemas, root_schema=schema))
+
+    for field in ("primary_interface_ref", "source_envelope_ref"):
+        value = str(packet.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"factory_start_conversation.{field}", errors)
+    loop = packet.get("product_understanding_loop") if isinstance(packet.get("product_understanding_loop"), dict) else {}
+    confirmed_ref = str(loop.get("confirmed_understanding_ref") or "").strip()
+    if confirmed_ref and not confirmed_ref.startswith("pending:"):
+        _validate_public_ref(confirmed_ref, "factory_start_conversation.product_understanding_loop.confirmed_understanding_ref", errors)
+    boundary = packet.get("factory_start_boundary") if isinstance(packet.get("factory_start_boundary"), dict) else {}
+    for field in (
+        "factory_start_forbidden_until_understanding_confirmed",
+        "manager_compiles_conversation_before_start",
+        "new_project_creates_fresh_hermes_board",
+        "bridge_does_not_create_cards",
+        "execution_forbidden_at_start_conversation",
+    ):
+        if boundary.get(field) is not True:
+            errors.append(f"factory_start_conversation.factory_start_boundary.{field} must be true")
+    acceptance = packet.get("acceptance") if isinstance(packet.get("acceptance"), dict) else {}
+    start_allowed = acceptance.get("factory_start_allowed") is True
+    if start_allowed and confirmed_ref.startswith("pending:"):
+        errors.append("factory_start_conversation cannot allow factory start with pending understanding confirmation")
+    handoff = packet.get("handoff") if isinstance(packet.get("handoff"), dict) else {}
+    start_request_ref = str(handoff.get("factory_bridge_start_request_ref") or "").strip()
+    if start_allowed:
+        if start_request_ref.startswith(("pending:", "not-created")):
+            errors.append("factory_start_conversation cannot allow factory start without a real factory start request ref")
+        elif start_request_ref:
+            _validate_public_ref(start_request_ref, "factory_start_conversation.handoff.factory_bridge_start_request_ref", errors)
+    if start_allowed and packet.get("conversation_state", {}).get("status") != "confirmed_for_factory_start":
+        errors.append("factory_start_conversation start allowed requires confirmed_for_factory_start status")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("factory_start_conversation execution_allowed must be false")
+    if acceptance.get("operator_polling_required") is not False:
+        errors.append("factory_start_conversation operator_polling_required must be false")
+    return errors
+
+
+def build_operator_briefing_package(
+    interface_profile: dict[str, Any],
+    *,
+    artifact_type: str,
+    artifact_ref: str,
+    decision_required: bool = False,
+    stage: str = "planning",
+    created_at: str | None = None,
+    briefing_id: str | None = None,
+) -> dict[str, Any]:
+    profile_errors = validate_operator_interface_profile(interface_profile)
+    if profile_errors:
+        raise ValueError("; ".join(profile_errors))
+    _ensure_public_ref(artifact_ref, "artifact_ref")
+    artifact_slug = slug_for_ref(f"{artifact_type}-{artifact_ref}")
+    assets = [
+        {
+            "kind": "short_message",
+            "asset_ref": f"external:operator-briefing-caption-{artifact_slug}",
+            "required_for_operator_decision": False,
+            "purpose": "short channel projection",
+        },
+        {
+            "kind": "markdown_document",
+            "asset_ref": f"reports/{artifact_slug}/briefing.md",
+            "required_for_operator_decision": True,
+            "purpose": "deep readable source document",
+        },
+        {
+            "kind": "pdf_document",
+            "asset_ref": f"reports/{artifact_slug}/briefing.pdf",
+            "required_for_operator_decision": True,
+            "purpose": "Telegram/Discord friendly review attachment",
+        },
+        {
+            "kind": "diagram",
+            "asset_ref": f"reports/{artifact_slug}/diagram.png",
+            "required_for_operator_decision": False,
+            "purpose": "optional visual explanation",
+        },
+        {
+            "kind": "video_explainer",
+            "asset_ref": f"reports/{artifact_slug}/explainer.mp4",
+            "required_for_operator_decision": False,
+            "purpose": "optional Manim or HyperFrames explainer",
+        },
+        {
+            "kind": "audio_explainer",
+            "asset_ref": f"reports/{artifact_slug}/explainer.mp3",
+            "required_for_operator_decision": False,
+            "purpose": "optional spoken walkthrough",
+        },
+    ]
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/operator-briefing-package.schema.json",
+        "record_type": "operator_briefing_package",
+        "briefing_id": briefing_id or f"operator-briefing-{artifact_slug}",
+        "created_at": created_at or utc_now(),
+        "primary_interface_ref": str(interface_profile.get("profile_id") or "operator-interface"),
+        "primary_interface": str(interface_profile.get("primary_interface") or ""),
+        "target_artifact": {
+            "artifact_type": artifact_type,
+            "artifact_ref": artifact_ref,
+            "stage": stage,
+            "decision_required": decision_required,
+        },
+        "briefing_depth": {
+            "depth": "deep_decision_package" if decision_required else "status_package",
+            "source_document_required": True,
+            "pdf_required": True,
+            "summary_only_forbidden_when_decision_required": True,
+        },
+        "delivery_assets": assets,
+        "interface_projection": {
+            "short_caption": "Documento profundo preparado; leia o anexo antes de confirmar, corrigir ou rejeitar.",
+            "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer", "audio_explainer"],
+            "fallback_when_attachment_fails": "send markdown document and public-safe artifact refs, then retry PDF asynchronously",
+            "max_questions_after_delivery": 5,
+        },
+        "decision_boundary": {
+            "briefing_is_not_source_of_truth": True,
+            "approval_requires_human_gate_when_authority_risk_access_release": True,
+            "operator_can_request_changes": True,
+            "execution_not_allowed_from_briefing": True,
+        },
+        "proactive_delivery": {
+            "push_required": True,
+            "operator_polling_required": False,
+            "notify_when_ready": True,
+        },
+        "public_private_boundary": {
+            "public_safe_refs_only": True,
+            "raw_private_evidence_embedded": False,
+            "private_context_retained_outside_public_repo": True,
+            "operator_instance_may_hold_private_source": True,
+        },
+        "acceptance": {
+            "briefing_package_created": True,
+            "deep_document_attached": True,
+            "pdf_attached_or_required": True,
+            "summary_only": False,
+            "execution_allowed": False,
+            "operator_polling_required": False,
+            "evidence_refs": [
+                "schemas/operator-briefing-package.schema.json",
+                "schemas/operator-interface-profile.schema.json",
+            ],
+        },
+    }
+
+
+def validate_operator_briefing_package(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("operator-briefing-package.schema.json")
+    if not schema:
+        return ["operator_briefing_package schema is not bundled"]
+    errors.extend(validate_node(schema, packet, "operator_briefing_package", schemas=schemas, root_schema=schema))
+
+    primary_ref = str(packet.get("primary_interface_ref") or "").strip()
+    if primary_ref:
+        _validate_public_ref(primary_ref, "operator_briefing_package.primary_interface_ref", errors)
+    target = packet.get("target_artifact") if isinstance(packet.get("target_artifact"), dict) else {}
+    artifact_ref = str(target.get("artifact_ref") or "").strip()
+    if artifact_ref:
+        _validate_public_ref(artifact_ref, "operator_briefing_package.target_artifact.artifact_ref", errors)
+    decision_required = target.get("decision_required") is True
+    assets = packet.get("delivery_assets") if isinstance(packet.get("delivery_assets"), list) else []
+    asset_kinds = {
+        str(asset.get("kind") or "").strip()
+        for asset in assets
+        if isinstance(asset, dict)
+    }
+    for index, asset in enumerate(assets):
+        if not isinstance(asset, dict):
+            continue
+        asset_ref = str(asset.get("asset_ref") or "").strip()
+        if asset_ref:
+            _validate_public_ref(asset_ref, f"operator_briefing_package.delivery_assets[{index}].asset_ref", errors)
+    if not {"markdown_document", "pdf_document"}.issubset(asset_kinds):
+        errors.append("operator_briefing_package delivery assets must include markdown_document and pdf_document")
+    if decision_required:
+        required_decision_assets = {
+            str(asset.get("kind") or "").strip()
+            for asset in assets
+            if isinstance(asset, dict) and asset.get("required_for_operator_decision") is True
+        }
+        if not {"markdown_document", "pdf_document"}.issubset(required_decision_assets):
+            errors.append("operator_briefing_package decisions require markdown and pdf assets")
+    depth = packet.get("briefing_depth") if isinstance(packet.get("briefing_depth"), dict) else {}
+    if decision_required and depth.get("summary_only_forbidden_when_decision_required") is not True:
+        errors.append("operator_briefing_package must forbid summary-only decision packages")
+    boundary = packet.get("decision_boundary") if isinstance(packet.get("decision_boundary"), dict) else {}
+    if boundary.get("briefing_is_not_source_of_truth") is not True:
+        errors.append("operator_briefing_package briefing must not replace source of truth")
+    if boundary.get("execution_not_allowed_from_briefing") is not True:
+        errors.append("operator_briefing_package must not allow execution from briefing")
+    proactive = packet.get("proactive_delivery") if isinstance(packet.get("proactive_delivery"), dict) else {}
+    if proactive.get("push_required") is not True:
+        errors.append("operator_briefing_package push delivery must be required")
+    if proactive.get("operator_polling_required") is not False:
+        errors.append("operator_briefing_package operator_polling_required must be false")
+    acceptance = packet.get("acceptance") if isinstance(packet.get("acceptance"), dict) else {}
+    if acceptance.get("summary_only") is not False:
+        errors.append("operator_briefing_package summary_only must be false")
+    if acceptance.get("execution_allowed") is not False:
+        errors.append("operator_briefing_package execution_allowed must be false")
+    return errors
+
+
 def _outcome_next_artifact(ledger: dict[str, Any]) -> tuple[str, str]:
     source_signal = ledger.get("source_signal") if isinstance(ledger.get("source_signal"), dict) else {}
     if source_signal.get("needs_product_sot") is True:
@@ -7313,6 +8112,7 @@ def _outcome_next_artifact(ledger: dict[str, Any]) -> tuple[str, str]:
 def build_outcome_contract(
     source_ledger: dict[str, Any],
     *,
+    operator_understanding_confirmation_ref: str | None = None,
     created_at: str | None = None,
     contract_id: str | None = None,
 ) -> dict[str, Any]:
@@ -7325,6 +8125,14 @@ def build_outcome_contract(
     summary = str(source_signal.get("summary_public_safe") or "Factory source signal must become a bounded outcome.")
     target = str(source_signal.get("target_surface") or "target surface")
     needs_product_sot = source_signal.get("needs_product_sot") is True
+    understanding_ref = (
+        operator_understanding_confirmation_ref
+        or (
+            f"pending/{_operator_understanding_confirmation_id(source_ledger)}.json"
+            if needs_product_sot
+            else "not_required"
+        )
+    )
     next_artifact, next_worker = _outcome_next_artifact(source_ledger)
     created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     discovery_depth = "deep" if str(source_signal.get("risk_initial") or "").upper() in {"R3", "R4"} else "standard"
@@ -7336,6 +8144,7 @@ def build_outcome_contract(
         "created_at": created,
         "factory_method_version": "OVERKILL_VFINAL",
         "source_ledger_ref": ledger_id,
+        "operator_understanding_confirmation_ref": understanding_ref,
         "source_signal": source_signal,
         "outcome": f"Produce a complete, production-ready outcome for {target}: {summary}",
         "users_or_actors": ["target product user", "factory operator"],
@@ -7353,6 +8162,7 @@ def build_outcome_contract(
         ],
         "open_questions": [
             "Worker-owned claim review must decide which source claims become Product SOT scope.",
+            "Operator understanding confirmation must be resolved before Product SOT can be promoted.",
             "Any authority, access, risk or preference decision must become an explicit human gate if needed.",
         ],
         "evidence_refs": [
@@ -7376,6 +8186,7 @@ def build_outcome_contract(
         "discovery_depth": discovery_depth,
         "blocking_rules": {
             "source_ledger_required": True,
+            "operator_understanding_confirmation_required": needs_product_sot,
             "product_sot_blocked_until_outcome_reviewed": needs_product_sot,
             "execution_blocked_until_required_artifacts_pass": True,
             "raw_private_evidence_must_stay_external": True,
@@ -7404,7 +8215,7 @@ def build_outcome_contract(
             "execution_allowed": False,
             "blocked_reason": (
                 "Outcome contract exists, but execution remains blocked until Product SOT when required, "
-                "method contract, readiness and gates pass."
+                "operator understanding confirmation, method contract, readiness and gates pass."
             ),
             "evidence_refs": [
                 "schemas/outcome-contract.schema.json",
@@ -7430,7 +8241,7 @@ def validate_outcome_contract(contract: dict[str, Any]) -> list[str]:
         )
     )
 
-    for field in ("source_ledger_ref",):
+    for field in ("source_ledger_ref", "operator_understanding_confirmation_ref"):
         value = str(contract.get(field) or "").strip()
         if value:
             _validate_public_ref(value, f"outcome_contract.{field}", errors)
@@ -7458,6 +8269,17 @@ def validate_outcome_contract(contract: dict[str, Any]) -> list[str]:
             errors.append(f"outcome_contract.blocking_rules.{field} must be true")
     if not isinstance(blocking_rules.get("product_sot_blocked_until_outcome_reviewed"), bool):
         errors.append("outcome_contract.blocking_rules.product_sot_blocked_until_outcome_reviewed must be boolean")
+    if not isinstance(blocking_rules.get("operator_understanding_confirmation_required"), bool):
+        errors.append("outcome_contract.blocking_rules.operator_understanding_confirmation_required must be boolean")
+    needs_product_sot = source_signal.get("needs_product_sot") is True
+    understanding_ref = str(contract.get("operator_understanding_confirmation_ref") or "").strip()
+    if needs_product_sot:
+        if not understanding_ref:
+            errors.append("outcome_contract requires operator_understanding_confirmation_ref before Product SOT")
+        if understanding_ref.startswith("pending/"):
+            errors.append("outcome_contract operator_understanding_confirmation_ref is still pending")
+        if blocking_rules.get("operator_understanding_confirmation_required") is not True:
+            errors.append("outcome_contract must require operator understanding confirmation when Product SOT is required")
 
     handoff = contract.get("handoff") if isinstance(contract.get("handoff"), dict) else {}
     if handoff.get("factory_owned_next_step") is not True:
@@ -7620,6 +8442,11 @@ def build_product_sot(
 
     contract_id = str(outcome_contract.get("contract_id") or "outcome-contract")
     ledger_ref = str(outcome_contract.get("source_ledger_ref") or "product-source-ledger")
+    understanding_ref = str(outcome_contract.get("operator_understanding_confirmation_ref") or "").strip()
+    if not understanding_ref:
+        raise ValueError("operator_understanding_confirmation_ref is required before Product SOT")
+    if understanding_ref.startswith("pending/"):
+        raise ValueError("operator_understanding_confirmation_ref is pending; confirm understanding with operator before Product SOT")
     created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     final_sot_id = sot_id or f"product-sot-{slug_for_ref(str(source_signal.get('intake_id') or contract_id))}"
     material = _markdown_material_bullets(source_material_text or "")
@@ -7692,6 +8519,7 @@ def build_product_sot(
         "factory_method_version": "OVERKILL_VFINAL",
         "outcome_contract_ref": contract_id,
         "source_ledger_ref": ledger_ref,
+        "operator_understanding_confirmation_ref": understanding_ref,
         "source_signal": source_signal,
         "what_it_is": f"Complete Product SOT for {target_surface}.",
         "target_users": _dedupe_preserve_order(outcome_contract.get("users_or_actors", [])),
@@ -7722,11 +8550,13 @@ def build_product_sot(
         "evidence_refs": [
             contract_id,
             ledger_ref,
+            understanding_ref,
             "schemas/product-sot.schema.json",
             "schemas/outcome-contract.schema.json",
         ],
         "blocking_rules": {
             "outcome_contract_required": True,
+            "operator_understanding_confirmation_required": True,
             "full_scope_coverage_required": True,
             "method_contract_required": True,
             "execution_blocked_until_required_artifacts_pass": True,
@@ -7769,7 +8599,12 @@ def validate_product_sot(product_sot: dict[str, Any]) -> list[str]:
         errors.append("product_sot.record_type must be product_sot")
     errors.extend(validate_product_sot_requirement_graph(product_sot))
 
-    for field in ("outcome_contract_ref", "source_ledger_ref", "full_product_sot_scope_coverage_ref"):
+    for field in (
+        "outcome_contract_ref",
+        "source_ledger_ref",
+        "operator_understanding_confirmation_ref",
+        "full_product_sot_scope_coverage_ref",
+    ):
         value = str(product_sot.get(field) or "").strip()
         if value:
             _validate_public_ref(value, f"product_sot.{field}", errors)
@@ -7811,6 +8646,7 @@ def validate_product_sot(product_sot: dict[str, Any]) -> list[str]:
     blocking_rules = product_sot.get("blocking_rules") if isinstance(product_sot.get("blocking_rules"), dict) else {}
     for field in (
         "outcome_contract_required",
+        "operator_understanding_confirmation_required",
         "full_scope_coverage_required",
         "method_contract_required",
         "execution_blocked_until_required_artifacts_pass",
@@ -7819,6 +8655,9 @@ def validate_product_sot(product_sot: dict[str, Any]) -> list[str]:
     ):
         if blocking_rules.get(field) is not True:
             errors.append(f"product_sot.blocking_rules.{field} must be true")
+    understanding_ref = str(product_sot.get("operator_understanding_confirmation_ref") or "").strip()
+    if understanding_ref.startswith("pending/"):
+        errors.append("product_sot operator_understanding_confirmation_ref must not be pending")
 
     handoff = product_sot.get("handoff") if isinstance(product_sot.get("handoff"), dict) else {}
     if handoff.get("factory_owned_next_step") is not True:
@@ -15695,11 +16534,15 @@ def user_decisions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -
             continue
         question_class = str(question.get("class") or "").strip()
         if question_class in ALLOWED_USER_QUESTION_CLASSES and not _contains_internal_coordination_request(question.get("question")):
+            if question_class == "product_intent_confirmation":
+                user_action = "confirm, correct or reject the factory's understanding before Product SOT"
+            else:
+                user_action = "answer, approve, reject or defer this bounded question"
             decisions.append(
                 {
                     "decision_type": question_class,
                     "reason": str(question.get("question") or "User decision is required."),
-                    "user_action": "answer, approve, reject or defer this bounded question",
+                    "user_action": user_action,
                     "factory_prepares": str(question.get("factory_resolution_path") or "decision packet"),
                 }
             )
@@ -16523,6 +17366,46 @@ def command_validate_source_ledger(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_understanding_confirmation(args: argparse.Namespace) -> int:
+    errors = validate_operator_understanding_confirmation(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_validate_operator_interface(args: argparse.Namespace) -> int:
+    errors = validate_operator_interface_profile(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_validate_start_conversation(args: argparse.Namespace) -> int:
+    errors = validate_factory_start_conversation(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_validate_briefing_package(args: argparse.Namespace) -> int:
+    errors = validate_operator_briefing_package(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_outcome_contract(args: argparse.Namespace) -> int:
     errors = validate_outcome_contract(load_json_like(args.path))
     if errors:
@@ -16663,10 +17546,98 @@ def command_source_ledger(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_understanding_confirmation(args: argparse.Namespace) -> int:
+    try:
+        packet = build_operator_understanding_confirmation(
+            load_json_like(args.source_ledger),
+            confirmed=args.confirmed,
+            operator_response_ref=args.operator_response_ref,
+            created_at=args.created_at,
+            confirmation_id=args.confirmation_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_operator_understanding_confirmation(packet)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, packet)
+    return 0
+
+
+def command_operator_interface(args: argparse.Namespace) -> int:
+    try:
+        profile = build_operator_interface_profile(
+            primary_interface=args.primary_interface,
+            language=args.language,
+            created_at=args.created_at,
+            profile_id=args.profile_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_operator_interface_profile(profile)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, profile)
+    return 0
+
+
+def command_start_conversation(args: argparse.Namespace) -> int:
+    try:
+        packet = build_factory_start_conversation(
+            load_json_like(args.operator_interface),
+            source_envelope_ref=args.source_envelope_ref,
+            confirmed=args.confirmed,
+            confirmed_understanding_ref=args.confirmed_understanding_ref,
+            factory_start_request_ref=args.factory_start_request_ref,
+            created_at=args.created_at,
+            conversation_id=args.conversation_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_factory_start_conversation(packet)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, packet)
+    return 0
+
+
+def command_briefing_package(args: argparse.Namespace) -> int:
+    try:
+        packet = build_operator_briefing_package(
+            load_json_like(args.operator_interface),
+            artifact_type=args.artifact_type,
+            artifact_ref=args.artifact_ref,
+            decision_required=args.decision_required,
+            stage=args.stage,
+            created_at=args.created_at,
+            briefing_id=args.briefing_id,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_operator_briefing_package(packet)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, packet)
+    return 0
+
+
 def command_outcome_contract(args: argparse.Namespace) -> int:
     try:
         contract = build_outcome_contract(
             load_json_like(args.source_ledger),
+            operator_understanding_confirmation_ref=args.operator_understanding_confirmation_ref,
             created_at=args.created_at,
             contract_id=args.contract_id,
         )
@@ -17302,6 +18273,22 @@ def build_parser() -> argparse.ArgumentParser:
     validate_source_ledger_parser.add_argument("path", type=Path)
     validate_source_ledger_parser.set_defaults(func=command_validate_source_ledger)
 
+    validate_understanding_parser = sub.add_parser("validate-understanding-confirmation")
+    validate_understanding_parser.add_argument("path", type=Path)
+    validate_understanding_parser.set_defaults(func=command_validate_understanding_confirmation)
+
+    validate_operator_interface_parser = sub.add_parser("validate-operator-interface")
+    validate_operator_interface_parser.add_argument("path", type=Path)
+    validate_operator_interface_parser.set_defaults(func=command_validate_operator_interface)
+
+    validate_start_conversation_parser = sub.add_parser("validate-start-conversation")
+    validate_start_conversation_parser.add_argument("path", type=Path)
+    validate_start_conversation_parser.set_defaults(func=command_validate_start_conversation)
+
+    validate_briefing_package_parser = sub.add_parser("validate-briefing-package")
+    validate_briefing_package_parser.add_argument("path", type=Path)
+    validate_briefing_package_parser.set_defaults(func=command_validate_briefing_package)
+
     validate_outcome_contract_parser = sub.add_parser("validate-outcome-contract")
     validate_outcome_contract_parser.add_argument("path", type=Path)
     validate_outcome_contract_parser.set_defaults(func=command_validate_outcome_contract)
@@ -17372,11 +18359,63 @@ def build_parser() -> argparse.ArgumentParser:
     source_ledger_parser.add_argument("--out", type=Path)
     source_ledger_parser.set_defaults(func=command_source_ledger)
 
+    understanding_parser = sub.add_parser(
+        "understanding-confirmation",
+        help="Build the operator understanding confirmation packet required before Product SOT for product starts.",
+    )
+    understanding_parser.add_argument("--source-ledger", type=Path, required=True)
+    understanding_parser.add_argument("--operator-response-ref")
+    understanding_parser.add_argument("--confirmed", action="store_true")
+    understanding_parser.add_argument("--created-at")
+    understanding_parser.add_argument("--confirmation-id")
+    understanding_parser.add_argument("--out", type=Path)
+    understanding_parser.set_defaults(func=command_understanding_confirmation)
+
+    operator_interface_parser = sub.add_parser(
+        "operator-interface",
+        help="Build the primary operator interface profile, e.g. Telegram-first operation.",
+    )
+    operator_interface_parser.add_argument("--primary-interface", default="telegram", choices=sorted(PRIMARY_OPERATOR_INTERFACES))
+    operator_interface_parser.add_argument("--language", default="pt-BR")
+    operator_interface_parser.add_argument("--created-at")
+    operator_interface_parser.add_argument("--profile-id")
+    operator_interface_parser.add_argument("--out", type=Path, required=True)
+    operator_interface_parser.set_defaults(func=command_operator_interface)
+
+    start_conversation_parser = sub.add_parser(
+        "start-conversation",
+        help="Build the conversational start packet before a factory start request is allowed.",
+    )
+    start_conversation_parser.add_argument("--operator-interface", type=Path, required=True)
+    start_conversation_parser.add_argument("--source-envelope-ref", required=True)
+    start_conversation_parser.add_argument("--confirmed", action="store_true")
+    start_conversation_parser.add_argument("--confirmed-understanding-ref")
+    start_conversation_parser.add_argument("--factory-start-request-ref")
+    start_conversation_parser.add_argument("--created-at")
+    start_conversation_parser.add_argument("--conversation-id")
+    start_conversation_parser.add_argument("--out", type=Path, required=True)
+    start_conversation_parser.set_defaults(func=command_start_conversation)
+
+    briefing_package_parser = sub.add_parser(
+        "briefing-package",
+        help="Build a deep operator briefing package with document/PDF attachments for decisions.",
+    )
+    briefing_package_parser.add_argument("--operator-interface", type=Path, required=True)
+    briefing_package_parser.add_argument("--artifact-type", required=True)
+    briefing_package_parser.add_argument("--artifact-ref", required=True)
+    briefing_package_parser.add_argument("--decision-required", action="store_true")
+    briefing_package_parser.add_argument("--stage", default="planning")
+    briefing_package_parser.add_argument("--created-at")
+    briefing_package_parser.add_argument("--briefing-id")
+    briefing_package_parser.add_argument("--out", type=Path, required=True)
+    briefing_package_parser.set_defaults(func=command_briefing_package)
+
     outcome_contract_parser = sub.add_parser(
         "outcome-contract",
         help="Build an outcome contract from a validated product source ledger without generating Product SOT.",
     )
     outcome_contract_parser.add_argument("--source-ledger", type=Path, required=True)
+    outcome_contract_parser.add_argument("--operator-understanding-confirmation-ref")
     outcome_contract_parser.add_argument("--created-at")
     outcome_contract_parser.add_argument("--contract-id")
     outcome_contract_parser.add_argument("--out", type=Path)

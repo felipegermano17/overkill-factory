@@ -92,12 +92,12 @@
       "can_mutate_card_state": false,
       "can_approve_final_gate": false
     },
-    "discord_interface": {
-      "label": "Discord Interface",
-      "plain_purpose": "Talks to the human operator and presents the operator console.",
-      "may": ["explain state", "receive input", "ask for decisions", "send public-safe status"],
-      "must_not": ["choose specialists outside Kanban", "mark work done", "store Discord as source of truth"],
-      "evidence_required": ["message intent", "Hermes event ref when applicable", "public-safe summary"],
+    "operator_interface": {
+      "label": "Operator Interface",
+      "plain_purpose": "Talks to the human operator through the selected primary interface and presents the operator console.",
+      "may": ["explain state", "receive input", "ask for decisions", "send public-safe status and briefing attachments"],
+      "must_not": ["choose specialists outside Kanban", "mark work done", "store Telegram, Discord or Cockpit as source of truth"],
+      "evidence_required": ["message intent", "Hermes event ref when applicable", "public-safe summary", "operator interface profile"],
       "can_mutate_card_state": false,
       "can_approve_final_gate": false
     },
@@ -163,7 +163,7 @@
     "discord-control-tower-bridge": "bridge"
   },
   "gateway_profile_assignments": {
-    "overkill-factory-gerente": "discord_interface"
+    "overkill-factory-gerente": "operator_interface"
   },
   "limits": [
     "This public matrix describes permission intent and required evidence. Runtime enforcement still lives in Hermes profiles, adapter gates, worker packets and human gates.",

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-understanding-confirmation.schema.json",
+  "record_type": "operator_understanding_confirmation",
+  "confirmation_id": "operator-understanding-public-template",
+  "created_at": "2026-06-23T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "source_ledger_ref": "templates/product-source-ledger.json",
+  "source_signal": {
+    "intake_id": "universal-signal-intake-public-template",
+    "signal_type": "product_paper",
+    "request_type": "product_new",
+    "route_class": "product_creation",
+    "target_surface": "complete-product-production",
+    "summary_public_safe": "Operator supplied product material must be understood and confirmed before Product SOT.",
+    "signal_ref_public_safe": "external:source-card-product-brief",
+    "source_class": "operator_supplied",
+    "sensitivity_class": "public_safe",
+    "freshness": "bounded",
+    "risk_initial": "R2",
+    "materiality": "material",
+    "needs_product_sot": true
+  },
+  "material_inventory": [
+    {
+      "source_id": "source-001",
+      "source_ref_public_safe": "external:source-card-product-brief",
+      "interpreted_role": "operator-supplied product brief or paper",
+      "confidence": "bounded"
+    }
+  ],
+  "product_understanding": {
+    "what_the_factory_understands": "The operator wants a complete product outcome; this understanding must be confirmed before Product SOT is promoted.",
+    "target_user_understanding": ["primary user or actor to be confirmed"],
+    "business_or_success_understanding": ["business metrics and success criteria to be confirmed"],
+    "non_negotiables_understood": ["raw private source stays outside public artifacts"],
+    "open_uncertainties": [
+      "Does this describe the product correctly?",
+      "Which source wins if supplied materials conflict?",
+      "Which metric is the strongest v1 success signal?"
+    ],
+    "confidence": "bounded_until_operator_confirms"
+  },
+  "operator_questions": [
+    {
+      "question_id": "understanding-confirmation-001",
+      "question": "Confirma que esse entendimento descreve o produto certo antes da fábrica criar o Product SOT?",
+      "question_class": "product_intent_confirmation",
+      "required_before_product_sot": true
+    }
+  ],
+  "confirmation_state": {
+    "status": "pending_operator_confirmation",
+    "operator_response_ref": "pending:operator-reply",
+    "changes_required": [],
+    "product_sot_allowed": false
+  },
+  "blocking_rules": {
+    "product_sot_blocked_until_operator_understanding_confirmed": true,
+    "max_operator_questions_for_telegram": 5,
+    "summarize_sources_do_not_dump": true,
+    "human_gate_only_for_authority_access_risk_or_preference": true,
+    "understanding_confirmation_is_not_execution_approval": true
+  },
+  "handoff": {
+    "next_artifact": "operator_understanding_confirmation",
+    "next_worker": "factory-orchestrator",
+    "next_safe_action": "Ask the operator the concise understanding confirmation in Telegram before Product SOT.",
+    "user_decision_required": true,
+    "factory_owned_next_step": false
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true,
+    "operator_instance_may_hold_private_source": true
+  },
+  "acceptance": {
+    "understanding_confirmation_created": true,
+    "product_sot_allowed": false,
+    "product_sot_generated": false,
+    "execution_allowed": false,
+    "blocked_reason": "Product SOT is blocked until the operator confirms or corrects the factory understanding.",
+    "evidence_refs": [
+      "schemas/operator-understanding-confirmation.schema.json",
+      "templates/product-source-ledger.json"
+    ]
+  }
+}

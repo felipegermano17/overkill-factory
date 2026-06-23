@@ -40,13 +40,21 @@ factoryctl init --out ../my-product-factory --project-name my-product
 ```bash
 factoryctl validate-card examples/minimal-hermes-project/card.md
 factoryctl route-registry --route-class product_creation
+factoryctl operator-interface --primary-interface telegram --out .tmp/operator-interface-profile.json
+factoryctl validate-operator-interface templates/operator-interface-profile.json
+factoryctl start-conversation --operator-interface templates/operator-interface-profile.json --source-envelope-ref external:operator-source-envelope --out .tmp/factory-start-conversation.json
+factoryctl validate-start-conversation templates/factory-start-conversation.json
 factoryctl intake --route-class bug_repair --request-type bug --signal-type bug_report --summary "Public-safe bug report enters reproduction and regression gates." --source-ref external:source-card-bug-001 --out .tmp/bug-intake.json
 factoryctl validate-signal-intake templates/universal-signal-intake.json
 factoryctl source-resolution --intake templates/universal-signal-intake.json --intake-ref templates/universal-signal-intake.json --out .tmp/source-resolution-packet.json
 factoryctl validate-source-resolution templates/source-resolution-packet.json
 factoryctl source-ledger --source-resolution templates/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json
 factoryctl validate-source-ledger templates/product-source-ledger.json
-factoryctl outcome-contract --source-ledger templates/product-source-ledger.json --out .tmp/outcome-contract.json
+factoryctl understanding-confirmation --source-ledger templates/product-source-ledger.json --operator-response-ref external:sanitized-operator-understanding-confirmed --confirmed --out .tmp/operator-understanding-confirmation.json
+factoryctl validate-understanding-confirmation templates/operator-understanding-confirmation.json
+factoryctl briefing-package --operator-interface templates/operator-interface-profile.json --artifact-type product_sot --artifact-ref templates/product-sot.json --decision-required --out .tmp/operator-briefing-package.json
+factoryctl validate-briefing-package templates/operator-briefing-package.json
+factoryctl outcome-contract --source-ledger templates/product-source-ledger.json --operator-understanding-confirmation-ref external:sanitized-operator-understanding-confirmed --out .tmp/outcome-contract.json
 factoryctl validate-outcome-contract templates/outcome-contract.json
 factoryctl product-sot --outcome-contract templates/outcome-contract.json --out .tmp/product-sot.json
 factoryctl validate-product-sot templates/product-sot.json
@@ -81,18 +89,33 @@ and execution blocked until the factory has enough source and scope.
 
 `route-registry` exposes the canonical route matrix used by the validators:
 route class, request types, signal types, required artifacts, workers, recovery
-policy and Hermes boundary. `intake` builds a valid Universal Signal Intake
-from that registry without executing work. `source-resolution` turns a valid
+policy and Hermes boundary. `operator-interface` records the primary human
+conversation surface, such as Telegram, Discord or Cockpit. It makes proactive
+notifications, attachment support and summary limits explicit, so the operator
+does not need to poll the bot for status. `start-conversation` is the
+conversational pre-start packet: the manager can ask open product-understanding
+questions and compile the confirmed conversation before a formal factory start
+request exists. It does not create Hermes boards or cards.
+
+`intake` builds a valid Universal Signal Intake from that registry without
+executing work. `source-resolution` turns a valid
 intake into the next factory-owned source-resolution handoff packet, keeping
 Product SOT ungenerated and execution blocked until the source ledger, route
 artifacts, gates and workers pass. `source-ledger` materializes that handoff as
 a product source ledger with public-safe refs, claim table, unresolved gaps and
 the next factory-owned artifact. It still does not generate Product SOT or allow
-execution. `outcome-contract` turns the source ledger into a bounded product or
-route outcome without treating the input as Product SOT and without allowing
-execution. `product-sot` turns that outcome into the first Product SOT and keeps
-execution blocked until full scope coverage, method contract, readiness and gates
-pass. `full-scope-coverage` accounts for every Product SOT requirement before
+execution. `understanding-confirmation` summarizes what the factory believes the
+product is, asks the operator for a concise confirmation or correction, and
+blocks Product SOT until that understanding is confirmed. It is not execution
+approval and it must not ask the operator to reconcile internal factory
+bookkeeping. `briefing-package` prepares a deep operator review package for
+important artifacts such as Product SOT, architecture or security architecture:
+short channel projection plus markdown and PDF attachments, with optional
+diagram, video or audio explainer slots. `outcome-contract` turns the source ledger and confirmed
+understanding into a bounded product or route outcome without treating the input
+as Product SOT and without allowing execution. `product-sot` turns that outcome
+into the first Product SOT and keeps execution blocked until full scope coverage,
+method contract, readiness and gates pass. `full-scope-coverage` accounts for every Product SOT requirement before
 method routing, so execution slices cannot silently become scope cuts.
 `method-contract` turns that coverage into factory-owned method, artifact,
 worker, gate and evidence requirements without handing DDD/BDD/spec choices to

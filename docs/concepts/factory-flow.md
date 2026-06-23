@@ -8,7 +8,10 @@ from jumping straight from a vague request to a confident completion claim.
 | Object | Meaning |
 | --- | --- |
 | Product paper | The short project brief or source material that starts the line. |
+| Operator interface profile | The selected human interface, such as Telegram, Discord or Cockpit, with proactive notification and attachment rules. |
+| Factory start conversation | The open conversational start that confirms the product understanding before a formal start request. |
 | Source resolution | The step that separates source facts, inference, decisions, conflicts and gaps. |
+| Operator briefing package | The deep review package for important decisions: short projection plus markdown/PDF attachments and optional explainers. |
 | Product SOT | The source-of-truth candidate for the complete product scope, non-goals and acceptance criteria. |
 | Full Product SOT scope coverage | The map that prevents a first slice from silently becoming the whole product. |
 | Specialist research decision | A public-safe research result that changes SOT, architecture, method, gate, worker, proof or blocker state. |
@@ -23,8 +26,12 @@ from jumping straight from a vague request to a confident completion claim.
 ## The Happy Path
 
 ```text
-source intake
+operator interface profile
+-> conversational start
+-> source intake
 -> source resolution
+-> operator understanding confirmation
+-> operator briefing package when a decision is needed
 -> Product SOT
 -> full Product SOT scope coverage
 -> specialist research decisions when needed
@@ -52,11 +59,17 @@ definition decide which workers are required.
 The normal user provides material, goals, constraints, access when required,
 bounded approvals and final review. The factory owns source resolution, Product
 SOT drafting, method routing, research routing, worker packets, execution
-routing, verification, review, evidence capture and completion audit.
+routing, verification, review, evidence capture, proactive status and completion
+audit.
 
 Internal objects such as schemas, worker packets, source ledgers, method
 contracts and evidence graphs may be visible for audit or maintainer work, but
 they should not become mandatory user labor.
+
+For Telegram-first operation, important decisions should not be made from a
+short chat summary alone. The operator should receive a briefing package with a
+deep document and PDF attachment, and the bot should proactively push meaningful
+state changes instead of waiting for the operator to poll.
 
 ## What Blocks A Card
 
@@ -78,8 +91,8 @@ A card should stay blocked when:
 ## Source Of Truth
 
 Hermes Kanban state plus repo-relative evidence and receipts are the source of
-truth. Chat, Discord messages and status summaries are useful operator views,
-but they do not close work by themselves.
+truth. Telegram messages, Discord messages and status summaries are useful
+operator views, but they do not close work by themselves.
 
 ## Risk Levels
 

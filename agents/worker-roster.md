@@ -30,9 +30,10 @@ The roster has 40 public-safe operators:
 - 4 human, release, memory and learning support workers.
 - 2 Control Tower operator console workers.
 
-The Discord gateway profile `overkill-factory-gerente` is official, but it is
-not counted as a worker. It is an interface profile: it talks to the operator
-and registers intent through Hermes without executing product work.
+The gateway profile `overkill-factory-gerente` is official, but it is not
+counted as a worker. It is an operator-interface profile: it talks to the
+operator through the selected primary channel, pushes status and registers
+intent through Hermes without executing product work.
 
 That number is intentionally split by ownership. It is not meant to create 40
 parallel personalities. A card should call only the operators whose surface,

@@ -96,6 +96,8 @@
       "execution routing",
       "verification and independent review",
       "evidence capture",
+      "deep operator briefing packages",
+      "proactive operator notifications",
       "completion audit and Receipt Five preparation"
     ],
     "user_must_not_do": [
@@ -103,9 +105,11 @@
       "manually assemble worker packets",
       "operate schemas or internal gates",
       "search internal evidence artifacts",
+      "poll the bot repeatedly for status",
       "decide method internals without a bounded approval request"
     ],
     "allowed_user_question_classes": [
+      "product_intent_confirmation",
       "preference",
       "authority_required",
       "access_required",
@@ -132,6 +136,7 @@
     "operator_interrupt_policy": {
       "default_behavior": "do_not_interrupt_operator",
       "ask_immediately_when": [
+        "product_intent_confirmation",
         "authority_required",
         "access_required",
         "risk_acceptance",
@@ -152,7 +157,7 @@
         "worker evidence can be produced by a registered non-human worker",
         "non-human blockers have a factory-owned repair route, retry budget and fresh review path"
       ],
-      "status_reporting": "Report progress, blockers and proof without asking for action unless a listed interrupt condition is active."
+      "status_reporting": "Push progress, blockers and proof proactively without asking for action unless a listed interrupt condition is active."
     },
     "handoff_mode": "compressed operator view with understanding, bounded decisions, blockers, proof and next action",
     "blocked_state_policy": "stop with a named blocker, owner, evidence needed and smallest safe next action instead of pushing open-ended work to the user",

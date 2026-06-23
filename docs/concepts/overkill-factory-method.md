@@ -18,9 +18,13 @@ has an owner, a contract and a way to be checked.
 
 ```text
 input
+-> operator interface
+-> conversational start
 -> source
+-> understanding confirmation
 -> outcome
 -> discovery
+-> operator briefing when a decision is needed
 -> Product SOT
 -> method
 -> executable plan
@@ -49,7 +53,7 @@ flow, `factoryctl help-next` and the workflow catalog compress them into:
 
 - what the factory understood;
 - what the factory will do next;
-- what user decision, access or approval is actually required;
+- what user decision, access, understanding confirmation or approval is actually required;
 - what is blocked and why;
 - what evidence proves progress.
 
@@ -87,7 +91,10 @@ flow, `factoryctl help-next` and the workflow catalog compress them into:
 | Factory Kernel | Generic rules, schemas, risk tiers, gates, states and validation behavior. |
 | Runtime | The system where durable work happens. Hermes is the first supported runtime. |
 | Runtime Adapter | The bridge that turns factory rules into runtime events, worker tasks and transition blocks. |
+| Operator Interface Profile | The selected human conversation surface, such as Telegram, Discord or Cockpit, with message, attachment and proactive notification rules. |
+| Factory Start Conversation | The conversational pre-start packet that confirms the product understanding before a formal factory start request is created. |
 | Product Outcome & Discovery OS | The layer that defines the result, user, problem, assumptions and missing research. |
+| Operator Briefing Package | A deep decision package with short projection plus markdown/PDF attachments and optional diagram, video or audio explainers. |
 | Product SOT | The source-of-truth candidate for scope, non-goals, acceptance criteria and success. |
 | Full Product SOT Scope Coverage | The map proving every meaningful SOT requirement is planned, blocked, deferred with owner, out of scope, human-owned or done. |
 | Specialist Research OS | The research lane that turns high-risk uncertainty into operational decisions instead of commentary. |
@@ -130,11 +137,14 @@ The factory can start from:
 - an agent, skill, prompt or model change.
 
 Every input becomes source material. Product or material product-change work
-also needs outcome and discovery before the Product SOT is treated as stable.
+also needs a selected operator interface, conversational start, understanding
+confirmation, outcome and discovery before the Product SOT is treated as stable.
 
-The first contract is the universal signal intake. It classifies the signal,
-chooses a route, lists required artifacts, names gates and prevents execution
-until source, scope and recovery are explicit.
+The first route contract is the universal signal intake. The human-facing flow
+can start earlier with operator interface selection and conversational
+understanding. Intake then classifies the signal, chooses a route, lists
+required artifacts, names gates and prevents execution until source, scope and
+recovery are explicit.
 
 | Signal | Route class | First contract |
 | --- | --- | --- |
@@ -153,44 +163,48 @@ This is the full flow. Small work can take a lighter path, but the router must
 record why a step is omitted.
 
 ```text
-1. Intake
-2. Source Ledger
-3. Source Resolution
-4. Product Outcome & Discovery
-5. Product SOT
-6. Full Product SOT Scope Coverage
-7. Specialist Research OS when material uncertainty exists
-8. Agentic Method Router
-9. Method Contract
-10. Product Pack and Surface Pack selection
-11. Risk, Authority, Dependency, Compliance, Access and Budget Gates
-12. Security Architecture Plan when material risk exists
-13. Product Creation Plan
-14. Software Development Plan
-15. Product Experience Plan when a product surface exists
-16. Data, Metrics & Analytics Plan when success must be measured
-17. Agent Quality & Evals Plan when agents, skills or models matter
-18. Spec Graph
-19. Loop Plan
-20. Product Context Packet
-21. Product Implementation Readiness
-22. SDLC Feedback Loop for material autonomous work
-23. Autonomy Readiness Packet and material autonomy routing
-24. Ready Gate
-25. Operator Projection
-26. Runtime execution
-27. Worker Results
-28. Verification
-29. Independent Review
-30. Human Gate when required
-31. Closure Summary
-32. Receipt Five
-33. Completion Audit
-34. Production Promotion Ladder and Operations
-35. Release or Block
-36. Monitoring, Incident and Support when needed
-37. Learnback
-38. Factory Maturity Audit
+1. Operator Interface Profile
+2. Conversational Start
+3. Intake
+4. Source Ledger
+5. Source Resolution
+6. Operator Understanding Confirmation
+7. Product Outcome & Discovery
+8. Operator Briefing Package when a decision is needed
+9. Product SOT
+10. Full Product SOT Scope Coverage
+11. Specialist Research OS when material uncertainty exists
+12. Agentic Method Router
+13. Method Contract
+14. Product Pack and Surface Pack selection
+15. Risk, Authority, Dependency, Compliance, Access and Budget Gates
+16. Security Architecture Plan when material risk exists
+17. Product Creation Plan
+18. Software Development Plan
+19. Product Experience Plan when a product surface exists
+20. Data, Metrics & Analytics Plan when success must be measured
+21. Agent Quality & Evals Plan when agents, skills or models matter
+22. Spec Graph
+23. Loop Plan
+24. Product Context Packet
+25. Product Implementation Readiness
+26. SDLC Feedback Loop for material autonomous work
+27. Autonomy Readiness Packet and material autonomy routing
+28. Ready Gate
+29. Operator Projection
+30. Runtime execution
+31. Worker Results
+32. Verification
+33. Independent Review
+34. Human Gate when required
+35. Closure Summary
+36. Receipt Five
+37. Completion Audit
+38. Production Promotion Ladder and Operations
+39. Release or Block
+40. Monitoring, Incident and Support when needed
+41. Learnback
+42. Factory Maturity Audit
 ```
 
 ## Work Units

@@ -11,7 +11,7 @@
       "request_type": "product_new",
       "route_class": "product_creation",
       "expected_method_family": "spec_first",
-      "expected_required_artifact_types": ["source_ledger", "outcome_contract", "product_sot", "full_product_sot_scope_coverage", "method_contract", "product_creation_plan", "product_implementation_readiness", "sdlc_feedback_loop"],
+      "expected_required_artifact_types": ["source_ledger", "operator_understanding_confirmation", "outcome_contract", "product_sot", "full_product_sot_scope_coverage", "method_contract", "product_creation_plan", "product_implementation_readiness", "sdlc_feedback_loop"],
       "expected_required_worker_ids": ["factory-orchestrator", "source-ledger-worker", "product-sot-planner"],
       "expected_recovery_policy": {"non_human_block_recovery_required": true, "factory_owned_repair_allowed": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},
       "expected_hermes_boundary": {"uses_native_kanban_primitives": true, "runtime_authority": "hermes_kanban", "local_state_authority": false},

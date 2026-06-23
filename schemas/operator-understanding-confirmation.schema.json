@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operator-understanding-confirmation.schema.json",
+  "title": "Overkill Factory Operator Understanding Confirmation",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "confirmation_id",
+    "created_at",
+    "factory_method_version",
+    "source_ledger_ref",
+    "source_signal",
+    "material_inventory",
+    "product_understanding",
+    "operator_questions",
+    "confirmation_state",
+    "blocking_rules",
+    "handoff",
+    "public_private_boundary",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/operator-understanding-confirmation.schema.json"
+    },
+    "record_type": { "const": "operator_understanding_confirmation" },
+    "confirmation_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "factory_method_version": { "const": "OVERKILL_VFINAL" },
+    "source_ledger_ref": { "type": "string", "minLength": 3 },
+    "source_signal": {
+      "type": "object",
+      "required": ["intake_id", "route_class", "summary_public_safe", "signal_ref_public_safe"],
+      "additionalProperties": true
+    },
+    "material_inventory": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source_id", "source_ref_public_safe", "interpreted_role", "confidence"],
+        "properties": {
+          "source_id": { "type": "string", "minLength": 3 },
+          "source_ref_public_safe": { "type": "string", "minLength": 3 },
+          "interpreted_role": { "type": "string", "minLength": 6 },
+          "confidence": { "enum": ["high", "bounded", "low", "unknown"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "product_understanding": {
+      "type": "object",
+      "required": [
+        "what_the_factory_understands",
+        "target_user_understanding",
+        "business_or_success_understanding",
+        "non_negotiables_understood",
+        "open_uncertainties",
+        "confidence"
+      ],
+      "properties": {
+        "what_the_factory_understands": { "type": "string", "minLength": 10 },
+        "target_user_understanding": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "business_or_success_understanding": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "non_negotiables_understood": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "open_uncertainties": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "confidence": { "enum": ["confirmed", "bounded_until_operator_confirms", "low"] }
+      },
+      "additionalProperties": false
+    },
+    "operator_questions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["question_id", "question", "question_class", "required_before_product_sot"],
+        "properties": {
+          "question_id": { "type": "string", "minLength": 3 },
+          "question": { "type": "string", "minLength": 10 },
+          "question_class": {
+            "enum": [
+              "product_intent_confirmation",
+              "preference",
+              "authority_required",
+              "access_required",
+              "risk_acceptance"
+            ]
+          },
+          "required_before_product_sot": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "confirmation_state": {
+      "type": "object",
+      "required": ["status", "operator_response_ref", "changes_required", "product_sot_allowed"],
+      "properties": {
+        "status": {
+          "enum": [
+            "pending_operator_confirmation",
+            "confirmed",
+            "changes_requested",
+            "not_required_low_complexity"
+          ]
+        },
+        "operator_response_ref": { "type": "string", "minLength": 3 },
+        "changes_required": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "product_sot_allowed": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "blocking_rules": {
+      "type": "object",
+      "required": [
+        "product_sot_blocked_until_operator_understanding_confirmed",
+        "max_operator_questions_for_telegram",
+        "summarize_sources_do_not_dump",
+        "human_gate_only_for_authority_access_risk_or_preference",
+        "understanding_confirmation_is_not_execution_approval"
+      ],
+      "properties": {
+        "product_sot_blocked_until_operator_understanding_confirmed": { "const": true },
+        "max_operator_questions_for_telegram": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "summarize_sources_do_not_dump": { "const": true },
+        "human_gate_only_for_authority_access_risk_or_preference": { "const": true },
+        "understanding_confirmation_is_not_execution_approval": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "next_artifact",
+        "next_worker",
+        "next_safe_action",
+        "user_decision_required",
+        "factory_owned_next_step"
+      ],
+      "properties": {
+        "next_artifact": { "type": "string", "minLength": 3 },
+        "next_worker": { "type": "string", "minLength": 3 },
+        "next_safe_action": { "type": "string", "minLength": 6 },
+        "user_decision_required": { "type": "boolean" },
+        "factory_owned_next_step": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo",
+        "operator_instance_may_hold_private_source"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true },
+        "operator_instance_may_hold_private_source": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "understanding_confirmation_created",
+        "product_sot_allowed",
+        "product_sot_generated",
+        "execution_allowed",
+        "blocked_reason",
+        "evidence_refs"
+      ],
+      "properties": {
+        "understanding_confirmation_created": { "const": true },
+        "product_sot_allowed": { "type": "boolean" },
+        "product_sot_generated": { "const": false },
+        "execution_allowed": { "const": false },
+        "blocked_reason": { "type": "string", "minLength": 6 },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -13,8 +13,12 @@ understand how the factory thinks.
 
 ```text
 request
+-> interface choice
+-> conversational start
 -> source
+-> understanding confirmation
 -> outcome
+-> briefing package when decisions matter
 -> method
 -> gates
 -> execution
@@ -92,38 +96,42 @@ support, learnback and factory maturity audit.
 
 | Stage | What happens | Output |
 | --- | --- | --- |
-| 1. Intake | The operator brings a paper, bug, repo, incident, feature, release or research request. | Universal signal intake, input type and initial scope. |
-| 2. Source Ledger | The factory records where source material came from. | Source list. |
-| 3. Source Resolution | Facts, inference, decisions, conflicts and gaps are separated. | Source resolution. |
-| 4. Product Outcome & Discovery | The desired result, user, problem and assumptions are clarified. | Outcome and discovery notes. |
-| 5. Product SOT | The product or slice is defined in one source-of-truth candidate. | Product SOT. |
-| 6. Method Router | The factory chooses the right process weight. | Router decision. |
-| 7. Method Contract | The chosen method, exclusions, evidence and blockers are recorded. | Method contract. |
-| 8. Pack Selection | Product and surface capability needs are identified. | Required packs and missing packs. |
-| 9. Gates | Risk, authority, dependency, compliance, access and budget are checked. | Gate status. |
-| 10. Security Architecture | Material risk is designed before implementation. | Security architecture plan. |
-| 11. Software Plan | The technical work is broken into a buildable plan. | Software plan. |
-| 12. Product Experience Plan | Product-facing surfaces get flows, states and proof requirements. | Product Face packet. |
-| 13. Data & Metrics Plan | Success, health and learning signals are defined. | Metrics plan. |
-| 14. Agent Evals Plan | Important agentic behavior gets evals before trust. | Evals plan. |
-| 15. Spec Graph | Specs, stories, cards and dependencies are connected. | Spec graph. |
-| 16. Loop Plan | Workers, order, limits and stop criteria become executable. | Loop plan. |
-| 17. Autonomy Readiness | Required access, accounts, tools and permissions are checked. | Readiness packet. |
-| 18. Ready Gate | The factory decides whether execution can start. | Ready, blocked or revise. |
-| 19. Operator Projection | The human view summarizes phase, blockers and next moves. | Operator status view. |
-| 20. Runtime Execution | Hermes or another runtime runs the card and worker tasks. | Runtime events. |
-| 21. Worker Results | Each worker returns structured output with evidence. | Worker result records. |
-| 22. Verification | Tests, checks and product proof are run. | Verification result. |
-| 23. Independent Review | A separate reviewer checks the work when required. | Review result. |
-| 24. Human Gate | A real human decision is recorded for material risk. | Decision record. |
-| 25. Closure Summary | The factory summarizes what actually happened. | Closure summary. |
-| 26. Receipt Five | The done receipt records change, evidence, review and next action. | Receipt Five. |
-| 27. Completion Audit | Required process is compared with delivered evidence. | Audit result. |
-| 28. Production Operations | Runbooks, ownership, health and rollback are prepared. | Ops readiness. |
-| 29. Release Or Block | The factory releases only when the gate is satisfied. | Release or block decision. |
-| 30. Monitoring & Support | The product is watched and incidents get a route. | Monitoring and support path. |
-| 31. Learnback | Lessons become docs, tests, policies, skills or product changes. | Learnback item. |
-| 32. Maturity Audit | The factory checks whether the method itself missed something. | Maturity audit. |
+| 1. Interface Choice | The operator chooses Telegram, Discord, Cockpit or another primary interface. | Operator interface profile with proactive notification and attachment rules. |
+| 2. Conversational Start | The manager has an open conversation, collects material and checks understanding. | Factory start conversation packet. |
+| 3. Intake | The operator brings a paper, bug, repo, incident, feature, release or research request. | Universal signal intake, input type and initial scope. |
+| 4. Source Ledger | The factory records where source material came from. | Source list. |
+| 5. Source Resolution | Facts, inference, decisions, conflicts and gaps are separated. | Source resolution. |
+| 6. Understanding Confirmation | The factory summarizes its product understanding and asks for correction or confirmation. | Operator understanding confirmation. |
+| 7. Product Outcome & Discovery | The desired result, user, problem and assumptions are clarified. | Outcome and discovery notes. |
+| 8. Operator Briefing | Major decisions receive a deep document, PDF and optional diagram/video/audio explanation. | Operator briefing package. |
+| 9. Product SOT | The product or slice is defined in one source-of-truth candidate. | Product SOT. |
+| 10. Method Router | The factory chooses the right process weight. | Router decision. |
+| 11. Method Contract | The chosen method, exclusions, evidence and blockers are recorded. | Method contract. |
+| 12. Pack Selection | Product and surface capability needs are identified. | Required packs and missing packs. |
+| 13. Gates | Risk, authority, dependency, compliance, access and budget are checked. | Gate status. |
+| 14. Security Architecture | Material risk is designed before implementation. | Security architecture plan. |
+| 15. Software Plan | The technical work is broken into a buildable plan. | Software plan. |
+| 16. Product Experience Plan | Product-facing surfaces get flows, states and proof requirements. | Product Face packet. |
+| 17. Data & Metrics Plan | Success, health and learning signals are defined. | Metrics plan. |
+| 18. Agent Evals Plan | Important agentic behavior gets evals before trust. | Evals plan. |
+| 19. Spec Graph | Specs, stories, cards and dependencies are connected. | Spec graph. |
+| 20. Loop Plan | Workers, order, limits and stop criteria become executable. | Loop plan. |
+| 21. Autonomy Readiness | Required access, accounts, tools and permissions are checked. | Readiness packet. |
+| 22. Ready Gate | The factory decides whether execution can start. | Ready, blocked or revise. |
+| 23. Operator Projection | The human view summarizes phase, blockers and next moves. | Operator status view. |
+| 24. Runtime Execution | Hermes or another runtime runs the card and worker tasks. | Runtime events. |
+| 25. Worker Results | Each worker returns structured output with evidence. | Worker result records. |
+| 26. Verification | Tests, checks and product proof are run. | Verification result. |
+| 27. Independent Review | A separate reviewer checks the work when required. | Review result. |
+| 28. Human Gate | A real human decision is recorded for material risk. | Decision record. |
+| 29. Closure Summary | The factory summarizes what actually happened. | Closure summary. |
+| 30. Receipt Five | The done receipt records change, evidence, review and next action. | Receipt Five. |
+| 31. Completion Audit | Required process is compared with delivered evidence. | Audit result. |
+| 32. Production Operations | Runbooks, ownership, health and rollback are prepared. | Ops readiness. |
+| 33. Release Or Block | The factory releases only when the gate is satisfied. | Release or block decision. |
+| 34. Monitoring & Support | The product is watched and incidents get a route. | Monitoring and support path. |
+| 35. Learnback | Lessons become docs, tests, policies, skills or product changes. | Learnback item. |
+| 36. Maturity Audit | The factory checks whether the method itself missed something. | Maturity audit. |
 
 ## Short Paths By Request Type
 
@@ -157,7 +165,8 @@ A normal feature still needs success criteria and evidence.
 ### Product With Interface
 
 ```text
-Intake -> Outcome & Discovery -> Product SOT -> Surface Pack
+Interface Choice -> Conversational Start -> Intake -> Understanding Confirmation
+-> Outcome & Discovery -> Product SOT -> Surface Pack
 -> Product Face Packet -> Software Plan -> execution -> Product Face Result
 -> Experience Gate -> review -> Receipt Five
 ```
@@ -168,8 +177,9 @@ behavior have been checked.
 ### Complex Product Or Material Change
 
 ```text
-Intake -> Source Ledger -> Source Resolution -> Outcome & Discovery
--> Product SOT -> Product Pack -> Method Router -> Method Contract
+Interface Choice -> Conversational Start -> Intake -> Source Ledger
+-> Source Resolution -> Understanding Confirmation -> Outcome & Discovery
+-> Briefing Package -> Product SOT -> Product Pack -> Method Router -> Method Contract
 -> Risk/Dependency/Access/Compliance/Budget Gates -> Security Architecture
 -> Software Plan -> Experience Plan -> Data Plan -> Evals Plan when relevant
 -> Spec Graph -> Loop Plan -> Autonomy Readiness -> Ready Gate

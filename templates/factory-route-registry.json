@@ -12,6 +12,7 @@
       "selected_method_family": "spec_first",
       "required_artifacts": [
         "source_ledger",
+        "operator_understanding_confirmation",
         "outcome_contract",
         "product_sot",
         "full_product_sot_scope_coverage",

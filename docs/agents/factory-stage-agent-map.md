@@ -25,8 +25,8 @@ the operator operator console.
 | 1. Intake | `factory-orchestrator` | `source-ledger-worker`, `memory-steward`, `control-tower-projection-worker` | Classify request type, phase, risk surface and first route. | Intake classification, source refs, initial risk. | Request cannot be classified or source is missing. |
 | 2. Source Ledger | `source-ledger-worker` | `memory-steward`, `public-safety-gate` | Register sources and separate source material from memory or chat claims. | Source map, freshness/trust notes. | Critical claim has no source ref. |
 | 3. Source Resolution | `source-ledger-worker` | `product-sot-planner`, `memory-steward` | Mark facts, inference, decision, conflict, stale material and gaps. | Promoted/rejected claims and conflict list. | Stale or conflicting source is promoted as fact. |
-| 4. Product Outcome & Discovery | `product-sot-planner` | `source-ledger-worker`, `product-face`, `detection-monitoring-worker` | Define expected outcome, user, problem, success metric, risk metric and assumptions. | Outcome contract, discovery notes, assumption ledger. | Product moves forward without outcome or critical assumption handling. |
-| 5. Product SOT | `product-sot-planner` | `product-architect`, `human-gate-clerk`, `docs-os-worker` | Produce the product or slice source of truth candidate. | SOT candidate with scope in/out, acceptance and open decisions. | SOT candidate is treated as approval. |
+| 4. Product Understanding, Outcome & Discovery | `product-sot-planner` | `source-ledger-worker`, `factory-orchestrator`, `product-face`, `detection-monitoring-worker` | Confirm the factory's product understanding with the operator when Product SOT is required, then define expected outcome, user, problem, success metric, risk metric and assumptions. | Operator understanding confirmation, outcome contract, discovery notes, assumption ledger. | Product moves forward as if raw material was perfectly understood. |
+| 5. Product SOT | `product-sot-planner` | `product-architect`, `human-gate-clerk`, `docs-os-worker` | Produce the product or slice source of truth candidate from confirmed understanding and source claims. | SOT candidate with scope in/out, acceptance and open decisions. | SOT candidate is treated as approval or is created before understanding confirmation. |
 | 6. Agentic Method Router | `factory-orchestrator` | `product-architect`, `security-orchestrator`, `skill-eval-distiller` | Choose method weight, required artifacts, workers, gates and reviews. | Method route and rationale. | Execution starts from habit instead of method. |
 | 7. Method Contract | `factory-orchestrator` | `decomposition-planner`, `independent-reviewer`, `human-gate-clerk` | Record selected methods, skipped methods, authority limits and done criteria. | Method contract status and skipped-method rationale. | Method is skipped without reason. |
 | 8. Product Pack & Surface Pack | `factory-orchestrator` | `product-face`, `security-orchestrator`, `agent-runtime-builder` | Select product/surface capability coverage and block unsupported product types. | Capability pack contract and coverage report. | Product type lacks ready pack or activated specialist pack. |
@@ -84,8 +84,9 @@ profiles unless they go through the full worker promotion path: registry,
 profile, binding, permission class, packet route, smoke and eval proof. If they
 exist as loose profiles, they create ambiguous routing because the Kanban cannot
 know whether to call the official worker or the duplicate profile. The exception
-is `overkill-factory-gerente`, which is an official Discord interface profile,
-not a worker executor.
+is `overkill-factory-gerente`, which is an official operator-interface profile,
+not a worker executor. The selected channel can be Telegram, Discord, Cockpit or
+another interface profile governed by the operator interface profile contract.
 
 ## Promotion Rule
 

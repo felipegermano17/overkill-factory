@@ -40,7 +40,7 @@ def build_valid_method_contract() -> dict:
         source_resolution,
         source_ref_public_safe="external:sanitized-product-brief",
     )
-    outcome = factoryctl.build_outcome_contract(ledger)
+    outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
     product_sot = factoryctl.build_product_sot(outcome)
     coverage = factoryctl.build_full_scope_coverage(product_sot)
     return factoryctl.build_method_contract(coverage)
@@ -86,6 +86,45 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             any("product_creation route missing required artifact types" in error for error in errors),
             errors,
         )
+
+    def test_product_creation_route_requires_operator_understanding_before_sot(self) -> None:
+        intake = signal_intake()
+
+        artifact_types = {artifact["artifact_type"] for artifact in intake["required_artifacts"]}
+
+        self.assertTrue(intake["normalization"]["operator_understanding_confirmation_required"])
+        self.assertIn("operator_understanding_confirmation", artifact_types)
+        self.assertEqual(factoryctl.validate_universal_signal_intake(intake), [])
+
+    def test_solana_product_signal_routes_to_solana_ai_kit_deterministically(self) -> None:
+        intake = factoryctl.build_universal_signal_intake(
+            route_class="product_creation",
+            request_type="product_new",
+            signal_type="mixed",
+            summary_public_safe="Build an onchain Solana bank with Token-2022, vaults, wallet transactions and DevNet proof.",
+            signal_ref_public_safe="external:sanitized-solana-bank-paper",
+            target_surface="solana onchain product",
+            owner="factory-orchestrator",
+            source_class="operator_supplied",
+            sensitivity_class="public_safe",
+            freshness="fresh",
+            risk_initial="R3",
+            materiality="critical",
+            created_at="2026-06-23T00:00:00+00:00",
+            intake_id="intake-solana-bank",
+        )
+
+        domain = intake["domain_routing"]
+        worker_ids = {worker["worker_id"] for worker in intake["required_workers"]}
+
+        self.assertIn("solana", domain["detected_surfaces"])
+        self.assertIn("solana-ai-kit-core", domain["capability_pack_ids"])
+        self.assertTrue(domain["official_brain_provider_required"])
+        self.assertTrue(domain["product_sot_must_include_domain_brain"])
+        self.assertIn("product-sot-planner", worker_ids)
+        self.assertIn("product-architect", worker_ids)
+        self.assertIn("solana-quasar-auditor", worker_ids)
+        self.assertEqual(factoryctl.validate_universal_signal_intake(intake), [])
 
     def test_request_type_must_align_with_factory_card(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
@@ -286,8 +325,8 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(public_json_validator.validate_domain_rules(ledger, "$"), [])
         self.assertEqual(ledger["record_type"], "product_source_ledger")
         self.assertEqual(ledger["source_resolution_ref"], source_resolution["packet_id"])
-        self.assertEqual(ledger["handoff"]["next_artifact"], "outcome_contract")
-        self.assertEqual(ledger["handoff"]["next_worker"], "product-sot-planner")
+        self.assertEqual(ledger["handoff"]["next_artifact"], "operator_understanding_confirmation")
+        self.assertEqual(ledger["handoff"]["next_worker"], "factory-orchestrator")
         self.assertFalse(ledger["acceptance"]["product_sot_generated"])
         self.assertFalse(ledger["acceptance"]["execution_allowed"])
 
@@ -373,7 +412,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_ref_public_safe="external:sanitized-product-brief",
         )
 
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
 
         self.assertEqual(factoryctl.validate_outcome_contract(outcome), [])
         self.assertEqual(public_json_validator.validate_domain_rules(outcome, "$"), [])
@@ -383,6 +422,51 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(outcome["handoff"]["next_worker"], "product-sot-planner")
         self.assertFalse(outcome["acceptance"]["product_sot_generated"])
         self.assertFalse(outcome["acceptance"]["execution_allowed"])
+
+    def test_pending_operator_understanding_blocks_outcome_and_product_sot(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+
+        pending = factoryctl.build_operator_understanding_confirmation(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger)
+
+        self.assertFalse(pending["confirmation_state"]["product_sot_allowed"])
+        self.assertEqual(factoryctl.validate_operator_understanding_confirmation(pending), [])
+        self.assertTrue(any("still pending" in error for error in factoryctl.validate_outcome_contract(outcome)))
+        with self.assertRaisesRegex(ValueError, "operator_understanding_confirmation_ref is still pending"):
+            factoryctl.build_product_sot(outcome)
+
+    def test_confirmed_operator_understanding_allows_product_sot(self) -> None:
+        source_resolution = factoryctl.build_source_resolution_packet(
+            signal_intake(),
+            intake_ref_public_safe="external:sanitized-universal-signal-intake",
+        )
+        ledger = factoryctl.build_product_source_ledger(
+            source_resolution,
+            source_ref_public_safe="external:sanitized-product-brief",
+        )
+        confirmation = factoryctl.build_operator_understanding_confirmation(
+            ledger,
+            confirmed=True,
+            operator_response_ref="external:operator-telegram-understanding-confirmed",
+        )
+        outcome = factoryctl.build_outcome_contract(
+            ledger,
+            operator_understanding_confirmation_ref=confirmation["confirmation_id"],
+        )
+
+        product_sot = factoryctl.build_product_sot(outcome)
+
+        self.assertTrue(confirmation["confirmation_state"]["product_sot_allowed"])
+        self.assertEqual(factoryctl.validate_operator_understanding_confirmation(confirmation), [])
+        self.assertEqual(product_sot["operator_understanding_confirmation_ref"], confirmation["confirmation_id"])
+        self.assertEqual(factoryctl.validate_product_sot(product_sot), [])
 
     def test_outcome_contract_requires_valid_source_ledger(self) -> None:
         source_resolution = factoryctl.build_source_resolution_packet(
@@ -396,7 +480,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         ledger["acceptance"]["execution_allowed"] = True
 
         with self.assertRaisesRegex(ValueError, "execution_allowed"):
-            factoryctl.build_outcome_contract(ledger)
+            factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
 
     def test_outcome_contract_cli_generates_public_safe_contract(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -417,6 +501,8 @@ class UniversalSignalIntakeTest(unittest.TestCase):
                     "outcome-contract",
                     "--source-ledger",
                     str(ledger_path),
+                    "--operator-understanding-confirmation-ref",
+                    "external:operator-understanding-confirmed",
                     "--out",
                     str(out_path),
                 ]
@@ -454,7 +540,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_ref_public_safe="external:sanitized-bug-report",
         )
 
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
 
         self.assertFalse(outcome["source_signal"]["needs_product_sot"])
         self.assertEqual(outcome["handoff"]["next_artifact"], "bug_reproduction")
@@ -470,7 +556,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
 
         product_sot = factoryctl.build_product_sot(outcome)
 
@@ -492,7 +578,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         outcome["acceptance"]["execution_allowed"] = True
 
         with self.assertRaisesRegex(ValueError, "execution_allowed"):
@@ -511,7 +597,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
                 source_resolution,
                 source_ref_public_safe="external:sanitized-product-brief",
             )
-            outcome = factoryctl.build_outcome_contract(ledger)
+            outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
             outcome_path.write_text(json.dumps(outcome), encoding="utf-8")
             material_path.write_text(
                 "\n".join(
@@ -568,7 +654,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-bug-report",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
 
         with self.assertRaisesRegex(ValueError, "does not require Product SOT"):
             factoryctl.build_product_sot(outcome)
@@ -582,7 +668,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
 
         coverage = factoryctl.build_full_scope_coverage(product_sot)
@@ -606,7 +692,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
         product_sot["acceptance"]["execution_allowed"] = True
 
@@ -625,7 +711,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
                 source_resolution,
                 source_ref_public_safe="external:sanitized-product-brief",
             )
-            outcome = factoryctl.build_outcome_contract(ledger)
+            outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
             product_sot = factoryctl.build_product_sot(outcome)
             product_sot_path.write_text(json.dumps(product_sot), encoding="utf-8")
 
@@ -654,7 +740,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
         product_sot["requirement_graph"][0]["decision_state"] = "open_decision"
         product_sot["requirement_graph"][0]["blocker_id"] = "human-gate-product-scope-001"
@@ -675,7 +761,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
         coverage = factoryctl.build_full_scope_coverage(product_sot)
 
@@ -701,7 +787,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
         coverage = factoryctl.build_full_scope_coverage(product_sot)
         coverage["acceptance"]["execution_allowed"] = True
@@ -721,7 +807,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
                 source_resolution,
                 source_ref_public_safe="external:sanitized-product-brief",
             )
-            outcome = factoryctl.build_outcome_contract(ledger)
+            outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
             product_sot = factoryctl.build_product_sot(outcome)
             coverage = factoryctl.build_full_scope_coverage(product_sot)
             coverage_path.write_text(json.dumps(coverage), encoding="utf-8")
@@ -751,7 +837,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
         coverage = factoryctl.build_full_scope_coverage(product_sot)
         coverage["requirement_coverage"][0]["status"] = "human_decision_required"
@@ -818,7 +904,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
         coverage = factoryctl.build_full_scope_coverage(product_sot)
         coverage["requirement_coverage"][0]["status"] = "human_decision_required"
@@ -887,7 +973,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
         coverage = factoryctl.build_full_scope_coverage(product_sot)
         coverage["requirement_coverage"][0]["status"] = "human_decision_required"
@@ -1075,7 +1161,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             source_resolution,
             source_ref_public_safe="external:sanitized-product-brief",
         )
-        outcome = factoryctl.build_outcome_contract(ledger)
+        outcome = factoryctl.build_outcome_contract(ledger, operator_understanding_confirmation_ref="external:operator-understanding-confirmed")
         product_sot = factoryctl.build_product_sot(outcome)
         coverage = factoryctl.build_full_scope_coverage(product_sot)
         coverage["requirement_coverage"][0]["status"] = "human_decision_required"

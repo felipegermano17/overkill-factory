@@ -10,6 +10,7 @@
     "created_at",
     "factory_method_version",
     "source_ledger_ref",
+    "operator_understanding_confirmation_ref",
     "source_signal",
     "outcome",
     "users_or_actors",
@@ -47,6 +48,10 @@
       "const": "OVERKILL_VFINAL"
     },
     "source_ledger_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "operator_understanding_confirmation_ref": {
       "type": "string",
       "minLength": 3
     },
@@ -124,6 +129,7 @@
       "type": "object",
       "required": [
         "source_ledger_required",
+        "operator_understanding_confirmation_required",
         "product_sot_blocked_until_outcome_reviewed",
         "execution_blocked_until_required_artifacts_pass",
         "raw_private_evidence_must_stay_external",
@@ -131,6 +137,7 @@
       ],
       "properties": {
         "source_ledger_required": { "const": true },
+        "operator_understanding_confirmation_required": { "type": "boolean" },
         "product_sot_blocked_until_outcome_reviewed": { "type": "boolean" },
         "execution_blocked_until_required_artifacts_pass": { "const": true },
         "raw_private_evidence_must_stay_external": { "const": true },

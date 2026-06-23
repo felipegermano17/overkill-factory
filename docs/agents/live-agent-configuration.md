@@ -49,9 +49,10 @@ packet route and no validation proof. If such a profile appears in Hermes, treat
 it as profile drift unless it has been promoted through the worker contract.
 
 The dedicated exception is `overkill-factory-gerente`: it is a gateway/interface
-profile for Discord. It may talk to the operator, receive inputs and register
-intent, but it must not choose specialists outside the Kanban, execute material
-work or mark cards done.
+profile for the selected primary operator interface, such as Telegram, Discord
+or Cockpit. It may talk to the operator, receive inputs, push status and attach
+briefing packages, but it must not choose specialists outside the Kanban,
+execute material work or mark cards done.
 
 ## Builder Layer
 
