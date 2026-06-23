@@ -69,6 +69,33 @@ release by itself.
 Worker packets carry `autonomy_mode` and `autonomy_lane_policy` so the worker
 receives the same authority envelope that `factoryctl validate-card` checked.
 
+## Operator Interruptions
+
+The manager/operator surface should not ask the human to approve internal
+factory work. The default behavior is: keep moving and report status.
+
+Interrupt the operator only for:
+
+- authority that only the human has;
+- access, credential, spend or account decisions;
+- risk acceptance, scope change, release, mainnet, funds, signing or
+  irreversible/destructive action;
+- a blocker marked human-only after the factory has prepared the bounded packet.
+
+Do not interrupt for:
+
+- discoverable information in source material, Hermes state, repo files or
+  worker outputs;
+- worker packet routing, schema details or gate report mechanics;
+- missing non-human worker evidence that has a registered owner;
+- recoverable non-human blockers with a repair route, retry budget and fresh
+  review path.
+
+`factoryctl help-next` exposes this split as `user_decision_required` versus
+`factory_resolved_without_user`. Telegram, Discord, Codex bridge or any other
+cockpit should show the first as a real user action and the second as factory
+work already owned by the system.
+
 ## Validation
 
 Run before handing a fast-lane card to Hermes:

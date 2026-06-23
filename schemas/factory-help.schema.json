@@ -96,6 +96,19 @@
         "additionalProperties": false
       }
     },
+    "factory_resolved_without_user": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["owner", "action", "why_no_user_action"],
+        "properties": {
+          "owner": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 },
+          "why_no_user_action": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
     "user_decision_required": {
       "type": "array",
       "items": {

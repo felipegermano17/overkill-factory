@@ -14,6 +14,7 @@
     "human_gate_triggers",
     "approval_points",
     "autonomy_level",
+    "operator_interrupt_policy",
     "handoff_mode",
     "blocked_state_policy",
     "burden_budget",
@@ -109,6 +110,52 @@
         },
         "additionalProperties": false
       }
+    },
+    "operator_interrupt_policy": {
+      "type": "object",
+      "required": [
+        "default_behavior",
+        "ask_immediately_when",
+        "batch_when",
+        "auto_resolve_when",
+        "status_reporting"
+      ],
+      "properties": {
+        "default_behavior": {
+          "const": "do_not_interrupt_operator"
+        },
+        "ask_immediately_when": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "authority_required",
+              "access_required",
+              "risk_acceptance",
+              "blocked_human_only",
+              "production_release",
+              "mainnet_or_funds",
+              "secret_or_credential_access",
+              "destructive_or_irreversible_action"
+            ]
+          }
+        },
+        "batch_when": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "auto_resolve_when": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "status_reporting": {
+          "type": "string",
+          "minLength": 3
+        }
+      },
+      "additionalProperties": false
     },
     "handoff_mode": { "type": "string", "minLength": 3 },
     "blocked_state_policy": { "type": "string", "minLength": 3 },

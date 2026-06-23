@@ -129,6 +129,31 @@
       "final acceptance after evidence and review"
     ],
     "autonomy_level": "gated_autonomous_execution",
+    "operator_interrupt_policy": {
+      "default_behavior": "do_not_interrupt_operator",
+      "ask_immediately_when": [
+        "authority_required",
+        "access_required",
+        "risk_acceptance",
+        "blocked_human_only",
+        "production_release",
+        "mainnet_or_funds",
+        "secret_or_credential_access",
+        "destructive_or_irreversible_action"
+      ],
+      "batch_when": [
+        "multiple preference decisions can be answered together",
+        "status updates are informational and do not change authority",
+        "non-urgent review notes can be summarized after the worker batch"
+      ],
+      "auto_resolve_when": [
+        "discoverable information can be found in source material, Hermes, repo files or worker outputs",
+        "internal coordination belongs to the factory, including worker packets, schemas, routing and gate reports",
+        "worker evidence can be produced by a registered non-human worker",
+        "non-human blockers have a factory-owned repair route, retry budget and fresh review path"
+      ],
+      "status_reporting": "Report progress, blockers and proof without asking for action unless a listed interrupt condition is active."
+    },
     "handoff_mode": "compressed operator view with understanding, bounded decisions, blockers, proof and next action",
     "blocked_state_policy": "stop with a named blocker, owner, evidence needed and smallest safe next action instead of pushing open-ended work to the user",
     "burden_budget": [

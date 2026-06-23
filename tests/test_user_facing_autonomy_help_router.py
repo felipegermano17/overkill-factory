@@ -34,6 +34,50 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
         self.assertEqual(payload["factory_next_action"]["owner"], "factory")
         self.assertIn("operator", " ".join(payload["limits"]).lower())
         self.assertIsInstance(payload["user_decision_required"], list)
+        self.assertIsInstance(payload["factory_resolved_without_user"], list)
+
+    def test_operator_interrupt_policy_is_required(self) -> None:
+        card = load_vfinal_card()
+        card["user_facing_autonomy_contract"].pop("operator_interrupt_policy")
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("user_facing_autonomy_contract.operator_interrupt_policy is required", errors)
+
+    def test_late_r2_phase_does_not_request_human_gate_by_phase_alone(self) -> None:
+        card = load_vfinal_card()
+        card["phase"] = "F15"
+        card["risk_initial"] = "R2"
+        card["risk_effective"] = "R2"
+        card["surfaces"] = ["code"]
+        card["review"]["human_gate_required"] = False
+
+        report = factoryctl.build_gate_report(card)
+        payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
+
+        self.assertFalse(report["workers"]["human-gate-clerk"]["required"])
+        self.assertNotIn("human-gate-clerk", report["required_workers"])
+        self.assertFalse(
+            any(decision["decision_type"] == "authority_required" for decision in payload["user_decision_required"]),
+            payload["user_decision_required"],
+        )
+        self.assertGreater(len(payload["factory_resolved_without_user"]), 0)
+
+    def test_r3_future_gate_packet_is_not_operator_interrupt_without_pending_authority(self) -> None:
+        card = load_vfinal_card()
+        card["risk_initial"] = "R3"
+        card["risk_effective"] = "R3"
+        card["surfaces"] = ["code"]
+        card["review"]["human_gate_required"] = False
+        card["review"]["CTO_gate_required"] = False
+        card["human_gate_packet"] = {
+            "decision_state": "not_required_for_current_step",
+            "gate_type": "future_release_boundary",
+        }
+
+        required, reason = factoryctl.human_gate_required_for_card(card)
+
+        self.assertFalse(required, reason)
 
     def test_missing_product_creation_plan_routes_to_planning_not_implementation(self) -> None:
         card = load_vfinal_card()

@@ -744,6 +744,29 @@ SECURITY_SURFACES = {
     "staking",
     "governance",
 }
+HUMAN_AUTHORITY_SURFACES = {
+    "release",
+    "production",
+    "deploy",
+    "mainnet",
+    "funds",
+    "signing",
+    "secret",
+    "secrets",
+    "secret-access",
+    "credential",
+    "credentials",
+    "billing",
+    "cost",
+    "destructive",
+    "destructive-action",
+    "waiver",
+    "risk-acceptance",
+    "scope-change",
+    "legal",
+    "privacy",
+    "compliance",
+}
 PRODUCT_FACE_RESULT_PHASES = {"F11", "F13", "F14", "F15", "F16", "F17"}
 HIGH_RISK = {"R3", "R4"}
 REVIEW_RISK = {"R2", "R3", "R4"}
@@ -3302,6 +3325,20 @@ def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
         if not _non_empty_text(question.get("factory_resolution_path")):
             errors.append(f"user_facing_autonomy_contract.user_questions[{index}].factory_resolution_path is required")
 
+    interrupt_policy = contract.get("operator_interrupt_policy")
+    if not isinstance(interrupt_policy, dict):
+        errors.append("user_facing_autonomy_contract.operator_interrupt_policy is required")
+    else:
+        if interrupt_policy.get("default_behavior") != "do_not_interrupt_operator":
+            errors.append("user_facing_autonomy_contract.operator_interrupt_policy.default_behavior must be do_not_interrupt_operator")
+        ask_now = set(_list_items(interrupt_policy.get("ask_immediately_when")))
+        if not {"authority_required", "access_required", "risk_acceptance"}.issubset(ask_now):
+            errors.append("user_facing_autonomy_contract.operator_interrupt_policy.ask_immediately_when must include authority_required, access_required and risk_acceptance")
+        auto_resolve = " ".join(_list_items(interrupt_policy.get("auto_resolve_when"))).lower()
+        for required in ("discoverable", "internal coordination", "worker evidence", "non-human"):
+            if required not in auto_resolve:
+                errors.append(f"user_facing_autonomy_contract.operator_interrupt_policy.auto_resolve_when must cover {required}")
+
     return errors
 
 
@@ -3987,6 +4024,42 @@ def _card_product_classifications(card: dict[str, Any]) -> set[str]:
 
 def risk(card: dict[str, Any]) -> str:
     return str(card.get("risk_effective", "")).strip().upper()
+
+
+def human_gate_required_for_card(card: dict[str, Any]) -> tuple[bool, str]:
+    effective_risk = risk(card)
+    phase = str(card.get("phase") or "").strip()
+    surfaces = normalized_surfaces(card)
+    review = card.get("review") if isinstance(card.get("review"), dict) else {}
+    human_gate_packet = card.get("human_gate_packet") if isinstance(card.get("human_gate_packet"), dict) else {}
+    human_gate_state = str(
+        human_gate_packet.get("decision_state")
+        or human_gate_packet.get("status")
+        or human_gate_packet.get("state")
+        or ""
+    ).strip().lower()
+    r4_gate = card.get("r4_gate") if isinstance(card.get("r4_gate"), dict) else {}
+    production_plan = card.get("production_readiness_plan") if isinstance(card.get("production_readiness_plan"), dict) else {}
+    release_rule = production_plan.get("release_approval_rule") if isinstance(production_plan.get("release_approval_rule"), dict) else {}
+
+    if review.get("human_gate_required") is True or review.get("CTO_gate_required") is True:
+        return True, "explicit review or CTO human gate required"
+    if effective_risk == "R4":
+        return True, "R4 work requires explicit human authority"
+    if effective_risk == "R3" and (
+        surfaces & HUMAN_AUTHORITY_SURFACES
+        or human_gate_state in {"pending", "pending_before_execution", "required", "approval_required"}
+    ):
+        return True, "R3 work with material authority boundary requires human gate"
+    if phase == "F9":
+        return True, "dedicated human gate phase"
+    if r4_gate:
+        return True, "R4 gate packet present"
+    if (phase in {"F16", "F17"} or surfaces & {"release", "production", "deploy"}) and release_rule.get("human_gate_required") is True:
+        return True, "release or production approval rule is active"
+    if surfaces & HUMAN_AUTHORITY_SURFACES:
+        return True, "authority, access, spend, release or irreversible surface detected"
+    return False, "no current human authority trigger detected"
 
 
 def strict_product_experience_required(card: dict[str, Any]) -> bool:
@@ -12412,13 +12485,7 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "late-stage or review-risk card requires reconciled Receipt Five evidence" if required else "early/low-risk card without done promotion trigger"
         return required, reason
     if worker_id == "human-gate-clerk":
-        required = (
-            effective_risk in HIGH_RISK
-            or phase in {"F4", "F9", "F15", "F16"}
-            or review.get("human_gate_required") is True
-            or review.get("CTO_gate_required") is True
-        )
-        reason = "architecture/high-risk/human gate detected" if required else "no human gate trigger detected"
+        required, reason = human_gate_required_for_card(card)
         return required, reason
     if worker_id == "factory-orchestrator":
         required = bool(phase or surfaces or effective_risk)
@@ -12858,14 +12925,19 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
 def build_gate_report(card: dict[str, Any]) -> dict[str, Any]:
     validation_errors = validate_card(card)
     validation_warnings = parallel_lane_warnings(card_parallel_lane_contracts(card))
+    profile_bindings = load_profile_bindings()
     worker_rows: dict[str, dict[str, Any]] = {}
     required_workers: list[str] = []
     blocked_workers: list[str] = []
     blocker_economics: list[dict[str, str]] = []
     for worker_id in WORKERS:
         required, reason = worker_required(worker_id, card)
-        status = build_worker_packet(worker_id, card, Path("<memory>"))["status"]
         missing_inputs = missing_required_inputs(WORKERS[worker_id], card)
+        status = "requires_execution" if required else "not_required_by_current_card"
+        if required and missing_inputs:
+            status = "blocked_missing_inputs"
+        if required and worker_id not in profile_bindings:
+            status = "blocked_missing_profile_binding"
         worker_rows[worker_id] = {
             "required": required,
             "reason": reason,
@@ -13213,8 +13285,9 @@ def build_factory_recovery_plan(
     card: dict[str, Any],
     worker_results_dir: Path | None = None,
     receipt: dict[str, Any] | None = None,
+    gate_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    report = build_gate_report(card)
+    report = gate_report or build_gate_report(card)
     routes: list[dict[str, Any]] = []
     route_index = 1
     if report.get("gate_predicate_result") == "BLOCK":
@@ -15579,6 +15652,41 @@ def recovery_decisions_for_help(routes: list[dict[str, Any]]) -> list[dict[str, 
     return decisions
 
 
+def factory_resolved_actions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -> list[dict[str, str]]:
+    actions: list[dict[str, str]] = []
+    for item in gate_report.get("next_safe_actions", []):
+        if not isinstance(item, dict):
+            continue
+        worker_id = str(item.get("worker_id") or "").strip()
+        if not worker_id or worker_id == "human-gate-clerk":
+            continue
+        action = str(item.get("action") or "").strip()
+        if not action:
+            continue
+        actions.append(
+            {
+                "owner": worker_id,
+                "action": action,
+                "why_no_user_action": "Factory-owned worker evidence, repair or validation; not a human authority decision.",
+            }
+        )
+
+    if not actions and gate_report.get("gate_status") == "ready_for_worker_execution":
+        for worker_id in _list_items(gate_report.get("required_workers")):
+            if worker_id == "human-gate-clerk":
+                continue
+            row = gate_report.get("workers", {}).get(worker_id) if isinstance(gate_report.get("workers"), dict) else {}
+            if isinstance(row, dict) and row.get("status") == "requires_execution":
+                actions.append(
+                    {
+                        "owner": worker_id,
+                        "action": f"execute {worker_id} through Hermes and attach its worker result",
+                        "why_no_user_action": "Required worker execution is inside the approved factory scope.",
+                    }
+                )
+    return actions
+
+
 def user_decisions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -> list[dict[str, str]]:
     decisions: list[dict[str, str]] = []
     contract = card.get("user_facing_autonomy_contract") if isinstance(card.get("user_facing_autonomy_contract"), dict) else {}
@@ -15597,11 +15705,12 @@ def user_decisions_for_card(card: dict[str, Any], gate_report: dict[str, Any]) -
             )
 
     review = card.get("review") if isinstance(card.get("review"), dict) else {}
-    if review.get("human_gate_required") is True or "human-gate-clerk" in _list_items(gate_report.get("required_workers")):
+    human_gate_required, human_gate_reason = human_gate_required_for_card(card)
+    if human_gate_required or review.get("human_gate_required") is True:
         decisions.append(
             {
                 "decision_type": "authority_required",
-                "reason": "Human gate is required by risk, authority or release policy.",
+                "reason": human_gate_reason,
                 "user_action": "approve, reject or request changes on the bounded gate packet",
                 "factory_prepares": "human gate packet with scope, risk, evidence and forbidden actions",
             }
@@ -15632,7 +15741,12 @@ def build_factory_help(
     catalog = load_workflow_catalog(catalog_path)
     phase_row = workflow_phase_for_card(card, catalog)
     gate_report = build_gate_report(card)
-    recovery_plan = build_factory_recovery_plan(card, worker_results_dir=worker_results_dir, receipt=receipt)
+    recovery_plan = build_factory_recovery_plan(
+        card,
+        worker_results_dir=worker_results_dir,
+        receipt=receipt,
+        gate_report=gate_report,
+    )
     active_recovery_routes = [
         summarize_recovery_route_for_help(route)
         for route in recovery_plan.get("recovery_routes", [])
@@ -15677,6 +15791,7 @@ def build_factory_help(
         "truth_scope": truth_scope_for_card(card),
         "factory_next_action": factory_action,
         "active_recovery_routes": active_recovery_routes,
+        "factory_resolved_without_user": factory_resolved_actions_for_card(card, gate_report),
         "user_decision_required": user_decisions_for_card(card, gate_report) + recovery_decisions_for_help(active_recovery_routes),
         "blocked_because": validation_errors + [f"{worker_id} is blocked by missing inputs" for worker_id in blocked_workers],
         "blocked_actions": sorted(set(_list_items(phase_row.get("blocked_actions")) + _list_items(card.get("forbidden_actions")))),
