@@ -207,6 +207,28 @@ python adapters/hermes/transition_hook.py \
   --report-only
 ```
 
+## Telegram Autonomy Heartbeat
+
+When Telegram is the only cockpit, the operator should not need to ask "andou?"
+for the factory to continue. The supported heartbeat is a Hermes cron job that
+runs `scripts/factory_no_idle_watchdog.py`.
+
+The watchdog:
+
+- scans explicit boards or non-empty boards;
+- asks the Hermes adapter to classify no-idle state;
+- creates one safe factory-owned remediation card when unfinished work is stuck
+  without `ready`, `running` or a sole human gate;
+- calls native Hermes dispatch only when the adapter reports dispatch is the
+  next action;
+- emits Durable Operator Inbox events for human gates or attention-worthy
+  remediation.
+
+It does not run product work, close gates, approve human decisions or replace
+Receipt Five. Telegram receives only state changes, remediations and real human
+gate requests; repeated identical states are deduplicated by the watchdog state
+file.
+
 ## Public Contracts
 
 The bridge exposes these machine contracts:

@@ -66,6 +66,43 @@ screenshots or runtime proof from your own Hermes instance.
 6. Create or route Hermes worker cards from those packets.
 7. Attach real worker result artifacts and Receipt Five before `done`.
 
+## Telegram-First Autonomy
+
+If the operator talks only to `overkill-factory-gerente` through Telegram, add a
+Hermes cron job for the no-idle watchdog after the adapter path is installed:
+
+```bash
+mkdir -p ~/.hermes/scripts
+cat > ~/.hermes/scripts/overkill_factory_no_idle_watchdog.sh <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+export HOME="${HERMES_HOME:-$HOME}"
+export HERMES_HOME="${HERMES_HOME:-$HOME}"
+cd /path/to/overkill-factory
+python scripts/factory_no_idle_watchdog.py \
+  --all-nonempty-boards \
+  --exclude-board old-product-board-if-not-archived \
+  --create-remediation \
+  --dispatch \
+  --emit-events
+SH
+chmod +x ~/.hermes/scripts/overkill_factory_no_idle_watchdog.sh
+hermes cron create "every 5m" \
+  --name overkill-factory-no-idle-watchdog \
+  --script overkill_factory_no_idle_watchdog.sh \
+  --no-agent \
+  --deliver telegram
+```
+
+This gives the factory a heartbeat without giving the watchdog authority over
+the product. It may create safe remediation work and trigger native dispatch. It
+must not close human gates, execute factory work as the manager, or approve
+production, mainnet, funds, signing, secrets, billing or destructive actions.
+
+Archive obsolete boards or pass `--exclude-board <slug>` for abandoned products.
+The watchdog should keep active factory runs moving; it should not revive a
+product the operator is intentionally replacing.
+
 ## Boundary
 
 Point 5 is intentionally deferred. This guide makes installation easy, but it

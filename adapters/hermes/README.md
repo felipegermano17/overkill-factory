@@ -404,6 +404,27 @@ gates are the only blockers, or creates one safe `factory_no_idle_remediation`
 card for `factory-orchestrator`. The next worker launch still belongs to native
 Hermes dispatch.
 
+For a Telegram-first production operator, run the cron-friendly watchdog from
+Hermes instead of waiting for the operator to ask for status:
+
+```bash
+python scripts/factory_no_idle_watchdog.py \
+  --all-nonempty-boards \
+  --exclude-board old-product-board-if-not-archived \
+  --create-remediation \
+  --dispatch \
+  --emit-events
+```
+
+The watchdog is not a second dispatcher. It calls this adapter for no-idle
+classification and uses native `hermes kanban dispatch` only when the adapter
+sets `native_dispatch_required_next=true`. Repeated identical states are
+deduplicated through `.tmp/factory-runs/no-idle-watchdog-state.json` so Telegram
+does not become noisy.
+
+Before using `--all-nonempty-boards`, archive obsolete boards or exclude them
+explicitly. A board left unarchived is treated as a live factory run.
+
 ## Generated Transition Examples
 
 Run the transition hook against `examples/minimal-hermes-project/card.md` to

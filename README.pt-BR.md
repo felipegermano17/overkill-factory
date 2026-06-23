@@ -240,7 +240,7 @@ Ela inclui:
 - release preflight, public-surface sync, safety scans e Factory v1 Completion
   Gate;
 - projeção de artefato de conclusão Hermes, controles de no-idle, Hermes update
-  guard e contratos da Fast Autonomy Lane.
+  guard, watchdog de no-idle para Hermes cron e contratos da Fast Autonomy Lane.
 
 Esse claim é deliberadamente limitado. Factory v1 significa que o kernel
 público está completo o suficiente para instalar, inspecionar, validar e
@@ -266,6 +266,8 @@ production readiness.
 - `docs/control-tower/open-source-setup.md`: setup opcional de Control Tower.
 - `docs/operations/validation-and-release.md`: checklist de release.
 - `docs/operations/fast-autonomy-lane.md`: limites da execução autônoma rápida.
+- `scripts/factory_no_idle_watchdog.py`: heartbeat de no-idle via Hermes cron
+  para operação primária pelo Telegram.
 - `docs/operations/release-policy.md`: política de versão e release.
 - `docs/operations/troubleshooting.md`: falhas comuns e caminho de recuperação.
 - `docs/architecture/hermes-integration.md`: arquitetura do adapter Hermes.

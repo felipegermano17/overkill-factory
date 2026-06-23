@@ -102,6 +102,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "factoryctl doctor",
             "factoryctl init",
             "factoryctl run minimal",
+            "factory_no_idle_watchdog.py",
             "codex plugin marketplace add .",
             "codex plugin add overkill-factory-bridge@overkill-factory",
         ]:
