@@ -9,6 +9,21 @@ public releases.
 
 Nothing yet.
 
+## 1.4.0 - 2026-06-23
+
+- Add Telegram-first operator interface, conversational start and deep briefing
+  package contracts so new product work confirms understanding before Product
+  SOT and pushes PDF/markdown decision packages instead of relying on shallow
+  chat summaries or operator polling.
+- Add `factoryctl operator-interface`, `factoryctl start-conversation`,
+  `factoryctl briefing-package` and `factoryctl understanding-confirmation`
+  validation/build commands for public-safe startup flows.
+- Require Solana/onchain product signals to route deterministically through the
+  `solana-ai-kit-core` domain brain before execution.
+- Harden the public validator so confirmed factory starts require a real start
+  request ref and confirmed product understanding requires a real operator
+  response ref.
+
 ## 1.3.0 - 2026-06-23
 
 - Add Fast Autonomy Lane contracts: `fast_autonomy` for reversible low-risk
