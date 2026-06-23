@@ -30,10 +30,11 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_readme_is_external_user_entrypoint(self) -> None:
         readme = read_text("README.md")
         required_headings = [
+            "Plain Explanation",
             "Why This Exists",
             "How The Factory Works",
             "Hermes Runtime",
-            "Use With The Codex Bridge Plugin",
+            "Ways To Use It",
             "First Run",
             "Repository Shape",
             "Current Release State",
@@ -55,8 +56,9 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("full Product SOT scope coverage", readme)
         self.assertIn("Hermes Kanban remains the source of truth", readme)
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
-        self.assertIn("A Overkill Factory é uma linha de produção para projetos feitos por agentes.", readme)
-        self.assertIn("O ponto mais importante: a fábrica não é “um chat inteligente”.", readme)
+        self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
+        self.assertIn('the factory is not "a smart chat."', readme)
+        self.assertIn("v1.4.0", readme)
         self.assertNotIn("Para você, como usuário leigo", readme)
         self.assertNotIn("## What It Does Not Do", readme)
 
@@ -109,16 +111,17 @@ class OpenSourceDocsTest(unittest.TestCase):
     def test_portuguese_readme_mirrors_public_entrypoint(self) -> None:
         readme_pt = read_text("README.pt-BR.md")
         required_headings = [
+            "Explicação Simples",
             "Por Que Existe",
-            "Como A Fabrica Funciona",
+            "Como A Fábrica Funciona",
             "Runtime Hermes",
-            "Usar Com O Plugin Bridge Do Codex",
-            "Primeira Execucao",
-            "Estrutura Do Repositorio",
+            "Formas De Usar",
+            "Primeira Execução",
+            "Estrutura Do Repositório",
             "Estado Atual De Release",
             "Leia Depois",
-            "Validacao",
-            "Fronteira Publica",
+            "Validação",
+            "Fronteira Pública",
         ]
 
         for heading in required_headings:
@@ -127,12 +130,13 @@ class OpenSourceDocsTest(unittest.TestCase):
 
         for expected in [
             "[English](README.md)",
-            "Mapa publico:",
+            "Mapa público:",
             "A Overkill Factory é uma linha de produção para projetos feitos por agentes.",
-            "O ponto mais importante: a fábrica não é “um chat inteligente”.",
-            "nao um atalho de MVP",
+            'O ponto mais importante: a fábrica não é "um chat inteligente".',
+            "não um atalho de MVP",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
+            "v1.4.0",
             "codex plugin marketplace add .",
             "codex plugin add overkill-factory-bridge@overkill-factory",
             "docs/operator/overkill-factory-bridge.md",

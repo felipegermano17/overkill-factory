@@ -1,92 +1,62 @@
 # Overkill Factory
 
-Language: English | [Portugues](README.pt-BR.md)
+Language: English | [Português](README.pt-BR.md)
 
-Overkill Factory is an open-source production system for agentic product work.
-It turns rough product signals into controlled factory state: source intake,
-operator understanding confirmation, Product SOT, full-scope planning, method
-routing, worker packets, gates, evidence, review, release readiness and
+Overkill Factory is a production line for Hermes-powered agentic product work.
+It turns a rough request into controlled factory state: source intake,
+understanding confirmation, Product SOT, full Product SOT scope coverage,
+method routing, worker packets, gates, evidence, review, release readiness and
 learnback.
 
-It is built for operators who want agents to work without letting chat,
+It exists for operators who want agents to work with speed without letting chat,
 enthusiasm or a partial demo become the source of truth.
 
 Public map:
 https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html
 
-## Explicacao Simples
+## Plain Explanation
 
-A Overkill Factory é uma linha de produção para projetos feitos por agentes.
+Overkill Factory is a production line for projects built by agents.
 
-Em vez de você pedir “faz um app” e um agente sair codando no improviso, a fábrica transforma sua ideia em um processo controlado: entende o material, confirma o entendimento, planeja, divide o trabalho, chama agentes especialistas, cobra provas, revisa, bloqueia riscos e só então considera algo pronto.
+Instead of asking an agent to "build an app" and hoping it codes the right
+thing, the factory turns the idea into a controlled process: understand the
+material, confirm the understanding, plan the work, split the work, call
+specialist agents, demand proof, review results, block risk and only then call
+something done.
 
-**Em termos simples:**
+In simple terms:
 
-- **Hermes** é o chão da fábrica: o quadro de tarefas, os cards, os agentes rodando, os status e os logs.
-- **Overkill Factory** é o método: regras, etapas, contratos, gates, workers, evidências e validações.
-- **Gerente da fábrica** é a porta de entrada: você fala com ele, por exemplo no Telegram.
-- **Workers** são agentes especialistas: produto, arquitetura, frontend, backend, segurança, Solana, QA, documentação, release etc.
-- **Gates** são checkpoints: “pode avançar?”, “tem prova?”, “precisa de decisão humana?”.
-- **Receipt Five** é o recibo final: o pacote de evidências que diz o que foi feito, testado, revisado e aprovado/bloqueado.
+- **Hermes** is the factory floor: tasks, cards, agents, status and logs.
+- **Overkill Factory** is the method: rules, stages, contracts, gates, workers,
+  evidence and validation.
+- **Factory manager** is the front door: the operator talks to it, for example
+  through Telegram.
+- **Workers** are specialist agents: product, architecture, frontend, backend,
+  security, Solana, QA, docs, release and more.
+- **Gates** are checkpoints: can this advance, is there proof, does a human need
+  to decide?
+- **Receipt Five** is the final receipt: the evidence package showing what was
+  built, tested, reviewed and approved or blocked.
 
-O fluxo normal é:
+The normal flow is:
 
 ```text
-sua ideia/material
--> entendimento do produto
--> confirmação com você
--> fonte da verdade do produto
--> plano completo
--> tarefas para agentes
--> execução
--> testes e revisão
--> aprovação/bloqueio
--> entrega com evidências
--> aprendizados para melhorar a fábrica
+your idea/material
+-> product understanding
+-> confirmation with you
+-> product source of truth
+-> complete plan
+-> tasks for agents
+-> execution
+-> tests and review
+-> approval/block
+-> evidence-backed delivery
+-> learnback to improve the factory
 ```
 
-Como usar, do jeito mais simples:
-
-1. Você fala com o **gerente da fábrica**.
-
-   Exemplo:
-   > Quero iniciar um projeto novo. É um banco digital onchain em Solana. Vou mandar paper, planilha, repo antigo e resumo do que imagino.
-
-2. Você manda os materiais.
-
-   Pode ser texto, links, documentos, planilhas, repositório, prints, regras de negócio, inspiração, qualquer coisa relevante.
-
-3. A fábrica não deveria sair fazendo direto.
-
-   Primeiro ela deve entender o que recebeu, levantar dúvidas e confirmar com você:
-   > “Pelo que entendi, o produto é X, o usuário é Y, o objetivo é Z, existem esses riscos e essas dúvidas. Está correto?”
-
-4. Depois da confirmação, ela cria a fonte de verdade.
-
-   Isso é o documento central dizendo o que o produto é, o que não é, quais requisitos importam, quais riscos existem e qual resultado esperado.
-
-5. A fábrica planeja e divide o trabalho.
-
-   Ela decide quais especialistas entram: produto, arquitetura, segurança, frontend, Solana, QA, auditoria, release etc.
-
-6. Os agentes executam.
-
-   Você não deveria ter que coordenar cada agente. A fábrica deveria chamar quem precisa, acompanhar status e só te acionar quando existe decisão real sua.
-
-7. Você recebe pedidos claros.
-
-   Bons pedidos seriam:
-   > “Preciso da sua decisão entre A e B.”
-
-   > “Esse risco exige aprovação humana antes de avançar.”
-
-   > “Aqui está o documento/PDF da arquitetura para validar.”
-
-8. No final, ela entrega com prova.
-
-   Não basta “pronto”. Tem que ter evidência: o que foi feito, onde está, como foi testado, o que foi revisado, o que ficou bloqueado e qual é o próximo passo.
-
-O ponto mais importante: a fábrica não é “um chat inteligente”. Ela é um sistema para impedir que agentes pulem entendimento, inventem escopo, ignorem segurança ou digam que algo está pronto sem prova.
+The most important point: the factory is not "a smart chat." It is a system for
+preventing agents from skipping understanding, inventing scope, ignoring
+security or claiming work is done without proof.
 
 ## Why This Exists
 
@@ -98,7 +68,7 @@ Agentic work usually fails in the spaces between tasks:
 - a dashboard looks useful but is not the runtime source of truth;
 - a blocked path waits for the operator even when the factory should repair it.
 
-Overkill Factory makes those spaces explicit. A signal is routed through known
+Overkill Factory makes those spaces explicit. A signal enters through known
 contracts. Every important state has an owner, gate, next action and evidence
 shape. Non-human blocks are expected to return to factory-owned repair routes.
 Human gates remain human gates.
@@ -126,76 +96,64 @@ raw signal
 -> monitoring, support and learnback
 ```
 
-The input can be a product paper, bug, idea, existing repository, incident,
-release request, research request, UX request, analytics request, integration,
-migration or agent/runtime change. The route registry and golden signal corpus
-make those paths inspectable instead of hidden in conversation.
+Inputs can be product papers, bugs, ideas, existing repositories, incidents,
+release requests, research requests, UX requests, analytics requests,
+integrations, migrations or agent/runtime changes. The route registry and
+golden signal corpus make those paths inspectable instead of hidden in
+conversation.
 
-The intended output is not "a good answer." It is a product or factory decision
-that can be audited: what was requested, what was planned, what was blocked,
-what was done, who or what had authority, and what evidence allows the next
-state.
+The output is not "a good answer." It is a product or factory decision that can
+be audited: what was requested, what was planned, what blocked, what was done,
+who had authority and what evidence allows the next state.
 
-For product-facing work, the route must also create a project design-system
-contract and AI-readable `DESIGN.md` before frontend builders or Product Face
-proof can pass.
+Product-facing work must also create a project design-system contract and an
+AI-readable `DESIGN.md` before frontend builders or Product Face proof can pass.
 
 ## Hermes Runtime
 
-Hermes is the first supported factory floor. The factory does not replace
+Hermes is the first supported factory floor. Overkill Factory does not replace
 Hermes; the normal execution path today is Hermes Kanban plus Overkill Factory
 contracts.
 
-Overkill Factory provides the method, contracts, schemas, worker registry,
-Hermes bindings, adapter hooks, examples and validation tools. Hermes provides
-the durable Kanban runtime where cards, workers, comments, runs and state
-transitions live.
+Overkill Factory supplies method, schemas, worker registry, Hermes bindings,
+adapter hooks, examples and validation tools. Hermes supplies the durable
+Kanban runtime where cards, workers, comments, runs and state transitions live.
 
-The practical boundary is simple:
+The runtime boundary is simple:
 
 - `factoryctl`, schemas and tests validate public contracts.
-- Hermes Kanban is the runtime authority for real cards and transitions.
-- Receipt Five and worker results are the completion evidence.
-- Operator Consoles and operator dashboards can project state, but they do not approve
+- Hermes Kanban remains the source of truth for real cards and transitions.
+- Worker results and Receipt Five are completion evidence.
+- Operator consoles and dashboards may project state, but they do not approve
   gates or replace Hermes.
 
 Speed is controlled by authority, not by vibe. Low-risk reversible work can use
-the Fast Autonomy Lane, while production, mainnet, funds, signing, secrets,
-billing, destructive actions and human-gate approval stay outside any YOLO-like
-mode. See `docs/operations/fast-autonomy-lane.md`.
+the Fast Autonomy Lane. Production, mainnet, funds, signing, secrets, billing,
+destructive actions and human-gate approval stay outside any YOLO-like mode.
+See `docs/operations/fast-autonomy-lane.md`.
 
-## Use With The Codex Bridge Plugin
+Hermes and Receipt Five remain the source of truth for real factory execution.
 
-There are two public operating paths:
+## Ways To Use It
 
-- direct: use `factoryctl` and connect generated packets to your Hermes runtime;
-- bridged: install the Codex Bridge plugin so Codex can act as the human
-  operator bridge.
+There are three practical operating paths:
 
-The plugin does not run the factory. It helps the operator collect the initial
-signal, start an approved factory run, read the Durable Operator Inbox, report
-pending human gates, record the operator's answer and hand that answer back to
-the factory.
+| Path | Use when | What happens |
+| --- | --- | --- |
+| `factoryctl` only | You want to inspect, validate or generate packets locally. | The CLI writes public-safe artifacts under `.tmp/`. It does not mutate a live Hermes board. |
+| Hermes runtime | You want the factory to run real cards and workers. | Hermes Kanban owns cards, workers, comments, runs and transitions. |
+| Codex Bridge plugin | You want Codex to act as the human operator bridge. | Codex reads the Durable Operator Inbox and forwards operator decisions without becoming the factory. |
 
-Hermes Kanban remains the source of truth. Worker results and Receipt Five
-still decide completion. The plugin is only the bridge between the operator and
-the runtime.
+The bridge does not run the factory. It helps collect the initial signal, start
+an approved factory run, read pending operator events, surface human gates,
+record the operator's answer and hand that answer back to the factory.
 
-Install from the repo root:
+Install the Codex Bridge plugin from the repo root:
 
 ```bash
 codex plugin marketplace add .
 codex plugin add overkill-factory-bridge@overkill-factory
 ```
-
-Start a new Codex thread after installation and review/trust the plugin hooks.
-The hooks run when Codex starts or when the operator submits a prompt. They do
-not keep Codex active 24/7, approve gates, mutate Hermes, run workers or
-replace Receipt Five.
-
-Use the bridge when you want to ask for factory status, start an approved run,
-see what is blocked, answer a human gate or request a scoped change without
-letting chat become the source of truth.
 
 Read `docs/operator/overkill-factory-bridge.md` for the bridge architecture and
 `docs/operator/overkill-factory-bridge-plugin.md` for install, inbox resolution
@@ -215,38 +173,22 @@ factoryctl run minimal
 
 The minimal run writes local output under `.tmp/`, including a quickstart result
 and worker packets for the public example card.
+Generated worker packets and gate reports belong in `.tmp/`. Release artifacts
+and private evidence stores are valid homes for evidence that should not be
+tracked in the public repo.
 
-Generated worker packets and gate reports belong in `.tmp/`, release artifacts
-or a private evidence store, not in the public repo.
-
-Useful next commands:
+Create a product workspace when you are ready to connect the method to your own
+material:
 
 ```bash
 factoryctl init --out ../my-product-factory --project-name my-product
 factoryctl operator-interface --primary-interface telegram --out .tmp/operator-interface-profile.json
 factoryctl start-conversation --operator-interface .tmp/operator-interface-profile.json --source-envelope-ref external:operator-source-envelope --out .tmp/factory-start-conversation.json
-factoryctl route-registry --route-class product_creation
-factoryctl intake --route-class product_creation --request-type product_new --signal-type product_paper --summary "Public product brief enters the complete product-creation route." --source-ref external:source-card-product-brief --out .tmp/product-intake.json
-factoryctl source-resolution --intake .tmp/product-intake.json --intake-ref external:sanitized-product-intake --out .tmp/source-resolution-packet.json
-factoryctl source-ledger --source-resolution .tmp/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json
-factoryctl understanding-confirmation --source-ledger .tmp/product-source-ledger.json --operator-response-ref external:sanitized-operator-understanding-confirmed --confirmed --out .tmp/operator-understanding-confirmation.json
-factoryctl briefing-package --operator-interface .tmp/operator-interface-profile.json --artifact-type product_sot --artifact-ref templates/product-sot.json --decision-required --out .tmp/operator-briefing-package.json
-factoryctl outcome-contract --source-ledger .tmp/product-source-ledger.json --operator-understanding-confirmation-ref operator-understanding-intake-product-creation-external-source-card-product-brief --out .tmp/outcome-contract.json
-factoryctl product-sot --outcome-contract .tmp/outcome-contract.json --out .tmp/product-sot.json
-factoryctl full-scope-coverage --product-sot .tmp/product-sot.json --out .tmp/full-product-sot-scope-coverage.json
-factoryctl method-contract --full-scope-coverage .tmp/full-product-sot-scope-coverage.json --out .tmp/method-contract.json
-factoryctl product-creation-plan --method-contract .tmp/method-contract.json --out .tmp/product-creation-plan.json
-factoryctl product-implementation-readiness --product-creation-plan .tmp/product-creation-plan.json --out .tmp/product-implementation-readiness.json
-factoryctl ready-work-unit-packets --product-creation-plan .tmp/product-creation-plan.json --product-implementation-readiness .tmp/product-implementation-readiness.json --out .tmp/ready-work-unit-packets
-factoryctl validate-ready-work-unit-packets .tmp/ready-work-unit-packets/manifest.json
-factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
-factoryctl gate-report --card examples/minimal-hermes-project/card.md
-factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 ```
 
 Read `docs/getting-started/quickstart-hermes.md` and
-`docs/getting-started/install-in-hermes.md` when connecting the factory to your
-own Hermes runtime.
+`docs/getting-started/install-in-hermes.md` before connecting generated packets
+to an operator-owned Hermes runtime.
 
 ## Repository Shape
 
@@ -262,7 +204,7 @@ first, what its source of truth is and how drift is prevented.
 | `agents/` | Public worker registry, profiles, permissions, capability packs and Hermes bindings. See `agents/README.md`. |
 | `docs/` | Human guides for onboarding, concepts, operations, security and maintenance. See `docs/README.md`. |
 | `examples/` | Small public examples and source fixtures for the factory path. See `examples/README.md`. |
-| `fixtures/` | Minimal public-safe regression fixtures, including advanced product-shaped validation fixtures when scripts need them. See `fixtures/README.md`. |
+| `fixtures/` | Minimal public-safe regression fixtures, including advanced product-shaped validation fixtures. See `fixtures/README.md`. |
 | `planning-bundles/` | Public-safe planning protocols for candidate artifacts before factory validation. See `planning-bundles/README.md`. |
 | `plugins/` | Public Codex plugin packages, currently the Overkill Factory Bridge. See `plugins/README.md`. |
 | `schemas/` | Machine contracts for cards, receipts, workers, gates and public artifacts. See `schemas/README.md`. |
@@ -276,30 +218,27 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 
 ## Current Release State
 
-Factory v1 is the current public kernel release line; the latest public tag is
-v1.3.0. It includes:
+Factory v1 is the current public kernel release line. The latest public release
+is v1.4.0.
 
-- Universal Signal Intake and route registry;
-- Golden Corpus and signal coverage checks;
+It includes:
+
+- Universal Signal Intake, route registry, Golden Corpus and signal coverage;
 - operator interface profiles for Telegram, Discord, Cockpit and bridge use;
-- conversational start before a factory start request is created;
+- conversational start before a formal factory start request exists;
 - operator understanding confirmation before Product SOT for product creation;
-- deep operator briefing packages with document/PDF attachments for important
-  decisions;
-- Product SOT, full-scope planning and method contracts;
-- worker registry, Hermes bindings and permission classes;
-- capability-pack activation rules;
+- briefing packages with document/PDF attachments for important decisions;
+- Product SOT, full-scope planning, method contracts and readiness checks;
+- worker registry, Hermes bindings, permissions and capability-pack routing;
 - Solana AI Kit domain-brain routing for Solana and on-chain work;
 - high-risk Solana/on-chain remote proof and R4 routing gates;
 - Codex Bridge plugin docs and package for operator-to-factory handoff;
-- Product Face packet/result contracts plus project design-system / `DESIGN.md`
-  gating;
-- release preflight, public-surface sync and safety scans;
-- Factory v1 Completion Gate;
-- Hermes completion artifact projection and no-idle remediation controls;
-- Hermes update guard for safer runtime maintenance;
-- Fast Autonomy Lane contracts for quick reversible work without global YOLO
-  authority.
+- Product Face packet/result contracts plus project design-system and
+  `DESIGN.md` gating;
+- release preflight, public-surface sync, safety scans and Factory v1
+  Completion Gate;
+- Hermes completion artifact projection, no-idle remediation controls, Hermes
+  update guard and Fast Autonomy Lane contracts.
 
 That claim is intentionally scoped. Factory v1 means the public kernel is
 complete enough to install, inspect, validate and extend. A product built by the
@@ -315,7 +254,7 @@ evidence, reviews, human gates and production readiness proof.
 - `docs/governance/document-governance.md`: document authority and public
   boundary rules.
 - `docs/reference/cli.md`: supported `factoryctl` commands.
-- `docs/concepts/factory-flow.md`: the production line and state model.
+- `docs/concepts/factory-flow.md`: production line and state model.
 - `docs/concepts/overkill-factory-method.md`: method guide.
 - `docs/concepts/operator-journey.md`: operator journey.
 - `docs/visuals/README.md`: visual map boundary and validation.
@@ -330,7 +269,8 @@ evidence, reviews, human gates and production readiness proof.
 - `docs/operations/troubleshooting.md`: common failures and recovery path.
 - `docs/architecture/hermes-integration.md`: Hermes adapter architecture.
 - `docs/operator/overkill-factory-bridge.md`: Codex/operator bridge architecture.
-- `docs/operator/overkill-factory-bridge-plugin.md`: Codex plugin install and hook trust.
+- `docs/operator/overkill-factory-bridge-plugin.md`: Codex plugin install and
+  hook trust.
 - `docs/examples/gallery.md`: public examples.
 - `docs/security/oss-security.md`: security posture.
 - `docs/maintenance/repo-surface.md`: public surface maintenance rules.
