@@ -192,7 +192,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line; the latest public tag is
-v1.2.0. It includes:
+v1.2.1. It includes:
 
 - Universal Signal Intake and route registry;
 - Golden Corpus and signal coverage checks;
@@ -205,7 +205,9 @@ v1.2.0. It includes:
 - Product Face packet/result contracts plus project design-system / `DESIGN.md`
   gating;
 - release preflight, public-surface sync and safety scans;
-- Factory v1 Completion Gate.
+- Factory v1 Completion Gate;
+- Hermes completion artifact projection and no-idle remediation controls;
+- Hermes update guard for safer runtime maintenance.
 
 That claim is intentionally scoped. Factory v1 means the public kernel is
 complete enough to install, inspect, validate and extend. A product built by the

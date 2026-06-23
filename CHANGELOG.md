@@ -9,6 +9,20 @@ public releases.
 
 Nothing yet.
 
+## 1.2.1 - 2026-06-23
+
+- Harden Hermes `enforce-done --complete-main` so local or scratch completion
+  artifacts must be copied to durable attachment storage, read back with a
+  matching SHA-256 hash and rewritten to durable logical refs before Hermes
+  `complete`.
+- Reject metadata-only `kanban-artifact:` and `kanban-attachment:` completion
+  evidence unless the receipt carries explicit artifact readback proof.
+- Add the Hermes `no-idle` controller, which classifies ready/running/todo/
+  blocked state, creates only safe factory-owned remediation cards when the
+  board would otherwise sit silently idle, and never dispatches workers itself.
+- Add the public Hermes update guard and runbook coverage for safer Hermes
+  updates and gateway restarts around active Kanban work.
+
 ## 1.2.0 - 2026-06-22
 
 - Require a project-level design-system / `DESIGN.md` contract for
