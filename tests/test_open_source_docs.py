@@ -55,6 +55,9 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("full Product SOT scope coverage", readme)
         self.assertIn("Hermes Kanban remains the source of truth", readme)
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
+        self.assertIn("A Overkill Factory é uma linha de produção para projetos feitos por agentes.", readme)
+        self.assertIn("O ponto mais importante: a fábrica não é “um chat inteligente”.", readme)
+        self.assertNotIn("Para você, como usuário leigo", readme)
         self.assertNotIn("## What It Does Not Do", readme)
 
         for rel in [
@@ -125,6 +128,8 @@ class OpenSourceDocsTest(unittest.TestCase):
         for expected in [
             "[English](README.md)",
             "Mapa publico:",
+            "A Overkill Factory é uma linha de produção para projetos feitos por agentes.",
+            "O ponto mais importante: a fábrica não é “um chat inteligente”.",
             "nao um atalho de MVP",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
@@ -138,6 +143,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         ]:
             with self.subTest(expected=expected):
                 self.assertIn(expected, readme_pt)
+        self.assertNotIn("Para você, como usuário leigo", readme_pt)
 
     def test_public_docs_skeleton_exists(self) -> None:
         required_paths = [

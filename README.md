@@ -14,6 +14,80 @@ enthusiasm or a partial demo become the source of truth.
 Public map:
 https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html
 
+## Explicacao Simples
+
+A Overkill Factory é uma linha de produção para projetos feitos por agentes.
+
+Em vez de você pedir “faz um app” e um agente sair codando no improviso, a fábrica transforma sua ideia em um processo controlado: entende o material, confirma o entendimento, planeja, divide o trabalho, chama agentes especialistas, cobra provas, revisa, bloqueia riscos e só então considera algo pronto.
+
+**Em termos simples:**
+
+- **Hermes** é o chão da fábrica: o quadro de tarefas, os cards, os agentes rodando, os status e os logs.
+- **Overkill Factory** é o método: regras, etapas, contratos, gates, workers, evidências e validações.
+- **Gerente da fábrica** é a porta de entrada: você fala com ele, por exemplo no Telegram.
+- **Workers** são agentes especialistas: produto, arquitetura, frontend, backend, segurança, Solana, QA, documentação, release etc.
+- **Gates** são checkpoints: “pode avançar?”, “tem prova?”, “precisa de decisão humana?”.
+- **Receipt Five** é o recibo final: o pacote de evidências que diz o que foi feito, testado, revisado e aprovado/bloqueado.
+
+O fluxo normal é:
+
+```text
+sua ideia/material
+-> entendimento do produto
+-> confirmação com você
+-> fonte da verdade do produto
+-> plano completo
+-> tarefas para agentes
+-> execução
+-> testes e revisão
+-> aprovação/bloqueio
+-> entrega com evidências
+-> aprendizados para melhorar a fábrica
+```
+
+Como usar, do jeito mais simples:
+
+1. Você fala com o **gerente da fábrica**.
+
+   Exemplo:
+   > Quero iniciar um projeto novo. É um banco digital onchain em Solana. Vou mandar paper, planilha, repo antigo e resumo do que imagino.
+
+2. Você manda os materiais.
+
+   Pode ser texto, links, documentos, planilhas, repositório, prints, regras de negócio, inspiração, qualquer coisa relevante.
+
+3. A fábrica não deveria sair fazendo direto.
+
+   Primeiro ela deve entender o que recebeu, levantar dúvidas e confirmar com você:
+   > “Pelo que entendi, o produto é X, o usuário é Y, o objetivo é Z, existem esses riscos e essas dúvidas. Está correto?”
+
+4. Depois da confirmação, ela cria a fonte de verdade.
+
+   Isso é o documento central dizendo o que o produto é, o que não é, quais requisitos importam, quais riscos existem e qual resultado esperado.
+
+5. A fábrica planeja e divide o trabalho.
+
+   Ela decide quais especialistas entram: produto, arquitetura, segurança, frontend, Solana, QA, auditoria, release etc.
+
+6. Os agentes executam.
+
+   Você não deveria ter que coordenar cada agente. A fábrica deveria chamar quem precisa, acompanhar status e só te acionar quando existe decisão real sua.
+
+7. Você recebe pedidos claros.
+
+   Bons pedidos seriam:
+   > “Preciso da sua decisão entre A e B.”
+
+   > “Esse risco exige aprovação humana antes de avançar.”
+
+   > “Aqui está o documento/PDF da arquitetura para validar.”
+
+8. No final, ela entrega com prova.
+
+   Não basta “pronto”. Tem que ter evidência: o que foi feito, onde está, como foi testado, o que foi revisado, o que ficou bloqueado e qual é o próximo passo.
+
+O ponto mais importante: a fábrica não é “um chat inteligente”. Ela é um sistema para impedir que agentes pulem entendimento, inventem escopo, ignorem segurança ou digam que algo está pronto sem prova.
+
 ## Why This Exists
 
 Agentic work usually fails in the spaces between tasks:
