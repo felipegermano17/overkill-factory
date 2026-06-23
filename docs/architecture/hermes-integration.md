@@ -46,9 +46,29 @@ Before `done`, the adapter should:
 - reject missing, failed or stale evidence;
 - reject metadata-only `external:kanban-artifact:` evidence unless the worker
   result includes successful downstream `artifact_readback` proof;
+- project declared local or scratch completion artifacts into durable attachment
+  storage before calling Hermes `complete`, then rewrite receipt refs to durable
+  logical refs;
+- reject native `kanban-attachment:` refs unless readback proves the attachment
+  row, blob, size, SHA-256, parse status and safety checks;
 - compare worker results to Receipt Five;
 - enforce independent review and human gate requirements;
 - return an explicit block reason instead of silently closing.
+
+## No-Idle Invariant
+
+Hermes dispatch remains the only worker scheduler. The factory no-idle layer is
+only a board-state controller:
+
+- if `running` exists, it reports active work;
+- if `ready` exists, it reports that native Hermes dispatch is the next action;
+- if only explicit human-gate blockers remain, it returns a structured human
+  decision request;
+- if unfinished work remains without `ready`, `running` or a sole human gate, it
+  may create one safe remediation card and leaves worker launch to native
+  dispatch.
+
+This closes silent idle without creating a shadow dispatcher or bypassing gates.
 
 ## Gate Timing Classes
 

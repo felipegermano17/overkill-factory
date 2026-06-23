@@ -9,6 +9,8 @@ Scripts provide the public CLI path, validation tools and maintainer checks.
   public-safe and do not replace factory gates.
 - Validation scripts for cards, schemas, worker profiles, public safety and
   release readiness.
+- Runtime maintenance guards such as `hermes_update_guard.py` when they are
+  public-safe, deterministic and covered by tests.
 - Small maintainer utilities that are documented and covered by tests.
 
 ## What Does Not Belong Here
@@ -31,6 +33,7 @@ Run the script-facing bundle:
 ```bash
 python scripts/quickstart_smoke.py
 python scripts/validate_worker_profiles.py
+python scripts/hermes_update_guard.py plan
 python scripts/validate_public_json_artifacts.py
 python scripts/factory_production_gate_receipts.py --no-write
 python -m unittest discover -s tests -p "test_*.py" -q

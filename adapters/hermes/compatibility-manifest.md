@@ -50,6 +50,18 @@ adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
 - Dispatch reporting must distinguish workers spawned by the command from
   workers already running after the dispatch interval and include run/PID refs
   when Hermes exposes them.
+- Completion must not accept local/scratch artifact refs unless the adapter has
+  copied them to durable attachment storage, read them back, matched SHA-256 and
+  rewritten the receipt refs before Hermes `complete`.
+- `kanban-artifact:` and `kanban-attachment:` completion evidence must include
+  explicit readback proof; metadata-only artifact refs are incompatible.
+- No-idle enforcement must classify `ready`, `running`, `todo` and `blocked`
+  state without dispatching workers itself, create only safe remediation cards
+  when no explicit human gate explains the idle state, and leave launch to
+  native Hermes dispatch.
+- Hermes update operations must run through an update guard that blocks gateway
+  restart while update processes or Kanban `running` tasks exist and reports
+  config/gateway service drift as explicit operator attention.
 
 ## Incompatible Signs
 
@@ -65,10 +77,15 @@ adapters/hermes/patches/0001-overkill-factory-v35-gates-official-main.patch
 - Auditor preflight can be represented as a real onchain code-audit PASS.
 - Dispatch JSON can return `spawned: []` while board state moved ready tasks to
   `running` without an explicit `already_running_after_dispatch` report.
+- A card can close while its receipt still points at `.tmp`, `scratch`,
+  `workspace:` or absolute artifact paths.
+- A silent board state with unfinished non-human-gate work produces no safe next
+  action or human decision request.
 
 ## Required Local Checks
 
 ```bash
+python scripts/hermes_update_guard.py plan
 python adapters/hermes/compatibility-check.py
 python -m unittest discover -s tests -p "test_*.py" -q
 python scripts/public_safety_scan.py

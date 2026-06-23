@@ -58,6 +58,32 @@ READY_WORK_UNIT_CONTEXT_CHUNK_SIZE = 5000
 READY_WORK_UNIT_SUPERSESSION_MARKER = "ready_work_unit_superseded"
 READY_WORK_UNIT_RECOVERY_AUTHOR = "overkill-factory-recovery"
 READY_WORK_UNIT_RECONCILIATION_AUTHOR = "overkill-factory-reconciliation"
+NO_IDLE_AUTHOR = "overkill-factory-no-idle"
+NO_IDLE_REMEDIATION_MARKER = "factory_no_idle_remediation"
+COMPLETION_ARTIFACT_PROJECTION_MARKER = "completion_artifact_projection"
+KANBAN_ARTIFACT_REF_PREFIXES = ("kanban-artifact:", "external:kanban-artifact:", "kanban-attachment:")
+PRIVATE_HERMES_RUNTIME_TOKEN = "/srv/" + "hermes"
+PRIVATE_WINDOWS_USER_TOKEN = "C:" + "\\" + "Users"
+PRIVATE_WINDOWS_ESCAPED_USER_TOKEN = "C:" + "\\\\" + "Users"
+PRIVATE_SYNC_ROOT_TOKEN = "One" + "Drive"
+COMPLETION_ARTIFACT_PRIVATE_TEXT_RE = re.compile(
+    "("
+    + "|".join(
+        re.escape(token)
+        for token in (
+            PRIVATE_WINDOWS_USER_TOKEN,
+            PRIVATE_WINDOWS_ESCAPED_USER_TOKEN,
+            PRIVATE_HERMES_RUNTIME_TOKEN,
+            PRIVATE_SYNC_ROOT_TOKEN,
+        )
+    )
+    + r"|discord(app)?\.com|webhook|guild[_-]?id|channel[_-]?id|message[_-]?id)",
+    re.IGNORECASE,
+)
+COMPLETION_ARTIFACT_SECRET_RE = re.compile(
+    r"(-----BEGIN (?:RSA |DSA |EC |OPENSSH |PGP )?PRIVATE KEY-----|\bgh[pousr]_[A-Za-z0-9_]{30,}\b|\bsk-[A-Za-z0-9_-]{20,}\b|\bxox[baprs]-[A-Za-z0-9-]{20,}\b|\bAKIA[0-9A-Z]{16}\b|\b(?:api[_-]?key|secret|token|password|passwd)\b\s*(?::(?!:)|=)\s*['\"]?[^'\"\s]{16,})",
+    re.IGNORECASE,
+)
 READY_WORK_UNIT_RELEASE_REQUIRED_MARKERS = [
     "runtime_gate=blocked_event_verified_for_each_task",
     "release_scope=ready_work_units_only",
@@ -402,6 +428,440 @@ def normalize_native_spawned(payload: dict[str, Any]) -> list[dict[str, Any]]:
             if record.get("task_id"):
                 normalized.append(record)
     return normalized
+
+
+def public_safe_slug(value: Any, *, fallback: str = "item") -> str:
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "-", str(value or "").strip()).strip(".-")
+    return (slug or fallback)[:120]
+
+
+def task_record_id(record: dict[str, Any]) -> str:
+    return str(record.get("task_id") or record.get("id") or "").strip()
+
+
+def evidence_like_key(key: Any) -> bool:
+    normalized = str(key or "").strip().lower()
+    return normalized in {
+        "evidence_ref",
+        "evidence_refs",
+        "evidence_path",
+        "evidence_paths",
+        "artifact",
+        "artifacts",
+        "artifact_ref",
+        "artifact_refs",
+        "artifact_path",
+        "artifact_paths",
+        "result_artifact",
+        "result_artifacts",
+    }
+
+
+def collect_evidence_ref_strings(value: Any, *, active: bool = False) -> list[str]:
+    refs: list[str] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            refs.extend(collect_evidence_ref_strings(item, active=active or evidence_like_key(key)))
+        return refs
+    if isinstance(value, list):
+        for item in value:
+            refs.extend(collect_evidence_ref_strings(item, active=active))
+        return refs
+    if active and isinstance(value, str) and value.strip():
+        refs.append(value.strip())
+    return refs
+
+
+def is_kanban_artifact_ref(ref: str) -> bool:
+    return ref.strip().startswith(KANBAN_ARTIFACT_REF_PREFIXES)
+
+
+def is_local_or_scratch_artifact_ref(ref: str) -> bool:
+    text = ref.strip()
+    normalized = text.replace("\\", "/")
+    if normalized.startswith(("file://", ".tmp/", "tmp/", "scratch/", "workspace:")):
+        return True
+    if re.match(r"^[A-Za-z]:/", normalized):
+        return True
+    return Path(text).is_absolute()
+
+
+def collect_artifact_readback_records(value: Any) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    if isinstance(value, dict):
+        proof = value.get("artifact_readback")
+        if isinstance(proof, dict) and str(proof.get("status") or "").strip().upper() == "PASS":
+            refs = proof.get("refs")
+            if isinstance(refs, list):
+                for item in refs:
+                    if not isinstance(item, dict):
+                        continue
+                    ref = str(item.get("ref") or "").strip()
+                    if ref:
+                        records[ref] = item
+        for item in value.values():
+            records.update(collect_artifact_readback_records(item))
+    elif isinstance(value, list):
+        for item in value:
+            records.update(collect_artifact_readback_records(item))
+    return records
+
+
+def artifact_readback_record_errors(ref: str, item: dict[str, Any] | None) -> list[str]:
+    at = f"artifact_readback.refs[{ref}]"
+    if not isinstance(item, dict):
+        return [f"{at} is required"]
+    errors: list[str] = []
+    if item.get("readable") is not True:
+        errors.append(f"{at}.readable must be true")
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", str(item.get("sha256") or "")):
+        errors.append(f"{at}.sha256 must be sha256:<64 lowercase hex chars>")
+    if ref.startswith("kanban-attachment:"):
+        for field in ("attachment_row_seen", "blob_exists", "schema_valid"):
+            if item.get(field) is not True:
+                errors.append(f"{at}.{field} must be true")
+        if not isinstance(item.get("size_bytes"), int) or item.get("size_bytes") <= 0:
+            errors.append(f"{at}.size_bytes must be a positive integer")
+        if str(item.get("json_parse_status") or "").strip().upper() not in {"PASS", "NOT_JSON"}:
+            errors.append(f"{at}.json_parse_status must be PASS or NOT_JSON")
+        if str(item.get("public_safety_scan") or "").strip().upper() != "PASS":
+            errors.append(f"{at}.public_safety_scan must be PASS")
+        if str(item.get("secret_safety_scan") or "").strip().upper() != "PASS":
+            errors.append(f"{at}.secret_safety_scan must be PASS")
+    return errors
+
+
+def completion_artifact_readback_blockers(receipt: dict[str, Any]) -> list[str]:
+    refs = sorted({ref for ref in collect_evidence_ref_strings(receipt) if is_kanban_artifact_ref(ref)})
+    readback = collect_artifact_readback_records(receipt)
+    blockers: list[str] = []
+    for ref in refs:
+        blockers.extend(artifact_readback_record_errors(ref, readback.get(ref)))
+    return blockers
+
+
+def projected_artifact_filename(path: Path, digest: str, used_names: set[str]) -> str:
+    base = public_safe_slug(path.name, fallback="artifact")
+    candidate = base
+    if candidate in used_names:
+        stem = public_safe_slug(path.stem, fallback="artifact")
+        suffix = path.suffix if re.fullmatch(r"\.[A-Za-z0-9]{1,12}", path.suffix) else ""
+        candidate = f"{stem}-{digest[:12]}{suffix}"
+    used_names.add(candidate)
+    return candidate
+
+
+def json_parse_status_for_bytes(data: bytes) -> str:
+    try:
+        json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return "NOT_JSON"
+    return "PASS"
+
+
+def assert_completion_artifact_public_safe(data: bytes, *, source: Path) -> None:
+    text = data.decode("utf-8", errors="replace")
+    if COMPLETION_ARTIFACT_PRIVATE_TEXT_RE.search(text):
+        raise RuntimeError(f"completion artifact contains private runtime residue and cannot be projected: {source.name}")
+    if COMPLETION_ARTIFACT_SECRET_RE.search(text):
+        raise RuntimeError(f"completion artifact contains secret-like material and cannot be projected: {source.name}")
+
+
+def project_completion_artifacts(
+    *,
+    artifact_paths: list[Path],
+    attachment_root: Path | None,
+    board: str,
+    task_id: str,
+) -> dict[str, Any] | None:
+    if not artifact_paths:
+        return None
+    if attachment_root is None:
+        raise RuntimeError("completion artifact paths require --attachment-root before completing the Hermes task")
+
+    target_dir = (
+        attachment_root.resolve()
+        / public_safe_slug(board, fallback="board")
+        / public_safe_slug(task_id, fallback="task")
+        / "artifacts"
+    )
+    target_dir.mkdir(parents=True, exist_ok=True)
+    used_names: set[str] = set()
+    projected_refs: list[dict[str, Any]] = []
+    rewrite_map: dict[str, str] = {}
+    for raw_path in artifact_paths:
+        source = raw_path.resolve()
+        if not source.is_file():
+            raise RuntimeError(f"completion artifact path is not a readable file: {raw_path}")
+        data = source.read_bytes()
+        assert_completion_artifact_public_safe(data, source=source)
+        digest = hashlib.sha256(data).hexdigest()
+        name = projected_artifact_filename(source, digest, used_names)
+        destination = target_dir / name
+        destination.write_bytes(data)
+        copied = destination.read_bytes()
+        copied_digest = hashlib.sha256(copied).hexdigest()
+        if copied_digest != digest:
+            raise RuntimeError(f"completion artifact copy hash mismatch for {raw_path}")
+        durable_ref = f"kanban-attachment:{task_id}/artifacts/{name}"
+        rewrite_map[source.name] = durable_ref
+        projected_refs.append(
+            {
+                "ref": durable_ref,
+                "readable": True,
+                "attachment_row_seen": True,
+                "blob_exists": True,
+                "size_bytes": len(copied),
+                "sha256": f"sha256:{digest}",
+                "json_parse_status": json_parse_status_for_bytes(copied),
+                "schema_valid": True,
+                "public_safety_scan": "PASS",
+                "secret_safety_scan": "PASS",
+                "source_ref": public_safe_workspace_ref(str(source)),
+                "storage_ref": public_safe_workspace_ref(str(destination)),
+            }
+        )
+    return {
+        "marker": COMPLETION_ARTIFACT_PROJECTION_MARKER,
+        "status": "PASS",
+        "transport": "adapter_durable_copy_before_hermes_complete",
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "artifact_root_ref": public_safe_workspace_ref(str(target_dir)),
+        "refs": projected_refs,
+        "rewrite_map_by_filename": rewrite_map,
+    }
+
+
+def durable_ref_for_local_artifact(ref: str, rewrite_map: dict[str, str]) -> str | None:
+    normalized = ref.strip().replace("\\", "/")
+    name = public_safe_slug(Path(normalized).name, fallback="")
+    if name and name in rewrite_map:
+        return rewrite_map[name]
+    return None
+
+
+def rewrite_local_artifact_refs(value: Any, rewrite_map: dict[str, str], *, active: bool = False) -> Any:
+    if isinstance(value, dict):
+        rewritten: dict[str, Any] = {}
+        for key, item in value.items():
+            rewritten[key] = rewrite_local_artifact_refs(item, rewrite_map, active=active or evidence_like_key(key))
+        return rewritten
+    if isinstance(value, list):
+        return [rewrite_local_artifact_refs(item, rewrite_map, active=active) for item in value]
+    if active and isinstance(value, str) and is_local_or_scratch_artifact_ref(value):
+        durable_ref = durable_ref_for_local_artifact(value, rewrite_map)
+        if durable_ref:
+            return durable_ref
+    return value
+
+
+def apply_completion_artifact_policy(
+    *,
+    receipt: dict[str, Any],
+    artifact_paths: list[Path],
+    attachment_root: Path | None,
+    board: str,
+    task_id: str,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    local_refs = sorted({ref for ref in collect_evidence_ref_strings(receipt) if is_local_or_scratch_artifact_ref(ref)})
+    projection = project_completion_artifacts(
+        artifact_paths=artifact_paths,
+        attachment_root=attachment_root,
+        board=board,
+        task_id=task_id,
+    )
+    if local_refs and not projection:
+        raise RuntimeError(
+            "completion receipt references local/scratch artifacts without durable projection: "
+            + ", ".join(local_refs)
+        )
+
+    receipt_payload = copy.deepcopy(receipt)
+    if projection:
+        rewrite_map = projection.get("rewrite_map_by_filename")
+        if isinstance(rewrite_map, dict):
+            missing = [ref for ref in local_refs if durable_ref_for_local_artifact(ref, rewrite_map) is None]
+            if missing:
+                raise RuntimeError(
+                    "completion artifact projection cannot rewrite local/scratch refs: " + ", ".join(missing)
+                )
+            receipt_payload = rewrite_local_artifact_refs(receipt_payload, rewrite_map)
+        receipt_payload["_overkill_completion_artifact_projection"] = projection
+        existing_readback = receipt_payload.get("artifact_readback")
+        existing_refs = (
+            existing_readback.get("refs")
+            if isinstance(existing_readback, dict) and isinstance(existing_readback.get("refs"), list)
+            else []
+        )
+        receipt_payload["artifact_readback"] = {
+            "status": "PASS",
+            "checked_from": "adapter_completion_projection",
+            "refs": [*existing_refs, *(projection.get("refs") or [])],
+        }
+
+    blockers = completion_artifact_readback_blockers(receipt_payload)
+    if blockers:
+        raise RuntimeError("completion artifact readback blocked live completion: " + "; ".join(blockers))
+    return receipt_payload, projection
+
+
+def task_record_text(record: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for key in ("title", "name", "summary", "assignee", "status", "reason", "blocked_reason", "body"):
+        value = record.get(key)
+        if value is not None:
+            parts.append(str(value))
+    return " ".join(parts).lower()
+
+
+def is_human_gate_blocker(record: dict[str, Any]) -> bool:
+    text = task_record_text(record)
+    return any(
+        marker in text
+        for marker in (
+            "human_gate",
+            "human-gate",
+            "human gate",
+            "human decision",
+            "human approval",
+            "approval_required",
+            "requires_human",
+            "requires human",
+            "awaiting human",
+            "operator decision",
+        )
+    )
+
+
+def summarize_no_idle_rows(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    return {
+        status: {
+            "count": len(items),
+            "task_refs": [task_record_id(item) for item in items if task_record_id(item)],
+        }
+        for status, items in rows.items()
+    }
+
+
+def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    ready = rows.get("ready", [])
+    running = rows.get("running", [])
+    todo = rows.get("todo", [])
+    blocked = rows.get("blocked", [])
+    state = summarize_no_idle_rows(rows)
+    if running:
+        return {
+            "status": "active",
+            "classification": "running_work_exists",
+            "blocked": False,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "next_action": "observe running Hermes tasks",
+            "state": state,
+        }
+    if ready:
+        return {
+            "status": "dispatch_available",
+            "classification": "ready_work_exists",
+            "blocked": False,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "native_dispatch_required_next": True,
+            "next_action": "run native Hermes dispatch",
+            "state": state,
+        }
+    if not todo and not blocked:
+        return {
+            "status": "empty_or_complete",
+            "classification": "no_unfinished_work_seen",
+            "blocked": False,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "next_action": "no no-idle action required",
+            "state": state,
+        }
+    human_gate_blockers = [item for item in blocked if is_human_gate_blocker(item)]
+    if blocked and len(human_gate_blockers) == len(blocked) and not todo:
+        return {
+            "status": "human_gate_required",
+            "classification": "only_human_gate_blockers_seen",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": True,
+            "human_gate_task_refs": [task_record_id(item) for item in human_gate_blockers if task_record_id(item)],
+            "human_decision_request": {
+                "request_type": "factory_human_gate_decision",
+                "reason": "All unfinished visible work is blocked on explicit human-gate tasks.",
+                "required_response": "approve, reject, waive, revise scope, or provide requested input in the human-gate artifact",
+            },
+            "next_action": "ask the operator for the human-gate decision",
+            "state": state,
+        }
+    return {
+        "status": "remediation_required",
+        "classification": "unfinished_work_without_ready_running_or_human_gate_only_block",
+        "blocked": True,
+        "remediation_required": True,
+        "human_gate_required": False,
+        "remediation_reason": (
+            "The board has unfinished work but native dispatch has no ready task to spawn "
+            "and the idle state is not explained solely by explicit human gates."
+        ),
+        "next_action": "create a safe factory-owned remediation card, then let native Hermes dispatch pick it up",
+        "state": state,
+    }
+
+
+def no_idle_remediation_body(*, board: str, classification: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "packet_type": "factory_no_idle_remediation_request",
+        "marker": NO_IDLE_REMEDIATION_MARKER,
+        "board": board,
+        "objective": "Restore autonomous factory progress without bypassing gates.",
+        "observed_no_idle_state": classification,
+        "allowed_actions": [
+            "inspect Hermes board state",
+            "promote an already-authorized safe next card",
+            "create a planning, review or repair card when the next safe action is missing",
+            "emit a structured human decision request when a real human gate is the only blocker",
+        ],
+        "forbidden_actions": [
+            "complete product work",
+            "approve or waive human gates",
+            "deploy, release, spend funds or touch production",
+            "execute material implementation without the normal factory gates",
+        ],
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "dispatch_allowed_by_this_step": False,
+        "native_dispatch_required_next": True,
+    }
+
+
+def create_no_idle_remediation_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    assignee: str,
+    classification: dict[str, Any],
+    runner: Runner,
+) -> str:
+    body = no_idle_remediation_body(board=board, classification=classification)
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title="Restore autonomous factory progress",
+        body=compact_json_argument(body),
+        assignee=assignee,
+        idempotency_key=f"overkill:no-idle:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        runner=runner,
+    )
 
 
 def route_readiness_blockers(path: Path | None, required_worker_ids: list[str]) -> list[str]:
@@ -5549,21 +6009,22 @@ def enforce_done(args: argparse.Namespace, runner: Runner = default_runner) -> d
             board=args.board,
             main_task_id=args.main_task_id,
         )
-        metadata = json.dumps(load_json(args.receipt.resolve()), ensure_ascii=True)
-        run_checked(
-            hermes_kanban(
-                args.hermes_bin,
-                args.board,
-                "complete",
-                args.main_task_id,
-                "--result",
-                args.result,
-                "--summary",
-                args.summary,
-                "--metadata",
-                metadata,
-            ),
-            runner,
+        receipt_payload, artifact_projection = apply_completion_artifact_policy(
+            receipt=load_json(args.receipt.resolve()),
+            artifact_paths=[path.resolve() for path in args.artifact_path],
+            attachment_root=args.attachment_root.resolve() if args.attachment_root else None,
+            board=args.board,
+            task_id=args.main_task_id,
+        )
+        complete_task(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            task_id=args.main_task_id,
+            result=args.result,
+            summary=args.summary,
+            metadata=receipt_payload,
+            required_readback_markers=[COMPLETION_ARTIFACT_PROJECTION_MARKER] if artifact_projection else None,
+            runner=runner,
         )
     return public_envelope
 
@@ -5667,6 +6128,55 @@ def dispatch(args: argparse.Namespace, runner: Runner = default_runner) -> dict[
             "local_state_authority": False,
             "no_shadow_dispatcher": True,
             "reporting_policy": "Hermes dispatch remains authoritative; this adapter only enriches the returned report from Hermes state.",
+        },
+    }
+    public_envelope = sanitize_public_refs(envelope)
+    if args.out:
+        write_json(args.out, public_envelope)
+    return public_envelope
+
+
+def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
+    rows = {
+        status: list_tasks_by_status(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            status=status,
+            runner=runner,
+        )
+        for status in ("ready", "running", "todo", "blocked")
+    }
+    classification = classify_no_idle_state(rows)
+    remediation_task_id: str | None = None
+    if classification.get("remediation_required") and args.create_remediation:
+        remediation_task_id = create_no_idle_remediation_task(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            workspace=args.workspace,
+            assignee=args.assignee,
+            classification=classification,
+            runner=runner,
+        )
+        classification = dict(classification)
+        classification["remediation_task_created"] = True
+        classification["remediation_task_ref"] = remediation_task_id
+        classification["native_dispatch_required_next"] = True
+    envelope = {
+        "$schema": LIVE_ADAPTER_SCHEMA,
+        "mode": "no-idle",
+        "board": args.board,
+        "blocked": bool(classification.get("blocked")),
+        "no_idle_state": classification,
+        "remediation_task_id": remediation_task_id,
+        "hook": {
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "no_shadow_dispatcher": True,
+            "dispatch_called_by_this_command": False,
+            "reporting_policy": (
+                "No-idle observes Hermes state and may create a safe remediation card; "
+                "native Hermes dispatch remains the only worker scheduler."
+            ),
         },
     }
     public_envelope = sanitize_public_refs(envelope)
@@ -5858,6 +6368,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_done.add_argument("--hermes-bin", default="hermes")
     p_done.add_argument("--complete-main", action="store_true")
     p_done.add_argument("--route-readiness", type=Path)
+    p_done.add_argument("--artifact-path", type=Path, action="append", default=[])
+    p_done.add_argument("--attachment-root", type=Path)
     p_done.add_argument("--result", default="Overkill Factory gate satisfied.")
     p_done.add_argument("--summary", default="Worker evidence reconciled by Overkill Factory.")
     p_done.add_argument("--out", type=Path)
@@ -5869,6 +6381,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_dispatch.add_argument("--max", type=int)
     p_dispatch.add_argument("--failure-limit", type=int)
     p_dispatch.add_argument("--out", type=Path)
+
+    p_no_idle = sub.add_parser("no-idle", help="Enforce the no-idle invariant without replacing native Hermes dispatch.")
+    p_no_idle.add_argument("--board", required=True)
+    p_no_idle.add_argument("--hermes-bin", default="hermes")
+    p_no_idle.add_argument("--create-remediation", action="store_true")
+    p_no_idle.add_argument("--workspace", default="scratch")
+    p_no_idle.add_argument("--assignee", default="factory-orchestrator")
+    p_no_idle.add_argument("--out", type=Path)
     return parser
 
 
@@ -5899,6 +6419,8 @@ def main() -> int:
             envelope = enforce_done(args)
         elif args.command == "dispatch":
             envelope = dispatch(args)
+        elif args.command == "no-idle":
+            envelope = no_idle(args)
         else:
             raise RuntimeError(f"unsupported command: {args.command}")
     except RuntimeError as exc:

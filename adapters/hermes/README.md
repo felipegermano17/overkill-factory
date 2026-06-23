@@ -356,6 +356,54 @@ The response includes:
 - `run_id` and `worker_pid` when Hermes exposes them;
 - redacted workspace refs, never local absolute paths.
 
+## Completion Artifact Projection
+
+`enforce-done --complete-main` now fails closed when Receipt Five points at
+local or scratch evidence that has not been projected before completion. Pass
+the concrete files and a durable attachment root so the adapter copies, hashes,
+readbacks and rewrites local refs before calling Hermes `complete`:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py enforce-done \
+  --card path/to/card.md \
+  --board overkill-factory-live \
+  --main-task-id <hermes-task-id> \
+  --receipt path/to/receipt-five.json \
+  --worker-results-dir path/to/worker-results \
+  --ledger path/to/worker-ledger.json \
+  --route-readiness path/to/route-readiness.json \
+  --complete-main \
+  --artifact-path .tmp/factory-runs/current/proof.json \
+  --attachment-root .tmp/factory-runs/hermes-attachments
+```
+
+The completion metadata records `_overkill_completion_artifact_projection`,
+rewrites matching local evidence refs to `kanban-attachment:` logical refs, and
+blocks completion if the copied bytes cannot be read back with the same SHA-256
+hash or if obvious private residue or secret-like material is present.
+
+Existing `kanban-artifact:` and `kanban-attachment:` refs must already carry
+artifact readback proof. A metadata-only ref is not accepted as completion
+evidence.
+
+## No-Idle Controller
+
+Kanban dispatch only runs cards that are already `ready`. When a board has no
+`ready` and no `running` tasks but still has unfinished work, use the no-idle
+controller to classify the state:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py no-idle \
+  --board overkill-factory-live \
+  --create-remediation
+```
+
+The controller never dispatches workers. It either reports that native dispatch
+is available, returns a structured human decision request when explicit human
+gates are the only blockers, or creates one safe `factory_no_idle_remediation`
+card for `factory-orchestrator`. The next worker launch still belongs to native
+Hermes dispatch.
+
 ## Generated Transition Examples
 
 Run the transition hook against `examples/minimal-hermes-project/card.md` to
@@ -400,7 +448,8 @@ contract.
 Real Hermes runtime integration is still not fully landed upstream. The public
 adapter now provides the executable hook, ledger contract, CI smoke,
 official-main-compatible Kanban patch, dashboard/API `ready` and `done` gate
-rejection, and worker CLI completion rejection. The remaining work is to wire
-Hermes Kanban events into this hook, map ledger tasks to real dashboard/API
-worker cards, ingest worker result artifacts automatically, and prove full
-specialist execution with real dispatched profiles.
+rejection, worker CLI completion rejection, completion artifact projection, and
+no-idle remediation. The remaining work is to wire Hermes Kanban events into
+this hook, map ledger tasks to real dashboard/API worker cards, replace the
+adapter-local projection root with upstream native attachment APIs when they are
+available, and prove full specialist execution with real dispatched profiles.

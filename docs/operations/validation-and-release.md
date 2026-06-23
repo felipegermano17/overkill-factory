@@ -74,6 +74,28 @@ For a live Hermes validation run, pass a public-safe runtime evidence JSON with
 `--runtime-status-evidence`. Running without that file intentionally fails the
 runtime status receipt closed.
 
+## Hermes Update Guard
+
+Run this whenever Hermes itself is updated or when a gateway restart is needed
+after an update:
+
+```bash
+python scripts/hermes_update_guard.py plan --board <board-slug>
+python scripts/hermes_update_guard.py evaluate \
+  --doctor .tmp/hermes-update/doctor.txt \
+  --gateway-status .tmp/hermes-update/gateway-status.txt \
+  --kanban-stats .tmp/hermes-update/kanban-stats.txt \
+  --processes .tmp/hermes-update/processes.txt \
+  --sudo-check .tmp/hermes-update/sudo-check.txt \
+  --board <board-slug> \
+  --out .tmp/hermes-update/update-guard.json
+```
+
+The receipt is `BLOCKED` while an update process is still active or the board
+has `running` tasks. It is `ATTENTION` when a human operator must migrate config
+or restart the system gateway. Do not dispatch, unblock or complete factory work
+until the guard is clear and `hermes gateway status` is current.
+
 ## Factory v1 Completion Gate
 
 Use this after the release preflight and GitHub checks are current, when the

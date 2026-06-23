@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import subprocess
@@ -3711,6 +3712,175 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(spawned["dispatch_observation"], "native_dispatch_spawned")
         self.assertEqual(spawned["workspace"], "redacted:absolute-hermes-workspace")
         self.assertEqual(result["already_running_after_dispatch"], [])
+
+    def test_no_idle_reports_ready_work_without_creating_or_dispatching(self) -> None:
+        fake = FakeHermes()
+        fake.tasks[READY_TASK_ID] = {
+            "id": READY_TASK_ID,
+            "status": "ready",
+            "assignee": "implementation-worker",
+            "body": "{}",
+            "events": [],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["mode"], "no-idle")
+        self.assertEqual(result["no_idle_state"]["status"], "dispatch_available")
+        self.assertTrue(result["no_idle_state"]["native_dispatch_required_next"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+
+    def test_no_idle_creates_safe_remediation_card_when_board_is_silent(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["t_" + "todo0001"] = {
+            "id": "t_" + "todo0001",
+            "status": "todo",
+            "assignee": "factory-orchestrator",
+            "body": json.dumps({"objective": "continue planning"}),
+            "events": [],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["no_idle_state"]["status"], "remediation_required")
+        self.assertTrue(result["no_idle_state"]["remediation_task_created"])
+        self.assertEqual(result["remediation_task_id"], adapter.PUBLIC_SAFE_KANBAN_REF)
+        created_task = next(
+            task for task in fake.tasks.values()
+            if json.loads(str(task.get("body") or "{}")).get("marker") == adapter.NO_IDLE_REMEDIATION_MARKER
+        )
+        self.assertEqual(created_task["status"], "ready")
+        body = json.loads(str(created_task["body"]))
+        self.assertFalse(body["dispatch_allowed_by_this_step"])
+        self.assertTrue(body["native_dispatch_required_next"])
+        self.assertIn("approve or waive human gates", body["forbidden_actions"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_reports_human_gate_without_remediation(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["t_" + "gate0001"] = {
+            "id": "t_" + "gate0001",
+            "status": "blocked",
+            "assignee": "human-gate-clerk",
+            "body": json.dumps({"marker": "human_gate", "reason": "awaiting human approval"}),
+            "events": [{"type": "blocked", "reason": "human gate"}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["no_idle_state"]["status"], "human_gate_required")
+        self.assertTrue(result["no_idle_state"]["human_gate_required"])
+        self.assertIn("human_decision_request", result["no_idle_state"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_enforce_done_projects_completion_artifact_before_main_complete(self) -> None:
+        fake = FakeHermes()
+        fake.tasks[MAIN_TASK_ID] = {"id": MAIN_TASK_ID, "status": "ready", "events": [], "comments": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            card = tmp_path / "CARD-001.md"
+            receipt = tmp_path / "receipt.json"
+            ledger = tmp_path / "ledger.json"
+            worker_results = tmp_path / "worker-results"
+            route_readiness = tmp_path / "route-readiness.json"
+            attachment_root = tmp_path / "attachments"
+            artifact = tmp_path / "proof.json"
+            worker_results.mkdir()
+            card.write_text("{}", encoding="utf-8")
+            artifact.write_text(json.dumps({"ok": True}), encoding="utf-8")
+            receipt.write_text(
+                json.dumps({"evidence_refs": [".tmp/factory-runs/proof.json"]}),
+                encoding="utf-8",
+            )
+            ledger.write_text(
+                json.dumps(
+                    {
+                        "runtime_authority": "hermes_kanban",
+                        "local_state_authority": False,
+                        "tasks": {},
+                        "live_bindings": {
+                            "CARD-001": {
+                                "binding_role": "hermes_ref_projection",
+                                "runtime_authority": "hermes_kanban",
+                                "local_state_authority": False,
+                                "board": TEST_BOARD,
+                                "main_task_id": MAIN_TASK_ID,
+                                "worker_task_ids": {},
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            write_route_readiness(route_readiness)
+            args = adapter.build_parser().parse_args(
+                [
+                    "enforce-done",
+                    "--card",
+                    str(card),
+                    "--board",
+                    TEST_BOARD,
+                    "--main-task-id",
+                    MAIN_TASK_ID,
+                    "--receipt",
+                    str(receipt),
+                    "--worker-results-dir",
+                    str(worker_results),
+                    "--ledger",
+                    str(ledger),
+                    "--route-readiness",
+                    str(route_readiness),
+                    "--complete-main",
+                    "--artifact-path",
+                    str(artifact),
+                    "--attachment-root",
+                    str(attachment_root),
+                ]
+            )
+            original_build_hook_result = adapter.build_hook_result
+            adapter.build_hook_result = lambda **_: {
+                "transition_action": "allow_done",
+                "plan": {"event": {"card_id": "CARD-001"}},
+            }
+            try:
+                adapter.enforce_done(args, runner=fake)
+            finally:
+                adapter.build_hook_result = original_build_hook_result
+
+            expected_copy = attachment_root / TEST_BOARD / MAIN_TASK_ID / "artifacts" / "proof.json"
+            copy_exists = expected_copy.is_file()
+            metadata = json.loads(str(fake.tasks[MAIN_TASK_ID]["metadata"]))
+
+        self.assertTrue(copy_exists)
+        self.assertEqual(metadata["evidence_refs"], [f"kanban-attachment:{MAIN_TASK_ID}/artifacts/proof.json"])
+        projection = metadata["_overkill_completion_artifact_projection"]
+        self.assertEqual(projection["status"], "PASS")
+        self.assertEqual(
+            projection["refs"][0]["sha256"],
+            "sha256:" + hashlib.sha256(json.dumps({"ok": True}).encode("utf-8")).hexdigest(),
+        )
+        complete_index = next(index for index, call in enumerate(fake.calls) if len(call) >= 5 and call[4] == "complete")
+        comment_index = next(index for index, call in enumerate(fake.calls) if len(call) >= 5 and call[4] == "comment")
+        self.assertLess(comment_index, complete_index)
+
+    def test_completion_blocks_kanban_attachment_ref_without_readback(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "completion artifact readback blocked"):
+            adapter.apply_completion_artifact_policy(
+                receipt={"evidence_refs": ["kanban-attachment:t_fixture/artifacts/proof.json"]},
+                artifact_paths=[],
+                attachment_root=None,
+                board=TEST_BOARD,
+                task_id=MAIN_TASK_ID,
+            )
 
     def test_materialize_creates_workers_as_parents_of_main_card(self) -> None:
         fake = FakeHermes()

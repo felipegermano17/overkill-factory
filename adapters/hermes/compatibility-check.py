@@ -15,6 +15,8 @@ PATCHES = [
 ]
 FACTORYCTL = ROOT / "scripts" / "factoryctl.py"
 TRANSITION_HOOK = ROOT / "adapters" / "hermes" / "transition_hook.py"
+LIVE_ADAPTER = ROOT / "adapters" / "hermes" / "live_kanban_adapter.py"
+UPDATE_GUARD = ROOT / "scripts" / "hermes_update_guard.py"
 
 REQUIRED_PATCH_MARKERS = {
     "0001-overkill-factory-v35-gates-official-main.patch": [
@@ -57,6 +59,26 @@ REQUIRED_TRANSITION_HOOK_MARKERS = [
     "block_transition",
     "worker-ledger",
     "completion_reconciliation",
+]
+
+REQUIRED_LIVE_ADAPTER_MARKERS = [
+    "completion_artifact_projection",
+    "apply_completion_artifact_policy",
+    "kanban-attachment:",
+    "no-idle",
+    "factory_no_idle_remediation",
+    "dispatch_called_by_this_command",
+    "No-idle observes Hermes state",
+]
+
+REQUIRED_UPDATE_GUARD_MARKERS = [
+    "overkill_factory_hermes_update_guard.v1",
+    "hermes_update_process_still_running",
+    "kanban_running_tasks_present",
+    "gateway_service_definition_outdated",
+    "hermes_config_version_outdated",
+    "operator_sudo_required",
+    "hermes gateway restart --system",
 ]
 
 
@@ -125,6 +147,8 @@ def main() -> int:
     failures.extend(hermes_checkout_failures())
     failures.extend(f"factoryctl missing marker: {m}" for m in missing_markers(FACTORYCTL, REQUIRED_FACTORYCTL_MARKERS))
     failures.extend(f"transition hook missing marker: {m}" for m in missing_markers(TRANSITION_HOOK, REQUIRED_TRANSITION_HOOK_MARKERS))
+    failures.extend(f"live adapter missing marker: {m}" for m in missing_markers(LIVE_ADAPTER, REQUIRED_LIVE_ADAPTER_MARKERS))
+    failures.extend(f"update guard missing marker: {m}" for m in missing_markers(UPDATE_GUARD, REQUIRED_UPDATE_GUARD_MARKERS))
 
     if failures:
         for failure in failures:
