@@ -165,6 +165,13 @@ memory or an unowned mutation.
 See `maintenance/factory-learning-skill-evolution-os.md` for the operating
 rules.
 
+Hermes `/learn` may draft or stage a skill candidate from a bounded workflow,
+URL, directory, pasted notes or the current conversation. It is only a capture
+lane. The learning proposal remains the factory contract, and `/learn` must not
+activate skills, gates, hooks, workers, MCP/tool bindings, install profiles,
+route registries or human-gate decisions. See
+`maintenance/hermes-learn-integration.md`.
+
 ## Owner Issue Intake
 
 An operator-owned factory instance may review selected GitHub issues and convert

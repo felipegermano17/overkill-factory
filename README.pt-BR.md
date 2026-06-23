@@ -259,6 +259,8 @@ readiness propria.
 - `docs/examples/gallery.md`: exemplos publicos.
 - `docs/security/oss-security.md`: postura de seguranca.
 - `docs/maintenance/repo-surface.md`: regras de manutencao da superficie publica.
+- `docs/maintenance/hermes-learn-integration.md`: fronteira do Hermes `/learn`
+  para candidatas de skill em revisao.
 - `.agents/README.md`: fronteira do marketplace local de plugins Codex.
 - `plugins/README.md`: fronteira dos pacotes publicos de plugin.
 - `examples/minimal-hermes-project/README.md`: exemplo minimo executavel.

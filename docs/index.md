@@ -70,3 +70,7 @@ and governance audit artifacts.
 Use `maintenance/factory-learning-skill-evolution-os.md` when repeated
 execution findings should become validated skills, rules, gates, tests, workers,
 schemas, hooks, MCP/tool proposals, install profiles, issues or rejections.
+
+Use `maintenance/hermes-learn-integration.md` when Hermes `/learn` is available
+and a repeated workflow should become a staged skill candidate without
+bypassing Factory Mechanic, proposal validation or human gates.

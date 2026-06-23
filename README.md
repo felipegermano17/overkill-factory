@@ -260,6 +260,8 @@ evidence, reviews, human gates and production readiness proof.
 - `docs/examples/gallery.md`: public examples.
 - `docs/security/oss-security.md`: security posture.
 - `docs/maintenance/repo-surface.md`: public surface maintenance rules.
+- `docs/maintenance/hermes-learn-integration.md`: Hermes `/learn` boundary for
+  staged skill candidates.
 - `.agents/README.md`: repo-local Codex plugin marketplace boundary.
 - `plugins/README.md`: public plugin package boundary.
 - `examples/minimal-hermes-project/README.md`: minimal runnable example.

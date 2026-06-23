@@ -81,6 +81,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/examples/gallery.md",
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
+            "docs/maintenance/hermes-learn-integration.md",
             "examples/minimal-hermes-project/README.md",
             "fixtures/README.md",
             ".env.example",
@@ -196,6 +197,28 @@ class OpenSourceDocsTest(unittest.TestCase):
         for rel in required_paths:
             with self.subTest(path=rel):
                 self.assertTrue((ROOT / rel).is_file())
+
+    def test_hermes_learn_boundary_is_documented(self) -> None:
+        learn = read_text("docs/maintenance/hermes-learn-integration.md")
+        learning_os = read_text("docs/maintenance/factory-learning-skill-evolution-os.md")
+        self_improvement = read_text("docs/maintenance/self-improvement-loop.md")
+        docs_index = read_text("docs/index.md")
+        mkdocs = read_text("mkdocs.yml")
+
+        for phrase in [
+            "Hermes `/learn`",
+            "capture lane",
+            "factory_learning_proposal",
+            "skills.write_approval: true",
+            "must not activate skills",
+            "python -m pytest -q tests/agent/test_learn_prompt.py",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, learn)
+
+        for text in [learning_os, self_improvement, docs_index, mkdocs]:
+            with self.subTest(doc=text[:40]):
+                self.assertIn("hermes-learn-integration.md", text)
 
     def test_public_repo_does_not_commit_generated_example_outputs(self) -> None:
         generated_paths = [

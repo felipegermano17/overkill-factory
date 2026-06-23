@@ -56,5 +56,6 @@ nav:
   - Maintainer Internals:
       - Repo Surface: maintenance/repo-surface.md
       - Factory Learning OS: maintenance/factory-learning-skill-evolution-os.md
+      - Hermes Learn Integration: maintenance/hermes-learn-integration.md
       - Self Improvement Loop: maintenance/self-improvement-loop.md
       - Context Spine: memory/context-spine.md

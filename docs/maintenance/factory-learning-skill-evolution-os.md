@@ -21,7 +21,9 @@ The source of a learning proposal can be:
 - recurring Receipt Five reconciliation finding;
 - governance audit;
 - issue intake from an owner-controlled factory instance;
-- public research summarized through a read-only source pass.
+- public research summarized through a read-only source pass;
+- Hermes `/learn` draft or pending skill write, when attached as a candidate
+  artifact rather than active behavior.
 
 Raw private evidence is not a learning artifact. Public proposals use redacted
 evidence refs such as `external:run-summary`, `.tmp` outputs during validation,
@@ -71,6 +73,12 @@ A workflow can become a factory skill only after this lifecycle:
 Skills should carry scripts or fixtures when that prevents agents from
 recreating boilerplate from memory. Large references stay on demand; they should
 not bloat always-loaded context.
+
+Hermes `/learn` can accelerate step 2 by drafting a `SKILL.md` from a bounded
+source. It does not remove the lifecycle. Keep `skills.write_approval=true` on
+operator-facing Hermes profiles so `/learn` creates a reviewable candidate
+instead of mutating the active skill set silently. Use
+`maintenance/hermes-learn-integration.md` for the runtime boundary.
 
 ## Plan Review
 
