@@ -191,12 +191,59 @@
     "sdlc_feedback_loop_ref": { "type": "string", "minLength": 3 },
     "autonomy_mode": {
       "enum": [
+        "planning_only",
+        "fast_autonomy",
+        "yolo_sandbox",
         "bounded_execution",
         "material_execution",
         "production_operation",
         "human_only",
         "deferred"
       ]
+    },
+    "autonomy_lane_policy": {
+      "type": "object",
+      "properties": {
+        "lane": {
+          "enum": [
+            "fast_autonomy",
+            "yolo_sandbox",
+            "bounded_execution",
+            "material_execution",
+            "production_operation",
+            "human_only",
+            "deferred"
+          ]
+        },
+        "dispatch_authority": { "const": "hermes_native_dispatch_only" },
+        "human_gate_authority": { "const": false },
+        "production_authority": { "const": false },
+        "budget": { "type": "object" },
+        "allowed_work": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "forbidden_actions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "human_gate_triggers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "stop_conditions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rollback_path": { "type": "string", "minLength": 3 },
+        "evidence_required": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "disposable_environment_required": { "type": "boolean" },
+        "cleanup_required": { "type": "boolean" }
+      },
+      "additionalProperties": true
     },
     "agent_readiness_basis": {
       "type": "object",

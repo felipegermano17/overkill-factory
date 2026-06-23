@@ -959,6 +959,87 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(input_contract["agent_readiness_basis"], card["agent_readiness_basis"])
         self.assertEqual(input_contract["model_routing_decision_ref"], card["model_routing_decision_ref"])
 
+    def test_worker_packet_carries_fast_autonomy_lane_policy(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+        card["autonomy_mode"] = "fast_autonomy"
+        card["autonomy_readiness_packet"]["execution_mode"] = "fast_autonomy"
+        card["agent_runtime_hardening_profile"]["execution_mode"] = "fast_autonomy"
+        card["access_capability"]["execution_mode"] = "fast_autonomy"
+        required_forbidden = sorted(factoryctl.FAST_AUTONOMY_REQUIRED_FORBIDDEN_ACTIONS)
+        card["forbidden_actions"] = required_forbidden
+        card["autonomy_readiness_packet"]["forbidden_actions"] = required_forbidden
+        card["access_capability"]["forbidden_actions"] = required_forbidden
+        card["autonomy_lane_policy"] = {
+            "lane": "fast_autonomy",
+            "dispatch_authority": "hermes_native_dispatch_only",
+            "human_gate_authority": False,
+            "production_authority": False,
+            "budget": {"max_runtime": "30m", "max_spend": "0", "max_turns": 4},
+            "allowed_work": ["docs", "tests", "local refactors", "smoke validation"],
+            "forbidden_actions": required_forbidden,
+            "human_gate_triggers": ["production", "mainnet", "funds", "signing", "secrets"],
+            "stop_conditions": ["budget exceeded", "human gate required", "blocking validation failure"],
+            "rollback_path": "revert bounded repo slice or discard workspace",
+            "evidence_required": ["tests", "worker result", "Receipt Five"],
+        }
+
+        self.assertEqual(factoryctl.validate_card(card), [])
+        packet = factoryctl.build_worker_packet("implementation-worker", card, card_path)
+
+        self.assertEqual(packet["input_contract"]["autonomy_mode"], "fast_autonomy")
+        self.assertEqual(packet["input_contract"]["autonomy_lane_policy"], card["autonomy_lane_policy"])
+
+    def test_fast_autonomy_lane_fails_closed_without_policy_and_forbidden_actions(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["autonomy_mode"] = "fast_autonomy"
+        card["autonomy_readiness_packet"]["execution_mode"] = "fast_autonomy"
+        card["agent_runtime_hardening_profile"]["execution_mode"] = "fast_autonomy"
+        card["forbidden_actions"] = ["deploy"]
+        card["autonomy_readiness_packet"]["forbidden_actions"] = []
+        card.pop("autonomy_lane_policy", None)
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("autonomy_lane_policy required for fast_autonomy or yolo_sandbox", errors)
+        self.assertTrue(
+            any(error.startswith("fast_autonomy forbidden_actions must explicitly include") for error in errors),
+            errors,
+        )
+
+    def test_yolo_sandbox_is_limited_to_disposable_low_risk_work(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["risk_effective"] = "R2"
+        card["autonomy_mode"] = "yolo_sandbox"
+        card["autonomy_readiness_packet"]["execution_mode"] = "yolo_sandbox"
+        card["agent_runtime_hardening_profile"]["execution_mode"] = "yolo_sandbox"
+        card["access_capability"]["execution_mode"] = "yolo_sandbox"
+        required_forbidden = sorted(factoryctl.FAST_AUTONOMY_REQUIRED_FORBIDDEN_ACTIONS)
+        card["forbidden_actions"] = required_forbidden
+        card["autonomy_readiness_packet"]["forbidden_actions"] = required_forbidden
+        card["access_capability"]["forbidden_actions"] = required_forbidden
+        card["autonomy_lane_policy"] = {
+            "lane": "yolo_sandbox",
+            "dispatch_authority": "hermes_native_dispatch_only",
+            "human_gate_authority": False,
+            "production_authority": False,
+            "budget": {"max_runtime": "10m", "max_spend": "0", "max_turns": 2},
+            "allowed_work": ["throwaway diagnostics"],
+            "forbidden_actions": required_forbidden,
+            "human_gate_triggers": ["production", "mainnet", "funds", "signing", "secrets"],
+            "stop_conditions": ["first blocker", "budget exceeded"],
+            "rollback_path": "delete disposable workspace",
+            "evidence_required": ["smoke output"],
+            "disposable_environment_required": False,
+            "cleanup_required": False,
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn("yolo_sandbox only allowed for R0, R1", errors)
+        self.assertIn("autonomy_lane_policy.disposable_environment_required must be true for yolo_sandbox", errors)
+        self.assertIn("autonomy_lane_policy.cleanup_required must be true for yolo_sandbox", errors)
+
     def test_worker_packet_carries_customer_readiness_gate_ref(self) -> None:
         card_path = ROOT / "templates" / "vfinal-factory-card.json"
         card = factoryctl.load_json_like(card_path)
@@ -994,6 +1075,7 @@ class FactoryCtlTest(unittest.TestCase):
         input_properties = schema["properties"]["input_contract"]["properties"]
 
         self.assertIn("autonomy_mode", input_properties)
+        self.assertIn("autonomy_lane_policy", input_properties)
         self.assertIn("agent_readiness_basis", input_properties)
         self.assertIn("model_routing_decision_ref", input_properties)
         self.assertIn("model_routing_decision", input_properties)

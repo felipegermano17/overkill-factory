@@ -10,6 +10,53 @@
     "secret_access",
     "billing_change"
   ],
+  "autonomy_lane_policy": {
+    "lane": "bounded_execution",
+    "dispatch_authority": "hermes_native_dispatch_only",
+    "human_gate_authority": false,
+    "production_authority": false,
+    "budget": {
+      "max_runtime": "set by card runtime contract",
+      "max_spend": "no material spend without gate",
+      "max_turns": "set by Hermes card"
+    },
+    "allowed_work": [
+      "planning",
+      "bounded local execution after Ready Gate"
+    ],
+    "forbidden_actions": [
+      "production",
+      "deploy",
+      "mainnet",
+      "funds",
+      "signing",
+      "secret_access",
+      "billing_change",
+      "destructive_action",
+      "human_gate_approval"
+    ],
+    "human_gate_triggers": [
+      "production",
+      "mainnet",
+      "funds",
+      "signing",
+      "secrets",
+      "billing",
+      "destructive action"
+    ],
+    "stop_conditions": [
+      "budget exceeded",
+      "human gate required",
+      "blocking validation failure",
+      "required evidence missing"
+    ],
+    "rollback_path": "Block the Hermes card, stop worker execution and revert the bounded slice.",
+    "evidence_required": [
+      "worker result",
+      "validation output",
+      "Receipt Five"
+    ]
+  },
   "rollback_path": "No material execution allowed yet.",
   "human_gates": [
     "Access & Capability Gate"

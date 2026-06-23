@@ -112,11 +112,23 @@
           "minLength": 3
         },
         "autonomy_mode": {
+          "enum": [
+            "planning_only",
+            "fast_autonomy",
+            "yolo_sandbox",
+            "bounded_execution",
+            "material_execution",
+            "production_operation",
+            "human_only",
+            "deferred",
+            null
+          ]
+        },
+        "autonomy_lane_policy": {
           "type": [
-            "string",
+            "object",
             "null"
-          ],
-          "minLength": 3
+          ]
         },
         "agent_readiness_basis": {
           "type": [

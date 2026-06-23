@@ -79,6 +79,37 @@
     "autonomy_level": {
       "enum": ["advisory", "planning_only", "supervised_execution", "gated_autonomous_execution", "production_autonomous_operation"]
     },
+    "autonomy_modes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["mode", "plain_meaning", "allowed_when", "blocked_when"],
+        "properties": {
+          "mode": {
+            "enum": [
+              "planning_only",
+              "fast_autonomy",
+              "yolo_sandbox",
+              "bounded_execution",
+              "material_execution",
+              "production_operation",
+              "human_only",
+              "deferred"
+            ]
+          },
+          "plain_meaning": { "type": "string", "minLength": 3 },
+          "allowed_when": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "blocked_when": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "handoff_mode": { "type": "string", "minLength": 3 },
     "blocked_state_policy": { "type": "string", "minLength": 3 },
     "burden_budget": {

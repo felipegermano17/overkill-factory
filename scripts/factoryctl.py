@@ -512,13 +512,35 @@ SECRET_POLICY_FORBIDDEN_KEYS = {
     "runtime_file_path",
     "local_secret_path",
 }
-HARDENING_REQUIRED_EXECUTION_MODES = {"bounded_execution", "material_execution", "production_operation"}
+HARDENING_REQUIRED_EXECUTION_MODES = {
+    "fast_autonomy",
+    "yolo_sandbox",
+    "bounded_execution",
+    "material_execution",
+    "production_operation",
+}
 MATERIAL_AUTONOMY_MODES = {
+    "fast_autonomy",
+    "yolo_sandbox",
     "bounded_execution",
     "material_execution",
     "production_operation",
     "human_only",
     "deferred",
+}
+FAST_AUTONOMY_LANE_MODES = {"fast_autonomy", "yolo_sandbox"}
+FAST_AUTONOMY_ALLOWED_RISKS = {"R0", "R1", "R2"}
+YOLO_SANDBOX_ALLOWED_RISKS = {"R0", "R1"}
+FAST_AUTONOMY_REQUIRED_FORBIDDEN_ACTIONS = {
+    "production",
+    "deploy",
+    "mainnet",
+    "funds",
+    "signing",
+    "secret_access",
+    "billing_change",
+    "destructive_action",
+    "human_gate_approval",
 }
 MODEL_ROUTING_MODEL_CLASSES = {
     "small_fast",
@@ -3320,6 +3342,62 @@ def _execution_mode(card: dict[str, Any]) -> str:
     return ""
 
 
+def _combined_forbidden_action_tokens(card: dict[str, Any]) -> set[str]:
+    actions: list[str] = []
+    actions.extend(_list_items(card.get("forbidden_actions")))
+    for field in ("autonomy_readiness_packet", "access_capability", "autonomy_lane_policy"):
+        value = card.get(field)
+        if isinstance(value, dict):
+            actions.extend(_list_items(value.get("forbidden_actions")))
+    return {_normalized_contract_token(item) for item in actions if _normalized_contract_token(item)}
+
+
+def validate_autonomy_lane_policy(card: dict[str, Any], *, autonomy_mode: str) -> list[str]:
+    if autonomy_mode not in FAST_AUTONOMY_LANE_MODES:
+        return []
+
+    errors: list[str] = []
+    policy = card.get("autonomy_lane_policy")
+    risk_effective = risk(card)
+    allowed_risks = YOLO_SANDBOX_ALLOWED_RISKS if autonomy_mode == "yolo_sandbox" else FAST_AUTONOMY_ALLOWED_RISKS
+
+    if risk_effective not in allowed_risks:
+        errors.append(f"{autonomy_mode} only allowed for " + ", ".join(sorted(allowed_risks)))
+
+    missing_forbidden = sorted(FAST_AUTONOMY_REQUIRED_FORBIDDEN_ACTIONS - _combined_forbidden_action_tokens(card))
+    if missing_forbidden:
+        errors.append(
+            f"{autonomy_mode} forbidden_actions must explicitly include "
+            + ", ".join(missing_forbidden)
+        )
+
+    if not isinstance(policy, dict) or not policy:
+        errors.append("autonomy_lane_policy required for fast_autonomy or yolo_sandbox")
+        return errors
+
+    if str(policy.get("lane") or "").strip() != autonomy_mode:
+        errors.append("autonomy_lane_policy.lane must match autonomy_mode")
+    if policy.get("dispatch_authority") != "hermes_native_dispatch_only":
+        errors.append("autonomy_lane_policy.dispatch_authority must be hermes_native_dispatch_only")
+    if policy.get("human_gate_authority") is not False:
+        errors.append("autonomy_lane_policy.human_gate_authority must be false")
+    if policy.get("production_authority") is not False:
+        errors.append("autonomy_lane_policy.production_authority must be false")
+    if not isinstance(policy.get("budget"), dict) or not policy.get("budget"):
+        errors.append("autonomy_lane_policy.budget must be a non-empty object")
+    for field in ("allowed_work", "forbidden_actions", "human_gate_triggers", "stop_conditions", "evidence_required"):
+        if not _list_items(policy.get(field)):
+            errors.append(f"autonomy_lane_policy.{field} must be a non-empty array")
+    if not _non_empty_text(policy.get("rollback_path")):
+        errors.append("autonomy_lane_policy.rollback_path is required")
+    if autonomy_mode == "yolo_sandbox":
+        if policy.get("disposable_environment_required") is not True:
+            errors.append("autonomy_lane_policy.disposable_environment_required must be true for yolo_sandbox")
+        if policy.get("cleanup_required") is not True:
+            errors.append("autonomy_lane_policy.cleanup_required must be true for yolo_sandbox")
+    return errors
+
+
 def _model_routing_decision_errors(decision: Any, *, at: str) -> list[str]:
     errors: list[str] = []
     if not isinstance(decision, dict):
@@ -3365,6 +3443,7 @@ def validate_material_autonomy_routing_contract(card: dict[str, Any]) -> list[st
         errors.append("autonomy_mode must be one of " + ", ".join(sorted(MATERIAL_AUTONOMY_MODES)))
     elif execution_mode and autonomy_mode != execution_mode:
         errors.append("autonomy_mode must match autonomy readiness execution_mode")
+    errors.extend(validate_autonomy_lane_policy(card, autonomy_mode=autonomy_mode))
 
     basis = card.get("agent_readiness_basis")
     if not isinstance(basis, dict) or not basis:
@@ -12692,6 +12771,7 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             or ("card.universal_signal_intake" if isinstance(card.get("universal_signal_intake"), dict) else None),
             "sdlc_feedback_loop_ref": card.get("sdlc_feedback_loop_ref"),
             "autonomy_mode": card.get("autonomy_mode"),
+            "autonomy_lane_policy": card.get("autonomy_lane_policy"),
             "agent_readiness_basis": card.get("agent_readiness_basis"),
             "model_routing_decision_ref": card.get("model_routing_decision_ref"),
             "model_routing_decision": card.get("model_routing_decision"),

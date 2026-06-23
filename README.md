@@ -83,6 +83,11 @@ The practical boundary is simple:
 - Operator Consoles and operator dashboards can project state, but they do not approve
   gates or replace Hermes.
 
+Speed is controlled by authority, not by vibe. Low-risk reversible work can use
+the Fast Autonomy Lane, while production, mainnet, funds, signing, secrets,
+billing, destructive actions and human-gate approval stay outside any YOLO-like
+mode. See `docs/operations/fast-autonomy-lane.md`.
+
 ## Use With The Codex Bridge Plugin
 
 There are two public operating paths:
@@ -207,7 +212,9 @@ v1.2.1. It includes:
 - release preflight, public-surface sync and safety scans;
 - Factory v1 Completion Gate;
 - Hermes completion artifact projection and no-idle remediation controls;
-- Hermes update guard for safer runtime maintenance.
+- Hermes update guard for safer runtime maintenance;
+- Fast Autonomy Lane contracts for quick reversible work without global YOLO
+  authority.
 
 That claim is intentionally scoped. Factory v1 means the public kernel is
 complete enough to install, inspect, validate and extend. A product built by the
@@ -233,6 +240,7 @@ evidence, reviews, human gates and production readiness proof.
 - `docs/agents/capability-packs.md`: product-type coverage rules.
 - `docs/control-tower/open-source-setup.md`: optional Control Tower setup.
 - `docs/operations/validation-and-release.md`: release validation checklist.
+- `docs/operations/fast-autonomy-lane.md`: fast autonomous execution limits.
 - `docs/operations/release-policy.md`: release and versioning policy.
 - `docs/operations/troubleshooting.md`: common failures and recovery path.
 - `docs/architecture/hermes-integration.md`: Hermes adapter architecture.

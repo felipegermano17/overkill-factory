@@ -83,6 +83,12 @@ A fronteira pratica e simples:
 - Operator Consoles e dashboards de operador podem projetar estado, mas nao aprovam
   gates nem substituem o Hermes.
 
+Velocidade e controlada por autoridade, nao por improviso. Trabalho reversivel
+e de baixo risco pode usar a Fast Autonomy Lane, enquanto producao, mainnet,
+fundos, assinatura, segredos, billing, acoes destrutivas e aprovacao de human
+gate ficam fora de qualquer modo parecido com YOLO. Veja
+`docs/operations/fast-autonomy-lane.md`.
+
 ## Usar Com O Plugin Bridge Do Codex
 
 Existem dois caminhos publicos de operacao:
@@ -191,7 +197,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 e a linha atual de release do kernel publico; a tag publica mais
-recente e v1.2.0. Ela inclui:
+recente e v1.2.1. Ela inclui:
 
 - Universal Signal Intake e route registry;
 - Golden Corpus e checks de cobertura de sinais;
@@ -205,7 +211,11 @@ recente e v1.2.0. Ela inclui:
 - contratos de Product Face packet/result mais gate de design system do projeto
   / `DESIGN.md`;
 - release preflight, public-surface sync e safety scans;
-- Factory v1 Completion Gate.
+- Factory v1 Completion Gate;
+- projecao de artefato de conclusao Hermes e controles de no-idle;
+- Hermes update guard para manutencao mais segura do runtime;
+- Fast Autonomy Lane para trabalho reversivel rapido sem autoridade YOLO
+  global.
 
 Esse claim e deliberadamente limitado. Factory v1 significa que o kernel
 publico esta completo o suficiente para instalar, inspecionar, validar e
@@ -230,6 +240,7 @@ readiness propria.
 - `docs/agents/capability-packs.md`: regras de cobertura por tipo de produto.
 - `docs/control-tower/open-source-setup.md`: setup opcional de Control Tower.
 - `docs/operations/validation-and-release.md`: checklist de release.
+- `docs/operations/fast-autonomy-lane.md`: limites da execucao autonoma rapida.
 - `docs/operations/release-policy.md`: politica de versao e release.
 - `docs/operations/troubleshooting.md`: falhas comuns e caminho de recuperacao.
 - `docs/architecture/hermes-integration.md`: arquitetura do adapter Hermes.

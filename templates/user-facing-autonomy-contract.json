@@ -47,6 +47,44 @@
     "final acceptance after evidence and review"
   ],
   "autonomy_level": "gated_autonomous_execution",
+  "autonomy_modes": [
+    {
+      "mode": "planning_only",
+      "plain_meaning": "The factory may organize sources, plans and questions, but cannot execute material work.",
+      "allowed_when": ["source intake", "scope discovery", "method routing"],
+      "blocked_when": ["implementation requested", "release requested"]
+    },
+    {
+      "mode": "fast_autonomy",
+      "plain_meaning": "The factory may move quickly on reversible low-risk work with budget, rollback and stop conditions.",
+      "allowed_when": ["R0/R1/R2", "repo-local or disposable work", "no production authority", "Hermes remains dispatcher"],
+      "blocked_when": ["production", "mainnet", "funds", "signing", "secrets", "billing", "human gate approval"]
+    },
+    {
+      "mode": "yolo_sandbox",
+      "plain_meaning": "A stricter disposable lane for throwaway diagnostics or experiments, not product authority.",
+      "allowed_when": ["R0/R1 only", "disposable environment", "cleanup required", "zero material spend"],
+      "blocked_when": ["R2+", "persistent workspace without cleanup", "production-like data or environment"]
+    },
+    {
+      "mode": "bounded_execution",
+      "plain_meaning": "Normal gated worker execution inside the approved card scope.",
+      "allowed_when": ["Ready Gate passed", "worker packet exists", "required proof path exists"],
+      "blocked_when": ["missing readiness", "missing worker packet", "human gate required"]
+    },
+    {
+      "mode": "material_execution",
+      "plain_meaning": "Higher-stakes implementation that needs stronger proof and review before completion.",
+      "allowed_when": ["material risk is explicit", "security/review gates are routed", "rollback exists"],
+      "blocked_when": ["unreviewed R3/R4", "unclear authority", "missing security architecture"]
+    },
+    {
+      "mode": "production_operation",
+      "plain_meaning": "Operational production work; never a default autonomous lane.",
+      "allowed_when": ["explicit production runbook", "release or operations gate", "rollback and monitoring proof"],
+      "blocked_when": ["no human authority", "no rollback", "no monitoring", "irreversible action"]
+    }
+  ],
   "handoff_mode": "compressed operator view with understanding, bounded decisions, blockers, proof and next action",
   "blocked_state_policy": "stop with a named blocker, owner, evidence needed and smallest safe next action instead of pushing open-ended work to the user",
   "burden_budget": [

@@ -46,6 +46,10 @@ release.
 Use `operations/parallel-execution-and-status.md` before scaling agents,
 splitting work across branches/worktrees or presenting a operator console/status view.
 
+Use `operations/fast-autonomy-lane.md` before allowing a card to move quickly
+without another human prompt. It separates reversible fast work from forbidden
+global YOLO authority.
+
 Use `operator/overkill-factory-bridge.md` when Codex or another assistant is
 bridging a human operator to the factory without acting as a factory worker.
 

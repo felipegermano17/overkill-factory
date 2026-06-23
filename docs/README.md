@@ -39,3 +39,7 @@ Start with `docs/index.md`, then read
 `docs/getting-started/install-in-hermes.md`,
 `docs/reference/cli.md`, `docs/concepts/factory-flow.md` and
 `docs/operations/validation-and-release.md`.
+
+Read `docs/operations/fast-autonomy-lane.md` when deciding whether a card can
+move quickly without human input. That guide defines the difference between
+fast reversible work and forbidden global YOLO authority.
