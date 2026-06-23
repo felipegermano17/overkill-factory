@@ -71,9 +71,15 @@ screenshots or runtime proof from your own Hermes instance.
 If the operator talks only to `overkill-factory-gerente` through Telegram, add a
 Hermes cron job for the no-idle watchdog after the adapter path is installed:
 
+For a gateway launched with a dedicated profile, put the wrapper in that
+profile's script directory. For a default-profile gateway, `~/.hermes/scripts`
+is also valid.
+
 ```bash
-mkdir -p ~/.hermes/scripts
-cat > ~/.hermes/scripts/overkill_factory_no_idle_watchdog.sh <<'SH'
+export FACTORY_GATEWAY_PROFILE=overkill-factory-gerente
+export HERMES_PROFILE_HOME="$HERMES_HOME/profiles/$FACTORY_GATEWAY_PROFILE"
+mkdir -p "$HERMES_PROFILE_HOME/scripts"
+cat > "$HERMES_PROFILE_HOME/scripts/overkill_factory_no_idle_watchdog.sh" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 export HOME="${HERMES_HOME:-$HOME}"
@@ -86,8 +92,8 @@ python scripts/factory_no_idle_watchdog.py \
   --dispatch \
   --emit-events
 SH
-chmod +x ~/.hermes/scripts/overkill_factory_no_idle_watchdog.sh
-hermes cron create "every 5m" \
+chmod +x "$HERMES_PROFILE_HOME/scripts/overkill_factory_no_idle_watchdog.sh"
+hermes --profile "$FACTORY_GATEWAY_PROFILE" cron create "every 5m" \
   --name overkill-factory-no-idle-watchdog \
   --script overkill_factory_no_idle_watchdog.sh \
   --no-agent \
