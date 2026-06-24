@@ -158,6 +158,44 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
 
         self.assertTrue(any("approval_type" in error for error in errors), errors)
 
+    def test_pending_human_gate_requires_full_decision_package_not_markdown_only(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md")
+        packet = card["human_gate_packet"]
+        for field in (
+            "operator_briefing_package_ref",
+            "approval_request_ref",
+            "evidence_index_ref",
+            "owner_review_ref",
+        ):
+            packet.pop(field, None)
+        packet["required_decision_assets"] = ["markdown_document"]
+        packet["optional_explainer_assets"] = []
+        packet["decision_package_delivery"] = {
+            "operator_interface": "telegram",
+            "push_required": True,
+            "summary_only_forbidden": False,
+            "material_before_question": False,
+            "attachment_order": ["markdown_document"],
+        }
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            "human_gate_packet.operator_briefing_package_ref is required before asking a human for a gate decision",
+            errors,
+        )
+        self.assertTrue(any("required_decision_assets must include" in error for error in errors), errors)
+        self.assertIn("human_gate_packet.decision_package_delivery.summary_only_forbidden must be true", errors)
+        self.assertIn("human_gate_packet.decision_package_delivery.material_before_question must be true", errors)
+        self.assertIn(
+            "human_gate_packet.decision_package_delivery.attachment_order must include markdown_document and pdf_document",
+            errors,
+        )
+        self.assertIn(
+            "human_gate_packet.optional_explainer_assets must expose at least one diagram/video/audio explainer slot",
+            errors,
+        )
+
     def test_missing_product_creation_plan_routes_to_planning_not_implementation(self) -> None:
         card = load_vfinal_card()
         card.pop("product_creation_plan_ref")

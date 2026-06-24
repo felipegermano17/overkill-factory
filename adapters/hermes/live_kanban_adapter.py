@@ -754,6 +754,34 @@ def is_human_gate_blocker(record: dict[str, Any]) -> bool:
     )
 
 
+def is_human_gate_decision_ready_blocker(record: dict[str, Any]) -> bool:
+    if not is_human_gate_blocker(record):
+        return False
+    if is_operator_input_blocker(record):
+        return False
+    text = task_record_text(record)
+    return any(
+        marker in text
+        for marker in (
+            "awaiting human decision",
+            "awaiting human approval",
+            "pending explicit human decision",
+            "decision-ready",
+            "decision ready",
+            "operator briefing delivered",
+            "approval request delivered",
+            "owner review delivered",
+            "pdf delivered",
+            "ready for owner decision",
+            "ready for operator decision",
+        )
+    )
+
+
+def is_human_gate_package_blocker(record: dict[str, Any]) -> bool:
+    return is_human_gate_blocker(record) and not is_human_gate_decision_ready_blocker(record)
+
+
 def is_operator_input_blocker(record: dict[str, Any]) -> bool:
     text = task_record_text(record)
     input_markers = (
@@ -767,6 +795,42 @@ def is_operator_input_blocker(record: dict[str, Any]) -> bool:
         "required inputs",
         "needed input",
         "needed inputs",
+        "missing evidence",
+        "missing evidences",
+        "missing proof",
+        "missing proofs",
+        "missing material",
+        "missing package",
+        "missing packet",
+        "missing upstream packet",
+        "no sufficient reviewed packet",
+        "without sufficient reviewed packet",
+        "insufficient reviewed packet",
+        "missing operator briefing package",
+        "operator briefing package missing",
+        "missing operator_briefing_package",
+        "operator_briefing_package missing",
+        "missing approval_request",
+        "approval_request missing",
+        "missing approval request",
+        "approval request missing",
+        "missing evidence_index",
+        "evidence_index missing",
+        "missing evidence index",
+        "evidence index missing",
+        "missing owner_review",
+        "owner_review missing",
+        "missing owner review",
+        "owner review missing",
+        "missing decision package",
+        "decision package missing",
+        "incomplete decision package",
+        "summary-only",
+        "summary only",
+        "markdown only",
+        "pdf missing",
+        "no pdf",
+        "no material",
         "provide exact",
         "provide requested",
         "cannot be completed",
@@ -959,10 +1023,38 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "next_action": "no no-idle action required",
             "state": state,
         }
-    human_gate_blockers = [item for item in blocked if is_human_gate_blocker(item)]
+    human_gate_blockers = [item for item in blocked if is_human_gate_decision_ready_blocker(item)]
     human_gate_refs = sorted(task_record_id(item) for item in human_gate_blockers if task_record_id(item))
-    operator_input_blockers = [item for item in blocked if is_operator_input_blocker(item)]
+    operator_input_blockers = [
+        item
+        for item in blocked
+        if is_operator_input_blocker(item) or is_human_gate_package_blocker(item)
+    ]
     operator_input_refs = sorted(task_record_id(item) for item in operator_input_blockers if task_record_id(item))
+    if blocked and len(operator_input_blockers) == len(blocked) and not todo:
+        return {
+            "status": "input_required",
+            "classification": "only_input_or_human_gate_package_blockers_seen",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": True,
+            "operator_input_task_refs": operator_input_refs,
+            "human_gate_task_refs": human_gate_refs,
+            "operator_input_request": {
+                "request_type": "factory_blocker_input_or_decision_package",
+                "reason": (
+                    "All unfinished visible work is blocked on missing inputs or an unfinished "
+                    "human-gate decision package. This is not approval-ready."
+                ),
+                "required_response": (
+                    "deliver the missing decision package/materials first, or ask for the exact "
+                    "missing source inputs; do not ask the operator to approve a summary-only gate"
+                ),
+            },
+            "next_action": "prepare/deliver the decision package or ask for exact missing inputs before any human approval request",
+            "state": state,
+        }
     if blocked and len(human_gate_blockers) == len(blocked) and not todo:
         return {
             "status": "human_gate_required",
@@ -992,6 +1084,37 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         input_dependency_refs = [
             ref for ref in blocker_refs if is_operator_input_blocker(blocked_by_task_id.get(ref, {}))
         ]
+        if input_dependency_refs or operator_input_refs:
+            return {
+                "status": "input_required",
+                "classification": (
+                    "todo_dependency_gated_by_missing_operator_inputs"
+                    if input_dependency_refs and not human_gate_refs
+                    else "todo_dependency_gated_by_inputs_before_human_gate"
+                ),
+                "blocked": True,
+                "remediation_required": False,
+                "human_gate_required": False,
+                "operator_input_required": True,
+                "human_gate_task_refs": sorted(set(human_gate_dependency_refs + human_gate_refs)),
+                "operator_input_task_refs": sorted(set(input_dependency_refs + operator_input_refs)),
+                "dependency_gated_task_refs": sorted(dependency_blockers),
+                "dependency_blocker_task_refs": blocker_refs,
+                "operator_input_request": {
+                    "request_type": "factory_blocker_input_or_decision_package",
+                    "reason": (
+                        "Visible todo work is dependency-gated while at least one blocker still "
+                        "needs exact inputs or a complete decision package. Asking for approval now "
+                        "would be a false human gate."
+                    ),
+                    "required_response": (
+                        "provide the exact missing inputs, or have the factory deliver the markdown, "
+                        "PDF and structured evidence package before requesting a decision"
+                    ),
+                },
+                "next_action": "resolve missing inputs or deliver the decision package before asking for a human-gate decision",
+                "state": state,
+            }
         if human_gate_dependency_refs or human_gate_refs:
             return {
                 "status": "human_gate_required",
@@ -1027,29 +1150,6 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
                 if input_dependency_refs or operator_input_refs
                 else None,
                 "next_action": "ask the operator for the current human-gate decision and any exact missing blocker inputs; do not create another generic remediation card",
-                "state": state,
-            }
-        if input_dependency_refs:
-            return {
-                "status": "input_required",
-                "classification": "todo_dependency_gated_by_missing_operator_inputs",
-                "blocked": True,
-                "remediation_required": False,
-                "human_gate_required": False,
-                "operator_input_required": True,
-                "operator_input_task_refs": input_dependency_refs,
-                "dependency_gated_task_refs": sorted(dependency_blockers),
-                "dependency_blocker_task_refs": blocker_refs,
-                "operator_input_request": {
-                    "request_type": "factory_blocker_input",
-                    "reason": (
-                        "Visible todo work is dependency-gated behind blockers that ask for "
-                        "exact missing inputs. This is not a generic no-idle gap and not an "
-                        "approval gate."
-                    ),
-                    "required_response": "provide the exact missing inputs, or ask the factory to re-read a named source artifact",
-                },
-                "next_action": "ask the operator/source pipeline for the exact blocker inputs; do not create generic no-idle remediation",
                 "state": state,
             }
         return {

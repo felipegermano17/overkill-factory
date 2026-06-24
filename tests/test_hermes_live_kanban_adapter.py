@@ -3782,6 +3782,32 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_treats_incomplete_human_gate_package_as_input_required(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["t_" + "gate0001"] = {
+            "id": "t_" + "gate0001",
+            "status": "blocked",
+            "assignee": "human-gate-clerk",
+            "body": (
+                "human gate packet is not approval-ready: missing operator briefing package, "
+                "APPROVAL_REQUEST, EVIDENCE_INDEX, OWNER_REVIEW and pdf"
+            ),
+            "events": [{"type": "blocked", "reason": "missing decision package"}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "input_required")
+        self.assertEqual(state["classification"], "only_input_or_human_gate_package_blockers_seen")
+        self.assertFalse(state["human_gate_required"])
+        self.assertTrue(state["operator_input_required"])
+        self.assertIn("decision package", state["next_action"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_reports_dependency_gated_todo_behind_human_gate_without_remediation(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0001"
@@ -3928,9 +3954,9 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             }
         )
 
-        self.assertEqual(state["status"], "human_gate_required")
-        self.assertEqual(state["classification"], "todo_dependency_gated_with_parallel_human_gate_blocker")
-        self.assertTrue(state["human_gate_required"])
+        self.assertEqual(state["status"], "input_required")
+        self.assertEqual(state["classification"], "todo_dependency_gated_by_inputs_before_human_gate")
+        self.assertFalse(state["human_gate_required"])
         self.assertTrue(state["operator_input_required"])
         self.assertEqual(state["human_gate_task_refs"], [gate_id])
         self.assertEqual(state["operator_input_task_refs"], [blocker_id])

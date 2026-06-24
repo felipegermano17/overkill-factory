@@ -49,7 +49,26 @@
     "risk_owner": "product-owner",
     "security_owner": "security-reviewer",
     "rollback_owner": "security-reviewer",
-    "waiver_policy": "no waiver without explicit human record"
+    "waiver_policy": "no waiver without explicit human record",
+    "operator_briefing_package_ref": "reports/val-security-r3/human-gate/operator-briefing-package.json",
+    "approval_request_ref": "reports/val-security-r3/human-gate/APPROVAL_REQUEST.json",
+    "evidence_index_ref": "reports/val-security-r3/human-gate/EVIDENCE_INDEX.json",
+    "owner_review_ref": "reports/val-security-r3/human-gate/OWNER_REVIEW.md",
+    "required_decision_assets": [
+      "markdown_document",
+      "pdf_document",
+      "approval_request_json",
+      "evidence_index_json",
+      "owner_review_markdown"
+    ],
+    "optional_explainer_assets": ["diagram", "video_explainer", "audio_explainer"],
+    "decision_package_delivery": {
+      "operator_interface": "telegram",
+      "push_required": true,
+      "summary_only_forbidden": true,
+      "material_before_question": true,
+      "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer"]
+    }
   },
   "factory_method_version": "OVERKILL_V3_5_FACTORY_10",
   "phase": "F8",

@@ -7,7 +7,13 @@ public releases.
 
 ## Unreleased
 
-Nothing yet.
+- Harden human-gate/no-idle handling so an incomplete gate package or missing
+  operator evidence is classified as `input_required`, not as an approval-ready
+  human gate.
+- Add the `human-gate-packet` contract and require pending human gates to carry
+  a structured decision package: operator briefing ref, approval request,
+  evidence index, owner review, markdown/PDF decision assets and optional
+  explainer slots.
 
 ## 1.5.2 - 2026-06-24
 

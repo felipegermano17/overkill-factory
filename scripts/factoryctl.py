@@ -4178,6 +4178,79 @@ def risk(card: dict[str, Any]) -> str:
     return str(card.get("risk_effective", "")).strip().upper()
 
 
+HUMAN_GATE_PENDING_STATES = {
+    "pending",
+    "pending_before_execution",
+    "pending_explicit_human_decision",
+    "required",
+    "approval_required",
+}
+HUMAN_GATE_REQUIRED_DECISION_ASSETS = {
+    "markdown_document",
+    "pdf_document",
+    "approval_request_json",
+    "evidence_index_json",
+    "owner_review_markdown",
+}
+HUMAN_GATE_PACKAGE_REFS = (
+    "operator_briefing_package_ref",
+    "approval_request_ref",
+    "evidence_index_ref",
+    "owner_review_ref",
+)
+
+
+def validate_human_gate_packet(
+    packet: dict[str, Any],
+    *,
+    at: str = "human_gate_packet",
+    require_decision_package: bool = False,
+) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("human-gate-packet.schema.json")
+    if schema:
+        errors.extend(validate_node(schema, packet, at, schemas=schemas, root_schema=schema))
+    state = str(packet.get("decision_state") or packet.get("status") or packet.get("state") or "").strip().lower()
+    decision_package_required = require_decision_package or state in HUMAN_GATE_PENDING_STATES
+    if not decision_package_required:
+        return errors
+
+    for field in HUMAN_GATE_PACKAGE_REFS:
+        value = str(packet.get(field) or "").strip()
+        if not value:
+            errors.append(f"{at}.{field} is required before asking a human for a gate decision")
+        else:
+            _validate_public_ref(value, f"{at}.{field}", errors)
+
+    required_assets = set(_list_items(packet.get("required_decision_assets")))
+    missing_assets = sorted(HUMAN_GATE_REQUIRED_DECISION_ASSETS - required_assets)
+    if missing_assets:
+        errors.append(
+            f"{at}.required_decision_assets must include "
+            + ", ".join(sorted(HUMAN_GATE_REQUIRED_DECISION_ASSETS))
+        )
+
+    delivery = packet.get("decision_package_delivery")
+    if not isinstance(delivery, dict):
+        errors.append(f"{at}.decision_package_delivery is required before asking a human for a gate decision")
+    else:
+        if delivery.get("push_required") is not True:
+            errors.append(f"{at}.decision_package_delivery.push_required must be true")
+        if delivery.get("summary_only_forbidden") is not True:
+            errors.append(f"{at}.decision_package_delivery.summary_only_forbidden must be true")
+        if delivery.get("material_before_question") is not True:
+            errors.append(f"{at}.decision_package_delivery.material_before_question must be true")
+        attachment_order = set(_list_items(delivery.get("attachment_order")))
+        if not {"markdown_document", "pdf_document"}.issubset(attachment_order):
+            errors.append(f"{at}.decision_package_delivery.attachment_order must include markdown_document and pdf_document")
+
+    optional_assets = set(_list_items(packet.get("optional_explainer_assets")))
+    if not optional_assets.intersection({"diagram", "video_explainer", "animation_html", "audio_explainer"}):
+        errors.append(f"{at}.optional_explainer_assets must expose at least one diagram/video/audio explainer slot")
+    return errors
+
+
 def human_gate_required_for_card(card: dict[str, Any]) -> tuple[bool, str]:
     effective_risk = risk(card)
     phase = str(card.get("phase") or "").strip()
@@ -5393,8 +5466,17 @@ def validate_card(data: dict[str, Any]) -> list[str]:
                 errors.append("quasar_required=false is not allowed for Overkill Solana work")
     if effective_risk in HIGH_RISK and not isinstance(data.get("security_scan_packet"), dict):
         errors.append("security_scan_packet required for R3/R4 work")
-    if effective_risk in HIGH_RISK and not isinstance(data.get("human_gate_packet"), dict):
+    human_gate_packet = data.get("human_gate_packet") if isinstance(data.get("human_gate_packet"), dict) else None
+    if effective_risk in HIGH_RISK and human_gate_packet is None:
         errors.append("human_gate_packet required for R3/R4 work")
+    elif human_gate_packet is not None:
+        human_gate_required, _human_gate_reason = human_gate_required_for_card(data)
+        errors.extend(
+            validate_human_gate_packet(
+                human_gate_packet,
+                require_decision_package=human_gate_required,
+            )
+        )
     if risk_class == "R3-financial-critical" and review.get("CTO_gate_required") is not True:
         errors.append("review.CTO_gate_required=true required for R3-financial-critical work")
     if effective_risk in HIGH_RISK and surfaces & SECURITY_SURFACES:
