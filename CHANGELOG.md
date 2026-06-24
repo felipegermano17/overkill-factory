@@ -7,6 +7,10 @@ public releases.
 
 ## Unreleased
 
+Nothing yet.
+
+## 1.5.3 - 2026-06-24
+
 - Harden human-gate/no-idle handling so an incomplete gate package or missing
   operator evidence is classified as `input_required`, not as an approval-ready
   human gate.
