@@ -112,7 +112,7 @@ the card.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `human-gate-clerk` | human-support | F9/F15/F16 | Prepares and records real human decisions for authority, access, budget, waiver and release. It cannot invent approval. |
+| `human-gate-clerk` | human-support | F9/F15/F16 | Prepares and records real human decisions for authority, access, budget, waiver, material risk and release. It must not ask approval for planning-only continuation, source resolution, method routing or specialist routing. |
 | `release-ops-worker` | closed/hybrid | F16-F17 | Handles release channel, production operations, promotion packet, smoke, canary, rollback readiness and monitoring. |
 | `public-safety-gate` | closed | F16-F17 | Blocks public artifacts containing private paths, internal names, raw source extraction or private links. |
 | `memory-steward` | hybrid | F0/F1/F18 | Treats memory as a risk surface with source, trust tier, freshness and poisoning controls. |

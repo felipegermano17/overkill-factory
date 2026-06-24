@@ -23,7 +23,7 @@
     "task_id": { "type": "string" },
     "approval_type": {
       "type": "string",
-      "enum": ["understanding", "plan", "access", "budget", "risk", "scope_change", "release", "production"]
+      "enum": ["access", "budget", "risk", "scope_change", "release", "production"]
     },
     "status": { "type": "string", "enum": ["pending", "approved", "rejected", "needs_changes", "expired"] },
     "risk": { "type": "string", "enum": ["R0", "R1", "R2", "R3", "R4"] },

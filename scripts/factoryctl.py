@@ -217,6 +217,79 @@ INTERNAL_COORDINATION_TERMS = {
     "hermes card",
     "kanban card",
 }
+PLANNING_ONLY_FALSE_GATE_TERMS = {
+    "planning",
+    "planning-only",
+    "plan approval",
+    "approve plan",
+    "initial planning",
+    "go planning",
+    "source resolution",
+    "product sot review",
+    "sot review",
+    "method routing",
+    "method-routing",
+    "specialist routing",
+    "specialist-routing",
+    "architecture planning",
+    "security planning",
+    "planejamento",
+    "aprovar planejamento",
+    "aprovar plano",
+    "go de planejamento",
+    "continuar o planejamento",
+}
+HUMAN_AUTHORITY_TERMS = {
+    "access",
+    "account",
+    "authority",
+    "budget",
+    "billing",
+    "compliance",
+    "credential",
+    "cost",
+    "custody",
+    "deploy",
+    "destructive",
+    "funds",
+    "irreversible",
+    "legal",
+    "mainnet",
+    "material scope",
+    "privacy",
+    "production",
+    "release",
+    "risk",
+    "risk_acceptance",
+    "risk-acceptance",
+    "scope change",
+    "scope_change",
+    "scope-change",
+    "secret",
+    "signing",
+    "waiver",
+    "acesso",
+    "assinatura",
+    "custodia",
+    "custódia",
+    "deploy",
+    "destrutiva",
+    "dinheiro",
+    "fundos",
+    "irreversivel",
+    "irreversível",
+    "juridico",
+    "jurídico",
+    "mainnet",
+    "orcamento",
+    "orçamento",
+    "privacidade",
+    "producao",
+    "produção",
+    "release",
+    "risco",
+    "segredo",
+}
 
 RECEIPT_REQUIRED = {
     "changed",
@@ -3319,6 +3392,25 @@ def _contains_internal_coordination_request(text: Any) -> bool:
     return any(term in normalized for term in INTERNAL_COORDINATION_TERMS)
 
 
+def _looks_like_planning_only_false_gate(text: Any) -> bool:
+    normalized = str(text or "").strip().lower()
+    if not normalized:
+        return False
+    if not any(term in normalized for term in PLANNING_ONLY_FALSE_GATE_TERMS):
+        return False
+    return not any(term in normalized for term in HUMAN_AUTHORITY_TERMS)
+
+
+def _planning_only_without_human_authority(card: dict[str, Any]) -> bool:
+    autonomy_mode = str(card.get("autonomy_mode") or "").strip()
+    surfaces = normalized_surfaces(card)
+    review = card.get("review") if isinstance(card.get("review"), dict) else {}
+    explicit_human_gate = review.get("human_gate_required") is True or review.get("CTO_gate_required") is True
+    if autonomy_mode != "planning_only" or not explicit_human_gate:
+        return False
+    return not bool(surfaces & HUMAN_AUTHORITY_SURFACES)
+
+
 def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
     contract = card.get("user_facing_autonomy_contract")
     if not isinstance(contract, dict):
@@ -3344,6 +3436,23 @@ def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
     if "worker" not in user_must_not_do or "schema" not in user_must_not_do:
         errors.append("user_facing_autonomy_contract.user_must_not_do must keep worker/schema coordination inside the factory")
 
+    for field in ("human_gate_triggers", "approval_points"):
+        for index, item in enumerate(_list_items(contract.get(field))):
+            if _looks_like_planning_only_false_gate(item):
+                errors.append(
+                    f"user_facing_autonomy_contract.{field}[{index}] must not turn planning-only factory work into a human gate"
+                )
+
+    factory_owned_without_gate = " ".join(_list_items(contract.get("factory_owned_without_human_gate"))).lower()
+    for required in ("planning-only", "source resolution", "method routing", "specialist routing"):
+        if required not in factory_owned_without_gate:
+            errors.append(f"user_facing_autonomy_contract.factory_owned_without_human_gate must cover {required}")
+
+    forbidden_gate_requests = " ".join(_list_items(contract.get("forbidden_human_gate_requests"))).lower()
+    for required in ("planning-only", "source resolution", "specialist routing"):
+        if required not in forbidden_gate_requests:
+            errors.append(f"user_facing_autonomy_contract.forbidden_human_gate_requests must cover {required}")
+
     for index, question in enumerate(contract.get("user_questions", []) if isinstance(contract.get("user_questions"), list) else []):
         if not isinstance(question, dict):
             errors.append(f"user_facing_autonomy_contract.user_questions[{index}] must be an object")
@@ -3355,6 +3464,10 @@ def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
             errors.append(f"user_facing_autonomy_contract.user_questions[{index}] is discoverable and must be resolved by the factory before asking the user")
         if _contains_internal_coordination_request(question.get("question")):
             errors.append(f"user_facing_autonomy_contract.user_questions[{index}] asks the user to perform internal factory coordination")
+        if question_class in {"authority_required", "risk_acceptance", "blocked"} and _looks_like_planning_only_false_gate(question.get("question")):
+            errors.append(
+                f"user_facing_autonomy_contract.user_questions[{index}] misclassifies planning-only factory work as a human decision"
+            )
         if not _non_empty_text(question.get("factory_resolution_path")):
             errors.append(f"user_facing_autonomy_contract.user_questions[{index}].factory_resolution_path is required")
 
@@ -3371,9 +3484,12 @@ def validate_user_facing_autonomy_contract(card: dict[str, Any]) -> list[str]:
                 "product_intent_confirmation, authority_required, access_required and risk_acceptance"
             )
         auto_resolve = " ".join(_list_items(interrupt_policy.get("auto_resolve_when"))).lower()
-        for required in ("discoverable", "internal coordination", "worker evidence", "non-human"):
+        for required in ("discoverable", "internal coordination", "worker evidence", "non-human", "planning-only", "source resolution", "specialist routing"):
             if required not in auto_resolve:
                 errors.append(f"user_facing_autonomy_contract.operator_interrupt_policy.auto_resolve_when must cover {required}")
+
+    if _planning_only_without_human_authority(card):
+        errors.append("planning-only cards must not require a human gate without authority, access, risk, release, funds, secrets or irreversible scope")
 
     return errors
 
@@ -4087,8 +4203,6 @@ def human_gate_required_for_card(card: dict[str, Any]) -> tuple[bool, str]:
         or human_gate_state in {"pending", "pending_before_execution", "required", "approval_required"}
     ):
         return True, "R3 work with material authority boundary requires human gate"
-    if phase == "F9":
-        return True, "dedicated human gate phase"
     if r4_gate:
         return True, "R4 gate packet present"
     if (phase in {"F16", "F17"} or surfaces & {"release", "production", "deploy"}) and release_rule.get("human_gate_required") is True:

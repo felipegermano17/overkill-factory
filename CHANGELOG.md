@@ -9,6 +9,34 @@ public releases.
 
 Nothing yet.
 
+## 1.5.1 - 2026-06-24
+
+- Harden authority/autonomy enforcement so planning-only continuation, source
+  resolution, Product SOT review, method routing and specialist routing cannot
+  become human approval requests unless a real authority trigger is present.
+- Remove `understanding` and `plan` from the `approval-request` approval types;
+  understanding is confirmation, and planning is briefing/status unless access,
+  budget, risk, scope change, release or production authority is required.
+- Tighten `human-gate-clerk`, Control Tower and operator docs so Telegram,
+  Discord or bridge surfaces distinguish proactive briefing from real human
+  gates.
+- Add regression tests for F9 planning-only cards, false planning gates,
+  approval-request schema boundaries and Control Tower approval examples.
+
+## 1.5.0 - 2026-06-24
+
+- Added the canonical Factory Operating System registry and scorecard for the
+  11 OS areas tracked in issues #400-#410.
+- Added Method OS engine registry for spec-first SDD, TDD, BDD,
+  discovery/research, security-first, design-first, legacy diagnosis and
+  incident-first routing.
+- Added public-safe Hermes runtime proof generation and scorecard integration.
+- Hardened factory start so rich product material requires source inventory,
+  brownfield handling, questions and briefing before Product SOT promotion.
+- Updated README/docs/CLI reference and public manifest for the OS spine,
+  Hermes runtime proof, Telegram-first operation and completion-audit
+  boundaries.
+
 ## 1.4.0 - 2026-06-23
 
 - Add Telegram-first operator interface, conversational start and deep briefing

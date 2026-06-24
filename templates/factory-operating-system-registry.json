@@ -167,11 +167,13 @@
       ],
       "fail_closed_rules": [
         "internal factory mechanics must not become operator approval requests",
+        "planning-only continuation source resolution method routing and specialist routing must not become human gates without authority access risk production funds secrets or irreversible scope",
         "funds secrets release production destructive actions and risk acceptance require human authority",
         "human-gate-clerk records but cannot invent approval"
       ],
       "forbidden_claims": [
         "global YOLO mode is safe",
+        "planning-only work needs owner approval by default",
         "bridge or manager can approve human gate"
       ],
       "mapped_docs": [
@@ -427,11 +429,13 @@
       ],
       "fail_closed_rules": [
         "short chat summary is projection not approval surface",
+        "planning-only progress uses proactive briefing not approval requests",
         "status cannot use ambient Hermes store as proof",
         "bridge cannot execute factory work or close gates"
       ],
       "forbidden_claims": [
         "Telegram manager is a worker",
+        "Telegram operator must approve routine factory planning",
         "Codex bridge watches runtime while closed",
         "operator polling is required for progress"
       ],

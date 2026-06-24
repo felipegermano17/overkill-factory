@@ -50,13 +50,13 @@ def utc_now() -> str:
 def pending_approval(created_at: str) -> dict[str, Any]:
     return {
         "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
-        "approval_id": "appr-example-plan",
+        "approval_id": "appr-example-risk",
         "project_id": "example-control-tower-project",
-        "approval_type": "plan",
+        "approval_type": "risk",
         "status": "pending",
         "risk": "R3",
-        "scope": "approve bounded execution plan for first safe slice",
-        "consequence": "The runtime may record a plan approval event, but execution still waits for Ready Gate.",
+        "scope": "accept R3 execution risk for the first bounded safe slice",
+        "consequence": "The runtime may record a bounded risk decision, but execution still waits for Ready Gate.",
         "not_authorized": ["production release", "unbounded spend", "broad credential access"],
         "requested_by": "factory-concierge",
         "evidence_refs": ["docs/control-tower/discord-control-tower-os.md"],
@@ -108,12 +108,12 @@ def register_decision(
 
     event = {
         "$schema": "https://overkill-factory.dev/schemas/control-tower-event.schema.json",
-        "event_id": "evt-approval-recorded-example-plan",
+        "event_id": "evt-approval-recorded-example-risk",
         "event_type": "approval_recorded",
         "severity": "P2",
         "project_id": approval["project_id"],
         "source": "bridge",
-        "summary": "Structured owner plan approval is ready to register in the runtime.",
+        "summary": "Structured owner risk approval is ready to register in the runtime.",
         "details": "Contract-only smoke. No real runtime mutation is claimed.",
         "action_required": False,
         "owner_role": decision["actor_role"],

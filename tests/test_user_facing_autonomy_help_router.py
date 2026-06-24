@@ -79,6 +79,85 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
 
         self.assertFalse(required, reason)
 
+    def test_f9_planning_only_card_is_not_human_gate_by_phase_name(self) -> None:
+        card = load_vfinal_card()
+        card["phase"] = "F9"
+        card["autonomy_mode"] = "planning_only"
+        card["risk_initial"] = "R2"
+        card["risk_effective"] = "R2"
+        card["surfaces"] = ["planning", "source_resolution", "method_routing", "specialist_routing"]
+        card["review"]["human_gate_required"] = False
+        card["review"]["CTO_gate_required"] = False
+        card.pop("human_gate_packet", None)
+
+        required, reason = factoryctl.human_gate_required_for_card(card)
+        report = factoryctl.build_gate_report(card)
+        payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
+
+        self.assertFalse(required, reason)
+        self.assertFalse(report["workers"]["human-gate-clerk"]["required"])
+        self.assertFalse(
+            any(decision["decision_type"] == "authority_required" for decision in payload["user_decision_required"]),
+            payload["user_decision_required"],
+        )
+
+    def test_planning_only_contract_rejects_fake_human_gate_request(self) -> None:
+        card = load_vfinal_card()
+        card["user_facing_autonomy_contract"]["human_gate_triggers"].append("planning-only specialist routing approval")
+        card["user_facing_autonomy_contract"]["approval_points"].append("source resolution approval")
+        card["user_facing_autonomy_contract"]["user_questions"] = [
+            {
+                "question": "Can you approve method routing so the factory can continue planning?",
+                "class": "authority_required",
+                "factory_resolution_path": "factory should route methods without user approval",
+            }
+        ]
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(
+            any("planning-only factory work into a human gate" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("misclassifies planning-only factory work" in error for error in errors),
+            errors,
+        )
+
+    def test_planning_only_explicit_human_gate_fails_without_authority_surface(self) -> None:
+        card = load_vfinal_card()
+        card["autonomy_mode"] = "planning_only"
+        card["phase"] = "F9"
+        card["surfaces"] = ["planning", "source_resolution", "specialist_routing"]
+        card["review"]["human_gate_required"] = True
+        card["review"]["CTO_gate_required"] = False
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertIn(
+            "planning-only cards must not require a human gate without authority, access, risk, release, funds, secrets or irreversible scope",
+            errors,
+        )
+
+    def test_approval_request_schema_rejects_understanding_or_plan_approval_types(self) -> None:
+        schemas = factoryctl.bundled_schemas()
+        schema = schemas["approval-request.schema.json"]
+        request = {
+            "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
+            "approval_id": "appr-fake-plan",
+            "project_id": "example-project",
+            "approval_type": "plan",
+            "status": "pending",
+            "risk": "R2",
+            "scope": "approve planning-only continuation",
+            "requested_by": "factory-concierge",
+            "created_at": "2026-06-24T00:00:00Z",
+        }
+
+        errors = factoryctl.validate_node(schema, request, "approval_request", schemas=schemas, root_schema=schema)
+
+        self.assertTrue(any("approval_type" in error for error in errors), errors)
+
     def test_missing_product_creation_plan_routes_to_planning_not_implementation(self) -> None:
         card = load_vfinal_card()
         card.pop("product_creation_plan_ref")

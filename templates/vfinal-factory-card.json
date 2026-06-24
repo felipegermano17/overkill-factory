@@ -132,6 +132,23 @@
       "release approval for production or irreversible promotion",
       "final acceptance after evidence and review"
     ],
+    "factory_owned_without_human_gate": [
+      "planning-only continuation",
+      "source resolution",
+      "Product SOT review when material scope is not being changed",
+      "method routing",
+      "specialist routing",
+      "architecture and security planning without cost, access, production, secrets or irreversible action",
+      "worker packet preparation and internal gate report mechanics"
+    ],
+    "forbidden_human_gate_requests": [
+      "planning-only continuation approval",
+      "source resolution approval",
+      "Product SOT review approval when no material scope decision is unresolved",
+      "method routing approval",
+      "specialist routing approval",
+      "approval to let the factory keep coordinating its own workers"
+    ],
     "autonomy_level": "gated_autonomous_execution",
     "operator_interrupt_policy": {
       "default_behavior": "do_not_interrupt_operator",
@@ -153,6 +170,8 @@
       ],
       "auto_resolve_when": [
         "discoverable information can be found in source material, Hermes, repo files or worker outputs",
+        "planning-only continuation is factory-owned unless authority, access, risk acceptance, production, funds, secrets or irreversible action is active",
+        "source resolution, Product SOT review, method routing and specialist routing are factory-owned unless they expose a material scope or risk decision",
         "internal coordination belongs to the factory, including worker packets, schemas, routing and gate reports",
         "worker evidence can be produced by a registered non-human worker",
         "non-human blockers have a factory-owned repair route, retry budget and fresh review path"

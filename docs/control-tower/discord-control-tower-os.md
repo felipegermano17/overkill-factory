@@ -55,10 +55,10 @@ It shows:
 - incident alerts;
 - bot and bridge health.
 
-It asks for:
+It asks for confirmations and approvals separately:
 
-- understanding approval;
-- plan approval;
+- understanding confirmation;
+- planning status/briefing, not approval;
 - access approval;
 - budget approval;
 - risk approval;

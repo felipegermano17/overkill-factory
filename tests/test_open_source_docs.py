@@ -58,7 +58,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
         self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
         self.assertIn('the factory is not "a smart chat."', readme)
-        self.assertIn("v1.5.0", readme)
+        self.assertIn("v1.5.1", readme)
         self.assertNotIn("Para você, como usuário leigo", readme)
         self.assertNotIn("## What It Does Not Do", readme)
 
@@ -138,7 +138,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "não um atalho de MVP",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
-            "v1.5.0",
+            "v1.5.1",
             "codex plugin marketplace add .",
             "codex plugin add overkill-factory-bridge@overkill-factory",
             "docs/operator/overkill-factory-bridge.md",

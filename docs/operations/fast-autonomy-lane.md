@@ -84,12 +84,20 @@ Interrupt the operator only for:
 
 Do not interrupt for:
 
+- planning-only continuation, source resolution, Product SOT review, method
+  routing or specialist routing when they do not change material scope or
+  accept risk;
 - discoverable information in source material, Hermes state, repo files or
   worker outputs;
 - worker packet routing, schema details or gate report mechanics;
 - missing non-human worker evidence that has a registered owner;
 - recoverable non-human blockers with a repair route, retry budget and fresh
   review path.
+
+Do not phrase these as `approve plan`, `approve planning`,
+`approve specialist routing` or `approve source resolution`. They are factory
+work. The operator may be notified and may receive a briefing package, but the
+factory should keep moving unless a real authority trigger is present.
 
 `factoryctl help-next` exposes this split as `user_decision_required` versus
 `factory_resolved_without_user`. Telegram, Discord, Codex bridge or any other

@@ -674,8 +674,8 @@
         "F16"
       ],
       "triggers": [
-        "architecture approval",
-        "R3",
+        "architecture approval when risk, cost, access or material authority is active",
+        "R3 material authority boundary",
         "R4",
         "promotion",
         "access approval",
@@ -701,7 +701,8 @@
       "veto_conditions": [
         "missing human actor",
         "missing evidence",
-        "fake approval"
+        "fake approval",
+        "planning-only continuation or specialist routing presented as approval"
       ],
       "evidence_required": [
         "decision",
@@ -714,7 +715,8 @@
         "durable runtime event"
       ],
       "factory_gate_transition_policy": [
-        "architecture and R4 promotion wait for real human decision"
+        "architecture and R4 promotion wait for real human decision when a material authority trigger exists",
+        "planning-only continuation, source resolution, method routing and specialist routing remain factory-owned unless authority, access, risk, release, funds, secrets or irreversible scope is present"
       ],
       "promotion_rule": "always human-controlled",
       "public_safety_notes": "Use role names, not private personal identifiers."

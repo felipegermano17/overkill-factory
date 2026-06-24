@@ -73,8 +73,8 @@
           "mark specialist evidence as done"
         ],
         "human_gate_required_when": [
-          "architecture approval",
-          "R3 or R4 promotion",
+          "architecture approval with material risk, cost, access or authority",
+          "R3 material authority boundary or R4 promotion",
           "release authority"
         ]
       },
@@ -611,7 +611,7 @@
           "trust boundaries",
           "architecture decision records"
         ],
-        "done_definition": "Architecture is clear enough for specialist review and still blocked from decomposition until approval."
+        "done_definition": "Architecture is clear enough for specialist review; decomposition waits only when a material risk, cost, access or authority approval is required."
       },
       "evidence_contract": {
         "trust_floor": "product_specific",
@@ -2434,12 +2434,13 @@
       "display_name": "Human Gate Clerk",
       "topology": "human",
       "identity": "A human-decision recorder that prepares approval packets and records only real human decisions with scope and evidence.",
-      "mission": "Ensure architecture, R3, R4 and release gates cannot pass without an explicit human decision record.",
+      "mission": "Ensure material authority, access, budget, legal, privacy, R4 and release gates cannot pass without an explicit human decision record.",
       "operating_rules": [
         "No agent may invent, infer or simulate human approval.",
         "Record scope, actor role, decision, time, evidence refs and forbidden scope.",
         "A missing human decision is a blocker, not a soft warning.",
-        "Human decisions must name the exact authority granted, denied or deferred; access, budget, legal and production approvals are separate decisions."
+        "Human decisions must name the exact authority granted, denied or deferred; access, budget, legal and production approvals are separate decisions.",
+        "Never ask for approval to continue planning-only work, source resolution, method routing, specialist routing or internal worker coordination."
       ],
       "activation": {
         "phases": [
@@ -2452,7 +2453,7 @@
           "approval",
           "architecture",
           "release",
-          "R3",
+          "R3-material-authority",
           "R4",
           "access-approval",
           "budget-approval",
@@ -2464,7 +2465,7 @@
         "trigger_words": [
           "approval",
           "human gate",
-          "R3",
+          "R3 material authority",
           "R4",
           "release",
           "access approval",
@@ -2483,10 +2484,11 @@
         "must_not": [
           "invent approvals",
           "approve on behalf of a human",
-          "mutate product state"
+          "mutate product state",
+          "present planning-only continuation or specialist routing as approval"
         ],
         "human_gate_required_when": [
-          "always for this worker"
+          "human_gate_packet names access, budget, legal, privacy, risk acceptance, R4, release, production, funds, secrets, signing, custody or irreversible action"
         ]
       },
       "tool_policy": {
@@ -2498,7 +2500,8 @@
         "forbidden": [
           "fake actor",
           "silent approval",
-          "private decision leak"
+          "private decision leak",
+          "planning-only approval request"
         ],
         "runtime_notes": "This is a human-support profile. It records, never substitutes, human authority."
       },
@@ -2540,7 +2543,8 @@
         "not_valid_evidence": [
           "agent approval",
           "implicit consent",
-          "chat inference"
+          "chat inference",
+          "approval for source resolution, method routing or specialist routing"
         ]
       },
       "review_contract": {
@@ -2891,7 +2895,7 @@
       "understanding_contract": {
         "required_when": [
           "execution kickoff",
-          "card graph approval",
+          "card graph materially changes scope, risk, access or authority",
           "risk routing"
         ],
         "must_record": [

@@ -156,13 +156,13 @@ class FakeDiscordClient:
 def approval_request() -> dict[str, Any]:
     return {
         "$schema": "https://overkill-factory.dev/schemas/approval-request.schema.json",
-        "approval_id": "appr-pilot-plan",
+        "approval_id": "appr-pilot-risk",
         "project_id": "pilot-front-jogo-fabrica",
-        "approval_type": "plan",
+        "approval_type": "risk",
         "status": "pending",
         "risk": "R2",
-        "scope": "aprovar plano de piloto sem autorizar producao",
-        "consequence": "A fabrica pode registrar a decisao, mas ainda precisa do Ready Gate.",
+        "scope": "aceitar risco R2 do piloto dentro do escopo limitado",
+        "consequence": "A fabrica pode registrar a decisao de risco, mas ainda precisa do Ready Gate.",
         "not_authorized": ["deploy em producao", "gasto sem limite"],
         "requested_by": "factory-concierge",
         "evidence_refs": ["external:pilot-operator_console"],

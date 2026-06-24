@@ -13,6 +13,8 @@
     "allowed_user_question_classes",
     "human_gate_triggers",
     "approval_points",
+    "factory_owned_without_human_gate",
+    "forbidden_human_gate_requests",
     "autonomy_level",
     "operator_interrupt_policy",
     "handoff_mode",
@@ -73,6 +75,16 @@
       "items": { "type": "string", "minLength": 3 }
     },
     "approval_points": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "factory_owned_without_human_gate": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "forbidden_human_gate_requests": {
       "type": "array",
       "minItems": 1,
       "items": { "type": "string", "minLength": 3 }
