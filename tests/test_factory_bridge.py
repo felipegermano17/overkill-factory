@@ -84,6 +84,7 @@ class FactoryBridgeTest(unittest.TestCase):
             "mude o escopo para incluir teste de release": "change_bridge",
             "aprenda com esse erro e melhore a fabrica": "learnback_forwarding",
             "quero iniciar uma nova fabrica para um produto": "intake_bridge",
+            "agora pode iniciar a fabrica com esse material": "start_bridge",
         }
 
         for prompt, expected_mode in cases.items():
@@ -289,6 +290,7 @@ class FactoryBridgeTest(unittest.TestCase):
 
         for expected in [
             "status_bridge",
+            "start_bridge",
             "question_bridge",
             "decision_bridge",
             "change_bridge",

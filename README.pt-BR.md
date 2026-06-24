@@ -267,7 +267,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 é a linha atual de release do kernel público. A release pública mais
-recente é v1.5.4.
+recente é v1.5.5.
 
 Ela inclui:
 
@@ -285,6 +285,9 @@ Ela inclui:
   gate de `DESIGN.md`;
 - release preflight, public-surface sync, safety scans e Factory v1 Completion
   Gate;
+- Phase Engine determinístico para que artefatos materializados, não prosa de
+  agente ou `phase` declarado no card, decidam a fronteira ativa e o próximo
+  artefato obrigatório;
 - projeção de artefato de conclusão Hermes, controles de no-idle, Hermes update
   guard, watchdog de no-idle para Hermes cron e contratos da Fast Autonomy Lane.
 

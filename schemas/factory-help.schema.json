@@ -12,6 +12,7 @@
     "workflow_phase",
     "gate_status",
     "truth_scope",
+    "phase_engine",
     "phase_lock",
     "factory_next_action",
     "active_recovery_routes",
@@ -43,6 +44,7 @@
     },
     "gate_status": { "type": "string", "minLength": 1 },
     "truth_scope": { "enum": ["repo_only", "runtime_backed", "bounded_proof", "production_ready"] },
+    "phase_engine": { "$ref": "factory-phase-engine-state.schema.json" },
     "phase_lock": {
       "type": "object",
       "required": [

@@ -264,7 +264,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line. The latest public release
-is v1.5.4.
+is v1.5.5.
 
 It includes:
 
@@ -284,6 +284,8 @@ It includes:
   Completion Gate;
 - deterministic phase lock, single active frontier and downstream freeze before
   architecture, repo cleanup, human gates or worker packets;
+- deterministic Phase Engine state so materialized artifacts, not agent prose or
+  declared card phase, decide the active frontier and next required artifact;
 - Hermes completion artifact projection, no-idle remediation controls, Hermes
   update guard, cron-friendly no-idle watchdog and Fast Autonomy Lane contracts.
 

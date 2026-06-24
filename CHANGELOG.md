@@ -7,10 +7,21 @@ public releases.
 
 ## Unreleased
 
+## 1.5.5 - 2026-06-24
+
+- Add the deterministic Factory Phase Engine state contract, schema and
+  `factoryctl phase-engine` command so materialized artifacts, not agent prose or
+  declared card phase, decide the current frontier.
+- Expose `phase_engine` inside `factoryctl help-next` and block declared later
+  phases such as F9 when owner-readable Product SOT material, Method Contract or
+  other required artifacts are still missing.
+- Harden Hermes bridge start and no-idle remediation payloads so the factory
+  must materialize the next artifact computed by the phase engine before
+  promotion, and cannot choose a frontier from memory, title, comments or prose.
 - Add a public promise-to-implementation map, validator and CI coverage so
   README/docs/release claims must point to implementation, proof and explicit
   boundaries.
-- Correct Portuguese README release state to v1.5.4 and clarify that Solana AI
+- Keep Portuguese README release state in sync and clarify that Solana AI
   Kit is the domain brain while Quasar/Auditor remain implementation or proof
   lanes.
 

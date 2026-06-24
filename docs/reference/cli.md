@@ -39,6 +39,7 @@ factoryctl init --out ../my-product-factory --project-name my-product
 
 ```bash
 factoryctl validate-card examples/minimal-hermes-project/card.md
+factoryctl phase-engine --card examples/minimal-hermes-project/card.md
 factoryctl route-registry --route-class product_creation
 factoryctl operator-interface --primary-interface telegram --out .tmp/operator-interface-profile.json
 factoryctl validate-operator-interface .tmp/operator-interface-profile.json
@@ -97,6 +98,14 @@ signal: paper, idea, bug, repo, incident, release, research, UX, analytics,
 security, docs, migration, refactor or agent/model change. It requires a known
 route, required artifacts, public-safe references, explicit non-human recovery
 and execution blocked until the factory has enough source and scope.
+
+`phase-engine` computes the active factory frontier from materialized artifacts,
+not from agent memory, card title, comments or the declared `phase` alone. It
+emits `factory_phase_engine_state` with the computed phase, computed frontier,
+next required artifact, allowed current workers and human-gate allowance. A card
+that declares a later phase such as F9 while the computed frontier still needs
+`operator_briefing_package` or `method_contract` is blocked before the operator
+is asked for a decision.
 
 `route-registry` exposes the canonical route matrix used by the validators:
 route class, request types, signal types, required artifacts, workers, recovery

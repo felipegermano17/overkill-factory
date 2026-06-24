@@ -198,6 +198,39 @@ FACTORY_PHASE_LOCK_NEXT_ARTIFACTS = {
     "release": "production_promotion_packet",
     "completion": "receipt_five",
 }
+FACTORY_PHASE_ENGINE_FRONTIER_ORDER = [
+    "intake",
+    "source_resolution",
+    "product_sot",
+    "method_contract",
+    "architecture",
+    "ready_gate",
+    "execution",
+    "release",
+    "completion",
+]
+FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER = {
+    "intake": "F1",
+    "source_resolution": "F2",
+    "product_sot": "F5",
+    "method_contract": "F6",
+    "architecture": "F10",
+    "ready_gate": "F13",
+    "execution": "F15",
+    "release": "F24",
+    "completion": "F22",
+}
+FACTORY_PHASE_ENGINE_WORKERS_BY_FRONTIER = {
+    "intake": ["factory-orchestrator"],
+    "source_resolution": ["source-ledger-worker", "factory-orchestrator"],
+    "product_sot": ["product-sot-planner", "factory-orchestrator"],
+    "method_contract": ["factory-orchestrator"],
+    "architecture": ["product-architect", "security-orchestrator", "factory-orchestrator"],
+    "ready_gate": ["factory-orchestrator", "decomposition-planner"],
+    "execution": ["implementation-worker", "qa-verification-worker", "evidence-reconciler"],
+    "release": ["release-ops-worker", "human-gate-clerk"],
+    "completion": ["evidence-reconciler", "handoff-packer"],
+}
 FACTORY_PHASE_LOCK_SURFACE_ALLOWLIST = {
     "intake": {
         "intake",
@@ -4451,30 +4484,244 @@ def _factory_phase_lock(card: dict[str, Any]) -> dict[str, Any]:
     return lock if isinstance(lock, dict) else {}
 
 
+def factory_phase_engine_frontier_rank(frontier: Any) -> int:
+    value = str(frontier or "").strip()
+    try:
+        return FACTORY_PHASE_ENGINE_FRONTIER_ORDER.index(value)
+    except ValueError:
+        return -1
+
+
+def _phase_engine_field_materialized(card: dict[str, Any], field: str) -> bool:
+    value = card.get(field)
+    if isinstance(value, dict) and value:
+        return True
+    if isinstance(value, list) and value:
+        return True
+    if isinstance(value, str) and value.strip():
+        if field.endswith("_ref") or field == "canonical_product_sot_ref":
+            return _phase_lock_public_ref_ok(value)
+        return True
+
+    lock = _factory_phase_lock(card)
+    refs = lock.get("materialized_artifact_refs") if isinstance(lock.get("materialized_artifact_refs"), dict) else {}
+    if _phase_lock_public_ref_ok(refs.get(field)):
+        return True
+    if not field.endswith("_ref") and _phase_lock_public_ref_ok(refs.get(f"{field}_ref")):
+        return True
+    return False
+
+
+def _phase_engine_any_materialized(card: dict[str, Any], *fields: str) -> bool:
+    return any(_phase_engine_field_materialized(card, field) for field in fields)
+
+
+def _phase_engine_frontier_state(
+    *,
+    card: dict[str, Any],
+    frontier: str,
+    phase_id: str,
+    next_required_artifact: str,
+    reason: str,
+    artifacts: dict[str, bool],
+) -> dict[str, Any]:
+    card_phase_id = str(card.get("phase") or "").strip() or "unknown"
+    computed_rank = factory_phase_rank(phase_id)
+    card_rank = factory_phase_rank(card_phase_id)
+    lock = _factory_phase_lock(card)
+    lock_phase_id = str(lock.get("current_phase_id") or lock.get("active_phase_id") or "").strip()
+    lock_frontier = str(lock.get("active_frontier") or "").strip()
+    lock_phase_rank = factory_phase_rank(lock_phase_id)
+    lock_frontier_rank = factory_phase_engine_frontier_rank(lock_frontier)
+    computed_frontier_rank = factory_phase_engine_frontier_rank(frontier)
+    human_gate_required, human_gate_reason = human_gate_required_for_card(card)
+    human_gate_allowed = (
+        human_gate_required
+        and artifacts.get("product_sot_owner_surface_delivered") is True
+        and artifacts.get("method_contract") is True
+        and computed_frontier_rank >= factory_phase_engine_frontier_rank("method_contract")
+    )
+    allowed_workers = FACTORY_PHASE_ENGINE_WORKERS_BY_FRONTIER.get(frontier, ["factory-orchestrator"])
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/factory-phase-engine-state.schema.json",
+        "record_type": "factory_phase_engine_state",
+        "engine_version": "v1",
+        "deterministic": True,
+        "agent_route_authority": False,
+        "card_phase_id": card_phase_id,
+        "computed_phase_id": phase_id,
+        "computed_frontier": frontier,
+        "next_required_artifact": next_required_artifact,
+        "allowed_current_worker_ids": allowed_workers,
+        "blocked_downstream_phase_ids": [
+            candidate
+            for candidate in ("F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F15", "F19", "F24")
+            if factory_phase_rank(candidate) > computed_rank
+        ],
+        "phase_mismatch": card_rank > computed_rank,
+        "lock_phase_mismatch": bool(lock_phase_id and lock_phase_rank > computed_rank),
+        "lock_frontier_mismatch": bool(
+            lock_frontier and lock_frontier_rank > computed_frontier_rank >= 0
+        ),
+        "human_gate_allowed": human_gate_allowed,
+        "human_gate_reason": human_gate_reason,
+        "human_gate_blocked_until_artifact": "" if human_gate_allowed else next_required_artifact,
+        "artifacts": artifacts,
+        "decision_basis": reason,
+    }
+
+
+def factory_phase_engine_state(card: dict[str, Any]) -> dict[str, Any]:
+    """Compute the active factory frontier from artifacts, not agent prose."""
+    surfaces = normalized_surfaces(card)
+    card_phase_rank = factory_phase_rank(card.get("phase"))
+    source_input = _phase_engine_any_materialized(
+        card,
+        "universal_signal_intake",
+        "factory_start_conversation",
+        "source_resolution_packet",
+        "source_refs",
+    )
+    product_sot = _phase_engine_any_materialized(
+        card,
+        "product_sot",
+        "product_sot_ref",
+        "canonical_product_sot_ref",
+    )
+    source_resolution = (
+        product_sot
+        or _phase_engine_any_materialized(card, "product_source_ledger", "source_resolution_packet")
+    )
+    understanding = (
+        product_sot
+        or _phase_engine_any_materialized(card, "operator_understanding_confirmation", "outcome_contract")
+    )
+    outcome = product_sot or _phase_engine_any_materialized(card, "outcome_contract", "discovery_brief")
+    full_scope = _phase_engine_any_materialized(
+        card,
+        "full_product_sot_scope_coverage",
+        "full_product_sot_scope_coverage_ref",
+    )
+    owner_surface = product_sot_owner_surface_delivered(card)
+    method_done = method_contract_materialized(card)
+    architecture_done = _phase_engine_any_materialized(
+        card,
+        "architecture_packet",
+        "architecture_packet_ref",
+        "security_architecture_plan",
+    )
+    product_creation_done = _phase_engine_any_materialized(
+        card,
+        "product_creation_plan",
+        "product_creation_plan_ref",
+    )
+    readiness_done = _phase_engine_any_materialized(
+        card,
+        "product_implementation_readiness",
+        "autonomy_readiness_packet",
+    )
+    ready_gate_done = ready_gate_materialized(card)
+    artifacts = {
+        "source_input": source_input,
+        "source_resolution": source_resolution,
+        "operator_understanding_confirmation": understanding,
+        "outcome_contract": outcome,
+        "product_sot": product_sot,
+        "full_product_sot_scope_coverage": full_scope,
+        "product_sot_owner_surface_delivered": owner_surface,
+        "method_contract": method_done,
+        "architecture_packet": architecture_done,
+        "product_creation_plan": product_creation_done,
+        "product_implementation_readiness": readiness_done,
+        "ready_gate": ready_gate_done,
+    }
+
+    def state(frontier: str, phase_id: str, artifact: str, reason: str) -> dict[str, Any]:
+        return _phase_engine_frontier_state(
+            card=card,
+            frontier=frontier,
+            phase_id=phase_id,
+            next_required_artifact=artifact,
+            reason=reason,
+            artifacts=artifacts,
+        )
+
+    if not source_input and not product_sot:
+        return state("intake", "F1", "universal_signal_intake", "no source intake artifact is materialized")
+    if not product_sot:
+        if not source_resolution:
+            return state("source_resolution", "F2", "product_source_ledger", "source claims are not resolved into a ledger")
+        if not understanding:
+            return state(
+                "source_resolution",
+                "F2",
+                "operator_understanding_confirmation",
+                "operator understanding is not confirmed before Product SOT",
+            )
+        if not outcome:
+            return state("source_resolution", "F3", "outcome_contract", "outcome/discovery is not materialized")
+        return state("product_sot", "F5", "product_sot", "resolved source material has not become Product SOT")
+    if card.get("complete_product_required") is True and not full_scope:
+        return state(
+            "product_sot",
+            "F5",
+            "full_product_sot_scope_coverage",
+            "complete product scope is required before downstream routing",
+        )
+    if not owner_surface:
+        return state(
+            "product_sot",
+            "F5",
+            "operator_briefing_package",
+            "owner-readable Product SOT material is not delivered",
+        )
+    if not method_done:
+        return state("method_contract", "F6", "method_contract", "Method Contract is not materialized")
+
+    architecture_needed = bool(
+        surfaces
+        & {
+            "architecture",
+            "security-architecture",
+            "trust-boundary",
+            "risk-route",
+            "runtime",
+            "interfaces",
+            "onchain",
+            "solana",
+        }
+    ) or card_phase_rank >= factory_phase_rank("F10")
+    if architecture_needed and not architecture_done:
+        return state("architecture", "F10", "architecture_packet", "architecture frontier is claimed but no architecture packet exists")
+    if not product_creation_done:
+        return state("architecture", "F11", "product_creation_plan", "execution plan is not materialized")
+    if not readiness_done:
+        return state("ready_gate", "F12", "product_implementation_readiness", "implementation readiness is not materialized")
+    if not ready_gate_done:
+        return state("ready_gate", "F13", "gate_report", "Ready Gate is not materialized")
+
+    if card_phase_rank >= factory_phase_rank("F24"):
+        return state("release", "F24", "production_promotion_packet", "ready gate is materialized and release is claimed")
+    if card_phase_rank >= factory_phase_rank("F15"):
+        return state("execution", "F15", "worker_packet", "ready gate is materialized and execution is claimed")
+    return state("ready_gate", "F13", "gate_report", "ready gate materialized; runtime may execute only through routed workers")
+
+
 def _phase_lock_frontier(card: dict[str, Any]) -> str:
     lock = _factory_phase_lock(card)
     frontier = str(lock.get("active_frontier") or "").strip()
     if frontier:
         return frontier
-    phase_rank = factory_phase_rank(card.get("phase"))
-    if phase_rank >= factory_phase_rank("F15"):
-        return "execution"
-    if phase_rank >= factory_phase_rank("F13"):
-        return "ready_gate"
-    if phase_rank >= factory_phase_rank("F10"):
-        return "architecture"
-    if phase_rank >= factory_phase_rank("F8"):
-        return "method_contract"
-    if phase_rank >= factory_phase_rank("F5"):
-        return "product_sot"
-    if phase_rank >= factory_phase_rank("F2"):
-        return "source_resolution"
-    return "intake"
+    return str(factory_phase_engine_state(card)["computed_frontier"])
 
 
 def _factory_phase_lock_current_phase_id(card: dict[str, Any]) -> str:
     lock = _factory_phase_lock(card)
-    return str(lock.get("current_phase_id") or lock.get("active_phase_id") or card.get("phase") or "").strip()
+    return str(
+        lock.get("current_phase_id")
+        or lock.get("active_phase_id")
+        or factory_phase_engine_state(card)["computed_phase_id"]
+    ).strip()
 
 
 def _phase_lock_allowed_surfaces(frontier: str) -> set[str]:
@@ -4589,6 +4836,7 @@ def factory_phase_lock_errors(card: dict[str, Any]) -> list[str]:
                 errors.append(f"factory_phase_lock.{field} must be public-safe")
 
     projection = factory_phase_lock_projection(card)
+    phase_engine = factory_phase_engine_state(card)
     phase_rank = factory_phase_rank(card.get("phase"))
     current_rank = factory_phase_rank(projection["current_phase_id"])
     surfaces = normalized_surfaces(card)
@@ -4599,6 +4847,26 @@ def factory_phase_lock_errors(card: dict[str, Any]) -> list[str]:
 
     if projection["single_active_frontier"] is not True:
         errors.append("factory_phase_lock.single_active_frontier must be true")
+
+    if phase_engine["phase_mismatch"]:
+        errors.append(
+            "factory_phase_engine blocks declared card phase "
+            f"{card.get('phase')} while computed phase is {phase_engine['computed_phase_id']} "
+            f"({phase_engine['computed_frontier']}); next required artifact is "
+            f"{phase_engine['next_required_artifact']}"
+        )
+
+    if phase_engine["lock_phase_mismatch"]:
+        errors.append(
+            "factory_phase_engine blocks factory_phase_lock.current_phase_id "
+            f"{projection['current_phase_id']} while computed phase is {phase_engine['computed_phase_id']}"
+        )
+
+    if phase_engine["lock_frontier_mismatch"]:
+        errors.append(
+            "factory_phase_engine blocks factory_phase_lock.active_frontier "
+            f"{projection['active_frontier']} while computed frontier is {phase_engine['computed_frontier']}"
+        )
 
     if current_rank >= 0 and phase_rank > current_rank and (projection["downstream_freeze_active"] or future_surface_seen):
         errors.append(
@@ -4625,6 +4893,12 @@ def factory_phase_lock_errors(card: dict[str, Any]) -> list[str]:
     if projection["operator_decision_required"] and not projection["product_sot_review_packet_delivered"]:
         errors.append(
             "factory_phase_lock cannot ask the operator for a decision before the owner-readable material package is delivered"
+        )
+
+    if projection["operator_decision_required"] and not phase_engine["human_gate_allowed"]:
+        errors.append(
+            "factory_phase_engine blocks operator decision request until "
+            f"{phase_engine['human_gate_blocked_until_artifact']} is materialized"
         )
 
     return errors
@@ -17119,14 +17393,16 @@ def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], pha
     blocked_workers = _list_items(gate_report.get("blocked_workers"))
     command_refs = _list_items(phase_row.get("related_command_refs")) or ["factoryctl gate-report"]
     phase_lock = factory_phase_lock_projection(card)
+    phase_engine = factory_phase_engine_state(card)
 
-    if any("factory_phase_lock" in error for error in errors):
-        next_artifact = str(phase_lock.get("next_required_artifact") or "operator_briefing_package")
+    if any("factory_phase_lock" in error or "factory_phase_engine" in error for error in errors):
+        next_artifact = str(phase_engine.get("next_required_artifact") or phase_lock.get("next_required_artifact") or "operator_briefing_package")
+        artifact_label = next_artifact.replace("_", " ").title()
         return {
             "owner": "factory",
-            "action": f"restore the active frontier and deliver {next_artifact} before downstream work",
-            "why": "The factory must keep one active frontier: Product SOT owner review and Method Contract come before architecture, repo cleanup, worker packets or human decisions.",
-            "command_refs": ["factoryctl validate-card", "factoryctl help-next", "factoryctl gate-report"],
+            "action": f"materialize {artifact_label} ({next_artifact}) in {phase_engine['computed_frontier']} before downstream work",
+            "why": "The factory phase engine is deterministic: artifacts decide the frontier; agents cannot promote cards by prose, memory or declared phase.",
+            "command_refs": ["factoryctl phase-engine", "factoryctl validate-card", "factoryctl help-next", "factoryctl gate-report"],
         }
 
     if product_experience_planning_gap(card, errors):
@@ -17337,7 +17613,8 @@ def build_factory_help(
     receipt: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     catalog = load_workflow_catalog(catalog_path)
-    phase_row = workflow_phase_for_card(card, catalog)
+    phase_engine = factory_phase_engine_state(card)
+    phase_row = workflow_phase_by_id(catalog, str(phase_engine.get("computed_phase_id") or "")) or workflow_phase_for_card(card, catalog)
     gate_report = build_gate_report(card)
     recovery_plan = build_factory_recovery_plan(
         card,
@@ -17370,7 +17647,8 @@ def build_factory_help(
     validation_errors = _list_items(gate_report.get("card_validation_errors"))
     phase_lock = factory_phase_lock_projection(card)
     phase_lock_blocked = any("factory_phase_lock" in error for error in validation_errors)
-    user_decisions = [] if phase_lock_blocked else user_decisions_for_card(card, gate_report)
+    phase_engine_blocked = any("factory_phase_engine" in error for error in validation_errors)
+    user_decisions = [] if phase_lock_blocked or phase_engine_blocked else user_decisions_for_card(card, gate_report)
     next_actions: list[str] = []
     for item in gate_report.get("next_safe_actions", []):
         next_action_text = str(item.get("action") if isinstance(item, dict) else item).strip()
@@ -17390,11 +17668,13 @@ def build_factory_help(
         },
         "gate_status": str(gate_report.get("gate_status") or "not_run"),
         "truth_scope": truth_scope_for_card(card),
+        "phase_engine": phase_engine,
         "phase_lock": phase_lock,
         "factory_next_action": factory_action,
         "active_recovery_routes": active_recovery_routes,
         "factory_resolved_without_user": factory_resolved_actions_for_card(card, gate_report),
-        "user_decision_required": user_decisions + ([] if phase_lock_blocked else recovery_decisions_for_help(active_recovery_routes)),
+        "user_decision_required": user_decisions
+        + ([] if phase_lock_blocked or phase_engine_blocked else recovery_decisions_for_help(active_recovery_routes)),
         "blocked_because": validation_errors + [f"{worker_id} is blocked by missing inputs" for worker_id in blocked_workers],
         "blocked_actions": sorted(set(_list_items(phase_row.get("blocked_actions")) + _list_items(card.get("forbidden_actions")))),
         "evidence_needed": next_actions or _list_items(phase_row.get("required_artifacts")) + _list_items(phase_row.get("required_gates")),
@@ -18043,6 +18323,12 @@ def command_validate_card(args: argparse.Namespace) -> int:
         return 1
     print("OK")
     return 0
+
+
+def command_phase_engine(args: argparse.Namespace) -> int:
+    state = factory_phase_engine_state(load_json_like(args.card))
+    write_json(args.out, state)
+    return 1 if state.get("phase_mismatch") or state.get("lock_phase_mismatch") or state.get("lock_frontier_mismatch") else 0
 
 
 def command_validate_receipt(args: argparse.Namespace) -> int:
@@ -19087,6 +19373,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate_card_parser = sub.add_parser("validate-card")
     validate_card_parser.add_argument("path", type=Path)
     validate_card_parser.set_defaults(func=command_validate_card)
+
+    phase_engine_parser = sub.add_parser("phase-engine", help="Compute the deterministic factory phase from materialized artifacts.")
+    phase_engine_parser.add_argument("--card", type=Path, required=True)
+    phase_engine_parser.add_argument("--out", type=Path)
+    phase_engine_parser.set_defaults(func=command_phase_engine)
 
     validate_receipt_parser = sub.add_parser("validate-receipt")
     validate_receipt_parser.add_argument("path", type=Path)
