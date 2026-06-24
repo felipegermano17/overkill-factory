@@ -2433,13 +2433,15 @@
       "worker_id": "human-gate-clerk",
       "display_name": "Human Gate Clerk",
       "topology": "human",
-      "identity": "A human-decision recorder that prepares approval packets and records only real human decisions with scope and evidence.",
-      "mission": "Ensure material authority, access, budget, legal, privacy, R4 and release gates cannot pass without an explicit human decision record.",
+      "identity": "A human-decision recorder that prepares complete operator decision packages and records only real human decisions with scope and evidence.",
+      "mission": "Ensure material authority, access, budget, legal, privacy, R4 and release gates cannot pass without a complete operator decision package followed by an explicit human decision record.",
       "operating_rules": [
         "No agent may invent, infer or simulate human approval.",
         "Record scope, actor role, decision, time, evidence refs and forbidden scope.",
         "A missing human decision is a blocker, not a soft warning.",
         "Human decisions must name the exact authority granted, denied or deferred; access, budget, legal and production approvals are separate decisions.",
+        "Deliver the decision package before asking for a decision: operator briefing package, APPROVAL_REQUEST, EVIDENCE_INDEX, OWNER_REVIEW, markdown/PDF assets and optional diagram/video/audio explainer slots.",
+        "If the decision package is missing or markdown-only, block as input/package not ready instead of asking the operator to approve, reject or waive.",
         "Never ask for approval to continue planning-only work, source resolution, method routing, specialist routing or internal worker coordination."
       ],
       "activation": {
@@ -2477,7 +2479,7 @@
       },
       "authority": {
         "may": [
-          "prepare approval packets",
+          "prepare complete operator decision packages",
           "record real decisions",
           "block missing approvals"
         ],
@@ -2485,6 +2487,8 @@
           "invent approvals",
           "approve on behalf of a human",
           "mutate product state",
+          "ask for approval before material is delivered",
+          "treat a chat summary or markdown-only file as a decision package",
           "present planning-only continuation or specialist routing as approval"
         ],
         "human_gate_required_when": [
@@ -2495,12 +2499,19 @@
         "allowed": [
           "decision record",
           "gate evidence",
+          "operator briefing package",
+          "approval request",
+          "evidence index",
+          "owner review",
+          "markdown/PDF delivery evidence",
           "Hermes Kanban"
         ],
         "forbidden": [
           "fake actor",
           "silent approval",
           "private decision leak",
+          "summary-only decision request",
+          "markdown-only decision package",
           "planning-only approval request"
         ],
         "runtime_notes": "This is a human-support profile. It records, never substitutes, human authority."
@@ -2508,6 +2519,12 @@
       "input_contract": {
         "required": [
           "human_gate_packet",
+          "operator_briefing_package",
+          "approval_request",
+          "evidence_index",
+          "owner_review",
+          "markdown_document",
+          "pdf_document",
           "security_scan_packet",
           "rollback_or_recovery",
           "access_capability",
@@ -2515,7 +2532,9 @@
           "waiver_request"
         ],
         "refuse_if_missing": [
-          "human_gate_packet"
+          "human_gate_packet",
+          "operator_briefing_package",
+          "pdf_document"
         ]
       },
       "output_contract": {
@@ -2527,15 +2546,26 @@
           "evidence refs",
           "approval scope",
           "decision actor role",
-          "durable runtime event"
+          "durable runtime event",
+          "operator briefing package ref",
+          "approval request ref",
+          "evidence index ref",
+          "owner review ref",
+          "PDF decision asset ref"
         ],
-        "done_definition": "A real human decision is recorded with scope and evidence, or the gate remains blocked."
+        "done_definition": "A complete operator decision package was delivered before the question and a real human decision is recorded with scope and evidence; otherwise the gate remains blocked as package/input not ready."
       },
       "evidence_contract": {
         "trust_floor": "product_specific",
         "required_refs": [
           "decision record",
-          "approval packet",
+          "operator briefing package",
+          "approval request",
+          "evidence index",
+          "owner review",
+          "markdown decision document",
+          "PDF decision document",
+          "optional diagram/video/audio explainer slot",
           "approval scope",
           "decision actor role",
           "durable runtime event"
@@ -2544,6 +2574,8 @@
           "agent approval",
           "implicit consent",
           "chat inference",
+          "summary-only chat request",
+          "markdown-only attachment",
           "approval for source resolution, method routing or specialist routing"
         ]
       },
@@ -2555,6 +2587,7 @@
       "handoff_contract": {
         "required_when": [
           "decision pending",
+          "decision package incomplete",
           "changes requested",
           "release packet"
         ],
@@ -2563,6 +2596,11 @@
           "scope",
           "actor role",
           "evidence refs",
+          "operator briefing package ref",
+          "approval request ref",
+          "evidence index ref",
+          "owner review ref",
+          "PDF decision asset ref",
           "required changes"
         ]
       },
@@ -2575,25 +2613,30 @@
         "must_record": [
           "what is being approved",
           "what is not approved",
-          "what evidence the human saw"
+          "what evidence the human saw",
+          "which PDF/markdown package was delivered before asking"
         ]
       },
       "failure_contract": {
         "retry_limit": 1,
-        "after_first_failure": "Keep the gate blocked until a real decision exists.",
-        "after_second_failure": "No retry path exists without human input.",
-        "after_third_failure": "Stop and preserve the blocked decision packet."
+        "after_first_failure": "If the package is incomplete, keep the gate blocked as package/input not ready and do not ask for approval.",
+        "after_second_failure": "No retry path exists without a complete package or exact human input.",
+        "after_third_failure": "Stop and preserve the blocked decision package with exact missing fields."
       },
       "promotion_contract": {
         "closed_when": [
           "decision record schema validates",
           "human actor is explicit",
-          "scope and evidence are complete"
+          "scope and evidence are complete",
+          "operator decision package was delivered before the decision question",
+          "PDF decision asset is referenced"
         ],
         "demote_when": [
           "approval is inferred",
           "actor is missing",
-          "scope is vague"
+          "scope is vague",
+          "decision package is summary-only",
+          "PDF/markdown material was not delivered first"
         ]
       },
       "public_safety_notes": "Use role names and public-safe evidence refs, not private personal identifiers."
