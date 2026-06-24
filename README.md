@@ -260,7 +260,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line. The latest public release
-is v1.4.0.
+is v1.5.0.
 
 It includes:
 
