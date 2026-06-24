@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/promise-implementation-map.schema.json",
+  "title": "Overkill Factory Promise Implementation Map",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "map_version",
+    "updated_at",
+    "status",
+    "rules",
+    "claims"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/promise-implementation-map.schema.json"
+    },
+    "record_type": { "const": "promise_implementation_map" },
+    "map_version": { "type": "string", "minLength": 2 },
+    "updated_at": { "type": "string", "minLength": 10 },
+    "status": {
+      "enum": ["current_public_kernel", "draft", "archived"]
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 12 }
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "public_promise",
+          "claim_level",
+          "documentation_refs",
+          "implementation_refs",
+          "proof_refs",
+          "boundary",
+          "boundary_refs"
+        ],
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "public_promise": { "type": "string", "minLength": 20 },
+          "claim_level": {
+            "enum": [
+              "local_contract_proof",
+              "runtime_integration_proof",
+              "public_release_proof",
+              "capability_routing_proof",
+              "operator_bridge_proof",
+              "bounded_process_proof"
+            ]
+          },
+          "documentation_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "implementation_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "proof_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "boundary": { "type": "string", "minLength": 30 },
+          "boundary_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

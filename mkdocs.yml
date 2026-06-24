@@ -38,6 +38,7 @@ nav:
       - Security Matrix: security/security-control-matrix.md
   - Release:
       - Validation And Release: operations/validation-and-release.md
+      - Promise To Implementation Audit: operations/promise-to-implementation.md
       - Fast Autonomy Lane: operations/fast-autonomy-lane.md
       - Parallel Execution And Status: operations/parallel-execution-and-status.md
       - Release Policy: operations/release-policy.md

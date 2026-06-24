@@ -13,7 +13,9 @@
     "docs/concepts/operator-journey.md",
     "docs/concepts/overkill-factory-method.md",
     "docs/getting-started/quickstart-hermes.md",
+    "docs/operations/promise-to-implementation.md",
     "docs/operations/validation-and-release.md",
+    "docs/promise-implementation-map.public.json",
     "docs/operator/overkill-factory-bridge.md",
     "docs/operator/overkill-factory-bridge-plugin.md",
     "docs/reference/cli.md",
@@ -23,6 +25,7 @@
     "templates/method-engine-registry.json",
     "templates/factory-operating-system-registry.json",
     "scripts/factoryctl.py",
+    "scripts/validate_promise_implementation_map.py",
     "scripts/hermes_runtime_proof.py"
   ],
   "published_check_policy": {
@@ -426,6 +429,7 @@
       "source_refs": [
         "scripts/release_integration_preflight.py",
         "scripts/worktree_release_inventory.py",
+        "scripts/validate_promise_implementation_map.py",
         "scripts/validate_public_surface_sync.py",
         "scripts/public_safety_scan.py",
         "scripts/secret_safety_scan.py",
@@ -443,6 +447,30 @@
       ]
     },
     {
+      "surface_id": "promise-to-implementation",
+      "path": "docs/operations/promise-to-implementation.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "docs/promise-implementation-map.public.json",
+        "schemas/promise-implementation-map.schema.json",
+        "scripts/validate_promise_implementation_map.py",
+        "tests/test_promise_implementation_map.py",
+        "README.md",
+        "README.pt-BR.md"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Every public promise must map to implementation, proof and boundary.",
+        "This audit does not replace Hermes runtime evidence",
+        "Solana AI Kit is the Solana domain brain; Quasar and Auditor are implementation or proof lanes"
+      ]
+    },
+    {
       "surface_id": "root-readme",
       "path": "README.md",
       "surface_type": "root_readme",
@@ -454,6 +482,8 @@
         "docs/operator/overkill-factory-bridge-plugin.md",
         "docs/visuals/README.md",
         "docs/public-surface.manifest.json",
+        "docs/operations/promise-to-implementation.md",
+        "docs/promise-implementation-map.public.json",
         "docs/visuals/overkill-factory-map-v1.0.1.html"
       ],
       "claim_checks": [
@@ -482,6 +512,8 @@
         "docs/operator/overkill-factory-bridge-plugin.md",
         "docs/visuals/README.md",
         "docs/public-surface.manifest.json",
+        "docs/operations/promise-to-implementation.md",
+        "docs/promise-implementation-map.public.json",
         "docs/visuals/overkill-factory-map-v1.0.1.html"
       ],
       "claim_checks": [

@@ -74,8 +74,8 @@ the card.
 | `frontend-builder` | hybrid | F12-F13 | Builds scoped screens, components, responsive states, wallet-facing UI and browser-testable product surfaces from Product Experience and Product Face contracts. Product Face still validates the result. |
 | `backend-api-builder` | hybrid | F12-F13 | Builds scoped API, service, validation, auth/session and server behavior with contract/API test evidence. |
 | `data-persistence-builder` | hybrid | F12-F13 | Builds schema, migration, storage and data-access changes with rollback and data-risk notes. |
-| `solana-quasar-builder` | hybrid | F12-F13 | Builds scoped Solana program work using Quasar. Anchor assumptions, mainnet deploys and real keys are forbidden. |
-| `solana-quasar-qa-engineer` | hybrid | F13/F15 | Runs Quasar/devnet/local behavior proof, negative tests, compute-unit checks and audit handoff notes. |
+| `solana-quasar-builder` | hybrid | F12-F13 | Builds scoped Solana program work after `solana-ai-kit-core` routing, using Quasar when that implementation lane is selected. Anchor assumptions, mainnet deploys and real keys are forbidden. |
+| `solana-quasar-qa-engineer` | hybrid | F13/F15 | Runs Quasar/devnet/local behavior proof, negative tests, compute-unit checks and audit handoff notes after Solana AI Kit routing is present. |
 | `wallet-transaction-builder` | hybrid | F12-F13 | Builds wallet connection, signing prompts and transaction states without touching real keys or funds. |
 | `integration-builder` | hybrid | F12-F13 | Connects approved frontend, backend, data, wallet and onchain surfaces into an end-to-end flow. |
 | `test-automation-builder` | hybrid | F12-F13/F18 | Turns acceptance criteria into repeatable unit, integration, E2E, visual or eval proof. |
@@ -104,7 +104,7 @@ the card.
 | `agentic-ai-security-specialist` | hybrid | F1/F7/F12/F14 | Covers prompt injection, tool misuse, browser risk, memory poisoning and excessive agency. |
 | `cloud-infra-security-specialist` | hybrid | F7/F14/F16 | Covers IAM, KMS, CI/CD, deploy, DNS, IaC, logs and rollback. |
 | `crypto-key-management-specialist` | hybrid | F7/F15/F16 | Covers secrets, signing, custody, cryptography and key lifecycle. It never touches real keys or funds. |
-| `solana-quasar-auditor` | hybrid | F7/F13/F15 | Runs or prepares Auditor evidence for Solana/Quasar work. Anchor assumptions are forbidden. |
+| `solana-quasar-auditor` | hybrid | F7/F13/F15 | Runs or prepares Auditor evidence for Solana/onchain work routed through `solana-ai-kit-core`; Quasar proof is required when the Quasar lane is selected. Anchor assumptions are forbidden. |
 | `supply-chain-gate` | closed/hybrid | F11/F13/F16 | Checks dependencies, CI, secret scan, SBOM/provenance and workflow risk. |
 | `detection-monitoring-worker` | closed/hybrid | F4/F16-F17 | Owns Data/Metrics planning and ensures logs, metrics, alerts, incident owner and rollback evidence exist. |
 
@@ -143,8 +143,10 @@ they get a machine-readable contract in `agents/worker-registry.public.json`.
 - A human-support worker records decisions; it cannot invent approval.
 - `implementation-worker` is fallback only. If a surface-specific builder
   matches, the fallback worker is not required.
-- Solana work uses `solana-quasar-builder`, `solana-quasar-qa-engineer` and
-  `solana-quasar-auditor`; build, QA and audit are separate.
+- Solana work first routes through `solana-ai-kit-core`. The
+  `solana-quasar-builder`, `solana-quasar-qa-engineer` and
+  `solana-quasar-auditor` IDs name the Quasar implementation/proof lane when
+  that lane applies; Solana AI Kit remains the domain brain.
 - Conceptual role names such as Method Router, Product Experience Router,
   Security Architect, Production Readiness, Access Capability and Factory
   Maturity Auditor are mapped to official workers in

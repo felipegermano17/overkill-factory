@@ -263,7 +263,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 é a linha atual de release do kernel público. A release pública mais
-recente é v1.5.1.
+recente é v1.5.4.
 
 Ela inclui:
 
@@ -289,6 +289,10 @@ público está completo o suficiente para instalar, inspecionar, validar e
 estender. Um produto criado pela fábrica ainda exige fonte real, Product SOT,
 execução de workers, evidência, revisões, human gates e prova própria de
 production readiness.
+As promessas públicas são rastreadas em
+`docs/operations/promise-to-implementation.md` e
+`docs/promise-implementation-map.public.json`; cada claim importante precisa
+apontar sua implementação, prova e limite.
 
 ## Leia Depois
 
@@ -307,6 +311,8 @@ production readiness.
 - `docs/agents/capability-packs.md`: regras de cobertura por tipo de produto.
 - `docs/control-tower/open-source-setup.md`: setup opcional de Control Tower.
 - `docs/operations/validation-and-release.md`: checklist de release.
+- `docs/operations/promise-to-implementation.md`: auditoria promessa-prova e
+  regras contra drift.
 - `docs/operations/fast-autonomy-lane.md`: limites da execução autônoma rápida.
 - `scripts/factory_no_idle_watchdog.py`: heartbeat de no-idle via Hermes cron
   para operação primária pelo Telegram.
@@ -337,6 +343,7 @@ Antes de publicar mudanças públicas:
 python scripts/validate_document_governance.py
 python scripts/validate_public_json_artifacts.py
 python scripts/validate_worker_profiles.py
+python scripts/validate_promise_implementation_map.py
 python scripts/validate_planning_bundles.py
 python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py

@@ -58,7 +58,9 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
         self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
         self.assertIn('the factory is not "a smart chat."', readme)
-        self.assertIn("v1.5.1", readme)
+        self.assertIn("v1.5.4", readme)
+        self.assertIn("docs/operations/promise-to-implementation.md", readme)
+        self.assertIn("docs/promise-implementation-map.public.json", readme)
         self.assertNotIn("Para você, como usuário leigo", readme)
         self.assertNotIn("## What It Does Not Do", readme)
 
@@ -138,9 +140,11 @@ class OpenSourceDocsTest(unittest.TestCase):
             "não um atalho de MVP",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
-            "v1.5.1",
+            "v1.5.4",
             "codex plugin marketplace add .",
             "codex plugin add overkill-factory-bridge@overkill-factory",
+            "docs/operations/promise-to-implementation.md",
+            "docs/promise-implementation-map.public.json",
             "docs/operator/overkill-factory-bridge.md",
             "docs/operator/overkill-factory-bridge-plugin.md",
             "fixtures/README.md",
@@ -164,6 +168,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/agents/capability-packs.md",
             "docs/control-tower/open-source-setup.md",
             "docs/operations/validation-and-release.md",
+            "docs/operations/promise-to-implementation.md",
             "docs/operations/release-policy.md",
             "docs/operations/troubleshooting.md",
             "docs/architecture/factory-operating-systems.md",
@@ -204,6 +209,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "plugins/overkill-factory-bridge/README.md",
             "docs/operator/overkill-factory-bridge.md",
             "docs/operator/overkill-factory-bridge-plugin.md",
+            "docs/operations/promise-to-implementation.md",
             "README.pt-BR.md",
         ]
 
@@ -561,6 +567,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "python -m unittest discover -s tests",
             "python scripts/validate_document_governance.py",
             "python scripts/validate_public_json_artifacts.py",
+            "python scripts/validate_promise_implementation_map.py",
             "python scripts/validate_worker_profiles.py",
             "python scripts/secret_safety_scan.py",
             "python scripts/public_safety_scan.py",

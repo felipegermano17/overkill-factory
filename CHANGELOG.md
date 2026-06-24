@@ -7,7 +7,12 @@ public releases.
 
 ## Unreleased
 
-Nothing yet.
+- Add a public promise-to-implementation map, validator and CI coverage so
+  README/docs/release claims must point to implementation, proof and explicit
+  boundaries.
+- Correct Portuguese README release state to v1.5.4 and clarify that Solana AI
+  Kit is the domain brain while Quasar/Auditor remain implementation or proof
+  lanes.
 
 ## 1.5.4 - 2026-06-24
 

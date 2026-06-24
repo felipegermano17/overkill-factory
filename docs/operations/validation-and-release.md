@@ -13,6 +13,7 @@ factoryctl run minimal
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/validate_public_json_artifacts.py
+python scripts/validate_promise_implementation_map.py
 python scripts/validate_planning_bundles.py
 python scripts/validate_public_surface_sync.py
 python scripts/validate_worker_profiles.py
@@ -151,6 +152,7 @@ python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/validate_worker_profiles.py
 python scripts/validate_public_json_artifacts.py
+python scripts/validate_promise_implementation_map.py
 python scripts/validate_planning_bundles.py
 python scripts/validate_public_surface_sync.py
 python scripts/public_safety_scan.py

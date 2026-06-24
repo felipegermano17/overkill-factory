@@ -66,6 +66,11 @@ before it can satisfy closure. Solana AI Kit guides the domain work; it does
 not replace Hermes, Receipt Five, Factory gates, signer rules or human
 approval.
 
+Do not read `solana-quasar-*` worker ids as the official Solana brain. Those
+ids name the Quasar implementation and proof lane when that lane applies.
+Solana AI Kit remains the routing/domain brain above Quasar, Auditor, devnet,
+remote proof and security gates.
+
 ## Template Packs
 
 These packs are recognized but not executable by default:

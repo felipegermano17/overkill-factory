@@ -287,6 +287,10 @@ That claim is intentionally scoped. Factory v1 means the public kernel is
 complete enough to install, inspect, validate and extend. A product built by the
 factory still needs its own source material, Product SOT, worker execution,
 evidence, reviews, human gates and production readiness proof.
+Public promises are tracked in
+`docs/operations/promise-to-implementation.md` and
+`docs/promise-implementation-map.public.json`; each major claim must name its
+implementation, proof and boundary.
 
 ## Read Next
 
@@ -309,6 +313,8 @@ evidence, reviews, human gates and production readiness proof.
 - `docs/agents/capability-packs.md`: product-type coverage rules.
 - `docs/control-tower/open-source-setup.md`: optional Control Tower setup.
 - `docs/operations/validation-and-release.md`: release validation checklist.
+- `docs/operations/promise-to-implementation.md`: promise-to-proof audit and
+  drift prevention rules.
 - `docs/operations/fast-autonomy-lane.md`: fast autonomous execution limits.
 - `scripts/factory_no_idle_watchdog.py`: Hermes-cron no-idle heartbeat for
   Telegram-first operation.
@@ -339,6 +345,7 @@ Before publishing public changes:
 python scripts/validate_document_governance.py
 python scripts/validate_public_json_artifacts.py
 python scripts/validate_worker_profiles.py
+python scripts/validate_promise_implementation_map.py
 python scripts/validate_planning_bundles.py
 python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
