@@ -104,6 +104,10 @@ This gives the factory a heartbeat without giving the watchdog authority over
 the product. It may create safe remediation work and trigger native dispatch. It
 must not close human gates, execute factory work as the manager, or approve
 production, mainnet, funds, signing, secrets, billing or destructive actions.
+When the adapter returns `input_required`, the Telegram operator should ask for
+the exact missing inputs instead of saying there is no human action. This is not
+approval bureaucracy; it is source/input collection for a blocked dependency
+chain.
 
 Archive obsolete boards or pass `--exclude-board <slug>` for abandoned products.
 The watchdog should keep active factory runs moving; it should not revive a

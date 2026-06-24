@@ -171,12 +171,19 @@ def emit_operator_event(
     *,
     board: str,
     status: str,
+    requires_user: bool,
     summary: str,
     inbox_dir: Path,
     runner: Runner = default_runner,
 ) -> None:
-    event_type = "human_gate_required" if status == "human_gate_required" else "worker_attention_required"
-    severity = "requires_user" if status == "human_gate_required" else "notice"
+    event_type = (
+        "human_gate_required"
+        if status == "human_gate_required"
+        else "decision_requested"
+        if requires_user
+        else "worker_attention_required"
+    )
+    severity = "requires_user" if requires_user else "notice"
     argv = [
         sys.executable,
         str(ROOT / "scripts" / "factory_bridge.py"),
@@ -196,7 +203,7 @@ def emit_operator_event(
         "--ref",
         f"hermes-board:{board}",
     ]
-    if status == "human_gate_required":
+    if requires_user:
         argv.append("--requires-user")
     completed = runner(argv)
     if completed.returncode != 0:
@@ -222,6 +229,11 @@ def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str,
             if isinstance(value, dict) and key in {"ready", "running", "todo", "blocked"}
         },
         "remediation_task_created": bool(no_idle_result.get("remediation_task_id")),
+        "human_gate_required": state.get("human_gate_required") is True,
+        "operator_input_required": state.get("operator_input_required") is True,
+        "human_gate_task_refs": sorted(state.get("human_gate_task_refs") or []),
+        "operator_input_task_refs": sorted(state.get("operator_input_task_refs") or []),
+        "dependency_blocker_task_refs": sorted(state.get("dependency_blocker_task_refs") or []),
         "dispatch": dispatch_state,
         "spawned_count": len(spawned) if isinstance(spawned, list) else 0,
     }
@@ -232,7 +244,17 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
     counts = signature.get("counts") if isinstance(signature.get("counts"), dict) else {}
     spawned = signature.get("spawned_count") or 0
     if status == "human_gate_required":
+        if signature.get("operator_input_required") is True:
+            return (
+                f"[Overkill Factory] {board}: gate humano real pendente e insumos bloqueadores faltando. "
+                f"todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
+            )
         return f"[Overkill Factory] {board}: gate humano real pendente."
+    if status == "input_required":
+        return (
+            f"[Overkill Factory] {board}: fila presa por insumos faltantes; "
+            f"acao do operador requerida. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
+        )
     if status == "remediation_required":
         return (
             f"[Overkill Factory] {board}: no-idle detectado; remediação segura "
@@ -289,10 +311,21 @@ def process_board(
     if previous == signature:
         return None
     summary = summarize_board(board, signature)
-    if emit_events and signature.get("status") in {"human_gate_required", "remediation_required", "dependency_gated"}:
+    requires_user = (
+        signature.get("human_gate_required") is True
+        or signature.get("operator_input_required") is True
+        or signature.get("status") == "input_required"
+    )
+    if emit_events and signature.get("status") in {
+        "human_gate_required",
+        "input_required",
+        "remediation_required",
+        "dependency_gated",
+    }:
         emit_operator_event(
             board=board,
             status=str(signature.get("status") or ""),
+            requires_user=requires_user,
             summary=summary,
             inbox_dir=inbox_dir,
             runner=runner,

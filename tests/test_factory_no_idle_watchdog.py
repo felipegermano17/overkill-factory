@@ -196,6 +196,49 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         self.assertIn("fila presa por dependências bloqueadas", output)
         self.assertNotIn("remediação segura criada", output)
 
+    def test_watchdog_input_required_emits_user_decision_event_without_dispatch(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": None,
+            "no_idle_state": {
+                "status": "input_required",
+                "classification": "todo_dependency_gated_by_missing_operator_inputs",
+                "operator_input_required": True,
+                "operator_input_task_refs": ["kanban:redacted-blocker"],
+                "state": {
+                    "todo": {"count": 3},
+                    "blocked": {"count": 2},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--dispatch",
+                        "--emit-events",
+                        "--state-file",
+                        str(Path(tmp) / "state.json"),
+                        "--inbox-dir",
+                        str(Path(tmp) / "inbox"),
+                    ],
+                    runner=fake,
+                )
+
+        output = buffer.getvalue()
+        self.assertIn("fila presa por insumos faltantes", output)
+        self.assertFalse(any(len(call) > 2 and call[2] == "dispatch" for call in fake.calls))
+        emit_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "emit-event")
+        self.assertIn("--requires-user", emit_call)
+        self.assertIn("decision_requested", emit_call)
+
     def test_human_gate_emits_event_without_dispatch(self) -> None:
         fake = FakeRunner()
         fake.no_idle_payloads["product-alpha"] = {

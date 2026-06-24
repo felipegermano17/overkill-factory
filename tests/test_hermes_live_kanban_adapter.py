@@ -3835,8 +3835,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             "status": "blocked",
             "assignee": "supply-chain-gate",
             "title": "Supply-chain target path blocker",
-            "body": "missing target_repo_paths and bounded scan scope",
-            "events": [{"kind": "blocked", "payload": {"reason": "missing target inputs"}}],
+            "body": "blocked by unresolved upstream worker result",
+            "events": [{"kind": "blocked", "payload": {"reason": "upstream worker result is still blocked"}}],
         }
         fake.tasks[todo_id] = {
             "id": todo_id,
@@ -3860,6 +3860,82 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_reports_input_required_without_generic_remediation(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "block001"
+        todo_id = "t_" + "todo0001"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "supply-chain-gate",
+            "title": "Supply-chain target path blocker",
+            "body": "missing target_repo_paths and bounded scan scope",
+            "events": [{"kind": "blocked", "payload": {"reason": "missing exact target inputs"}}],
+        }
+        fake.tasks[todo_id] = {
+            "id": todo_id,
+            "status": "todo",
+            "assignee": "handoff-packer",
+            "title": "Packet that depends on blocked supply-chain evidence",
+            "body": "{}",
+            "parents": [blocker_id],
+            "events": [],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "input_required")
+        self.assertEqual(state["classification"], "todo_dependency_gated_by_missing_operator_inputs")
+        self.assertFalse(state["human_gate_required"])
+        self.assertTrue(state["operator_input_required"])
+        self.assertFalse(state["remediation_required"])
+        self.assertEqual(state["operator_input_task_refs"], ["kanban:<redacted>"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_reports_parallel_human_gate_and_input_blockers(self) -> None:
+        gate_id = "t_" + "gate0001"
+        blocker_id = "t_" + "block001"
+        todo_id = "t_" + "todo0001"
+        state = adapter.classify_no_idle_state(
+            {
+                "ready": [],
+                "running": [],
+                "todo": [
+                    {
+                        "id": todo_id,
+                        "status": "todo",
+                        "parents": [blocker_id],
+                    }
+                ],
+                "blocked": [
+                    {
+                        "id": gate_id,
+                        "status": "blocked",
+                        "assignee": "human-gate-clerk",
+                        "body": "human gate: awaiting human decision",
+                    },
+                    {
+                        "id": blocker_id,
+                        "status": "blocked",
+                        "assignee": "supply-chain-gate",
+                        "body": "missing target_repo_paths and bounded scan scope",
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(state["status"], "human_gate_required")
+        self.assertEqual(state["classification"], "todo_dependency_gated_with_parallel_human_gate_blocker")
+        self.assertTrue(state["human_gate_required"])
+        self.assertTrue(state["operator_input_required"])
+        self.assertEqual(state["human_gate_task_refs"], [gate_id])
+        self.assertEqual(state["operator_input_task_refs"], [blocker_id])
+        self.assertFalse(state["remediation_required"])
+
     def test_no_idle_dependency_graph_accepts_parent_id_shape(self) -> None:
         blocker_id = "t_" + "block001"
         todo_id = "t_" + "todo0001"
@@ -3879,7 +3955,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                         "id": blocker_id,
                         "status": "blocked",
                         "assignee": "supply-chain-gate",
-                        "body": "missing exact target inputs",
+                        "body": "blocked by unresolved upstream worker result",
                     }
                 ],
             }

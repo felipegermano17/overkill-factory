@@ -708,10 +708,30 @@ def apply_completion_artifact_policy(
 
 def task_record_text(record: dict[str, Any]) -> str:
     parts: list[str] = []
-    for key in ("title", "name", "summary", "assignee", "status", "reason", "blocked_reason", "body"):
+    for key in (
+        "title",
+        "name",
+        "summary",
+        "latest_summary",
+        "assignee",
+        "status",
+        "reason",
+        "blocked_reason",
+        "body",
+    ):
         value = record.get(key)
         if value is not None:
             parts.append(str(value))
+    for item in record.get("comments") or []:
+        if isinstance(item, dict):
+            parts.append(str(item.get("body") or item.get("summary") or item.get("reason") or ""))
+        else:
+            parts.append(str(item))
+    for item in record.get("events") or []:
+        if isinstance(item, dict):
+            parts.append(str(item.get("reason") or item.get("payload") or item.get("type") or item.get("kind") or ""))
+        else:
+            parts.append(str(item))
     return " ".join(parts).lower()
 
 
@@ -732,6 +752,42 @@ def is_human_gate_blocker(record: dict[str, Any]) -> bool:
             "operator decision",
         )
     )
+
+
+def is_operator_input_blocker(record: dict[str, Any]) -> bool:
+    text = task_record_text(record)
+    input_markers = (
+        "missing input",
+        "missing inputs",
+        "missing required",
+        "missing exact",
+        "missing target",
+        "missing public-safe",
+        "required input",
+        "required inputs",
+        "needed input",
+        "needed inputs",
+        "provide exact",
+        "provide requested",
+        "cannot be completed",
+        "cannot complete",
+        "target_repo_paths",
+        "target url",
+        "target_url",
+        "prototype artifact",
+        "package manifests",
+        "scan scope",
+        "authority/custody policy",
+        "custody/signing policy",
+        "mint address",
+        "token program id",
+        "insumo",
+        "insumos",
+        "faltante",
+        "faltantes",
+        "fornecer",
+    )
+    return any(marker in text for marker in input_markers)
 
 
 def no_idle_parent_refs(record: dict[str, Any]) -> list[str]:
@@ -899,10 +955,14 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "blocked": False,
             "remediation_required": False,
             "human_gate_required": False,
+            "operator_input_required": False,
             "next_action": "no no-idle action required",
             "state": state,
         }
     human_gate_blockers = [item for item in blocked if is_human_gate_blocker(item)]
+    human_gate_refs = sorted(task_record_id(item) for item in human_gate_blockers if task_record_id(item))
+    operator_input_blockers = [item for item in blocked if is_operator_input_blocker(item)]
+    operator_input_refs = sorted(task_record_id(item) for item in operator_input_blockers if task_record_id(item))
     if blocked and len(human_gate_blockers) == len(blocked) and not todo:
         return {
             "status": "human_gate_required",
@@ -910,7 +970,9 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "blocked": True,
             "remediation_required": False,
             "human_gate_required": True,
-            "human_gate_task_refs": [task_record_id(item) for item in human_gate_blockers if task_record_id(item)],
+            "operator_input_required": bool(operator_input_refs),
+            "human_gate_task_refs": human_gate_refs,
+            "operator_input_task_refs": operator_input_refs,
             "human_decision_request": {
                 "request_type": "factory_human_gate_decision",
                 "reason": "All unfinished visible work is blocked on explicit human-gate tasks.",
@@ -927,28 +989,67 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         human_gate_dependency_refs = [
             ref for ref in blocker_refs if is_human_gate_blocker(blocked_by_task_id.get(ref, {}))
         ]
-        if human_gate_dependency_refs:
+        input_dependency_refs = [
+            ref for ref in blocker_refs if is_operator_input_blocker(blocked_by_task_id.get(ref, {}))
+        ]
+        if human_gate_dependency_refs or human_gate_refs:
             return {
                 "status": "human_gate_required",
-                "classification": "todo_dependency_gated_by_human_gate_blocker",
+                "classification": (
+                    "todo_dependency_gated_by_human_gate_blocker"
+                    if human_gate_dependency_refs
+                    else "todo_dependency_gated_with_parallel_human_gate_blocker"
+                ),
                 "blocked": True,
                 "remediation_required": False,
                 "human_gate_required": True,
-                "human_gate_task_refs": human_gate_dependency_refs,
+                "operator_input_required": bool(input_dependency_refs or operator_input_refs),
+                "human_gate_task_refs": sorted(set(human_gate_dependency_refs + human_gate_refs)),
+                "operator_input_task_refs": sorted(set(input_dependency_refs + operator_input_refs)),
                 "dependency_gated_task_refs": sorted(dependency_blockers),
                 "dependency_blocker_task_refs": blocker_refs,
                 "human_decision_request": {
                     "request_type": "factory_human_gate_decision",
                     "reason": (
-                        "Visible todo work is dependency-gated behind at least one explicit "
-                        "human-gate blocker; generic no-idle remediation would only create churn."
+                        "The board has an explicit human-gate blocker while visible todo work is "
+                        "dependency-gated; generic no-idle remediation would only create churn."
                     ),
                     "required_response": (
                         "approve, reject, request changes, or provide the exact scoped input "
                         "requested by the human-gate artifact"
                     ),
                 },
-                "next_action": "ask the operator for the current human-gate decision instead of creating another remediation card",
+                "operator_input_request": {
+                    "request_type": "factory_blocker_input",
+                    "reason": "At least one dependency blocker also appears to require exact operator/source input.",
+                    "required_response": "provide the exact missing inputs, or ask the factory to re-read a named source artifact",
+                }
+                if input_dependency_refs or operator_input_refs
+                else None,
+                "next_action": "ask the operator for the current human-gate decision and any exact missing blocker inputs; do not create another generic remediation card",
+                "state": state,
+            }
+        if input_dependency_refs:
+            return {
+                "status": "input_required",
+                "classification": "todo_dependency_gated_by_missing_operator_inputs",
+                "blocked": True,
+                "remediation_required": False,
+                "human_gate_required": False,
+                "operator_input_required": True,
+                "operator_input_task_refs": input_dependency_refs,
+                "dependency_gated_task_refs": sorted(dependency_blockers),
+                "dependency_blocker_task_refs": blocker_refs,
+                "operator_input_request": {
+                    "request_type": "factory_blocker_input",
+                    "reason": (
+                        "Visible todo work is dependency-gated behind blockers that ask for "
+                        "exact missing inputs. This is not a generic no-idle gap and not an "
+                        "approval gate."
+                    ),
+                    "required_response": "provide the exact missing inputs, or ask the factory to re-read a named source artifact",
+                },
+                "next_action": "ask the operator/source pipeline for the exact blocker inputs; do not create generic no-idle remediation",
                 "state": state,
             }
         return {
@@ -957,6 +1058,8 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "blocked": True,
             "remediation_required": False,
             "human_gate_required": False,
+            "operator_input_required": False,
+            "human_gate_task_refs": human_gate_refs,
             "dependency_gated_task_refs": sorted(dependency_blockers),
             "dependency_blocker_task_refs": blocker_refs,
             "next_action": "surface the specific blocker chain or route a targeted blocker repair; do not create generic no-idle remediation",
@@ -968,6 +1071,9 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         "blocked": True,
         "remediation_required": True,
         "human_gate_required": False,
+        "operator_input_required": bool(operator_input_refs),
+        "operator_input_task_refs": operator_input_refs,
+        "human_gate_task_refs": human_gate_refs,
         "remediation_reason": (
             "The board has unfinished work but native dispatch has no ready task to spawn "
             "and the idle state is not explained solely by explicit human gates."

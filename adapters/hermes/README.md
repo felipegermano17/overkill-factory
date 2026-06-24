@@ -398,11 +398,13 @@ python adapters/hermes/live_kanban_adapter.py no-idle \
   --create-remediation
 ```
 
-The controller never dispatches workers. It either reports that native dispatch
-is available, returns a structured human decision request when explicit human
-gates are the only blockers, or creates one safe `factory_no_idle_remediation`
-card for `factory-orchestrator`. The next worker launch still belongs to native
-Hermes dispatch.
+The controller never dispatches workers. It reports native dispatch when ready
+work exists, returns a structured human decision request when explicit human
+gates are present, returns `input_required` when blocked ancestors are asking
+for exact operator/source inputs, returns `dependency_gated` for non-generic
+blocker chains, or creates one safe `factory_no_idle_remediation` card for
+`factory-orchestrator` only when the idle state is genuinely unexplained. The
+next worker launch still belongs to native Hermes dispatch.
 
 For a Telegram-first production operator, run the cron-friendly watchdog from
 Hermes instead of waiting for the operator to ask for status:
@@ -421,6 +423,13 @@ classification and uses native `hermes kanban dispatch` only when the adapter
 sets `native_dispatch_required_next=true`. Repeated identical states are
 deduplicated through `.tmp/factory-runs/no-idle-watchdog-state.json` so Telegram
 does not become noisy.
+
+`input_required` is not a human approval gate. It means the factory found a
+specific blocker asking for exact missing inputs, such as target repo paths,
+package/scan scope, prototype URL/artifact, custody policy or public onchain
+identifiers. The operator should provide those inputs or name the source
+artifact the factory must re-read; the watchdog must not keep creating generic
+remediation cards for the same blocker chain.
 
 Before using `--all-nonempty-boards`, archive obsolete boards or exclude them
 explicitly. A board left unarchived is treated as a live factory run.

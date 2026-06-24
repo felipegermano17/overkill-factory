@@ -7,7 +7,11 @@ public releases.
 
 ## Unreleased
 
-Nothing yet.
+- Fix Hermes no-idle classification so dependency-gated `todo` chains behind
+  blocked ancestors do not create generic remediation loops.
+- Add explicit `input_required`/`operator_input_required` no-idle handling so
+  Telegram-first operators are asked for exact missing inputs instead of being
+  told the factory has no human action.
 
 ## 1.5.1 - 2026-06-24
 
