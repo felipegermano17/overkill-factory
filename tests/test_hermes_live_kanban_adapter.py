@@ -3782,6 +3782,138 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_reports_dependency_gated_todo_behind_human_gate_without_remediation(self) -> None:
+        fake = FakeHermes()
+        gate_id = "t_" + "gate0001"
+        mid_id = "t_" + "todo0001"
+        child_id = "t_" + "todo0002"
+        fake.tasks[gate_id] = {
+            "id": gate_id,
+            "status": "blocked",
+            "assignee": "human-gate-clerk",
+            "title": "Human architecture gate",
+            "body": json.dumps({"marker": "human_gate", "reason": "awaiting human decision"}),
+            "events": [{"kind": "blocked", "payload": {"reason": "human gate"}}],
+        }
+        fake.tasks[mid_id] = {
+            "id": mid_id,
+            "status": "todo",
+            "assignee": "handoff-packer",
+            "title": "Prepare gate packet after human gate",
+            "body": "{}",
+            "parents": [gate_id],
+            "events": [],
+        }
+        fake.tasks[child_id] = {
+            "id": child_id,
+            "status": "todo",
+            "assignee": "independent-reviewer",
+            "title": "Review packet after preparation",
+            "body": "{}",
+            "parents": [mid_id],
+            "events": [],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "human_gate_required")
+        self.assertEqual(state["classification"], "todo_dependency_gated_by_human_gate_blocker")
+        self.assertTrue(state["human_gate_required"])
+        self.assertFalse(state["remediation_required"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_reports_dependency_gated_todo_without_generic_remediation(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "block001"
+        todo_id = "t_" + "todo0001"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "supply-chain-gate",
+            "title": "Supply-chain target path blocker",
+            "body": "missing target_repo_paths and bounded scan scope",
+            "events": [{"kind": "blocked", "payload": {"reason": "missing target inputs"}}],
+        }
+        fake.tasks[todo_id] = {
+            "id": todo_id,
+            "status": "todo",
+            "assignee": "handoff-packer",
+            "title": "Packet that depends on blocked supply-chain evidence",
+            "body": "{}",
+            "parents": [blocker_id],
+            "events": [],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "dependency_gated")
+        self.assertEqual(state["classification"], "todo_dependency_gated_by_blocked_ancestors")
+        self.assertFalse(state["human_gate_required"])
+        self.assertFalse(state["remediation_required"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_dependency_graph_accepts_parent_id_shape(self) -> None:
+        blocker_id = "t_" + "block001"
+        todo_id = "t_" + "todo0001"
+        state = adapter.classify_no_idle_state(
+            {
+                "ready": [],
+                "running": [],
+                "todo": [
+                    {
+                        "id": todo_id,
+                        "status": "todo",
+                        "parents": [{"parent_id": blocker_id}],
+                    }
+                ],
+                "blocked": [
+                    {
+                        "id": blocker_id,
+                        "status": "blocked",
+                        "assignee": "supply-chain-gate",
+                        "body": "missing exact target inputs",
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(state["status"], "dependency_gated")
+        self.assertEqual(state["dependency_blocker_task_refs"], [blocker_id])
+
+    def test_no_idle_does_not_hide_unidentified_todo_as_dependency_gated(self) -> None:
+        blocker_id = "t_" + "block001"
+        state = adapter.classify_no_idle_state(
+            {
+                "ready": [],
+                "running": [],
+                "todo": [
+                    {
+                        "status": "todo",
+                        "parents": [blocker_id],
+                    }
+                ],
+                "blocked": [
+                    {
+                        "id": blocker_id,
+                        "status": "blocked",
+                        "assignee": "supply-chain-gate",
+                        "body": "missing exact target inputs",
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertTrue(state["remediation_required"])
+
     def test_enforce_done_projects_completion_artifact_before_main_complete(self) -> None:
         fake = FakeHermes()
         fake.tasks[MAIN_TASK_ID] = {"id": MAIN_TASK_ID, "status": "ready", "events": [], "comments": []}

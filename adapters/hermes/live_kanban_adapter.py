@@ -734,6 +734,127 @@ def is_human_gate_blocker(record: dict[str, Any]) -> bool:
     )
 
 
+def no_idle_parent_refs(record: dict[str, Any]) -> list[str]:
+    raw_parents = record.get("parents") or record.get("parent_ids") or []
+    if not isinstance(raw_parents, list):
+        return []
+    refs: list[str] = []
+    for parent in raw_parents:
+        if isinstance(parent, dict):
+            ref = str(parent.get("id") or parent.get("task_id") or parent.get("parent_id") or "").strip()
+        else:
+            ref = str(parent or "").strip()
+        if ref:
+            refs.append(ref)
+    return refs
+
+
+def no_idle_status_by_task_id(rows: dict[str, list[dict[str, Any]]]) -> dict[str, str]:
+    status_by_id: dict[str, str] = {}
+    for status, items in rows.items():
+        for item in items:
+            task_id = task_record_id(item)
+            if task_id:
+                status_by_id[task_id] = str(item.get("status") or status).strip().lower() or status
+    return status_by_id
+
+
+def no_idle_parent_map(rows: dict[str, list[dict[str, Any]]]) -> dict[str, list[str]]:
+    parent_map: dict[str, list[str]] = {}
+    for items in rows.values():
+        for item in items:
+            task_id = task_record_id(item)
+            if task_id:
+                parent_map[task_id] = no_idle_parent_refs(item)
+    return parent_map
+
+
+def blocked_ancestor_refs(
+    task_id: str,
+    *,
+    parent_map: dict[str, list[str]],
+    status_by_id: dict[str, str],
+    seen: set[str] | None = None,
+) -> set[str]:
+    if seen is None:
+        seen = set()
+    if task_id in seen:
+        return set()
+    seen.add(task_id)
+    blockers: set[str] = set()
+    for parent_id in parent_map.get(task_id, []):
+        parent_status = status_by_id.get(parent_id)
+        if parent_status == "blocked":
+            blockers.add(parent_id)
+            continue
+        if parent_status in {"todo", "ready", "running"}:
+            blockers.update(
+                blocked_ancestor_refs(
+                    parent_id,
+                    parent_map=parent_map,
+                    status_by_id=status_by_id,
+                    seen=seen,
+                )
+            )
+    return blockers
+
+
+def dependency_gated_todo_blockers(
+    todo: list[dict[str, Any]],
+    rows: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[str]]:
+    status_by_id = no_idle_status_by_task_id(rows)
+    parent_map = no_idle_parent_map(rows)
+    blockers_by_todo: dict[str, list[str]] = {}
+    for item in todo:
+        task_id = task_record_id(item)
+        if not task_id:
+            continue
+        blockers = sorted(
+            blocked_ancestor_refs(
+                task_id,
+                parent_map=parent_map,
+                status_by_id=status_by_id,
+            )
+        )
+        if blockers:
+            blockers_by_todo[task_id] = blockers
+    return blockers_by_todo
+
+
+def enrich_no_idle_rows(
+    *,
+    hermes_bin: str,
+    board: str,
+    rows: dict[str, list[dict[str, Any]]],
+    runner: Runner,
+) -> dict[str, list[dict[str, Any]]]:
+    enriched: dict[str, list[dict[str, Any]]] = {status: list(items) for status, items in rows.items()}
+    if rows.get("ready") or rows.get("running"):
+        return enriched
+    for status in ("todo", "blocked"):
+        next_items: list[dict[str, Any]] = []
+        for item in rows.get(status, []):
+            task_id = task_record_id(item)
+            if not task_id:
+                next_items.append(item)
+                continue
+            shown = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+            task = task_readback_task(shown)
+            merged = dict(item)
+            for key in ("id", "task_id", "title", "body", "assignee", "status", "priority", "result", "summary"):
+                if task.get(key) is not None and merged.get(key) is None:
+                    merged[key] = task.get(key)
+            if shown.get("latest_summary") is not None:
+                merged["latest_summary"] = shown.get("latest_summary")
+            merged["parents"] = task_readback_parents(shown)
+            merged["comments"] = task_readback_comments(shown)[-3:]
+            merged["events"] = task_readback_events(shown)[-5:]
+            next_items.append(merged)
+        enriched[status] = next_items
+    return enriched
+
+
 def summarize_no_idle_rows(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
     return {
         status: {
@@ -796,6 +917,49 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
                 "required_response": "approve, reject, waive, revise scope, or provide requested input in the human-gate artifact",
             },
             "next_action": "ask the operator for the human-gate decision",
+            "state": state,
+        }
+    dependency_blockers = dependency_gated_todo_blockers(todo, rows)
+    identified_todo = [item for item in todo if task_record_id(item)]
+    if todo and len(identified_todo) == len(todo) and len(dependency_blockers) == len(identified_todo):
+        blocked_by_task_id = {task_record_id(item): item for item in blocked if task_record_id(item)}
+        blocker_refs = sorted({ref for refs in dependency_blockers.values() for ref in refs})
+        human_gate_dependency_refs = [
+            ref for ref in blocker_refs if is_human_gate_blocker(blocked_by_task_id.get(ref, {}))
+        ]
+        if human_gate_dependency_refs:
+            return {
+                "status": "human_gate_required",
+                "classification": "todo_dependency_gated_by_human_gate_blocker",
+                "blocked": True,
+                "remediation_required": False,
+                "human_gate_required": True,
+                "human_gate_task_refs": human_gate_dependency_refs,
+                "dependency_gated_task_refs": sorted(dependency_blockers),
+                "dependency_blocker_task_refs": blocker_refs,
+                "human_decision_request": {
+                    "request_type": "factory_human_gate_decision",
+                    "reason": (
+                        "Visible todo work is dependency-gated behind at least one explicit "
+                        "human-gate blocker; generic no-idle remediation would only create churn."
+                    ),
+                    "required_response": (
+                        "approve, reject, request changes, or provide the exact scoped input "
+                        "requested by the human-gate artifact"
+                    ),
+                },
+                "next_action": "ask the operator for the current human-gate decision instead of creating another remediation card",
+                "state": state,
+            }
+        return {
+            "status": "dependency_gated",
+            "classification": "todo_dependency_gated_by_blocked_ancestors",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "dependency_gated_task_refs": sorted(dependency_blockers),
+            "dependency_blocker_task_refs": blocker_refs,
+            "next_action": "surface the specific blocker chain or route a targeted blocker repair; do not create generic no-idle remediation",
             "state": state,
         }
     return {
@@ -6146,6 +6310,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         )
         for status in ("ready", "running", "todo", "blocked")
     }
+    rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
     classification = classify_no_idle_state(rows)
     remediation_task_id: str | None = None
     if classification.get("remediation_required") and args.create_remediation:

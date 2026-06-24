@@ -221,7 +221,7 @@ def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str,
             for key, value in counts.items()
             if isinstance(value, dict) and key in {"ready", "running", "todo", "blocked"}
         },
-        "remediation_task_id": no_idle_result.get("remediation_task_id"),
+        "remediation_task_created": bool(no_idle_result.get("remediation_task_id")),
         "dispatch": dispatch_state,
         "spawned_count": len(spawned) if isinstance(spawned, list) else 0,
     }
@@ -237,6 +237,11 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
         return (
             f"[Overkill Factory] {board}: no-idle detectado; remediação segura "
             f"criada/confirmada. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
+        )
+    if status == "dependency_gated":
+        return (
+            f"[Overkill Factory] {board}: fila presa por dependências bloqueadas; "
+            f"sem remediação genérica. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
         )
     if status == "dispatch_available" or spawned:
         return f"[Overkill Factory] {board}: dispatch nativo acionado; spawned={spawned}."
@@ -284,7 +289,7 @@ def process_board(
     if previous == signature:
         return None
     summary = summarize_board(board, signature)
-    if emit_events and signature.get("status") in {"human_gate_required", "remediation_required"}:
+    if emit_events and signature.get("status") in {"human_gate_required", "remediation_required", "dependency_gated"}:
         emit_operator_event(
             board=board,
             status=str(signature.get("status") or ""),

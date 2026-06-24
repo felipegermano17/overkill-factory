@@ -139,6 +139,63 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         self.assertIn("workers em execução", first.getvalue())
         self.assertEqual(second.getvalue(), "")
 
+    def test_watchdog_dedupes_same_remediation_state_with_different_task_id(self) -> None:
+        fake = FakeRunner()
+        payload = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": "kanban:redacted-a",
+            "no_idle_state": {
+                "status": "remediation_required",
+                "classification": "unfinished_work_without_ready_running_or_human_gate_only_block",
+                "state": {
+                    "todo": {"count": 3},
+                    "blocked": {"count": 2},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        fake.no_idle_payloads["product-alpha"] = payload
+        with tempfile.TemporaryDirectory() as tmp:
+            state_file = Path(tmp) / "state.json"
+            first = io.StringIO()
+            second = io.StringIO()
+            with redirect_stdout(first):
+                watchdog.main(["--board", "product-alpha", "--state-file", str(state_file)], runner=fake)
+            payload["remediation_task_id"] = "kanban:redacted-b"
+            with redirect_stdout(second):
+                watchdog.main(["--board", "product-alpha", "--state-file", str(state_file)], runner=fake)
+
+        self.assertIn("no-idle detectado", first.getvalue())
+        self.assertEqual(second.getvalue(), "")
+
+    def test_watchdog_summarizes_dependency_gated_without_remediation_language(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": None,
+            "no_idle_state": {
+                "status": "dependency_gated",
+                "classification": "todo_dependency_gated_by_blocked_ancestors",
+                "state": {
+                    "todo": {"count": 3},
+                    "blocked": {"count": 2},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                watchdog.main(["--board", "product-alpha", "--state-file", str(Path(tmp) / "state.json")], runner=fake)
+
+        output = buffer.getvalue()
+        self.assertIn("fila presa por dependências bloqueadas", output)
+        self.assertNotIn("remediação segura criada", output)
+
     def test_human_gate_emits_event_without_dispatch(self) -> None:
         fake = FakeRunner()
         fake.no_idle_payloads["product-alpha"] = {
