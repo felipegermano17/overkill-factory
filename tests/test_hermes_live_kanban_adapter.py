@@ -856,6 +856,9 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(body["task_type"], "factory_bridge_start_root")
         self.assertEqual(body["initial_gate"]["status"], "blocked_then_released_by_default")
         self.assertFalse(body["initial_gate"]["human_gate_required_for_normal_start"])
+        self.assertEqual(body["deterministic_phase_contract"]["route_authority"], "factory_phase_engine")
+        self.assertFalse(body["deterministic_phase_contract"]["agent_may_choose_phase"])
+        self.assertEqual(body["deterministic_phase_contract"]["initial_frontier"], "intake")
         self.assertFalse(body["bridge_boundary"]["bridge_created_hermes_board"])
         self.assertTrue(body["bridge_boundary"]["factory_start_path_created_runtime_state"])
         assert_live_adapter_result_schema(self, hold_result)
@@ -3759,7 +3762,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         body = json.loads(str(created_task["body"]))
         self.assertFalse(body["dispatch_allowed_by_this_step"])
         self.assertTrue(body["native_dispatch_required_next"])
+        self.assertEqual(body["deterministic_phase_contract"]["route_authority"], "factory_phase_engine")
+        self.assertTrue(body["deterministic_phase_contract"]["generic_frontier_selection_forbidden"])
         self.assertIn("approve or waive human gates", body["forbidden_actions"])
+        self.assertIn(
+            "decide the next factory phase from prose, memory, title, comments or declared card phase alone",
+            body["forbidden_actions"],
+        )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
     def test_no_idle_reports_human_gate_without_remediation(self) -> None:

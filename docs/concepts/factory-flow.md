@@ -17,6 +17,7 @@ from jumping straight from a vague request to a confident completion claim.
 | Specialist research decision | A public-safe research result that changes SOT, architecture, method, gate, worker, proof or blocker state. |
 | Product Creation Plan | The complete product decomposition into safe execution slices, proof and stop rules. |
 | Product Implementation Readiness | The gate that checks SOT, method, research, architecture, work units, packs, access and proof before material execution. |
+| Factory Phase Engine | The deterministic state calculator that reads materialized artifacts and decides the active frontier, next required artifact and whether a declared card phase is allowed. |
 | Factory card | The machine-checkable work contract consumed by Hermes and `factoryctl.py`. |
 | Worker packet | The task-specific assignment generated for one worker role. |
 | Worker result | The evidence-bearing result produced after a worker actually runs. |
@@ -53,6 +54,28 @@ operator interface profile
 
 Not every project uses every worker. The card surfaces, risk class and done
 definition decide which workers are required.
+
+## Deterministic Phase Engine
+
+Agents may draft, summarize, research and execute scoped work, but they do not
+choose the factory route from memory or prose. `factoryctl phase-engine` computes
+the current frontier from materialized artifacts:
+
+```text
+source/input artifacts
+-> source resolution and understanding artifacts
+-> Product SOT plus full scope coverage
+-> owner-readable Product SOT briefing package
+-> Method Contract
+-> architecture/planning/readiness artifacts
+-> Ready Gate
+-> worker execution
+```
+
+If a card says it is in a later phase but the required artifacts are missing,
+the engine blocks the card. For example, a declared F9 architecture or human
+gate package cannot proceed while the computed frontier is still Product SOT and
+the next required artifact is `operator_briefing_package`.
 
 ## User Role
 

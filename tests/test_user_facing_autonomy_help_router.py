@@ -30,7 +30,9 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
         payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
 
         self.assertEqual(payload["record_type"], "factory_help_next_action")
-        self.assertEqual(payload["workflow_phase"]["phase_id"], "F11")
+        self.assertEqual(payload["workflow_phase"]["phase_id"], "F13")
+        self.assertEqual(payload["phase_engine"]["computed_phase_id"], "F13")
+        self.assertFalse(payload["phase_engine"]["agent_route_authority"])
         self.assertEqual(payload["factory_next_action"]["owner"], "factory")
         self.assertIn("operator", " ".join(payload["limits"]).lower())
         self.assertIsInstance(payload["user_decision_required"], list)
@@ -313,6 +315,24 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
         self.assertEqual(payload["phase_lock"]["next_required_artifact"], "operator_briefing_package")
         self.assertIn("operator_briefing_package", payload["factory_next_action"]["action"])
         self.assertEqual(payload["factory_next_action"]["owner"], "factory")
+        self.assertEqual(payload["user_decision_required"], [])
+
+    def test_phase_engine_blocks_declared_f9_without_owner_package_even_without_phase_lock(self) -> None:
+        card = load_vfinal_card()
+        card["phase"] = "F9"
+        card["surfaces"] = ["architecture"]
+        card.pop("factory_phase_lock", None)
+        card.pop("operator_briefing_package_ref", None)
+
+        errors = factoryctl.validate_card(card)
+        payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
+
+        self.assertTrue(
+            any("factory_phase_engine blocks declared card phase F9 while computed phase is F5" in error for error in errors),
+            errors,
+        )
+        self.assertEqual(payload["phase_engine"]["computed_frontier"], "product_sot")
+        self.assertEqual(payload["phase_engine"]["next_required_artifact"], "operator_briefing_package")
         self.assertEqual(payload["user_decision_required"], [])
 
     def test_repo_cleanup_is_frozen_until_ready_gate(self) -> None:
