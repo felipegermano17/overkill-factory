@@ -364,6 +364,41 @@ def classify_prompt(prompt: str) -> dict[str, Any]:
     normalized = " ".join(prompt.lower().strip().split())
     mode = "intake_bridge"
     reason = "default intake signal"
+    start_terms = (
+        "dar start",
+        "startar",
+        "inicie",
+        "iniciar",
+        "comece",
+        "começar",
+        "pode iniciar",
+        "pode rodar",
+        "rodar a fabrica",
+        "rodar a fábrica",
+        "start request",
+    )
+    explicit_start_authority_terms = (
+        "com esse material",
+        "com esses materiais",
+        "material de start",
+        "materiais de start",
+        "ja enviado",
+        "já enviado",
+        "ja enviei",
+        "já enviei",
+        "autorizo",
+        "autorizado",
+        "aprovado",
+        "aprovada",
+        "pode iniciar",
+        "pode rodar",
+        "faz o que tem que ser feito",
+    )
+    if any(term in normalized for term in start_terms) and any(
+        term in normalized for term in explicit_start_authority_terms
+    ):
+        mode = "start_bridge"
+        reason = "operator explicitly authorized factory start from supplied material"
     if any(term in normalized for term in ("status", "como esta", "como está", "quanto falta", "andamento", "progresso")):
         mode = "status_bridge"
         reason = "operator asked for current state"
