@@ -11,7 +11,9 @@
     "status": "clarifying",
     "rounds_completed": 0,
     "open_questions": [
-      "Confirma que esse entendimento descreve o produto certo antes da fabrica iniciar?"
+      "Confirma que esse entendimento descreve o produto certo antes da fabrica iniciar?",
+      "Qual problema, usuario e resultado de negocio sao mais importantes para o primeiro ciclo?",
+      "Entre os materiais enviados, existe alguma fonte que deve prevalecer se houver conflito?"
     ],
     "max_questions_next_turn": 5
   },
@@ -20,6 +22,10 @@
     "raw_material_not_assumed_complete": true,
     "dynamic_questions_allowed": true,
     "max_questions_per_turn": 5,
+    "minimum_questions_before_confirmation": 3,
+    "rich_material_requires_source_inventory": true,
+    "brownfield_input_requires_brownfield_plan": true,
+    "decision_briefing_required_before_sot": true,
     "confirmed_understanding_ref": "pending:operator-understanding-confirmation"
   },
   "factory_start_boundary": {

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import subprocess
 import sys
 import tempfile
@@ -9,6 +10,13 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+MODULE_PATH = ROOT / "scripts" / "factoryctl.py"
+SPEC = importlib.util.spec_from_file_location("factoryctl_operator_experience", MODULE_PATH)
+assert SPEC is not None
+factoryctl = importlib.util.module_from_spec(SPEC)
+assert SPEC.loader is not None
+sys.modules["factoryctl_operator_experience"] = factoryctl
+SPEC.loader.exec_module(factoryctl)
 
 
 def run_factoryctl(*args: str) -> subprocess.CompletedProcess[str]:
@@ -209,8 +217,43 @@ class OperatorExperienceTest(unittest.TestCase):
         self.assertTrue(confirmed_payload["acceptance"]["factory_start_allowed"])
         self.assertEqual(confirmed_payload["handoff"]["next_artifact"], "factory_bridge_start_request")
         self.assertFalse(confirmed_payload["acceptance"]["execution_allowed"])
+        self.assertGreaterEqual(
+            pending_payload["product_understanding_loop"]["minimum_questions_before_confirmation"],
+            3,
+        )
+        self.assertTrue(pending_payload["product_understanding_loop"]["rich_material_requires_source_inventory"])
+        self.assertTrue(pending_payload["product_understanding_loop"]["brownfield_input_requires_brownfield_plan"])
+        self.assertGreaterEqual(len(pending_payload["conversation_state"]["open_questions"]), 3)
         self.assertNotEqual(missing_start_request.returncode, 0)
         self.assertIn("factory_start_request_ref is required", missing_start_request.stderr)
+
+    def test_start_conversation_rejects_shallow_pending_understanding(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            interface = tmp / "operator-interface.json"
+            pending = tmp / "start-pending.json"
+            run_factoryctl("operator-interface", "--primary-interface", "telegram", "--out", str(interface))
+            run_factoryctl(
+                "start-conversation",
+                "--operator-interface",
+                str(interface),
+                "--source-envelope-ref",
+                "external:operator-source-envelope",
+                "--out",
+                str(pending),
+            )
+            payload = json.loads(pending.read_text(encoding="utf-8"))
+
+        payload["conversation_state"]["open_questions"] = ["Confirma?"]
+
+        errors = factoryctl.validate_factory_start_conversation(payload)
+
+        self.assertTrue(any("enough product understanding questions" in error for error in errors), errors)
+
+        payload["product_understanding_loop"]["minimum_questions_before_confirmation"] = 1
+        errors = factoryctl.validate_factory_start_conversation(payload)
+
+        self.assertTrue(any("at least 3 understanding questions" in error for error in errors), errors)
 
     def test_briefing_package_requires_pdf_markdown_and_push_delivery_for_decisions(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

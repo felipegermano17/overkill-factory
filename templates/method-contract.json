@@ -25,10 +25,36 @@
     "product_creation_plan",
     "product_implementation_readiness"
   ],
+  "method_engine_registry_ref": "templates/method-engine-registry.json",
+  "selected_method_engines": [
+    {
+      "engine_id": "spec_first_sdd",
+      "method": "spec-first",
+      "method_family": "spec_first",
+      "why_selected": "Product SOT requirements need a spec graph before execution.",
+      "required_artifacts": ["method_contract", "spec_graph", "product_creation_plan", "work_unit_contract"],
+      "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
+      "required_workers": ["factory-orchestrator", "decomposition-planner", "qa-verification-worker"],
+      "proof_requirements": ["spec artifacts exist", "tasks trace to Product SOT", "Receipt Five cites spec evidence"],
+      "execution_allowed_by_engine_selection": false
+    },
+    {
+      "engine_id": "test_first_tdd",
+      "method": "test-first",
+      "method_family": "test_first",
+      "why_selected": "Product SOT requirements need regression proof before completion.",
+      "required_artifacts": ["test_plan", "regression_tests", "verification_commands"],
+      "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
+      "required_workers": ["qa-verification-worker", "test-automation-builder", "independent-reviewer"],
+      "proof_requirements": ["failing or target test defined before implementation", "tests pass after implementation", "Receipt Five cites commands"],
+      "execution_allowed_by_engine_selection": false
+    }
+  ],
   "engineering_method_matrix": [
     {
       "surface_or_component": "product core",
       "methods": ["spec-first", "test-first"],
+      "method_engine_ids": ["spec_first_sdd", "test_first_tdd"],
       "reason": "Product SOT requirements need stable contracts and regression proof.",
       "required_artifacts": ["spec_graph", "work_unit_contract"],
       "evidence_required": ["tests pass", "worker result evidence"]
@@ -44,7 +70,8 @@
   "research_route_impacts": ["research decisions may add gates, methods, workers or proof requirements"],
   "work_type": "feature | bug | product-experience | critical-api | complex-product | legacy | agent-skill | R4-release",
   "selected_methods": [
-    "spec-first"
+    "spec-first",
+    "test-first"
   ],
   "skipped_methods": [
     {

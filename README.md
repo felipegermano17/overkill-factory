@@ -109,6 +109,47 @@ who had authority and what evidence allows the next state.
 Product-facing work must also create a project design-system contract and an
 AI-readable `DESIGN.md` before frontend builders or Product Face proof can pass.
 
+## Factory Operating Systems
+
+Critical factory areas are grouped in a canonical Operating System registry.
+This keeps the factory from becoming scattered contracts with no operational
+owner.
+
+Inspect it with:
+
+```bash
+factoryctl operating-systems
+factoryctl validate-operating-systems templates/factory-operating-system-registry.json
+factoryctl operating-system-scorecard --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
+```
+
+The registry currently tracks Product Truth and Research, Method, Authority and
+Autonomy, Hermes Worker Runtime, Evidence and Product Proof, Capability and
+Domain Packs, Operator Experience, Security and Release, Product Quality,
+Velocity and Cost, and Factory Learning.
+
+An OS entry names the owner worker, issue, contracts, fail-closed rules,
+runtime boundary and required proof. It does not claim a product is production
+ready. Production still requires Hermes state, worker results, Receipt Five,
+product-specific proof and human gates when risk requires them.
+
+Hermes runtime proof is public-safe and redacted: it proves gateway, Codex auth,
+Telegram, manager profile, worker completion and human-gate blocking without
+publishing private board content. It proves the factory operating spine, not a
+specific product release.
+
+Method OS also has a method-engine registry:
+
+```bash
+factoryctl method-engines
+factoryctl validate-method-engines templates/method-engine-registry.json
+```
+
+The Method Contract must bind selected methods to engines such as spec-first
+SDD, test-first TDD, behavior-first BDD, discovery/research, security-first,
+design-first, legacy diagnosis or incident-first. A method label alone cannot
+authorize execution.
+
 ## Hermes Runtime
 
 Hermes is the first supported factory floor. Overkill Factory does not replace
@@ -254,6 +295,8 @@ evidence, reviews, human gates and production readiness proof.
 - `docs/governance/document-governance.md`: document authority and public
   boundary rules.
 - `docs/reference/cli.md`: supported `factoryctl` commands.
+- `docs/architecture/factory-operating-systems.md`: OS registry and production
+  claim boundary.
 - `docs/concepts/factory-flow.md`: production line and state model.
 - `docs/concepts/overkill-factory-method.md`: method guide.
 - `docs/concepts/operator-journey.md`: operator journey.

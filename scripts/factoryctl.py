@@ -41,6 +41,21 @@ from factory_route_registry import (  # noqa: E402
     route_required_workers,
     route_signal_types,
 )
+from factory_method_engines import (  # noqa: E402
+    DEFAULT_METHOD_ENGINE_REGISTRY_PATH,
+    load_method_engine_registry,
+    method_engine_entries,
+    method_engine_for_method,
+    validate_method_engine_registry_semantics,
+)
+from factory_operating_systems import (  # noqa: E402
+    DEFAULT_OPERATING_SYSTEM_REGISTRY_PATH,
+    build_operating_system_scorecard,
+    load_operating_system_registry,
+    operating_system_entries,
+    validate_operating_system_registry_semantics,
+    validate_operating_system_scorecard_semantics,
+)
 from validate_public_json_artifacts import load_schemas, validate_node  # noqa: E402
 
 
@@ -90,6 +105,7 @@ DEFAULT_HERMES_EVIDENCE_OUT = ROOT / ".tmp" / "factory-runs" / "hermes-evidence"
 DEFAULT_PREPILOT_CHECKLIST_OUT = ROOT / ".tmp" / "factory-runs" / "prepilot" / "loose-end-checklist.json"
 DEFAULT_SIGNAL_CORPUS_PATH = ROOT / "templates" / "universal-signal-golden-corpus.json"
 DEFAULT_SIGNAL_COVERAGE_OUT = ROOT / ".tmp" / "factory-runs" / "signal-coverage" / "factory-signal-coverage-scorecard.json"
+DEFAULT_OPERATING_SYSTEM_SCORECARD_OUT = ROOT / ".tmp" / "factory-runs" / "operating-systems" / "factory-operating-system-scorecard.json"
 DEFAULT_FACTORY_READINESS_SCORECARD_PATH = ROOT / "templates" / "factory-readiness-scorecard.json"
 DEFAULT_V1_COMPLETION_GATE_OUT = ROOT / ".tmp" / "factory-runs" / "v1-completion" / "factory-v1-completion-gate.json"
 DEFAULT_RELEASE_INTEGRATION_PREFLIGHT = ROOT / ".tmp" / "factory-runs" / "release" / "release-integration-preflight.json"
@@ -7825,7 +7841,9 @@ def build_factory_start_conversation(
             "status": "confirmed_for_factory_start" if start_allowed else "clarifying",
             "rounds_completed": 0,
             "open_questions": [
-                "Confirma que esse entendimento descreve o produto certo antes da fabrica iniciar?"
+                "Confirma que esse entendimento descreve o produto certo antes da fabrica iniciar?",
+                "Qual problema, usuario e resultado de negocio sao mais importantes para o primeiro ciclo?",
+                "Entre os materiais enviados, existe alguma fonte que deve prevalecer se houver conflito?",
             ] if not start_allowed else [],
             "max_questions_next_turn": 5,
         },
@@ -7834,6 +7852,10 @@ def build_factory_start_conversation(
             "raw_material_not_assumed_complete": True,
             "dynamic_questions_allowed": True,
             "max_questions_per_turn": 5,
+            "minimum_questions_before_confirmation": 3,
+            "rich_material_requires_source_inventory": True,
+            "brownfield_input_requires_brownfield_plan": True,
+            "decision_briefing_required_before_sot": True,
             "confirmed_understanding_ref": confirmed_understanding_ref or "pending:operator-understanding-confirmation",
         },
         "factory_start_boundary": {
@@ -7895,6 +7917,19 @@ def validate_factory_start_conversation(packet: dict[str, Any]) -> list[str]:
     confirmed_ref = str(loop.get("confirmed_understanding_ref") or "").strip()
     if confirmed_ref and not confirmed_ref.startswith("pending:"):
         _validate_public_ref(confirmed_ref, "factory_start_conversation.product_understanding_loop.confirmed_understanding_ref", errors)
+    for field in (
+        "operator_understanding_confirmation_required",
+        "raw_material_not_assumed_complete",
+        "dynamic_questions_allowed",
+        "rich_material_requires_source_inventory",
+        "brownfield_input_requires_brownfield_plan",
+        "decision_briefing_required_before_sot",
+    ):
+        if loop.get(field) is not True:
+            errors.append(f"factory_start_conversation.product_understanding_loop.{field} must be true")
+    minimum_questions = loop.get("minimum_questions_before_confirmation")
+    if not isinstance(minimum_questions, int) or minimum_questions < 3:
+        errors.append("factory_start_conversation requires at least 3 understanding questions before confirmation")
     boundary = packet.get("factory_start_boundary") if isinstance(packet.get("factory_start_boundary"), dict) else {}
     for field in (
         "factory_start_forbidden_until_understanding_confirmed",
@@ -7910,13 +7945,17 @@ def validate_factory_start_conversation(packet: dict[str, Any]) -> list[str]:
     if start_allowed and confirmed_ref.startswith("pending:"):
         errors.append("factory_start_conversation cannot allow factory start with pending understanding confirmation")
     handoff = packet.get("handoff") if isinstance(packet.get("handoff"), dict) else {}
+    conversation_state = packet.get("conversation_state") if isinstance(packet.get("conversation_state"), dict) else {}
+    open_questions = conversation_state.get("open_questions") if isinstance(conversation_state.get("open_questions"), list) else []
+    if not start_allowed and isinstance(minimum_questions, int) and len(open_questions) < minimum_questions:
+        errors.append("factory_start_conversation pending start must carry enough product understanding questions")
     start_request_ref = str(handoff.get("factory_bridge_start_request_ref") or "").strip()
     if start_allowed:
         if start_request_ref.startswith(("pending:", "not-created")):
             errors.append("factory_start_conversation cannot allow factory start without a real factory start request ref")
         elif start_request_ref:
             _validate_public_ref(start_request_ref, "factory_start_conversation.handoff.factory_bridge_start_request_ref", errors)
-    if start_allowed and packet.get("conversation_state", {}).get("status") != "confirmed_for_factory_start":
+    if start_allowed and conversation_state.get("status") != "confirmed_for_factory_start":
         errors.append("factory_start_conversation start allowed requires confirmed_for_factory_start status")
     if acceptance.get("execution_allowed") is not False:
         errors.append("factory_start_conversation execution_allowed must be false")
@@ -8972,6 +9011,29 @@ def _method_selected_methods(coverage: dict[str, Any]) -> list[str]:
     return _dedupe_preserve_order(methods)
 
 
+def _selected_method_engine_contracts(selected_methods: list[str]) -> list[dict[str, Any]]:
+    registry = load_method_engine_registry()
+    contracts: list[dict[str, Any]] = []
+    for method in selected_methods:
+        engine = method_engine_for_method(method, registry)
+        if not engine:
+            continue
+        contracts.append(
+            {
+                "engine_id": str(engine.get("engine_id") or ""),
+                "method": method,
+                "method_family": str(engine.get("method_family") or ""),
+                "why_selected": f"{method} is selected by the factory Method OS for the current scope, risk and blockers.",
+                "required_artifacts": _dedupe_preserve_order([str(item) for item in _list_items(engine.get("required_artifacts"))]),
+                "required_gates": _dedupe_preserve_order([str(item) for item in _list_items(engine.get("required_gates"))]),
+                "required_workers": _dedupe_preserve_order([str(item) for item in _list_items(engine.get("required_workers"))]),
+                "proof_requirements": _dedupe_preserve_order([str(item) for item in _list_items(engine.get("proof_requirements"))]),
+                "execution_allowed_by_engine_selection": False,
+            }
+        )
+    return contracts
+
+
 def build_method_contract(
     full_scope_coverage: dict[str, Any],
     *,
@@ -8990,6 +9052,8 @@ def build_method_contract(
     final_contract_id = contract_id or _method_contract_id(coverage_ref)
     created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     selected_methods = _method_selected_methods(full_scope_coverage)
+    selected_method_engines = _selected_method_engine_contracts(selected_methods)
+    selected_engine_ids = [str(engine.get("engine_id") or "") for engine in selected_method_engines if str(engine.get("engine_id") or "").strip()]
     user_decision_required = any(
         isinstance(item, dict) and item.get("status") in {"human_decision_required", "blocked"}
         for item in full_scope_coverage.get("requirement_coverage", [])
@@ -9037,10 +9101,13 @@ def build_method_contract(
             "product_creation_plan",
             "product_implementation_readiness",
         ],
+        "method_engine_registry_ref": "templates/method-engine-registry.json",
+        "selected_method_engines": selected_method_engines,
         "engineering_method_matrix": [
             {
                 "surface_or_component": "complete product scope",
                 "methods": selected_methods,
+                "method_engine_ids": selected_engine_ids,
                 "reason": "Coverage requires every Product SOT requirement to be planned before implementation starts.",
                 "required_artifacts": ["product_creation_plan", "spec_graph", "work_unit_contract"],
                 "evidence_required": ["full scope coverage", "worker result evidence", "tests pass"],
@@ -9070,8 +9137,22 @@ def build_method_contract(
             "software_development_plan",
             "loop_plan",
             "product_implementation_readiness",
+            *[
+                artifact
+                for engine in selected_method_engines
+                for artifact in _list_items(engine.get("required_artifacts"))
+            ],
         ],
-        "required_workers": _dedupe_preserve_order(required_workers),
+        "required_workers": _dedupe_preserve_order(
+            [
+                *required_workers,
+                *[
+                    worker
+                    for engine in selected_method_engines
+                    for worker in _list_items(engine.get("required_workers"))
+                ],
+            ]
+        ),
         "reviewers": ["independent-reviewer"],
         "evidence_requirements": _dedupe_preserve_order(
             [
@@ -9079,6 +9160,11 @@ def build_method_contract(
                 "product_creation_plan",
                 "product_implementation_readiness",
                 "Receipt Five",
+                *[
+                    proof
+                    for engine in selected_method_engines
+                    for proof in _list_items(engine.get("proof_requirements"))
+                ],
                 *blocker_refs,
             ]
         ),
@@ -9145,6 +9231,47 @@ def validate_method_contract(method_contract: dict[str, Any]) -> list[str]:
         if artifact not in required_factory_artifacts:
             errors.append(f"method_contract.required_factory_artifacts must include {artifact}")
 
+    registry_ref = str(method_contract.get("method_engine_registry_ref") or "").strip()
+    if registry_ref:
+        _validate_public_ref(registry_ref, "method_contract.method_engine_registry_ref", errors)
+    else:
+        errors.append("method_contract.method_engine_registry_ref is required")
+
+    selected_methods = _list_items(method_contract.get("selected_methods"))
+    selected_engines = method_contract.get("selected_method_engines") if isinstance(method_contract.get("selected_method_engines"), list) else []
+    if not selected_engines:
+        errors.append("method_contract.selected_method_engines must be non-empty")
+    engine_registry = load_method_engine_registry()
+    registry_engines = method_engine_entries(engine_registry)
+    engine_methods = {
+        str(engine.get("method") or "").strip(): engine
+        for engine in selected_engines
+        if isinstance(engine, dict)
+    }
+    for method in selected_methods:
+        engine = engine_methods.get(str(method))
+        if not engine:
+            errors.append(f"method_contract.selected_method {method} must have a selected_method_engine")
+            continue
+        engine_id = str(engine.get("engine_id") or "").strip()
+        registry_engine = registry_engines.get(engine_id)
+        if not registry_engine:
+            errors.append(f"method_contract.selected_method_engines has unknown engine_id: {engine_id}")
+            continue
+        expected_engine = method_engine_for_method(str(method), engine_registry)
+        if expected_engine and expected_engine.get("engine_id") != engine_id:
+            errors.append(
+                f"method_contract.selected_method_engine for {method} must be {expected_engine.get('engine_id')}"
+            )
+        if engine.get("execution_allowed_by_engine_selection") is not False:
+            errors.append(f"method_contract.selected_method_engines[{engine_id}].execution_allowed_by_engine_selection must be false")
+        for field in ("required_artifacts", "required_gates", "required_workers", "proof_requirements"):
+            if not _list_items(engine.get(field)):
+                errors.append(f"method_contract.selected_method_engines[{engine_id}].{field} must be non-empty")
+        for index, worker in enumerate(_list_items(engine.get("required_workers"))):
+            if worker not in WORKERS:
+                errors.append(f"method_contract.selected_method_engines[{engine_id}].required_workers[{index}] must be a registered worker: {worker}")
+
     matrix = method_contract.get("engineering_method_matrix") if isinstance(method_contract.get("engineering_method_matrix"), list) else []
     if not matrix:
         errors.append("method_contract.engineering_method_matrix is required")
@@ -9157,6 +9284,13 @@ def validate_method_contract(method_contract: dict[str, Any]) -> list[str]:
         for field in ("surface_or_component", "reason"):
             if not public_safe_text(item.get(field)):
                 errors.append(f"method_contract.engineering_method_matrix[{index}].{field} must be public-safe")
+        row_engine_ids = {str(engine_id) for engine_id in _list_items(item.get("method_engine_ids"))}
+        missing_row_engines = sorted({str(engine.get("engine_id") or "") for engine in selected_engines if isinstance(engine, dict)} - row_engine_ids)
+        if missing_row_engines:
+            errors.append(
+                f"method_contract.engineering_method_matrix[{index}].method_engine_ids missing selected engines: "
+                + ", ".join(missing_row_engines)
+            )
 
     slice_policy = method_contract.get("slice_execution_policy") if isinstance(method_contract.get("slice_execution_policy"), dict) else {}
     if slice_policy.get("slices_are_execution_units_only") is not True:
@@ -9164,7 +9298,7 @@ def validate_method_contract(method_contract: dict[str, Any]) -> list[str]:
     if slice_policy.get("canonical_scope_must_not_shrink") is not True:
         errors.append("method_contract.slice_execution_policy.canonical_scope_must_not_shrink must be true")
 
-    if not _list_items(method_contract.get("selected_methods")):
+    if not selected_methods:
         errors.append("method_contract.selected_methods must be non-empty")
     for field in ("required_workers", "reviewers"):
         for index, worker in enumerate(_list_items(method_contract.get(field))):
@@ -11557,6 +11691,63 @@ def validate_factory_signal_coverage_scorecard(scorecard: dict[str, Any]) -> lis
         errors.append("factory_signal_coverage_scorecard must not embed raw private evidence")
     if boundary.get("private_context_retained_outside_public_repo") is not True:
         errors.append("factory_signal_coverage_scorecard private context must stay outside the public repo")
+    return errors
+
+
+def validate_operating_system_registry(registry: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-operating-system-registry.schema.json")
+    if not schema:
+        return ["factory_operating_system_registry schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            registry,
+            "factory_operating_system_registry",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+    errors.extend(validate_operating_system_registry_semantics(registry, "factory_operating_system_registry"))
+    return errors
+
+
+def validate_operating_system_scorecard(scorecard: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-operating-system-scorecard.schema.json")
+    if not schema:
+        return ["factory_operating_system_scorecard schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            scorecard,
+            "factory_operating_system_scorecard",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+    errors.extend(validate_operating_system_scorecard_semantics(scorecard, "factory_operating_system_scorecard"))
+    return errors
+
+
+def validate_method_engine_registry(registry: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("method-engine-registry.schema.json")
+    if not schema:
+        return ["method_engine_registry schema is not bundled"]
+    errors.extend(
+        validate_node(
+            schema,
+            registry,
+            "method_engine_registry",
+            schemas=schemas,
+            root_schema=schema,
+        )
+    )
+    errors.extend(validate_method_engine_registry_semantics(registry, "method_engine_registry"))
     return errors
 
 
@@ -17466,6 +17657,36 @@ def command_validate_product_implementation_readiness(args: argparse.Namespace) 
     return 0
 
 
+def command_validate_operating_systems(args: argparse.Namespace) -> int:
+    errors = validate_operating_system_registry(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_validate_operating_system_scorecard(args: argparse.Namespace) -> int:
+    errors = validate_operating_system_scorecard(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_validate_method_engines(args: argparse.Namespace) -> int:
+    errors = validate_method_engine_registry(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_route_registry(args: argparse.Namespace) -> int:
     registry = load_route_registry(args.registry)
     if args.route_class:
@@ -17475,6 +17696,71 @@ def command_route_registry(args: argparse.Namespace) -> int:
             print(f"unknown route_class: {args.route_class}", file=sys.stderr)
             return 1
         write_json(args.out, route)
+        return 0
+    write_json(args.out, registry)
+    return 0
+
+
+def command_operating_systems(args: argparse.Namespace) -> int:
+    registry = load_operating_system_registry(args.registry)
+    errors = validate_operating_system_registry(registry)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    if args.os_id:
+        entries = operating_system_entries(registry)
+        entry = entries.get(args.os_id)
+        if not entry:
+            print(f"unknown os_id: {args.os_id}", file=sys.stderr)
+            return 1
+        write_json(args.out, entry)
+        return 0
+    write_json(args.out, registry)
+    return 0
+
+
+def command_operating_system_scorecard(args: argparse.Namespace) -> int:
+    registry = load_operating_system_registry(args.registry)
+    registry_errors = validate_operating_system_registry(registry)
+    if registry_errors:
+        for error in registry_errors:
+            print(error, file=sys.stderr)
+        return 1
+    completion_audit = load_json_like(args.completion_audit) if args.completion_audit else None
+    runtime_proofs = [load_json_like(path) for path in args.runtime_proof]
+    runtime_proof_refs = [path.as_posix() for path in args.runtime_proof]
+    scorecard = build_operating_system_scorecard(
+        registry,
+        registry_ref=args.registry_ref,
+        completion_audit=completion_audit,
+        completion_audit_ref=args.completion_audit_ref,
+        runtime_proofs=runtime_proofs,
+        runtime_proof_refs=runtime_proof_refs,
+    )
+    errors = validate_operating_system_scorecard(scorecard)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, scorecard)
+    return 0 if scorecard["result"] == "PASS" else 1
+
+
+def command_method_engines(args: argparse.Namespace) -> int:
+    registry = load_method_engine_registry(args.registry)
+    errors = validate_method_engine_registry(registry)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    if args.engine_id:
+        entries = method_engine_entries(registry)
+        engine = entries.get(args.engine_id)
+        if not engine:
+            print(f"unknown engine_id: {args.engine_id}", file=sys.stderr)
+            return 1
+        write_json(args.out, engine)
         return 0
     write_json(args.out, registry)
     return 0
@@ -18313,11 +18599,47 @@ def build_parser() -> argparse.ArgumentParser:
     validate_product_implementation_readiness_parser.add_argument("path", type=Path)
     validate_product_implementation_readiness_parser.set_defaults(func=command_validate_product_implementation_readiness)
 
+    validate_operating_systems_parser = sub.add_parser("validate-operating-systems")
+    validate_operating_systems_parser.add_argument("path", type=Path)
+    validate_operating_systems_parser.set_defaults(func=command_validate_operating_systems)
+
+    validate_operating_system_scorecard_parser = sub.add_parser("validate-operating-system-scorecard")
+    validate_operating_system_scorecard_parser.add_argument("path", type=Path)
+    validate_operating_system_scorecard_parser.set_defaults(func=command_validate_operating_system_scorecard)
+
+    validate_method_engines_parser = sub.add_parser("validate-method-engines")
+    validate_method_engines_parser.add_argument("path", type=Path)
+    validate_method_engines_parser.set_defaults(func=command_validate_method_engines)
+
     route_registry_parser = sub.add_parser("route-registry", help="Show the canonical Universal Signal route registry.")
     route_registry_parser.add_argument("--registry", type=Path, default=DEFAULT_ROUTE_REGISTRY_PATH)
     route_registry_parser.add_argument("--route-class")
     route_registry_parser.add_argument("--out", type=Path)
     route_registry_parser.set_defaults(func=command_route_registry)
+
+    operating_systems_parser = sub.add_parser("operating-systems", help="Show the canonical factory operating-system registry.")
+    operating_systems_parser.add_argument("--registry", type=Path, default=DEFAULT_OPERATING_SYSTEM_REGISTRY_PATH)
+    operating_systems_parser.add_argument("--os-id")
+    operating_systems_parser.add_argument("--out", type=Path)
+    operating_systems_parser.set_defaults(func=command_operating_systems)
+
+    operating_system_scorecard_parser = sub.add_parser(
+        "operating-system-scorecard",
+        help="Build the factory operating-system readiness scorecard.",
+    )
+    operating_system_scorecard_parser.add_argument("--registry", type=Path, default=DEFAULT_OPERATING_SYSTEM_REGISTRY_PATH)
+    operating_system_scorecard_parser.add_argument("--registry-ref", default="templates/factory-operating-system-registry.json")
+    operating_system_scorecard_parser.add_argument("--completion-audit", type=Path)
+    operating_system_scorecard_parser.add_argument("--completion-audit-ref")
+    operating_system_scorecard_parser.add_argument("--runtime-proof", type=Path, action="append", default=[])
+    operating_system_scorecard_parser.add_argument("--out", type=Path, default=DEFAULT_OPERATING_SYSTEM_SCORECARD_OUT)
+    operating_system_scorecard_parser.set_defaults(func=command_operating_system_scorecard)
+
+    method_engines_parser = sub.add_parser("method-engines", help="Show the canonical Method OS engine registry.")
+    method_engines_parser.add_argument("--registry", type=Path, default=DEFAULT_METHOD_ENGINE_REGISTRY_PATH)
+    method_engines_parser.add_argument("--engine-id")
+    method_engines_parser.add_argument("--out", type=Path)
+    method_engines_parser.set_defaults(func=command_method_engines)
 
     intake_parser = sub.add_parser("intake", help="Build a valid Universal Signal Intake contract without executing work.")
     intake_parser.add_argument("--route-class", required=True)

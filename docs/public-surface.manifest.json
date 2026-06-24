@@ -8,6 +8,7 @@
     "agents/worker-profiles.public.json",
     "agents/hermes-profile-bindings.public.json",
     "docs/agents/factory-stage-agent-map.md",
+    "docs/architecture/factory-operating-systems.md",
     "docs/concepts/factory-flow.md",
     "docs/concepts/operator-journey.md",
     "docs/concepts/overkill-factory-method.md",
@@ -18,7 +19,11 @@
     "docs/reference/cli.md",
     "planning-bundles/manifest.json",
     "schemas/",
-    "scripts/factoryctl.py"
+    "templates/hermes-production-proof.json",
+    "templates/method-engine-registry.json",
+    "templates/factory-operating-system-registry.json",
+    "scripts/factoryctl.py",
+    "scripts/hermes_runtime_proof.py"
   ],
   "published_check_policy": {
     "default_status_without_network": "not_checked",

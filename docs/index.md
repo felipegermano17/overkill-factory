@@ -28,6 +28,14 @@ Overkill Factory supplies contracts, profiles, packets and gates.
 Use `reference/cli.md` for the supported operator commands. Prefer `factoryctl`
 over calling many scripts directly.
 
+## Factory Operating Systems
+
+Use `architecture/factory-operating-systems.md` to understand the canonical OS
+registry: Product Truth, Method, Authority, Hermes Runtime, Evidence, Domain
+Packs, Operator Experience, Security/Release, Product Quality, Velocity/Cost and
+Learning. The registry maps owners and proof obligations; it does not claim
+product-specific production readiness by itself.
+
 ## Examples
 
 Use `examples/gallery.md` to choose a minimal, Product Face, security or onchain

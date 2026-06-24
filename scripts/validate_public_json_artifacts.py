@@ -29,6 +29,11 @@ from factory_route_registry import (  # noqa: E402
     route_required_workers,
     route_signal_types,
 )
+from factory_method_engines import validate_method_engine_registry_semantics  # noqa: E402
+from factory_operating_systems import (  # noqa: E402
+    validate_operating_system_registry_semantics,
+    validate_operating_system_scorecard_semantics,
+)
 
 SCHEMA_DIR = ROOT / "schemas"
 PUBLIC_SCHEMA_DIRS = [
@@ -2497,6 +2502,12 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         for field in required_checks:
             if checks.get(field) is not True:
                 errors.append(f"{at}: discord_control_tower_ux_audit requires {field}=true")
+    if data.get("record_type") == "factory_operating_system_registry":
+        errors.extend(validate_operating_system_registry_semantics(data, at))
+    if data.get("record_type") == "factory_operating_system_scorecard":
+        errors.extend(validate_operating_system_scorecard_semantics(data, at))
+    if data.get("record_type") == "method_engine_registry":
+        errors.extend(validate_method_engine_registry_semantics(data, at))
     return errors
 
 

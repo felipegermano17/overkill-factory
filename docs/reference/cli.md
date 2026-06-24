@@ -62,10 +62,19 @@ factoryctl full-scope-coverage --product-sot templates/product-sot.json --out .t
 factoryctl validate-full-scope-coverage templates/full-product-sot-scope-coverage.json
 factoryctl method-contract --full-scope-coverage templates/full-product-sot-scope-coverage.json --out .tmp/method-contract.json
 factoryctl validate-method-contract templates/method-contract.json
+factoryctl method-engines --engine-id spec_first_sdd
+factoryctl validate-method-engines templates/method-engine-registry.json
 factoryctl product-creation-plan --method-contract templates/method-contract.json --out .tmp/product-creation-plan.json
 factoryctl validate-product-creation-plan templates/product-creation-plan.json
 factoryctl product-implementation-readiness --product-creation-plan templates/product-creation-plan.json --out .tmp/product-implementation-readiness.json
 factoryctl validate-product-implementation-readiness templates/product-implementation-readiness.json
+factoryctl operating-systems --os-id hermes_worker_runtime_os
+factoryctl validate-operating-systems templates/factory-operating-system-registry.json
+factoryctl operating-system-scorecard --out .tmp/factory-runs/operating-systems/factory-operating-system-scorecard.json
+python scripts/hermes_runtime_proof.py --boards-json .tmp/hermes-runtime/boards.json --profile-list-text .tmp/hermes-runtime/profile-list.txt --status-text .tmp/hermes-runtime/status.txt --task-list-json .tmp/hermes-runtime/task-list.json --done-task-runs-json .tmp/hermes-runtime/done-task-runs.json --blocked-task-show-json .tmp/hermes-runtime/blocked-task-show.json --out .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
+factoryctl operating-system-scorecard --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --out .tmp/factory-runs/operating-systems/factory-operating-system-scorecard-runtime-proven.json
+factoryctl validate-operating-system-scorecard .tmp/factory-runs/operating-systems/factory-operating-system-scorecard.json
+python scripts/factory_completion_audit.py --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --out-dir .tmp/factory-runs/completion-os-check
 factoryctl ready-work-unit-packets --product-creation-plan templates/product-creation-plan.json --product-implementation-readiness templates/product-implementation-readiness.json --forbidden-context-ref external:sanitized-off-limits-parallel-thread --out .tmp/ready-work-unit-packets
 factoryctl validate-ready-work-unit-packets templates/ready-work-unit-packets.json
 factoryctl validate-signal-corpus templates/universal-signal-golden-corpus.json
@@ -119,7 +128,11 @@ method contract, readiness and gates pass. `full-scope-coverage` accounts for ev
 method routing, so execution slices cannot silently become scope cuts.
 `method-contract` turns that coverage into factory-owned method, artifact,
 worker, gate and evidence requirements without handing DDD/BDD/spec choices to
-the operator. `product-creation-plan` turns the Method Contract into a complete
+the operator. `method-engines` exposes the Method OS registry that maps selected
+methods to executable method engines such as spec-first SDD, test-first TDD,
+BDD, discovery/research, security-first, design-first, legacy diagnosis and
+incident-first. A method label alone cannot authorize execution.
+`product-creation-plan` turns the Method Contract into a complete
 product decomposition with work units, proof ids, blockers, stop rules,
 reconciliation and the next readiness gate, while keeping execution blocked.
 `product-implementation-readiness` checks that Product Creation Plan work units
@@ -150,6 +163,26 @@ the packet validator.
 `validate-signal-corpus` and `signal-coverage` prove that the public
 Golden Corpus covers every known route without treating contract coverage as
 production readiness.
+
+`operating-systems` exposes the canonical OS registry: the factory-wide owners
+for Product Truth, Method, Authority, Hermes Runtime, Evidence, Domain Packs,
+Operator Experience, Security/Release, Product Quality, Velocity/Cost and
+Learning. `validate-operating-systems` checks the registry shape and semantic
+guardrails: every P0 OS has an issue, every OS has a runtime boundary and
+fail-closed rules, and the registry itself cannot claim product-specific
+production readiness. `operating-system-scorecard` turns the registry plus an
+optional completion audit into a readiness scorecard. It exits non-zero while
+P0 OS work is planned, blocked pending runtime proof or mapped to active
+completion blockers. That is deliberate fail-closed behavior, not a CLI crash.
+`hermes_runtime_proof.py` builds the public-safe runtime proof from read-only
+Hermes evidence; passing that proof with `--runtime-proof` can prove the Hermes
+Worker Runtime OS without publishing raw private board content. A passing OS
+scorecard is kernel/runtime-spine evidence only. Product-specific completion
+still needs Receipt Five, current worker results, release evidence and any
+required human-gate records. `factory_completion_audit.py --runtime-proof`
+consumes the same proof to clear runtime-backed audit requirements while keeping
+product/release/security requirements blocked until product-specific evidence
+exists.
 
 `v1-completion-gate` is the finish-line gate for the public Factory v1 kernel.
 It does not search forever for new work. It requires current release preflight,

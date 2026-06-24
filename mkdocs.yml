@@ -29,6 +29,7 @@ nav:
       - Permission Model: agents/permission-model.md
       - Security Specialist Matrix: agents/security-specialist-matrix.md
   - Architecture:
+      - Factory Operating Systems: architecture/factory-operating-systems.md
       - Hermes Integration: architecture/hermes-integration.md
   - Automation:
       - Worker Automation v0: automation/worker-automation-v0.md
@@ -37,6 +38,7 @@ nav:
       - Security Matrix: security/security-control-matrix.md
   - Release:
       - Validation And Release: operations/validation-and-release.md
+      - Fast Autonomy Lane: operations/fast-autonomy-lane.md
       - Parallel Execution And Status: operations/parallel-execution-and-status.md
       - Release Policy: operations/release-policy.md
       - Troubleshooting: operations/troubleshooting.md
@@ -55,6 +57,7 @@ nav:
       - Public Visual Surfaces: visuals/README.md
   - Maintainer Internals:
       - Repo Surface: maintenance/repo-surface.md
+      - Telegram Performance Audit: maintenance/telegram-performance-autonomy-audit-2026-06-23.md
       - Factory Learning OS: maintenance/factory-learning-skill-evolution-os.md
       - Hermes Learn Integration: maintenance/hermes-learn-integration.md
       - Self Improvement Loop: maintenance/self-improvement-loop.md

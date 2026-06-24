@@ -6,6 +6,43 @@ from tempfile import TemporaryDirectory
 from scripts import factory_completion_audit as audit
 
 
+def sample_hermes_runtime_proof() -> dict:
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/hermes-production-proof.schema.json",
+        "record_type": "hermes_production_proof",
+        "created_at": "2026-06-24T00:00:00Z",
+        "proof_type": "non_stub_worker_execution",
+        "result": "PASS",
+        "summary": "Read-only Hermes runtime proof.",
+        "scope": "redacted test runtime",
+        "environment_ref": "external:redacted",
+        "evidence_refs": ["external:redacted-hermes-status"],
+        "runtime_summary": {
+            "gateway_running": True,
+            "openai_codex_logged_in": True,
+            "telegram_configured": True,
+            "profile_count": 42,
+            "running_profile_count": 1,
+            "manager_profile_running": True,
+            "current_board_detected": True,
+            "current_board_total_tasks": 8,
+            "task_list_total": 8,
+            "done_task_count": 7,
+            "blocked_task_count": 1,
+            "representative_done_run_count": 1,
+            "representative_done_run_profiles": ["source-ledger-worker"],
+            "live_worker_orchestration_proven": True,
+            "human_gate_block_event_detected": True,
+        },
+        "operator_gate_boundary": {
+            "human_gate_auto_approved": False,
+            "human_gate_blocked_until_owner_decision": True,
+            "bridge_or_manager_executed_gate": False,
+        },
+        "limits": ["Runtime proof only."],
+    }
+
+
 class FactoryCompletionAuditTests(unittest.TestCase):
     def test_current_public_factory_completion_state_is_consistent(self):
         result = audit.build_audit()
@@ -29,13 +66,14 @@ class FactoryCompletionAuditTests(unittest.TestCase):
         self.assertIn("production_product_face", blockers)
         self.assertIn("completion:production_product_face", blocker_ids)
         self.assertIn("production_quasar_auditor", blockers)
+        self.assertIn("factory_operating_system_scorecard", blockers)
         if result["status"] == "COMPLETE":
             self.assertEqual(blockers, set())
         else:
             self.assertIn("full_product_specific_worker_graph", blockers)
             self.assertIn("managed_remote_proof", blockers)
             self.assertIn("production_release_human_gate", blockers)
-            self.assertGreaterEqual(len(blockers), 8)
+            self.assertGreaterEqual(len(blockers), 9)
 
     def test_product_face_and_quasar_auditor_can_be_achieved_while_other_public_proofs_remain_bounded(self):
         result = audit.build_audit()
@@ -46,6 +84,21 @@ class FactoryCompletionAuditTests(unittest.TestCase):
         self.assertEqual(by_id["production_cu_svm_economic"]["status"], "BLOCKED_MISSING_EVIDENCE")
         self.assertEqual(by_id["managed_remote_proof"]["status"], "BLOCKED_MISSING_EVIDENCE")
         self.assertEqual(by_id["full_product_specific_worker_graph"]["status"], "BLOCKED_MISSING_EVIDENCE")
+        self.assertEqual(by_id["factory_operating_system_scorecard"]["status"], "BLOCKED_MISSING_EVIDENCE")
+
+    def test_runtime_proof_clears_only_runtime_backed_requirements(self):
+        result = audit.build_audit(
+            runtime_proofs=[sample_hermes_runtime_proof()],
+            runtime_proof_refs=["external:redacted-hermes-runtime-proof"],
+        )
+        by_id = {item["id"]: item for item in result["requirements"]}
+
+        self.assertEqual(by_id["hermes_real_worker_orchestration"]["status"], "ACHIEVED")
+        self.assertEqual(by_id["live_agent_profile_layer"]["status"], "ACHIEVED")
+        self.assertEqual(by_id["production_product_face"]["status"], "BLOCKED_MISSING_EVIDENCE")
+        self.assertEqual(by_id["production_release_human_gate"]["status"], "BLOCKED_MISSING_EVIDENCE")
+        self.assertEqual(result["status"], "NOT_COMPLETE")
+        self.assertFalse(result["completion_claim_allowed"])
 
     def test_symbolic_cu_svm_result_cannot_clear_production_scope(self):
         symbolic = {

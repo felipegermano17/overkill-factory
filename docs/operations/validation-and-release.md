@@ -157,12 +157,24 @@ python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
 python scripts/supply_chain_proof.py --check --no-write
 factoryctl signal-coverage --out .tmp/factory-runs/signal-coverage/factory-signal-coverage-scorecard.json
-python scripts/factory_completion_audit.py --no-write --require-complete
+factoryctl validate-method-engines templates/method-engine-registry.json
+factoryctl operating-system-scorecard --out .tmp/factory-runs/operating-systems/factory-operating-system-scorecard.json
+python scripts/hermes_runtime_proof.py --boards-json .tmp/hermes-runtime/boards.json --profile-list-text .tmp/hermes-runtime/profile-list.txt --status-text .tmp/hermes-runtime/status.txt --task-list-json .tmp/hermes-runtime/task-list.json --done-task-runs-json .tmp/hermes-runtime/done-task-runs.json --blocked-task-show-json .tmp/hermes-runtime/blocked-task-show.json --out .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
+factoryctl operating-system-scorecard --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --out .tmp/factory-runs/operating-systems/factory-operating-system-scorecard-runtime-proven.json
+python scripts/factory_completion_audit.py --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json --no-write --require-complete
 python -m unittest discover -s tests -p "test_*.py" -q
 ```
 
 If a command fails, do not weaken the validator. Fix the contract, data model,
 docs or fixture that caused the failure.
+
+Keep the scorecards separate:
+
+- OS scorecard with runtime proof proves the factory operating spine.
+- Completion audit proves whether the current product/release can be claimed.
+- Completion audit with `--runtime-proof` clears only runtime-backed
+  requirements; it does not clear product/release/security proof.
+- A product can remain `BLOCKED` even when the operating spine is green.
 
 ## Windows Notes
 

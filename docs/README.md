@@ -37,7 +37,8 @@ python -m unittest tests.test_open_source_docs -q
 
 Start with `docs/index.md`, then read
 `docs/getting-started/install-in-hermes.md`,
-`docs/reference/cli.md`, `docs/concepts/factory-flow.md` and
+`docs/reference/cli.md`, `docs/architecture/factory-operating-systems.md`,
+`docs/concepts/factory-flow.md` and
 `docs/operations/validation-and-release.md`.
 
 Read `docs/operations/fast-autonomy-lane.md` when deciding whether a card can

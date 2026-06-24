@@ -12,7 +12,16 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from factory_operating_systems import build_operating_system_scorecard, load_operating_system_registry  # noqa: E402
+from hermes_runtime_proof import validate_hermes_runtime_proof  # noqa: E402
+from validate_worker_profiles import validate as validate_worker_profiles  # noqa: E402
+
 DEFAULT_OUT = ROOT / ".tmp" / "factory-runs" / "completion"
+DEFAULT_OPERATING_SYSTEM_SCORECARD_REF = ".tmp/factory-runs/operating-systems/factory-operating-system-scorecard.json"
 
 
 def now_iso() -> str:
@@ -390,10 +399,41 @@ def bounded_requirement(
     }
 
 
-def build_requirements() -> list[dict[str, Any]]:
-    requirements: list[dict[str, Any]] = []
+def hermes_runtime_proven(runtime_proofs: list[dict[str, Any]] | None) -> bool:
+    return any(not validate_hermes_runtime_proof(proof) for proof in (runtime_proofs or []))
 
-    if exists(".tmp/factory-runs/hermes-live/multi-profile-dispatch-summary.md") and exists(".tmp/factory-runs/hermes-live/real-profile-dispatch-smoke.md"):
+
+def public_worker_profile_layer_ready(runtime_proofs: list[dict[str, Any]] | None) -> bool:
+    if not hermes_runtime_proven(runtime_proofs):
+        return False
+    if validate_worker_profiles():
+        return False
+    return (
+        exists("agents/worker-profiles.public.json")
+        and exists("agents/hermes-profile-bindings.public.json")
+        and exists("docs/agents/live-agent-configuration.md")
+        and exists("docs/agents/security-specialist-matrix.md")
+    )
+
+
+def build_requirements(
+    *,
+    runtime_proofs: list[dict[str, Any]] | None = None,
+    runtime_proof_refs: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    requirements: list[dict[str, Any]] = []
+    runtime_proof_refs = runtime_proof_refs or []
+
+    if hermes_runtime_proven(runtime_proofs):
+        requirements.append(
+            achieved_requirement(
+                "hermes_real_worker_orchestration",
+                "Hermes real worker orchestration",
+                runtime_proof_refs or ["external:redacted-hermes-runtime-proof"],
+                "The factory floor must be Hermes, not only local scripts or chat plans.",
+            )
+        )
+    elif exists(".tmp/factory-runs/hermes-live/multi-profile-dispatch-summary.md") and exists(".tmp/factory-runs/hermes-live/real-profile-dispatch-smoke.md"):
         requirements.append(
             achieved_requirement(
                 "hermes_real_worker_orchestration",
@@ -417,7 +457,22 @@ def build_requirements() -> list[dict[str, Any]]:
             )
         )
 
-    if (
+    if public_worker_profile_layer_ready(runtime_proofs):
+        requirements.append(
+            achieved_requirement(
+                "live_agent_profile_layer",
+                "Live agent profile layer",
+                [
+                    "agents/worker-profiles.public.json",
+                    "agents/hermes-profile-bindings.public.json",
+                    "docs/agents/live-agent-configuration.md",
+                    "docs/agents/security-specialist-matrix.md",
+                    *(runtime_proof_refs or ["external:redacted-hermes-runtime-proof"]),
+                ],
+                "Workers must be executable Hermes profiles with identity, authority, tool policy, evidence, handoff and review contracts.",
+            )
+        )
+    elif (
         exists("agents/worker-profiles.public.json")
         and exists("agents/hermes-profile-bindings.public.json")
         and exists("docs/agents/live-agent-configuration.md")
@@ -707,8 +762,38 @@ def build_requirements() -> list[dict[str, Any]]:
     return requirements
 
 
-def build_audit() -> dict[str, Any]:
-    requirements = build_requirements()
+def build_audit(
+    *,
+    runtime_proofs: list[dict[str, Any]] | None = None,
+    runtime_proof_refs: list[str] | None = None,
+) -> dict[str, Any]:
+    requirements = build_requirements(runtime_proofs=runtime_proofs, runtime_proof_refs=runtime_proof_refs)
+    os_scorecard = build_operating_system_scorecard(
+        load_operating_system_registry(),
+        completion_audit={"requirements": requirements},
+        completion_audit_ref="external:current-factory-10-completion-audit",
+        runtime_proofs=runtime_proofs,
+        runtime_proof_refs=runtime_proof_refs,
+    )
+    if os_scorecard["result"] == "PASS":
+        requirements.append(
+            achieved_requirement(
+                "factory_operating_system_scorecard",
+                "Factory operating-system readiness scorecard",
+                ["templates/factory-operating-system-registry.json"],
+                "The factory must know which OS owns each critical risk before claiming practical completion.",
+            )
+        )
+    else:
+        requirements.append(
+            blocked_requirement(
+                "factory_operating_system_scorecard",
+                "Factory operating-system readiness scorecard",
+                [DEFAULT_OPERATING_SYSTEM_SCORECARD_REF],
+                "The factory must know which OS owns each critical risk before claiming practical completion.",
+                "Close P0 OS issues, attach runtime evidence and rerun factoryctl operating-system-scorecard until it passes.",
+            )
+        )
     blocking = [item for item in requirements if item["blocking"]]
     achieved = [item for item in requirements if item["status"] == "ACHIEVED"]
     bounded = [item for item in requirements if item["status"] == "BOUNDED_PUBLIC_PROOF"]
@@ -798,9 +883,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT))
     parser.add_argument("--no-write", action="store_true")
     parser.add_argument("--require-complete", action="store_true")
+    parser.add_argument("--runtime-proof", type=Path, action="append", default=[])
     args = parser.parse_args(argv)
 
-    audit = build_audit()
+    runtime_proofs = [load_json(path) for path in args.runtime_proof]
+    runtime_proof_refs = [repo_ref(path) for path in args.runtime_proof]
+    audit = build_audit(runtime_proofs=runtime_proofs, runtime_proof_refs=runtime_proof_refs)
     if not args.no_write:
         out_dir = Path(args.out_dir)
         write_json(out_dir / "factory-10-completion-audit.json", audit)

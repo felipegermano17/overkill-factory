@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-operating-system-registry.schema.json",
+  "title": "Overkill Factory Operating System Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "factory_method_version",
+    "issue_set_ref",
+    "entries",
+    "coverage_policy",
+    "completion_claim_policy",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-operating-system-registry.schema.json"
+    },
+    "record_type": {
+      "const": "factory_operating_system_registry"
+    },
+    "registry_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "issue_set_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "required": [
+          "os_id",
+          "display_name",
+          "priority",
+          "status",
+          "issue_number",
+          "issue_url",
+          "owner_worker",
+          "purpose",
+          "weak_point",
+          "primary_contract_refs",
+          "source_of_truth_refs",
+          "enforcement_command_refs",
+          "validation_test_refs",
+          "required_runtime_proofs",
+          "fail_closed_rules",
+          "forbidden_claims",
+          "mapped_docs",
+          "completion_audit_blockers_owned",
+          "runtime_boundary",
+          "production_claim_state"
+        ],
+        "properties": {
+          "os_id": {
+            "enum": [
+              "product_truth_research_os",
+              "method_os",
+              "authority_autonomy_os",
+              "hermes_worker_runtime_os",
+              "evidence_product_proof_os",
+              "capability_domain_pack_os",
+              "operator_experience_os",
+              "security_release_os",
+              "product_quality_os",
+              "velocity_cost_os",
+              "factory_learning_os"
+            ]
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 3
+          },
+          "priority": {
+            "enum": ["P0", "P1"]
+          },
+          "status": {
+            "enum": ["planned", "active", "hardened_existing", "blocked_pending_runtime_proof"]
+          },
+          "issue_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "issue_url": {
+            "type": "string",
+            "minLength": 10
+          },
+          "owner_worker": {
+            "type": "string",
+            "minLength": 3
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 20
+          },
+          "weak_point": {
+            "type": "string",
+            "minLength": 20
+          },
+          "primary_contract_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "source_of_truth_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "enforcement_command_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "validation_test_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "required_runtime_proofs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "fail_closed_rules": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "forbidden_claims": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "mapped_docs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "completion_audit_blockers_owned": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 3
+            },
+            "uniqueItems": true
+          },
+          "runtime_boundary": {
+            "type": "object",
+            "required": [
+              "hermes_source_of_truth",
+              "worker_results_required",
+              "receipt_five_required",
+              "bridge_may_execute_factory_work",
+              "human_gate_can_be_auto_approved",
+              "local_validation_is_production_proof"
+            ],
+            "properties": {
+              "hermes_source_of_truth": { "const": true },
+              "worker_results_required": { "const": true },
+              "receipt_five_required": { "const": true },
+              "bridge_may_execute_factory_work": { "const": false },
+              "human_gate_can_be_auto_approved": { "const": false },
+              "local_validation_is_production_proof": { "const": false }
+            },
+            "additionalProperties": false
+          },
+          "production_claim_state": {
+            "enum": ["no_product_claim", "kernel_only", "blocked_pending_product_specific_proof"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "coverage_policy": {
+      "type": "object",
+      "required": [
+        "all_p0_systems_have_issue",
+        "all_systems_have_runtime_boundary",
+        "all_systems_have_fail_closed_rules",
+        "all_systems_separate_contract_from_runtime_proof"
+      ],
+      "properties": {
+        "all_p0_systems_have_issue": { "const": true },
+        "all_systems_have_runtime_boundary": { "const": true },
+        "all_systems_have_fail_closed_rules": { "const": true },
+        "all_systems_separate_contract_from_runtime_proof": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "completion_claim_policy": {
+      "type": "object",
+      "required": [
+        "registry_alone_allows_completion_claim",
+        "factory_v1_public_kernel_scope_allowed",
+        "product_specific_production_claim_allowed",
+        "runtime_proof_required_before_production_claim"
+      ],
+      "properties": {
+        "registry_alone_allows_completion_claim": { "const": false },
+        "factory_v1_public_kernel_scope_allowed": { "const": true },
+        "product_specific_production_claim_allowed": { "const": false },
+        "runtime_proof_required_before_production_claim": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

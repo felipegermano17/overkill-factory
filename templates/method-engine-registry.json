@@ -1,0 +1,130 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/method-engine-registry.schema.json",
+  "record_type": "method_engine_registry",
+  "registry_id": "method-engine-registry-v1",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "engines": [
+    {
+      "engine_id": "spec_first_sdd",
+      "method_family": "spec_first",
+      "display_name": "Spec-First SDD Engine",
+      "method_aliases": ["spec-first", "SDD", "SpecKit", "OpenSpec", "TLC Spec Driven"],
+      "trigger_routes": ["product_creation", "feature_delivery", "critical_integration", "migration_execution"],
+      "required_artifacts": ["method_contract", "spec_graph", "product_creation_plan", "work_unit_contract"],
+      "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
+      "required_workers": ["factory-orchestrator", "decomposition-planner", "qa-verification-worker"],
+      "proof_requirements": ["spec artifacts exist", "tasks trace to Product SOT", "Receipt Five cites spec evidence"],
+      "forbidden_shortcuts": ["method label without spec artifact", "implementation before Product Creation Plan"],
+      "operator_choice_required": false,
+      "execution_allowed_by_engine_selection": false
+    },
+    {
+      "engine_id": "test_first_tdd",
+      "method_family": "test_first",
+      "display_name": "Test-First TDD Engine",
+      "method_aliases": ["test-first", "TDD"],
+      "trigger_routes": ["feature_delivery", "bug_repair", "critical_integration", "migration_execution"],
+      "required_artifacts": ["test_plan", "regression_tests", "verification_commands"],
+      "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
+      "required_workers": ["qa-verification-worker", "test-automation-builder", "independent-reviewer"],
+      "proof_requirements": ["failing or target test defined before implementation", "tests pass after implementation", "Receipt Five cites commands"],
+      "forbidden_shortcuts": ["test-first claimed without test artifact", "manual check as only regression proof"],
+      "operator_choice_required": false,
+      "execution_allowed_by_engine_selection": false
+    },
+    {
+      "engine_id": "behavior_first_bdd",
+      "method_family": "behavior_first",
+      "display_name": "Behavior-First BDD Engine",
+      "method_aliases": ["behavior-first", "BDD", "Specification by Example"],
+      "trigger_routes": ["product_creation", "feature_delivery", "ux_product_experience"],
+      "required_artifacts": ["scenario_matrix", "acceptance_examples", "operator_briefing_package"],
+      "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
+      "required_workers": ["product-sot-planner", "qa-verification-worker", "product-face"],
+      "proof_requirements": ["examples map to Product SOT", "scenarios checked by QA or Product Face", "Receipt Five cites scenario evidence"],
+      "forbidden_shortcuts": ["acceptance examples invented after execution", "operator chat used as scenario proof"],
+      "operator_choice_required": false,
+      "execution_allowed_by_engine_selection": false
+    },
+    {
+      "engine_id": "discovery_research",
+      "method_family": "discovery_first",
+      "display_name": "Discovery and Research Engine",
+      "method_aliases": ["discovery-first", "research-first"],
+      "trigger_routes": ["product_creation", "research_validation", "brownfield_discovery"],
+      "required_artifacts": ["source_resolution_packet", "product_source_ledger", "specialist_research_plan", "operator_understanding_confirmation"],
+      "required_gates": ["Source Gate", "Research Gate", "Product SOT Gate"],
+      "required_workers": ["source-ledger-worker", "product-sot-planner", "factory-orchestrator"],
+      "proof_requirements": ["source claims classified", "conflicts resolved or blocked", "operator understanding confirmed"],
+      "forbidden_shortcuts": ["raw paper becomes Product SOT", "repo supplied but not studied"],
+      "operator_choice_required": false,
+      "execution_allowed_by_engine_selection": false
+    },
+    {
+      "engine_id": "security_first_threat_model",
+      "method_family": "security_first",
+      "display_name": "Security-First Threat Model Engine",
+      "method_aliases": ["security-first", "threat-model-first", "SSDF"],
+      "trigger_routes": ["security_remediation", "release_promotion", "critical_integration", "agent_quality_change"],
+      "required_artifacts": ["security_architecture_plan", "threat_model", "secret_delivery_policy", "supply_chain_result"],
+      "required_gates": ["Security Gate", "Review Gate", "Human R4 Gate"],
+      "required_workers": ["security-orchestrator", "codex-security", "supply-chain-gate", "independent-reviewer"],
+      "proof_requirements": ["security architecture exists before material implementation", "scanner evidence attached", "release risk owner recorded"],
+      "forbidden_shortcuts": ["security review replaces security architecture", "placeholder secret delivery passes production"],
+      "operator_choice_required": false,
+      "execution_allowed_by_engine_selection": false
+    },
+    {
+      "engine_id": "design_first_product_experience",
+      "method_family": "design_first",
+      "display_name": "Design-First Product Experience Engine",
+      "method_aliases": ["design-first", "Product Experience OS", "Product Face"],
+      "trigger_routes": ["ux_product_experience", "product_creation", "feature_delivery"],
+      "required_artifacts": ["professional_design_process", "project_design_system", "product_experience_plan", "product_face_packet"],
+      "required_gates": ["Product Experience Gate", "Product Face Gate", "Review Gate"],
+      "required_workers": ["product-face", "frontend-builder", "qa-verification-worker"],
+      "proof_requirements": ["DESIGN.md or design-system contract exists", "Product Face result checks states", "screenshots and accessibility evidence attached"],
+      "forbidden_shortcuts": ["visible product passes without screenshots", "Product Face Packet treated as proof"],
+      "operator_choice_required": false,
+      "execution_allowed_by_engine_selection": false
+    },
+    {
+      "engine_id": "legacy_diagnosis",
+      "method_family": "legacy_diagnosis",
+      "display_name": "Legacy Diagnosis Engine",
+      "method_aliases": ["legacy-diagnosis", "brownfield-first"],
+      "trigger_routes": ["brownfield_discovery", "migration_execution", "bug_repair"],
+      "required_artifacts": ["brownfield_os_plan", "repo_archaeology_notes", "risk_register"],
+      "required_gates": ["Source Gate", "Migration Gate", "Review Gate"],
+      "required_workers": ["source-ledger-worker", "product-architect", "qa-verification-worker"],
+      "proof_requirements": ["existing repo studied before SOT", "legacy risk mapped", "migration rollback identified"],
+      "forbidden_shortcuts": ["old repo treated as fresh product", "legacy assumptions copied into Product SOT without source refs"],
+      "operator_choice_required": false,
+      "execution_allowed_by_engine_selection": false
+    },
+    {
+      "engine_id": "incident_first",
+      "method_family": "incident_first",
+      "display_name": "Incident-First Engine",
+      "method_aliases": ["incident-first", "repair-first"],
+      "trigger_routes": ["incident_response", "bug_repair", "security_remediation"],
+      "required_artifacts": ["incident_support_plan", "reproduction_evidence", "rollback_or_mitigation_plan"],
+      "required_gates": ["Incident Gate", "Verification Gate", "Review Gate"],
+      "required_workers": ["factory-orchestrator", "qa-verification-worker", "security-orchestrator"],
+      "proof_requirements": ["current impact classified", "fix or mitigation verified", "post-incident learnback captured"],
+      "forbidden_shortcuts": ["incident fixed only by chat status", "mitigation accepted without verification"],
+      "operator_choice_required": false,
+      "execution_allowed_by_engine_selection": false
+    }
+  ],
+  "coverage_policy": {
+    "method_label_cannot_authorize_execution": true,
+    "operator_does_not_choose_internal_method": true,
+    "all_engines_require_artifacts_gates_workers_and_proof": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  }
+}

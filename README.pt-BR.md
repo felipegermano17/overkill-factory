@@ -109,6 +109,48 @@ Trabalho com superfície de produto também precisa criar o contrato de design
 system do projeto e o `DESIGN.md` legível por IA antes de builders de frontend
 ou prova de Product Face passarem.
 
+## Operating Systems Da Fábrica
+
+As áreas críticas da fábrica ficam agrupadas em um registry canônico de
+Operating Systems. Isso impede que a fábrica vire um conjunto de contratos
+espalhados sem dono operacional.
+
+Inspecione com:
+
+```bash
+factoryctl operating-systems
+factoryctl validate-operating-systems templates/factory-operating-system-registry.json
+factoryctl operating-system-scorecard --runtime-proof .tmp/factory-runs/hermes-runtime/hermes-worker-runtime-proof.json
+```
+
+O registry cobre Product Truth and Research, Method, Authority and Autonomy,
+Hermes Worker Runtime, Evidence and Product Proof, Capability and Domain Packs,
+Operator Experience, Security and Release, Product Quality, Velocity and Cost e
+Factory Learning.
+
+Uma OS declara worker dono, issue, contratos, regras de falha fechada,
+fronteira de runtime e provas exigidas. Ela não afirma que um produto está
+pronto para produção. Produção ainda exige estado Hermes, resultados de
+workers, Receipt Five, prova específica do produto e gates humanos quando o
+risco exigir.
+
+A prova runtime do Hermes é public-safe e redigida: ela prova gateway, auth do
+Codex, Telegram, perfil gerente, conclusão de worker e bloqueio de human gate
+sem publicar conteúdo privado do board. Ela prova a espinha operacional da
+fábrica, não o release de um produto específico.
+
+O Method OS também tem um registry de method engines:
+
+```bash
+factoryctl method-engines
+factoryctl validate-method-engines templates/method-engine-registry.json
+```
+
+O Method Contract precisa ligar os métodos escolhidos a engines como spec-first
+SDD, test-first TDD, behavior-first BDD, discovery/research, security-first,
+design-first, legacy diagnosis ou incident-first. Nome de método sozinho não
+autoriza execução.
+
 ## Runtime Hermes
 
 Hermes é o primeiro chão de fábrica suportado. A Overkill Factory não substitui

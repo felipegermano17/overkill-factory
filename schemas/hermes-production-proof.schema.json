@@ -57,6 +57,81 @@
         "minLength": 1
       }
     },
+    "runtime_summary": {
+      "type": "object",
+      "properties": {
+        "gateway_running": {
+          "type": "boolean"
+        },
+        "openai_codex_logged_in": {
+          "type": "boolean"
+        },
+        "telegram_configured": {
+          "type": "boolean"
+        },
+        "profile_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "running_profile_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "manager_profile_running": {
+          "type": "boolean"
+        },
+        "current_board_detected": {
+          "type": "boolean"
+        },
+        "current_board_total_tasks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "task_list_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "done_task_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked_task_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "representative_done_run_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "representative_done_run_profiles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "live_worker_orchestration_proven": {
+          "type": "boolean"
+        },
+        "human_gate_block_event_detected": {
+          "type": "boolean"
+        }
+      }
+    },
+    "operator_gate_boundary": {
+      "type": "object",
+      "properties": {
+        "human_gate_auto_approved": {
+          "const": false
+        },
+        "human_gate_blocked_until_owner_decision": {
+          "type": "boolean"
+        },
+        "bridge_or_manager_executed_gate": {
+          "const": false
+        }
+      }
+    },
     "limits": {
       "type": "array",
       "minItems": 1,

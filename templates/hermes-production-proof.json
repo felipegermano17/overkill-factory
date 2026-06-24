@@ -10,6 +10,30 @@
   "evidence_refs": [
     ".tmp/factory-runs/path/to/evidence.json"
   ],
+  "runtime_summary": {
+    "gateway_running": true,
+    "openai_codex_logged_in": true,
+    "telegram_configured": true,
+    "profile_count": 5,
+    "running_profile_count": 1,
+    "manager_profile_running": true,
+    "current_board_detected": true,
+    "current_board_total_tasks": 1,
+    "task_list_total": 1,
+    "done_task_count": 1,
+    "blocked_task_count": 0,
+    "representative_done_run_count": 1,
+    "representative_done_run_profiles": [
+      "example-worker"
+    ],
+    "live_worker_orchestration_proven": true,
+    "human_gate_block_event_detected": true
+  },
+  "operator_gate_boundary": {
+    "human_gate_auto_approved": false,
+    "human_gate_blocked_until_owner_decision": true,
+    "bridge_or_manager_executed_gate": false
+  },
   "limits": [
     "This proof is bounded to the named scope.",
     "This proof does not authorize a real Hermes update by itself."
