@@ -5,6 +5,7 @@
   "owner_profile": "factory-orchestrator",
   "request_type": "product_new",
   "universal_signal_intake_ref": "templates/universal-signal-intake.json",
+  "operator_briefing_package_ref": "templates/operator-briefing-package.json",
   "canonical_product_sot_ref": "product_sot",
   "scope_intent": "full_product",
   "complete_product_required": true,
@@ -20,6 +21,35 @@
   "customer_readiness_gate_ref": "templates/customer-readiness-gate.json",
   "scale_slo_readiness_gate_ref": "templates/scale-slo-readiness-gate.json",
   "sdlc_feedback_loop_ref": "templates/factory-sdlc-feedback-loop.json",
+  "factory_phase_lock": {
+    "$schema": "https://overkill-factory.dev/schemas/factory-phase-lock.schema.json",
+    "record_type": "factory_phase_lock",
+    "current_phase_id": "F13",
+    "active_phase_id": "F13",
+    "active_frontier": "ready_gate",
+    "single_active_frontier": true,
+    "downstream_freeze_active": false,
+    "owner_surface_first": {
+      "product_sot_review_packet_delivered": true,
+      "product_sot_review_packet_ref": "templates/product-sot.json",
+      "operator_briefing_package_ref": "templates/operator-briefing-package.json",
+      "summary_only_forbidden": true,
+      "material_before_question": true
+    },
+    "materialized_artifact_refs": {
+      "product_sot_ref": "templates/product-sot.json",
+      "full_product_sot_scope_coverage_ref": "templates/full-product-sot-scope-coverage.json",
+      "operator_briefing_package_ref": "templates/operator-briefing-package.json",
+      "method_contract_ref": "templates/method-contract.json",
+      "ready_gate_ref": "factoryctl:gate-report"
+    },
+    "frozen_phase_ids": [],
+    "frozen_worker_ids": [],
+    "allowed_current_worker_ids": ["factory-orchestrator", "decomposition-planner"],
+    "next_required_artifact": "gate_report",
+    "operator_decision_required": false,
+    "freeze_reason": "Canonical vFinal template is already past Product SOT and Method Contract; product instances must freeze downstream until equivalent owner-readable artifacts exist."
+  },
   "autonomy_mode": "bounded_execution",
   "agent_readiness_basis": {
     "human_guidance_required": "bounded approvals for material scope, access, risk and release decisions",

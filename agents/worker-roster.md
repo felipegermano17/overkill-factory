@@ -57,8 +57,8 @@ needed.
 |---|---|---|---|
 | `factory-orchestrator` | hybrid | F0-F18 | Maintains phase, risk, routing, Method Contract, capability coverage, readiness and blockers, then emits semantic transition/recovery intent for Hermes. It does not own Kanban runtime state or approve product, security or R3/R4 gates. |
 | `source-ledger-worker` | open | F0-F1 | Separates source, inference, decision, conflict, stale material and gap before any SOT claim is promoted. |
-| `product-sot-planner` | open | F2-F3 | Owns Outcome/Discovery and turns source ledger plus answers into a Product SOT candidate. Candidate is not approval. |
-| `product-architect` | open | F4-F6 | Creates architecture candidate, boundaries, tradeoffs, trust boundaries and risk map from the SOT. |
+| `product-sot-planner` | open | F2-F5 | Owns Outcome/Discovery and turns source ledger plus answers into a Product SOT candidate plus owner-readable review packet. Candidate is not approval. |
+| `product-architect` | open | F10 | Creates architecture candidate, boundaries, tradeoffs, trust boundaries and risk map only after owner-readable Product SOT material and Method Contract exist. |
 | `product-face` | hybrid | F5/F13 | Defines and validates Product Experience Plan, Product Face packet, screens, states, mobile, wallet UX, accessibility, performance and visual evidence. |
 | `docs-os-worker` | closed/hybrid | F10 | Converts approved architecture into specs, ADRs, diagrams, contracts and evidence paths. |
 | `decomposition-planner` | closed | F11 | Produces Spec Graph, Loop Plan, work packages and Hermes card graph with risk, runtime, reviewer, lane/worktree and gate contracts. |
@@ -92,7 +92,7 @@ the card.
 | `evidence-reconciler` | deterministic | F13-F16 | Selects current worker results, records superseded stale evidence and blocks Closure Summary, Completion Audit, Receipt Five or done when closure evidence is invalid. |
 | `autoreview-gate` | closed | F14/F15 | Runs structured pre-landing code review. It finds issues but does not replace independent review. |
 | `remote-proof-runner` | closed | F13-F16 | Uses Crabbox/Testbox/container fallback for heavy or clean-environment proof with TTL, cost and cleanup evidence. |
-| `handoff-packer` | closed | F9-F15 | Creates portable handoff packets for worker transfer, pause, context compaction or phase change. |
+| `handoff-packer` | closed | F9-F15 | Creates portable handoff packets for worker transfer, pause, context compaction or phase change; it must not promote future-phase work while `factory_phase_lock` freezes downstream. |
 
 ## Security And Onchain
 
@@ -112,7 +112,7 @@ the card.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `human-gate-clerk` | human-support | F9/F15/F16 | Prepares and records real human decisions for authority, access, budget, waiver, material risk and release. It must deliver the operator decision package before asking for a decision, and must not ask approval for planning-only continuation, source resolution, method routing or specialist routing. |
+| `human-gate-clerk` | human-support | F9/F15/F16 | Prepares and records real human decisions for authority, access, budget, waiver, material risk and release. It must deliver the operator decision package before asking for a decision, obey `factory_phase_lock`, and must not ask approval for planning-only continuation, source resolution, method routing, specialist routing or downstream work that is still frozen. |
 | `release-ops-worker` | closed/hybrid | F16-F17 | Handles release channel, production operations, promotion packet, smoke, canary, rollback readiness and monitoring. |
 | `public-safety-gate` | closed | F16-F17 | Blocks public artifacts containing private paths, internal names, raw source extraction or private links. |
 | `memory-steward` | hybrid | F0/F1/F18 | Treats memory as a risk surface with source, trust tier, freshness and poisoning controls. |

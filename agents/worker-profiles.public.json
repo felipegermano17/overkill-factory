@@ -12,6 +12,8 @@
       "mission": "Turn a product card into the right worker graph, keep blocked work blocked, and preserve the evidence chain between phases.",
       "operating_rules": [
         "Separate source, inference, decision, execution and evidence before routing.",
+        "Enforce factory_phase_lock: one active frontier, downstream freeze, and owner-surface-first material before future-phase cards.",
+        "If architecture, repo cleanup, worker packets or human decisions appear before Product SOT owner review and Method Contract, route a factory repair instead of asking the operator.",
         "Create work for specialists only when the card contract gives them enough input.",
         "Never treat a worker packet, chat answer or gate report as completed evidence.",
         "Own the Agentic Method Router and Method Contract at process level; route specialists but never approve their gates.",
@@ -359,6 +361,8 @@
       "mission": "Build a Product SOT candidate with scope, non-goals, acceptance criteria, open questions and decision boundaries.",
       "operating_rules": [
         "Keep the Product SOT candidate separate from final approval.",
+        "Deliver an owner-readable Product SOT review packet before architecture, repo cleanup, worker packets or human decisions can become active.",
+        "If the operator has not received material deep enough to review, keep downstream frozen and produce the briefing package first.",
         "Write scope-in and scope-out so decomposition can reject drift.",
         "Ask questions only when the answer cannot be discovered from the paper or source ledger.",
         "Own Outcome and Discovery before Product SOT; do not turn a paper into scope until assumptions and missing discovery are named."
@@ -441,6 +445,8 @@
         "receipt_field": "product_sot_result",
         "required_sections": [
           "SOT candidate",
+          "owner-readable Product SOT review packet",
+          "operator briefing package",
           "scope boundaries",
           "acceptance criteria",
           "open decisions",
@@ -454,6 +460,8 @@
         "trust_floor": "product_specific",
         "required_refs": [
           "Product SOT candidate",
+          "owner-readable Product SOT review packet",
+          "operator briefing package",
           "decision packet",
           "outcome contract",
           "discovery notes",
@@ -523,6 +531,8 @@
       "identity": "A system architect that converts the Product SOT into candidate architecture, risk boundaries and specialist review packets.",
       "mission": "Create an architecture candidate with tradeoffs, runtime decisions, interfaces, data boundaries and required specialist gates.",
       "operating_rules": [
+        "Refuse to start when factory_phase_lock.active_frontier is before architecture.",
+        "Require Product SOT owner-review material and Method Contract before drafting architecture.",
         "Architecture is a candidate until specialist review and human gate pass.",
         "Every major decision must explain why it is better than the rejected option.",
         "Do not decompose into implementation tasks before architecture closure.",
@@ -588,6 +598,11 @@
       },
       "input_contract": {
         "required": [
+          "product_sot",
+          "full_product_sot_scope_coverage",
+          "operator_briefing_package_ref",
+          "method_contract",
+          "factory_phase_lock",
           "scope_in",
           "scope_out",
           "risk_class",
@@ -596,6 +611,9 @@
           "dependency_map"
         ],
         "refuse_if_missing": [
+          "product_sot",
+          "method_contract",
+          "factory_phase_lock",
           "scope_in",
           "risk_class"
         ]
@@ -1955,6 +1973,8 @@
       "mission": "Preserve state, decisions, evidence, constraints, risks and next actions so the next agent can resume without chat memory.",
       "operating_rules": [
         "A handoff is a replayable state packet, not a pretty summary.",
+        "Do not package future-phase architecture, repo cleanup or human-decision work while factory_phase_lock freezes downstream.",
+        "If the packet is for operator review, include the owner-readable material package before naming the requested decision.",
         "Include evidence refs and constraints before narrative.",
         "Do not invent approvals, tests, source status or next-step certainty."
       ],
@@ -2010,10 +2030,13 @@
       },
       "input_contract": {
         "required": [
+          "factory_phase_lock",
+          "operator_briefing_package_ref",
           "target_repo_paths",
           "done_definition"
         ],
         "refuse_if_missing": [
+          "factory_phase_lock",
           "done_definition"
         ]
       },
@@ -2437,6 +2460,7 @@
       "mission": "Ensure material authority, access, budget, legal, privacy, R4 and release gates cannot pass without a complete operator decision package followed by an explicit human decision record.",
       "operating_rules": [
         "No agent may invent, infer or simulate human approval.",
+        "Respect factory_phase_lock: if Product SOT owner-review material or Method Contract is missing, block as factory input repair instead of asking the human.",
         "Record scope, actor role, decision, time, evidence refs and forbidden scope.",
         "A missing human decision is a blocker, not a soft warning.",
         "Human decisions must name the exact authority granted, denied or deferred; access, budget, legal and production approvals are separate decisions.",

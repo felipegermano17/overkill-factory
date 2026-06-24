@@ -254,12 +254,102 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
 
         errors = factoryctl.validate_card(card)
         payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
+        schemas = factoryctl.bundled_schemas()
+        help_schema = schemas["factory-help.schema.json"]
 
         self.assertEqual(errors, [])
+        self.assertEqual(
+            factoryctl.validate_node(help_schema, payload, "factory_help", schemas=schemas, root_schema=help_schema),
+            [],
+        )
         decision = payload["user_decision_required"][0]
         self.assertEqual(decision["decision_type"], "product_intent_confirmation")
         self.assertIn("confirm, correct or reject", decision["user_action"])
         self.assertNotIn("approve", decision["user_action"].lower())
+
+    def test_phase_lock_blocks_architecture_when_product_sot_packet_was_not_delivered(self) -> None:
+        card = load_vfinal_card()
+        card["phase"] = "F9"
+        card["surfaces"] = ["architecture", "repo-cleanup"]
+        card.pop("operator_briefing_package_ref", None)
+        card["factory_phase_lock"] = {
+            "$schema": "https://overkill-factory.dev/schemas/factory-phase-lock.schema.json",
+            "record_type": "factory_phase_lock",
+            "current_phase_id": "F5",
+            "active_frontier": "product_sot",
+            "single_active_frontier": True,
+            "downstream_freeze_active": True,
+            "owner_surface_first": {
+                "product_sot_review_packet_delivered": False,
+                "summary_only_forbidden": True,
+                "material_before_question": True,
+            },
+            "materialized_artifact_refs": {
+                "product_sot_ref": "templates/product-sot.json",
+                "full_product_sot_scope_coverage_ref": "templates/full-product-sot-scope-coverage.json",
+                "method_contract_ref": "templates/method-contract.json",
+            },
+            "frozen_phase_ids": ["F8", "F9", "F10", "F11", "F12", "F13", "F15"],
+            "frozen_worker_ids": ["product-architect", "handoff-packer", "human-gate-clerk"],
+            "allowed_current_worker_ids": ["product-sot-planner", "factory-orchestrator"],
+            "next_required_artifact": "operator_briefing_package",
+            "operator_decision_required": False,
+            "freeze_reason": "Product SOT owner review packet has not been delivered.",
+        }
+
+        errors = factoryctl.validate_card(card)
+        payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
+
+        self.assertIn(
+            "factory_phase_lock blocks downstream card phase F9 while active frontier is product_sot",
+            errors,
+        )
+        self.assertIn(
+            "factory_phase_lock owner-surface-first requires an owner-readable Product SOT review packet before architecture, repo cleanup, human gates, worker packets or execution",
+            errors,
+        )
+        self.assertEqual(payload["gate_status"], "blocked")
+        self.assertEqual(payload["phase_lock"]["active_frontier"], "product_sot")
+        self.assertEqual(payload["phase_lock"]["next_required_artifact"], "operator_briefing_package")
+        self.assertIn("operator_briefing_package", payload["factory_next_action"]["action"])
+        self.assertEqual(payload["factory_next_action"]["owner"], "factory")
+        self.assertEqual(payload["user_decision_required"], [])
+
+    def test_repo_cleanup_is_frozen_until_ready_gate(self) -> None:
+        card = load_vfinal_card()
+        card["phase"] = "F11"
+        card["surfaces"] = ["repo-cleanup"]
+        card.pop("product_implementation_readiness_ref", None)
+        card.pop("product_implementation_readiness", None)
+        card["factory_phase_lock"] = dict(card["factory_phase_lock"])
+        card["factory_phase_lock"]["current_phase_id"] = "F11"
+        card["factory_phase_lock"]["active_phase_id"] = "F11"
+        card["factory_phase_lock"]["active_frontier"] = "architecture"
+        card["factory_phase_lock"]["next_required_artifact"] = "architecture_packet"
+        card["factory_phase_lock"]["materialized_artifact_refs"] = dict(
+            card["factory_phase_lock"]["materialized_artifact_refs"]
+        )
+        card["factory_phase_lock"]["materialized_artifact_refs"].pop("ready_gate_ref", None)
+
+        errors = factoryctl.validate_card(card)
+        payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
+
+        self.assertIn(
+            "factory_phase_lock freezes repo cleanup, rebuild, reset and destructive cleanup until Ready Gate is materialized",
+            errors,
+        )
+        self.assertEqual(payload["gate_status"], "blocked")
+        self.assertEqual(payload["user_decision_required"], [])
+
+    def test_factory_help_schema_accepts_phase_lock_projection(self) -> None:
+        card = load_vfinal_card()
+        payload = factoryctl.build_factory_help(card, ROOT / "templates" / "vfinal-factory-card.json")
+        schemas = factoryctl.bundled_schemas()
+        schema = schemas["factory-help.schema.json"]
+
+        errors = factoryctl.validate_node(schema, payload, "factory_help", schemas=schemas, root_schema=schema)
+
+        self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-phase-lock.schema.json",
+  "title": "Factory Phase Lock",
+  "type": "object",
+  "required": [
+    "record_type",
+    "current_phase_id",
+    "active_frontier",
+    "single_active_frontier",
+    "downstream_freeze_active",
+    "owner_surface_first",
+    "next_required_artifact",
+    "operator_decision_required"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-phase-lock.schema.json" },
+    "record_type": { "const": "factory_phase_lock" },
+    "current_phase_id": { "type": "string", "pattern": "^F[0-9]+[A-Z]?$" },
+    "active_phase_id": { "type": "string", "pattern": "^F[0-9]+[A-Z]?$" },
+    "active_frontier": {
+      "enum": [
+        "intake",
+        "source_resolution",
+        "product_sot",
+        "method_contract",
+        "architecture",
+        "ready_gate",
+        "execution",
+        "release",
+        "completion"
+      ]
+    },
+    "single_active_frontier": { "const": true },
+    "downstream_freeze_active": { "type": "boolean" },
+    "owner_surface_first": {
+      "type": "object",
+      "required": [
+        "product_sot_review_packet_delivered",
+        "summary_only_forbidden",
+        "material_before_question"
+      ],
+      "properties": {
+        "product_sot_review_packet_delivered": { "type": "boolean" },
+        "product_sot_review_packet_ref": { "type": "string", "minLength": 3 },
+        "operator_briefing_package_ref": { "type": "string", "minLength": 3 },
+        "summary_only_forbidden": { "const": true },
+        "material_before_question": { "const": true }
+      },
+      "additionalProperties": true
+    },
+    "materialized_artifact_refs": {
+      "type": "object",
+      "properties": {
+        "product_sot_ref": { "type": "string", "minLength": 3 },
+        "full_product_sot_scope_coverage_ref": { "type": "string", "minLength": 3 },
+        "operator_briefing_package_ref": { "type": "string", "minLength": 3 },
+        "method_contract_ref": { "type": "string", "minLength": 3 },
+        "architecture_packet_ref": { "type": "string", "minLength": 3 },
+        "ready_gate_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "frozen_phase_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^F[0-9]+[A-Z]?$" }
+    },
+    "frozen_worker_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "allowed_current_worker_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "next_required_artifact": { "type": "string", "minLength": 3 },
+    "operator_decision_required": { "type": "boolean" },
+    "freeze_reason": { "type": "string", "minLength": 3 }
+  },
+  "additionalProperties": true
+}

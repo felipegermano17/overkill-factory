@@ -146,13 +146,15 @@
         "decision packet"
       ],
       "output_contract": "product_sot_result",
-      "authority_max": "draft SOT candidate; cannot approve architecture",
+      "authority_max": "draft SOT candidate and owner-readable review packet; cannot approve architecture or release downstream freeze",
       "veto_conditions": [
         "candidate treated as approved",
         "business/legal debate outside scope"
       ],
       "evidence_required": [
         "SOT candidate",
+        "owner-readable Product SOT review packet",
+        "operator briefing package",
         "open questions",
         "decision boundaries",
         "outcome contract",
@@ -160,7 +162,7 @@
         "assumption ledger"
       ],
       "factory_gate_transition_policy": [
-        "architecture waits for SOT candidate and open risk list"
+        "architecture waits for owner-readable Product SOT review packet, full Product SOT scope coverage and Method Contract"
       ],
       "promotion_rule": "closed only for repeatable SOT normalization after evals",
       "public_safety_notes": "No internal product names in public examples."
@@ -180,6 +182,11 @@
         "architecture risk"
       ],
       "inputs": [
+        "product_sot",
+        "full_product_sot_scope_coverage",
+        "operator_briefing_package_ref",
+        "method_contract",
+        "factory_phase_lock",
         "scope_in",
         "scope_out",
         "risk_class",
@@ -195,6 +202,9 @@
       "output_contract": "architecture_result",
       "authority_max": "produce candidate architecture; cannot bypass human architecture gate",
       "veto_conditions": [
+        "factory_phase_lock active frontier is before architecture",
+        "missing owner-readable Product SOT review packet",
+        "missing Method Contract",
         "architecture without risks",
         "hidden dependency",
         "unsupported runtime choice"
@@ -208,6 +218,8 @@
         "architecture decision record"
       ],
       "factory_gate_transition_policy": [
+        "do not run while phase lock freezes architecture",
+        "architecture waits for Product SOT owner review package and Method Contract",
         "no decomposition before architecture gate"
       ],
       "promotion_rule": "stays open for judgment-heavy design",
@@ -536,6 +548,8 @@
         "phase boundary"
       ],
       "inputs": [
+        "factory_phase_lock",
+        "operator_briefing_package_ref",
         "target_repo_paths",
         "done_definition"
       ],
@@ -546,6 +560,8 @@
       "output_contract": "handoff_packet_result",
       "authority_max": "package state; cannot invent approval or evidence",
       "veto_conditions": [
+        "future-phase handoff while factory_phase_lock freezes downstream",
+        "operator decision handoff without owner-readable material package",
         "missing constraints",
         "missing evidence",
         "private paths in public packet"
@@ -558,6 +574,7 @@
         "next action"
       ],
       "factory_gate_transition_policy": [
+        "handoff must not promote architecture, repo cleanup or human decisions ahead of the active frontier",
         "handoff required for R2+ worker transfer"
       ],
       "promotion_rule": "closed because packet shape is repeatable",
@@ -699,6 +716,8 @@
       "output_contract": "human_gate_record",
       "authority_max": "record a real human decision; cannot invent approval",
       "veto_conditions": [
+        "factory_phase_lock blocks the decision because owner-readable material was not delivered",
+        "approval requested for future-phase work while downstream is frozen",
         "missing human actor",
         "missing evidence",
         "fake approval",

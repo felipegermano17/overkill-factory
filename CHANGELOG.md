@@ -9,6 +9,18 @@ public releases.
 
 Nothing yet.
 
+## 1.5.4 - 2026-06-24
+
+- Add `factory_phase_lock` so vFinal cards expose one active frontier,
+  downstream freeze, owner-surface-first delivery and next required artifact.
+- Block architecture, repo cleanup, human gates, worker packets and execution
+  until owner-readable Product SOT material and Method Contract are present.
+- Teach `factoryctl help-next` to report phase-lock blockers as factory-owned
+  repair work instead of user approval requests.
+- Harden Product SOT, Product Architect, Handoff Packer and Human Gate Clerk
+  contracts so Hermes profiles cannot promote future-phase work before the
+  active frontier is unlocked.
+
 ## 1.5.3 - 2026-06-24
 
 - Harden human-gate/no-idle handling so an incomplete gate package or missing

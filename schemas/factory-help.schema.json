@@ -12,6 +12,7 @@
     "workflow_phase",
     "gate_status",
     "truth_scope",
+    "phase_lock",
     "factory_next_action",
     "active_recovery_routes",
     "user_decision_required",
@@ -42,6 +43,42 @@
     },
     "gate_status": { "type": "string", "minLength": 1 },
     "truth_scope": { "enum": ["repo_only", "runtime_backed", "bounded_proof", "production_ready"] },
+    "phase_lock": {
+      "type": "object",
+      "required": [
+        "active_frontier",
+        "current_phase_id",
+        "card_phase_id",
+        "single_active_frontier",
+        "owner_surface_first",
+        "product_sot_review_packet_delivered",
+        "method_contract_materialized",
+        "ready_gate_materialized",
+        "downstream_freeze_active",
+        "downstream_surface_seen",
+        "frozen_phase_ids",
+        "frozen_worker_ids",
+        "next_required_artifact",
+        "operator_decision_required"
+      ],
+      "properties": {
+        "active_frontier": { "type": "string", "minLength": 1 },
+        "current_phase_id": { "type": "string" },
+        "card_phase_id": { "type": "string" },
+        "single_active_frontier": { "type": "boolean" },
+        "owner_surface_first": { "type": "boolean" },
+        "product_sot_review_packet_delivered": { "type": "boolean" },
+        "method_contract_materialized": { "type": "boolean" },
+        "ready_gate_materialized": { "type": "boolean" },
+        "downstream_freeze_active": { "type": "boolean" },
+        "downstream_surface_seen": { "type": "boolean" },
+        "frozen_phase_ids": { "type": "array", "items": { "type": "string" } },
+        "frozen_worker_ids": { "type": "array", "items": { "type": "string" } },
+        "next_required_artifact": { "type": "string", "minLength": 1 },
+        "operator_decision_required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
     "factory_next_action": {
       "type": "object",
       "required": ["owner", "action", "why", "command_refs"],
@@ -116,7 +153,7 @@
         "required": ["decision_type", "reason", "user_action", "factory_prepares"],
         "properties": {
           "decision_type": {
-            "enum": ["preference", "authority_required", "access_required", "risk_acceptance", "blocked"]
+            "enum": ["product_intent_confirmation", "preference", "authority_required", "access_required", "risk_acceptance", "blocked"]
           },
           "reason": { "type": "string", "minLength": 1 },
           "user_action": { "type": "string", "minLength": 1 },

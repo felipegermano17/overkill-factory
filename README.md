@@ -260,7 +260,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line. The latest public release
-is v1.5.1.
+is v1.5.4.
 
 It includes:
 
@@ -278,6 +278,8 @@ It includes:
   `DESIGN.md` gating;
 - release preflight, public-surface sync, safety scans and Factory v1
   Completion Gate;
+- deterministic phase lock, single active frontier and downstream freeze before
+  architecture, repo cleanup, human gates or worker packets;
 - Hermes completion artifact projection, no-idle remediation controls, Hermes
   update guard, cron-friendly no-idle watchdog and Fast Autonomy Lane contracts.
 

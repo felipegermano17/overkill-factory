@@ -176,6 +176,88 @@ VFINAL_CORE_CONTRACTS = {
 
 PRODUCT_SCOPE_INTENTS = {"full_product", "child_slice"}
 PRODUCT_PLANNING_PHASES = {"F11", "F12", "F13", "F14", "F15", "F16", "F17"}
+FACTORY_PHASE_LOCK_FRONTIERS = {
+    "intake",
+    "source_resolution",
+    "product_sot",
+    "method_contract",
+    "architecture",
+    "ready_gate",
+    "execution",
+    "release",
+    "completion",
+}
+FACTORY_PHASE_LOCK_NEXT_ARTIFACTS = {
+    "intake": "source_resolution_packet",
+    "source_resolution": "operator_understanding_confirmation",
+    "product_sot": "operator_briefing_package",
+    "method_contract": "method_contract",
+    "architecture": "architecture_packet",
+    "ready_gate": "gate_report",
+    "execution": "worker_packet",
+    "release": "production_promotion_packet",
+    "completion": "receipt_five",
+}
+FACTORY_PHASE_LOCK_SURFACE_ALLOWLIST = {
+    "intake": {
+        "intake",
+        "source",
+        "source_resolution",
+        "source-resolution",
+        "operator-interface",
+        "conversation",
+    },
+    "source_resolution": {
+        "planning",
+        "source",
+        "source_resolution",
+        "source-resolution",
+        "research",
+        "paper",
+        "claim",
+        "conflict",
+        "gap",
+    },
+    "product_sot": {
+        "planning",
+        "product",
+        "sot",
+        "requirements",
+        "outcome",
+        "discovery",
+        "scope",
+        "operator-review",
+        "owner-review",
+    },
+    "method_contract": {
+        "planning",
+        "method",
+        "method-routing",
+        "method_routing",
+        "specialist-routing",
+        "specialist_routing",
+        "capability-pack",
+        "surface-pack",
+    },
+    "architecture": {
+        "planning",
+        "architecture",
+        "security-architecture",
+        "trust-boundary",
+        "risk-route",
+        "runtime",
+        "interfaces",
+    },
+    "ready_gate": {
+        "planning",
+        "ready",
+        "ready-gate",
+        "autonomy-readiness",
+        "access-gate",
+        "budget-gate",
+        "worker-packet",
+    },
+}
 PRODUCTION_SURFACES = {
     "production",
     "release",
@@ -873,6 +955,40 @@ HUMAN_AUTHORITY_SURFACES = {
     "privacy",
     "compliance",
 }
+ARCHITECTURE_SURFACES = {
+    "architecture",
+    "security-architecture",
+    "trust-boundary",
+    "runtime",
+    "interfaces",
+    "risk-route",
+}
+REPO_CLEANUP_SURFACES = {
+    "repo-cleanup",
+    "repository-cleanup",
+    "cleanup",
+    "reset",
+    "rebuild",
+    "delete",
+    "destructive-cleanup",
+}
+SUPPLY_CHAIN_SURFACES = {
+    "supply-chain",
+    "dependency",
+    "dependencies",
+    "sbom",
+    "provenance",
+    "secret-scan",
+}
+DOWNSTREAM_PHASE_LOCK_SURFACES = (
+    ARCHITECTURE_SURFACES
+    | REPO_CLEANUP_SURFACES
+    | SUPPLY_CHAIN_SURFACES
+    | SPECIFIC_BUILDER_SURFACES
+    | SECURITY_SURFACES
+    | ONCHAIN_SURFACES
+    | PRODUCT_EXPERIENCE_SURFACES
+)
 PRODUCT_FACE_RESULT_PHASES = {"F11", "F13", "F14", "F15", "F16", "F17"}
 HIGH_RISK = {"R3", "R4"}
 REVIEW_RISK = {"R2", "R3", "R4"}
@@ -4285,6 +4401,224 @@ def human_gate_required_for_card(card: dict[str, Any]) -> tuple[bool, str]:
     return False, "no current human authority trigger detected"
 
 
+def factory_phase_rank(phase_id: Any) -> int:
+    value = str(phase_id or "").strip().upper()
+    match = re.fullmatch(r"F(\d+)([A-Z]?)", value)
+    if not match:
+        return -1
+    base = int(match.group(1)) * 10
+    suffix = match.group(2)
+    if suffix:
+        base += ord(suffix) - ord("A") + 1
+    return base
+
+
+def _has_card_artifact(card: dict[str, Any], artifact_type: str) -> bool:
+    value = card.get(artifact_type)
+    if isinstance(value, dict) and value:
+        return True
+    ref = str(card.get(f"{artifact_type}_ref") or "").strip()
+    if ref:
+        return True
+    return False
+
+
+def _phase_lock_ref(value: Any) -> str:
+    return str(value or "").strip()
+
+
+def _phase_lock_public_ref_ok(value: Any) -> bool:
+    ref = _phase_lock_ref(value)
+    if not ref:
+        return False
+    _, redaction = sanitize_public_ref(ref)
+    return redaction is None
+
+
+def _factory_phase_lock(card: dict[str, Any]) -> dict[str, Any]:
+    lock = card.get("factory_phase_lock")
+    return lock if isinstance(lock, dict) else {}
+
+
+def _phase_lock_frontier(card: dict[str, Any]) -> str:
+    lock = _factory_phase_lock(card)
+    frontier = str(lock.get("active_frontier") or "").strip()
+    if frontier:
+        return frontier
+    phase_rank = factory_phase_rank(card.get("phase"))
+    if phase_rank >= factory_phase_rank("F15"):
+        return "execution"
+    if phase_rank >= factory_phase_rank("F13"):
+        return "ready_gate"
+    if phase_rank >= factory_phase_rank("F10"):
+        return "architecture"
+    if phase_rank >= factory_phase_rank("F8"):
+        return "method_contract"
+    if phase_rank >= factory_phase_rank("F5"):
+        return "product_sot"
+    if phase_rank >= factory_phase_rank("F2"):
+        return "source_resolution"
+    return "intake"
+
+
+def _factory_phase_lock_current_phase_id(card: dict[str, Any]) -> str:
+    lock = _factory_phase_lock(card)
+    return str(lock.get("current_phase_id") or lock.get("active_phase_id") or card.get("phase") or "").strip()
+
+
+def _phase_lock_allowed_surfaces(frontier: str) -> set[str]:
+    allowed: set[str] = set()
+    order = [
+        "intake",
+        "source_resolution",
+        "product_sot",
+        "method_contract",
+        "architecture",
+        "ready_gate",
+    ]
+    for item in order:
+        allowed.update(FACTORY_PHASE_LOCK_SURFACE_ALLOWLIST.get(item, set()))
+        if item == frontier:
+            break
+    return allowed
+
+
+def product_sot_owner_surface_delivered(card: dict[str, Any]) -> bool:
+    lock = _factory_phase_lock(card)
+    owner_surface = lock.get("owner_surface_first") if isinstance(lock.get("owner_surface_first"), dict) else {}
+    if owner_surface.get("product_sot_review_packet_delivered") is True:
+        review_ref = _phase_lock_ref(owner_surface.get("product_sot_review_packet_ref"))
+        briefing_ref = _phase_lock_ref(owner_surface.get("operator_briefing_package_ref"))
+        if (not review_ref or _phase_lock_public_ref_ok(review_ref)) and (
+            not briefing_ref or _phase_lock_public_ref_ok(briefing_ref)
+        ):
+            return True
+
+    return (
+        _has_card_artifact(card, "product_sot")
+        and _has_card_artifact(card, "full_product_sot_scope_coverage")
+        and (
+            _has_card_artifact(card, "operator_briefing_package")
+            or _phase_lock_public_ref_ok(card.get("operator_briefing_package_ref"))
+            or _phase_lock_public_ref_ok(card.get("owner_review_ref"))
+        )
+    )
+
+
+def method_contract_materialized(card: dict[str, Any]) -> bool:
+    lock = _factory_phase_lock(card)
+    refs = lock.get("materialized_artifact_refs") if isinstance(lock.get("materialized_artifact_refs"), dict) else {}
+    return _has_card_artifact(card, "method_contract") or _phase_lock_public_ref_ok(refs.get("method_contract_ref"))
+
+
+def ready_gate_materialized(card: dict[str, Any]) -> bool:
+    lock = _factory_phase_lock(card)
+    refs = lock.get("materialized_artifact_refs") if isinstance(lock.get("materialized_artifact_refs"), dict) else {}
+    review = card.get("review") if isinstance(card.get("review"), dict) else {}
+    return (
+        _has_card_artifact(card, "product_implementation_readiness")
+        or _phase_lock_public_ref_ok(refs.get("ready_gate_ref"))
+        or review.get("ready_gate_passed") is True
+    )
+
+
+def factory_phase_lock_projection(card: dict[str, Any]) -> dict[str, Any]:
+    surfaces = normalized_surfaces(card)
+    frontier = _phase_lock_frontier(card)
+    current_phase_id = _factory_phase_lock_current_phase_id(card)
+    lock = _factory_phase_lock(card)
+    downstream_freeze = bool(lock.get("downstream_freeze_active", False))
+    if not downstream_freeze:
+        downstream_freeze = factory_phase_rank(card.get("phase")) > factory_phase_rank(current_phase_id)
+    sot_delivered = product_sot_owner_surface_delivered(card)
+    method_done = method_contract_materialized(card)
+    ready_done = ready_gate_materialized(card)
+    downstream_surface_seen = bool(surfaces & DOWNSTREAM_PHASE_LOCK_SURFACES)
+    return {
+        "active_frontier": frontier,
+        "current_phase_id": current_phase_id,
+        "card_phase_id": str(card.get("phase") or "").strip(),
+        "single_active_frontier": lock.get("single_active_frontier") is True if lock else True,
+        "owner_surface_first": sot_delivered,
+        "product_sot_review_packet_delivered": sot_delivered,
+        "method_contract_materialized": method_done,
+        "ready_gate_materialized": ready_done,
+        "downstream_freeze_active": downstream_freeze,
+        "downstream_surface_seen": downstream_surface_seen,
+        "frozen_phase_ids": _list_items(lock.get("frozen_phase_ids")),
+        "frozen_worker_ids": _list_items(lock.get("frozen_worker_ids")),
+        "next_required_artifact": str(
+            lock.get("next_required_artifact")
+            or FACTORY_PHASE_LOCK_NEXT_ARTIFACTS.get(frontier)
+            or "operator_briefing_package"
+        ),
+        "operator_decision_required": lock.get("operator_decision_required") is True,
+    }
+
+
+def factory_phase_lock_errors(card: dict[str, Any]) -> list[str]:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return []
+
+    errors: list[str] = []
+    lock = _factory_phase_lock(card)
+    if lock:
+        schemas = bundled_schemas()
+        schema = schemas.get("factory-phase-lock.schema.json")
+        if schema:
+            errors.extend(validate_node(schema, lock, "factory_phase_lock", schemas=schemas, root_schema=schema))
+        frontier = str(lock.get("active_frontier") or "").strip()
+        if frontier and frontier not in FACTORY_PHASE_LOCK_FRONTIERS:
+            errors.append(f"factory_phase_lock.active_frontier unknown frontier {frontier!r}")
+        current_phase_id = _factory_phase_lock_current_phase_id(card)
+        if current_phase_id and factory_phase_rank(current_phase_id) < 0:
+            errors.append(f"factory_phase_lock.current_phase_id unknown phase {current_phase_id!r}")
+        for field, value in lock.items():
+            if field.endswith("_ref") and str(value or "").strip() and not _phase_lock_public_ref_ok(value):
+                errors.append(f"factory_phase_lock.{field} must be public-safe")
+
+    projection = factory_phase_lock_projection(card)
+    phase_rank = factory_phase_rank(card.get("phase"))
+    current_rank = factory_phase_rank(projection["current_phase_id"])
+    surfaces = normalized_surfaces(card)
+    downstream_surface_seen = bool(surfaces & DOWNSTREAM_PHASE_LOCK_SURFACES)
+    downstream_phase_seen = phase_rank >= factory_phase_rank("F8")
+    allowed_surfaces = _phase_lock_allowed_surfaces(str(projection["active_frontier"]))
+    future_surface_seen = bool((surfaces - allowed_surfaces) & DOWNSTREAM_PHASE_LOCK_SURFACES)
+
+    if projection["single_active_frontier"] is not True:
+        errors.append("factory_phase_lock.single_active_frontier must be true")
+
+    if current_rank >= 0 and phase_rank > current_rank and (projection["downstream_freeze_active"] or future_surface_seen):
+        errors.append(
+            "factory_phase_lock blocks downstream card phase "
+            f"{card.get('phase')} while active frontier is {projection['active_frontier']}"
+        )
+
+    if (downstream_phase_seen or downstream_surface_seen) and not projection["product_sot_review_packet_delivered"]:
+        errors.append(
+            "factory_phase_lock owner-surface-first requires an owner-readable Product SOT review packet "
+            "before architecture, repo cleanup, human gates, worker packets or execution"
+        )
+
+    if (downstream_phase_seen or downstream_surface_seen) and not projection["method_contract_materialized"]:
+        errors.append(
+            "factory_phase_lock requires Method Contract before architecture, repo cleanup, human gates, worker packets or execution"
+        )
+
+    if surfaces & REPO_CLEANUP_SURFACES and not projection["ready_gate_materialized"]:
+        errors.append(
+            "factory_phase_lock freezes repo cleanup, rebuild, reset and destructive cleanup until Ready Gate is materialized"
+        )
+
+    if projection["operator_decision_required"] and not projection["product_sot_review_packet_delivered"]:
+        errors.append(
+            "factory_phase_lock cannot ask the operator for a decision before the owner-readable material package is delivered"
+        )
+
+    return errors
+
+
 def strict_product_experience_required(card: dict[str, Any]) -> bool:
     return card.get("factory_method_version") == "OVERKILL_VFINAL" or isinstance(card.get("product_experience_plan"), dict)
 
@@ -5302,6 +5636,7 @@ def validate_vfinal_card_contract(data: dict[str, Any]) -> list[str]:
         _validate_public_ref(feedback_ref, "sdlc_feedback_loop_ref", errors)
 
     errors.extend(validate_card_universal_signal_intake_contract(data))
+    errors.extend(factory_phase_lock_errors(data))
 
     method_contract = data.get("method_contract") if isinstance(data.get("method_contract"), dict) else {}
     required_plans = method_contract.get("required_plans") if isinstance(method_contract, dict) else []
@@ -16760,6 +17095,16 @@ def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], pha
     errors = _list_items(gate_report.get("card_validation_errors"))
     blocked_workers = _list_items(gate_report.get("blocked_workers"))
     command_refs = _list_items(phase_row.get("related_command_refs")) or ["factoryctl gate-report"]
+    phase_lock = factory_phase_lock_projection(card)
+
+    if any("factory_phase_lock" in error for error in errors):
+        next_artifact = str(phase_lock.get("next_required_artifact") or "operator_briefing_package")
+        return {
+            "owner": "factory",
+            "action": f"restore the active frontier and deliver {next_artifact} before downstream work",
+            "why": "The factory must keep one active frontier: Product SOT owner review and Method Contract come before architecture, repo cleanup, worker packets or human decisions.",
+            "command_refs": ["factoryctl validate-card", "factoryctl help-next", "factoryctl gate-report"],
+        }
 
     if product_experience_planning_gap(card, errors):
         return {
@@ -17000,6 +17345,9 @@ def build_factory_help(
         }
     blocked_workers = _list_items(gate_report.get("blocked_workers"))
     validation_errors = _list_items(gate_report.get("card_validation_errors"))
+    phase_lock = factory_phase_lock_projection(card)
+    phase_lock_blocked = any("factory_phase_lock" in error for error in validation_errors)
+    user_decisions = [] if phase_lock_blocked else user_decisions_for_card(card, gate_report)
     next_actions: list[str] = []
     for item in gate_report.get("next_safe_actions", []):
         next_action_text = str(item.get("action") if isinstance(item, dict) else item).strip()
@@ -17019,10 +17367,11 @@ def build_factory_help(
         },
         "gate_status": str(gate_report.get("gate_status") or "not_run"),
         "truth_scope": truth_scope_for_card(card),
+        "phase_lock": phase_lock,
         "factory_next_action": factory_action,
         "active_recovery_routes": active_recovery_routes,
         "factory_resolved_without_user": factory_resolved_actions_for_card(card, gate_report),
-        "user_decision_required": user_decisions_for_card(card, gate_report) + recovery_decisions_for_help(active_recovery_routes),
+        "user_decision_required": user_decisions + ([] if phase_lock_blocked else recovery_decisions_for_help(active_recovery_routes)),
         "blocked_because": validation_errors + [f"{worker_id} is blocked by missing inputs" for worker_id in blocked_workers],
         "blocked_actions": sorted(set(_list_items(phase_row.get("blocked_actions")) + _list_items(card.get("forbidden_actions")))),
         "evidence_needed": next_actions or _list_items(phase_row.get("required_artifacts")) + _list_items(phase_row.get("required_gates")),
