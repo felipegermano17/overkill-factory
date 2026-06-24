@@ -224,7 +224,11 @@ material:
 ```bash
 factoryctl init --out ../my-product-factory --project-name my-product
 factoryctl operator-interface --primary-interface telegram --out .tmp/operator-interface-profile.json
+factoryctl validate-operator-interface .tmp/operator-interface-profile.json
 factoryctl start-conversation --operator-interface .tmp/operator-interface-profile.json --source-envelope-ref external:operator-source-envelope --out .tmp/factory-start-conversation.json
+factoryctl validate-start-conversation .tmp/factory-start-conversation.json
+factoryctl intake --route-class product_creation --request-type product_new --signal-type product_paper --summary "Public-safe product brief enters source resolution and understanding confirmation." --source-ref external:source-card-product-brief --out .tmp/universal-signal-intake.json
+factoryctl validate-signal-intake .tmp/universal-signal-intake.json
 ```
 
 Read `docs/getting-started/quickstart-hermes.md` and

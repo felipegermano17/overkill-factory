@@ -41,11 +41,13 @@ factoryctl init --out ../my-product-factory --project-name my-product
 factoryctl validate-card examples/minimal-hermes-project/card.md
 factoryctl route-registry --route-class product_creation
 factoryctl operator-interface --primary-interface telegram --out .tmp/operator-interface-profile.json
-factoryctl validate-operator-interface templates/operator-interface-profile.json
-factoryctl start-conversation --operator-interface templates/operator-interface-profile.json --source-envelope-ref external:operator-source-envelope --out .tmp/factory-start-conversation.json
-factoryctl validate-start-conversation templates/factory-start-conversation.json
+factoryctl validate-operator-interface .tmp/operator-interface-profile.json
+factoryctl start-conversation --operator-interface .tmp/operator-interface-profile.json --source-envelope-ref external:operator-source-envelope --out .tmp/factory-start-conversation.json
+factoryctl validate-start-conversation .tmp/factory-start-conversation.json
+factoryctl intake --route-class product_creation --request-type product_new --signal-type product_paper --summary "Public-safe product brief enters source resolution and understanding confirmation." --source-ref external:source-card-product-brief --out .tmp/product-intake.json
+factoryctl validate-signal-intake .tmp/product-intake.json
 factoryctl intake --route-class bug_repair --request-type bug --signal-type bug_report --summary "Public-safe bug report enters reproduction and regression gates." --source-ref external:source-card-bug-001 --out .tmp/bug-intake.json
-factoryctl validate-signal-intake templates/universal-signal-intake.json
+factoryctl validate-signal-intake .tmp/bug-intake.json
 factoryctl source-resolution --intake templates/universal-signal-intake.json --intake-ref templates/universal-signal-intake.json --out .tmp/source-resolution-packet.json
 factoryctl validate-source-resolution templates/source-resolution-packet.json
 factoryctl source-ledger --source-resolution templates/source-resolution-packet.json --source-ref external:source-card-product-brief --out .tmp/product-source-ledger.json

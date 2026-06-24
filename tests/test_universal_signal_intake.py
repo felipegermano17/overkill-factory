@@ -181,6 +181,34 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
         self.assertEqual(result, 0)
 
+    def test_intake_cli_accepts_operator_friendly_product_aliases(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "signal-intake.json"
+
+            result = factoryctl.main_with_args_for_test(
+                [
+                    "intake",
+                    "--route-class",
+                    "product_creation",
+                    "--request-type",
+                    "new_product",
+                    "--signal-type",
+                    "product_brief",
+                    "--summary",
+                    "Operator supplied product brief for a full product start.",
+                    "--signal-ref",
+                    "external:source-card-product-brief",
+                    "--out",
+                    str(path),
+                ]
+            )
+            intake = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        self.assertEqual(intake["classification"]["request_type"], "product_new")
+        self.assertEqual(intake["signal"]["signal_type"], "product_paper")
+        self.assertEqual(factoryctl.validate_universal_signal_intake(intake), [])
+
     def test_source_resolution_packet_from_intake_is_valid(self) -> None:
         intake = signal_intake()
 

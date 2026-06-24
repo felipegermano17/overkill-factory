@@ -400,6 +400,17 @@ SECRET_DELIVERY_EXCEPTION_MODES = {"startup_env", "runtime_file"}
 SOLANA_AI_KIT_PACK_ID = "solana-ai-kit-core"
 SOLANA_AI_KIT_USAGE_RECEIPT_FIELD = "solana_ai_kit_usage_receipt"
 PRIMARY_OPERATOR_INTERFACES = {"telegram", "discord", "cockpit", "codex_bridge", "cli", "api"}
+INTAKE_REQUEST_TYPE_ALIASES = {
+    "new_product": "product_new",
+    "product": "product_new",
+    "new-product": "product_new",
+}
+INTAKE_SIGNAL_TYPE_ALIASES = {
+    "product_brief": "product_paper",
+    "product-brief": "product_paper",
+    "brief": "product_paper",
+    "paper": "product_paper",
+}
 OPERATOR_BRIEFING_DECISION_ARTIFACTS = {
     "operator_understanding_confirmation",
     "product_sot",
@@ -7239,6 +7250,18 @@ def artifact_required_before(artifact_type: str) -> str:
 def slug_for_ref(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
     return slug[:64] or "signal"
+
+
+def canonical_intake_request_type(value: str) -> str:
+    normalized = str(value or "").strip()
+    alias_key = normalized.lower()
+    return INTAKE_REQUEST_TYPE_ALIASES.get(alias_key, normalized)
+
+
+def canonical_intake_signal_type(value: str) -> str:
+    normalized = str(value or "").strip()
+    alias_key = normalized.lower()
+    return INTAKE_SIGNAL_TYPE_ALIASES.get(alias_key, normalized)
 
 
 def build_universal_signal_intake(
@@ -18312,10 +18335,12 @@ def command_method_engines(args: argparse.Namespace) -> int:
 
 
 def command_intake(args: argparse.Namespace) -> int:
+    request_type = canonical_intake_request_type(args.request_type)
+    signal_type = canonical_intake_signal_type(args.signal_type)
     intake = build_universal_signal_intake(
         route_class=args.route_class,
-        request_type=args.request_type,
-        signal_type=args.signal_type,
+        request_type=request_type,
+        signal_type=signal_type,
         summary_public_safe=args.summary,
         signal_ref_public_safe=args.source_ref,
         target_surface=args.target_surface,
@@ -19191,7 +19216,7 @@ def build_parser() -> argparse.ArgumentParser:
     intake_parser.add_argument("--request-type", required=True)
     intake_parser.add_argument("--signal-type", required=True)
     intake_parser.add_argument("--summary", required=True)
-    intake_parser.add_argument("--source-ref", required=True)
+    intake_parser.add_argument("--source-ref", "--signal-ref", dest="source_ref", required=True)
     intake_parser.add_argument("--target-surface", default="operator-supplied-target")
     intake_parser.add_argument("--owner", default="factory-orchestrator")
     intake_parser.add_argument("--source-class", default="operator_supplied")
