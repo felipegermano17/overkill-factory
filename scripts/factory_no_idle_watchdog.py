@@ -234,6 +234,9 @@ def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str,
         "human_gate_task_refs": sorted(state.get("human_gate_task_refs") or []),
         "operator_input_task_refs": sorted(state.get("operator_input_task_refs") or []),
         "dependency_blocker_task_refs": sorted(state.get("dependency_blocker_task_refs") or []),
+        "operator_input_request": state.get("operator_input_request")
+        if isinstance(state.get("operator_input_request"), dict)
+        else None,
         "dispatch": dispatch_state,
         "spawned_count": len(spawned) if isinstance(spawned, list) else 0,
     }
@@ -251,6 +254,12 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
             )
         return f"[Overkill Factory] {board}: gate humano real pendente."
     if status == "input_required":
+        request = signature.get("operator_input_request") if isinstance(signature.get("operator_input_request"), dict) else {}
+        if request.get("request_type") == "operator_understanding_confirmation":
+            return (
+                f"[Overkill Factory] {board}: aguardando sua confirmação/correção do entendimento "
+                f"antes da Product SOT. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
+            )
         return (
             f"[Overkill Factory] {board}: fila presa por insumos faltantes; "
             f"acao do operador requerida. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."

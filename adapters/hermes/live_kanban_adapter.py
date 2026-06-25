@@ -896,6 +896,26 @@ def is_factory_owned_repair_task(record: dict[str, Any]) -> bool:
     return any(marker in text for marker in markers)
 
 
+def is_operator_understanding_confirmation_blocker(record: dict[str, Any]) -> bool:
+    text = task_record_text(record)
+    markers = (
+        "operator_understanding_confirmation",
+        "operator understanding confirmation",
+        "pending_operator_confirmation",
+        "operator_response_ref",
+        "required_before_product_sot",
+        "product_sot_blocked_until_operator_understanding_confirmed",
+        "confirm/correct",
+        "confirm or correct",
+        "confirmar/corrigir",
+        "confirmar ou corrigir",
+        "confirme/corrija",
+        "owner-readable understanding confirmation",
+        "understanding confirmation is pending",
+    )
+    return any(marker in text for marker in markers)
+
+
 def is_operator_input_blocker(record: dict[str, Any]) -> bool:
     text = task_record_text(record)
     external_input_markers = (
@@ -921,7 +941,60 @@ def is_operator_input_blocker(record: dict[str, Any]) -> bool:
         "mint address",
         "token program id",
     )
-    return any(marker in text for marker in external_input_markers)
+    return is_operator_understanding_confirmation_blocker(record) or any(
+        marker in text for marker in external_input_markers
+    )
+
+
+def operator_input_request_for_blockers(blockers: list[dict[str, Any]]) -> dict[str, Any]:
+    if any(is_operator_understanding_confirmation_blocker(item) for item in blockers):
+        return {
+            "request_type": "operator_understanding_confirmation",
+            "reason": (
+                "The factory produced an owner-readable understanding packet and Product SOT "
+                "must remain blocked until the operator confirms or corrects it."
+            ),
+            "required_response": (
+                "confirm the understanding, or send the exact correction to apply before Product SOT"
+            ),
+        }
+    return {
+        "request_type": "factory_blocker_input_or_decision_package",
+        "reason": (
+            "All unfinished visible work is blocked on missing inputs or an unfinished "
+            "human-gate decision package. This is not approval-ready."
+        ),
+        "required_response": (
+            "deliver the missing decision package/materials first, or ask for the exact "
+            "missing source inputs; do not ask the operator to approve a summary-only gate"
+        ),
+    }
+
+
+def dependency_operator_input_request_for_blockers(blockers: list[dict[str, Any]]) -> dict[str, Any]:
+    if any(is_operator_understanding_confirmation_blocker(item) for item in blockers):
+        return {
+            "request_type": "operator_understanding_confirmation",
+            "reason": (
+                "Visible work is dependency-gated by an owner-readable understanding packet "
+                "that needs operator confirmation or correction before Product SOT."
+            ),
+            "required_response": (
+                "confirm the understanding, or provide the exact correction before Product SOT continues"
+            ),
+        }
+    return {
+        "request_type": "factory_blocker_input_or_decision_package",
+        "reason": (
+            "Visible todo work is dependency-gated while at least one blocker still "
+            "needs exact inputs or a complete decision package. Asking for approval now "
+            "would be a false human gate."
+        ),
+        "required_response": (
+            "provide the exact missing inputs, or have the factory deliver the markdown, "
+            "PDF and structured evidence package before requesting a decision"
+        ),
+    }
 
 
 def no_idle_parent_refs(record: dict[str, Any]) -> list[str]:
@@ -1107,6 +1180,20 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         if is_factory_owned_package_blocker(item) or is_human_gate_package_blocker(item)
     ]
     factory_package_refs = sorted(task_record_id(item) for item in factory_package_blockers if task_record_id(item))
+    if blocked and len(operator_input_blockers) == len(blocked) and not todo:
+        return {
+            "status": "input_required",
+            "classification": "only_operator_input_blockers_seen",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": True,
+            "operator_input_task_refs": operator_input_refs,
+            "human_gate_task_refs": human_gate_refs,
+            "operator_input_request": operator_input_request_for_blockers(operator_input_blockers),
+            "next_action": "ask the operator for the exact confirmation, correction, or missing input before creating another remediation card",
+            "state": state,
+        }
     if blocked and factory_package_blockers and len(factory_package_blockers) == len(blocked) and not todo:
         return {
             "status": "remediation_required",
@@ -1124,30 +1211,6 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
                 "This is internal factory repair, not operator input."
             ),
             "next_action": "create a factory-owned package/readback repair task before any human-gate question",
-            "state": state,
-        }
-    if blocked and len(operator_input_blockers) == len(blocked) and not todo:
-        return {
-            "status": "input_required",
-            "classification": "only_operator_input_blockers_seen",
-            "blocked": True,
-            "remediation_required": False,
-            "human_gate_required": False,
-            "operator_input_required": True,
-            "operator_input_task_refs": operator_input_refs,
-            "human_gate_task_refs": human_gate_refs,
-            "operator_input_request": {
-                "request_type": "factory_blocker_input_or_decision_package",
-                "reason": (
-                    "All unfinished visible work is blocked on missing inputs or an unfinished "
-                    "human-gate decision package. This is not approval-ready."
-                ),
-                "required_response": (
-                    "deliver the missing decision package/materials first, or ask for the exact "
-                    "missing source inputs; do not ask the operator to approve a summary-only gate"
-                ),
-            },
-            "next_action": "prepare/deliver the decision package or ask for exact missing inputs before any human approval request",
             "state": state,
         }
     if blocked and len(human_gate_blockers) == len(blocked) and not todo:
@@ -1248,18 +1311,13 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
                 "operator_input_task_refs": sorted(set(input_dependency_refs + operator_input_refs)),
                 "dependency_gated_task_refs": sorted(dependency_blockers),
                 "dependency_blocker_task_refs": blocker_refs,
-                "operator_input_request": {
-                    "request_type": "factory_blocker_input_or_decision_package",
-                    "reason": (
-                        "Visible todo work is dependency-gated while at least one blocker still "
-                        "needs exact inputs or a complete decision package. Asking for approval now "
-                        "would be a false human gate."
-                    ),
-                    "required_response": (
-                        "provide the exact missing inputs, or have the factory deliver the markdown, "
-                        "PDF and structured evidence package before requesting a decision"
-                    ),
-                },
+                "operator_input_request": dependency_operator_input_request_for_blockers(
+                    [
+                        blocked_by_task_id[ref]
+                        for ref in set(input_dependency_refs + operator_input_refs)
+                        if ref in blocked_by_task_id
+                    ]
+                ),
                 "next_action": "resolve missing inputs or deliver the decision package before asking for a human-gate decision",
                 "state": state,
             }

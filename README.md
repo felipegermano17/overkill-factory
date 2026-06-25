@@ -264,7 +264,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line. The latest public release
-is v1.5.11.
+is v1.5.12.
 
 It includes:
 
@@ -298,6 +298,9 @@ It includes:
 - no-idle classification that treats missing decision packages, PDF/readback,
   owner-readable materials and repair tasks gated behind their own blocker as
   factory-owned repair, not operator approval bureaucracy;
+- no-idle classification that treats pending operator understanding
+  confirmation as operator input, with a clear Telegram-facing request to
+  confirm or correct understanding before Product SOT;
 - blocked Hermes task creation that uses create-unassigned, block-readback,
   then assign-readback so Kanban dispatch cannot race ahead of a gate;
 - Solana AI Kit route repair when Solana/on-chain F4+ planning lacks the

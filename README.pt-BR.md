@@ -267,7 +267,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 é a linha atual de release do kernel público. A release pública mais
-recente é v1.5.11.
+recente é v1.5.12.
 
 Ela inclui:
 
@@ -300,6 +300,9 @@ Ela inclui:
 - classificação de no-idle que trata pacote de decisão, PDF/readback, material
   legível para dono e tarefa de reparo presa atrás do próprio bloqueio como
   reparo da fábrica, não burocracia de aprovação do operador;
+- classificação de no-idle que trata confirmação de entendimento pendente como
+  input do operador, com pedido claro no Telegram para confirmar ou corrigir o
+  entendimento antes da Product SOT;
 - criação bloqueada de tarefas Hermes usando criar-sem-responsável,
   verificar-bloqueio, atribuir e verificar de novo para o dispatch do Kanban
   não passar na frente de um gate;
