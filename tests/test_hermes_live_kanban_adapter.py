@@ -4123,10 +4123,34 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F5-product-sot")
         self.assertTrue(body["human_gate_required"])
         self.assertIn(
-            "include APPROVAL_REQUEST, EVIDENCE_INDEX, OWNER_REVIEW and operator briefing material",
+            "prepare a canonical owner-facing Product SOT document in the operator locale as the primary human artifact",
+            body["required_actions"],
+        )
+        self.assertIn(
+            "keep APPROVAL_REQUEST, EVIDENCE_INDEX, OWNER_REVIEW, hashes, schemas and validation receipts as supporting evidence, not as the SOT body",
+            body["required_actions"],
+        )
+        self.assertIn(
+            "when a primary operator channel such as Telegram is configured, deliver a short decision message and the Product SOT PDF through the manager/operator-facing profile (for Hermes use `hermes send` with `MEDIA:<pdf>` from that profile)",
             body["required_actions"],
         )
         self.assertIn("ask for a decision from a chat summary without the decision package material", body["forbidden_actions"])
+        self.assertIn(
+            "deliver an operational receipt, approval JSON, evidence index, hash list or worker log as if it were the Product SOT",
+            body["forbidden_actions"],
+        )
+        self.assertIn(
+            "deliver an English-only Product SOT when the operator-facing language is Portuguese",
+            body["forbidden_actions"],
+        )
+        self.assertIn(
+            "treat a Kanban comment alone as delivered material when a primary operator channel is configured",
+            body["forbidden_actions"],
+        )
+        self.assertIn(
+            "send the operator-facing gate from a non-manager profile when a manager/operator-facing profile is configured",
+            body["forbidden_actions"],
+        )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
     def test_no_idle_treats_delivered_product_sot_package_as_human_gate(self) -> None:

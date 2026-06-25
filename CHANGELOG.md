@@ -7,6 +7,18 @@ public releases.
 
 ## Unreleased
 
+## 1.5.16 - 2026-06-25
+
+- Require Product SOT human gates to deliver a canonical localized Product SOT
+  as the primary human artifact
+  ([#440](https://github.com/felipegermano17/overkill-factory/issues/440)).
+- Keep approval JSON, evidence indexes, hashes, schemas, validation receipts and
+  worker logs as supporting evidence instead of allowing them to become the SOT
+  body.
+- Require Telegram/operator-channel delivery through the configured
+  manager-facing profile when one exists, and forbid English-only Product SOT
+  delivery for a Portuguese operator flow.
+
 ## 1.5.15 - 2026-06-25
 
 - Fix post-delivery no-idle classification for Product SOT owner gates
