@@ -7,6 +7,16 @@ public releases.
 
 ## Unreleased
 
+## 1.5.6 - 2026-06-25
+
+- Block Solana/onchain `OVERKILL_VFINAL` F4+ routes unless a structured
+  `solana-ai-kit-core` domain-brain record is present through universal signal
+  intake, capability pack contract, direct domain brain provider state, or a
+  valid Solana AI Kit usage receipt.
+- Add transition-plan regression coverage so Hermes/adapter promotion cannot
+  move Solana architecture, specialist planning, worker routing or execution
+  from prose-only Solana/Quasar mentions.
+
 ## 1.5.5 - 2026-06-24
 
 - Add the deterministic Factory Phase Engine state contract, schema and
