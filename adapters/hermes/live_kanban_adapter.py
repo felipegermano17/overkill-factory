@@ -1684,6 +1684,37 @@ def task_readback_comments(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return []
 
 
+def task_has_active_idempotency_replay_evidence(payload: dict[str, Any]) -> bool:
+    task = task_readback_task(payload)
+    if task_readback_assignee(payload):
+        return True
+    if task.get("current_run_id") or task.get("run_id") or task.get("worker_pid"):
+        return True
+    if task_readback_comments(payload):
+        return True
+    runs = payload.get("runs")
+    if not isinstance(runs, list):
+        runs = task.get("runs")
+    if isinstance(runs, list) and runs:
+        return True
+    replay_event_kinds = {
+        "assigned",
+        "claimed",
+        "completed",
+        "done",
+        "running",
+        "spawned",
+        "unblocked",
+    }
+    for event in task_readback_events(payload):
+        if not isinstance(event, dict):
+            continue
+        kind = str(event.get("kind") or event.get("type") or event.get("event") or event.get("action") or "")
+        if kind.strip().lower() in replay_event_kinds:
+            return True
+    return False
+
+
 def task_readback_parents(payload: dict[str, Any]) -> list[str]:
     raw_parents = payload.get("parents")
     if not isinstance(raw_parents, list):
@@ -2344,6 +2375,21 @@ def create_task(
     runner: Runner = default_runner,
 ) -> str:
     ensure_non_empty_body(body)
+    if blocked:
+        return create_blocked_task_before_assignment(
+            hermes_bin=hermes_bin,
+            board=board,
+            title=title,
+            body=body,
+            assignee=assignee,
+            idempotency_key=idempotency_key,
+            created_by=created_by,
+            workspace=workspace,
+            blocked_reason="Overkill Factory gate starts blocked until required authority evidence passes.",
+            workflow_template_id=workflow_template_id,
+            current_step_key=current_step_key,
+            runner=runner,
+        )
     args = hermes_kanban(
         hermes_bin,
         board,
@@ -2361,8 +2407,6 @@ def create_task(
         workspace,
         "--json",
     )
-    if blocked:
-        args.extend(["--initial-status", "blocked"])
     task_id = parse_task_id(run_checked(args, runner).stdout)
     apply_native_workflow_state(
         board=board,
@@ -2370,24 +2414,6 @@ def create_task(
         workflow_template_id=workflow_template_id,
         current_step_key=current_step_key,
     )
-    if blocked:
-        shown_task = show_task(
-            hermes_bin=hermes_bin,
-            board=board,
-            task_id=task_id,
-            runner=runner,
-        )
-        status = task_status(shown_task)
-        if status in ACTIVE_OR_TERMINAL_STATUSES:
-            return task_id
-        if not task_has_blocked_event(shown_task):
-            ensure_blocked_event(
-                hermes_bin=hermes_bin,
-                board=board,
-                task_id=task_id,
-                reason="Overkill Factory gate starts blocked until required authority evidence passes.",
-                runner=runner,
-            )
     return task_id
 
 
@@ -2402,6 +2428,8 @@ def create_blocked_task_before_assignment(
     created_by: str,
     workspace: str,
     blocked_reason: str,
+    workflow_template_id: str | None = None,
+    current_step_key: str | None = None,
     runner: Runner = default_runner,
 ) -> str:
     ensure_non_empty_body(body)
@@ -2425,6 +2453,18 @@ def create_blocked_task_before_assignment(
             runner,
         ).stdout
     )
+    apply_native_workflow_state(
+        board=board,
+        task_id=task_id,
+        workflow_template_id=workflow_template_id,
+        current_step_key=current_step_key,
+    )
+    created_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    if (
+        task_readback_status(created_task) in ACTIVE_OR_TERMINAL_STATUSES
+        and task_has_active_idempotency_replay_evidence(created_task)
+    ):
+        return task_id
     ensure_blocked_event(
         hermes_bin=hermes_bin,
         board=board,
@@ -2450,6 +2490,8 @@ def create_blocked_task_before_assignment(
     ensure_no_pre_dispatch_activity(assigned_task, task_id=task_id)
     if task_readback_status(assigned_task) != "blocked":
         raise RuntimeError(f"Hermes task {task_id} is not blocked after assignment")
+    if task_readback_assignee(assigned_task) != assignee:
+        raise RuntimeError(f"Hermes task {task_id} assignee readback does not match target profile")
     return task_id
 
 

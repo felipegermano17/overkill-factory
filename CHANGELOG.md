@@ -7,6 +7,15 @@ public releases.
 
 ## Unreleased
 
+## 1.5.10 - 2026-06-25
+
+- Fix generic blocked Hermes task creation to use an unassigned-create,
+  block-readback, assign-readback protocol, preventing native Kanban dispatch
+  from racing ahead of a factory gate.
+- Preserve native workflow binding during that safe blocked-create path.
+- Add regression coverage for the `create_task(blocked=True)` path that failed
+  during live runtime smoke validation.
+
 ## 1.5.9 - 2026-06-25
 
 - Bind factory-created Hermes tasks to native Kanban workflow state when

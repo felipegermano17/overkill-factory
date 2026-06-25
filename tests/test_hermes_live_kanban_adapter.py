@@ -3772,6 +3772,59 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 conn.close()
             self.assertEqual(tuple(row), ("overkill-vfinal", "F5-product-sot"))
 
+    def test_create_task_blocked_uses_unassigned_block_assign_protocol(self) -> None:
+        fake = FakeHermes()
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            board_dir = home / "kanban" / "boards" / TEST_BOARD
+            board_dir.mkdir(parents=True)
+            db_path = board_dir / "kanban.db"
+            conn = adapter.sqlite3.connect(str(db_path))
+            try:
+                conn.execute(
+                    "CREATE TABLE tasks (id TEXT PRIMARY KEY, workflow_template_id TEXT, current_step_key TEXT)"
+                )
+                conn.execute("INSERT INTO tasks (id) VALUES (?)", ("t_" + "00000001",))
+                conn.commit()
+            finally:
+                conn.close()
+
+            with mock.patch.dict(adapter.os.environ, {"HERMES_HOME": str(home)}, clear=False):
+                task_id = adapter.create_task(
+                    hermes_bin="hermes",
+                    board=TEST_BOARD,
+                    title="Blocked gate",
+                    body=json.dumps({"task_type": "human_gate_package"}),
+                    assignee="factory-orchestrator",
+                    idempotency_key="blocked-create-race",
+                    created_by="test",
+                    workspace="scratch",
+                    blocked=True,
+                    workflow_template_id="overkill-vfinal",
+                    current_step_key="F5-product-sot",
+                    runner=fake,
+                )
+
+            conn = adapter.sqlite3.connect(str(db_path))
+            try:
+                row = conn.execute(
+                    "SELECT workflow_template_id, current_step_key FROM tasks WHERE id = ?",
+                    (task_id,),
+                ).fetchone()
+            finally:
+                conn.close()
+
+        create_call = next(call for call in fake.calls if len(call) >= 5 and call[4] == "create")
+        block_call = next(call for call in fake.calls if len(call) >= 5 and call[4] == "block")
+        assign_call = next(call for call in fake.calls if len(call) >= 5 and call[4] == "assign")
+        self.assertNotIn("--assignee", create_call)
+        self.assertNotIn("--initial-status", create_call)
+        self.assertLess(fake.calls.index(create_call), fake.calls.index(block_call))
+        self.assertLess(fake.calls.index(block_call), fake.calls.index(assign_call))
+        self.assertEqual(fake.tasks[task_id]["status"], "blocked")
+        self.assertEqual(fake.tasks[task_id]["assignee"], "factory-orchestrator")
+        self.assertEqual(tuple(row), ("overkill-vfinal", "F5-product-sot"))
+
     def test_no_idle_creates_deterministic_reconcile_card_when_board_is_silent(self) -> None:
         fake = FakeHermes()
         fake.tasks["t_" + "todo0001"] = {
