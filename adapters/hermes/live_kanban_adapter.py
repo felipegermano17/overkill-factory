@@ -61,6 +61,7 @@ READY_WORK_UNIT_RECOVERY_AUTHOR = "overkill-factory-recovery"
 READY_WORK_UNIT_RECONCILIATION_AUTHOR = "overkill-factory-reconciliation"
 NO_IDLE_AUTHOR = "overkill-factory-no-idle"
 NO_IDLE_REMEDIATION_MARKER = "factory_no_idle_remediation"
+NO_IDLE_REVIEW_REPAIR_MARKER = "factory_no_idle_review_repair"
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
 COMPLETION_ARTIFACT_PROJECTION_MARKER = "completion_artifact_projection"
@@ -886,6 +887,7 @@ def is_factory_owned_repair_task(record: dict[str, Any]) -> bool:
         "factory owned repair",
         "factory_deterministic_reconcile",
         "factory_no_idle_remediation",
+        "factory_no_idle_review_repair",
         "repair human gate decision package",
         "repair package",
         "rebuild the package",
@@ -894,6 +896,39 @@ def is_factory_owned_repair_task(record: dict[str, Any]) -> bool:
         "readable artifact is ready",
     )
     return any(marker in text for marker in markers)
+
+
+def is_review_failed_factory_repair_blocker(record: dict[str, Any]) -> bool:
+    if is_human_gate_decision_ready_blocker(record):
+        return False
+    text = task_record_text(record)
+    review_failed = any(
+        marker in text
+        for marker in (
+            "review-failed",
+            "review failed",
+            "independent review result: fail",
+            "independent review result: block",
+            "fail / block",
+        )
+    )
+    if not review_failed:
+        return False
+    return any(
+        marker in text
+        for marker in (
+            "factoryctl validators fail",
+            "validator failure",
+            "validators fail",
+            "handoff sequencing is inconsistent",
+            "schema-valid",
+            "required fixes",
+            "rerun independent review",
+            "rerun review",
+            "repair before owner",
+            "repair before human",
+        )
+    )
 
 
 def is_operator_understanding_confirmation_blocker(record: dict[str, Any]) -> bool:
@@ -1174,6 +1209,12 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         if is_operator_input_blocker(item)
     ]
     operator_input_refs = sorted(task_record_id(item) for item in operator_input_blockers if task_record_id(item))
+    review_repair_blockers = [
+        item
+        for item in blocked
+        if is_review_failed_factory_repair_blocker(item)
+    ]
+    review_repair_refs = sorted(task_record_id(item) for item in review_repair_blockers if task_record_id(item))
     factory_package_blockers = [
         item
         for item in blocked
@@ -1192,6 +1233,30 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "human_gate_task_refs": human_gate_refs,
             "operator_input_request": operator_input_request_for_blockers(operator_input_blockers),
             "next_action": "ask the operator for the exact confirmation, correction, or missing input before creating another remediation card",
+            "state": state,
+        }
+    if blocked and review_repair_blockers and len(review_repair_blockers) == len(blocked) and not todo:
+        return {
+            "status": "remediation_required",
+            "classification": "only_factory_review_repair_blockers_seen",
+            "blocked": True,
+            "remediation_required": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "operator_input_task_refs": [],
+            "human_gate_task_refs": human_gate_refs,
+            "factory_owned_package_task_refs": review_repair_refs,
+            "review_repair_task_refs": review_repair_refs,
+            "remediation_strategy": "create_targeted_review_repair_task",
+            "remediation_reason": (
+                "All unfinished visible work is blocked by an independent review failure "
+                "with internal validator, artifact or handoff repair instructions. This is "
+                "factory-owned repair, not operator input and not a human gate."
+            ),
+            "next_action": (
+                "create a targeted repair task from the blocked review report, then let native "
+                "Hermes dispatch run it before any human-gate question"
+            ),
             "state": state,
         }
     if blocked and factory_package_blockers and len(factory_package_blockers) == len(blocked) and not todo:
@@ -1448,6 +1513,125 @@ def create_no_idle_remediation_task(
         current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
         runner=runner,
     )
+
+
+def no_idle_review_repair_assignee(blockers: list[dict[str, Any]], fallback: str) -> str:
+    text = " ".join(task_record_text(item) for item in blockers)
+    if any(
+        marker in text
+        for marker in (
+            "product sot",
+            "product_sot",
+            "outcome_contract",
+            "full_product_sot_scope_coverage",
+            "scope_in",
+            "scope_out",
+        )
+    ):
+        return "product-sot-planner"
+    if any(marker in text for marker in ("method_contract", "method contract", "architecture")):
+        return "factory-orchestrator"
+    return fallback or "factory-orchestrator"
+
+
+def no_idle_review_repair_body(
+    *,
+    board: str,
+    classification: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "packet_type": "factory_no_idle_review_repair_request",
+        "marker": NO_IDLE_REVIEW_REPAIR_MARKER,
+        "board": board,
+        "objective": (
+            "Repair the factory-owned package rejected by independent review and "
+            "route it back to review without asking the operator."
+        ),
+        "blocked_review_task_refs": classification.get("review_repair_task_refs") or [],
+        "observed_no_idle_state": classification,
+        "kanban_workflow_binding": {
+            "workflow_template_id": FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+            "current_step_key": "F5-product-sot",
+            "runtime_field_required": True,
+            "fallback_body_binding": True,
+            "route_authority": "factory_phase_engine",
+        },
+        "required_actions": [
+            "inspect the blocked independent review task, comments and report artifact",
+            "repair the exact validator, public-safety, artifact or handoff failures named by the review",
+            "rerun the relevant factoryctl validators before returning the package",
+            "route a fresh independent-reviewer task or unblock the reviewed path only after evidence passes",
+        ],
+        "forbidden_actions": [
+            "ask the operator for approval or input for internal validator repair",
+            "treat review repair as a human gate",
+            "approve Product SOT, method, architecture, release, funds, secrets or production",
+            "advance downstream phases while the reviewed package still fails validators",
+            "create another generic board reconcile card instead of the targeted repair",
+        ],
+        "human_gate_required": False,
+        "operator_input_required": False,
+        "native_dispatch_required_next": True,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+    }
+
+
+def create_no_idle_review_repair_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    assignee: str,
+    classification: dict[str, Any],
+    blockers: list[dict[str, Any]],
+    runner: Runner,
+) -> str:
+    body = no_idle_review_repair_body(board=board, classification=classification)
+    digest = idempotency_digest_fragment(contract_digest(body))
+    repair_assignee = no_idle_review_repair_assignee(blockers, assignee)
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title="Repair failed independent review package",
+        body=compact_json_argument(body),
+        assignee=repair_assignee,
+        idempotency_key=f"overkill:no-idle-review-repair:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key="F5-product-sot",
+        runner=runner,
+    )
+
+
+def remediation_task_runtime_metadata(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str | None,
+    runner: Runner,
+) -> dict[str, Any]:
+    if not task_id:
+        return {
+            "remediation_task_created": False,
+            "remediation_task_status": None,
+            "remediation_task_stale": False,
+            "native_dispatch_required_next": False,
+        }
+    try:
+        payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+        status = task_readback_status(payload)
+    except RuntimeError:
+        status = ""
+    stale = status in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES
+    return {
+        "remediation_task_created": not stale,
+        "remediation_task_status": status or "unknown",
+        "remediation_task_stale": stale,
+        "native_dispatch_required_next": status in {"ready", "unknown", ""},
+    }
 
 
 def build_board_reconcile_plan_from_rows(*, board: str, rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
@@ -6848,27 +7032,80 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
     classification = classify_no_idle_state(rows)
     remediation_task_id: str | None = None
     reconcile_plan: dict[str, Any] | None = None
+    targeted_remediation_plan: dict[str, Any] | None = None
     if classification.get("remediation_required") and args.create_remediation:
-        reconcile_plan = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
-        remediation_task_id = create_deterministic_reconcile_task(
-            hermes_bin=args.hermes_bin,
-            board=args.board,
-            workspace=args.workspace,
-            plan=reconcile_plan,
-            runner=runner,
-        )
         classification = dict(classification)
-        classification["board_reconcile_plan"] = reconcile_plan
-        classification["remediation_task_created"] = remediation_task_id is not None
-        classification["remediation_task_ref"] = remediation_task_id
-        classification["native_dispatch_required_next"] = bool(
-            remediation_task_id and reconcile_plan.get("native_dispatch_required_next") is True
-        )
-        classification["classification"] = (
-            "deterministic_board_reconcile_task_created"
-            if remediation_task_id
-            else str(reconcile_plan.get("plan_action") or classification.get("classification"))
-        )
+        if classification.get("remediation_strategy") == "create_targeted_review_repair_task":
+            blockers = [
+                item for item in rows.get("blocked", [])
+                if is_review_failed_factory_repair_blocker(item)
+            ]
+            targeted_remediation_plan = {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "repair_failed_independent_review_package",
+                "board": args.board,
+                "blocked_review_task_refs": classification.get("review_repair_task_refs") or [],
+                "assignee": no_idle_review_repair_assignee(blockers, args.assignee),
+                "native_dispatch_required_next": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            }
+            remediation_task_id = create_no_idle_review_repair_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                assignee=args.assignee,
+                classification=classification,
+                blockers=blockers,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+            classification["targeted_remediation_plan"] = targeted_remediation_plan
+            classification["remediation_task_ref"] = remediation_task_id
+            classification.update(task_runtime)
+            classification["native_dispatch_required_next"] = bool(
+                remediation_task_id
+                and targeted_remediation_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next") is True
+            )
+            classification["classification"] = (
+                "deterministic_targeted_review_repair_task_created"
+                if remediation_task_id and not classification.get("remediation_task_stale")
+                else "targeted_review_repair_task_not_created"
+            )
+        else:
+            reconcile_plan = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
+            remediation_task_id = create_deterministic_reconcile_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                plan=reconcile_plan,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+            classification["board_reconcile_plan"] = reconcile_plan
+            classification["remediation_task_ref"] = remediation_task_id
+            classification.update(task_runtime)
+            classification["native_dispatch_required_next"] = bool(
+                remediation_task_id
+                and reconcile_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next") is True
+            )
+            classification["classification"] = (
+                "deterministic_board_reconcile_task_created"
+                if remediation_task_id and not classification.get("remediation_task_stale")
+                else str(reconcile_plan.get("plan_action") or classification.get("classification"))
+            )
     envelope = {
         "$schema": LIVE_ADAPTER_SCHEMA,
         "mode": "no-idle",
@@ -6876,6 +7113,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         "blocked": bool(classification.get("blocked")),
         "no_idle_state": classification,
         "board_reconcile_plan": reconcile_plan,
+        "targeted_remediation_plan": targeted_remediation_plan,
         "remediation_task_id": remediation_task_id,
         "hook": {
             "runtime_authority": "hermes_kanban",

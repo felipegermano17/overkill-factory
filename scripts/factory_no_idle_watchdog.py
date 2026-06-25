@@ -173,6 +173,7 @@ def emit_operator_event(
     status: str,
     requires_user: bool,
     summary: str,
+    payload: dict[str, Any] | None,
     inbox_dir: Path,
     runner: Runner = default_runner,
 ) -> None:
@@ -205,6 +206,8 @@ def emit_operator_event(
     ]
     if requires_user:
         argv.append("--requires-user")
+    if payload is not None:
+        argv.extend(["--payload-json", json.dumps(payload, ensure_ascii=False, separators=(",", ":"))])
     completed = runner(argv)
     if completed.returncode != 0:
         raise RuntimeError(
@@ -220,6 +223,13 @@ def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str,
     counts = state.get("state") if isinstance(state.get("state"), dict) else {}
     dispatch_state = dispatch_result.get("dispatch_observed_state") if isinstance(dispatch_result, dict) else {}
     spawned = dispatch_result.get("spawned") if isinstance(dispatch_result, dict) else []
+    remediation_task_ref = no_idle_result.get("remediation_task_id")
+    explicit_remediation_created = state.get("remediation_task_created")
+    remediation_created = (
+        explicit_remediation_created is True
+        if explicit_remediation_created is not None
+        else bool(remediation_task_ref)
+    )
     return {
         "status": state.get("status"),
         "classification": state.get("classification"),
@@ -228,12 +238,20 @@ def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str,
             for key, value in counts.items()
             if isinstance(value, dict) and key in {"ready", "running", "todo", "blocked"}
         },
-        "remediation_task_created": bool(no_idle_result.get("remediation_task_id")),
+        "remediation_strategy": state.get("remediation_strategy"),
+        "remediation_task_created": remediation_created,
+        "remediation_task_status": state.get("remediation_task_status"),
+        "remediation_task_stale": state.get("remediation_task_stale") is True,
         "human_gate_required": state.get("human_gate_required") is True,
         "operator_input_required": state.get("operator_input_required") is True,
         "human_gate_task_refs": sorted(state.get("human_gate_task_refs") or []),
         "operator_input_task_refs": sorted(state.get("operator_input_task_refs") or []),
+        "factory_owned_package_task_refs": sorted(state.get("factory_owned_package_task_refs") or []),
+        "review_repair_task_refs": sorted(state.get("review_repair_task_refs") or []),
         "dependency_blocker_task_refs": sorted(state.get("dependency_blocker_task_refs") or []),
+        "human_decision_request": state.get("human_decision_request")
+        if isinstance(state.get("human_decision_request"), dict)
+        else None,
         "operator_input_request": state.get("operator_input_request")
         if isinstance(state.get("operator_input_request"), dict)
         else None,
@@ -244,6 +262,7 @@ def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str,
 
 def summarize_board(board: str, signature: dict[str, Any]) -> str:
     status = signature.get("status")
+    classification = str(signature.get("classification") or "")
     counts = signature.get("counts") if isinstance(signature.get("counts"), dict) else {}
     spawned = signature.get("spawned_count") or 0
     if status == "human_gate_required":
@@ -265,9 +284,33 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
             f"acao do operador requerida. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
         )
     if status == "remediation_required":
+        if "review_repair" in classification:
+            if signature.get("remediation_task_created") is True:
+                return (
+                    f"[Overkill Factory] {board}: review interno bloqueou por reparo da fábrica; "
+                    f"reparo interno criado/acionado. todo={counts.get('todo', 0)} "
+                    f"blocked={counts.get('blocked', 0)}."
+                )
+            return (
+                f"[Overkill Factory] {board}: review interno bloqueou por reparo da fábrica; "
+                f"remediação direcionada ainda não materializada. todo={counts.get('todo', 0)} "
+                f"blocked={counts.get('blocked', 0)}."
+            )
+        if signature.get("remediation_task_created") is True:
+            return (
+                f"[Overkill Factory] {board}: no-idle detectado; remediação segura "
+                f"criada/confirmada. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
+            )
+        if signature.get("remediation_task_stale") is True:
+            return (
+                f"[Overkill Factory] {board}: no-idle detectado; a remediação idempotente existente "
+                f"já está concluída e não destravou a fila. todo={counts.get('todo', 0)} "
+                f"blocked={counts.get('blocked', 0)}."
+            )
         return (
-            f"[Overkill Factory] {board}: no-idle detectado; remediação segura "
-            f"criada/confirmada. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
+            f"[Overkill Factory] {board}: no-idle detectado; remediação segura necessária, "
+            f"mas ainda não materializada. todo={counts.get('todo', 0)} "
+            f"blocked={counts.get('blocked', 0)}."
         )
     if status == "dependency_gated":
         return (
@@ -331,11 +374,19 @@ def process_board(
         "remediation_required",
         "dependency_gated",
     }:
+        event_payload = {
+            "board": board,
+            "status": signature.get("status"),
+            "summary": summary,
+            "requires_user": requires_user,
+            "signature": signature,
+        }
         emit_operator_event(
             board=board,
             status=str(signature.get("status") or ""),
             requires_user=requires_user,
             summary=summary,
+            payload=event_payload,
             inbox_dir=inbox_dir,
             runner=runner,
         )
