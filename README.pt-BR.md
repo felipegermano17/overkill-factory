@@ -267,7 +267,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 é a linha atual de release do kernel público. A release pública mais
-recente é v1.5.8.
+recente é v1.5.9.
 
 Ela inclui:
 
@@ -291,6 +291,14 @@ Ela inclui:
 - reconciliação determinística de board Hermes/Kanban para transformar uma fila
   silenciosa em uma única tarefa de próximo artefato, dispatch nativo ou pedido
   real de gate limitado, sem rota escolhida pelo agente;
+- binding nativo de workflow no Kanban com
+  `workflow_template_id=overkill-vfinal` e `current_step_key` determinístico nas
+  tarefas criadas pela fábrica quando o banco Hermes expõe esses campos;
+- classificação de no-idle que trata pacote de decisão, PDF/readback, material
+  legível para dono e tarefa de reparo presa atrás do próprio bloqueio como
+  reparo da fábrica, não burocracia de aprovação do operador;
+- reparo obrigatório da rota Solana AI Kit quando planejamento Solana/on-chain
+  F4+ não tem registro estruturado do cérebro de domínio;
 - projeção de artefato de conclusão Hermes, controles de no-idle, Hermes update
   guard, watchdog de no-idle para Hermes cron e contratos da Fast Autonomy Lane.
 

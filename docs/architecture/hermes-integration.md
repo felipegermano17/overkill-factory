@@ -62,8 +62,16 @@ only a board-state controller:
 
 - if `running` exists, it reports active work;
 - if `ready` exists, it reports that native Hermes dispatch is the next action;
-- if only explicit human-gate blockers remain, it returns a structured human
-  decision request;
+- if only explicit decision-ready human-gate blockers remain, it returns a
+  structured human decision request;
+- if the blocker is a missing decision package, PDF/readback, owner-readable
+  material or gate artifact, it routes factory-owned repair instead of asking
+  the operator for approval;
+- if a repair task is dependency-gated by the same blocker it should repair, it
+  treats that as a Kanban graph defect and creates a bounded repair route;
+- if Solana/onchain planning at F4 or later lacks the Solana AI Kit domain-brain
+  record, it routes a factory-owned Solana AI Kit repair before architecture or
+  human gates;
 - if unfinished work remains without `ready`, `running` or a sole human gate, it
   runs `factoryctl reconcile-board` over the Kanban snapshot and may create
   exactly one deterministic reconcile card for the next artifact selected by the
@@ -73,6 +81,19 @@ This closes silent idle without creating a shadow dispatcher or bypassing gates.
 The no-idle layer must not ask for a human gate when the board reconciler says
 `phase_engine.human_gate_allowed=false`; it must create or repair the next
 factory-owned artifact instead.
+
+## Kanban Workflow Binding
+
+Factory-created Hermes tasks should carry the native workflow fields exposed by
+Hermes Kanban:
+
+- `workflow_template_id=overkill-vfinal`;
+- `current_step_key=F...` from the deterministic phase engine.
+
+The adapter writes those columns directly when the installed Hermes SQLite
+schema contains them. The task body also carries `kanban_workflow_binding` as a
+fallback when a Hermes installation or remote API does not expose those
+columns. Agents may read those fields, but they do not get to choose them.
 
 ## Gate Timing Classes
 

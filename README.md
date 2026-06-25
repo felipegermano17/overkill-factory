@@ -264,7 +264,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line. The latest public release
-is v1.5.8.
+is v1.5.9.
 
 It includes:
 
@@ -289,6 +289,14 @@ It includes:
 - deterministic Hermes/Kanban board reconciliation so a silent board becomes
   one allowed next-artifact task, native dispatch, or a real bounded gate
   request instead of agent-chosen phase routing;
+- Kanban-native workflow binding with `workflow_template_id=overkill-vfinal`
+  and deterministic `current_step_key` on factory-created Hermes tasks when the
+  installed Hermes database exposes those fields;
+- no-idle classification that treats missing decision packages, PDF/readback,
+  owner-readable materials and repair tasks gated behind their own blocker as
+  factory-owned repair, not operator approval bureaucracy;
+- Solana AI Kit route repair when Solana/on-chain F4+ planning lacks the
+  required structured domain-brain record;
 - Hermes completion artifact projection, no-idle remediation controls, Hermes
   update guard, cron-friendly no-idle watchdog and Fast Autonomy Lane contracts.
 
