@@ -188,6 +188,11 @@ the task is still blocked and has no pre-dispatch `promoted`, `claimed`,
 evidence exists. Complete-product claims remain forbidden until all Product SOT
 scope is reconciled through worker results, review and Receipt Five.
 
+The same blocked-first protocol applies to every factory-created Hermes task
+that starts blocked. A blocked task must not be created with an assignee already
+attached, because native Kanban dispatch can observe that assignment before the
+gate is durably blocked.
+
 Ready work-unit packets and the resulting Hermes task contracts also carry both
 a `context_boundary` and a resolved `work_unit_context_packet`. Workers may
 inspect only named allowed refs plus artifacts created for the current
