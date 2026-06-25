@@ -88,6 +88,8 @@ factoryctl gate-report --card examples/minimal-hermes-project/card.md
 factoryctl unblock-plan --card examples/minimal-hermes-project/card.md
 factoryctl recovery-plan --card examples/minimal-hermes-project/card.md --receipt .tmp/receipt.json --worker-results-dir .tmp/worker-results
 factoryctl help-next --card examples/minimal-hermes-project/card.md --worker-results-dir .tmp/worker-results --out .tmp/factory-help.json
+factoryctl reconcile-board --board product-alpha --snapshot .tmp/hermes-board-snapshot.json --out .tmp/factory-board-reconcile-plan.json
+factoryctl validate-reconcile-board .tmp/factory-board-reconcile-plan.json
 factoryctl worker-packet --worker all --required-only --card examples/minimal-hermes-project/card.md --out .tmp/minimal-worker-packets
 factoryctl transition-plan --card examples/minimal-hermes-project/card.md --from-status draft --to-status ready
 factoryctl status-snapshot --card examples/minimal-hermes-project/card.md --out .tmp/factory-status-snapshot.json
@@ -106,6 +108,13 @@ next required artifact, allowed current workers and human-gate allowance. A card
 that declares a later phase such as F9 while the computed frontier still needs
 `operator_briefing_package` or `method_contract` is blocked before the operator
 is asked for a decision.
+
+`reconcile-board` applies that rule to a Hermes/Kanban board snapshot. It is the
+deterministic no-idle decision contract: running work is observed, ready work is
+left to native Hermes dispatch, missing canonical cards become board-contract
+repair, and a single canonical card can create only the next artifact selected
+by the phase engine. It must not ask for a human gate unless
+`phase_engine.human_gate_allowed=true` and the decision package is complete.
 
 `route-registry` exposes the canonical route matrix used by the validators:
 route class, request types, signal types, required artifacts, workers, recovery

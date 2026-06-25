@@ -104,6 +104,11 @@ This gives the factory a heartbeat without giving the watchdog authority over
 the product. It may create safe remediation work and trigger native dispatch. It
 must not close human gates, execute factory work as the manager, or approve
 production, mainnet, funds, signing, secrets, billing or destructive actions.
+When unfinished work is silent, the adapter first runs the deterministic
+`factoryctl reconcile-board` plan. That plan either points to native dispatch,
+repairs the canonical factory card, creates the next required artifact from the
+phase engine, repairs a decision package, or asks for a real bounded decision
+only when `phase_engine.human_gate_allowed=true`.
 When the adapter returns `input_required`, the Telegram operator should ask for
 the exact missing inputs instead of saying there is no human action. This is not
 approval bureaucracy; it is source/input collection for a blocked dependency

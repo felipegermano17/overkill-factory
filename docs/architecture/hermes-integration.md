@@ -65,10 +65,14 @@ only a board-state controller:
 - if only explicit human-gate blockers remain, it returns a structured human
   decision request;
 - if unfinished work remains without `ready`, `running` or a sole human gate, it
-  may create one safe remediation card and leaves worker launch to native
-  dispatch.
+  runs `factoryctl reconcile-board` over the Kanban snapshot and may create
+  exactly one deterministic reconcile card for the next artifact selected by the
+  phase engine.
 
 This closes silent idle without creating a shadow dispatcher or bypassing gates.
+The no-idle layer must not ask for a human gate when the board reconciler says
+`phase_engine.human_gate_allowed=false`; it must create or repair the next
+factory-owned artifact instead.
 
 ## Gate Timing Classes
 

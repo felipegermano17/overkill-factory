@@ -77,6 +77,23 @@ the engine blocks the card. For example, a declared F9 architecture or human
 gate package cannot proceed while the computed frontier is still Product SOT and
 the next required artifact is `operator_briefing_package`.
 
+## Deterministic Board Reconciler
+
+`factoryctl reconcile-board` applies the phase engine to Hermes/Kanban board
+state. This is the runtime rule for silent boards:
+
+- `running` means observe running work;
+- `ready` means native Hermes dispatch is the next action;
+- no canonical factory card means repair the board contract, not infer a phase;
+- one canonical card means compute its phase engine state and create only the
+  next artifact task selected by that state;
+- a human gate can be requested only when the phase engine allows it and the
+  decision package is complete.
+
+This keeps Telegram, Discord, Codex bridge and status messages as operator
+views. They can show the reconciled state, but they do not choose F1, F2, F3 or
+F9 from conversation history.
+
 ## User Role
 
 The normal user provides material, goals, constraints, access when required,

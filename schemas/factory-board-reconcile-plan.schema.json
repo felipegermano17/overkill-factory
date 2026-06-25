@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-board-reconcile-plan.schema.json",
+  "title": "Factory Board Reconcile Plan",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "created_at",
+    "board",
+    "deterministic",
+    "agent_route_authority",
+    "runtime_authority",
+    "local_state_authority",
+    "status_counts",
+    "plan_action",
+    "reason",
+    "blocked_reasons",
+    "selected_card",
+    "phase_engine",
+    "factory_help",
+    "create_task_allowed",
+    "create_task_contract",
+    "native_dispatch_required_next",
+    "human_gate_required",
+    "operator_input_required",
+    "user_decision_required",
+    "operator_decision_policy",
+    "limits"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-board-reconcile-plan.schema.json" },
+    "record_type": { "const": "factory_board_reconcile_plan" },
+    "created_at": { "type": "string", "minLength": 1 },
+    "board": { "type": "string", "minLength": 1 },
+    "deterministic": { "const": true },
+    "agent_route_authority": { "const": false },
+    "runtime_authority": { "const": "hermes_kanban" },
+    "local_state_authority": { "const": false },
+    "status_counts": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "plan_action": {
+      "enum": [
+        "observe_running",
+        "dispatch_ready",
+        "no_unfinished_work",
+        "repair_board_contract",
+        "create_next_artifact_task",
+        "repair_human_gate_packet",
+        "request_operator_input",
+        "request_human_gate_decision",
+        "block_invariant_violation"
+      ]
+    },
+    "reason": { "type": "string", "minLength": 1 },
+    "blocked_reasons": { "type": "array", "items": { "type": "string" } },
+    "selected_card": {
+      "type": ["object", "null"],
+      "required": ["task_ref", "status", "title", "assignee", "selection_reason"],
+      "properties": {
+        "task_ref": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "assignee": { "type": "string" },
+        "selection_reason": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "phase_engine": { "type": ["object", "null"] },
+    "factory_help": { "type": ["object", "null"] },
+    "create_task_allowed": { "type": "boolean" },
+    "create_task_contract": {
+      "type": ["object", "null"],
+      "required": ["title", "assignee", "body"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "assignee": { "type": "string", "minLength": 1 },
+        "body": {
+          "type": "object",
+          "required": [
+            "packet_type",
+            "marker",
+            "board",
+            "plan_action",
+            "phase_engine",
+            "required_output",
+            "reason",
+            "runtime_authority",
+            "local_state_authority",
+            "agent_may_choose_phase",
+            "allowed_actions",
+            "forbidden_actions",
+            "native_dispatch_required_next"
+          ],
+          "properties": {
+            "packet_type": { "const": "factory_deterministic_reconcile_task" },
+            "marker": { "const": "factory_deterministic_reconcile" },
+            "board": { "type": "string", "minLength": 1 },
+            "plan_action": { "type": "string", "minLength": 1 },
+            "card_id": { "type": "string", "minLength": 1 },
+            "phase_engine": { "type": "object" },
+            "factory_next_action": { "type": ["object", "null"] },
+            "required_output": { "type": "string", "minLength": 1 },
+            "reason": { "type": "string", "minLength": 1 },
+            "runtime_authority": { "const": "hermes_kanban" },
+            "local_state_authority": { "const": false },
+            "agent_may_choose_phase": { "const": false },
+            "allowed_actions": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "forbidden_actions": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "native_dispatch_required_next": { "const": true }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "native_dispatch_required_next": { "type": "boolean" },
+    "human_gate_required": { "type": "boolean" },
+    "operator_input_required": { "type": "boolean" },
+    "user_decision_required": { "type": "boolean" },
+    "operator_decision_policy": {
+      "type": "object",
+      "required": [
+        "human_gate_only_when_phase_engine_allows",
+        "planning_continuation_approval_forbidden",
+        "decision_package_required_before_question",
+        "summary_only_gate_forbidden"
+      ],
+      "properties": {
+        "human_gate_only_when_phase_engine_allows": { "const": true },
+        "planning_continuation_approval_forbidden": { "const": true },
+        "decision_package_required_before_question": { "const": true },
+        "summary_only_gate_forbidden": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": false
+}

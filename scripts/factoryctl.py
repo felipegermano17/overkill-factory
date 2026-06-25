@@ -17781,6 +17781,400 @@ def build_factory_help(
     }
 
 
+TERMINAL_BOARD_STATUSES = {"done", "complete", "completed", "archived", "cancelled", "canceled"}
+BOARD_RECONCILE_CREATE_ACTIONS = {
+    "repair_board_contract",
+    "create_next_artifact_task",
+    "repair_human_gate_packet",
+    "request_operator_input",
+}
+
+
+def _task_status(task: dict[str, Any], fallback: str = "") -> str:
+    return str(task.get("status") or task.get("state") or fallback or "").strip().lower()
+
+
+def _task_public_ref(task: dict[str, Any]) -> str:
+    raw = str(task.get("id") or task.get("task_id") or task.get("card_id") or "kanban:unknown").strip()
+    return public_safe_kanban_ref(raw) or "kanban:<redacted>"
+
+
+def _task_public_title(task: dict[str, Any]) -> str:
+    return str(task.get("title") or task.get("name") or task.get("summary") or "Untitled Hermes task").strip()
+
+
+def _json_object_from_possible_string(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not text or not text.startswith("{"):
+        return None
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _factory_card_from_payload(payload: dict[str, Any]) -> dict[str, Any] | None:
+    if str(payload.get("factory_method_version") or "").strip() or str(payload.get("record_type") or "") == "factory_card":
+        return copy.deepcopy(payload)
+    for key in ("card", "factory_card", "canonical_card", "source_card"):
+        nested = payload.get(key)
+        if isinstance(nested, dict) and (
+            str(nested.get("factory_method_version") or "").strip()
+            or str(nested.get("record_type") or "") == "factory_card"
+        ):
+            return copy.deepcopy(nested)
+    return None
+
+
+def factory_card_from_task(task: dict[str, Any]) -> dict[str, Any] | None:
+    for key in ("card", "factory_card", "canonical_card", "metadata", "body", "description", "result"):
+        payload = _json_object_from_possible_string(task.get(key))
+        if not isinstance(payload, dict):
+            continue
+        card = _factory_card_from_payload(payload)
+        if card is not None:
+            return card
+    return None
+
+
+def board_rows_from_snapshot(snapshot: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    rows: dict[str, list[dict[str, Any]]] = {status: [] for status in ("ready", "running", "todo", "blocked", "done")}
+    raw_rows = snapshot.get("rows") if isinstance(snapshot.get("rows"), dict) else snapshot.get("tasks_by_status")
+    if isinstance(raw_rows, dict):
+        for status, items in raw_rows.items():
+            normalized = str(status or "").strip().lower()
+            if not isinstance(items, list):
+                continue
+            rows.setdefault(normalized, [])
+            for item in items:
+                if isinstance(item, dict):
+                    task = dict(item)
+                    task.setdefault("status", normalized)
+                    rows[normalized].append(task)
+        return rows
+
+    raw_tasks = snapshot.get("tasks") or snapshot.get("cards") or []
+    if isinstance(raw_tasks, list):
+        for item in raw_tasks:
+            if not isinstance(item, dict):
+                continue
+            status = _task_status(item, "unknown")
+            rows.setdefault(status, []).append(dict(item))
+    return rows
+
+
+def board_status_counts(rows: dict[str, list[dict[str, Any]]]) -> dict[str, int]:
+    return {status: len(items) for status, items in sorted(rows.items()) if items}
+
+
+def board_reconcile_task_ref(task: dict[str, Any], *, status: str) -> dict[str, Any]:
+    return sanitize_public_refs(
+        {
+            "task_ref": _task_public_ref(task),
+            "status": status,
+            "title": _task_public_title(task),
+            "assignee": str(task.get("assignee") or task.get("owner") or "").strip(),
+        }
+    )
+
+
+def select_canonical_board_card(rows: dict[str, list[dict[str, Any]]]) -> tuple[dict[str, Any] | None, dict[str, Any] | None, list[str]]:
+    candidates: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
+    for status, items in rows.items():
+        normalized_status = str(status or "").strip().lower()
+        if normalized_status in TERMINAL_BOARD_STATUSES:
+            continue
+        for task in items:
+            card = factory_card_from_task(task)
+            if card is not None:
+                candidates.append((normalized_status, task, card))
+    if not candidates:
+        return None, None, []
+
+    distinct_ids = {
+        str(card.get("card_id") or card.get("slice_id") or _task_public_title(task)).strip()
+        for _status, task, card in candidates
+    }
+    distinct_ids.discard("")
+    if len(distinct_ids) > 1:
+        refs = [
+            f"{status}:{_task_public_ref(task)}:{card.get('card_id') or card.get('slice_id') or 'unknown-card'}"
+            for status, task, card in candidates
+        ]
+        return None, None, [
+            "board has multiple active canonical factory cards; reconcile one active frontier before creating more work: "
+            + ", ".join(sorted(refs))
+        ]
+
+    status_rank = {"running": 0, "in_progress": 0, "doing": 0, "ready": 1, "blocked": 2, "todo": 3}
+    candidates.sort(
+        key=lambda item: (
+            status_rank.get(item[0], 9),
+            factory_phase_rank(item[2].get("phase")),
+            str(item[2].get("card_id") or ""),
+            _task_public_title(item[1]),
+        )
+    )
+    status, task, card = candidates[0]
+    selected = board_reconcile_task_ref(task, status=status)
+    selected["selection_reason"] = "single canonical non-terminal factory card selected by status and phase rank"
+    return card, selected, []
+
+
+def _board_reconcile_task_contract(
+    *,
+    plan_action: str,
+    board: str,
+    selected_card: dict[str, Any] | None,
+    phase_engine: dict[str, Any] | None,
+    factory_help: dict[str, Any] | None,
+    reason: str,
+    assignee: str = "factory-orchestrator",
+) -> dict[str, Any]:
+    next_artifact = str((phase_engine or {}).get("next_required_artifact") or "canonical_factory_card").strip()
+    card_id = str((selected_card or {}).get("card_id") or "board").strip() or "board"
+    title_action = {
+        "repair_board_contract": "Materialize canonical factory card",
+        "create_next_artifact_task": f"Materialize {next_artifact}",
+        "repair_human_gate_packet": "Repair human gate decision package",
+        "request_operator_input": "Prepare bounded operator input request",
+    }.get(plan_action, "Reconcile factory board")
+    return {
+        "title": f"{title_action} for {card_id}",
+        "assignee": assignee,
+        "body": {
+            "packet_type": "factory_deterministic_reconcile_task",
+            "marker": "factory_deterministic_reconcile",
+            "board": board,
+            "plan_action": plan_action,
+            "card_id": card_id,
+            "phase_engine": phase_engine or {},
+            "factory_next_action": (factory_help or {}).get("factory_next_action") if factory_help else None,
+            "required_output": next_artifact,
+            "reason": reason,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "agent_may_choose_phase": False,
+            "allowed_actions": [
+                "inspect Hermes board and durable artifacts",
+                f"create or repair only {next_artifact}",
+                "record fresh evidence or a bounded blocker",
+                "leave downstream phases frozen until factory_phase_engine recomputes the frontier",
+            ],
+            "forbidden_actions": [
+                "choose a later phase from title, chat, memory, prose or declared phase alone",
+                "ask for a human gate when phase_engine.human_gate_allowed is false",
+                "approve or waive human gates",
+                "start implementation, deploy, release, spend funds or touch production",
+            ],
+            "native_dispatch_required_next": True,
+        },
+    }
+
+
+def build_board_reconcile_plan(
+    snapshot: dict[str, Any],
+    *,
+    board: str = "unknown-board",
+    catalog_path: Path | None = None,
+) -> dict[str, Any]:
+    rows = board_rows_from_snapshot(snapshot)
+    counts = board_status_counts(rows)
+    running = rows.get("running", []) + rows.get("in_progress", []) + rows.get("doing", [])
+    ready = rows.get("ready", [])
+    unfinished = [
+        task
+        for status, items in rows.items()
+        if status not in TERMINAL_BOARD_STATUSES
+        for task in items
+    ]
+    blocked_reasons: list[str] = []
+    selected_card: dict[str, Any] | None = None
+    selected_ref: dict[str, Any] | None = None
+    phase_engine: dict[str, Any] | None = None
+    factory_help: dict[str, Any] | None = None
+    user_decision_required = False
+    human_gate_required = False
+    operator_input_required = False
+    create_task_contract: dict[str, Any] | None = None
+
+    if running:
+        plan_action = "observe_running"
+        reason = "running Hermes work exists; no reconcile task is allowed"
+        native_dispatch_required_next = False
+    elif ready:
+        plan_action = "dispatch_ready"
+        reason = "ready Hermes work exists; native Hermes dispatch is the next action"
+        native_dispatch_required_next = True
+    elif not unfinished:
+        plan_action = "no_unfinished_work"
+        reason = "no non-terminal Hermes work was observed"
+        native_dispatch_required_next = False
+    else:
+        selected_card, selected_ref, selection_errors = select_canonical_board_card(rows)
+        blocked_reasons.extend(selection_errors)
+        native_dispatch_required_next = False
+        if selection_errors:
+            plan_action = "block_invariant_violation"
+            reason = selection_errors[0]
+        elif selected_card is None:
+            plan_action = "repair_board_contract"
+            reason = "unfinished board has no canonical factory card; phase cannot be inferred from task prose"
+            create_task_contract = _board_reconcile_task_contract(
+                plan_action=plan_action,
+                board=board,
+                selected_card=None,
+                phase_engine=None,
+                factory_help=None,
+                reason=reason,
+            )
+            native_dispatch_required_next = True
+        else:
+            phase_engine = factory_phase_engine_state(selected_card)
+            factory_help = build_factory_help(selected_card, Path("<kanban-card>"), catalog_path=catalog_path)
+            gate_report = factory_help.get("gate_status")
+            user_decisions = [
+                item for item in factory_help.get("user_decision_required", []) if isinstance(item, dict)
+            ]
+            raw_human_decisions = [
+                item for item in user_decisions if str(item.get("decision_type") or "") == "authority_required"
+            ]
+            product_intent_decisions = [
+                item for item in user_decisions if str(item.get("decision_type") or "") == "product_intent_confirmation"
+            ]
+            phase_allows_human_gate = phase_engine.get("human_gate_allowed") is True
+            human_gate_requested_early = bool(raw_human_decisions) and not phase_allows_human_gate
+            human_decisions = raw_human_decisions if phase_allows_human_gate else []
+            if human_decisions:
+                human_gate_required = True
+            if product_intent_decisions:
+                operator_input_required = True
+            if human_gate_requested_early:
+                blocked_reasons.append(
+                    "premature human gate request suppressed until "
+                    + str(phase_engine.get("human_gate_blocked_until_artifact") or phase_engine.get("next_required_artifact") or "required artifact")
+                )
+
+            packet = selected_card.get("human_gate_packet") if isinstance(selected_card.get("human_gate_packet"), dict) else {}
+            packet_errors = (
+                validate_human_gate_packet(packet, require_decision_package=True)
+                if phase_allows_human_gate and human_gate_required
+                else []
+            )
+            if phase_allows_human_gate and human_gate_required and not packet_errors:
+                plan_action = "request_human_gate_decision"
+                reason = "phase engine allows a real human gate and the decision package is complete"
+                user_decision_required = True
+            elif phase_allows_human_gate and human_gate_required and packet_errors:
+                plan_action = "repair_human_gate_packet"
+                reason = "human gate was requested before a complete decision package existed"
+                blocked_reasons.extend(packet_errors)
+                create_task_contract = _board_reconcile_task_contract(
+                    plan_action=plan_action,
+                    board=board,
+                    selected_card=selected_card,
+                    phase_engine=phase_engine,
+                    factory_help=factory_help,
+                    reason=reason,
+                    assignee="human-gate-clerk",
+                )
+                native_dispatch_required_next = True
+            elif product_intent_decisions and not phase_engine.get("phase_mismatch"):
+                plan_action = "request_operator_input"
+                reason = "operator understanding confirmation is a product input, not an approval gate"
+                user_decision_required = True
+                create_task_contract = _board_reconcile_task_contract(
+                    plan_action=plan_action,
+                    board=board,
+                    selected_card=selected_card,
+                    phase_engine=phase_engine,
+                    factory_help=factory_help,
+                    reason=reason,
+                )
+                native_dispatch_required_next = True
+            else:
+                plan_action = "create_next_artifact_task"
+                reason = str(
+                    (factory_help.get("factory_next_action") or {}).get("why")
+                    or phase_engine.get("decision_basis")
+                    or "deterministic phase engine selected the next artifact"
+                )
+                create_task_contract = _board_reconcile_task_contract(
+                    plan_action=plan_action,
+                    board=board,
+                    selected_card=selected_card,
+                    phase_engine=phase_engine,
+                    factory_help=factory_help,
+                    reason=reason,
+                    assignee=str((factory_help.get("factory_next_action") or {}).get("owner") or "factory-orchestrator"),
+                )
+                native_dispatch_required_next = True
+            if gate_report == "blocked":
+                blocked_reasons.extend(_list_items(factory_help.get("blocked_because")))
+
+    return sanitize_public_refs(
+        {
+            "$schema": "https://overkill-factory.dev/schemas/factory-board-reconcile-plan.schema.json",
+            "record_type": "factory_board_reconcile_plan",
+            "created_at": utc_now(),
+            "board": board,
+            "deterministic": True,
+            "agent_route_authority": False,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "status_counts": counts,
+            "plan_action": plan_action,
+            "reason": reason,
+            "blocked_reasons": sorted(set(blocked_reasons)),
+            "selected_card": selected_ref,
+            "phase_engine": phase_engine,
+            "factory_help": factory_help,
+            "create_task_allowed": plan_action in BOARD_RECONCILE_CREATE_ACTIONS,
+            "create_task_contract": create_task_contract,
+            "native_dispatch_required_next": native_dispatch_required_next,
+            "human_gate_required": human_gate_required,
+            "operator_input_required": operator_input_required,
+            "user_decision_required": user_decision_required,
+            "operator_decision_policy": {
+                "human_gate_only_when_phase_engine_allows": True,
+                "planning_continuation_approval_forbidden": True,
+                "decision_package_required_before_question": True,
+                "summary_only_gate_forbidden": True,
+            },
+            "limits": [
+                "This plan does not execute workers, approve gates or replace Hermes dispatch.",
+                "Agents may follow only the create_task_contract or wait/dispatch action selected here.",
+            ],
+        }
+    )
+
+
+def validate_board_reconcile_plan(plan: dict[str, Any]) -> list[str]:
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-board-reconcile-plan.schema.json")
+    errors: list[str] = []
+    if schema:
+        errors.extend(validate_node(schema, plan, "factory_board_reconcile_plan", schemas=schemas, root_schema=schema))
+    if plan.get("deterministic") is not True:
+        errors.append("factory_board_reconcile_plan.deterministic must be true")
+    if plan.get("agent_route_authority") is not False:
+        errors.append("factory_board_reconcile_plan.agent_route_authority must be false")
+    if plan.get("human_gate_required") is True:
+        phase_engine = plan.get("phase_engine") if isinstance(plan.get("phase_engine"), dict) else {}
+        if phase_engine.get("human_gate_allowed") is not True:
+            errors.append("factory_board_reconcile_plan cannot require human gate while phase_engine.human_gate_allowed is false")
+    if plan.get("plan_action") == "request_human_gate_decision" and plan.get("user_decision_required") is not True:
+        errors.append("request_human_gate_decision requires user_decision_required=true")
+    if plan.get("create_task_allowed") is True and not isinstance(plan.get("create_task_contract"), dict):
+        errors.append("create_task_allowed=true requires create_task_contract")
+    return errors
+
+
 def validate_status_snapshot(snapshot: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if not isinstance(snapshot.get("source_refs"), list) or not snapshot.get("source_refs"):
@@ -18412,6 +18806,30 @@ def command_phase_engine(args: argparse.Namespace) -> int:
     state = factory_phase_engine_state(load_json_like(args.card))
     write_json(args.out, state)
     return 1 if state.get("phase_mismatch") or state.get("lock_phase_mismatch") or state.get("lock_frontier_mismatch") else 0
+
+
+def command_reconcile_board(args: argparse.Namespace) -> int:
+    plan = build_board_reconcile_plan(
+        load_json_like(args.snapshot),
+        board=args.board,
+        catalog_path=args.catalog,
+    )
+    errors = validate_board_reconcile_plan(plan)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+    write_json(args.out, plan)
+    return 1 if errors or args.enforce and plan.get("plan_action") in {"block_invariant_violation"} else 0
+
+
+def command_validate_reconcile_board(args: argparse.Namespace) -> int:
+    errors = validate_board_reconcile_plan(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
 
 
 def command_validate_receipt(args: argparse.Namespace) -> int:
@@ -19461,6 +19879,21 @@ def build_parser() -> argparse.ArgumentParser:
     phase_engine_parser.add_argument("--card", type=Path, required=True)
     phase_engine_parser.add_argument("--out", type=Path)
     phase_engine_parser.set_defaults(func=command_phase_engine)
+
+    reconcile_board_parser = sub.add_parser(
+        "reconcile-board",
+        help="Compute the deterministic board-level next action from Hermes/Kanban state.",
+    )
+    reconcile_board_parser.add_argument("--snapshot", type=Path, required=True)
+    reconcile_board_parser.add_argument("--board", required=True)
+    reconcile_board_parser.add_argument("--catalog", type=Path)
+    reconcile_board_parser.add_argument("--out", type=Path)
+    reconcile_board_parser.add_argument("--enforce", action="store_true")
+    reconcile_board_parser.set_defaults(func=command_reconcile_board)
+
+    validate_reconcile_board_parser = sub.add_parser("validate-reconcile-board")
+    validate_reconcile_board_parser.add_argument("path", type=Path)
+    validate_reconcile_board_parser.set_defaults(func=command_validate_reconcile_board)
 
     validate_receipt_parser = sub.add_parser("validate-receipt")
     validate_receipt_parser.add_argument("path", type=Path)
