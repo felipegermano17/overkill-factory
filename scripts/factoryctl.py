@@ -2162,6 +2162,88 @@ def validate_capability_coverage(card: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _solana_ai_kit_provider_record(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    provider_id = str(value.get("provider_id") or "").strip()
+    pack_id = str(value.get("pack_id") or "").strip()
+    source = str(value.get("source") or "").strip()
+    if provider_id != "solana-ai-kit":
+        return False
+    return (
+        (pack_id == SOLANA_AI_KIT_PACK_ID or source == "https://github.com/solanabr/solana-ai-kit")
+        and pack_id in {"", SOLANA_AI_KIT_PACK_ID}
+        and source in {"", "https://github.com/solanabr/solana-ai-kit"}
+    )
+
+
+def solana_domain_brain_materialized(card: dict[str, Any]) -> bool:
+    """Return true only when Solana AI Kit is recorded as structured route state."""
+
+    for field in ("domain_brain_provider", "solana_domain_brain_provider"):
+        if _solana_ai_kit_provider_record(card.get(field)):
+            return True
+
+    intake = card.get("universal_signal_intake") if isinstance(card.get("universal_signal_intake"), dict) else {}
+    domain = intake.get("domain_routing") if isinstance(intake.get("domain_routing"), dict) else {}
+    if domain:
+        pack_ids = {str(pack).strip() for pack in _list_items(domain.get("capability_pack_ids"))}
+        provider_ref = str(domain.get("official_brain_provider_ref") or "").strip()
+        if (
+            SOLANA_AI_KIT_PACK_ID in pack_ids
+            and domain.get("official_brain_provider_required") is True
+            and f"packs.{SOLANA_AI_KIT_PACK_ID}.official_brain_provider" in provider_ref
+        ):
+            return True
+
+    contract = card.get("capability_pack_contract")
+    if SOLANA_AI_KIT_PACK_ID in _activated_capability_pack_ids(contract):
+        return True
+    if isinstance(contract, dict) and str(contract.get("pack_id") or "").strip() == SOLANA_AI_KIT_PACK_ID:
+        return True
+
+    for field in SOLANA_DOMAIN_BRAIN_OUTPUT_FIELDS:
+        result = card.get(field)
+        if isinstance(result, dict) and _solana_ai_kit_usage_receipt_errors(result, card, ROOT) == []:
+            return True
+
+    return False
+
+
+def solana_domain_brain_required_for_card(card: dict[str, Any]) -> bool:
+    if card.get("factory_method_version") != "OVERKILL_VFINAL":
+        return False
+    if not (normalized_surfaces(card) & SOLANA_DOMAIN_SURFACES):
+        return False
+
+    phase_rank = factory_phase_rank(card.get("phase"))
+    f4_rank = factory_phase_rank("F4")
+    if phase_rank >= f4_rank:
+        return True
+
+    return _phase_engine_any_materialized(
+        card,
+        "method_contract",
+        "architecture_candidate",
+        "security_architecture_plan",
+        "specialist_decision_packet",
+        "product_creation_plan",
+        "product_implementation_readiness",
+        "onchain_work_package",
+    )
+
+
+def validate_solana_domain_brain_route(card: dict[str, Any]) -> list[str]:
+    if not solana_domain_brain_required_for_card(card):
+        return []
+    if solana_domain_brain_materialized(card):
+        return []
+    return [
+        "Solana/onchain F4+ route requires an explicit solana-ai-kit-core domain brain record "
+        "before architecture, specialist planning, worker routing or execution"
+    ]
+
+
 def worker_result_schema_path(worker_id: str) -> str:
     binding = load_profile_bindings().get(worker_id) or {}
     schema_path = str(binding.get("result_schema") or "schemas/worker-result.schema.json").strip()
@@ -6010,6 +6092,7 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     errors.extend(validate_vfinal_card_contract(data))
     errors.extend(validate_canonical_runtime_gate(data))
     errors.extend(validate_capability_coverage(data))
+    errors.extend(validate_solana_domain_brain_route(data))
     errors.extend(validate_agent_runtime_hardening_profile(data))
     if data.get("factory_method_version") == "OVERKILL_VFINAL":
         if not isinstance(data.get("reasoning_policy"), dict):

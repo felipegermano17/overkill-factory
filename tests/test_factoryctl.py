@@ -860,6 +860,60 @@ class FactoryCtlTest(unittest.TestCase):
             "agents/capability-packs.public.json#packs.solana-ai-kit-core.official_brain_provider",
         )
 
+    def test_vfinal_solana_f4_blocks_without_structured_solana_ai_kit_route(self) -> None:
+        card_path = ROOT / "templates" / "vfinal-factory-card.json"
+        card = factoryctl.load_json_like(card_path)
+        card["phase"] = "F4"
+        card["surfaces"] = ["architecture", "solana", "onchain"]
+        card.pop("universal_signal_intake", None)
+        card["universal_signal_intake_ref"] = "templates/universal-signal-intake.json"
+
+        errors = factoryctl.validate_solana_domain_brain_route(card)
+        plan = factoryctl.build_transition_plan(card, card_path, from_status="todo", to_status="ready")
+
+        expected = (
+            "Solana/onchain F4+ route requires an explicit solana-ai-kit-core domain brain record "
+            "before architecture, specialist planning, worker routing or execution"
+        )
+        self.assertIn(expected, errors)
+        self.assertIn(expected, plan["blocked_reasons"])
+
+    def test_vfinal_solana_f4_accepts_structured_solana_ai_kit_intake_route(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["phase"] = "F4"
+        card["surfaces"] = ["architecture", "solana", "onchain"]
+        card["universal_signal_intake"] = factoryctl.build_universal_signal_intake(
+            route_class="product_creation",
+            request_type="product_new",
+            signal_type="product_paper",
+            summary_public_safe="Solana onchain digital bank product start.",
+            signal_ref_public_safe="external:solana-bank-start-sources",
+            target_surface="Solana onchain bank with wallet, Token-2022 and Quasar architecture",
+            owner="operator",
+            source_class="operator_supplied",
+            sensitivity_class="public_safe_summary",
+            freshness="fresh",
+            risk_initial="R4",
+            materiality="material",
+            intake_id="intake-solana-bank",
+        )
+
+        self.assertTrue(factoryctl.solana_domain_brain_materialized(card))
+        self.assertEqual(factoryctl.validate_solana_domain_brain_route(card), [])
+
+    def test_vfinal_solana_f4_rejects_label_only_solana_ai_kit_provider_record(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["phase"] = "F4"
+        card["surfaces"] = ["architecture", "solana", "onchain"]
+        card["domain_brain_provider"] = {"provider_id": "solana-ai-kit"}
+
+        self.assertFalse(factoryctl.solana_domain_brain_materialized(card))
+        self.assertTrue(factoryctl.validate_solana_domain_brain_route(card))
+
+        card["domain_brain_provider"]["pack_id"] = "solana-ai-kit-core"
+        self.assertTrue(factoryctl.solana_domain_brain_materialized(card))
+        self.assertEqual(factoryctl.validate_solana_domain_brain_route(card), [])
+
     def test_real_solana_worker_result_requires_solana_ai_kit_usage_receipt(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         result = worker_result("solana_quasar_build_result", source_card=card)
