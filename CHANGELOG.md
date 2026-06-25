@@ -7,6 +7,19 @@ public releases.
 
 ## Unreleased
 
+## 1.5.7 - 2026-06-25
+
+- Add `factoryctl reconcile-board`, a deterministic Hermes/Kanban board
+  reconciler that selects the active factory card from board state, computes the
+  phase engine frontier and emits a single allowed next action.
+- Wire Hermes no-idle remediation to the board reconciler so silent boards
+  create deterministic next-artifact tasks instead of generic remediation cards.
+- Block declared future phases from becoming human-gate requests when the
+  computed frontier is still Product SOT or another earlier artifact.
+- Add regressions for F9 architecture/gate claims that must reconcile back to
+  F5 `operator_briefing_package`, plus no-canonical-card and ready-dispatch
+  board states.
+
 ## 1.5.6 - 2026-06-25
 
 - Block Solana/onchain `OVERKILL_VFINAL` F4+ routes unless a structured

@@ -264,7 +264,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line. The latest public release
-is v1.5.6.
+is v1.5.7.
 
 It includes:
 
@@ -286,6 +286,9 @@ It includes:
   architecture, repo cleanup, human gates or worker packets;
 - deterministic Phase Engine state so materialized artifacts, not agent prose or
   declared card phase, decide the active frontier and next required artifact;
+- deterministic Hermes/Kanban board reconciliation so a silent board becomes
+  one allowed next-artifact task, native dispatch, or a real bounded gate
+  request instead of agent-chosen phase routing;
 - Hermes completion artifact projection, no-idle remediation controls, Hermes
   update guard, cron-friendly no-idle watchdog and Fast Autonomy Lane contracts.
 
@@ -324,6 +327,8 @@ implementation, proof and boundary.
 - `docs/operations/fast-autonomy-lane.md`: fast autonomous execution limits.
 - `scripts/factory_no_idle_watchdog.py`: Hermes-cron no-idle heartbeat for
   Telegram-first operation.
+- `factoryctl reconcile-board`: deterministic board-level next action from a
+  Hermes/Kanban snapshot.
 - `docs/operations/release-policy.md`: release and versioning policy.
 - `docs/operations/troubleshooting.md`: common failures and recovery path.
 - `docs/architecture/hermes-integration.md`: Hermes adapter architecture.

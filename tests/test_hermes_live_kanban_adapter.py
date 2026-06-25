@@ -3736,7 +3736,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
 
-    def test_no_idle_creates_safe_remediation_card_when_board_is_silent(self) -> None:
+    def test_no_idle_creates_deterministic_reconcile_card_when_board_is_silent(self) -> None:
         fake = FakeHermes()
         fake.tasks["t_" + "todo0001"] = {
             "id": "t_" + "todo0001",
@@ -3752,24 +3752,65 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         result = adapter.no_idle(args, runner=fake)
 
         self.assertEqual(result["no_idle_state"]["status"], "remediation_required")
+        self.assertEqual(result["no_idle_state"]["classification"], "deterministic_board_reconcile_task_created")
         self.assertTrue(result["no_idle_state"]["remediation_task_created"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "repair_board_contract")
         self.assertEqual(result["remediation_task_id"], adapter.PUBLIC_SAFE_KANBAN_REF)
         created_task = next(
             task for task in fake.tasks.values()
-            if json.loads(str(task.get("body") or "{}")).get("marker") == adapter.NO_IDLE_REMEDIATION_MARKER
+            if json.loads(str(task.get("body") or "{}")).get("marker") == "factory_deterministic_reconcile"
         )
         self.assertEqual(created_task["status"], "ready")
         body = json.loads(str(created_task["body"]))
-        self.assertFalse(body["dispatch_allowed_by_this_step"])
+        self.assertEqual(body["plan_action"], "repair_board_contract")
         self.assertTrue(body["native_dispatch_required_next"])
-        self.assertEqual(body["deterministic_phase_contract"]["route_authority"], "factory_phase_engine")
-        self.assertTrue(body["deterministic_phase_contract"]["generic_frontier_selection_forbidden"])
+        self.assertFalse(body["agent_may_choose_phase"])
         self.assertIn("approve or waive human gates", body["forbidden_actions"])
         self.assertIn(
-            "decide the next factory phase from prose, memory, title, comments or declared card phase alone",
+            "choose a later phase from title, chat, memory, prose or declared phase alone",
             body["forbidden_actions"],
         )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_reconciles_declared_f9_to_f5_owner_package_before_gate(self) -> None:
+        fake = FakeHermes()
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["phase"] = "F9"
+        card["surfaces"] = ["architecture", "planning"]
+        card["autonomy_mode"] = "planning_only"
+        card["risk_initial"] = "R2"
+        card["risk_effective"] = "R2"
+        card.pop("factory_phase_lock", None)
+        card.pop("operator_briefing_package_ref", None)
+        card["review"]["human_gate_required"] = False
+        card["review"]["CTO_gate_required"] = False
+        fake.tasks["t_" + "phasejump1"] = {
+            "id": "t_" + "phasejump1",
+            "status": "todo",
+            "assignee": "human-gate-clerk",
+            "title": "Human architecture gate",
+            "body": json.dumps(card),
+            "events": [],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        plan = result["board_reconcile_plan"]
+        self.assertEqual(plan["plan_action"], "create_next_artifact_task")
+        self.assertEqual(plan["phase_engine"]["computed_phase_id"], "F5")
+        self.assertEqual(plan["phase_engine"]["next_required_artifact"], "operator_briefing_package")
+        self.assertFalse(plan["human_gate_required"])
+        created_task = next(
+            task for task in fake.tasks.values()
+            if json.loads(str(task.get("body") or "{}")).get("marker") == "factory_deterministic_reconcile"
+        )
+        body = json.loads(str(created_task["body"]))
+        self.assertEqual(body["required_output"], "operator_briefing_package")
+        self.assertEqual(body["plan_action"], "create_next_artifact_task")
+        self.assertFalse(body["agent_may_choose_phase"])
 
     def test_no_idle_reports_human_gate_without_remediation(self) -> None:
         fake = FakeHermes()

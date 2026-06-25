@@ -1242,6 +1242,44 @@ def create_no_idle_remediation_task(
     )
 
 
+def build_board_reconcile_plan_from_rows(*, board: str, rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    factoryctl = load_factoryctl()
+    plan = factoryctl.build_board_reconcile_plan({"rows": rows}, board=board)
+    errors = factoryctl.validate_board_reconcile_plan(plan)
+    if errors:
+        raise RuntimeError("factory board reconcile plan is invalid: " + "; ".join(errors))
+    return plan
+
+
+def create_deterministic_reconcile_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    plan: dict[str, Any],
+    runner: Runner,
+) -> str | None:
+    contract = plan.get("create_task_contract")
+    if not isinstance(contract, dict):
+        return None
+    body = contract.get("body")
+    if not isinstance(body, dict):
+        return None
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title=str(contract.get("title") or "Factory deterministic reconcile"),
+        body=compact_json_argument(body),
+        assignee=str(contract.get("assignee") or "factory-orchestrator"),
+        idempotency_key=f"overkill:reconcile:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        runner=runner,
+    )
+
+
 def route_readiness_blockers(path: Path | None, required_worker_ids: list[str]) -> list[str]:
     if path is None:
         return ["route readiness manifest is required before live Hermes dispatch"]
@@ -6536,25 +6574,35 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
     rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
     classification = classify_no_idle_state(rows)
     remediation_task_id: str | None = None
+    reconcile_plan: dict[str, Any] | None = None
     if classification.get("remediation_required") and args.create_remediation:
-        remediation_task_id = create_no_idle_remediation_task(
+        reconcile_plan = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
+        remediation_task_id = create_deterministic_reconcile_task(
             hermes_bin=args.hermes_bin,
             board=args.board,
             workspace=args.workspace,
-            assignee=args.assignee,
-            classification=classification,
+            plan=reconcile_plan,
             runner=runner,
         )
         classification = dict(classification)
-        classification["remediation_task_created"] = True
+        classification["board_reconcile_plan"] = reconcile_plan
+        classification["remediation_task_created"] = remediation_task_id is not None
         classification["remediation_task_ref"] = remediation_task_id
-        classification["native_dispatch_required_next"] = True
+        classification["native_dispatch_required_next"] = bool(
+            remediation_task_id and reconcile_plan.get("native_dispatch_required_next") is True
+        )
+        classification["classification"] = (
+            "deterministic_board_reconcile_task_created"
+            if remediation_task_id
+            else str(reconcile_plan.get("plan_action") or classification.get("classification"))
+        )
     envelope = {
         "$schema": LIVE_ADAPTER_SCHEMA,
         "mode": "no-idle",
         "board": args.board,
         "blocked": bool(classification.get("blocked")),
         "no_idle_state": classification,
+        "board_reconcile_plan": reconcile_plan,
         "remediation_task_id": remediation_task_id,
         "hook": {
             "runtime_authority": "hermes_kanban",

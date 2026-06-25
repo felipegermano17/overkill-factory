@@ -267,7 +267,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 é a linha atual de release do kernel público. A release pública mais
-recente é v1.5.6.
+recente é v1.5.7.
 
 Ela inclui:
 
@@ -288,6 +288,9 @@ Ela inclui:
 - Phase Engine determinístico para que artefatos materializados, não prosa de
   agente ou `phase` declarado no card, decidam a fronteira ativa e o próximo
   artefato obrigatório;
+- reconciliação determinística de board Hermes/Kanban para transformar uma fila
+  silenciosa em uma única tarefa de próximo artefato, dispatch nativo ou pedido
+  real de gate limitado, sem rota escolhida pelo agente;
 - projeção de artefato de conclusão Hermes, controles de no-idle, Hermes update
   guard, watchdog de no-idle para Hermes cron e contratos da Fast Autonomy Lane.
 
@@ -323,6 +326,8 @@ apontar sua implementação, prova e limite.
 - `docs/operations/fast-autonomy-lane.md`: limites da execução autônoma rápida.
 - `scripts/factory_no_idle_watchdog.py`: heartbeat de no-idle via Hermes cron
   para operação primária pelo Telegram.
+- `factoryctl reconcile-board`: próxima ação determinística de nível board a
+  partir de um snapshot Hermes/Kanban.
 - `docs/operations/release-policy.md`: política de versão e release.
 - `docs/operations/troubleshooting.md`: falhas comuns e caminho de recuperação.
 - `docs/architecture/hermes-integration.md`: arquitetura do adapter Hermes.
