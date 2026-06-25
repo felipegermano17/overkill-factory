@@ -264,7 +264,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory v1 is the current public kernel release line. The latest public release
-is v1.5.10.
+is v1.5.11.
 
 It includes:
 
@@ -289,6 +289,9 @@ It includes:
 - deterministic Hermes/Kanban board reconciliation so a silent board becomes
   one allowed next-artifact task, native dispatch, or a real bounded gate
   request instead of agent-chosen phase routing;
+- runtime-strict phase evidence in Hermes reconciliation, so template/example
+  scaffold refs and placeholder packets cannot make a live product board skip
+  F1/F2/F3/F4 boundaries;
 - Kanban-native workflow binding with `workflow_template_id=overkill-vfinal`
   and deterministic `current_step_key` on factory-created Hermes tasks when the
   installed Hermes database exposes those fields;

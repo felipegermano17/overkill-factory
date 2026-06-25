@@ -4551,12 +4551,120 @@ def factory_phase_rank(phase_id: Any) -> int:
     return base
 
 
-def _has_card_artifact(card: dict[str, Any], artifact_type: str) -> bool:
+PHASE_ENGINE_SCAFFOLD_REF_PREFIXES = ("templates/", "examples/")
+PHASE_ENGINE_SCAFFOLD_REF_VALUES = {
+    "factoryctl:gate-report",
+    "source-ledger.md",
+}
+PHASE_ENGINE_SCAFFOLD_BARE_REF_VALUES = {"product_sot"}
+PHASE_ENGINE_SCAFFOLD_TEXT_MARKERS = (
+    "a short, concrete description",
+    "acceptance example or scenario",
+    "bounded slice",
+    "concrete product result",
+    "describe the concrete result",
+    "observable acceptance criterion",
+    "primary user or actor",
+    "product_slice_id",
+    "target user",
+    "template only",
+    "to be filled by execution",
+    "what the worker may do",
+    "what the worker must not do",
+)
+
+
+def _phase_engine_scaffold_ref(value: Any) -> bool:
+    text = str(value or "").strip()
+    if not text:
+        return True
+    normalized = text.replace("\\", "/").lower()
+    if normalized.startswith(PHASE_ENGINE_SCAFFOLD_REF_PREFIXES):
+        return True
+    if normalized in PHASE_ENGINE_SCAFFOLD_REF_VALUES:
+        return True
+    return False
+
+
+def _phase_engine_scaffold_score(value: Any, *, depth: int = 0) -> int:
+    if depth > 6:
+        return 0
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if not normalized:
+            return 1
+        return sum(1 for marker in PHASE_ENGINE_SCAFFOLD_TEXT_MARKERS if marker in normalized)
+    if isinstance(value, list):
+        return sum(_phase_engine_scaffold_score(item, depth=depth + 1) for item in value)
+    if isinstance(value, dict):
+        return sum(_phase_engine_scaffold_score(item, depth=depth + 1) for item in value.values())
+    return 0
+
+
+def _phase_engine_contains_scaffold_ref(value: Any, *, depth: int = 0) -> bool:
+    if depth > 6:
+        return False
+    if isinstance(value, str):
+        return _phase_engine_scaffold_ref(value)
+    if isinstance(value, list):
+        return any(_phase_engine_contains_scaffold_ref(item, depth=depth + 1) for item in value)
+    if isinstance(value, dict):
+        return any(_phase_engine_contains_scaffold_ref(item, depth=depth + 1) for item in value.values())
+    return False
+
+
+def _phase_engine_value_materialized(
+    value: Any,
+    *,
+    allow_scaffold_artifacts: bool,
+    ref_like: bool = False,
+) -> bool:
+    if isinstance(value, dict):
+        if not value:
+            return False
+        if not allow_scaffold_artifacts:
+            if _phase_engine_scaffold_score(value) >= 2:
+                return False
+            if _phase_engine_contains_scaffold_ref(value):
+                return False
+        return True
+    if isinstance(value, list):
+        return any(
+            _phase_engine_value_materialized(
+                item,
+                allow_scaffold_artifacts=allow_scaffold_artifacts,
+                ref_like=ref_like or isinstance(item, str),
+            )
+            for item in value
+        )
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return False
+        if not allow_scaffold_artifacts and ref_like and text.lower() in PHASE_ENGINE_SCAFFOLD_BARE_REF_VALUES:
+            return False
+        if not allow_scaffold_artifacts and (
+            _phase_engine_scaffold_ref(text)
+            or _phase_engine_scaffold_score(text) > 0
+        ):
+            return False
+        if ref_like:
+            return _phase_lock_public_ref_ok(text)
+        return True
+    return False
+
+
+def _has_card_artifact(
+    card: dict[str, Any],
+    artifact_type: str,
+    *,
+    allow_scaffold_artifacts: bool = True,
+) -> bool:
     value = card.get(artifact_type)
-    if isinstance(value, dict) and value:
+    if _phase_engine_value_materialized(value, allow_scaffold_artifacts=allow_scaffold_artifacts):
         return True
     ref = str(card.get(f"{artifact_type}_ref") or "").strip()
-    if ref:
+    if _phase_engine_value_materialized(ref, allow_scaffold_artifacts=allow_scaffold_artifacts, ref_like=True):
         return True
     return False
 
@@ -4586,28 +4694,50 @@ def factory_phase_engine_frontier_rank(frontier: Any) -> int:
         return -1
 
 
-def _phase_engine_field_materialized(card: dict[str, Any], field: str) -> bool:
+def _phase_engine_field_materialized(
+    card: dict[str, Any],
+    field: str,
+    *,
+    allow_scaffold_artifacts: bool = True,
+) -> bool:
     value = card.get(field)
-    if isinstance(value, dict) and value:
-        return True
-    if isinstance(value, list) and value:
-        return True
-    if isinstance(value, str) and value.strip():
-        if field.endswith("_ref") or field == "canonical_product_sot_ref":
-            return _phase_lock_public_ref_ok(value)
+    if _phase_engine_value_materialized(
+        value,
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+        ref_like=field.endswith("_ref") or field == "canonical_product_sot_ref",
+    ):
         return True
 
     lock = _factory_phase_lock(card)
     refs = lock.get("materialized_artifact_refs") if isinstance(lock.get("materialized_artifact_refs"), dict) else {}
-    if _phase_lock_public_ref_ok(refs.get(field)):
+    if _phase_engine_value_materialized(
+        refs.get(field),
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+        ref_like=True,
+    ):
         return True
-    if not field.endswith("_ref") and _phase_lock_public_ref_ok(refs.get(f"{field}_ref")):
+    if not field.endswith("_ref") and _phase_engine_value_materialized(
+        refs.get(f"{field}_ref"),
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+        ref_like=True,
+    ):
         return True
     return False
 
 
-def _phase_engine_any_materialized(card: dict[str, Any], *fields: str) -> bool:
-    return any(_phase_engine_field_materialized(card, field) for field in fields)
+def _phase_engine_any_materialized(
+    card: dict[str, Any],
+    *fields: str,
+    allow_scaffold_artifacts: bool = True,
+) -> bool:
+    return any(
+        _phase_engine_field_materialized(
+            card,
+            field,
+            allow_scaffold_artifacts=allow_scaffold_artifacts,
+        )
+        for field in fields
+    )
 
 
 def _phase_engine_frontier_state(
@@ -4665,7 +4795,11 @@ def _phase_engine_frontier_state(
     }
 
 
-def factory_phase_engine_state(card: dict[str, Any]) -> dict[str, Any]:
+def factory_phase_engine_state(
+    card: dict[str, Any],
+    *,
+    allow_scaffold_artifacts: bool = True,
+) -> dict[str, Any]:
     """Compute the active factory frontier from artifacts, not agent prose."""
     surfaces = normalized_surfaces(card)
     card_phase_rank = factory_phase_rank(card.get("phase"))
@@ -4675,46 +4809,70 @@ def factory_phase_engine_state(card: dict[str, Any]) -> dict[str, Any]:
         "factory_start_conversation",
         "source_resolution_packet",
         "source_refs",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
     product_sot = _phase_engine_any_materialized(
         card,
         "product_sot",
         "product_sot_ref",
         "canonical_product_sot_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
     source_resolution = (
         product_sot
-        or _phase_engine_any_materialized(card, "product_source_ledger", "source_resolution_packet")
+        or _phase_engine_any_materialized(
+            card,
+            "product_source_ledger",
+            "source_resolution_packet",
+            allow_scaffold_artifacts=allow_scaffold_artifacts,
+        )
     )
     understanding = (
         product_sot
-        or _phase_engine_any_materialized(card, "operator_understanding_confirmation", "outcome_contract")
+        or _phase_engine_any_materialized(
+            card,
+            "operator_understanding_confirmation",
+            "outcome_contract",
+            allow_scaffold_artifacts=allow_scaffold_artifacts,
+        )
     )
-    outcome = product_sot or _phase_engine_any_materialized(card, "outcome_contract", "discovery_brief")
+    outcome = product_sot or _phase_engine_any_materialized(
+        card,
+        "outcome_contract",
+        "discovery_brief",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
     full_scope = _phase_engine_any_materialized(
         card,
         "full_product_sot_scope_coverage",
         "full_product_sot_scope_coverage_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
-    owner_surface = product_sot_owner_surface_delivered(card)
-    method_done = method_contract_materialized(card)
+    owner_surface = product_sot_owner_surface_delivered(
+        card,
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    method_done = method_contract_materialized(card, allow_scaffold_artifacts=allow_scaffold_artifacts)
     architecture_done = _phase_engine_any_materialized(
         card,
         "architecture_packet",
         "architecture_packet_ref",
         "security_architecture_plan",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
     product_creation_done = _phase_engine_any_materialized(
         card,
         "product_creation_plan",
         "product_creation_plan_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
     readiness_done = _phase_engine_any_materialized(
         card,
         "product_implementation_readiness",
         "autonomy_readiness_packet",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
-    ready_gate_done = ready_gate_materialized(card)
+    ready_gate_done = ready_gate_materialized(card, allow_scaffold_artifacts=allow_scaffold_artifacts)
     artifacts = {
         "source_input": source_input,
         "source_resolution": source_resolution,
@@ -4843,56 +5001,132 @@ def _phase_lock_allowed_surfaces(frontier: str) -> set[str]:
     return allowed
 
 
-def product_sot_owner_surface_delivered(card: dict[str, Any]) -> bool:
+def product_sot_owner_surface_delivered(
+    card: dict[str, Any],
+    *,
+    allow_scaffold_artifacts: bool = True,
+) -> bool:
     lock = _factory_phase_lock(card)
     owner_surface = lock.get("owner_surface_first") if isinstance(lock.get("owner_surface_first"), dict) else {}
     if owner_surface.get("product_sot_review_packet_delivered") is True:
         review_ref = _phase_lock_ref(owner_surface.get("product_sot_review_packet_ref"))
         briefing_ref = _phase_lock_ref(owner_surface.get("operator_briefing_package_ref"))
-        if (not review_ref or _phase_lock_public_ref_ok(review_ref)) and (
-            not briefing_ref or _phase_lock_public_ref_ok(briefing_ref)
+        if (
+            not review_ref
+            or _phase_engine_value_materialized(
+                review_ref,
+                allow_scaffold_artifacts=allow_scaffold_artifacts,
+                ref_like=True,
+            )
+        ) and (
+            not briefing_ref
+            or _phase_engine_value_materialized(
+                briefing_ref,
+                allow_scaffold_artifacts=allow_scaffold_artifacts,
+                ref_like=True,
+            )
         ):
             return True
 
     return (
-        _has_card_artifact(card, "product_sot")
-        and _has_card_artifact(card, "full_product_sot_scope_coverage")
+        _has_card_artifact(card, "product_sot", allow_scaffold_artifacts=allow_scaffold_artifacts)
+        and _has_card_artifact(
+            card,
+            "full_product_sot_scope_coverage",
+            allow_scaffold_artifacts=allow_scaffold_artifacts,
+        )
         and (
-            _has_card_artifact(card, "operator_briefing_package")
-            or _phase_lock_public_ref_ok(card.get("operator_briefing_package_ref"))
-            or _phase_lock_public_ref_ok(card.get("owner_review_ref"))
+            _has_card_artifact(
+                card,
+                "operator_briefing_package",
+                allow_scaffold_artifacts=allow_scaffold_artifacts,
+            )
+            or _phase_engine_value_materialized(
+                card.get("operator_briefing_package_ref"),
+                allow_scaffold_artifacts=allow_scaffold_artifacts,
+                ref_like=True,
+            )
+            or _phase_engine_value_materialized(
+                card.get("owner_review_ref"),
+                allow_scaffold_artifacts=allow_scaffold_artifacts,
+                ref_like=True,
+            )
         )
     )
 
 
-def method_contract_materialized(card: dict[str, Any]) -> bool:
+def method_contract_materialized(
+    card: dict[str, Any],
+    *,
+    allow_scaffold_artifacts: bool = True,
+) -> bool:
     lock = _factory_phase_lock(card)
     refs = lock.get("materialized_artifact_refs") if isinstance(lock.get("materialized_artifact_refs"), dict) else {}
-    return _has_card_artifact(card, "method_contract") or _phase_lock_public_ref_ok(refs.get("method_contract_ref"))
+    return _has_card_artifact(
+        card,
+        "method_contract",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    ) or _phase_engine_value_materialized(
+        refs.get("method_contract_ref"),
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+        ref_like=True,
+    )
 
 
-def ready_gate_materialized(card: dict[str, Any]) -> bool:
+def ready_gate_materialized(
+    card: dict[str, Any],
+    *,
+    allow_scaffold_artifacts: bool = True,
+) -> bool:
     lock = _factory_phase_lock(card)
     refs = lock.get("materialized_artifact_refs") if isinstance(lock.get("materialized_artifact_refs"), dict) else {}
     review = card.get("review") if isinstance(card.get("review"), dict) else {}
     return (
-        _has_card_artifact(card, "product_implementation_readiness")
-        or _phase_lock_public_ref_ok(refs.get("ready_gate_ref"))
+        _has_card_artifact(
+            card,
+            "product_implementation_readiness",
+            allow_scaffold_artifacts=allow_scaffold_artifacts,
+        )
+        or _phase_engine_value_materialized(
+            refs.get("ready_gate_ref"),
+            allow_scaffold_artifacts=allow_scaffold_artifacts,
+            ref_like=True,
+        )
         or review.get("ready_gate_passed") is True
     )
 
 
-def factory_phase_lock_projection(card: dict[str, Any]) -> dict[str, Any]:
+def factory_phase_lock_projection(
+    card: dict[str, Any],
+    *,
+    allow_scaffold_artifacts: bool = True,
+) -> dict[str, Any]:
     surfaces = normalized_surfaces(card)
-    frontier = _phase_lock_frontier(card)
-    current_phase_id = _factory_phase_lock_current_phase_id(card)
+    strict_phase_engine = (
+        factory_phase_engine_state(card, allow_scaffold_artifacts=False)
+        if not allow_scaffold_artifacts
+        else None
+    )
+    frontier = (
+        str(strict_phase_engine.get("computed_frontier") or "")
+        if isinstance(strict_phase_engine, dict)
+        else _phase_lock_frontier(card)
+    )
+    current_phase_id = (
+        str(strict_phase_engine.get("computed_phase_id") or "")
+        if isinstance(strict_phase_engine, dict)
+        else _factory_phase_lock_current_phase_id(card)
+    )
     lock = _factory_phase_lock(card)
     downstream_freeze = bool(lock.get("downstream_freeze_active", False))
     if not downstream_freeze:
         downstream_freeze = factory_phase_rank(card.get("phase")) > factory_phase_rank(current_phase_id)
-    sot_delivered = product_sot_owner_surface_delivered(card)
-    method_done = method_contract_materialized(card)
-    ready_done = ready_gate_materialized(card)
+    sot_delivered = product_sot_owner_surface_delivered(
+        card,
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    method_done = method_contract_materialized(card, allow_scaffold_artifacts=allow_scaffold_artifacts)
+    ready_done = ready_gate_materialized(card, allow_scaffold_artifacts=allow_scaffold_artifacts)
     downstream_surface_seen = bool(surfaces & DOWNSTREAM_PHASE_LOCK_SURFACES)
     return {
         "active_frontier": frontier,
@@ -17714,9 +17948,10 @@ def build_factory_help(
     catalog_path: Path | None = None,
     worker_results_dir: Path | None = None,
     receipt: dict[str, Any] | None = None,
+    allow_scaffold_artifacts: bool = True,
 ) -> dict[str, Any]:
     catalog = load_workflow_catalog(catalog_path)
-    phase_engine = factory_phase_engine_state(card)
+    phase_engine = factory_phase_engine_state(card, allow_scaffold_artifacts=allow_scaffold_artifacts)
     phase_row = workflow_phase_by_id(catalog, str(phase_engine.get("computed_phase_id") or "")) or workflow_phase_for_card(card, catalog)
     gate_report = build_gate_report(card)
     recovery_plan = build_factory_recovery_plan(
@@ -17748,7 +17983,7 @@ def build_factory_help(
         }
     blocked_workers = _list_items(gate_report.get("blocked_workers"))
     validation_errors = _list_items(gate_report.get("card_validation_errors"))
-    phase_lock = factory_phase_lock_projection(card)
+    phase_lock = factory_phase_lock_projection(card, allow_scaffold_artifacts=allow_scaffold_artifacts)
     phase_lock_blocked = any("factory_phase_lock" in error for error in validation_errors)
     phase_engine_blocked = any("factory_phase_engine" in error for error in validation_errors)
     user_decisions = [] if phase_lock_blocked or phase_engine_blocked else user_decisions_for_card(card, gate_report)
@@ -18070,8 +18305,13 @@ def build_board_reconcile_plan(
             )
             native_dispatch_required_next = True
         else:
-            phase_engine = factory_phase_engine_state(selected_card)
-            factory_help = build_factory_help(selected_card, Path("<kanban-card>"), catalog_path=catalog_path)
+            phase_engine = factory_phase_engine_state(selected_card, allow_scaffold_artifacts=False)
+            factory_help = build_factory_help(
+                selected_card,
+                Path("<kanban-card>"),
+                catalog_path=catalog_path,
+                allow_scaffold_artifacts=False,
+            )
             gate_report = factory_help.get("gate_status")
             user_decisions = [
                 item for item in factory_help.get("user_decision_required", []) if isinstance(item, dict)

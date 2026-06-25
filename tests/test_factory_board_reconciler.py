@@ -23,8 +23,50 @@ def load_vfinal_card() -> dict:
     return factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
 
 
+def materialize_product_sot_frontier(card: dict) -> dict:
+    card["universal_signal_intake"] = {
+        "record_type": "universal_signal_intake",
+        "intake_id": "runtime-intake-001",
+        "source_ref_public_safe": "external:operator:source-envelope",
+    }
+    card["product_source_ledger"] = {
+        "record_type": "product_source_ledger",
+        "ledger_id": "runtime-source-ledger-001",
+        "claim_table": [
+            {
+                "claim_id": "claim-001",
+                "claim": "Product Alpha is an operations product with web and admin surfaces.",
+                "claim_class": "fact",
+                "status": "promoted",
+                "source_refs": ["external:operator:source-envelope"],
+            }
+        ],
+    }
+    card["outcome_contract"] = {
+        "record_type": "outcome_contract",
+        "outcome": "Produce the complete product planning baseline before architecture.",
+        "users_or_actors": ["Brazilian web3 user", "operator"],
+        "success_signals": ["scope is covered", "open risks are named"],
+    }
+    card["product_sot"] = {
+        "record_type": "product_sot",
+        "what_it_is": "Product Alpha is an operations product with onboarding and operator surfaces.",
+        "scope_in": ["onboarding", "operator administration"],
+        "scope_out": ["production deploy", "credential transfer"],
+        "evidence_refs": ["external:operator:source-envelope"],
+    }
+    card["full_product_sot_scope_coverage"] = {
+        "record_type": "full_product_sot_scope_coverage",
+        "coverage_state": "covered_for_owner_review",
+        "covered_requirement_ids": ["REQ-001", "REQ-002"],
+        "evidence_refs": ["external:operator:source-envelope"],
+    }
+    return card
+
+
 def sot_without_owner_packet_card() -> dict:
     card = load_vfinal_card()
+    materialize_product_sot_frontier(card)
     card["phase"] = "F9"
     card["surfaces"] = ["architecture", "planning"]
     card["autonomy_mode"] = "planning_only"
@@ -72,6 +114,95 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(task_body["agent_may_choose_phase"])
         self.assertEqual(task_body["required_output"], "operator_briefing_package")
         self.assertIn("ask for a human gate when phase_engine.human_gate_allowed is false", task_body["forbidden_actions"])
+
+    def test_template_scaffold_does_not_count_as_runtime_artifacts(self) -> None:
+        card = load_vfinal_card()
+        card["phase"] = "F13"
+        snapshot = {
+            "rows": {
+                "todo": [
+                    {
+                        "id": "task-template-copy",
+                        "status": "todo",
+                        "title": "Copied public template",
+                        "assignee": "factory-orchestrator",
+                        "body": json.dumps(card),
+                    }
+                ]
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha-runtime")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["phase_engine"]["computed_phase_id"], "F1")
+        self.assertEqual(plan["phase_engine"]["next_required_artifact"], "universal_signal_intake")
+        self.assertFalse(plan["phase_engine"]["artifacts"]["source_input"])
+        self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "universal_signal_intake")
+
+    def test_runtime_reconciler_does_not_count_template_method_after_real_sot(self) -> None:
+        card = sot_without_owner_packet_card()
+        card["phase"] = "F10"
+        card["operator_briefing_package"] = {
+            "record_type": "operator_briefing_package",
+            "artifact_ref": "external:operator:product-sot-briefing",
+            "formats": ["markdown", "pdf"],
+        }
+        snapshot = {
+            "rows": {
+                "todo": [
+                    {
+                        "id": "task-template-method",
+                        "status": "todo",
+                        "title": "Architecture from copied template",
+                        "assignee": "product-architect",
+                        "body": json.dumps(card),
+                    }
+                ]
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(plan["phase_engine"]["computed_phase_id"], "F6")
+        self.assertEqual(plan["phase_engine"]["next_required_artifact"], "method_contract")
+        self.assertFalse(plan["phase_engine"]["artifacts"]["method_contract"])
+        self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "method_contract")
+
+    def test_runtime_reconciler_does_not_count_template_architecture_after_real_method(self) -> None:
+        card = sot_without_owner_packet_card()
+        card["phase"] = "F11"
+        card["operator_briefing_package"] = {
+            "record_type": "operator_briefing_package",
+            "artifact_ref": "external:operator:product-sot-briefing",
+            "formats": ["markdown", "pdf"],
+        }
+        card["method_contract"] = {
+            "record_type": "method_contract",
+            "selected_method": "spec-first",
+            "canonical_scope_source": "external:operator:product-sot",
+            "required_artifacts": ["architecture_packet", "product_creation_plan"],
+        }
+        snapshot = {
+            "rows": {
+                "todo": [
+                    {
+                        "id": "task-template-architecture",
+                        "status": "todo",
+                        "title": "Execution plan from copied template",
+                        "assignee": "decomposition-planner",
+                        "body": json.dumps(card),
+                    }
+                ]
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(plan["phase_engine"]["computed_phase_id"], "F10")
+        self.assertEqual(plan["phase_engine"]["next_required_artifact"], "architecture_packet")
+        self.assertFalse(plan["phase_engine"]["artifacts"]["architecture_packet"])
+        self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "architecture_packet")
 
     def test_premature_human_gate_request_is_suppressed_until_phase_engine_allows_it(self) -> None:
         card = sot_without_owner_packet_card()

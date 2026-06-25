@@ -7,6 +7,20 @@ public releases.
 
 ## Unreleased
 
+## 1.5.11 - 2026-06-25
+
+- Harden Hermes runtime reconciliation so template/example scaffold refs,
+  placeholder refs and embedded vFinal template packets do not count as
+  materialized runtime evidence.
+- Keep public template validation useful while forcing `reconcile-board` and
+  no-idle remediation to compute the live frontier from product-specific
+  artifacts only.
+- Add regressions for template-only boards, real-SOT-with-template-method
+  boards and real-method-with-template-architecture boards so the factory
+  cannot jump past F1/F6/F10 from inherited scaffold data.
+- Add a worker-profile boundary that builders must not approve their own work,
+  with public profile validation coverage.
+
 ## 1.5.10 - 2026-06-25
 
 - Fix generic blocked Hermes task creation to use an unassigned-create,

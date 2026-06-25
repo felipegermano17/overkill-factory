@@ -76,6 +76,22 @@ Current automation is intentionally an orchestration and reconciliation layer.
 It does not replace real Codex Security scans, solanabr/Auditor runs,
 screenshots, independent reviews, or human approval records.
 
+## Runtime-Strict Phase Evidence
+
+Hermes runtime reconciliation treats the public factory templates as scaffold,
+not as product evidence. A card copied from `templates/vfinal-factory-card.json`
+may contain example Product SOT, Method Contract, architecture, readiness and
+gate fields. Those fields are valid as examples, but they do not prove that a
+live product produced the corresponding artifacts.
+
+When the no-idle adapter calls `factoryctl reconcile-board`, the phase engine
+runs in runtime-strict mode. In that mode `templates/...`, `source-ledger.md`,
+`factoryctl:gate-report`, bare scaffold refs and embedded placeholder packets
+are ignored for phase advancement. The board can advance only from
+product-specific source, SOT, Method Contract, architecture, readiness and gate
+artifacts. This prevents Telegram, worker prose, copied templates or stale card
+fields from jumping the factory to a later phase.
+
 ## Transition Plan Model
 
 Hermes should treat the factory helper output as a transition plan, not as a
