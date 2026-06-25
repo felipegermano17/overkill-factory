@@ -158,6 +158,49 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         dispatch_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "dispatch")
         self.assertEqual(dispatch_call[2], "dispatch")
 
+    def test_watchdog_names_post_review_owner_gate_package_and_dispatches(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": "kanban:redacted",
+            "no_idle_state": {
+                "status": "remediation_required",
+                "classification": "deterministic_post_review_owner_gate_package_task_created",
+                "remediation_strategy": "create_post_review_owner_gate_package_task",
+                "remediation_task_created": True,
+                "remediation_task_status": "ready",
+                "post_review_task_refs": ["kanban:redacted-review"],
+                "native_dispatch_required_next": True,
+                "state": {
+                    "todo": {"count": 0},
+                    "blocked": {"count": 1},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            state_file = Path(tmp) / "state.json"
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                result = watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--create-remediation",
+                        "--dispatch",
+                        "--state-file",
+                        str(state_file),
+                    ],
+                    runner=fake,
+                )
+
+        self.assertEqual(result, 0)
+        self.assertIn("review PASS exige pacote de decisão Product SOT", buffer.getvalue())
+        dispatch_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "dispatch")
+        self.assertEqual(dispatch_call[2], "dispatch")
+
     def test_watchdog_does_not_repeat_same_message(self) -> None:
         fake = FakeRunner()
         fake.no_idle_payloads["product-alpha"] = {

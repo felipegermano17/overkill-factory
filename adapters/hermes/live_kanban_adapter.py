@@ -62,6 +62,7 @@ READY_WORK_UNIT_RECONCILIATION_AUTHOR = "overkill-factory-reconciliation"
 NO_IDLE_AUTHOR = "overkill-factory-no-idle"
 NO_IDLE_REMEDIATION_MARKER = "factory_no_idle_remediation"
 NO_IDLE_REVIEW_REPAIR_MARKER = "factory_no_idle_review_repair"
+NO_IDLE_POST_REVIEW_GATE_MARKER = "factory_no_idle_post_review_gate_package"
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
 COMPLETION_ARTIFACT_PROJECTION_MARKER = "completion_artifact_projection"
@@ -888,6 +889,7 @@ def is_factory_owned_repair_task(record: dict[str, Any]) -> bool:
         "factory_deterministic_reconcile",
         "factory_no_idle_remediation",
         "factory_no_idle_review_repair",
+        "factory_no_idle_post_review_gate_package",
         "repair human gate decision package",
         "repair package",
         "rebuild the package",
@@ -896,6 +898,19 @@ def is_factory_owned_repair_task(record: dict[str, Any]) -> bool:
         "readable artifact is ready",
     )
     return any(marker in text for marker in markers)
+
+
+def task_body_json_object(record: dict[str, Any]) -> dict[str, Any]:
+    body = record.get("body")
+    if isinstance(body, dict):
+        return body
+    if isinstance(body, str) and body.strip():
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError:
+            return {}
+        return data if isinstance(data, dict) else {}
+    return {}
 
 
 def is_review_failed_factory_repair_blocker(record: dict[str, Any]) -> bool:
@@ -927,6 +942,49 @@ def is_review_failed_factory_repair_blocker(record: dict[str, Any]) -> bool:
             "rerun review",
             "repair before owner",
             "repair before human",
+        )
+    )
+
+
+def superseded_review_blocker_refs(done: list[dict[str, Any]]) -> set[str]:
+    refs: set[str] = set()
+    for item in done:
+        if str(item.get("status") or "").strip().lower() not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+            continue
+        body = task_body_json_object(item)
+        if body.get("marker") != NO_IDLE_REVIEW_REPAIR_MARKER:
+            continue
+        for ref in body.get("blocked_review_task_refs") or []:
+            if isinstance(ref, str) and ref.strip():
+                refs.add(ref.strip())
+    return refs
+
+
+def done_review_requires_owner_product_sot_gate(record: dict[str, Any]) -> bool:
+    if str(record.get("status") or "").strip().lower() not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+        return False
+    text = task_record_text(record)
+    review_pass = any(
+        marker in text
+        for marker in (
+            "independent review pass",
+            "verdict': 'pass",
+            '"verdict": "pass',
+            "result': 'pass",
+            '"result": "pass',
+        )
+    )
+    if not review_pass:
+        return False
+    return any(
+        marker in text
+        for marker in (
+            "owner/product sot approval",
+            "product sot approval or rebaseline",
+            "product sot approval/rebaseline",
+            "owner product sot approval",
+            "before method-contract planning",
+            "before method contract planning",
         )
     )
 
@@ -1130,7 +1188,7 @@ def enrich_no_idle_rows(
     enriched: dict[str, list[dict[str, Any]]] = {status: list(items) for status, items in rows.items()}
     if rows.get("ready") or rows.get("running"):
         return enriched
-    for status in ("todo", "blocked"):
+    for status in ("todo", "blocked", "done"):
         next_items: list[dict[str, Any]] = []
         for item in rows.get(status, []):
             task_id = task_record_id(item)
@@ -1167,7 +1225,23 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
     ready = rows.get("ready", [])
     running = rows.get("running", [])
     todo = rows.get("todo", [])
-    blocked = rows.get("blocked", [])
+    raw_blocked = rows.get("blocked", [])
+    done = rows.get("done", [])
+    superseded_blocked_refs = superseded_review_blocker_refs(done)
+    blocked = [
+        item for item in raw_blocked
+        if task_record_id(item) not in superseded_blocked_refs
+    ]
+    ignored_superseded_blocked_refs = sorted(
+        task_record_id(item)
+        for item in raw_blocked
+        if task_record_id(item) in superseded_blocked_refs
+    )
+    post_review_gate_candidates = [
+        item for item in done
+        if done_review_requires_owner_product_sot_gate(item)
+    ]
+    post_review_gate_refs = sorted(task_record_id(item) for item in post_review_gate_candidates if task_record_id(item))
     state = summarize_no_idle_rows(rows)
     if running:
         return {
@@ -1190,6 +1264,30 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "next_action": "run native Hermes dispatch",
             "state": state,
         }
+    if not todo and not blocked and post_review_gate_candidates:
+        return {
+            "status": "remediation_required",
+            "classification": "post_review_owner_product_sot_gate_package_missing",
+            "blocked": True,
+            "remediation_required": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "operator_input_task_refs": [],
+            "human_gate_task_refs": [],
+            "post_review_task_refs": post_review_gate_refs,
+            "ignored_superseded_blocked_task_refs": ignored_superseded_blocked_refs,
+            "remediation_strategy": "create_post_review_owner_gate_package_task",
+            "remediation_reason": (
+                "A repaired independent review passed and requires owner/Product SOT approval "
+                "or rebaseline before method-contract planning, but no live gate package task exists. "
+                "The factory must prepare and deliver the decision package before asking the operator."
+            ),
+            "next_action": (
+                "create a Product SOT owner decision package task, then let native Hermes dispatch "
+                "deliver the materials and request the bounded decision"
+            ),
+            "state": state,
+        }
     if not todo and not blocked:
         return {
             "status": "empty_or_complete",
@@ -1198,6 +1296,7 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "remediation_required": False,
             "human_gate_required": False,
             "operator_input_required": False,
+            "ignored_superseded_blocked_task_refs": ignored_superseded_blocked_refs,
             "next_action": "no no-idle action required",
             "state": state,
         }
@@ -1597,6 +1696,77 @@ def create_no_idle_review_repair_task(
         body=compact_json_argument(body),
         assignee=repair_assignee,
         idempotency_key=f"overkill:no-idle-review-repair:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key="F5-product-sot",
+        runner=runner,
+    )
+
+
+def no_idle_post_review_gate_body(
+    *,
+    board: str,
+    classification: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "packet_type": "factory_no_idle_post_review_gate_package_request",
+        "marker": NO_IDLE_POST_REVIEW_GATE_MARKER,
+        "board": board,
+        "objective": (
+            "Prepare and deliver the owner/Product SOT decision package after a repaired "
+            "independent review PASS, without approving the decision."
+        ),
+        "post_review_task_refs": classification.get("post_review_task_refs") or [],
+        "ignored_superseded_blocked_task_refs": classification.get("ignored_superseded_blocked_task_refs") or [],
+        "observed_no_idle_state": classification,
+        "kanban_workflow_binding": {
+            "workflow_template_id": FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+            "current_step_key": "F5-product-sot",
+            "runtime_field_required": True,
+            "fallback_body_binding": True,
+            "route_authority": "factory_phase_engine",
+        },
+        "required_actions": [
+            "inspect the PASS independent review report and the reviewed Product SOT artifacts",
+            "prepare an owner-readable decision package before asking for a decision",
+            "include APPROVAL_REQUEST, EVIDENCE_INDEX, OWNER_REVIEW and operator briefing material",
+            "attach or reference the markdown/PDF decision material available to the Telegram-facing manager",
+            "ask only the bounded Product SOT approve / rebaseline / request changes decision",
+        ],
+        "forbidden_actions": [
+            "approve Product SOT on behalf of the operator",
+            "start method-contract planning before the owner decision is recorded",
+            "start architecture, implementation, repo cleanup, deployment, cloud mutation, DevNet/Mainnet material action, funds, custody, signing or release",
+            "ask for a decision from a chat summary without the decision package material",
+            "treat a superseded failed review blocker as a live blocker",
+        ],
+        "human_gate_required": True,
+        "operator_input_required": False,
+        "native_dispatch_required_next": True,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+    }
+
+
+def create_no_idle_post_review_gate_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    classification: dict[str, Any],
+    runner: Runner,
+) -> str:
+    body = no_idle_post_review_gate_body(board=board, classification=classification)
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title="Prepare Product SOT owner decision package",
+        body=compact_json_argument(body),
+        assignee="human-gate-clerk",
+        idempotency_key=f"overkill:no-idle-post-review-gate:{public_safe_slug(board, fallback='board')}:{digest}",
         created_by=NO_IDLE_AUTHOR,
         workspace=workspace,
         blocked=False,
@@ -7026,7 +7196,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             status=status,
             runner=runner,
         )
-        for status in ("ready", "running", "todo", "blocked")
+        for status in ("ready", "running", "todo", "blocked", "done")
     }
     rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
     classification = classify_no_idle_state(rows)
@@ -7077,6 +7247,44 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 "deterministic_targeted_review_repair_task_created"
                 if remediation_task_id and not classification.get("remediation_task_stale")
                 else "targeted_review_repair_task_not_created"
+            )
+        elif classification.get("remediation_strategy") == "create_post_review_owner_gate_package_task":
+            targeted_remediation_plan = {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "prepare_post_review_owner_product_sot_gate_package",
+                "board": args.board,
+                "post_review_task_refs": classification.get("post_review_task_refs") or [],
+                "ignored_superseded_blocked_task_refs": classification.get("ignored_superseded_blocked_task_refs") or [],
+                "assignee": "human-gate-clerk",
+                "native_dispatch_required_next": True,
+                "human_gate_required": True,
+                "operator_input_required": False,
+            }
+            remediation_task_id = create_no_idle_post_review_gate_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                classification=classification,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+            classification["targeted_remediation_plan"] = targeted_remediation_plan
+            classification["remediation_task_ref"] = remediation_task_id
+            classification.update(task_runtime)
+            classification["native_dispatch_required_next"] = bool(
+                remediation_task_id
+                and targeted_remediation_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next") is True
+            )
+            classification["classification"] = (
+                "deterministic_post_review_owner_gate_package_task_created"
+                if remediation_task_id and not classification.get("remediation_task_stale")
+                else "post_review_owner_gate_package_task_not_created"
             )
         else:
             reconcile_plan = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)

@@ -284,6 +284,18 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
             f"acao do operador requerida. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
         )
     if status == "remediation_required":
+        if "post_review_owner_gate" in classification:
+            if signature.get("remediation_task_created") is True:
+                return (
+                    f"[Overkill Factory] {board}: review PASS exige pacote de decisão Product SOT; "
+                    f"tarefa de pacote humano criada/acionada. todo={counts.get('todo', 0)} "
+                    f"blocked={counts.get('blocked', 0)}."
+                )
+            return (
+                f"[Overkill Factory] {board}: review PASS exige pacote de decisão Product SOT; "
+                f"tarefa de pacote humano ainda não materializada. todo={counts.get('todo', 0)} "
+                f"blocked={counts.get('blocked', 0)}."
+            )
         if "review_repair" in classification:
             if signature.get("remediation_task_created") is True:
                 return (

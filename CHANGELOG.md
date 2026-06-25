@@ -7,6 +7,18 @@ public releases.
 
 ## Unreleased
 
+## 1.5.14 - 2026-06-25
+
+- Fix Hermes no-idle handling after a failed review has already been repaired
+  ([#436](https://github.com/felipegermano17/overkill-factory/issues/436)):
+  superseded blocked review tasks no longer keep the board artificially idle.
+- Detect repaired independent-review PASS states that require owner/Product SOT
+  approval or rebaseline, and create a targeted `human-gate-clerk` task to
+  prepare and deliver the Product SOT decision package before asking the
+  operator.
+- Make watchdog messaging distinguish post-review Product SOT decision-package
+  creation from generic remediation.
+
 ## 1.5.13 - 2026-06-25
 
 - Fix Hermes no-idle remediation for failed independent-review blockers:
