@@ -399,12 +399,23 @@ python adapters/hermes/live_kanban_adapter.py no-idle \
 ```
 
 The controller never dispatches workers. It reports native dispatch when ready
-work exists, returns a structured human decision request when explicit human
-gates are present, returns `input_required` when blocked ancestors are asking
-for exact operator/source inputs, returns `dependency_gated` for non-generic
-blocker chains, or creates one safe `factory_no_idle_remediation` card for
-`factory-orchestrator` only when the idle state is genuinely unexplained. The
-next worker launch still belongs to native Hermes dispatch.
+work exists, returns a structured human decision request only when an explicit
+decision-ready human gate remains, returns `input_required` only when blocked
+ancestors are asking for exact external operator/source inputs, returns
+`dependency_gated` for non-generic blocker chains, or creates one deterministic
+factory-owned reconcile task. Missing owner-readable material, PDF/readback,
+`APPROVAL_REQUEST`, `EVIDENCE_INDEX`, `OWNER_REVIEW`, or a summary-only gate is
+internal factory repair, not a human approval request. If a repair task is
+dependency-gated by the same gate/package it is supposed to repair, no-idle
+classifies that as a Kanban graph defect and routes graph/package repair instead
+of asking the operator. The next worker launch still belongs to native Hermes
+dispatch.
+
+Factory-created Hermes tasks also bind the native Kanban workflow fields when
+the installed Hermes database exposes them: `workflow_template_id` is
+`overkill-vfinal`, and `current_step_key` comes from the deterministic phase
+engine. The JSON body carries the same binding as a fallback, but the SQLite
+workflow columns are the preferred runtime state when available.
 
 For a Telegram-first production operator, run the cron-friendly watchdog from
 Hermes instead of waiting for the operator to ask for status:
@@ -426,10 +437,11 @@ does not become noisy.
 
 `input_required` is not a human approval gate. It means the factory found a
 specific blocker asking for exact missing inputs, such as target repo paths,
-package/scan scope, prototype URL/artifact, custody policy or public onchain
+scan scope, prototype URL/artifact, custody policy or public onchain
 identifiers. The operator should provide those inputs or name the source
-artifact the factory must re-read; the watchdog must not keep creating generic
-remediation cards for the same blocker chain.
+artifact the factory must re-read. Package quality, missing PDF/readback and
+missing gate materials stay factory-owned repairs; the watchdog must not keep
+creating generic remediation cards for the same blocker chain.
 
 Before using `--all-nonempty-boards`, archive obsolete boards or exclude them
 explicitly. A board left unarchived is treated as a live factory run.

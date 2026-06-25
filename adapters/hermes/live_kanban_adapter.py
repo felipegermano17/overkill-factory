@@ -10,6 +10,7 @@ import importlib.util
 import json
 import os
 import re
+import sqlite3
 import subprocess  # nosec B404
 import sys
 from pathlib import Path
@@ -60,6 +61,8 @@ READY_WORK_UNIT_RECOVERY_AUTHOR = "overkill-factory-recovery"
 READY_WORK_UNIT_RECONCILIATION_AUTHOR = "overkill-factory-reconciliation"
 NO_IDLE_AUTHOR = "overkill-factory-no-idle"
 NO_IDLE_REMEDIATION_MARKER = "factory_no_idle_remediation"
+FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
+FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
 COMPLETION_ARTIFACT_PROJECTION_MARKER = "completion_artifact_projection"
 KANBAN_ARTIFACT_REF_PREFIXES = ("kanban-artifact:", "external:kanban-artifact:", "kanban-attachment:")
 PRIVATE_HERMES_RUNTIME_TOKEN = "/srv/" + "hermes"
@@ -217,6 +220,54 @@ def parse_json_output(output: str, *, command: str) -> Any:
         return json.loads(output or "{}")
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"{command} did not return JSON") from exc
+
+
+def hermes_home_path() -> Path:
+    raw = os.environ.get("HERMES_HOME") or os.environ.get("HOME")
+    if raw:
+        return Path(raw).expanduser()
+    return Path.home()
+
+
+def local_kanban_db_path(board: str) -> Path | None:
+    slug = str(board or "").strip()
+    if not slug or not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,63}", slug):
+        return None
+    home = hermes_home_path()
+    if slug == "default":
+        return home / "kanban.db"
+    return home / "kanban" / "boards" / slug / "kanban.db"
+
+
+def apply_native_workflow_state(
+    *,
+    board: str,
+    task_id: str,
+    workflow_template_id: str | None,
+    current_step_key: str | None,
+) -> bool:
+    if not workflow_template_id or not current_step_key:
+        return False
+    db_path = local_kanban_db_path(board)
+    if db_path is None or not db_path.exists():
+        return False
+    conn = sqlite3.connect(str(db_path))
+    try:
+        cols = {
+            str(row[1])
+            for row in conn.execute("PRAGMA table_info(tasks)").fetchall()
+            if len(row) > 1
+        }
+        if {"workflow_template_id", "current_step_key"} - cols:
+            return False
+        conn.execute(
+            "UPDATE tasks SET workflow_template_id = ?, current_step_key = ? WHERE id = ?",
+            (workflow_template_id, current_step_key, task_id),
+        )
+        conn.commit()
+        return conn.total_changes > 0
+    finally:
+        conn.close()
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -782,30 +833,9 @@ def is_human_gate_package_blocker(record: dict[str, Any]) -> bool:
     return is_human_gate_blocker(record) and not is_human_gate_decision_ready_blocker(record)
 
 
-def is_operator_input_blocker(record: dict[str, Any]) -> bool:
+def is_factory_owned_package_blocker(record: dict[str, Any]) -> bool:
     text = task_record_text(record)
-    input_markers = (
-        "missing input",
-        "missing inputs",
-        "missing required",
-        "missing exact",
-        "missing target",
-        "missing public-safe",
-        "required input",
-        "required inputs",
-        "needed input",
-        "needed inputs",
-        "missing evidence",
-        "missing evidences",
-        "missing proof",
-        "missing proofs",
-        "missing material",
-        "missing package",
-        "missing packet",
-        "missing upstream packet",
-        "no sufficient reviewed packet",
-        "without sufficient reviewed packet",
-        "insufficient reviewed packet",
+    package_markers = (
         "missing operator briefing package",
         "operator briefing package missing",
         "missing operator_briefing_package",
@@ -831,10 +861,55 @@ def is_operator_input_blocker(record: dict[str, Any]) -> bool:
         "pdf missing",
         "no pdf",
         "no material",
+        "owner-readable",
+        "owner readable",
+        "readable package",
+        "readable artifact",
+        "package quality",
+        "artifact quality failure",
+        "material package",
+        "gate package",
+        "decision assets",
+        "attachment missing",
+        "missing attachment",
+        "artifact readback",
+        "missing readback",
+        "delivery assets",
+    )
+    return any(marker in text for marker in package_markers)
+
+
+def is_factory_owned_repair_task(record: dict[str, Any]) -> bool:
+    text = task_record_text(record)
+    markers = (
+        "factory-owned repair",
+        "factory owned repair",
+        "factory_deterministic_reconcile",
+        "factory_no_idle_remediation",
+        "repair human gate decision package",
+        "repair package",
+        "rebuild the package",
+        "owner-facing artifact quality failure",
+        "no renewed decision request",
+        "readable artifact is ready",
+    )
+    return any(marker in text for marker in markers)
+
+
+def is_operator_input_blocker(record: dict[str, Any]) -> bool:
+    text = task_record_text(record)
+    external_input_markers = (
+        "missing input",
+        "missing inputs",
+        "missing exact",
+        "missing target",
+        "missing public-safe",
+        "required input",
+        "required inputs",
+        "needed input",
+        "needed inputs",
         "provide exact",
         "provide requested",
-        "cannot be completed",
-        "cannot complete",
         "target_repo_paths",
         "target url",
         "target_url",
@@ -845,13 +920,8 @@ def is_operator_input_blocker(record: dict[str, Any]) -> bool:
         "custody/signing policy",
         "mint address",
         "token program id",
-        "insumo",
-        "insumos",
-        "faltante",
-        "faltantes",
-        "fornecer",
     )
-    return any(marker in text for marker in input_markers)
+    return any(marker in text for marker in external_input_markers)
 
 
 def no_idle_parent_refs(record: dict[str, Any]) -> list[str]:
@@ -1028,13 +1098,38 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
     operator_input_blockers = [
         item
         for item in blocked
-        if is_operator_input_blocker(item) or is_human_gate_package_blocker(item)
+        if is_operator_input_blocker(item)
     ]
     operator_input_refs = sorted(task_record_id(item) for item in operator_input_blockers if task_record_id(item))
+    factory_package_blockers = [
+        item
+        for item in blocked
+        if is_factory_owned_package_blocker(item) or is_human_gate_package_blocker(item)
+    ]
+    factory_package_refs = sorted(task_record_id(item) for item in factory_package_blockers if task_record_id(item))
+    if blocked and factory_package_blockers and len(factory_package_blockers) == len(blocked) and not todo:
+        return {
+            "status": "remediation_required",
+            "classification": "only_factory_owned_package_blockers_seen",
+            "blocked": True,
+            "remediation_required": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "operator_input_task_refs": [],
+            "human_gate_task_refs": human_gate_refs,
+            "factory_owned_package_task_refs": factory_package_refs,
+            "remediation_reason": (
+                "All unfinished visible work is blocked on a factory-owned decision package, "
+                "owner-readable material, PDF, evidence index, owner review or artifact readback. "
+                "This is internal factory repair, not operator input."
+            ),
+            "next_action": "create a factory-owned package/readback repair task before any human-gate question",
+            "state": state,
+        }
     if blocked and len(operator_input_blockers) == len(blocked) and not todo:
         return {
             "status": "input_required",
-            "classification": "only_input_or_human_gate_package_blockers_seen",
+            "classification": "only_operator_input_blockers_seen",
             "blocked": True,
             "remediation_required": False,
             "human_gate_required": False,
@@ -1084,6 +1179,59 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         input_dependency_refs = [
             ref for ref in blocker_refs if is_operator_input_blocker(blocked_by_task_id.get(ref, {}))
         ]
+        factory_package_dependency_refs = [
+            ref
+            for ref in blocker_refs
+            if is_factory_owned_package_blocker(blocked_by_task_id.get(ref, {}))
+            or is_human_gate_package_blocker(blocked_by_task_id.get(ref, {}))
+        ]
+        repair_todo_refs = [
+            task_record_id(item)
+            for item in todo
+            if task_record_id(item) and is_factory_owned_repair_task(item)
+        ]
+        if repair_todo_refs and (human_gate_dependency_refs or factory_package_dependency_refs):
+            return {
+                "status": "remediation_required",
+                "classification": "factory_repair_task_dependency_gated_by_blocker_it_repairs",
+                "blocked": True,
+                "remediation_required": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "human_gate_task_refs": sorted(set(human_gate_dependency_refs + human_gate_refs)),
+                "operator_input_task_refs": [],
+                "factory_owned_package_task_refs": sorted(set(factory_package_dependency_refs + factory_package_refs)),
+                "dependency_gated_task_refs": sorted(dependency_blockers),
+                "dependency_blocker_task_refs": blocker_refs,
+                "repair_task_refs": sorted(repair_todo_refs),
+                "remediation_reason": (
+                    "A factory-owned repair task is dependency-gated by a blocked gate/package "
+                    "that it is supposed to repair. The repair must be re-created or unlinked as "
+                    "an independent ready work unit with a repairs_task_ref, not as a child of the blocker."
+                ),
+                "next_action": "repair the Kanban dependency graph, then let native Hermes dispatch run the factory-owned repair",
+                "state": state,
+            }
+        if factory_package_dependency_refs or factory_package_refs:
+            return {
+                "status": "remediation_required",
+                "classification": "todo_dependency_gated_by_factory_owned_package_blocker",
+                "blocked": True,
+                "remediation_required": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "human_gate_task_refs": sorted(set(human_gate_dependency_refs + human_gate_refs)),
+                "operator_input_task_refs": [],
+                "factory_owned_package_task_refs": sorted(set(factory_package_dependency_refs + factory_package_refs)),
+                "dependency_gated_task_refs": sorted(dependency_blockers),
+                "dependency_blocker_task_refs": blocker_refs,
+                "remediation_reason": (
+                    "Visible todo work is dependency-gated behind factory-owned package/readback work. "
+                    "The factory must repair the package or dependency graph before asking the operator."
+                ),
+                "next_action": "create targeted factory-owned package/dependency remediation; do not ask for a human-gate decision",
+                "state": state,
+            }
         if input_dependency_refs or operator_input_refs:
             return {
                 "status": "input_required",
@@ -1238,6 +1386,8 @@ def create_no_idle_remediation_task(
         created_by=NO_IDLE_AUTHOR,
         workspace=workspace,
         blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
         runner=runner,
     )
 
@@ -1276,6 +1426,8 @@ def create_deterministic_reconcile_task(
         created_by=NO_IDLE_AUTHOR,
         workspace=workspace,
         blocked=False,
+        workflow_template_id=str(contract.get("workflow_template_id") or FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID),
+        current_step_key=str(contract.get("current_step_key") or FACTORY_KANBAN_DEFAULT_STEP_KEY),
         runner=runner,
     )
 
@@ -2187,6 +2339,8 @@ def create_task(
     created_by: str,
     workspace: str,
     blocked: bool,
+    workflow_template_id: str | None = None,
+    current_step_key: str | None = None,
     runner: Runner = default_runner,
 ) -> str:
     ensure_non_empty_body(body)
@@ -2210,6 +2364,12 @@ def create_task(
     if blocked:
         args.extend(["--initial-status", "blocked"])
     task_id = parse_task_id(run_checked(args, runner).stdout)
+    apply_native_workflow_state(
+        board=board,
+        task_id=task_id,
+        workflow_template_id=workflow_template_id,
+        current_step_key=current_step_key,
+    )
     if blocked:
         shown_task = show_task(
             hermes_bin=hermes_bin,
@@ -6135,6 +6295,15 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         raise RuntimeError("pre-dispatch route readiness blocked live materialization: " + "; ".join(readiness_blockers))
 
     card_body = card_path.read_text(encoding="utf-8")
+    workflow_template_id = FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID
+    current_step_key = FACTORY_KANBAN_DEFAULT_STEP_KEY
+    try:
+        factoryctl = load_factoryctl()
+        card_data = factoryctl.load_json_like(card_path)
+        phase_engine = factoryctl.factory_phase_engine_state(card_data)
+        current_step_key = factoryctl.factory_workflow_step_key(phase_engine)
+    except Exception:
+        current_step_key = FACTORY_KANBAN_DEFAULT_STEP_KEY
     main_contract_digest = contract_digest(card_body)
     idempotency_contract: dict[str, Any] = {
         "digest_algorithm": CONTRACT_DIGEST_ALGORITHM,
@@ -6172,6 +6341,8 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
         created_by="overkill-factory",
         workspace=f"dir:{ROOT}",
         blocked=True,
+        workflow_template_id=workflow_template_id,
+        current_step_key=current_step_key,
         runner=runner,
     )
     worker_task_ids: dict[str, str] = {}
@@ -6216,6 +6387,8 @@ def materialize(args: argparse.Namespace, runner: Runner = default_runner) -> di
             created_by="overkill-factory",
             workspace=f"dir:{ROOT}",
             blocked=not args.worker_ready,
+            workflow_template_id=workflow_template_id,
+            current_step_key=current_step_key,
             runner=runner,
         )
         worker_task_ids[worker_id] = task_id

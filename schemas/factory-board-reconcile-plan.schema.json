@@ -48,6 +48,7 @@
         "no_unfinished_work",
         "repair_board_contract",
         "create_next_artifact_task",
+        "repair_domain_brain_route",
         "repair_human_gate_packet",
         "request_operator_input",
         "request_human_gate_decision",
@@ -73,16 +74,19 @@
     "create_task_allowed": { "type": "boolean" },
     "create_task_contract": {
       "type": ["object", "null"],
-      "required": ["title", "assignee", "body"],
+      "required": ["title", "assignee", "workflow_template_id", "current_step_key", "body"],
       "properties": {
         "title": { "type": "string", "minLength": 1 },
         "assignee": { "type": "string", "minLength": 1 },
+        "workflow_template_id": { "const": "overkill-vfinal" },
+        "current_step_key": { "type": "string", "pattern": "^F[0-9]+-[a-z0-9-]+$" },
         "body": {
           "type": "object",
           "required": [
             "packet_type",
             "marker",
             "board",
+            "kanban_workflow_binding",
             "plan_action",
             "phase_engine",
             "required_output",
@@ -98,6 +102,24 @@
             "packet_type": { "const": "factory_deterministic_reconcile_task" },
             "marker": { "const": "factory_deterministic_reconcile" },
             "board": { "type": "string", "minLength": 1 },
+            "kanban_workflow_binding": {
+              "type": "object",
+              "required": [
+                "workflow_template_id",
+                "current_step_key",
+                "runtime_field_required",
+                "fallback_body_binding",
+                "route_authority"
+              ],
+              "properties": {
+                "workflow_template_id": { "const": "overkill-vfinal" },
+                "current_step_key": { "type": "string", "pattern": "^F[0-9]+-[a-z0-9-]+$" },
+                "runtime_field_required": { "const": true },
+                "fallback_body_binding": { "const": true },
+                "route_authority": { "const": "factory_phase_engine" }
+              },
+              "additionalProperties": false
+            },
             "plan_action": { "type": "string", "minLength": 1 },
             "card_id": { "type": "string", "minLength": 1 },
             "phase_engine": { "type": "object" },

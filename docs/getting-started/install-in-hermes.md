@@ -108,7 +108,20 @@ When unfinished work is silent, the adapter first runs the deterministic
 `factoryctl reconcile-board` plan. That plan either points to native dispatch,
 repairs the canonical factory card, creates the next required artifact from the
 phase engine, repairs a decision package, or asks for a real bounded decision
-only when `phase_engine.human_gate_allowed=true`.
+only when `phase_engine.human_gate_allowed=true` and the decision package is
+already approval-ready.
+
+Package/readback failures are factory work. If the blocker says the factory has
+not delivered owner-readable material, PDF, `APPROVAL_REQUEST`,
+`EVIDENCE_INDEX`, `OWNER_REVIEW`, or attachment readback, the watchdog should
+route repair and continue through native dispatch instead of asking the
+Telegram operator to approve a summary. If the repair task was accidentally
+linked behind the same blocked gate it repairs, the watchdog treats that as a
+Kanban graph defect and routes a graph/package fix.
+
+For Solana/onchain products, the same path checks for the Solana AI Kit
+domain-brain record before architecture and later gates. Missing Solana AI Kit
+state is a factory-owned planning repair, not a Telegram approval request.
 When the adapter returns `input_required`, the Telegram operator should ask for
 the exact missing inputs instead of saying there is no human action. This is not
 approval bureaucracy; it is source/input collection for a blocked dependency

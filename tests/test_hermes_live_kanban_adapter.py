@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 
@@ -3736,6 +3737,41 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
 
+    def test_native_workflow_state_updates_hermes_sqlite_columns(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            board_dir = home / "kanban" / "boards" / TEST_BOARD
+            board_dir.mkdir(parents=True)
+            db_path = board_dir / "kanban.db"
+            conn = adapter.sqlite3.connect(str(db_path))
+            try:
+                conn.execute(
+                    "CREATE TABLE tasks (id TEXT PRIMARY KEY, workflow_template_id TEXT, current_step_key TEXT)"
+                )
+                conn.execute("INSERT INTO tasks (id) VALUES (?)", (MAIN_TASK_ID,))
+                conn.commit()
+            finally:
+                conn.close()
+
+            with mock.patch.dict(adapter.os.environ, {"HERMES_HOME": str(home)}, clear=False):
+                changed = adapter.apply_native_workflow_state(
+                    board=TEST_BOARD,
+                    task_id=MAIN_TASK_ID,
+                    workflow_template_id="overkill-vfinal",
+                    current_step_key="F5-product-sot",
+                )
+
+            self.assertTrue(changed)
+            conn = adapter.sqlite3.connect(str(db_path))
+            try:
+                row = conn.execute(
+                    "SELECT workflow_template_id, current_step_key FROM tasks WHERE id = ?",
+                    (MAIN_TASK_ID,),
+                ).fetchone()
+            finally:
+                conn.close()
+            self.assertEqual(tuple(row), ("overkill-vfinal", "F5-product-sot"))
+
     def test_no_idle_creates_deterministic_reconcile_card_when_board_is_silent(self) -> None:
         fake = FakeHermes()
         fake.tasks["t_" + "todo0001"] = {
@@ -3832,7 +3868,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
-    def test_no_idle_treats_incomplete_human_gate_package_as_input_required(self) -> None:
+    def test_no_idle_treats_incomplete_human_gate_package_as_factory_repair(self) -> None:
         fake = FakeHermes()
         fake.tasks["t_" + "gate0001"] = {
             "id": "t_" + "gate0001",
@@ -3849,13 +3885,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         result = adapter.no_idle(args, runner=fake)
 
         state = result["no_idle_state"]
-        self.assertEqual(state["status"], "input_required")
-        self.assertEqual(state["classification"], "only_input_or_human_gate_package_blockers_seen")
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertEqual(state["classification"], "deterministic_board_reconcile_task_created")
         self.assertFalse(state["human_gate_required"])
-        self.assertTrue(state["operator_input_required"])
-        self.assertIn("decision package", state["next_action"])
-        self.assertIsNone(result["remediation_task_id"])
-        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(state["operator_input_required"])
+        self.assertIn("factory-owned", state["remediation_reason"])
+        self.assertIsNotNone(result["remediation_task_id"])
+        self.assertTrue(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
     def test_no_idle_reports_dependency_gated_todo_behind_human_gate_without_remediation(self) -> None:
@@ -3901,6 +3937,50 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIsNone(result["remediation_task_id"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_repairs_repair_task_gated_by_the_gate_it_repairs(self) -> None:
+        gate_id = "t_" + "gate0001"
+        repair_id = "t_" + "repair01"
+
+        state = adapter.classify_no_idle_state(
+            {
+                "ready": [],
+                "running": [],
+                "todo": [
+                    {
+                        "id": repair_id,
+                        "status": "todo",
+                        "assignee": "factory-orchestrator",
+                        "title": "Repair owner-readable human gate package",
+                        "body": (
+                            "factory-owned repair: rebuild the package; no renewed decision "
+                            "request until readable artifact is ready"
+                        ),
+                        "parents": [gate_id],
+                    }
+                ],
+                "blocked": [
+                    {
+                        "id": gate_id,
+                        "status": "blocked",
+                        "assignee": "human-gate-clerk",
+                        "title": "Human architecture gate",
+                        "body": (
+                            "human gate packet is not approval-ready: missing operator briefing package, "
+                            "APPROVAL_REQUEST, EVIDENCE_INDEX, OWNER_REVIEW and pdf"
+                        ),
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertEqual(state["classification"], "factory_repair_task_dependency_gated_by_blocker_it_repairs")
+        self.assertFalse(state["human_gate_required"])
+        self.assertFalse(state["operator_input_required"])
+        self.assertEqual(state["repair_task_refs"], [repair_id])
+        self.assertEqual(state["factory_owned_package_task_refs"], [gate_id])
+        self.assertIn("re-created or unlinked", state["remediation_reason"])
 
     def test_no_idle_reports_dependency_gated_todo_without_generic_remediation(self) -> None:
         fake = FakeHermes()

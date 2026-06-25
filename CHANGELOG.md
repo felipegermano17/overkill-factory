@@ -7,6 +7,21 @@ public releases.
 
 ## Unreleased
 
+## 1.5.9 - 2026-06-25
+
+- Bind factory-created Hermes tasks to native Kanban workflow state when
+  available: `workflow_template_id=overkill-vfinal` plus the deterministic
+  `current_step_key` computed by the phase engine.
+- Harden no-idle classification so missing decision packages, PDF/readback,
+  owner-readable material and repair tasks gated behind their own blocker route
+  to factory-owned repair instead of operator approval bureaucracy.
+- Route missing Solana AI Kit domain-brain state on Solana/onchain F4+ boards as
+  a bounded factory planning repair, not a human approval question.
+- Add regression coverage for SQLite workflow binding, factory-owned package
+  repair, Kanban graph repair and Solana AI Kit route repair.
+- Update Hermes/Telegram-first docs to make no-idle, factory-owned repair and
+  native dispatch boundaries explicit.
+
 ## 1.5.8 - 2026-06-25
 
 - Keep public JSON validation from treating local no-idle watchdog runtime state

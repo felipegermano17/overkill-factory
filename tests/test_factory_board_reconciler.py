@@ -64,7 +64,11 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(plan["human_gate_required"])
         self.assertFalse(plan["user_decision_required"])
         self.assertTrue(plan["create_task_allowed"])
+        self.assertEqual(plan["create_task_contract"]["workflow_template_id"], "overkill-vfinal")
+        self.assertEqual(plan["create_task_contract"]["current_step_key"], "F5-product-sot")
         task_body = plan["create_task_contract"]["body"]
+        self.assertEqual(task_body["kanban_workflow_binding"]["workflow_template_id"], "overkill-vfinal")
+        self.assertEqual(task_body["kanban_workflow_binding"]["current_step_key"], "F5-product-sot")
         self.assertFalse(task_body["agent_may_choose_phase"])
         self.assertEqual(task_body["required_output"], "operator_briefing_package")
         self.assertIn("ask for a human gate when phase_engine.human_gate_allowed is false", task_body["forbidden_actions"])
@@ -136,6 +140,8 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
         self.assertEqual(plan["plan_action"], "repair_board_contract")
         self.assertTrue(plan["create_task_allowed"])
+        self.assertEqual(plan["create_task_contract"]["workflow_template_id"], "overkill-vfinal")
+        self.assertEqual(plan["create_task_contract"]["current_step_key"], "F1-intake")
         self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "canonical_factory_card")
         self.assertFalse(plan["create_task_contract"]["body"]["agent_may_choose_phase"])
         self.assertFalse(plan["human_gate_required"])
@@ -179,6 +185,38 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertEqual(plan["plan_action"], "block_invariant_violation")
         self.assertFalse(plan["create_task_allowed"])
         self.assertTrue(any("multiple active canonical factory cards" in item for item in plan["blocked_reasons"]))
+
+    def test_solana_route_gap_reconciles_to_domain_brain_repair_not_human_gate(self) -> None:
+        card = load_vfinal_card()
+        card["phase"] = "F10"
+        card["surfaces"] = ["architecture", "solana", "onchain"]
+        card.pop("capability_pack_contract", None)
+        card.pop("domain_brain_provider", None)
+        card.pop("solana_domain_brain_provider", None)
+        card.pop("solana_ai_kit_usage_receipt", None)
+        snapshot = {
+            "rows": {
+                "todo": [
+                    {
+                        "id": "task-solana-route",
+                        "status": "todo",
+                        "title": "Solana architecture candidate",
+                        "assignee": "product-architect",
+                        "body": json.dumps(card),
+                    }
+                ]
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "repair_domain_brain_route")
+        self.assertTrue(plan["create_task_allowed"])
+        self.assertFalse(plan["human_gate_required"])
+        self.assertFalse(plan["user_decision_required"])
+        self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "solana_ai_kit_domain_brain_route")
+        self.assertIn("Solana AI Kit", plan["reason"])
 
 
 if __name__ == "__main__":

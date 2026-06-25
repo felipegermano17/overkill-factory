@@ -115,6 +115,12 @@ left to native Hermes dispatch, missing canonical cards become board-contract
 repair, and a single canonical card can create only the next artifact selected
 by the phase engine. It must not ask for a human gate unless
 `phase_engine.human_gate_allowed=true` and the decision package is complete.
+The reconcile task contract includes `workflow_template_id=overkill-vfinal`,
+the computed `current_step_key`, and a fallback `kanban_workflow_binding` in the
+task body so Hermes/Kanban state, not chat context, carries the current phase.
+For Solana/onchain cards at F4 or later, a missing Solana AI Kit provider or
+usage receipt is a factory-owned route defect and becomes a bounded repair task,
+not an optional architecture opinion and not an operator approval question.
 
 `route-registry` exposes the canonical route matrix used by the validators:
 route class, request types, signal types, required artifacts, workers, recovery

@@ -220,6 +220,18 @@ FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER = {
     "release": "F24",
     "completion": "F22",
 }
+FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
+FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER = {
+    "intake": "F1-intake",
+    "source_resolution": "F2-source-resolution",
+    "product_sot": "F5-product-sot",
+    "method_contract": "F6-method-contract",
+    "architecture": "F10-architecture",
+    "ready_gate": "F13-ready-gate",
+    "execution": "F15-execution",
+    "release": "F24-release",
+    "completion": "F22-completion",
+}
 FACTORY_PHASE_ENGINE_WORKERS_BY_FRONTIER = {
     "intake": ["factory-orchestrator"],
     "source_resolution": ["source-ledger-worker", "factory-orchestrator"],
@@ -4787,6 +4799,14 @@ def factory_phase_engine_state(card: dict[str, Any]) -> dict[str, Any]:
     if card_phase_rank >= factory_phase_rank("F15"):
         return state("execution", "F15", "worker_packet", "ready gate is materialized and execution is claimed")
     return state("ready_gate", "F13", "gate_report", "ready gate materialized; runtime may execute only through routed workers")
+
+
+def factory_workflow_step_key(phase_engine: dict[str, Any] | None) -> str:
+    if isinstance(phase_engine, dict):
+        frontier = str(phase_engine.get("computed_frontier") or "").strip()
+        if frontier in FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER:
+            return FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER[frontier]
+    return FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER["intake"]
 
 
 def _phase_lock_frontier(card: dict[str, Any]) -> str:
@@ -17785,6 +17805,7 @@ TERMINAL_BOARD_STATUSES = {"done", "complete", "completed", "archived", "cancell
 BOARD_RECONCILE_CREATE_ACTIONS = {
     "repair_board_contract",
     "create_next_artifact_task",
+    "repair_domain_brain_route",
     "repair_human_gate_packet",
     "request_operator_input",
 }
@@ -17937,20 +17958,34 @@ def _board_reconcile_task_contract(
     assignee: str = "factory-orchestrator",
 ) -> dict[str, Any]:
     next_artifact = str((phase_engine or {}).get("next_required_artifact") or "canonical_factory_card").strip()
+    if plan_action == "repair_domain_brain_route":
+        next_artifact = "solana_ai_kit_domain_brain_route"
+    workflow_template_id = FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID
+    current_step_key = factory_workflow_step_key(phase_engine)
     card_id = str((selected_card or {}).get("card_id") or "board").strip() or "board"
     title_action = {
         "repair_board_contract": "Materialize canonical factory card",
         "create_next_artifact_task": f"Materialize {next_artifact}",
+        "repair_domain_brain_route": "Materialize Solana AI Kit route",
         "repair_human_gate_packet": "Repair human gate decision package",
         "request_operator_input": "Prepare bounded operator input request",
     }.get(plan_action, "Reconcile factory board")
     return {
         "title": f"{title_action} for {card_id}",
         "assignee": assignee,
+        "workflow_template_id": workflow_template_id,
+        "current_step_key": current_step_key,
         "body": {
             "packet_type": "factory_deterministic_reconcile_task",
             "marker": "factory_deterministic_reconcile",
             "board": board,
+            "kanban_workflow_binding": {
+                "workflow_template_id": workflow_template_id,
+                "current_step_key": current_step_key,
+                "runtime_field_required": True,
+                "fallback_body_binding": True,
+                "route_authority": "factory_phase_engine",
+            },
             "plan_action": plan_action,
             "card_id": card_id,
             "phase_engine": phase_engine or {},
@@ -18060,13 +18095,28 @@ def build_board_reconcile_plan(
                     + str(phase_engine.get("human_gate_blocked_until_artifact") or phase_engine.get("next_required_artifact") or "required artifact")
                 )
 
+            domain_brain_errors = validate_solana_domain_brain_route(selected_card)
             packet = selected_card.get("human_gate_packet") if isinstance(selected_card.get("human_gate_packet"), dict) else {}
             packet_errors = (
                 validate_human_gate_packet(packet, require_decision_package=True)
                 if phase_allows_human_gate and human_gate_required
                 else []
             )
-            if phase_allows_human_gate and human_gate_required and not packet_errors:
+            if domain_brain_errors:
+                plan_action = "repair_domain_brain_route"
+                reason = "Solana/onchain route is missing the required Solana AI Kit domain-brain record"
+                blocked_reasons.extend(domain_brain_errors)
+                create_task_contract = _board_reconcile_task_contract(
+                    plan_action=plan_action,
+                    board=board,
+                    selected_card=selected_card,
+                    phase_engine=phase_engine,
+                    factory_help=factory_help,
+                    reason=reason,
+                    assignee="factory-orchestrator",
+                )
+                native_dispatch_required_next = True
+            elif phase_allows_human_gate and human_gate_required and not packet_errors:
                 plan_action = "request_human_gate_decision"
                 reason = "phase engine allows a real human gate and the decision package is complete"
                 user_decision_required = True
