@@ -77,6 +77,14 @@ the engine blocks the card. For example, a declared F9 architecture or human
 gate package cannot proceed while the computed frontier is still Product SOT and
 the next required artifact is `operator_briefing_package`.
 
+In Hermes/Kanban runtime reconciliation, public scaffold material is not
+evidence. References such as `templates/...`, `source-ledger.md`,
+`factoryctl:gate-report` or embedded placeholder packets copied from
+`templates/vfinal-factory-card.json` do not count as product-specific source,
+SOT, Method Contract, architecture, readiness or gate artifacts. They are useful
+as examples and schemas; a live product board must materialize its own artifacts
+before the phase engine advances.
+
 ## Deterministic Board Reconciler
 
 `factoryctl reconcile-board` applies the phase engine to Hermes/Kanban board
@@ -87,6 +95,9 @@ state. This is the runtime rule for silent boards:
 - no canonical factory card means repair the board contract, not infer a phase;
 - one canonical card means compute its phase engine state and create only the
   next artifact task selected by that state;
+- template/scaffold artifacts are ignored in runtime mode, so a copied public
+  template reconciles back to the first missing product artifact instead of
+  jumping to F9/F13;
 - a human gate can be requested only when the phase engine allows it and the
   decision package is complete.
 

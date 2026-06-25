@@ -57,6 +57,47 @@ def solana_ai_kit_usage_receipt() -> dict:
     }
 
 
+def materialize_product_sot_frontier(card: dict) -> dict:
+    card["universal_signal_intake"] = {
+        "record_type": "universal_signal_intake",
+        "intake_id": "runtime-intake-001",
+        "source_ref_public_safe": "external:operator:source-envelope",
+    }
+    card["product_source_ledger"] = {
+        "record_type": "product_source_ledger",
+        "ledger_id": "runtime-source-ledger-001",
+        "claim_table": [
+            {
+                "claim_id": "claim-001",
+                "claim": "Product Alpha is an operations product with web and admin surfaces.",
+                "claim_class": "fact",
+                "status": "promoted",
+                "source_refs": ["external:operator:source-envelope"],
+            }
+        ],
+    }
+    card["outcome_contract"] = {
+        "record_type": "outcome_contract",
+        "outcome": "Produce the complete product planning baseline before architecture.",
+        "users_or_actors": ["Brazilian web3 user", "operator"],
+        "success_signals": ["scope is covered", "open risks are named"],
+    }
+    card["product_sot"] = {
+        "record_type": "product_sot",
+        "what_it_is": "Product Alpha is an operations product with onboarding and operator surfaces.",
+        "scope_in": ["onboarding", "operator administration"],
+        "scope_out": ["production deploy", "credential transfer"],
+        "evidence_refs": ["external:operator:source-envelope"],
+    }
+    card["full_product_sot_scope_coverage"] = {
+        "record_type": "full_product_sot_scope_coverage",
+        "coverage_state": "covered_for_owner_review",
+        "covered_requirement_ids": ["REQ-001", "REQ-002"],
+        "evidence_refs": ["external:operator:source-envelope"],
+    }
+    return card
+
+
 class FakeHermes:
     def __init__(self) -> None:
         self.calls: list[list[str]] = []
@@ -3864,6 +3905,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
     def test_no_idle_reconciles_declared_f9_to_f5_owner_package_before_gate(self) -> None:
         fake = FakeHermes()
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        materialize_product_sot_frontier(card)
         card["phase"] = "F9"
         card["surfaces"] = ["architecture", "planning"]
         card["autonomy_mode"] = "planning_only"

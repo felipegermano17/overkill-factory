@@ -14,6 +14,9 @@ class WorkerPermissionClassesTest(unittest.TestCase):
         self.matrix = json.loads(
             (ROOT / "agents" / "worker-permission-classes.public.json").read_text(encoding="utf-8")
         )
+        self.profiles = json.loads(
+            (ROOT / "agents" / "worker-profiles.public.json").read_text(encoding="utf-8")
+        )
 
     def test_every_public_worker_has_permission_class(self):
         worker_ids = {worker["worker_id"] for worker in self.registry["workers"]}
@@ -40,6 +43,18 @@ class WorkerPermissionClassesTest(unittest.TestCase):
             self.assertTrue(spec["plain_purpose"].strip(), class_id)
             self.assertGreaterEqual(len(spec["must_not"]), 1, class_id)
             self.assertGreaterEqual(len(spec["evidence_required"]), 1, class_id)
+
+    def test_builders_carry_no_self_approval_boundary_in_profile(self):
+        profiles = self.profiles["profiles"]
+        builder_ids = [
+            worker_id
+            for worker_id, class_id in self.matrix["worker_assignments"].items()
+            if class_id == "builder"
+        ]
+
+        for worker_id in builder_ids:
+            must_not = " ".join(profiles[worker_id]["authority"]["must_not"]).lower()
+            self.assertIn("approve", must_not, worker_id)
 
 
 if __name__ == "__main__":

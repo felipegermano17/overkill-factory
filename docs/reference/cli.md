@@ -115,6 +115,12 @@ left to native Hermes dispatch, missing canonical cards become board-contract
 repair, and a single canonical card can create only the next artifact selected
 by the phase engine. It must not ask for a human gate unless
 `phase_engine.human_gate_allowed=true` and the decision package is complete.
+Unlike the public template validation path, board reconciliation runs the phase
+engine in runtime-strict mode: `templates/...`, `source-ledger.md`,
+`factoryctl:gate-report`, bare scaffold refs and placeholder packets copied from
+`templates/vfinal-factory-card.json` do not count as materialized product
+evidence. A live board must carry product-specific artifacts before it can move
+from intake to SOT, method, architecture, readiness or execution.
 The reconcile task contract includes `workflow_template_id=overkill-vfinal`,
 the computed `current_step_key`, and a fallback `kanban_workflow_binding` in the
 task body so Hermes/Kanban state, not chat context, carries the current phase.
