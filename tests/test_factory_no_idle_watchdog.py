@@ -115,6 +115,49 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         self.assertIn("--create-remediation", no_idle_call)
         self.assertEqual(dispatch_call[2], "dispatch")
 
+    def test_watchdog_names_review_repair_and_calls_native_dispatch(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": "kanban:redacted",
+            "no_idle_state": {
+                "status": "remediation_required",
+                "classification": "deterministic_targeted_review_repair_task_created",
+                "remediation_strategy": "create_targeted_review_repair_task",
+                "remediation_task_created": True,
+                "remediation_task_status": "ready",
+                "review_repair_task_refs": ["kanban:redacted-review"],
+                "native_dispatch_required_next": True,
+                "state": {
+                    "todo": {"count": 0},
+                    "blocked": {"count": 1},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            state_file = Path(tmp) / "state.json"
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                result = watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--create-remediation",
+                        "--dispatch",
+                        "--state-file",
+                        str(state_file),
+                    ],
+                    runner=fake,
+                )
+
+        self.assertEqual(result, 0)
+        self.assertIn("review interno bloqueou", buffer.getvalue())
+        dispatch_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "dispatch")
+        self.assertEqual(dispatch_call[2], "dispatch")
+
     def test_watchdog_does_not_repeat_same_message(self) -> None:
         fake = FakeRunner()
         fake.no_idle_payloads["product-alpha"] = {
@@ -238,6 +281,9 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         emit_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "emit-event")
         self.assertIn("--requires-user", emit_call)
         self.assertIn("decision_requested", emit_call)
+        payload = json.loads(emit_call[emit_call.index("--payload-json") + 1])
+        self.assertEqual(payload["signature"]["operator_input_task_refs"], ["kanban:redacted-blocker"])
+        self.assertTrue(payload["requires_user"])
 
     def test_watchdog_names_operator_understanding_confirmation(self) -> None:
         fake = FakeRunner()
@@ -284,6 +330,8 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         self.assertFalse(any(len(call) > 2 and call[2] == "dispatch" for call in fake.calls))
         emit_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "emit-event")
         self.assertIn("--requires-user", emit_call)
+        payload = json.loads(emit_call[emit_call.index("--payload-json") + 1])
+        self.assertEqual(payload["signature"]["operator_input_request"]["request_type"], "operator_understanding_confirmation")
 
     def test_human_gate_emits_event_without_dispatch(self) -> None:
         fake = FakeRunner()
@@ -295,6 +343,11 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
                 "status": "human_gate_required",
                 "classification": "only_human_gate_blockers_seen",
                 "human_gate_required": True,
+                "human_gate_task_refs": ["kanban:redacted-gate"],
+                "human_decision_request": {
+                    "request_type": "factory_human_gate_decision",
+                    "required_response": "approve, reject or request changes",
+                },
                 "state": {"blocked": {"count": 1}},
             },
         }
@@ -318,6 +371,9 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         emit_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "emit-event")
         self.assertIn("--requires-user", emit_call)
         self.assertIn("human_gate_required", emit_call)
+        payload = json.loads(emit_call[emit_call.index("--payload-json") + 1])
+        self.assertEqual(payload["signature"]["human_gate_task_refs"], ["kanban:redacted-gate"])
+        self.assertEqual(payload["signature"]["human_decision_request"]["request_type"], "factory_human_gate_decision")
 
 
 if __name__ == "__main__":

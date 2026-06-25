@@ -3989,6 +3989,63 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_creates_targeted_repair_for_failed_independent_review(self) -> None:
+        fake = FakeHermes()
+        review_id = "t_" + "review01"
+        fake.tasks[review_id] = {
+            "id": review_id,
+            "status": "blocked",
+            "assignee": "independent-reviewer",
+            "title": "F3 - Independent review of Product SOT candidate",
+            "latest_summary": (
+                "review-failed: Product SOT package source meaning is aligned, but "
+                "required factoryctl validators fail and handoff sequencing is inconsistent."
+            ),
+            "body": "review Product SOT, outcome_contract and full_product_sot_scope_coverage",
+            "comments": [
+                {
+                    "author": "independent-reviewer",
+                    "body": (
+                        "Independent review result: FAIL / BLOCK. Required fixes: repair "
+                        "factoryctl validators fail, preserve candidate-only, rerun independent review."
+                    ),
+                }
+            ],
+            "events": [
+                {
+                    "type": "blocked",
+                    "reason": "review-failed: validators fail; rerun independent review after repair",
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertEqual(state["classification"], "deterministic_targeted_review_repair_task_created")
+        self.assertEqual(state["remediation_strategy"], "create_targeted_review_repair_task")
+        self.assertFalse(state["human_gate_required"])
+        self.assertFalse(state["operator_input_required"])
+        self.assertTrue(state["remediation_task_created"])
+        self.assertEqual(state["remediation_task_status"], "ready")
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertIsNone(result["board_reconcile_plan"])
+        self.assertIsNotNone(result["targeted_remediation_plan"])
+        created_task = next(
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("marker") == "factory_no_idle_review_repair"
+        )
+        self.assertEqual(created_task["status"], "ready")
+        self.assertEqual(created_task["assignee"], "product-sot-planner")
+        body = json.loads(str(created_task["body"]))
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F5-product-sot")
+        self.assertIn("ask the operator for approval or input for internal validator repair", body["forbidden_actions"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_reports_dependency_gated_todo_behind_human_gate_without_remediation(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0001"

@@ -267,7 +267,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory v1 é a linha atual de release do kernel público. A release pública mais
-recente é v1.5.12.
+recente é v1.5.13.
 
 Ela inclui:
 

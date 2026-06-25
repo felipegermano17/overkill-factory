@@ -7,6 +7,18 @@ public releases.
 
 ## Unreleased
 
+## 1.5.13 - 2026-06-25
+
+- Fix Hermes no-idle remediation for failed independent-review blockers:
+  internal `review-failed` states with `factoryctl` validator, artifact or
+  handoff repair instructions now create a targeted factory-owned repair task
+  instead of falling back to stale board reconciliation.
+- Route targeted Product SOT review repairs to `product-sot-planner`, bind the
+  task to the factory workflow, and allow only native Hermes dispatch to run it.
+- Stop the no-idle watchdog from claiming remediation was created when the
+  idempotent task is already terminal, and include structured bridge payloads
+  for human-gate/input events.
+
 ## 1.5.12 - 2026-06-25
 
 - Fix Hermes no-idle classification for pending operator understanding
