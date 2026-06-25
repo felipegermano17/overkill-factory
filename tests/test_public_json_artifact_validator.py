@@ -177,6 +177,23 @@ class PublicJsonArtifactValidatorTest(unittest.TestCase):
 
         self.assertNotIn(f".tmp/factory-runs/operator-inbox/{ack_name}", public_json_paths)
 
+    def test_public_json_discovery_skips_no_idle_watchdog_runtime_state(self) -> None:
+        validator = load_validator()
+        state_path = ROOT / ".tmp" / "factory-runs" / "no-idle-watchdog-state.json"
+        original = state_path.read_text(encoding="utf-8") if state_path.exists() else None
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        state_path.write_text(json.dumps({"last_seen": "runtime-local"}), encoding="utf-8")
+
+        try:
+            public_json_paths = {path.relative_to(ROOT).as_posix() for path in validator.iter_public_json()}
+        finally:
+            if original is None:
+                state_path.unlink(missing_ok=True)
+            else:
+                state_path.write_text(original, encoding="utf-8")
+
+        self.assertNotIn(".tmp/factory-runs/no-idle-watchdog-state.json", public_json_paths)
+
     def test_factory_card_schema_rejects_absurd_required_field_shapes(self) -> None:
         validator = load_validator()
         schemas = validator.load_schemas()
