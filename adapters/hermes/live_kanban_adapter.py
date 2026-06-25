@@ -825,6 +825,12 @@ def is_human_gate_decision_ready_blocker(record: dict[str, Any]) -> bool:
             "approval request delivered",
             "owner review delivered",
             "pdf delivered",
+            "package prepared and delivered",
+            "decision package prepared and delivered",
+            "owner decision package prepared and delivered",
+            "product sot owner decision package prepared and delivered",
+            "after delivered product sot package",
+            "after reading package",
             "ready for owner decision",
             "ready for operator decision",
         )
@@ -1314,12 +1320,6 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         if is_review_failed_factory_repair_blocker(item)
     ]
     review_repair_refs = sorted(task_record_id(item) for item in review_repair_blockers if task_record_id(item))
-    factory_package_blockers = [
-        item
-        for item in blocked
-        if is_factory_owned_package_blocker(item) or is_human_gate_package_blocker(item)
-    ]
-    factory_package_refs = sorted(task_record_id(item) for item in factory_package_blockers if task_record_id(item))
     if blocked and len(operator_input_blockers) == len(blocked) and not todo:
         return {
             "status": "input_required",
@@ -1332,6 +1332,25 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "human_gate_task_refs": human_gate_refs,
             "operator_input_request": operator_input_request_for_blockers(operator_input_blockers),
             "next_action": "ask the operator for the exact confirmation, correction, or missing input before creating another remediation card",
+            "state": state,
+        }
+    if blocked and len(human_gate_blockers) == len(blocked) and not todo:
+        return {
+            "status": "human_gate_required",
+            "classification": "only_human_gate_blockers_seen",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": True,
+            "operator_input_required": bool(operator_input_refs),
+            "human_gate_task_refs": human_gate_refs,
+            "operator_input_task_refs": operator_input_refs,
+            "ignored_superseded_blocked_task_refs": ignored_superseded_blocked_refs,
+            "human_decision_request": {
+                "request_type": "factory_human_gate_decision",
+                "reason": "All unfinished visible work is blocked on explicit human-gate tasks.",
+                "required_response": "approve, reject, waive, revise scope, or provide requested input in the human-gate artifact",
+            },
+            "next_action": "ask the operator for the human-gate decision",
             "state": state,
         }
     if blocked and review_repair_blockers and len(review_repair_blockers) == len(blocked) and not todo:
@@ -1358,6 +1377,13 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             ),
             "state": state,
         }
+    factory_package_blockers = [
+        item
+        for item in blocked
+        if not is_human_gate_decision_ready_blocker(item)
+        and (is_factory_owned_package_blocker(item) or is_human_gate_package_blocker(item))
+    ]
+    factory_package_refs = sorted(task_record_id(item) for item in factory_package_blockers if task_record_id(item))
     if blocked and factory_package_blockers and len(factory_package_blockers) == len(blocked) and not todo:
         return {
             "status": "remediation_required",
@@ -1375,24 +1401,6 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
                 "This is internal factory repair, not operator input."
             ),
             "next_action": "create a factory-owned package/readback repair task before any human-gate question",
-            "state": state,
-        }
-    if blocked and len(human_gate_blockers) == len(blocked) and not todo:
-        return {
-            "status": "human_gate_required",
-            "classification": "only_human_gate_blockers_seen",
-            "blocked": True,
-            "remediation_required": False,
-            "human_gate_required": True,
-            "operator_input_required": bool(operator_input_refs),
-            "human_gate_task_refs": human_gate_refs,
-            "operator_input_task_refs": operator_input_refs,
-            "human_decision_request": {
-                "request_type": "factory_human_gate_decision",
-                "reason": "All unfinished visible work is blocked on explicit human-gate tasks.",
-                "required_response": "approve, reject, waive, revise scope, or provide requested input in the human-gate artifact",
-            },
-            "next_action": "ask the operator for the human-gate decision",
             "state": state,
         }
     dependency_blockers = dependency_gated_todo_blockers(todo, rows)

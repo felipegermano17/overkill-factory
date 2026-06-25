@@ -7,6 +7,18 @@ public releases.
 
 ## Unreleased
 
+## 1.5.15 - 2026-06-25
+
+- Fix post-delivery no-idle classification for Product SOT owner gates
+  ([#438](https://github.com/felipegermano17/overkill-factory/issues/438)):
+  a `human-gate-clerk` task that has already delivered Markdown/PDF,
+  `APPROVAL_REQUEST`, `EVIDENCE_INDEX`, `OWNER_REVIEW` and validation evidence
+  is now treated as a real `human_gate_required` state, not as another generic
+  factory package repair.
+- Give delivered human-gate packages precedence over internal package-repair
+  heuristics, even when the task text contains words such as "decision package",
+  "PDF" or "evidence index".
+
 ## 1.5.14 - 2026-06-25
 
 - Fix Hermes no-idle handling after a failed review has already been repaired

@@ -4129,6 +4129,104 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIn("ask for a decision from a chat summary without the decision package material", body["forbidden_actions"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_treats_delivered_product_sot_package_as_human_gate(self) -> None:
+        fake = FakeHermes()
+        failed_review_id = "t_" + "review01"
+        repair_id = "t_" + "repair01"
+        pass_review_id = "t_" + "review02"
+        gate_id = "t_" + "gate0001"
+        fake.tasks[failed_review_id] = {
+            "id": failed_review_id,
+            "status": "blocked",
+            "assignee": "independent-reviewer",
+            "title": "F3 - Independent review of Product SOT candidate",
+            "latest_summary": "review-failed: required factoryctl validators fail",
+            "body": "review Product SOT package",
+            "events": [{"type": "blocked", "reason": "review-failed: validators fail"}],
+        }
+        fake.tasks[repair_id] = {
+            "id": repair_id,
+            "status": "done",
+            "assignee": "product-sot-planner",
+            "title": "Repair failed independent review package",
+            "body": json.dumps(
+                {
+                    "marker": "factory_no_idle_review_repair",
+                    "blocked_review_task_refs": [failed_review_id],
+                }
+            ),
+            "events": [{"type": "completed", "payload": {"summary": "repair complete"}}],
+        }
+        fake.tasks[pass_review_id] = {
+            "id": pass_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "F3 - Independent review of repaired Product SOT candidate",
+            "latest_summary": (
+                "Independent review PASS for the repaired Product SOT candidate package; "
+                "next gate is owner/Product SOT approval or rebaseline before method-contract planning."
+            ),
+            "body": "review repaired Product SOT package",
+            "parents": [repair_id],
+            "events": [
+                {
+                    "type": "completed",
+                    "payload": {
+                        "summary": (
+                            "Independent review PASS; owner/Product SOT approval or rebaseline "
+                            "is still required before method-contract planning."
+                        )
+                    },
+                }
+            ],
+        }
+        fake.tasks[gate_id] = {
+            "id": gate_id,
+            "status": "blocked",
+            "assignee": "human-gate-clerk",
+            "title": "Prepare Product SOT owner decision package",
+            "body": json.dumps({"marker": "factory_no_idle_post_review_gate_package"}),
+            "latest_summary": (
+                "Human decision required after delivered Product SOT package: choose approve "
+                "Product SOT candidate for method-contract planning only, request exact changes, or rebaseline."
+            ),
+            "comments": [
+                {
+                    "author": "human-gate-clerk",
+                    "body": (
+                        "Product SOT owner decision package prepared and delivered before the decision question. "
+                        "Decision package refs include Markdown, PDF, APPROVAL_REQUEST, EVIDENCE_INDEX, OWNER_REVIEW "
+                        "and validation receipt. No human decision has been recorded by this worker."
+                    ),
+                }
+            ],
+            "events": [
+                {
+                    "kind": "blocked",
+                    "payload": {
+                        "reason": (
+                            "Human decision required after delivered Product SOT package: choose approve "
+                            "Product SOT candidate for method-contract planning only, request exact changes, or rebaseline."
+                        )
+                    },
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "human_gate_required")
+        self.assertEqual(state["classification"], "only_human_gate_blockers_seen")
+        self.assertTrue(state["human_gate_required"])
+        self.assertFalse(state["remediation_required"])
+        self.assertEqual(state["human_gate_task_refs"], ["kanban:<redacted>"])
+        self.assertEqual(state["ignored_superseded_blocked_task_refs"], ["kanban:<redacted>"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_reports_dependency_gated_todo_behind_human_gate_without_remediation(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0001"
