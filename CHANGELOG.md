@@ -7,6 +7,16 @@ public releases.
 
 ## Unreleased
 
+## 1.5.12 - 2026-06-25
+
+- Fix Hermes no-idle classification for pending operator understanding
+  confirmation: owner-readable Product SOT understanding packets now become
+  `input_required`, not generic factory-owned package remediation.
+- Make the no-idle watchdog name the exact Telegram-facing action for this
+  state: confirm or correct the understanding before Product SOT.
+- Add regressions so `operator_understanding_confirmation` blockers do not
+  create more remediation cards or dispatch workers.
+
 ## 1.5.11 - 2026-06-25
 
 - Harden Hermes runtime reconciliation so template/example scaffold refs,

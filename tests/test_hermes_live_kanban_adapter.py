@@ -4147,6 +4147,52 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_reports_operator_understanding_confirmation_as_input_not_remediation(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_" + "under01"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "assignee": "factory-orchestrator",
+            "title": "Product Alpha source resolution",
+            "latest_summary": (
+                "review-required: source-resolution artifacts are materialized, but owner-readable "
+                "operator_understanding_confirmation is pending. Confirm/correct it before Product SOT."
+            ),
+            "body": json.dumps(
+                {
+                    "record_type": "operator_understanding_confirmation",
+                    "confirmation_state": {"status": "pending_operator_confirmation"},
+                    "operator_response_ref": "pending:kanban-human-unblock-or-comment",
+                    "blocking_rules": {
+                        "product_sot_blocked_until_operator_understanding_confirmed": True,
+                    },
+                }
+            ),
+            "events": [
+                {
+                    "kind": "blocked",
+                    "payload": {
+                        "reason": "understanding confirmation is pending before Product SOT",
+                    },
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "input_required")
+        self.assertEqual(state["classification"], "only_operator_input_blockers_seen")
+        self.assertTrue(state["operator_input_required"])
+        self.assertFalse(state["human_gate_required"])
+        self.assertFalse(state["remediation_required"])
+        self.assertEqual(state["operator_input_request"]["request_type"], "operator_understanding_confirmation")
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_reports_parallel_human_gate_and_input_blockers(self) -> None:
         gate_id = "t_" + "gate0001"
         blocker_id = "t_" + "block001"

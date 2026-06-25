@@ -239,6 +239,52 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         self.assertIn("--requires-user", emit_call)
         self.assertIn("decision_requested", emit_call)
 
+    def test_watchdog_names_operator_understanding_confirmation(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": None,
+            "no_idle_state": {
+                "status": "input_required",
+                "classification": "only_operator_input_blockers_seen",
+                "operator_input_required": True,
+                "operator_input_task_refs": ["kanban:redacted-blocker"],
+                "operator_input_request": {
+                    "request_type": "operator_understanding_confirmation",
+                    "required_response": "confirm the understanding or send corrections before Product SOT",
+                },
+                "state": {
+                    "todo": {"count": 0},
+                    "blocked": {"count": 1},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--dispatch",
+                        "--emit-events",
+                        "--state-file",
+                        str(Path(tmp) / "state.json"),
+                        "--inbox-dir",
+                        str(Path(tmp) / "inbox"),
+                    ],
+                    runner=fake,
+                )
+
+        output = buffer.getvalue()
+        self.assertIn("aguardando sua confirmação/correção do entendimento", output)
+        self.assertFalse(any(len(call) > 2 and call[2] == "dispatch" for call in fake.calls))
+        emit_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "emit-event")
+        self.assertIn("--requires-user", emit_call)
+
     def test_human_gate_emits_event_without_dispatch(self) -> None:
         fake = FakeRunner()
         fake.no_idle_payloads["product-alpha"] = {
