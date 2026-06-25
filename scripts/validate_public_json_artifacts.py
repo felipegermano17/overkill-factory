@@ -57,6 +57,9 @@ SCAN_DIRS = [
 RUNTIME_LOCAL_JSON_DIRS = [
     ROOT / ".tmp" / "factory-runs" / "operator-inbox",
 ]
+RUNTIME_LOCAL_JSON_PATHS = {
+    ROOT / ".tmp" / "factory-runs" / "no-idle-watchdog-state.json",
+}
 
 SCHEMA_OPTIONAL = {
     ".tmp/factory-runs/product-face/console.json",
@@ -2527,6 +2530,9 @@ def validate_public_ref_hygiene(value: Any, at: str = "$") -> list[str]:
 
 def is_runtime_local_json(path: Path) -> bool:
     resolved_path = path.resolve()
+    for runtime_path in RUNTIME_LOCAL_JSON_PATHS:
+        if resolved_path == runtime_path.resolve():
+            return True
     for directory in RUNTIME_LOCAL_JSON_DIRS:
         try:
             resolved_path.relative_to(directory.resolve())

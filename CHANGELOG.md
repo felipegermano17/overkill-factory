@@ -7,6 +7,13 @@ public releases.
 
 ## Unreleased
 
+## 1.5.8 - 2026-06-25
+
+- Keep public JSON validation from treating local no-idle watchdog runtime state
+  as a public artifact.
+- Add regression coverage so local operational state does not break release
+  validation after the factory has been used.
+
 ## 1.5.7 - 2026-06-25
 
 - Add `factoryctl reconcile-board`, a deterministic Hermes/Kanban board
