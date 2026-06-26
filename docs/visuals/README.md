@@ -31,7 +31,7 @@ The HTML visualizations explain those contracts; they do not replace them.
 
 ## Version Boundary
 
-The current public map is `v1.0.2`. That is the visual surface version, not the
+The current public map is `v1.0.3`. That is the visual surface version, not the
 repository release tag. The map is an explanation layer. The authoritative
 contracts for Solana AI Kit routing, the Codex Bridge plugin, Solana/on-chain R4
 gate hardening, project design-system / `DESIGN.md`, Hermes update/no-idle
@@ -52,8 +52,8 @@ in `docs/operator/overkill-factory-bridge.md` and
 
 | File | Purpose |
 | --- | --- |
-| `overkill-factory-map-v1.0.2.svg` | Static README preview of the factory line and public boundary. |
-| `overkill-factory-map-v1.0.2.html` | Interactive map of the production line, R0-R4 risk tiers and the 40 public factory agents. |
+| `overkill-factory-map-v1.0.3.svg` | Static README preview of the factory line and public boundary. |
+| `overkill-factory-map-v1.0.3.html` | Interactive map of the production line, R0-R4 risk tiers and the 40 public factory agents. |
 
 ## Validation
 

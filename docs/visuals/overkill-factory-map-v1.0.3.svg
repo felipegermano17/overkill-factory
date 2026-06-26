@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
   <title id="title">Overkill Factory visual map</title>
   <desc id="desc">Static preview of the Overkill Factory production line: a request enters, the factory understands it, chooses a safe route, sends agents to work, checks proof and then releases or blocks.</desc>
-  <metadata id="overkill-public-surface-metadata">{"surface_id":"visual-map-v1.0.2-svg","manifest_ref":"docs/public-surface.manifest.json","authority_level":"conceptual_supporting_surface","source_refs":["docs/visuals/README.md","docs/visuals/overkill-factory-map-v1.0.2.html","docs/agents/factory-stage-agent-map.md","docs/factory-workflow.catalog.json","docs/concepts/factory-flow.md","docs/operations/validation-and-release.md"],"claim_checks":["risk_tiers","source_of_truth_disclaimer","no_runtime_proof_claim"]}</metadata>
+  <metadata id="overkill-public-surface-metadata">{"surface_id":"visual-map-v1.0.3-svg","manifest_ref":"docs/public-surface.manifest.json","authority_level":"conceptual_supporting_surface","source_refs":["docs/visuals/README.md","docs/visuals/overkill-factory-map-v1.0.3.html","docs/agents/factory-stage-agent-map.md","docs/factory-workflow.catalog.json","docs/concepts/factory-flow.md","docs/operations/validation-and-release.md"],"claim_checks":["risk_tiers","source_of_truth_disclaimer","no_runtime_proof_claim"]}</metadata>
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
       <stop offset="0" stop-color="#151514"/>
@@ -36,7 +36,7 @@
   <path d="M64 115 H1216" stroke="url(#rail)" stroke-width="5" stroke-linecap="round"/>
 
   <text x="64" y="85" class="label big">Overkill Factory</text>
-  <text x="430" y="82" class="muted small">visual map v1.0.2</text>
+  <text x="430" y="82" class="muted small">visual map v1.0.3</text>
   <text x="64" y="136" class="body mid">A request enters. The factory understands it, chooses the safe path, sends agents to work and checks proof before release.</text>
 
   <g transform="translate(64 175)">
@@ -95,7 +95,7 @@
     <text x="28" y="158" class="body small">Use it to understand the factory; use scripts, schemas, tests, Receipt Five and</text>
     <text x="28" y="184" class="body small">Hermes state to prove whether a real card is ready, blocked, complete or releasable.</text>
     <rect x="28" y="216" width="330" height="36" rx="8" fill="#252520" stroke="#454139"/>
-    <text x="45" y="240" class="muted tiny">docs/visuals/overkill-factory-map-v1.0.2.html</text>
+    <text x="45" y="240" class="muted tiny">docs/visuals/overkill-factory-map-v1.0.3.html</text>
   </g>
 
   <text x="64" y="646" class="muted tiny">Static preview for GitHub README. Open the HTML from the docs site or a local checkout for keyboard navigation and step details.</text>
