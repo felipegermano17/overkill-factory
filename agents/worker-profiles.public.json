@@ -75,7 +75,8 @@
           "mark specialist evidence as done",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "architecture approval with material risk, cost, access or authority",
@@ -250,7 +251,9 @@
           "commit raw private extraction to public artifacts",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "source conflict changes product scope",
@@ -414,7 +417,10 @@
           "erase source uncertainty",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "scope changes the product",
@@ -587,7 +593,10 @@
           "hide unsupported dependencies",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "architecture closure",
@@ -757,7 +766,10 @@
           "ignore inaccessible states",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "brand-critical release",
@@ -921,7 +933,10 @@
           "touch keys or funds",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "R3 or R4 onchain waiver",
@@ -1128,7 +1143,10 @@
           "publish sensitive exploit details",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "blocking finding waiver",
@@ -1336,7 +1354,10 @@
           "replace Codex Security scans",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "auth bypass waiver",
@@ -1540,7 +1561,10 @@
           "store raw private memory publicly",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "dangerous tool grant",
@@ -1741,7 +1765,10 @@
           "review without diff",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "finding waiver",
@@ -1890,7 +1917,10 @@
           "leave leases running",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "secret-required proof",
@@ -2043,7 +2073,10 @@
           "hide unresolved blockers",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "handoff asks for decision",
@@ -2196,7 +2229,10 @@
           "self-review",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "R3 or R4 waiver",
@@ -2369,7 +2405,10 @@
           "mutate unrelated Kanban card state directly",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "R3 or R4 waiver",
@@ -2558,7 +2597,10 @@
           "present planning-only continuation or specialist routing as approval",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "human_gate_packet names access, budget, legal, privacy, risk acceptance, R4, release, production, funds, secrets, signing, custody or irreversible action"
@@ -2757,7 +2799,10 @@
           "hide unresolved decisions",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "doc changes architecture",
@@ -2920,7 +2965,10 @@
           "remove specialist requirements for convenience",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "architecture not approved",
@@ -3084,7 +3132,10 @@
           "deploy or touch forbidden surfaces",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "scope expansion",
@@ -3243,7 +3294,10 @@
           "hide flaky failures",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "test waiver",
@@ -3410,7 +3464,10 @@
           "approve release",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "security owner missing for R3 or R4",
@@ -3633,7 +3690,10 @@
           "approve deploy alone",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "IAM exception",
@@ -3839,7 +3899,10 @@
           "store secrets",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "key access",
@@ -4050,7 +4113,10 @@
           "touch production authority",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "production promotion",
@@ -4210,7 +4276,10 @@
           "ignore poisoning risk",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "private memory promotion",
@@ -4384,7 +4453,10 @@
           "publish private source material",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "public skill includes sensitive workflow",
@@ -4548,7 +4620,10 @@
           "ignore binary assets",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "sensitive artifact exception",
@@ -4749,7 +4824,10 @@
           "mutate package registry",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "critical dependency waiver",
@@ -4974,7 +5052,10 @@
           "hide missing observability",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "production release",
@@ -5188,7 +5269,10 @@
           "mutate backend/onchain scope without a handoff",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "Product Face changes user commitments",
@@ -5347,7 +5431,10 @@
           "invent data contracts",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "auth model changes",
@@ -5500,7 +5587,10 @@
           "invent privacy assumptions",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "destructive migration",
@@ -5654,7 +5744,10 @@
           "touch real keys or funds",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "R3/R4 onchain work",
@@ -5804,7 +5897,10 @@
           "touch real keys or funds",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "R3/R4 onchain completion",
@@ -5954,7 +6050,10 @@
           "hide signer/custody assumptions",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "funds path",
@@ -6104,7 +6203,10 @@
           "hide cross-surface risk",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "R3/R4 cross-surface risk",
@@ -6259,7 +6361,10 @@
           "claim manual proof as automation",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "acceptance criteria change",
@@ -6413,7 +6518,10 @@
           "mutate cloud without gate",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "production-like release",
@@ -6571,7 +6679,10 @@
           "self-approve agent safety",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "R3/R4 agent autonomy",
@@ -6724,7 +6835,10 @@
           "hide blocker evidence",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings",
+          "mutate card state directly"
         ],
         "human_gate_required_when": [
           "approval is requested",
@@ -6875,7 +6989,9 @@
           "store secrets or raw private ids",
           "choose phase outside the deterministic phase graph",
           "choose route outside the reducer and registry",
-          "approve gates or approvals for the operator"
+          "approve gates or approvals for the operator",
+          "approve product decisions",
+          "waive security findings"
         ],
         "human_gate_required_when": [
           "approval is requested",

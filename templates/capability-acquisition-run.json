@@ -1,0 +1,31 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/capability-acquisition-run.schema.json",
+  "record_type": "capability_acquisition_run",
+  "run_id": "capability-acquisition-run-template",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "capability_gap": "unknown-specialist-surface",
+  "contract_ref": "templates/capability-acquisition-contract.json",
+  "search_completed": true,
+  "candidates": [
+    {
+      "candidate_id": "existing-provider-match",
+      "source_ref": "agents/skill-provider-registry.public.json",
+      "fit": "selected",
+      "rejection_reason": "not rejected"
+    },
+    {
+      "candidate_id": "reference-repo-fallback",
+      "source_ref": "external:public:reference-repository-search",
+      "fit": "rejected",
+      "rejection_reason": "Existing provider covers the required surface with lower risk."
+    }
+  ],
+  "activation_decision": "activate",
+  "smoke_result": "PASS",
+  "eval_result": "PASS",
+  "block_allowed": false,
+  "evidence_refs": [
+    "agents/skill-provider-registry.public.json",
+    "scripts/validate_agent_vs_skill_boundaries.py"
+  ]
+}

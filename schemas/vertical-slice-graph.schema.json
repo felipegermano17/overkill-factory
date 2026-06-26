@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/vertical-slice-graph.schema.json",
+  "title": "Overkill Factory Vertical Slice Graph",
+  "type": "object",
+  "required": ["$schema", "record_type", "graph_id", "created_at", "slice_policy", "slices"],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/vertical-slice-graph.schema.json" },
+    "record_type": { "const": "vertical_slice_graph" },
+    "graph_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "slice_policy": {
+      "type": "object",
+      "required": ["vertical_slices_required", "thin_horizontal_tasks_forbidden", "each_slice_has_e2e_path"],
+      "properties": {
+        "vertical_slices_required": { "const": true },
+        "thin_horizontal_tasks_forbidden": { "const": true },
+        "each_slice_has_e2e_path": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "slices": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["slice_id", "user_outcome", "surface_refs", "work_unit_refs", "verification_refs"],
+        "properties": {
+          "slice_id": { "type": "string", "minLength": 3 },
+          "user_outcome": { "type": "string", "minLength": 10 },
+          "surface_refs": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "work_unit_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "verification_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

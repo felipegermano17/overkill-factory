@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/capability-broker.schema.json",
+  "title": "Overkill Factory Capability Broker",
+  "type": "object",
+  "required": ["$schema", "record_type", "broker_id", "created_at", "policy", "capabilities"],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/capability-broker.schema.json" },
+    "record_type": { "const": "capability_broker" },
+    "broker_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "policy": {
+      "type": "object",
+      "required": ["least_privilege", "lease_required", "secret_default_denied"],
+      "properties": {
+        "least_privilege": { "const": true },
+        "lease_required": { "const": true },
+        "secret_default_denied": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 }, "uniqueItems": true }
+  },
+  "additionalProperties": false
+}

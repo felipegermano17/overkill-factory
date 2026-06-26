@@ -1,0 +1,137 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import shutil
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = ROOT / "scripts"
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+
+def load_script(name: str) -> Any:
+    path = SCRIPT_DIR / f"{name}.py"
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+factoryctl = load_script("factoryctl")
+runtime_contracts = load_script("validate_v2_runtime_contracts")
+agent_skill_boundaries = load_script("validate_agent_vs_skill_boundaries")
+reference_superiority = load_script("validate_reference_superiority")
+
+
+def copy_contract_root(tmp: Path) -> None:
+    for dirname in ("agents", "schemas", "templates", "fixtures"):
+        shutil.copytree(ROOT / dirname, tmp / dirname)
+
+
+class V2RuntimeContractsTests(unittest.TestCase):
+    def test_factoryctl_validates_runtime_contract_set(self) -> None:
+        self.assertEqual(factoryctl.main_with_args_for_test(["validate-v2-runtime-contracts"]), 0)
+
+    def test_factoryctl_validates_agent_skill_boundaries(self) -> None:
+        self.assertEqual(factoryctl.main_with_args_for_test(["validate-agent-skill-boundaries"]), 0)
+
+    def test_factoryctl_validates_reference_superiority_fixtures(self) -> None:
+        self.assertEqual(factoryctl.main_with_args_for_test(["validate-reference-superiority"]), 0)
+
+    def test_operator_delivery_rejects_decision_before_material(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp = Path(tmp_dir)
+            copy_contract_root(tmp)
+            receipt_path = tmp / "templates" / "operator-delivery-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["material_delivered_before_question"] = False
+            receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+
+            errors = runtime_contracts.validate_runtime_contract_set(tmp)
+
+        self.assertTrue(any("material_delivered_before_question" in error for error in errors), errors)
+
+    def test_agent_binding_rejects_unregistered_skill_ref(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp = Path(tmp_dir)
+            copy_contract_root(tmp)
+            bindings_path = tmp / "agents" / "hermes-profile-bindings.public.json"
+            bindings = json.loads(bindings_path.read_text(encoding="utf-8"))
+            bindings["bindings"]["factory-orchestrator"]["skill_refs"].append("missing-specialist-provider")
+            bindings_path.write_text(json.dumps(bindings, indent=2) + "\n", encoding="utf-8")
+
+            errors = agent_skill_boundaries.validate_boundaries(tmp)
+
+        self.assertTrue(any("missing-specialist-provider" in error for error in errors), errors)
+
+    def test_reference_superiority_fixture_must_block_regression(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            fixture_path = Path(tmp_dir) / "reference-derived-negative-fixtures.json"
+            shutil.copyfile(ROOT / "fixtures" / "v2" / "reference-derived-negative-fixtures.json", fixture_path)
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            fixture["fixtures"][0]["expected_factory_result"] = "PASS"
+            fixture_path.write_text(json.dumps(fixture, indent=2) + "\n", encoding="utf-8")
+
+            errors = reference_superiority.validate_reference_superiority(fixture_path)
+
+        self.assertTrue(any("must expect BLOCKED" in error for error in errors), errors)
+
+    def test_capability_acquisition_run_activates_existing_provider(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            out = Path(tmp_dir) / "capability-run.json"
+
+            self.assertEqual(
+                factoryctl.main_with_args_for_test(
+                    [
+                        "capability-acquisition-run",
+                        "--capability-gap",
+                        "solana-ai-kit",
+                        "--surface",
+                        "solana",
+                        "--created-at",
+                        "2026-06-26T00:00:00+00:00",
+                        "--out",
+                        str(out),
+                    ]
+                ),
+                0,
+            )
+            packet = json.loads(out.read_text(encoding="utf-8"))
+
+        self.assertEqual(packet["activation_decision"], "activate")
+        self.assertFalse(packet["block_allowed"])
+        self.assertIn("solana-ai-kit", {candidate["candidate_id"] for candidate in packet["candidates"]})
+        self.assertEqual(factoryctl.validate_capability_acquisition_run(packet), [])
+
+    def test_capability_acquisition_run_blocks_only_after_completed_search(self) -> None:
+        packet = factoryctl.build_capability_acquisition_run(
+            capability_gap="unavailable-specialist",
+            surfaces=["unknown-surface-for-negative-test"],
+            reference_sources=["external:public:reference-search"],
+            created_at="2026-06-26T00:00:00+00:00",
+            run_id="capability-acquisition-negative-test",
+        )
+
+        self.assertEqual(packet["activation_decision"], "block")
+        self.assertTrue(packet["block_allowed"])
+        self.assertTrue(packet["search_completed"])
+        self.assertEqual(factoryctl.validate_capability_acquisition_run(packet), [])
+
+        packet["search_completed"] = False
+        errors = factoryctl.validate_capability_acquisition_run(packet)
+
+        self.assertTrue(any("cannot block before search_completed=true" in error for error in errors), errors)
+
+
+if __name__ == "__main__":
+    unittest.main()

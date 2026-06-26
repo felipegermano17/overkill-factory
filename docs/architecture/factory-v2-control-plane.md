@@ -29,11 +29,16 @@ outbox, and promotion needs a packet with evidence.
 | V2 study traceability | No-simplification ledger that binds raw V2 study claims to bounded truth levels, evidence refs, claim boundaries, known gaps and next actions. | `schemas/v2-study-traceability.schema.json`, `templates/v2-study-traceability.json`, `factoryctl validate-v2-study-traceability` |
 | V2 doc implementation obligations | Fails validation when documented V2 obligations are overclaimed as implemented without matching public artifacts, tests and fixture proof. | `schemas/v2-doc-implementation-obligations.schema.json`, `templates/v2-doc-implementation-obligations.json`, `factoryctl validate-v2-doc-implementation-obligations` |
 | Worker authority contract | Makes worker profiles operational only; route, gate, waiver and promotion authority stay in reducers and registries. | `schemas/worker-authority-contract.schema.json`, `templates/worker-authority-contract.json`, `factoryctl validate-worker-authority-contract` |
+| Profile compatibility aliases | Keeps legacy names explicit and expirable instead of letting old worker ids become hidden authority. | `schemas/profile-compatibility-alias.schema.json`, `agents/profile-compatibility-aliases.public.json`, `factoryctl validate-agent-skill-boundaries` |
+| Skill provider registry | Resolves every Hermes `skill_refs` entry to a provider so skills are capability, not process authority. | `schemas/skill-provider-registry.schema.json`, `agents/skill-provider-registry.public.json`, `templates/skill-ref-resolution-report.json`, `factoryctl validate-agent-skill-boundaries` |
 | Product Experience control plane | Governs design, brand, frontend, operator UX and Product Face as first-class product surfaces. | `schemas/product-experience-control-plane.schema.json`, `templates/product-experience-control-plane.json`, `factoryctl validate-product-experience-control-plane` |
-| Capability acquisition contract | Requires reference search, template match, create/install attempt and smoke/eval before missing capability can block. | `schemas/capability-acquisition-contract.schema.json`, `templates/capability-acquisition-contract.json`, `factoryctl validate-capability-acquisition-contract` |
-| Hermes reducer mutation proof | Proves bridges and adapters cannot become the Kanban mutation authority. | `schemas/hermes-reducer-mutation-proof.schema.json`, `templates/hermes-reducer-mutation-proof.json`, `factoryctl validate-hermes-reducer-mutation-proof` |
+| Product Experience evidence stack | Requires brand strategy, identity system, component registry, accessibility, visual regression and Storybook-equivalent proof for product-facing work. | `schemas/brand-strategy.schema.json`, `schemas/identity-system.schema.json`, `schemas/component-registry.schema.json`, `schemas/accessibility-report.schema.json`, `schemas/visual-regression-proof.schema.json`, `schemas/storybook-equivalent-catalog.schema.json` |
+| Capability acquisition lane | Searches providers, packs and reference sources, writes a `capability_acquisition_run`, and blocks only after completed search. | `schemas/capability-acquisition-run.schema.json`, `templates/capability-acquisition-run.json`, `factoryctl capability-acquisition-run`, `factoryctl validate-capability-acquisition-run` |
+| Hermes reducer mutation proof | Proves bridges and adapters cannot become the Kanban mutation authority. | `schemas/hermes-reducer-mutation-proof.schema.json`, `schemas/hermes-blocked-first-protocol-receipt.schema.json`, `templates/hermes-reducer-mutation-proof.json`, `factoryctl validate-v2-runtime-contracts` |
+| Operator delivery OS | Requires channel-aware delivery receipts before asking the operator for a human decision. | `schemas/operator-delivery-receipt.schema.json`, `schemas/operator-notification-policy.schema.json`, `schemas/operator-channel-pack.schema.json`, `factoryctl validate-v2-runtime-contracts` |
+| Security OS matrix | Makes security route, state, capability broker, capability leases and security profiles explicit before material work. | `schemas/security-route-contract.schema.json`, `schemas/security-state-ledger.schema.json`, `schemas/capability-broker.schema.json`, `schemas/capability-lease.schema.json`, `schemas/security-profile.schema.json` |
 | Readiness claim | Separates kernel-ready, runtime-ready, product-run-ready and production-proven claims. | `schemas/factory-v2-readiness-claim.schema.json`, `templates/factory-v2-readiness-claim.json`, `factoryctl validate-readiness-claim` |
-| Reference superiority claim | Public-safe way to claim the factory is stronger than a reference, tied to schema, reducer and test proof. | `schemas/reference-superiority-claim.schema.json`, `templates/reference-superiority-claim.json` |
+| Reference superiority harness | Public-safe way to claim the factory is stronger than a reference, tied to negative fixtures and a runner. | `schemas/reference-derived-negative-fixture.schema.json`, `fixtures/v2/reference-derived-negative-fixtures.json`, `factoryctl validate-reference-superiority` |
 
 ## Invariants
 
@@ -55,6 +60,18 @@ Factory V2 fails closed on these rules:
   readiness, rollback, monitoring and human gate record when scope requires it.
 - `.tmp/factory-runs` is runtime evidence, not public release surface.
 
+## Hermes Kanban Compatibility
+
+Factory V2 now treats current Hermes Kanban primitives as the runtime lane:
+`gateway start`, `kanban dispatch`, `kanban watch`, `kanban tail`,
+`kanban runs`, `kanban diagnostics`, `kanban notify-subscribe`,
+`kanban notify-list` and `kanban notify-unsubscribe`.
+
+That matters because Overkill Factory should not create a shadow dispatcher.
+The factory owns contracts, gates, route decisions, receipts and validation.
+Hermes owns durable cards, workers, runs, comments, transitions and native
+dispatch/notification behavior.
+
 ## CLI Proof
 
 Compile and validate the control plane:
@@ -70,9 +87,14 @@ factoryctl validate-factory-run templates/factory-run.json
 factoryctl validate-phase-graph templates/factory-phase-graph.json
 factoryctl validate-v2-study-traceability templates/v2-study-traceability.json
 factoryctl validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
+factoryctl validate-v2-runtime-contracts
+factoryctl validate-agent-skill-boundaries
+factoryctl validate-reference-superiority
 factoryctl validate-worker-authority-contract templates/worker-authority-contract.json
 factoryctl validate-product-experience-control-plane templates/product-experience-control-plane.json
 factoryctl validate-capability-acquisition-contract templates/capability-acquisition-contract.json
+factoryctl capability-acquisition-run --capability-gap solana-ai-kit --surface solana --out .tmp/factory-runs/capability/v2-control-plane-capability-run.json
+factoryctl validate-capability-acquisition-run .tmp/factory-runs/capability/v2-control-plane-capability-run.json
 factoryctl validate-hermes-reducer-mutation-proof templates/hermes-reducer-mutation-proof.json
 factoryctl validate-readiness-claim templates/factory-v2-readiness-claim.json
 ```

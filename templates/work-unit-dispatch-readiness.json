@@ -1,0 +1,31 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/work-unit-dispatch-readiness.schema.json",
+  "record_type": "work_unit_dispatch_readiness",
+  "readiness_id": "overkill-factory-v2-work-unit-dispatch-readiness",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "hermes_policy": {
+    "gateway_dispatch_required": true,
+    "blocked_first_required": true,
+    "direct_worker_spawn_forbidden": true
+  },
+  "work_units": [
+    {
+      "work_unit_id": "wu-frontend-first-success",
+      "slice_ref": "slice-operator-first-success",
+      "worker_id": "frontend-builder",
+      "dependencies_satisfied": true,
+      "dispatch_decision": "ready",
+      "hermes_task_plan_ref": "templates/ready-work-unit-hermes-materialization-plan.json",
+      "evidence_refs": ["templates/component-registry.json", "templates/project-design-system.json"]
+    },
+    {
+      "work_unit_id": "wu-onchain-plan",
+      "slice_ref": "slice-onchain-safe-path",
+      "worker_id": "solana-quasar-builder",
+      "dependencies_satisfied": false,
+      "dispatch_decision": "blocked",
+      "hermes_task_plan_ref": "templates/ready-work-unit-hermes-materialization-plan.json",
+      "evidence_refs": ["schemas/solana-ai-kit-usage-receipt.schema.json", "templates/security-route-contract.json"]
+    }
+  ]
+}

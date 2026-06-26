@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/capability-acquisition-run.schema.json",
+  "title": "Overkill Factory Capability Acquisition Run",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "run_id",
+    "created_at",
+    "capability_gap",
+    "contract_ref",
+    "search_completed",
+    "candidates",
+    "activation_decision",
+    "smoke_result",
+    "eval_result",
+    "block_allowed",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/capability-acquisition-run.schema.json"
+    },
+    "record_type": { "const": "capability_acquisition_run" },
+    "run_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "capability_gap": { "type": "string", "minLength": 3 },
+    "contract_ref": { "type": "string", "minLength": 3 },
+    "search_completed": { "type": "boolean" },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["candidate_id", "source_ref", "fit", "rejection_reason"],
+        "properties": {
+          "candidate_id": { "type": "string", "minLength": 3 },
+          "source_ref": { "type": "string", "minLength": 3 },
+          "fit": { "enum": ["selected", "rejected", "blocked"] },
+          "rejection_reason": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "activation_decision": { "enum": ["activate", "block", "defer"] },
+    "smoke_result": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
+    "eval_result": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
+    "block_allowed": { "type": "boolean" },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

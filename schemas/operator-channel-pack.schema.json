@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operator-channel-pack.schema.json",
+  "title": "Overkill Factory Operator Channel Pack",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "pack_id",
+    "created_at",
+    "channel",
+    "message_shape",
+    "asset_policy",
+    "ack_policy"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/operator-channel-pack.schema.json" },
+    "record_type": { "const": "operator_channel_pack" },
+    "pack_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "channel": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+    "message_shape": {
+      "type": "object",
+      "required": ["max_summary_lines", "plain_language_required", "decision_options_required"],
+      "properties": {
+        "max_summary_lines": { "type": "integer", "minimum": 1 },
+        "plain_language_required": { "const": true },
+        "decision_options_required": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "asset_policy": {
+      "type": "object",
+      "required": ["pdf_supported", "markdown_supported", "json_supported", "summary_only_forbidden"],
+      "properties": {
+        "pdf_supported": { "type": "boolean" },
+        "markdown_supported": { "type": "boolean" },
+        "json_supported": { "type": "boolean" },
+        "summary_only_forbidden": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "ack_policy": {
+      "type": "object",
+      "required": ["ack_required_for_gate", "retry_on_missing_delivery", "runtime_receipt_ref_required"],
+      "properties": {
+        "ack_required_for_gate": { "const": true },
+        "retry_on_missing_delivery": { "const": true },
+        "runtime_receipt_ref_required": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

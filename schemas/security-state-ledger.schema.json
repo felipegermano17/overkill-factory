@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/security-state-ledger.schema.json",
+  "title": "Overkill Factory Security State Ledger",
+  "type": "object",
+  "required": ["$schema", "record_type", "ledger_id", "created_at", "state", "open_risks", "evidence_refs"],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/security-state-ledger.schema.json" },
+    "record_type": { "const": "security_state_ledger" },
+    "ledger_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "state": { "enum": ["ready", "blocked", "repairing", "waived_with_record"] },
+    "open_risks": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+    "evidence_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 }, "uniqueItems": true }
+  },
+  "additionalProperties": false
+}

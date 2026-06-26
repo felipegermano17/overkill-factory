@@ -1,0 +1,11 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/capability-lease.schema.json",
+  "record_type": "capability_lease",
+  "lease_id": "capability-lease-template",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "capability_id": "repo-write-bounded",
+  "holder_worker_id": "implementation-worker",
+  "scope": "Bounded repository edit for a ready work unit only.",
+  "expires_at": "2026-12-31T00:00:00+00:00",
+  "revocation_policy": "Revoke on scope drift, failed security route, missing evidence or human gate boundary."
+}

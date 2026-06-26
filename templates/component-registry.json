@@ -1,0 +1,26 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/component-registry.schema.json",
+  "record_type": "component_registry",
+  "registry_id": "product-component-registry-template",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "components": [
+    {
+      "component_id": "decision-panel",
+      "purpose": "Present bounded human decisions with evidence and consequences.",
+      "states": ["ready", "blocked", "submitted"],
+      "evidence_refs": ["templates/operator-delivery-receipt.json"]
+    },
+    {
+      "component_id": "status-strip",
+      "purpose": "Expose current runtime state and stale state clearly.",
+      "states": ["running", "idle", "blocked", "stale"],
+      "evidence_refs": ["templates/factory-status-snapshot.json"]
+    },
+    {
+      "component_id": "evidence-table",
+      "purpose": "Let reviewers inspect proof, source and verification references.",
+      "states": ["loaded", "empty", "error"],
+      "evidence_refs": ["templates/operational-evidence-bundle.json"]
+    }
+  ]
+}

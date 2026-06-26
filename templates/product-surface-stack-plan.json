@@ -1,0 +1,29 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-surface-stack-plan.schema.json",
+  "record_type": "product_surface_stack_plan",
+  "plan_id": "overkill-factory-v2-product-surface-stack-plan",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "surfaces": [
+    {
+      "surface_id": "web-app",
+      "surface_type": "frontend",
+      "stack_layers": ["product-experience", "component-system", "accessibility", "visual-regression"],
+      "owner_worker": "frontend-builder",
+      "required_evidence_refs": ["templates/component-registry.json", "templates/accessibility-report.json"]
+    },
+    {
+      "surface_id": "api-core",
+      "surface_type": "backend",
+      "stack_layers": ["domain-api", "auth-boundary", "observability"],
+      "owner_worker": "backend-api-builder",
+      "required_evidence_refs": ["templates/security-route-contract.json", "templates/product-e2e-release-proof.json"]
+    },
+    {
+      "surface_id": "onchain-core",
+      "surface_type": "onchain",
+      "stack_layers": ["solana-ai-kit", "quasar", "auditor", "signer-boundary"],
+      "owner_worker": "solana-quasar-builder",
+      "required_evidence_refs": ["templates/capability-acquisition-run.json", "schemas/solana-ai-kit-usage-receipt.schema.json"]
+    }
+  ]
+}

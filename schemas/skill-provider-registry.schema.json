@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/skill-provider-registry.schema.json",
+  "title": "Overkill Factory Skill Provider Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "created_at",
+    "policy",
+    "providers"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/skill-provider-registry.schema.json"
+    },
+    "record_type": { "const": "skill_provider_registry" },
+    "registry_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "policy": {
+      "type": "object",
+      "required": [
+        "providers_are_capability_not_authority",
+        "agents_do_not_select_route",
+        "missing_provider_triggers_acquisition_lane",
+        "profile_bindings_must_resolve_skill_refs"
+      ],
+      "properties": {
+        "providers_are_capability_not_authority": { "const": true },
+        "agents_do_not_select_route": { "const": true },
+        "missing_provider_triggers_acquisition_lane": { "const": true },
+        "profile_bindings_must_resolve_skill_refs": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "providers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "provider_id",
+          "provider_type",
+          "status",
+          "capability_surfaces",
+          "source_ref",
+          "authority_boundary",
+          "smoke_or_eval_ref"
+        ],
+        "properties": {
+          "provider_id": { "type": "string", "minLength": 2 },
+          "provider_type": {
+            "enum": ["codex_skill", "hermes_skill", "plugin_skill", "external_tool", "process_contract", "reference_pack"]
+          },
+          "status": {
+            "enum": ["active", "available", "candidate", "blocked", "external_unmanaged"]
+          },
+          "capability_surfaces": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 2 },
+            "uniqueItems": true
+          },
+          "source_ref": { "type": "string", "minLength": 3 },
+          "authority_boundary": { "type": "string", "minLength": 10 },
+          "smoke_or_eval_ref": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

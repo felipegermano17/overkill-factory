@@ -191,11 +191,15 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
                 if "--out" in command:
                     out = Path(command[command.index("--out") + 1])
                     payload = {"result": "ATTENTION", "cleanup_policy": {}}
-                else:
+                elif "--summary-json" in command:
                     out = Path(command[command.index("--summary-json") + 1])
                     payload = {"result": "PASS"}
-                out.parent.mkdir(parents=True, exist_ok=True)
-                out.write_text(json.dumps(payload), encoding="utf-8")
+                else:
+                    out = None
+                    payload = {}
+                if out is not None:
+                    out.parent.mkdir(parents=True, exist_ok=True)
+                    out.write_text(json.dumps(payload), encoding="utf-8")
                 return subprocess.CompletedProcess(command, 0)
 
             materialization = preflight.materialize_preflight_inputs(
@@ -264,8 +268,8 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
         self.assertIn("preflight_materializers_passed", receipt["blocking_items"])
         self.assertIn("preflight_evidence_refs_exist", receipt["blocking_items"])
         self.assertFalse(receipt["materialization"]["all_materializers_passed"])
-        self.assertEqual(len(receipt["materialization"]["failed_materializers"]), 4)
-        self.assertEqual(len(receipt["missing_evidence_refs"]), 4)
+        self.assertEqual(len(receipt["materialization"]["failed_materializers"]), 8)
+        self.assertEqual(len(receipt["missing_evidence_refs"]), 5)
         self.assertNotIn(str(root), json.dumps(receipt))
 
     def _fixtures(

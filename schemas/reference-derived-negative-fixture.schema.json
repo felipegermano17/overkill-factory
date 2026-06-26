@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/reference-derived-negative-fixture.schema.json",
+  "title": "Overkill Factory Reference Derived Negative Fixtures",
+  "type": "object",
+  "required": ["$schema", "record_type", "corpus_id", "created_at", "fixtures"],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/reference-derived-negative-fixture.schema.json" },
+    "record_type": { "const": "reference_derived_negative_fixtures" },
+    "corpus_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "fixtures": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["fixture_id", "reference_project", "failure_mode", "overkill_controls", "expected_factory_result", "regression_test_ref"],
+        "properties": {
+          "fixture_id": { "type": "string", "minLength": 3 },
+          "reference_project": { "type": "string", "minLength": 3 },
+          "failure_mode": { "type": "string", "minLength": 10 },
+          "overkill_controls": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "expected_factory_result": { "enum": ["BLOCKED", "REPAIRED"] },
+          "regression_test_ref": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

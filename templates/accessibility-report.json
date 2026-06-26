@@ -1,0 +1,12 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/accessibility-report.schema.json",
+  "record_type": "accessibility_report",
+  "report_id": "product-accessibility-report-template",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "result": "BLOCKED",
+  "checks": ["keyboard", "focus", "contrast", "screen-reader", "reduced-motion"],
+  "evidence_refs": [
+    "templates/product-face-result.json",
+    "templates/component-registry.json"
+  ]
+}

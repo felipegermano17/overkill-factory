@@ -1,0 +1,13 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/identity-system.schema.json",
+  "record_type": "identity_system",
+  "system_id": "product-identity-system-template",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "color_roles": ["background", "surface", "text", "accent", "danger", "success"],
+  "typography_roles": ["display", "body", "label"],
+  "motion_policy": "Motion clarifies state changes and must not hide information or block task completion.",
+  "evidence_refs": [
+    "templates/project-design-system.json",
+    "templates/component-registry.json"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/visual-regression-proof.schema.json",
+  "record_type": "visual_regression_proof",
+  "proof_id": "product-visual-regression-proof-template",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "result": "BLOCKED",
+  "viewports": ["mobile", "desktop"],
+  "states": ["default", "loading", "error", "empty"],
+  "evidence_refs": [
+    "templates/product-face-result.json",
+    "templates/storybook-equivalent-catalog.json"
+  ]
+}

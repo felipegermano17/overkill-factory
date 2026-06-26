@@ -267,7 +267,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory V2 é a linha atual de release do kernel público. A release pública mais
-recente é v2.0.2.
+recente é v2.0.3.
 
 V2 significa que o kernel público tem contratos executáveis para a linha da
 fábrica:
@@ -280,8 +280,9 @@ fábrica:
 - Product Experience control plane: trabalho com interface precisa de Product
   Experience Plan, Product Face Packet, processo profissional de design, design
   system do projeto, `DESIGN.md` e Product Face Result;
-- contrato de aquisição de capability: quando falta especialista, a fábrica
-  pesquisa packs e referências antes de bloquear;
+- lane runtime de aquisição de capability: quando falta especialista, a fábrica
+  pesquisa skill providers, capability packs e referências, escreve um receipt
+  `capability_acquisition_run` e só bloqueia depois da busca completa;
 - Solana AI Kit como rota de primeira classe para Solana/on-chain, com usage
   receipt, signer boundary e onchain work package;
 - human gates estritos: o operador recebe o material antes da pergunta de
@@ -320,6 +321,11 @@ python scripts/validate_public_json_artifacts.py
 python scripts/validate_worker_profiles.py
 python scripts/validate_promise_implementation_map.py
 python scripts/validate_planning_bundles.py
+python scripts/factoryctl.py validate-v2-runtime-contracts
+python scripts/factoryctl.py validate-agent-skill-boundaries
+python scripts/factoryctl.py validate-reference-superiority
+python scripts/factoryctl.py capability-acquisition-run --capability-gap solana-ai-kit --surface solana --out .tmp/factory-runs/capability/readme-capability-acquisition-run.json
+python scripts/factoryctl.py validate-capability-acquisition-run .tmp/factory-runs/capability/readme-capability-acquisition-run.json
 python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
 python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 python scripts/public_safety_scan.py

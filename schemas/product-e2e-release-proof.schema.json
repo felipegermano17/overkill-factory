@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-e2e-release-proof.schema.json",
+  "title": "Overkill Factory Product E2E Release Proof",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "proof_id",
+    "created_at",
+    "result",
+    "journey_proofs",
+    "rollback_ref",
+    "monitoring_ref",
+    "release_decision_boundary"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/product-e2e-release-proof.schema.json" },
+    "record_type": { "const": "product_e2e_release_proof" },
+    "proof_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "result": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+    "journey_proofs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["journey_id", "result", "evidence_refs"],
+        "properties": {
+          "journey_id": { "type": "string", "minLength": 3 },
+          "result": { "enum": ["PASS", "BLOCKED", "FAIL"] },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rollback_ref": { "type": "string", "minLength": 3 },
+    "monitoring_ref": { "type": "string", "minLength": 3 },
+    "release_decision_boundary": { "type": "string", "minLength": 10 }
+  },
+  "additionalProperties": false
+}

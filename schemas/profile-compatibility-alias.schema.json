@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/profile-compatibility-alias.schema.json",
+  "title": "Overkill Factory Profile Compatibility Aliases",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "alias_set_id",
+    "created_at",
+    "policy",
+    "aliases"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/profile-compatibility-alias.schema.json"
+    },
+    "record_type": {
+      "enum": ["profile_compatibility_aliases", "profile_compatibility_alias"]
+    },
+    "alias_set_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "policy": {
+      "type": "object",
+      "required": [
+        "agent_names_are_not_authority",
+        "legacy_ids_are_compatibility_only",
+        "expiry_required_for_deprecated_aliases",
+        "migration_requires_profile_binding"
+      ],
+      "properties": {
+        "agent_names_are_not_authority": { "const": true },
+        "legacy_ids_are_compatibility_only": { "const": true },
+        "expiry_required_for_deprecated_aliases": { "const": true },
+        "migration_requires_profile_binding": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "aliases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "legacy_id",
+          "target_worker_id",
+          "target_profile_ref",
+          "status",
+          "reason",
+          "compatibility_scope",
+          "expires_at",
+          "migration_evidence_refs"
+        ],
+        "properties": {
+          "legacy_id": { "type": "string", "minLength": 3 },
+          "target_worker_id": { "type": "string", "minLength": 3 },
+          "target_profile_ref": { "type": "string", "minLength": 3 },
+          "status": {
+            "enum": ["active_alias", "deprecated_alias", "blocked_alias", "removed_alias"]
+          },
+          "reason": { "type": "string", "minLength": 10 },
+          "compatibility_scope": {
+            "enum": ["dispatch_name", "docs_name", "legacy_card_field", "skill_ref", "removed"]
+          },
+          "expires_at": { "type": "string", "minLength": 4 },
+          "migration_evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

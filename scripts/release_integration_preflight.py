@@ -20,7 +20,9 @@ DEFAULT_INVENTORY = ROOT / ".tmp" / "factory-runs" / "release" / "worktree-relea
 DEFAULT_PUBLIC_WORKTREE = ROOT / ".tmp" / "factory-runs" / "public-safety" / "worktree-summary.json"
 DEFAULT_PUBLIC_HEAD = ROOT / ".tmp" / "factory-runs" / "public-safety" / "head-summary.json"
 DEFAULT_PUBLIC_ORIGIN = ROOT / ".tmp" / "factory-runs" / "public-safety" / "origin-main-summary.json"
+DEFAULT_CAPABILITY_PREFLIGHT = ROOT / ".tmp" / "factory-runs" / "capability" / "release-preflight-capability-acquisition-run.json"
 GENERATED_RECEIPT_PATHS = {
+    ".tmp/factory-runs/capability/release-preflight-capability-acquisition-run.json",
     ".tmp/factory-runs/factory-production-readiness/current-readiness.json",
     ".tmp/factory-runs/public-safety/head-summary.json",
     ".tmp/factory-runs/public-safety/origin-main-summary.json",
@@ -123,11 +125,41 @@ def materialize_preflight_inputs(
                 str(public_origin_path),
             ],
         },
+        {
+            "name": "v2_runtime_contracts",
+            "output": None,
+            "command": [sys.executable, "scripts/factoryctl.py", "validate-v2-runtime-contracts"],
+        },
+        {
+            "name": "agent_skill_boundaries",
+            "output": None,
+            "command": [sys.executable, "scripts/factoryctl.py", "validate-agent-skill-boundaries"],
+        },
+        {
+            "name": "reference_superiority",
+            "output": None,
+            "command": [sys.executable, "scripts/factoryctl.py", "validate-reference-superiority"],
+        },
+        {
+            "name": "capability_acquisition_lane",
+            "output": DEFAULT_CAPABILITY_PREFLIGHT,
+            "command": [
+                sys.executable,
+                "scripts/factoryctl.py",
+                "capability-acquisition-run",
+                "--capability-gap",
+                "solana-ai-kit",
+                "--surface",
+                "solana",
+                "--out",
+                str(DEFAULT_CAPABILITY_PREFLIGHT),
+            ],
+        },
     ]
     runs: list[dict[str, Any]] = []
     for spec in commands:
         output_path = spec["output"]
-        if output_path.exists():
+        if isinstance(output_path, Path) and output_path.exists():
             output_path.unlink()
         completed = runner(
             spec["command"],
@@ -137,12 +169,12 @@ def materialize_preflight_inputs(
             stderr=subprocess.PIPE,
             text=True,
         )
-        output_exists = output_path.is_file()
+        output_exists = True if output_path is None else output_path.is_file()
         runs.append(
             {
                 "name": spec["name"],
                 "command": public_command(spec["command"]),
-                "output_ref": repo_ref(output_path),
+                "output_ref": "stdout:validation" if output_path is None else repo_ref(output_path),
                 "returncode": int(completed.returncode),
                 "stdout_tail": safe_tail(str(completed.stdout or "")),
                 "stderr_tail": safe_tail(str(completed.stderr or "")),
@@ -152,7 +184,7 @@ def materialize_preflight_inputs(
         )
     missing = [
         repo_ref(path)
-        for path in (inventory_path, public_worktree_path, public_head_path, public_origin_path)
+        for path in (inventory_path, public_worktree_path, public_head_path, public_origin_path, DEFAULT_CAPABILITY_PREFLIGHT)
         if not path.is_file()
     ]
     failed = [run["name"] for run in runs if run["result"] != "PASS"]
@@ -222,6 +254,12 @@ def build_preflight(
     public_head = load_json(public_head_path)
     public_origin = load_json(public_origin_path)
     evidence_paths = [inventory_path, public_worktree_path, public_head_path, public_origin_path]
+    materialization_runs = materialization.get("runs", []) if isinstance(materialization, dict) else []
+    if any(
+        isinstance(run, dict) and run.get("name") == "capability_acquisition_lane"
+        for run in materialization_runs
+    ):
+        evidence_paths.append(DEFAULT_CAPABILITY_PREFLIGHT)
     missing_evidence_refs = [repo_ref(path) for path in evidence_paths if not path.is_file()]
     evidence_refs = [repo_ref(path) for path in evidence_paths if path.is_file()]
 

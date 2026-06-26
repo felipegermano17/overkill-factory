@@ -233,7 +233,7 @@ class FactoryV2KernelTests(unittest.TestCase):
         statuses = {claim["status"] for claim in packet["claims"]}
         self.assertNotIn("implemented", statuses)
         self.assertIn("kernel_implemented", statuses)
-        self.assertIn("contract_only", statuses)
+        self.assertIn("runtime_integrated", statuses)
         for claim in packet["claims"]:
             self.assertIn("claim_boundary", claim)
             self.assertGreater(len(claim["known_gaps"]), 0)

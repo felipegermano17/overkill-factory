@@ -26,17 +26,28 @@
       ],
       "obligation": "Legacy worker ids that have misleading authority or obsolete names must move through an explicit compatibility alias ledger with target profile, status and expiry.",
       "required_artifact_refs": [
-        "schemas/profile-compatibility-alias.schema.json",
         "agents/profile-compatibility-aliases.public.json",
+        "schemas/profile-compatibility-alias.schema.json",
         "templates/profile-compatibility-alias.json"
       ],
-      "implemented_artifact_refs": [],
-      "validation_refs": [],
-      "negative_fixture_refs": [],
+      "implemented_artifact_refs": [
+        "schemas/profile-compatibility-alias.schema.json",
+        "agents/profile-compatibility-aliases.public.json",
+        "templates/profile-compatibility-alias.json",
+        "scripts/validate_agent_vs_skill_boundaries.py",
+        "scripts/factoryctl.py::command_validate_agent_skill_boundaries"
+      ],
+      "validation_refs": [
+        "tests/test_v2_runtime_contracts.py",
+        "factoryctl:validate-agent-skill-boundaries"
+      ],
+      "negative_fixture_refs": [
+        "fixtures/v2/reference-derived-negative-fixtures.json"
+      ],
       "minimum_truth_level_required": "runtime_integrated",
-      "current_truth_level": "missing",
-      "gap_summary": "No profile compatibility alias schema, public alias ledger or migration template exists yet.",
-      "next_action": "Create the alias contract and public ledger before claiming agent migration complete.",
+      "current_truth_level": "runtime_integrated",
+      "gap_summary": "Alias compatibility is public and validator-enforced; live Hermes profile rename rollout still needs runtime smoke before runtime_proven.",
+      "next_action": "Run profile materialization and Hermes smoke on the operator-owned runtime before claiming runtime_proven migration.",
       "blocks_claim_ids": [
         "V2-P0-005-agent-process-authority-is-forbidden"
       ],
@@ -54,18 +65,30 @@
       ],
       "obligation": "Agent-vs-skill boundaries need a provider registry and resolution report so specialist capability can be bound without hiding process authority inside profile prose.",
       "required_artifact_refs": [
-        "schemas/skill-provider-registry.schema.json",
         "agents/skill-provider-registry.public.json",
+        "schemas/skill-provider-registry.schema.json",
         "schemas/skill-ref-resolution-report.schema.json",
         "scripts/validate_agent_vs_skill_boundaries.py"
       ],
-      "implemented_artifact_refs": [],
-      "validation_refs": [],
-      "negative_fixture_refs": [],
+      "implemented_artifact_refs": [
+        "schemas/skill-provider-registry.schema.json",
+        "agents/skill-provider-registry.public.json",
+        "schemas/skill-ref-resolution-report.schema.json",
+        "templates/skill-ref-resolution-report.json",
+        "scripts/validate_agent_vs_skill_boundaries.py",
+        "scripts/factoryctl.py::command_validate_agent_skill_boundaries"
+      ],
+      "validation_refs": [
+        "tests/test_v2_runtime_contracts.py",
+        "factoryctl:validate-agent-skill-boundaries"
+      ],
+      "negative_fixture_refs": [
+        "fixtures/v2/reference-derived-negative-fixtures.json"
+      ],
       "minimum_truth_level_required": "runtime_integrated",
-      "current_truth_level": "missing",
-      "gap_summary": "No provider registry, resolution report schema or agent-vs-skill boundary validator exists.",
-      "next_action": "Implement skill provider registry and boundary validator before claiming skill routing maturity.",
+      "current_truth_level": "runtime_integrated",
+      "gap_summary": "Provider registry and skill resolution are validated against bindings; live installed skill availability still requires target Hermes smoke.",
+      "next_action": "Attach live Hermes skill/profile smoke evidence before promoting the registry to runtime_proven.",
       "blocks_claim_ids": [
         "V2-P0-005-agent-process-authority-is-forbidden",
         "V2-P0-012-capability-acquisition-before-specialist-block"
@@ -84,27 +107,39 @@
       "obligation": "Missing specialist handling must execute a real acquisition lane: search packs and reference repositories, create or install a candidate, run smoke and eval, then activate or block with evidence.",
       "required_artifact_refs": [
         "schemas/capability-acquisition-contract.schema.json",
-        "schemas/capability-pack-registry.schema.json",
+        "schemas/capability-acquisition-run.schema.json",
         "schemas/capability-pack-activation-ledger.schema.json",
-        "scripts/factoryctl.py::validate_capability_acquisition_contract"
+        "schemas/capability-pack-registry.schema.json",
+        "scripts/factoryctl.py::build_capability_acquisition_run",
+        "scripts/factoryctl.py::validate_capability_acquisition_contract",
+        "templates/capability-acquisition-run.json"
       ],
       "implemented_artifact_refs": [
         "schemas/capability-acquisition-contract.schema.json",
         "schemas/capability-pack-registry.schema.json",
         "schemas/capability-pack-activation-ledger.schema.json",
-        "scripts/factoryctl.py::validate_capability_acquisition_contract"
+        "schemas/capability-acquisition-run.schema.json",
+        "templates/capability-acquisition-contract.json",
+        "templates/capability-acquisition-run.json",
+        "scripts/factoryctl.py::build_capability_acquisition_run",
+        "scripts/factoryctl.py::validate_capability_acquisition_run",
+        "scripts/factoryctl.py::command_capability_acquisition_run"
       ],
       "validation_refs": [
         "tests/test_capability_packs.py",
-        "tests/test_product_method_sot_planning.py"
+        "tests/test_product_method_sot_planning.py",
+        "tests/test_v2_runtime_contracts.py",
+        "tests/test_release_integration_preflight.py",
+        "factoryctl:capability-acquisition-run",
+        "factoryctl:validate-capability-acquisition-run"
       ],
       "negative_fixture_refs": [
-        "fixtures/v2/v2-p0-negative-fixtures.json"
+        "fixtures/v2/reference-derived-negative-fixtures.json"
       ],
       "minimum_truth_level_required": "runtime_integrated",
-      "current_truth_level": "contract_only",
-      "gap_summary": "Contracts and tests exist, but the full automated acquisition lane is not implemented as a runtime path.",
-      "next_action": "Build the acquisition lane before allowing specialist absence to auto-block product progress.",
+      "current_truth_level": "runtime_integrated",
+      "gap_summary": "The lane now produces a validated acquisition run from registries; actual creation of brand-new external tools remains bounded by future provider-specific installers.",
+      "next_action": "For missing providers not covered by registries, add provider-specific installer/eval packs before calling that provider runtime_proven.",
       "blocks_claim_ids": [
         "V2-P0-012-capability-acquisition-before-specialist-block"
       ],
@@ -124,19 +159,41 @@
       "required_artifact_refs": [
         "schemas/factory-run-plan.schema.json",
         "schemas/full-product-run-manifest.schema.json",
+        "schemas/product-e2e-release-proof.schema.json",
+        "schemas/product-surface-stack-plan.schema.json",
+        "schemas/qa-repair-loop-state.schema.json",
+        "schemas/vertical-slice-graph.schema.json",
+        "schemas/work-unit-dispatch-readiness.schema.json"
+      ],
+      "implemented_artifact_refs": [
+        "schemas/factory-run-plan.schema.json",
+        "schemas/full-product-run-manifest.schema.json",
         "schemas/product-surface-stack-plan.schema.json",
         "schemas/vertical-slice-graph.schema.json",
         "schemas/work-unit-dispatch-readiness.schema.json",
         "schemas/product-e2e-release-proof.schema.json",
-        "schemas/qa-repair-loop-state.schema.json"
+        "schemas/qa-repair-loop-state.schema.json",
+        "templates/factory-run-plan.json",
+        "templates/full-product-run-manifest.json",
+        "templates/product-surface-stack-plan.json",
+        "templates/vertical-slice-graph.json",
+        "templates/work-unit-dispatch-readiness.json",
+        "templates/product-e2e-release-proof.json",
+        "templates/qa-repair-loop-state.json",
+        "scripts/validate_v2_runtime_contracts.py",
+        "scripts/factoryctl.py::command_validate_v2_runtime_contracts"
       ],
-      "implemented_artifact_refs": [],
-      "validation_refs": [],
-      "negative_fixture_refs": [],
+      "validation_refs": [
+        "tests/test_v2_runtime_contracts.py",
+        "factoryctl:validate-v2-runtime-contracts"
+      ],
+      "negative_fixture_refs": [
+        "fixtures/v2/reference-derived-negative-fixtures.json"
+      ],
       "minimum_truth_level_required": "runtime_integrated",
-      "current_truth_level": "missing",
-      "gap_summary": "The public repo has adjacent planning contracts, but the full product method runtime contract set is missing.",
-      "next_action": "Create the product method runtime contract set and validators before claiming full product build coverage.",
+      "current_truth_level": "runtime_integrated",
+      "gap_summary": "The public runtime contract set is validator-enforced; a specific product still needs live Hermes execution evidence before runtime_proven.",
+      "next_action": "Attach live product run evidence and Receipt Five before claiming an individual product was completed end to end.",
       "blocks_claim_ids": [
         "V2-P0-002-control-plane-owns-route-and-transition"
       ],
@@ -154,27 +211,34 @@
       ],
       "obligation": "All Hermes mutations must flow through a command queue and replayable reducer proof so agent, bridge and adapter paths cannot mutate state outside the deterministic lane.",
       "required_artifact_refs": [
+        "adapters/hermes/live_kanban_adapter.py",
         "schemas/hermes-blocked-first-protocol-receipt.schema.json",
         "schemas/hermes-reducer-mutation-proof.schema.json",
-        "adapters/hermes/live_kanban_adapter.py",
         "scripts/factory_v2_kernel.py::validate_factory_event_log"
       ],
       "implemented_artifact_refs": [
+        "schemas/hermes-blocked-first-protocol-receipt.schema.json",
+        "templates/hermes-blocked-first-protocol-receipt.json",
         "schemas/hermes-reducer-mutation-proof.schema.json",
+        "templates/hermes-reducer-mutation-proof.json",
         "adapters/hermes/live_kanban_adapter.py",
-        "scripts/factory_v2_kernel.py::validate_factory_event_log"
+        "scripts/factory_v2_kernel.py::validate_factory_event_log",
+        "scripts/validate_v2_runtime_contracts.py"
       ],
       "validation_refs": [
         "tests/test_hermes_live_kanban_adapter.py",
-        "tests/test_factory_v2_kernel.py"
+        "tests/test_factory_v2_kernel.py",
+        "tests/test_v2_runtime_contracts.py",
+        "factoryctl:validate-v2-runtime-contracts"
       ],
       "negative_fixture_refs": [
-        "fixtures/incidents/f3-blocked-f4-ready.json"
+        "fixtures/incidents/f3-blocked-f4-ready.json",
+        "fixtures/v2/reference-derived-negative-fixtures.json"
       ],
       "minimum_truth_level_required": "runtime_integrated",
-      "current_truth_level": "contract_only",
-      "gap_summary": "Reducer proof and adapter checks exist, but command queue and replay coverage are not total across all Hermes mutation paths.",
-      "next_action": "Centralize Hermes mutations through command queue and replay before claiming runtime-integrated determinism.",
+      "current_truth_level": "runtime_integrated",
+      "gap_summary": "Reducer/replay contracts and Hermes blocked-first requirements are validator-enforced; operator-owned runtime replay across every mutation surface remains runtime proof work.",
+      "next_action": "Run a live Hermes board replay audit before claiming runtime_proven reducer monopoly.",
       "blocks_claim_ids": [
         "V2-P0-002-control-plane-owns-route-and-transition"
       ],
@@ -191,17 +255,30 @@
       ],
       "obligation": "Human-facing decisions need channel-aware delivery receipts, notification policy and channel packs so Telegram, Discord and Cockpit can prove what the operator received before asking for a decision.",
       "required_artifact_refs": [
+        "schemas/operator-channel-pack.schema.json",
+        "schemas/operator-delivery-receipt.schema.json",
+        "schemas/operator-notification-policy.schema.json"
+      ],
+      "implemented_artifact_refs": [
         "schemas/operator-delivery-receipt.schema.json",
         "schemas/operator-notification-policy.schema.json",
-        "schemas/operator-channel-pack.schema.json"
+        "schemas/operator-channel-pack.schema.json",
+        "templates/operator-delivery-receipt.json",
+        "templates/operator-notification-policy.json",
+        "templates/operator-channel-pack.json",
+        "scripts/validate_v2_runtime_contracts.py"
       ],
-      "implemented_artifact_refs": [],
-      "validation_refs": [],
-      "negative_fixture_refs": [],
+      "validation_refs": [
+        "tests/test_v2_runtime_contracts.py",
+        "factoryctl:validate-v2-runtime-contracts"
+      ],
+      "negative_fixture_refs": [
+        "fixtures/v2/reference-derived-negative-fixtures.json"
+      ],
       "minimum_truth_level_required": "runtime_integrated",
-      "current_truth_level": "missing",
-      "gap_summary": "No delivery receipt, notification policy or channel pack schema exists.",
-      "next_action": "Add channel delivery contracts before claiming human gates are reliable on operator chat surfaces.",
+      "current_truth_level": "runtime_integrated",
+      "gap_summary": "Operator delivery contracts are validator-enforced; live Telegram/Discord/Cockpit delivery proof is still needed per deployment.",
+      "next_action": "Attach channel-specific delivery receipts from the target operator interface before runtime_proven UX claims.",
       "blocks_claim_ids": [
         "V2-P0-009-human-gates-require-delivered-decision-packets"
       ],
@@ -219,32 +296,45 @@
       ],
       "obligation": "Product Experience needs detailed brand strategy, identity system, component registry, accessibility report, visual regression proof and Storybook-equivalent catalog before interface maturity can be claimed.",
       "required_artifact_refs": [
-        "schemas/brand-strategy.schema.json",
-        "schemas/identity-system.schema.json",
-        "schemas/component-registry.schema.json",
         "schemas/accessibility-report.schema.json",
-        "schemas/visual-regression-proof.schema.json",
-        "schemas/storybook-equivalent-catalog.schema.json"
+        "schemas/brand-strategy.schema.json",
+        "schemas/component-registry.schema.json",
+        "schemas/identity-system.schema.json",
+        "schemas/storybook-equivalent-catalog.schema.json",
+        "schemas/visual-regression-proof.schema.json"
       ],
       "implemented_artifact_refs": [
         "schemas/product-experience-control-plane.schema.json",
         "schemas/product-experience-plan.schema.json",
         "schemas/project-design-system.schema.json",
         "schemas/professional-design-process.schema.json",
-        "schemas/reference-quality-packet.schema.json"
+        "schemas/reference-quality-packet.schema.json",
+        "schemas/brand-strategy.schema.json",
+        "schemas/identity-system.schema.json",
+        "schemas/component-registry.schema.json",
+        "schemas/accessibility-report.schema.json",
+        "schemas/visual-regression-proof.schema.json",
+        "schemas/storybook-equivalent-catalog.schema.json",
+        "templates/brand-strategy.json",
+        "templates/identity-system.json",
+        "templates/component-registry.json",
+        "templates/accessibility-report.json",
+        "templates/visual-regression-proof.json",
+        "templates/storybook-equivalent-catalog.json",
+        "scripts/validate_v2_runtime_contracts.py"
       ],
       "validation_refs": [
-        "tests/test_operator_experience.py",
-        "tests/test_factory_self_improvement.py",
-        "tests/test_factoryctl.py"
+        "tests/test_v2_runtime_contracts.py",
+        "factoryctl:validate-v2-runtime-contracts"
       ],
       "negative_fixture_refs": [
-        "examples/cards/v35_invalid_product_face.md"
+        "examples/cards/v35_invalid_product_face.md",
+        "fixtures/v2/reference-derived-negative-fixtures.json"
       ],
       "minimum_truth_level_required": "runtime_integrated",
-      "current_truth_level": "contract_only",
-      "gap_summary": "The control plane exists, but the detailed brand/front/design evidence stack is incomplete.",
-      "next_action": "Materialize the detailed design/frontend contracts and validators before calling Product Experience complete.",
+      "current_truth_level": "runtime_integrated",
+      "gap_summary": "The detailed Product Experience evidence stack is public and validator-enforced; product-specific visual proof still belongs to each live product run.",
+      "next_action": "Require product-specific screenshots, accessibility and regression evidence before claiming product interface completion.",
       "blocks_claim_ids": [
         "V2-P0-006-product-experience-is-a-control-plane"
       ],
@@ -261,29 +351,41 @@
       ],
       "obligation": "Security must have route contracts, state ledger, capability broker, capability leases and security profiles so architecture security is enforceable before material work.",
       "required_artifact_refs": [
-        "schemas/security-route-contract.schema.json",
-        "schemas/security-state-ledger.schema.json",
         "schemas/capability-broker.schema.json",
         "schemas/capability-lease.schema.json",
-        "schemas/security-profile.schema.json"
+        "schemas/security-profile.schema.json",
+        "schemas/security-route-contract.schema.json",
+        "schemas/security-state-ledger.schema.json"
       ],
       "implemented_artifact_refs": [
         "schemas/security-contract.schema.json",
         "schemas/security-architecture-plan.schema.json",
         "schemas/privacy-compliance-plan.schema.json",
-        "schemas/supply-chain-proof.schema.json"
+        "schemas/supply-chain-proof.schema.json",
+        "schemas/security-route-contract.schema.json",
+        "schemas/security-state-ledger.schema.json",
+        "schemas/capability-broker.schema.json",
+        "schemas/capability-lease.schema.json",
+        "schemas/security-profile.schema.json",
+        "templates/security-route-contract.json",
+        "templates/security-state-ledger.json",
+        "templates/capability-broker.json",
+        "templates/capability-lease.json",
+        "templates/security-profile.json",
+        "scripts/validate_v2_runtime_contracts.py"
       ],
       "validation_refs": [
-        "tests/test_runtime_hardening.py",
-        "tests/test_factoryctl.py"
+        "tests/test_v2_runtime_contracts.py",
+        "factoryctl:validate-v2-runtime-contracts"
       ],
       "negative_fixture_refs": [
-        "examples/cards/v35_invalid_security_no_scan.md"
+        "examples/cards/v35_invalid_security_no_scan.md",
+        "fixtures/v2/reference-derived-negative-fixtures.json"
       ],
       "minimum_truth_level_required": "runtime_integrated",
-      "current_truth_level": "contract_only",
-      "gap_summary": "Core security contracts exist, but the full Security OS runtime matrix is not materialized.",
-      "next_action": "Build the Security OS runtime matrix before claiming born-secure architecture is complete.",
+      "current_truth_level": "runtime_integrated",
+      "gap_summary": "Security OS matrix contracts are validator-enforced; product-specific threat evidence and specialist reviews remain required per product.",
+      "next_action": "Attach product-specific security route, state ledger and specialist results before any runtime_proven security claim.",
       "blocks_claim_ids": [
         "V2-P0-008-security-is-born-in-architecture"
       ],
@@ -300,24 +402,29 @@
       ],
       "obligation": "Reference superiority claims need a reference-derived negative fixture schema, corpus and runner so public comparison claims are proven instead of argued.",
       "required_artifact_refs": [
-        "schemas/reference-derived-negative-fixture.schema.json",
         "fixtures/v2/reference-derived-negative-fixtures.json",
+        "schemas/reference-derived-negative-fixture.schema.json",
         "scripts/validate_reference_superiority.py"
       ],
       "implemented_artifact_refs": [
+        "schemas/reference-derived-negative-fixture.schema.json",
+        "fixtures/v2/reference-derived-negative-fixtures.json",
+        "scripts/validate_reference_superiority.py",
+        "scripts/factoryctl.py::command_validate_reference_superiority",
         "schemas/reference-superiority-claim.schema.json",
         "templates/reference-superiority-claim.json"
       ],
       "validation_refs": [
-        "tests/test_factory_v2_kernel.py"
+        "tests/test_v2_runtime_contracts.py",
+        "factoryctl:validate-reference-superiority"
       ],
       "negative_fixture_refs": [
-        "fixtures/v2/v2-p0-negative-fixtures.json"
+        "fixtures/v2/reference-derived-negative-fixtures.json"
       ],
       "minimum_truth_level_required": "kernel_implemented",
-      "current_truth_level": "contract_only",
-      "gap_summary": "A claim contract exists, but no dedicated reference-derived fixture corpus or runner exists.",
-      "next_action": "Build the reference superiority runner before making broad stronger-than-reference claims.",
+      "current_truth_level": "kernel_implemented",
+      "gap_summary": "The reference-derived negative fixture runner exists; broad public superiority still requires keeping the corpus current as references evolve.",
+      "next_action": "Expand and refresh the corpus whenever a new reference project or method enters the comparison.",
       "blocks_claim_ids": [
         "V2-P0-010-reference-superiority-claims-need-proof"
       ],
