@@ -57,6 +57,39 @@ def solana_ai_kit_usage_receipt() -> dict:
     }
 
 
+def human_gate_packet_fixture() -> dict:
+    return {
+        "gate_type": "product_sot_owner_decision",
+        "required_approvers": ["product-owner"],
+        "decision_state": "pending",
+        "operator_briefing_package_ref": "reports/product-alpha/operator-briefing-package.md",
+        "approval_request_ref": "reports/product-alpha/APPROVAL_REQUEST.json",
+        "evidence_index_ref": "reports/product-alpha/EVIDENCE_INDEX.json",
+        "owner_review_ref": "reports/product-alpha/OWNER_REVIEW.md",
+        "required_decision_assets": [
+            "markdown_document",
+            "pdf_document",
+            "approval_request_json",
+            "evidence_index_json",
+            "owner_review_markdown",
+        ],
+        "optional_explainer_assets": ["diagram"],
+        "decision_package_delivery": {
+            "operator_interface": "telegram",
+            "push_required": True,
+            "summary_only_forbidden": True,
+            "material_before_question": True,
+            "attachment_order": [
+                "markdown_document",
+                "pdf_document",
+                "approval_request_json",
+                "evidence_index_json",
+                "owner_review_markdown",
+            ],
+        },
+    }
+
+
 def materialize_product_sot_frontier(card: dict) -> dict:
     card["universal_signal_intake"] = {
         "record_type": "universal_signal_intake",
@@ -302,9 +335,10 @@ def private_windows_workspace_ref() -> str:
 
 
 class FakeDispatchHermes:
-    def __init__(self, *, native_spawned: bool = False) -> None:
+    def __init__(self, *, native_spawned: bool = False, ready_step_key: str | None = "F15-runtime-execution") -> None:
         self.calls: list[list[str]] = []
         self.native_spawned = native_spawned
+        self.ready_step_key = ready_step_key
         self.running_list_calls = 0
 
     def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
@@ -321,11 +355,14 @@ class FakeDispatchHermes:
                                 "id": READY_TASK_ID,
                                 "assignee": "implementation-worker",
                                 "workspace": private_windows_workspace_ref(),
+                                **({"current_step_key": self.ready_step_key} if self.ready_step_key else {}),
                             }
                         ]
                     ),
                     stderr="",
                 )
+            if status in {"todo", "blocked", "done"}:
+                return subprocess.CompletedProcess(argv, 0, stdout="[]", stderr="")
             if status == "running":
                 self.running_list_calls += 1
                 if self.running_list_calls == 1:
@@ -339,6 +376,7 @@ class FakeDispatchHermes:
                                 "id": READY_TASK_ID,
                                 "assignee": "implementation-worker",
                                 "current_run_id": 42,
+                                "current_step_key": "F15-runtime-execution",
                                 "worker_pid": 12345,
                                 "workspace": private_windows_workspace_ref(),
                             }
@@ -352,6 +390,7 @@ class FakeDispatchHermes:
                     {
                         "task_id": READY_TASK_ID,
                         "assignee": "implementation-worker",
+                        "current_step_key": "F15-runtime-execution",
                         "workspace": private_windows_workspace_ref(),
                     }
                 ]
@@ -383,6 +422,7 @@ class FakeDispatchHermes:
                         "id": argv[5],
                         "status": "running",
                         "assignee": "implementation-worker",
+                        "current_step_key": "F15-runtime-execution",
                         "current_run_id": 42,
                         "worker_pid": 12345,
                         "workspace": private_windows_workspace_ref(),
@@ -2659,13 +2699,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         )
 
         for body in (review_body, authority_body):
-            self.assertEqual(body["phase"], "F12")
+            self.assertEqual(body["phase"], "F15")
             self.assertEqual(body["risk_effective"], "R2")
             self.assertEqual(
                 body["surfaces"],
                 ["code", "release path", "rollback", "monitoring", "support", "customer readiness"],
             )
-            self.assertEqual(body["route_repair_contract"]["phase"], "F12")
+            self.assertEqual(body["route_repair_contract"]["phase"], "F15")
             self.assertEqual(body["route_repair_contract"]["risk_effective"], "R2")
             self.assertIn("phase", body["route_repair_contract"]["required_card_fields"])
             self.assertIn("risk_effective", body["route_repair_contract"]["required_card_fields"])
@@ -3758,12 +3798,23 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(spawned["workspace"], "redacted:absolute-hermes-workspace")
         self.assertEqual(result["already_running_after_dispatch"], [])
 
+    def test_dispatch_skips_native_dispatch_when_ready_task_lacks_phase_binding(self) -> None:
+        fake = FakeDispatchHermes(ready_step_key=None)
+        args = adapter.build_parser().parse_args(["dispatch", "--board", TEST_BOARD])
+
+        result = adapter.dispatch(args, runner=fake)
+
+        self.assertTrue(result["dispatch_skipped"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "repair_board_contract")
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_reports_ready_work_without_creating_or_dispatching(self) -> None:
         fake = FakeHermes()
         fake.tasks[READY_TASK_ID] = {
             "id": READY_TASK_ID,
             "status": "ready",
             "assignee": "implementation-worker",
+            "current_step_key": "F15-runtime-execution",
             "body": "{}",
             "events": [],
         }
@@ -3777,6 +3828,25 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIsNone(result["remediation_task_id"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+
+    def test_no_idle_blocks_ready_work_without_structured_phase_binding(self) -> None:
+        fake = FakeHermes()
+        fake.tasks[READY_TASK_ID] = {
+            "id": READY_TASK_ID,
+            "status": "ready",
+            "assignee": "implementation-worker",
+            "body": "{}",
+            "events": [],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["mode"], "no-idle")
+        self.assertEqual(result["no_idle_state"]["classification"], "repair_board_contract")
+        self.assertTrue(result["no_idle_state"]["blocked"])
+        self.assertFalse(result["no_idle_state"]["native_dispatch_required_next"])
+        self.assertIsNone(result["remediation_task_id"])
 
     def test_native_workflow_state_updates_hermes_sqlite_columns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -3949,7 +4019,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             "id": "t_" + "gate0001",
             "status": "blocked",
             "assignee": "human-gate-clerk",
-            "body": json.dumps({"marker": "human_gate", "reason": "awaiting human approval"}),
+            "body": json.dumps(
+                {
+                    "marker": "human_gate",
+                    "reason": "awaiting human approval",
+                    "human_gate_packet": human_gate_packet_fixture(),
+                }
+            ),
             "events": [{"type": "blocked", "reason": "human gate"}],
         }
         args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
@@ -4033,7 +4109,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(state["remediation_task_created"])
         self.assertEqual(state["remediation_task_status"], "ready")
         self.assertTrue(state["native_dispatch_required_next"])
-        self.assertIsNone(result["board_reconcile_plan"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "repair_board_contract")
         self.assertIsNotNone(result["targeted_remediation_plan"])
         created_task = next(
             task for task in fake.tasks.values()
@@ -4153,6 +4229,50 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_blocks_ready_future_phase_when_prior_phase_is_blocked(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["t_" + "f3block"] = {
+            "id": "t_" + "f3block",
+            "status": "blocked",
+            "title": "F3 source resolution blocked",
+            "current_step_key": "F3-source-resolution",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_deterministic_reconcile_task",
+                    "kanban_workflow_binding": {
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F3-source-resolution",
+                    },
+                }
+            ),
+        }
+        fake.tasks["t_" + "f4ready"] = {
+            "id": "t_" + "f4ready",
+            "status": "ready",
+            "title": "F4 outcome work",
+            "current_step_key": "F4-product-outcome-and-discovery",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_deterministic_reconcile_task",
+                    "kanban_workflow_binding": {
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F4-product-outcome-and-discovery",
+                    },
+                }
+            ),
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "blocked")
+        self.assertEqual(state["classification"], "factory_phase_invariant_violation")
+        self.assertFalse(state["native_dispatch_required_next"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "block_invariant_violation")
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_treats_delivered_product_sot_package_as_human_gate(self) -> None:
         fake = FakeHermes()
         failed_review_id = "t_" + "review01"
@@ -4209,7 +4329,12 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             "status": "blocked",
             "assignee": "human-gate-clerk",
             "title": "Prepare Product SOT owner decision package",
-            "body": json.dumps({"marker": "factory_no_idle_post_review_gate_package"}),
+            "body": json.dumps(
+                {
+                    "marker": "factory_no_idle_post_review_gate_package",
+                    "human_gate_packet": human_gate_packet_fixture(),
+                }
+            ),
             "latest_summary": (
                 "Human decision required after delivered Product SOT package: choose approve "
                 "Product SOT candidate for method-contract planning only, request exact changes, or rebaseline."
@@ -4251,6 +4376,38 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_does_not_treat_text_only_human_gate_as_decision_ready(self) -> None:
+        fake = FakeHermes()
+        gate_id = "t_" + "gate0001"
+        fake.tasks[gate_id] = {
+            "id": gate_id,
+            "status": "blocked",
+            "assignee": "human-gate-clerk",
+            "title": "Human gate awaiting owner approval",
+            "body": json.dumps({"marker": "human_gate", "reason": "awaiting human decision"}),
+            "latest_summary": (
+                "Decision package prepared and delivered. Awaiting human approval."
+            ),
+            "comments": [
+                {
+                    "author": "human-gate-clerk",
+                    "body": "PDF delivered, approval request delivered, ready for operator decision.",
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertEqual(state["classification"], "deterministic_board_reconcile_task_created")
+        self.assertFalse(state["human_gate_required"])
+        self.assertTrue(state["remediation_required"])
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "repair_board_contract")
+        self.assertIsNotNone(result["remediation_task_id"])
+
     def test_no_idle_reports_dependency_gated_todo_behind_human_gate_without_remediation(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0001"
@@ -4261,7 +4418,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             "status": "blocked",
             "assignee": "human-gate-clerk",
             "title": "Human architecture gate",
-            "body": json.dumps({"marker": "human_gate", "reason": "awaiting human decision"}),
+            "body": json.dumps(
+                {
+                    "marker": "human_gate",
+                    "reason": "awaiting human decision",
+                    "human_gate_packet": human_gate_packet_fixture(),
+                }
+            ),
             "events": [{"kind": "blocked", "payload": {"reason": "human gate"}}],
         }
         fake.tasks[mid_id] = {
@@ -4475,7 +4638,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                         "id": gate_id,
                         "status": "blocked",
                         "assignee": "human-gate-clerk",
-                        "body": "human gate: awaiting human decision",
+                        "body": json.dumps(
+                            {
+                                "marker": "human_gate",
+                                "reason": "awaiting human decision",
+                                "human_gate_packet": human_gate_packet_fixture(),
+                            }
+                        ),
                     },
                     {
                         "id": blocker_id,

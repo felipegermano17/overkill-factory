@@ -7,16 +7,16 @@
     "No public worker may directly approve its own output.",
     "No public worker may directly mutate final card state; state changes go through Hermes adapter gates and durable events.",
     "No public worker may touch production, signing authority, funds, secrets, cloud IAM, DNS, KMS or destructive cleanup without the matching human or runtime gate.",
-    "Discord is an operator operator console only; it may request, display and record decisions, but Hermes remains authoritative.",
+    "Discord is an operator console only; it may request, display and record decisions, but Hermes remains authoritative.",
     "Evidence must be public-safe before it is written to this repository."
   ],
   "classes": {
     "orchestrator": {
       "label": "Orchestrator",
-      "plain_purpose": "Keeps phase, risk, routing and blocked/ready decisions coherent.",
-      "may": ["route work", "request specialist packets", "block unsafe progression"],
-      "must_not": ["approve final gates", "execute implementation", "hide missing evidence"],
-      "evidence_required": ["routing summary", "blocked reason when blocked", "worker graph refs"],
+      "plain_purpose": "Keeps phase, risk, reducer route records and blocked/ready state coherent.",
+      "may": ["materialize reducer-approved route records", "request specialist packets only when gate report or worker registry requires them", "block progression only when reducer or gate evidence requires it"],
+      "must_not": ["approve final gates", "execute implementation", "hide missing evidence", "choose route, phase, gate, specialist or transition from prose"],
+      "evidence_required": ["reducer route record", "blocked reason when blocked", "worker graph refs"],
       "can_mutate_card_state": false,
       "can_approve_final_gate": false
     },
@@ -96,7 +96,7 @@
       "label": "Operator Interface",
       "plain_purpose": "Talks to the human operator through the selected primary interface and presents the operator console.",
       "may": ["explain state", "receive input", "ask for decisions", "send public-safe status and briefing attachments"],
-      "must_not": ["choose specialists outside Kanban", "mark work done", "store Telegram, Discord or Cockpit as source of truth"],
+      "must_not": ["choose specialists", "mark work done", "store Telegram, Discord or Cockpit as source of truth"],
       "evidence_required": ["message intent", "Hermes event ref when applicable", "public-safe summary", "operator interface profile"],
       "can_mutate_card_state": false,
       "can_approve_final_gate": false

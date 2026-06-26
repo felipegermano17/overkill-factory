@@ -145,12 +145,12 @@
     {
       "phase": "planning",
       "allowed_user_work": ["approve or reject material scope and risk decisions"],
-      "factory_work": ["create Product SOT, route methods, research and plans"]
+      "factory_work": ["create Product SOT, materialize Method OS route, research and plans"]
     },
     {
       "phase": "execution",
       "allowed_user_work": ["provide access only when required"],
-      "factory_work": ["route workers, run checks, capture evidence and review"]
+      "factory_work": ["materialize reducer-approved worker routes, run checks, capture evidence and review"]
     },
     {
       "phase": "promotion",

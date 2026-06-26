@@ -502,6 +502,7 @@ def build_factory_card_candidate(
     labels: set[str],
     default_status: str,
     sdlc_feedback_loop_ref: str,
+    owner_worker: str,
 ) -> dict[str, Any]:
     critical = decision == "critical_factory_change"
     documentation = decision == "documentation_only"
@@ -525,7 +526,7 @@ def build_factory_card_candidate(
         "surfaces": sorted(labels) or ["factory"],
         "risk_initial": risk,
         "risk_effective": risk,
-        "owner_worker": "factory-mechanic-loop",
+        "owner_worker": owner_worker,
         "executor_identity": "unassigned",
         "reviewer_identity": "independent-review-required",
         "required_gates": required_gates,
@@ -556,17 +557,45 @@ def triage_decision_for_issue_intake(decision: str) -> str:
     return "work_unit"
 
 
+def registered_worker_ids() -> set[str]:
+    registry = load_json(ROOT / "agents" / "worker-registry.public.json")
+    workers = registry.get("workers") if isinstance(registry, dict) else []
+    return {
+        str(worker.get("worker_id") or "").strip()
+        for worker in workers
+        if isinstance(worker, dict) and str(worker.get("worker_id") or "").strip()
+    }
+
+
+def resolve_owner_issue_profile(config: dict[str, Any], decision: str) -> tuple[str, str]:
+    policy = config.get("profile_resolution") if isinstance(config.get("profile_resolution"), dict) else {}
+    mapping = policy.get("decision_to_profile") if isinstance(policy.get("decision_to_profile"), dict) else {}
+    selected = str(mapping.get(decision) or "").strip()
+    if not selected:
+        fallback_decision = str(policy.get("fallback_decision") or "needs_human_triage").strip()
+        selected = str(mapping.get(fallback_decision) or "human-gate-clerk").strip()
+        return selected, "fallback_profile_resolution"
+    if selected not in registered_worker_ids():
+        fallback_decision = str(policy.get("fallback_decision") or "needs_human_triage").strip()
+        fallback = str(mapping.get(fallback_decision) or "human-gate-clerk").strip()
+        if fallback in registered_worker_ids():
+            return fallback, f"unregistered_profile:{selected};fallback:{fallback_decision}"
+        return "human-gate-clerk", f"unregistered_profile:{selected};hard_fallback:human-gate-clerk"
+    return selected, "owner_issue_intake_config_profile_resolution"
+
+
 def build_issue_intake_sdlc_feedback_loop(
     issue_ref: str,
     title: str,
     decision: str,
     reason: str,
     dedupe_key: str,
+    config: dict[str, Any],
 ) -> dict[str, Any]:
     critical = decision == "critical_factory_change"
     feedback_ref = f"external:operator-sdlc-feedback-loop-{dedupe_key}"
     source_ref = f"external:operator-owner-issue-{dedupe_key}"
-    selected_profile = "human-gate-clerk" if critical else "factory-mechanic-loop"
+    selected_profile, profile_selection_basis = resolve_owner_issue_profile(config, decision)
     selected_model_class = "human_only" if decision in {"critical_factory_change", "needs_human_triage"} else "balanced"
     promotion_boundary = "requires_human_gate" if critical else "public_issue_only"
     return {
@@ -597,6 +626,7 @@ def build_issue_intake_sdlc_feedback_loop(
             "selected_profile": selected_profile,
             "selected_model_class": selected_model_class,
             "selection_basis": {
+                "profile_resolution": profile_selection_basis,
                 "cost": "bounded public issue intake",
                 "speed": "dry-run candidate creation only",
                 "quality": "requires schema validation and independent review before activation",
@@ -676,6 +706,7 @@ def build_issue_intake_report(config: dict[str, Any], issues: list[dict[str, Any
                 decision,
                 reason,
                 row["dedupe_key"],
+                config,
             )
             feedback_ref = feedback_loop["loop_id"]
             row["sdlc_feedback_loop_ref"] = feedback_ref
@@ -688,6 +719,7 @@ def build_issue_intake_report(config: dict[str, Any], issues: list[dict[str, Any
                 labels,
                 card_status,
                 feedback_ref,
+                str(feedback_loop["routing_decision"]["selected_profile"]),
             )
         decisions.append(row)
     return {

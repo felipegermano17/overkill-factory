@@ -51,8 +51,9 @@ it as profile drift unless it has been promoted through the worker contract.
 The dedicated exception is `overkill-factory-gerente`: it is a gateway/interface
 profile for the selected primary operator interface, such as Telegram, Discord
 or Cockpit. It may talk to the operator, receive inputs, push status and attach
-briefing packages, but it must not choose specialists outside the Kanban,
-execute material work or mark cards done.
+briefing packages, but it must not choose specialists at all; it may only
+display or forward specialists resolved by PhaseGraph and the worker registry.
+It must not execute material work or mark cards done.
 
 ## Builder Layer
 

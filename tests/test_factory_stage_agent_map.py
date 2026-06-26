@@ -20,6 +20,9 @@ class FactoryStageAgentMapTest(unittest.TestCase):
         self.workflow_catalog = json.loads(
             (ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8")
         )
+        self.worker_profiles = json.loads(
+            (ROOT / "agents" / "worker-profiles.public.json").read_text(encoding="utf-8")
+        )
 
     def test_stage_map_names_every_canonical_stage(self) -> None:
         for stage_number in range(1, 33):
@@ -92,6 +95,38 @@ class FactoryStageAgentMapTest(unittest.TestCase):
         self.assertTrue(
             any("schema-backed runtime validation" in item for item in executable_plan["completion_detection"])
         )
+
+    def test_agent_contract_language_does_not_grant_free_route_authority(self) -> None:
+        checked_text = "\n".join(
+            [
+                self.stage_map,
+                json.dumps(self.registry, sort_keys=True),
+                json.dumps(self.worker_profiles, sort_keys=True),
+                (ROOT / "docs" / "agents" / "worker-profiles.md").read_text(encoding="utf-8"),
+                (ROOT / "agents" / "worker-roster.md").read_text(encoding="utf-8"),
+                (ROOT / "docs" / "control-tower" / "discord-control-tower-os.md").read_text(
+                    encoding="utf-8"
+                ),
+            ]
+        )
+        forbidden_phrases = [
+            "Choose method weight",
+            "Select product/surface capability coverage",
+            "Decide if the line is allowed",
+            "surface builder selected by `factory-orchestrator`",
+            "Decide released, release candidate",
+            "The worker profile still decides authority",
+            "route workers",
+            "routing decision",
+            "routes and points",
+            "Chooses Security Architecture Plan routes",
+            "Selects current worker results",
+            "Select QA modes",
+        ]
+
+        for phrase in forbidden_phrases:
+            with self.subTest(phrase=phrase):
+                self.assertNotIn(phrase, checked_text)
 
 
 if __name__ == "__main__":

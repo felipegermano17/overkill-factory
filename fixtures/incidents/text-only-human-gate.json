@@ -1,0 +1,27 @@
+{
+  "incident_id": "text-only-human-gate",
+  "description": "A blocked card with approval prose but no human_gate_packet is not a valid human gate.",
+  "board": "product-alpha",
+  "snapshot": {
+    "rows": {
+      "blocked": [
+        {
+          "id": "task-text-gate",
+          "status": "blocked",
+          "title": "Owner approval needed",
+          "assignee": "human-gate-clerk",
+          "body": "Aguardando aprovacao humana. Responda aprovo, nao aprovo ou pedir ajuste."
+        }
+      ]
+    }
+  },
+  "expect": {
+    "plan_action": "repair_board_contract",
+    "native_dispatch_required_next": true,
+    "create_task_allowed": true,
+    "human_gate_required": false,
+    "user_decision_required": false,
+    "create_task_required_output": "canonical_factory_card",
+    "blocked_reason_contains": ["no canonical factory card"]
+  }
+}

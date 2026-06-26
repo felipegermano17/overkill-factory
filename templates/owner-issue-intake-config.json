@@ -14,5 +14,16 @@
     "critical_change_terms": ["registry", "binding", "adapter", "authority", "release", "security", "methodology"]
   },
   "default_card_status": "blocked",
+  "profile_resolution": {
+    "registry_ref": "agents/worker-registry.public.json",
+    "decision_to_profile": {
+      "critical_factory_change": "human-gate-clerk",
+      "needs_human_triage": "human-gate-clerk",
+      "documentation_only": "docs-os-worker",
+      "implementation_candidate": "skill-eval-distiller",
+      "private_operator_only": "human-gate-clerk"
+    },
+    "fallback_decision": "needs_human_triage"
+  },
   "public_comment_policy": "after_human_gate"
 }

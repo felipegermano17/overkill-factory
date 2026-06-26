@@ -444,6 +444,9 @@ SECRET_DELIVERY_SAFE_MODES = {
 SECRET_DELIVERY_EXCEPTION_MODES = {"startup_env", "runtime_file"}
 SOLANA_AI_KIT_PACK_ID = "solana-ai-kit-core"
 SOLANA_AI_KIT_USAGE_RECEIPT_FIELD = "solana_ai_kit_usage_receipt"
+SOLANA_AI_KIT_SOURCE = "https://github.com/solanabr/solana-ai-kit"
+SOLANA_AI_KIT_PINNED_REF = "v2.0.2"
+SOLANA_AI_KIT_PINNED_COMMIT = "4fb9d3d619467e068c1cf3120d3933aa933aeb21"
 PRIMARY_OPERATOR_INTERFACES = {"telegram", "discord", "cockpit", "codex_bridge", "cli", "api"}
 INTAKE_REQUEST_TYPE_ALIASES = {
     "new_product": "product_new",
@@ -2180,12 +2183,16 @@ def _solana_ai_kit_provider_record(value: Any) -> bool:
     provider_id = str(value.get("provider_id") or "").strip()
     pack_id = str(value.get("pack_id") or "").strip()
     source = str(value.get("source") or "").strip()
-    if provider_id != "solana-ai-kit":
-        return False
+    pinned_ref = str(value.get("pinned_ref") or "").strip()
+    pinned_commit = str(value.get("pinned_commit") or "").strip()
     return (
-        (pack_id == SOLANA_AI_KIT_PACK_ID or source == "https://github.com/solanabr/solana-ai-kit")
-        and pack_id in {"", SOLANA_AI_KIT_PACK_ID}
-        and source in {"", "https://github.com/solanabr/solana-ai-kit"}
+        provider_id == "solana-ai-kit"
+        and pack_id == SOLANA_AI_KIT_PACK_ID
+        and source == SOLANA_AI_KIT_SOURCE
+        and pinned_ref == SOLANA_AI_KIT_PINNED_REF
+        and pinned_commit == SOLANA_AI_KIT_PINNED_COMMIT
+        and value.get("required_before_execution") is True
+        and value.get("usage_receipt_required") is True
     )
 
 
@@ -2195,24 +2202,6 @@ def solana_domain_brain_materialized(card: dict[str, Any]) -> bool:
     for field in ("domain_brain_provider", "solana_domain_brain_provider"):
         if _solana_ai_kit_provider_record(card.get(field)):
             return True
-
-    intake = card.get("universal_signal_intake") if isinstance(card.get("universal_signal_intake"), dict) else {}
-    domain = intake.get("domain_routing") if isinstance(intake.get("domain_routing"), dict) else {}
-    if domain:
-        pack_ids = {str(pack).strip() for pack in _list_items(domain.get("capability_pack_ids"))}
-        provider_ref = str(domain.get("official_brain_provider_ref") or "").strip()
-        if (
-            SOLANA_AI_KIT_PACK_ID in pack_ids
-            and domain.get("official_brain_provider_required") is True
-            and f"packs.{SOLANA_AI_KIT_PACK_ID}.official_brain_provider" in provider_ref
-        ):
-            return True
-
-    contract = card.get("capability_pack_contract")
-    if SOLANA_AI_KIT_PACK_ID in _activated_capability_pack_ids(contract):
-        return True
-    if isinstance(contract, dict) and str(contract.get("pack_id") or "").strip() == SOLANA_AI_KIT_PACK_ID:
-        return True
 
     for field in SOLANA_DOMAIN_BRAIN_OUTPUT_FIELDS:
         result = card.get(field)
@@ -12336,6 +12325,19 @@ def build_ready_work_unit_hermes_materialization_plan(
         work_unit_id = str(packet.get("work_unit_id") or "").strip()
         packet_id = str(packet.get("packet_id") or "").strip()
         safe_packet = sanitize_public_refs(copy.deepcopy(packet))
+        workflow_template_id = FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID
+        current_step_key = "F15-runtime-execution"
+        safe_packet.setdefault("current_step_key", current_step_key)
+        safe_packet.setdefault(
+            "kanban_workflow_binding",
+            {
+                "workflow_template_id": workflow_template_id,
+                "current_step_key": current_step_key,
+                "runtime_field_required": True,
+                "fallback_body_binding": True,
+                "route_authority": "factory_phase_engine",
+            },
+        )
         task = {
             "task_plan_id": f"hermes-ready-work-unit-{slug_for_ref(work_unit_id)}",
             "packet_id": packet_id,
@@ -12343,6 +12345,8 @@ def build_ready_work_unit_hermes_materialization_plan(
             "owner_worker": owner_worker,
             "reviewer_role": str(packet.get("reviewer_role") or "").strip(),
             "title": _ready_work_unit_hermes_title(packet),
+            "workflow_template_id": workflow_template_id,
+            "current_step_key": current_step_key,
             "materialization_state": "planned_pending_hermes_runtime_gate",
             "initial_status": "unassigned_pending_block",
             "body_format": "ready_work_unit_execution_request_json",
@@ -14961,6 +14965,7 @@ def domain_brain_provider_for_worker(worker_id: str, card: dict[str, Any]) -> di
         "provider_id": provider.get("provider_id"),
         "source": provider.get("source"),
         "pinned_ref": provider.get("pinned_ref"),
+        "pinned_commit": provider.get("pinned_commit"),
         "required_before_execution": provider.get("required_before_execution") is True,
         "install_modes": _list_items(provider.get("install_modes")),
         "load_contract": _list_items(provider.get("load_contract")),
@@ -15973,6 +15978,12 @@ def validate_worker_result_record(
     errors.extend(async_background_reconciliation_errors(data, record_type=record_type))
 
     if record_type == "human_gate_record":
+        if card is None:
+            errors.append("human_gate_record validation requires the source card")
+        else:
+            packet = card.get("human_gate_packet") if isinstance(card.get("human_gate_packet"), dict) else {}
+            for packet_error in validate_human_gate_packet(packet, require_decision_package=True):
+                errors.append(f"human_gate_packet: {packet_error}")
         if data.get("decision") != "approved":
             errors.append("human gate decision must be approved")
         if not str(data.get("human_actor") or "").strip():
@@ -17466,6 +17477,9 @@ def build_human_gate_record(
         raise ValueError("approved human gates require at least one evidence ref")
 
     packet = card.get("human_gate_packet", {}) if isinstance(card.get("human_gate_packet"), dict) else {}
+    packet_errors = validate_human_gate_packet(packet, require_decision_package=True)
+    if packet_errors:
+        raise ValueError("human gate record requires a complete human_gate_packet: " + "; ".join(packet_errors))
     r4_gate = card.get("r4_gate", {}) if isinstance(card.get("r4_gate"), dict) else {}
     scan_packet = card.get("security_scan_packet", {}) if isinstance(card.get("security_scan_packet"), dict) else {}
 
@@ -18098,6 +18112,125 @@ def factory_card_from_task(task: dict[str, Any]) -> dict[str, Any] | None:
     return None
 
 
+def factory_phase_id_from_step_key(value: Any) -> str:
+    text = str(value or "").strip().upper()
+    match = re.match(r"^F(\d+)(?:-|$)", text)
+    if not match:
+        return ""
+    return f"F{int(match.group(1))}"
+
+
+def _structured_phase_id_from_payload(payload: dict[str, Any]) -> str:
+    phase_engine = payload.get("phase_engine") if isinstance(payload.get("phase_engine"), dict) else {}
+    computed = str(phase_engine.get("computed_phase_id") or "").strip().upper()
+    if factory_phase_rank(computed) >= 0:
+        return computed
+    for key in ("current_step_key", "step_key"):
+        phase_id = factory_phase_id_from_step_key(payload.get(key))
+        if phase_id:
+            return phase_id
+    binding = payload.get("kanban_workflow_binding") if isinstance(payload.get("kanban_workflow_binding"), dict) else {}
+    phase_id = factory_phase_id_from_step_key(binding.get("current_step_key"))
+    if phase_id:
+        return phase_id
+    return ""
+
+
+def structured_phase_id_from_task(task: dict[str, Any]) -> str:
+    """Read phase only from structured runtime fields or a canonical card."""
+    for key in ("current_step_key", "step_key"):
+        phase_id = factory_phase_id_from_step_key(task.get(key))
+        if phase_id:
+            return phase_id
+    for key in ("metadata", "body", "description", "result"):
+        payload = _json_object_from_possible_string(task.get(key))
+        if isinstance(payload, dict):
+            phase_id = _structured_phase_id_from_payload(payload)
+            if phase_id:
+                return phase_id
+    card = factory_card_from_task(task)
+    if card is not None:
+        phase_engine = factory_phase_engine_state(card, allow_scaffold_artifacts=False)
+        return str(phase_engine.get("computed_phase_id") or "").strip().upper()
+    return ""
+
+
+def board_reconcile_active_phase_blockers(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
+    active: list[tuple[str, dict[str, Any], str, int]] = []
+    for status in ("running", "in_progress", "doing", "ready"):
+        for task in rows.get(status, []):
+            phase_id = structured_phase_id_from_task(task)
+            rank = factory_phase_rank(phase_id)
+            if rank >= 0:
+                active.append((status, task, phase_id, rank))
+    if not active:
+        return []
+
+    blocked_items: list[tuple[dict[str, Any], str, int]] = []
+    for task in rows.get("blocked", []):
+        phase_id = structured_phase_id_from_task(task)
+        blocked_items.append((task, phase_id, factory_phase_rank(phase_id)))
+
+    blockers: list[str] = []
+    for active_status, active_task, active_phase, active_rank in active:
+        for blocked_task, blocked_phase, blocked_rank in blocked_items:
+            if blocked_rank < 0:
+                blockers.append(
+                    "active "
+                    + active_status
+                    + " task "
+                    + _task_public_ref(active_task)
+                    + f" at {active_phase} cannot proceed while blocked task "
+                    + _task_public_ref(blocked_task)
+                    + " has no structured phase binding"
+                )
+            elif blocked_rank < active_rank:
+                blockers.append(
+                    "active "
+                    + active_status
+                    + " task "
+                    + _task_public_ref(active_task)
+                    + f" at {active_phase} cannot proceed while earlier blocked task "
+                    + _task_public_ref(blocked_task)
+                    + f" remains at {blocked_phase}"
+                )
+    return sorted(set(blockers))
+
+
+def board_reconcile_ready_dispatch_blockers(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[list[str], dict[str, Any] | None, dict[str, Any] | None, str | None]:
+    blockers: list[str] = []
+    selected_repair_card: dict[str, Any] | None = None
+    selected_repair_ref: dict[str, Any] | None = None
+    selected_repair_action: str | None = None
+
+    for task in rows.get("ready", []):
+        task_ref = _task_public_ref(task)
+        phase_id = structured_phase_id_from_task(task)
+        if not phase_id:
+            blockers.append(
+                f"ready task {task_ref} cannot dispatch without structured phase binding"
+            )
+            selected_repair_action = selected_repair_action or "repair_board_contract"
+
+        card = factory_card_from_task(task)
+        if card is None:
+            continue
+
+        domain_errors = validate_solana_domain_brain_route(card)
+        if domain_errors:
+            selected_repair_card = selected_repair_card or card
+            selected_repair_ref = selected_repair_ref or board_reconcile_task_ref(task, status="ready")
+            selected_repair_ref["selection_reason"] = (
+                "ready canonical Solana/onchain card selected for deterministic domain-brain repair"
+            )
+            selected_repair_action = "repair_domain_brain_route"
+            blockers.extend(f"ready task {task_ref} cannot dispatch: {error}" for error in domain_errors)
+
+    return sorted(set(blockers)), selected_repair_card, selected_repair_ref, selected_repair_action
+
+
 def board_rows_from_snapshot(snapshot: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     rows: dict[str, list[dict[str, Any]]] = {status: [] for status in ("ready", "running", "todo", "blocked", "done")}
     raw_rows = snapshot.get("rows") if isinstance(snapshot.get("rows"), dict) else snapshot.get("tasks_by_status")
@@ -18272,8 +18405,46 @@ def build_board_reconcile_plan(
     human_gate_required = False
     operator_input_required = False
     create_task_contract: dict[str, Any] | None = None
+    active_phase_blockers = board_reconcile_active_phase_blockers(rows)
+    (
+        ready_dispatch_blockers,
+        ready_repair_card,
+        ready_repair_ref,
+        ready_repair_action,
+    ) = board_reconcile_ready_dispatch_blockers(rows)
 
-    if running:
+    if active_phase_blockers:
+        plan_action = "block_invariant_violation"
+        reason = "active future-phase Hermes work is blocked by an earlier unresolved factory phase"
+        blocked_reasons.extend(active_phase_blockers)
+        native_dispatch_required_next = False
+    elif ready_dispatch_blockers:
+        selected_card = ready_repair_card
+        selected_ref = ready_repair_ref
+        if selected_card is not None:
+            phase_engine = factory_phase_engine_state(selected_card, allow_scaffold_artifacts=False)
+            factory_help = build_factory_help(
+                selected_card,
+                Path("<kanban-ready-card>"),
+                catalog_path=catalog_path,
+                allow_scaffold_artifacts=False,
+            )
+        plan_action = ready_repair_action or "repair_board_contract"
+        reason = "ready Hermes work is missing deterministic dispatch prerequisites"
+        if plan_action == "repair_domain_brain_route":
+            reason = "ready Solana/onchain work is missing the required Solana AI Kit domain-brain record"
+        blocked_reasons.extend(ready_dispatch_blockers)
+        create_task_contract = _board_reconcile_task_contract(
+            plan_action=plan_action,
+            board=board,
+            selected_card=selected_card,
+            phase_engine=phase_engine,
+            factory_help=factory_help,
+            reason=reason,
+            assignee="factory-orchestrator",
+        )
+        native_dispatch_required_next = False
+    elif running:
         plan_action = "observe_running"
         reason = "running Hermes work exists; no reconcile task is allowed"
         native_dispatch_required_next = False
@@ -19093,7 +19264,10 @@ def command_validate_card(args: argparse.Namespace) -> int:
 
 
 def command_phase_engine(args: argparse.Namespace) -> int:
-    state = factory_phase_engine_state(load_json_like(args.card))
+    state = factory_phase_engine_state(
+        load_json_like(args.card),
+        allow_scaffold_artifacts=bool(args.allow_scaffold_artifacts),
+    )
     write_json(args.out, state)
     return 1 if state.get("phase_mismatch") or state.get("lock_phase_mismatch") or state.get("lock_frontier_mismatch") else 0
 
@@ -20168,6 +20342,11 @@ def build_parser() -> argparse.ArgumentParser:
     phase_engine_parser = sub.add_parser("phase-engine", help="Compute the deterministic factory phase from materialized artifacts.")
     phase_engine_parser.add_argument("--card", type=Path, required=True)
     phase_engine_parser.add_argument("--out", type=Path)
+    phase_engine_parser.add_argument(
+        "--allow-scaffold-artifacts",
+        action="store_true",
+        help="Allow template/example placeholders. Runtime use must omit this flag.",
+    )
     phase_engine_parser.set_defaults(func=command_phase_engine)
 
     reconcile_board_parser = sub.add_parser(
