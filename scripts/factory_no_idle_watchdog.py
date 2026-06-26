@@ -240,7 +240,7 @@ def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str,
         "counts": {
             key: value.get("count")
             for key, value in counts.items()
-            if isinstance(value, dict) and key in {"ready", "running", "todo", "blocked"}
+            if isinstance(value, dict) and key in {"ready", "running", "todo", "blocked", "triage"}
         },
         "remediation_strategy": state.get("remediation_strategy"),
         "remediation_task_created": remediation_created,
@@ -296,7 +296,7 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
             return (
                 f"[Overkill Factory] {board}: Hermes detectou loop de bloqueio repetido; "
                 f"triagem determinística de causa criada/necessária. todo={counts.get('todo', 0)} "
-                f"blocked={counts.get('blocked', 0)}."
+                f"blocked={counts.get('blocked', 0)} triage={counts.get('triage', 0)}."
             )
         if "post_review_owner_gate" in classification:
             if signature.get("remediation_task_created") is True:

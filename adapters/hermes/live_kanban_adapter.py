@@ -1376,7 +1376,7 @@ def enrich_no_idle_rows(
     enriched: dict[str, list[dict[str, Any]]] = {status: list(items) for status, items in rows.items()}
     if rows.get("ready") or rows.get("running"):
         return enriched
-    for status in ("todo", "blocked", "done"):
+    for status in ("todo", "blocked", "triage", "done"):
         next_items: list[dict[str, Any]] = []
         for item in rows.get(status, []):
             task_id = task_record_id(item)
@@ -7613,7 +7613,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             status=status,
             runner=runner,
         )
-        for status in ("ready", "running", "todo", "blocked", "done")
+        for status in ("ready", "running", "todo", "blocked", "triage", "done")
     }
     rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
     reconcile_plan: dict[str, Any] | None = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)

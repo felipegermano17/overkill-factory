@@ -3857,6 +3857,32 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(result["no_idle_state"]["native_dispatch_required_next"])
         self.assertIsNone(result["remediation_task_id"])
 
+    def test_no_idle_reads_hermes_triage_block_loop_detected(self) -> None:
+        fake = FakeHermes()
+        fake.tasks[MAIN_TASK_ID] = {
+            "id": MAIN_TASK_ID,
+            "status": "triage",
+            "assignee": None,
+            "body": "{}",
+            "events": [
+                {"kind": "block_loop_detected", "payload": {"kind": "transient", "recurrences": 2}},
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        queried_statuses = [
+            call[call.index("--status") + 1]
+            for call in fake.calls
+            if len(call) >= 5 and call[4] == "list" and "--status" in call
+        ]
+        self.assertIn("triage", queried_statuses)
+        self.assertEqual(result["mode"], "no-idle")
+        self.assertEqual(result["no_idle_state"]["classification"], "hermes_typed_block_loop_detected")
+        self.assertTrue(result["no_idle_state"]["block_loop_detected"])
+        self.assertFalse(result["no_idle_state"]["human_gate_required"])
+
     def test_native_workflow_state_updates_hermes_sqlite_columns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
@@ -5717,11 +5743,12 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         state = adapter.classify_no_idle_state(
             {
                 "todo": [],
-                "blocked": [
+                "blocked": [],
+                "triage": [
                     {
                         "id": "t_loop",
-                        "status": "blocked",
-                        "events": [{"type": "block_loop_detected", "payload": {"kind": "transient", "recurrences": 2}}],
+                        "status": "triage",
+                        "events": [{"kind": "block_loop_detected", "payload": {"kind": "transient", "recurrences": 2}}],
                     }
                 ],
                 "ready": [],
