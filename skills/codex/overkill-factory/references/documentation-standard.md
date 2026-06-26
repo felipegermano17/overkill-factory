@@ -17,6 +17,9 @@ enough for another agent to operate from it without relying on chat memory.
 - Proposal document: candidate decision and what changes if accepted.
 - Area Manual: operational explanation of one factory area.
 - Context lock: continuity map, valid files, replaced files, open pending work.
+- Generated reference: a public doc produced from registries, schemas,
+  templates, tests or manifests. Do not hand-edit it; change the source or the
+  generator and run the `--check` command.
 
 ## Area Manual Checklist
 
@@ -43,6 +46,9 @@ An Area Manual should explain:
 - Separate source, inference, and decision.
 - Keep roadmap and pending work out of final canonical documents.
 - Do not write a document that only the author can understand.
+- When docs mirror complete registries or contracts, prefer generation over
+  manual tables. Generated docs must name their generator and validation
+  command.
 
 ## Done Rule
 

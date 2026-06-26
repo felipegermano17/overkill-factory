@@ -11,6 +11,8 @@ maintenance of Overkill Factory.
   public governance rules.
 - Area manuals that explain a real factory area deeply enough for another agent
   to continue the work.
+- Generated reference docs that are produced from current registries, schemas,
+  templates and public-surface contracts.
 
 ## What Does Not Belong Here
 
@@ -38,6 +40,7 @@ python -m unittest tests.test_open_source_docs -q
 Start with `docs/index.md`, then read
 `docs/getting-started/install-in-hermes.md`,
 `docs/reference/cli.md`, `docs/architecture/factory-operating-systems.md`,
+`docs/reference/factory-kernel-reference.md`,
 `docs/architecture/factory-v2-control-plane.md`,
 `docs/concepts/factory-flow.md` and
 `docs/operations/validation-and-release.md`.
@@ -45,3 +48,10 @@ Start with `docs/index.md`, then read
 Read `docs/operations/fast-autonomy-lane.md` when deciding whether a card can
 move quickly without human input. That guide defines the difference between
 fast reversible work and forbidden global YOLO authority.
+
+Read `docs/operations/telegram-operator-experience.md` when Telegram is the
+primary operator interface. That guide defines proactive status, decision
+packages and the boundary between Telegram messages and Hermes truth.
+
+Read `docs/architecture/context-spine.md` before using memory, prior context or
+learned facts as part of factory behavior.

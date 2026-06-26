@@ -6,7 +6,7 @@
 <title>Overkill Factory</title>
 <script type="application/json" id="overkill-public-surface-metadata">
 {
-  "surface_id": "visual-map-v1.0.1-html",
+  "surface_id": "visual-map-v1.0.2-html",
   "manifest_ref": "docs/public-surface.manifest.json",
   "authority_level": "conceptual_supporting_surface",
   "source_refs": [
@@ -72,7 +72,7 @@
   .shell {
     height: 100%;
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto 1fr;
   }
 
   .topbar {
@@ -97,6 +97,21 @@
     height: 2px;
     background: linear-gradient(90deg, var(--truth), var(--method), var(--risk), var(--exec), var(--ops));
     transition: width .24s ease;
+  }
+
+  .simple-intro {
+    margin: 0;
+    padding: 9px 16px 10px;
+    border-bottom: 1px solid var(--line-soft);
+    background: color-mix(in srgb, var(--surface) 48%, var(--bg));
+    color: var(--body);
+    font-size: 13px;
+    line-height: 1.36;
+  }
+
+  .simple-intro strong {
+    color: var(--ink);
+    font-weight: 680;
   }
 
   .brand {
@@ -852,7 +867,7 @@
   <header class="topbar">
     <div class="brand">
       <h1>Overkill Factory</h1>
-      <span class="version-badge">v1.0.1</span>
+      <span class="version-badge">v1.0.2</span>
       <span class="step-control" aria-label="Navegação por etapas">
         <button class="step-btn" id="prevStage" type="button" title="Etapa anterior" aria-label="Etapa anterior" aria-keyshortcuts="ArrowLeft ArrowUp">←</button>
         <button class="step-btn" id="nextStage" type="button" title="Próxima etapa" aria-label="Próxima etapa" aria-keyshortcuts="ArrowRight ArrowDown">→</button>
@@ -873,6 +888,8 @@
       <button class="chip" data-flow="done" aria-pressed="false">Pronto</button>
     </nav>
   </header>
+
+  <p class="simple-intro"><strong>Como ler:</strong> uma ideia entra por um lado, a fábrica entende, escolhe o trilho seguro, chama agentes, cobra provas e só deixa avançar quando Hermes, contratos e evidências concordam.</p>
 
   <main class="stage" id="stage">
     <p class="sr-only" id="mapHint">Use Tab para entrar nos controles, Enter ou Espaço para escolher uma visão, e as setas do teclado para navegar pelas etapas do mapa.</p>
@@ -926,11 +943,11 @@ const NODE_H = 84;
 const NODE_Y_NUDGE = 12;
 
 const ZONES = [
-  { key: "truth", label: "1. Verdade", sub: "intake universal -> fontes -> Product SOT completa", y: 86, h: 176, fill: "var(--truth-soft)" },
-  { key: "method", label: "2. Método e planos", sub: "router -> pesquisa -> Product Creation Plan", y: 294, h: 176, fill: "var(--method-soft)" },
-  { key: "risk", label: "3. Risco e autoridade", sub: "risk tier -> Product Implementation Readiness -> humano", y: 502, h: 176, fill: "var(--risk-soft)" },
-  { key: "exec", label: "4. Execução e prova", sub: "Hermes -> agentes -> evidência", y: 710, h: 176, fill: "var(--exec-soft)" },
-  { key: "ops", label: "5. Operação e maturidade", sub: "release -> monitoramento -> learnback", y: 918, h: 176, fill: "var(--ops-soft)" }
+  { key: "truth", label: "1. Entender antes de fazer", sub: "entrada -> fontes -> verdade do produto", y: 86, h: 176, fill: "var(--truth-soft)" },
+  { key: "method", label: "2. Escolher o trilho", sub: "método -> pesquisa -> plano de criação", y: 294, h: 176, fill: "var(--method-soft)" },
+  { key: "risk", label: "3. Checar perigo e permissão", sub: "risco -> prontidão -> decisão humana real", y: 502, h: 176, fill: "var(--risk-soft)" },
+  { key: "exec", label: "4. Trabalhar e provar", sub: "Hermes -> agentes -> evidência", y: 710, h: 176, fill: "var(--exec-soft)" },
+  { key: "ops", label: "5. Entregar e aprender", sub: "release -> monitoramento -> learnback", y: 918, h: 176, fill: "var(--ops-soft)" }
 ];
 
 const STAGES = [

@@ -861,7 +861,7 @@
       ],
       "source_of_truth_refs": [
         "docs/operator/overkill-factory-bridge.md",
-        "docs/maintenance/telegram-performance-autonomy-audit-2026-06-23.md"
+        "docs/operations/telegram-operator-experience.md"
       ],
       "enforcement_command_refs": [
         "factoryctl operator-interface",
@@ -895,7 +895,7 @@
       ],
       "mapped_docs": [
         "docs/operator/overkill-factory-bridge.md",
-        "docs/maintenance/telegram-performance-autonomy-audit-2026-06-23.md"
+        "docs/operations/telegram-operator-experience.md"
       ],
       "completion_audit_blockers_owned": [],
       "runtime_boundary": {

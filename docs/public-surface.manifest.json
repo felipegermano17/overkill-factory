@@ -20,7 +20,6 @@
     "docs/operator/overkill-factory-bridge.md",
     "docs/operator/overkill-factory-bridge-plugin.md",
     "docs/reference/cli.md",
-    "planning-bundles/manifest.json",
     "schemas/",
     "templates/hermes-production-proof.json",
     "templates/factory-run.json",
@@ -30,7 +29,11 @@
     "scripts/factoryctl.py",
     "scripts/factory_v2_kernel.py",
     "scripts/validate_promise_implementation_map.py",
-    "scripts/hermes_runtime_proof.py"
+    "scripts/hermes_runtime_proof.py",
+    "docs/reference/factory-kernel-reference.md",
+    "scripts/generate_factory_reference_docs.py",
+    "docs/operations/telegram-operator-experience.md",
+    "docs/architecture/context-spine.md"
   ],
   "published_check_policy": {
     "default_status_without_network": "not_checked",
@@ -38,9 +41,9 @@
   },
   "surfaces": [
     {
-      "surface_id": "visual-map-v1.0.1-html",
-      "path": "docs/visuals/overkill-factory-map-v1.0.1.html",
-      "published_url": "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
+      "surface_id": "visual-map-v1.0.2-html",
+      "path": "docs/visuals/overkill-factory-map-v1.0.2.html",
+      "published_url": "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html",
       "surface_type": "conceptual_visual_map",
       "authority_level": "conceptual_supporting_surface",
       "source_refs": [
@@ -87,7 +90,10 @@
         "v1 blocker",
         "Mapa != Prova",
         "Hermes segue como fonte da verdade",
-        "não provam entrega"
+        "n\u00e3o provam entrega",
+        "uma ideia entra por um lado",
+        "a f\u00e1brica entende, escolhe o trilho seguro",
+        "Hermes, contratos e evid\u00eancias concordam"
       ],
       "fidelity_contract": {
         "workflow_catalog_ref": "docs/factory-workflow.catalog.json",
@@ -113,50 +119,171 @@
           "Mapa != Prova"
         ],
         "required_stage_nodes": [
-          { "node_id": "intake", "title": "Universal Signal Intake", "required_output_terms": ["Tipo de sinal"] },
-          { "node_id": "ledger", "title": "Source Ledger" },
-          { "node_id": "resolution", "title": "Source Resolution", "required_output_terms": ["Specialist Research Decision"] },
-          { "node_id": "outcome", "title": "Resultado e Descoberta" },
-          { "node_id": "sot", "title": "Product SOT", "required_output_terms": ["full Product SOT scope coverage"] },
-          { "node_id": "router", "title": "Roteador de Método" },
-          { "node_id": "contract", "title": "Contrato de Método" },
-          { "node_id": "packs", "title": "Product e Surface Packs" },
-          { "node_id": "securityplan", "title": "Arquitetura de Segurança" },
-          { "node_id": "devplan", "title": "Product Creation Plan", "required_output_terms": ["Product Creation Plan", "Work units"] },
-          { "node_id": "experience", "title": "Product Experience Gate", "required_output_terms": ["professional_design_process", "surface_evidence_profile", "product_delivery_quality_profile"] },
-          { "node_id": "dataeval", "title": "Dados e Evals" },
-          { "node_id": "specgraph", "title": "Grafo de Especificação" },
-          { "node_id": "riskgates", "title": "Gates de Risco" },
-          { "node_id": "loop", "title": "Plano de Loops" },
-          { "node_id": "autonomy", "title": "Prontidão de Autonomia" },
-          { "node_id": "ready", "title": "Product Implementation Readiness" },
-          { "node_id": "controltower", "title": "Projeção da Control Tower" },
-          { "node_id": "humangate", "title": "Gate Humano" },
-          { "node_id": "runtime", "title": "Runtime Hermes" },
-          { "node_id": "workerresult", "title": "Resultado do Agente" },
-          { "node_id": "verification", "title": "Verificação" },
-          { "node_id": "review", "title": "Revisão Independente" },
-          { "node_id": "closure", "title": "Resumo de Fechamento" },
-          { "node_id": "receipt", "title": "Receipt Five" },
-          { "node_id": "completion", "title": "Factory v1 Completion Gate", "required_output_terms": ["v1 blocker", "vNext ou not planned"] },
-          { "node_id": "prodops", "title": "Operação de Produção" },
-          { "node_id": "release", "title": "Release ou Bloqueio" },
-          { "node_id": "monitoring", "title": "Monitoramento e Suporte" },
-          { "node_id": "learnback", "title": "Learnback" },
-          { "node_id": "maturity", "title": "Auditoria de Maturidade" },
-          { "node_id": "readiness", "title": "Mapa != Prova" },
-          { "node_id": "r4", "title": "Rigor R4" }
+          {
+            "node_id": "intake",
+            "title": "Universal Signal Intake",
+            "required_output_terms": [
+              "Tipo de sinal"
+            ]
+          },
+          {
+            "node_id": "ledger",
+            "title": "Source Ledger"
+          },
+          {
+            "node_id": "resolution",
+            "title": "Source Resolution",
+            "required_output_terms": [
+              "Specialist Research Decision"
+            ]
+          },
+          {
+            "node_id": "outcome",
+            "title": "Resultado e Descoberta"
+          },
+          {
+            "node_id": "sot",
+            "title": "Product SOT",
+            "required_output_terms": [
+              "full Product SOT scope coverage"
+            ]
+          },
+          {
+            "node_id": "router",
+            "title": "Roteador de M\u00e9todo"
+          },
+          {
+            "node_id": "contract",
+            "title": "Contrato de M\u00e9todo"
+          },
+          {
+            "node_id": "packs",
+            "title": "Product e Surface Packs"
+          },
+          {
+            "node_id": "securityplan",
+            "title": "Arquitetura de Seguran\u00e7a"
+          },
+          {
+            "node_id": "devplan",
+            "title": "Product Creation Plan",
+            "required_output_terms": [
+              "Product Creation Plan",
+              "Work units"
+            ]
+          },
+          {
+            "node_id": "experience",
+            "title": "Product Experience Gate",
+            "required_output_terms": [
+              "professional_design_process",
+              "surface_evidence_profile",
+              "product_delivery_quality_profile"
+            ]
+          },
+          {
+            "node_id": "dataeval",
+            "title": "Dados e Evals"
+          },
+          {
+            "node_id": "specgraph",
+            "title": "Grafo de Especifica\u00e7\u00e3o"
+          },
+          {
+            "node_id": "riskgates",
+            "title": "Gates de Risco"
+          },
+          {
+            "node_id": "loop",
+            "title": "Plano de Loops"
+          },
+          {
+            "node_id": "autonomy",
+            "title": "Prontid\u00e3o de Autonomia"
+          },
+          {
+            "node_id": "ready",
+            "title": "Product Implementation Readiness"
+          },
+          {
+            "node_id": "controltower",
+            "title": "Proje\u00e7\u00e3o da Control Tower"
+          },
+          {
+            "node_id": "humangate",
+            "title": "Gate Humano"
+          },
+          {
+            "node_id": "runtime",
+            "title": "Runtime Hermes"
+          },
+          {
+            "node_id": "workerresult",
+            "title": "Resultado do Agente"
+          },
+          {
+            "node_id": "verification",
+            "title": "Verifica\u00e7\u00e3o"
+          },
+          {
+            "node_id": "review",
+            "title": "Revis\u00e3o Independente"
+          },
+          {
+            "node_id": "closure",
+            "title": "Resumo de Fechamento"
+          },
+          {
+            "node_id": "receipt",
+            "title": "Receipt Five"
+          },
+          {
+            "node_id": "completion",
+            "title": "Factory v1 Completion Gate",
+            "required_output_terms": [
+              "v1 blocker",
+              "vNext ou not planned"
+            ]
+          },
+          {
+            "node_id": "prodops",
+            "title": "Opera\u00e7\u00e3o de Produ\u00e7\u00e3o"
+          },
+          {
+            "node_id": "release",
+            "title": "Release ou Bloqueio"
+          },
+          {
+            "node_id": "monitoring",
+            "title": "Monitoramento e Suporte"
+          },
+          {
+            "node_id": "learnback",
+            "title": "Learnback"
+          },
+          {
+            "node_id": "maturity",
+            "title": "Auditoria de Maturidade"
+          },
+          {
+            "node_id": "readiness",
+            "title": "Mapa != Prova"
+          },
+          {
+            "node_id": "r4",
+            "title": "Rigor R4"
+          }
         ]
       }
     },
     {
-      "surface_id": "visual-map-v1.0.1-svg",
-      "path": "docs/visuals/overkill-factory-map-v1.0.1.svg",
+      "surface_id": "visual-map-v1.0.2-svg",
+      "path": "docs/visuals/overkill-factory-map-v1.0.2.svg",
       "surface_type": "static_visual_preview",
       "authority_level": "conceptual_supporting_surface",
       "source_refs": [
         "docs/visuals/README.md",
-        "docs/visuals/overkill-factory-map-v1.0.1.html",
+        "docs/visuals/overkill-factory-map-v1.0.2.html",
         "docs/agents/factory-stage-agent-map.md",
         "docs/factory-workflow.catalog.json",
         "docs/concepts/factory-flow.md",
@@ -204,8 +331,8 @@
       "authority_level": "supporting_explanation_not_source_of_truth",
       "source_refs": [
         "docs/public-surface.manifest.json",
-        "docs/visuals/overkill-factory-map-v1.0.1.html",
-        "docs/visuals/overkill-factory-map-v1.0.1.svg"
+        "docs/visuals/overkill-factory-map-v1.0.2.html",
+        "docs/visuals/overkill-factory-map-v1.0.2.svg"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -265,6 +392,34 @@
         "Hermes Kanban remains the runtime source of truth",
         "agents can produce work, but agents cannot choose the factory route",
         "factoryctl compile-workflow"
+      ]
+    },
+    {
+      "surface_id": "factory-kernel-reference",
+      "path": "docs/reference/factory-kernel-reference.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "scripts/generate_factory_reference_docs.py",
+        "docs/factory-workflow.catalog.json",
+        "agents/worker-registry.public.json",
+        "agents/worker-profiles.public.json",
+        "agents/hermes-profile-bindings.public.json",
+        "templates/factory-operating-system-registry.json",
+        "templates/method-engine-registry.json",
+        "docs/public-surface.manifest.json"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "This file is generated by `scripts/generate_factory_reference_docs.py`",
+        "Hermes Kanban remains the runtime source of truth",
+        "Agents do the work; contracts choose the path",
+        "Done without evidence is only a claim",
+        "## Generated From"
       ]
     },
     {
@@ -392,26 +547,6 @@
       ]
     },
     {
-      "surface_id": "planning-bundles-index",
-      "path": "planning-bundles/README.md",
-      "surface_type": "public_planning_bundle_index",
-      "authority_level": "supporting_explanation_not_source_of_truth",
-      "source_refs": [
-        "planning-bundles/manifest.json",
-        "schemas/planning-bundle-manifest.schema.json",
-        "scripts/validate_planning_bundles.py"
-      ],
-      "claim_checks": [
-        "source_refs_exist",
-        "source_of_truth_disclaimer",
-        "no_runtime_proof_claim"
-      ],
-      "required_phrases": [
-        "Every bundle output is a candidate artifact",
-        "They do not replace the factory runtime"
-      ]
-    },
-    {
       "surface_id": "quickstart-hermes",
       "path": "docs/getting-started/quickstart-hermes.md",
       "surface_type": "concept_doc",
@@ -520,7 +655,7 @@
         "docs/public-surface.manifest.json",
         "docs/operations/promise-to-implementation.md",
         "docs/promise-implementation-map.public.json",
-        "docs/visuals/overkill-factory-map-v1.0.1.html"
+        "docs/visuals/overkill-factory-map-v1.0.2.html"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -532,7 +667,7 @@
         "Hermes and Receipt Five remain the source of truth"
       ],
       "expected_links": [
-        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html"
+        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html"
       ]
     },
     {
@@ -550,7 +685,7 @@
         "docs/public-surface.manifest.json",
         "docs/operations/promise-to-implementation.md",
         "docs/promise-implementation-map.public.json",
-        "docs/visuals/overkill-factory-map-v1.0.1.html"
+        "docs/visuals/overkill-factory-map-v1.0.2.html"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -562,7 +697,49 @@
         "Hermes e Receipt Five continuam sendo a fonte de verdade"
       ],
       "expected_links": [
-        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html"
+        "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html"
+      ]
+    },
+    {
+      "surface_id": "telegram-operator-experience",
+      "path": "docs/operations/telegram-operator-experience.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "schemas/operator-interface-profile.schema.json",
+        "schemas/operator-briefing-package.schema.json",
+        "scripts/factoryctl.py",
+        "tests/test_operator_experience.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Telegram is an operator interface",
+        "A human gate needs a package before it needs an answer",
+        "`needs_input`"
+      ]
+    },
+    {
+      "surface_id": "context-spine",
+      "path": "docs/architecture/context-spine.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "scripts/factoryctl.py",
+        "docs/concepts/operator-journey.md",
+        "docs/maintenance/self-improvement-loop.md"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Memory is not truth by itself",
+        "Old memory can help. Old memory cannot approve"
       ]
     }
   ]

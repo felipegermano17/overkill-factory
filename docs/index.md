@@ -28,6 +28,10 @@ Overkill Factory supplies contracts, profiles, packets and gates.
 Use `reference/cli.md` for the supported operator commands. Prefer `factoryctl`
 over calling many scripts directly.
 
+Use `reference/factory-kernel-reference.md` when you need a generated map of the
+actual factory kernel: phases, workers, profiles, operating systems, method
+engines, schemas, templates and public surfaces.
+
 ## Factory Operating Systems
 
 Use `architecture/factory-v2-control-plane.md` first when changing phase
@@ -43,6 +47,10 @@ product-specific production readiness by itself.
 
 Use `architecture/deterministic-control-plane.md` before changing dispatch,
 no-idle, bridge start, phase binding, human gates or domain-brain routing.
+
+Use `architecture/context-spine.md` before letting memory, prior run context or
+learned facts affect factory behavior.
+
 Use these templates when checking V2 closure:
 `templates/v2-study-traceability.json`,
 `templates/product-experience-control-plane.json`,
@@ -72,6 +80,10 @@ splitting work across branches/worktrees or presenting a operator console/status
 Use `operations/fast-autonomy-lane.md` before allowing a card to move quickly
 without another human prompt. It separates reversible fast work from forbidden
 global YOLO authority.
+
+Use `operations/telegram-operator-experience.md` when Telegram is the primary
+operator interface and the human should receive proactive status, PDF-backed
+decision packages and only real human gates.
 
 Use `operations/promise-to-implementation.md` before changing README, release
 notes, public docs or visual surfaces. It maps public promises to implementation,

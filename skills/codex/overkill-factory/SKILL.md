@@ -133,6 +133,9 @@ Block or revise cards when:
 - The public repository contains partial manual mirrors of generated contracts,
   historical evidence dumps, or folders that cannot justify their public
   purpose, first-use path, source of truth, and validation coverage.
+- Public documentation changes touch registries, workers, phases, schemas,
+  templates, method engines or public surfaces without regenerating and checking
+  `docs/reference/factory-kernel-reference.md`.
 - Hermes updates have not passed compatibility manifest, update runbook,
   disposable smoke and rollback planning.
 - Hermes `dispatch --dry-run` and `--initial-status blocked` are not enough to
@@ -154,6 +157,9 @@ Load only what is needed:
   release hygiene, public safety, or comparisons with other open-source repos.
 - `docs/architecture/factory-v2-control-plane.md` when working on deterministic
   state, phase jumps, command/event logs, decision outbox or promotion packets.
+- `docs/reference/factory-kernel-reference.md` when checking the complete public
+  factory surface generated from workflow, worker, profile, OS, method, schema,
+  template and public-surface contracts.
 - `agents/worker-registry.public.json`, `agents/worker-profiles.public.json`
   and `agents/hermes-profile-bindings.public.json` before changing worker
   profiles or dispatch behavior.
@@ -184,6 +190,7 @@ python scripts/factoryctl.py capability-acquisition-run --capability-gap solana-
 python scripts/factoryctl.py validate-capability-acquisition-run .tmp/factory-runs/capability/skill-capability-acquisition-run.json
 python scripts/factoryctl.py validate-hermes-reducer-mutation-proof templates/hermes-reducer-mutation-proof.json
 python scripts/factoryctl.py validate-readiness-claim templates/factory-v2-readiness-claim.json
+python scripts/generate_factory_reference_docs.py --check
 python scripts/validate_worker_profiles.py
 ```
 

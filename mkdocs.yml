@@ -6,15 +6,13 @@ exclude_docs: |
   /README.md
 not_in_nav: |
   README.md
-  maintenance/implacability-audit-2026-06-19.md
-  superpowers/plans/2026-06-19-overkill-implacavel-audit.md
-  superpowers/plans/2026-06-19-overkill-open-issues-closeout.md
 nav:
   - Operator Path: index.md
   - Quickstart With Hermes: getting-started/quickstart-hermes.md
   - Install In Your Hermes: getting-started/install-in-hermes.md
   - First Operator Walkthrough: getting-started/first-external-operator-walkthrough.md
   - CLI Reference: reference/cli.md
+  - Factory Kernel Reference: reference/factory-kernel-reference.md
   - Examples: examples/gallery.md
   - Concepts:
       - Factory Flow: concepts/factory-flow.md
@@ -29,8 +27,11 @@ nav:
       - Permission Model: agents/permission-model.md
       - Security Specialist Matrix: agents/security-specialist-matrix.md
   - Architecture:
+      - Factory V2 Control Plane: architecture/factory-v2-control-plane.md
+      - Deterministic Control Plane: architecture/deterministic-control-plane.md
       - Factory Operating Systems: architecture/factory-operating-systems.md
       - Hermes Integration: architecture/hermes-integration.md
+      - Context Spine: architecture/context-spine.md
   - Automation:
       - Worker Automation v0: automation/worker-automation-v0.md
   - Security:
@@ -40,6 +41,7 @@ nav:
       - Validation And Release: operations/validation-and-release.md
       - Promise To Implementation Audit: operations/promise-to-implementation.md
       - Fast Autonomy Lane: operations/fast-autonomy-lane.md
+      - Telegram Operator Experience: operations/telegram-operator-experience.md
       - Parallel Execution And Status: operations/parallel-execution-and-status.md
       - Release Policy: operations/release-policy.md
       - Troubleshooting: operations/troubleshooting.md
@@ -58,8 +60,6 @@ nav:
       - Public Visual Surfaces: visuals/README.md
   - Maintainer Internals:
       - Repo Surface: maintenance/repo-surface.md
-      - Telegram Performance Audit: maintenance/telegram-performance-autonomy-audit-2026-06-23.md
       - Factory Learning OS: maintenance/factory-learning-skill-evolution-os.md
       - Hermes Learn Integration: maintenance/hermes-learn-integration.md
       - Self Improvement Loop: maintenance/self-improvement-loop.md
-      - Context Spine: memory/context-spine.md
