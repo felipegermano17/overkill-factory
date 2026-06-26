@@ -1,6 +1,6 @@
 {
   "name": "overkill-factory-bridge",
-  "version": "0.1.0+codex.20260622182349",
+  "version": "0.2.0+codex.20260626000000",
   "description": "Operate Overkill Factory from Codex as the human bridge, not as the factory runtime.",
   "author": {
     "name": "Overkill Factory maintainers",

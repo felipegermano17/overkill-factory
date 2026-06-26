@@ -266,11 +266,23 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 
 ## Estado Atual De Release
 
-Factory v1 é a linha atual de release do kernel público. A release pública mais
-recente é v1.5.16.
+Factory V2 é a linha atual de release do kernel público. A release pública mais
+recente é v2.0.0.
 
 Ela inclui:
 
+- control plane determinístico da Factory V2: workflow compiled plan, command
+  inbox, event log de run com hash chain, decision outbox, promotion packets e
+  validação de `FactoryRun`;
+- `factoryctl compile-workflow`, `validate-factory-run`,
+  `validate-factory-command`, `validate-factory-event-log`,
+  `validate-decision-outbox`, `validate-promotion-packet` e
+  `validate-workflow-compiled-plan`;
+- endurecimento do bridge para que status, pergunta, decisão, mudança, exceção
+  e handoff exijam alvo runtime explícito em vez de estado Hermes ambiente;
+- registros formais de decisão do bridge exigindo `human_gate_record_ref` para
+  respostas de human gate, separando aprovação em chat de autoridade da fábrica;
+- templates públicos e testes de regressão para os contratos de estado V2;
 - Universal Signal Intake, route registry, Golden Corpus e cobertura de sinais;
 - perfis de interface para Telegram, Discord, Cockpit e bridge;
 - start conversacional antes de existir pedido formal de início da fábrica;
@@ -311,11 +323,11 @@ Ela inclui:
 - projeção de artefato de conclusão Hermes, controles de no-idle, Hermes update
   guard, watchdog de no-idle para Hermes cron e contratos da Fast Autonomy Lane.
 
-Esse claim é deliberadamente limitado. Factory v1 significa que o kernel
-público está completo o suficiente para instalar, inspecionar, validar e
-estender. Um produto criado pela fábrica ainda exige fonte real, Product SOT,
-execução de workers, evidência, revisões, human gates e prova própria de
-production readiness.
+Esse claim é deliberadamente limitado. Factory V2 significa que o kernel
+público tem um control plane determinístico que pode ser instalado,
+inspecionado, validado e estendido. Um produto criado pela fábrica ainda exige
+fonte real, Product SOT, execução de workers, evidência, revisões, human gates e
+prova própria de production readiness.
 As promessas públicas são rastreadas em
 `docs/operations/promise-to-implementation.md` e
 `docs/promise-implementation-map.public.json`; cada claim importante precisa
@@ -328,6 +340,8 @@ apontar sua implementação, prova e limite.
 - `docs/getting-started/install-in-hermes.md`: conectar a fábrica a um runtime Hermes do operador.
 - `docs/governance/document-governance.md`: autoridade documental e fronteira pública.
 - `docs/reference/cli.md`: comandos suportados do `factoryctl`.
+- `docs/architecture/factory-v2-control-plane.md`: contratos determinísticos V2
+  de comando, evento, decisão e promoção.
 - `docs/concepts/factory-flow.md`: linha de produção e modelo de estado.
 - `docs/concepts/overkill-factory-method.md`: guia do método.
 - `docs/concepts/operator-journey.md`: jornada do operador.

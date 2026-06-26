@@ -44,8 +44,8 @@ publish to GitHub or make Discord a source of truth.
 For `new_project`, the plugin creates a `factory_bridge_source_envelope` and a
 `factory_bridge_start_request` addressed to `overkill-factory-gerente` /
 `factory-orchestrator`. The factory start path owns board creation. For
-`existing_project`, the operator/runtime must provide an explicit existing board
-or run reference.
+`existing_project`, the operator/runtime must provide an explicit `kanban:`,
+`hermes:`, `run:` or `board:` reference.
 
 Inside the public factory repository, the deterministic factory start path is:
 
@@ -66,6 +66,10 @@ immediately.
 For status requests, the plugin must resolve the explicit runtime target for the
 run before reading Hermes. An ambient/default Hermes store is not proof that a
 configured remote or project-specific Hermes runtime is empty.
+
+For human gate responses, the plugin must create a bridge decision with
+`human_gate_record_ref`. A chat approval is operator input, not the factory gate
+record that closes or promotes work.
 
 ## Inbox
 

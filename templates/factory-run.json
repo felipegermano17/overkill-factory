@@ -1,0 +1,80 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-run.schema.json",
+  "record_type": "factory_run",
+  "run_id": "run-001",
+  "state_version": 1,
+  "status": "planning",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "current_phase_id": "F1",
+  "runtime_target": {
+    "runtime": "hermes_kanban",
+    "runtime_target_ref": "hermes:board:example-product",
+    "ambient_runtime_allowed": false
+  },
+  "board_binding": {
+    "binding_ref": "binding-001",
+    "board_policy": "factory_must_create_new_board",
+    "board_ref": null
+  },
+  "command_inbox": [
+    {
+      "$schema": "https://overkill-factory.dev/schemas/factory-command.schema.json",
+      "record_type": "factory_command",
+      "command_id": "cmd-001",
+      "run_id": "run-001",
+      "command_type": "start_run",
+      "expected_version": 0,
+      "idempotency_key": "idem-0001",
+      "created_at": "2026-06-26T00:00:00+00:00",
+      "source": {
+        "source_type": "operator",
+        "source_ref": "external:operator:telegram"
+      },
+      "authority": {
+        "reducer_must_accept": true,
+        "bridge_may_execute": false,
+        "bridge_may_approve_human_gate": false,
+        "adapter_may_decide_business_rule": false
+      },
+      "payload": {
+        "summary": "Start factory run from sealed source envelope."
+      }
+    }
+  ],
+  "event_log": [
+    {
+      "$schema": "https://overkill-factory.dev/schemas/factory-run-event.schema.json",
+      "record_type": "factory_run_event",
+      "event_id": "event-001",
+      "run_id": "run-001",
+      "sequence": 1,
+      "event_type": "run_started",
+      "created_at": "2026-06-26T00:00:00+00:00",
+      "previous_event_hash": null,
+      "payload": {
+        "summary": "Factory run started from explicit operator signal."
+      },
+      "event_hash": "sha256:def33025eb2e667dec61fb2c48f1585364469ae0e91e1f9f9237b36d1207d617"
+    }
+  ],
+  "decision_outbox": {
+    "$schema": "https://overkill-factory.dev/schemas/factory-decision-outbox.schema.json",
+    "record_type": "factory_decision_outbox",
+    "outbox_id": "outbox-001",
+    "run_id": "run-001",
+    "created_at": "2026-06-26T00:00:00+00:00",
+    "pending_decisions": [],
+    "authority": {
+      "operator_decides": true,
+      "bridge_records_only": true,
+      "reducer_consumes_decision": true
+    }
+  },
+  "promotion_packets": [],
+  "authority": {
+    "state_authority": "factory_event_log",
+    "transition_authority": "transition_reducer",
+    "bridge_may_mutate": false,
+    "adapter_may_decide": false
+  }
+}

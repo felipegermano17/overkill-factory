@@ -47,7 +47,6 @@ PUBLIC_SCHEMA_DIRS = [
 ]
 SCAN_DIRS = [
     ROOT / "examples",
-    ROOT / ".tmp" / "factory-runs",
     ROOT / "agents",
     ROOT / "templates",
     ROOT / "docs",

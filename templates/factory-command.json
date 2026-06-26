@@ -1,0 +1,23 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-command.schema.json",
+  "record_type": "factory_command",
+  "command_id": "cmd-001",
+  "run_id": "run-001",
+  "command_type": "start_run",
+  "expected_version": 0,
+  "idempotency_key": "idem-0001",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "source": {
+    "source_type": "operator",
+    "source_ref": "external:operator:telegram"
+  },
+  "authority": {
+    "reducer_must_accept": true,
+    "bridge_may_execute": false,
+    "bridge_may_approve_human_gate": false,
+    "adapter_may_decide_business_rule": false
+  },
+  "payload": {
+    "summary": "Start factory run from sealed source envelope."
+  }
+}

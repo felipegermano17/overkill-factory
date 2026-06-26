@@ -38,6 +38,7 @@ python -m unittest tests.test_open_source_docs -q
 Start with `docs/index.md`, then read
 `docs/getting-started/install-in-hermes.md`,
 `docs/reference/cli.md`, `docs/architecture/factory-operating-systems.md`,
+`docs/architecture/factory-v2-control-plane.md`,
 `docs/concepts/factory-flow.md` and
 `docs/operations/validation-and-release.md`.
 

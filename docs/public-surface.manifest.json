@@ -1,13 +1,14 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/public-surface-manifest.schema.json",
   "record_type": "public_surface_manifest",
-  "manifest_version": "v1",
+  "manifest_version": "v2",
   "created_at": "2026-06-14T00:00:00Z",
   "canonical_sources": [
     "agents/worker-registry.public.json",
     "agents/worker-profiles.public.json",
     "agents/hermes-profile-bindings.public.json",
     "docs/agents/factory-stage-agent-map.md",
+    "docs/architecture/factory-v2-control-plane.md",
     "docs/architecture/factory-operating-systems.md",
     "docs/concepts/factory-flow.md",
     "docs/concepts/operator-journey.md",
@@ -22,9 +23,12 @@
     "planning-bundles/manifest.json",
     "schemas/",
     "templates/hermes-production-proof.json",
+    "templates/factory-run.json",
+    "templates/factory-workflow-compiled-plan.json",
     "templates/method-engine-registry.json",
     "templates/factory-operating-system-registry.json",
     "scripts/factoryctl.py",
+    "scripts/factory_v2_kernel.py",
     "scripts/validate_promise_implementation_map.py",
     "scripts/hermes_runtime_proof.py"
   ],
@@ -231,6 +235,34 @@
       "required_phrases": [
         "Hermes Kanban state plus repo-relative evidence and receipts are the source of truth",
         "they do not close work by themselves"
+      ]
+    },
+    {
+      "surface_id": "factory-v2-control-plane",
+      "path": "docs/architecture/factory-v2-control-plane.md",
+      "surface_type": "concept_doc",
+      "authority_level": "supporting_explanation_not_source_of_truth",
+      "source_refs": [
+        "docs/factory-workflow.catalog.json",
+        "scripts/factory_v2_kernel.py",
+        "scripts/factoryctl.py",
+        "schemas/factory-run.schema.json",
+        "schemas/factory-command.schema.json",
+        "schemas/factory-run-event.schema.json",
+        "schemas/factory-decision-outbox.schema.json",
+        "schemas/factory-promotion-packet.schema.json",
+        "templates/factory-run.json",
+        "tests/test_factory_v2_kernel.py"
+      ],
+      "claim_checks": [
+        "source_refs_exist",
+        "source_of_truth_disclaimer",
+        "no_runtime_proof_claim"
+      ],
+      "required_phrases": [
+        "Hermes Kanban remains the runtime source of truth",
+        "agents can produce work, but agents cannot choose the factory route",
+        "factoryctl compile-workflow"
       ]
     },
     {

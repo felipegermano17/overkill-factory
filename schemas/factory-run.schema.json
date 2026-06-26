@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-run.schema.json",
+  "title": "Factory Run",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "run_id",
+    "state_version",
+    "status",
+    "created_at",
+    "current_phase_id",
+    "runtime_target",
+    "board_binding",
+    "command_inbox",
+    "event_log",
+    "decision_outbox",
+    "promotion_packets",
+    "authority"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-run.schema.json" },
+    "record_type": { "const": "factory_run" },
+    "run_id": { "type": "string", "minLength": 3 },
+    "state_version": { "type": "integer", "minimum": 0 },
+    "status": { "enum": ["intake", "planning", "ready", "running", "blocked", "awaiting_human", "release_ready", "completed"] },
+    "created_at": { "type": "string", "minLength": 10 },
+    "updated_at": { "type": "string", "minLength": 10 },
+    "current_phase_id": { "type": "string", "minLength": 2 },
+    "runtime_target": {
+      "type": "object",
+      "required": ["runtime", "runtime_target_ref", "ambient_runtime_allowed"],
+      "properties": {
+        "runtime": { "const": "hermes_kanban" },
+        "runtime_target_ref": { "type": "string", "minLength": 3 },
+        "ambient_runtime_allowed": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "board_binding": {
+      "type": "object",
+      "required": ["binding_ref", "board_policy", "board_ref"],
+      "properties": {
+        "binding_ref": { "type": "string", "minLength": 3 },
+        "board_policy": { "enum": ["factory_must_create_new_board", "explicit_existing_board"] },
+        "board_ref": { "type": ["string", "null"], "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "command_inbox": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "event_log": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "decision_outbox": { "type": "object" },
+    "promotion_packets": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "compiled_workflow_plan_ref": { "type": "string", "minLength": 3 },
+    "authority": {
+      "type": "object",
+      "required": [
+        "state_authority",
+        "transition_authority",
+        "bridge_may_mutate",
+        "adapter_may_decide"
+      ],
+      "properties": {
+        "state_authority": { "const": "factory_event_log" },
+        "transition_authority": { "const": "transition_reducer" },
+        "bridge_may_mutate": { "const": false },
+        "adapter_may_decide": { "const": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

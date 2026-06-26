@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-decision-outbox.schema.json",
+  "title": "Factory Decision Outbox",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "outbox_id",
+    "run_id",
+    "created_at",
+    "pending_decisions",
+    "authority"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-decision-outbox.schema.json" },
+    "record_type": { "const": "factory_decision_outbox" },
+    "outbox_id": { "type": "string", "minLength": 3 },
+    "run_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "pending_decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "decision_id",
+          "event_id",
+          "decision_type",
+          "authority_required",
+          "required_packet_ref",
+          "status",
+          "bridge_may_resolve",
+          "factory_may_auto_approve"
+        ],
+        "properties": {
+          "decision_id": { "type": "string", "minLength": 3 },
+          "event_id": { "type": "string", "minLength": 3 },
+          "decision_type": {
+            "enum": [
+              "human_gate",
+              "scope_change",
+              "risk_acceptance",
+              "release_approval",
+              "funds_or_custody",
+              "mainnet_or_production",
+              "security_exception"
+            ]
+          },
+          "authority_required": {
+            "enum": ["human_operator", "reviewer", "security_owner", "risk_owner", "release_owner"]
+          },
+          "required_packet_ref": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["pending", "resolved", "cancelled"] },
+          "bridge_may_resolve": { "const": false },
+          "factory_may_auto_approve": { "const": false },
+          "recorded_decision_ref": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "authority": {
+      "type": "object",
+      "required": ["operator_decides", "bridge_records_only", "reducer_consumes_decision"],
+      "properties": {
+        "operator_decides": { "const": true },
+        "bridge_records_only": { "const": true },
+        "reducer_consumes_decision": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

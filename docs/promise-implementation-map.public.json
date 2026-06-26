@@ -1,8 +1,8 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/promise-implementation-map.schema.json",
   "record_type": "promise_implementation_map",
-  "map_version": "v1",
-  "updated_at": "2026-06-24",
+  "map_version": "v2",
+  "updated_at": "2026-06-26",
   "status": "current_public_kernel",
   "rules": [
     "A public promise must point to documentation, implementation, proof and a stated boundary.",
@@ -11,6 +11,46 @@
     "If the implementation is partial, blocked or runtime-owned, the boundary must say so plainly."
   ],
   "claims": [
+    {
+      "claim_id": "deterministic-v2-control-plane",
+      "public_promise": "Factory V2 moves route authority into a deterministic control plane with compiled workflow, command inbox, event log, decision outbox and promotion packet contracts.",
+      "claim_level": "local_contract_proof",
+      "documentation_refs": [
+        "README.md",
+        "README.pt-BR.md",
+        "docs/architecture/factory-v2-control-plane.md",
+        "docs/reference/cli.md"
+      ],
+      "implementation_refs": [
+        "docs/factory-workflow.catalog.json",
+        "scripts/factory_v2_kernel.py",
+        "scripts/factoryctl.py",
+        "schemas/factory-workflow-compiled-plan.schema.json",
+        "schemas/factory-command.schema.json",
+        "schemas/factory-run-event.schema.json",
+        "schemas/factory-run.schema.json",
+        "schemas/factory-decision-outbox.schema.json",
+        "schemas/factory-promotion-packet.schema.json",
+        "templates/factory-workflow-compiled-plan.json",
+        "templates/factory-command.json",
+        "templates/factory-run-event.json",
+        "templates/factory-run.json",
+        "templates/factory-decision-outbox.json",
+        "templates/factory-promotion-packet.json"
+      ],
+      "proof_refs": [
+        "tests/test_factory_v2_kernel.py",
+        "tests/test_factory_bridge.py",
+        "tests/test_factory_board_reconciler.py",
+        "tests/test_factory_incident_replay.py"
+      ],
+      "boundary": "This proves deterministic public control-plane contracts and regressions. A live product still requires current Hermes runtime state, worker results, Receipt Five, approvals and product-specific release evidence.",
+      "boundary_refs": [
+        "docs/architecture/factory-v2-control-plane.md",
+        "docs/architecture/hermes-integration.md",
+        "docs/operations/validation-and-release.md"
+      ]
+    },
     {
       "claim_id": "hermes-runtime-floor",
       "public_promise": "Hermes Kanban is the first supported runtime floor; Overkill Factory supplies contracts, gates, worker bindings and validation around it.",

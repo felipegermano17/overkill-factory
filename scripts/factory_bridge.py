@@ -80,6 +80,7 @@ DECISIONS = {
     "needs_human_gate_record",
 }
 PROJECT_MODES = {"new_project", "existing_project"}
+EXPLICIT_EXISTING_BOARD_REF = re.compile(r"^(?:kanban|hermes|run|board):[A-Za-z0-9_.:/@-]{3,}$")
 
 PRIVATE_SYNC_ROOT = "One" + "Drive"
 PRIVATE_MARKER = re.compile(
@@ -141,6 +142,17 @@ def safe_refs(refs: list[str] | None) -> list[str]:
     return [safe_ref(ref) for ref in refs or []]
 
 
+def validate_existing_board_ref(value: str) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        raise ValueError("existing_project requires an explicit existing_board_ref")
+    if PRIVATE_MARKER.search(raw) or Path(raw.replace("\\", "/")).is_absolute():
+        raise ValueError("existing_board_ref must be an explicit runtime ref, not a private/local path")
+    if not EXPLICIT_EXISTING_BOARD_REF.search(raw):
+        raise ValueError("existing_board_ref must start with kanban:, hermes:, run:, or board:")
+    return raw
+
+
 def validate_choice(name: str, value: str, choices: set[str]) -> None:
     if value not in choices:
         raise ValueError(f"{name} must be one of {', '.join(sorted(choices))}: {value}")
@@ -170,10 +182,11 @@ def build_target_board_policy(project_mode: str, existing_board_ref: str | None 
         }
     if not raw_existing:
         raise ValueError("existing_project requires an explicit existing_board_ref")
+    existing_ref = validate_existing_board_ref(raw_existing)
     return {
         "policy": "use_explicit_existing_board",
         "requires_new_hermes_board": False,
-        "existing_board_ref": safe_ref(raw_existing),
+        "existing_board_ref": existing_ref,
         "requires_explicit_existing_board_ref": True,
         "board_creation_owner": "existing_runtime",
         "factory_start_path_required": True,
@@ -233,14 +246,40 @@ def stable_event_id(
     return f"fbe_{digest}"
 
 
-def read_jsonl(path: Path) -> list[dict[str, Any]]:
+def read_jsonl_with_errors(path: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     if not path.exists():
-        return []
+        return [], []
     rows: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    errors: list[dict[str, Any]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         if not line.strip():
             continue
-        rows.append(json.loads(line))
+        try:
+            parsed = json.loads(line)
+        except json.JSONDecodeError as exc:
+            errors.append(
+                {
+                    "file": path.name,
+                    "line": line_number,
+                    "error": f"invalid JSONL record: {exc.msg}",
+                }
+            )
+            continue
+        if not isinstance(parsed, dict):
+            errors.append(
+                {
+                    "file": path.name,
+                    "line": line_number,
+                    "error": "JSONL record must be an object",
+                }
+            )
+            continue
+        rows.append(parsed)
+    return rows, errors
+
+
+def read_jsonl(path: Path) -> list[dict[str, Any]]:
+    rows, _errors = read_jsonl_with_errors(path)
     return rows
 
 
@@ -340,9 +379,10 @@ def event_is_acked(event: dict[str, Any], acked_ids: set[str]) -> bool:
 
 def summarize_inbox(*, inbox_dir: Path | str | None = None, max_items: int = 10) -> dict[str, Any]:
     inbox = normalize_inbox_dir(inbox_dir)
-    events = read_jsonl(inbox / EVENTS_FILE)
-    pending = read_jsonl(inbox / PENDING_FILE)
-    acks = read_jsonl(inbox / ACKS_FILE)
+    events, event_errors = read_jsonl_with_errors(inbox / EVENTS_FILE)
+    pending, pending_errors = read_jsonl_with_errors(inbox / PENDING_FILE)
+    acks, ack_errors = read_jsonl_with_errors(inbox / ACKS_FILE)
+    read_errors = event_errors + pending_errors + ack_errors
     acked_ids = {str(ack.get("event_id") or "") for ack in acks}
     open_pending = [event for event in pending if not event_is_acked(event, acked_ids)]
     open_pending.sort(key=lambda row: str(row.get("created_at") or ""))
@@ -356,6 +396,15 @@ def summarize_inbox(*, inbox_dir: Path | str | None = None, max_items: int = 10)
         "pending_count": len(open_pending),
         "pending_events": open_pending[:max_items],
         "recent_events": recent_events,
+        "inbox_health": {
+            "inbox_dir_exists": inbox.exists(),
+            "events_file_exists": (inbox / EVENTS_FILE).exists(),
+            "pending_file_exists": (inbox / PENDING_FILE).exists(),
+            "acks_file_exists": (inbox / ACKS_FILE).exists(),
+            "jsonl_error_count": len(read_errors),
+            "jsonl_errors": read_errors[:max_items],
+            "status": "warning" if read_errors or not inbox.exists() else "ok",
+        },
         "authority": bridge_authority(),
     }
 
@@ -422,10 +471,23 @@ def classify_prompt(prompt: str) -> dict[str, Any]:
     if any(term in normalized for term in ("aprenda", "learnback", "melhore a fabrica", "melhorar a fabrica", "factory mechanic")):
         mode = "learnback_forwarding"
         reason = "operator supplied learnback; bridge forwards it without activating changes"
+    requires_runtime_target = mode in {
+        "status_bridge",
+        "question_bridge",
+        "decision_bridge",
+        "change_bridge",
+        "exception_bridge",
+        "handoff_bridge",
+    }
     return {
         "record_type": "factory_bridge_prompt_classification",
         "bridge_mode": mode,
         "reason": reason,
+        "runtime_target_contract": {
+            "explicit_runtime_target_ref_required": requires_runtime_target,
+            "ambient_runtime_allowed": False,
+            "bridge_may_guess_runtime_target": False,
+        },
         "authority": prompt_authority(),
     }
 
@@ -452,6 +514,17 @@ def format_hook_context(summary: dict[str, Any], classification: dict[str, Any] 
     ]
     if classification:
         lines.append(f"Bridge mode: {classification['bridge_mode']} ({classification['reason']}).")
+        runtime_contract = classification.get("runtime_target_contract") or {}
+        if runtime_contract.get("explicit_runtime_target_ref_required"):
+            lines.append("Runtime target: explicit board/run ref required before reading Hermes state.")
+        lines.append("Runtime target: ambient/default Hermes store is not authority.")
+    health = summary.get("inbox_health") or {}
+    if health.get("status") != "ok":
+        lines.append("Inbox health: warning.")
+        if not health.get("inbox_dir_exists"):
+            lines.append("- operator inbox directory does not exist yet")
+        for error in health.get("jsonl_errors") or []:
+            lines.append(f"- {error.get('file')} line {error.get('line')}: {error.get('error')}")
     pending = summary.get("pending_events", [])
     lines.append(f"Pending operator events: {summary.get('pending_count', 0)}.")
     for event in pending[:5]:
@@ -517,10 +590,17 @@ def build_decision_record(
     actor: str,
     summary: str,
     evidence_refs: list[str] | None = None,
+    human_gate_record_ref: str | None = None,
     created_at: str | None = None,
 ) -> dict[str, Any]:
     validate_choice("decision_type", decision_type, DECISION_TYPES)
     validate_choice("decision", decision, DECISIONS)
+    if decision_type == "human_gate_response" and not human_gate_record_ref:
+        raise ValueError("human_gate_response requires --human-gate-record-ref")
+    clean_evidence_refs = safe_refs(evidence_refs)
+    clean_human_gate_record_ref = safe_ref(human_gate_record_ref) if human_gate_record_ref else None
+    if decision_type == "human_gate_response" and clean_human_gate_record_ref not in clean_evidence_refs:
+        clean_evidence_refs.append(str(clean_human_gate_record_ref))
     return {
         "$schema": DECISION_SCHEMA,
         "record_type": "factory_bridge_decision",
@@ -530,7 +610,8 @@ def build_decision_record(
         "decision": decision,
         "actor": actor,
         "summary": summary,
-        "evidence_refs": safe_refs(evidence_refs),
+        "evidence_refs": clean_evidence_refs,
+        "human_gate_record_ref": clean_human_gate_record_ref,
         "created_at": created_at or utc_now(),
         "authority": {
             "closes_factory_gate": False,
@@ -797,6 +878,7 @@ def command_decision_record(args: argparse.Namespace) -> int:
         actor=args.actor,
         summary=args.summary,
         evidence_refs=args.evidence_ref,
+        human_gate_record_ref=args.human_gate_record_ref,
     )
     write_json(args.out, record)
     return 0
@@ -896,6 +978,7 @@ def build_parser() -> argparse.ArgumentParser:
     decision.add_argument("--actor", required=True)
     decision.add_argument("--summary", required=True)
     decision.add_argument("--evidence-ref", action="append", default=[])
+    decision.add_argument("--human-gate-record-ref")
     decision.add_argument("--out", type=Path)
     decision.set_defaults(func=command_decision_record)
 

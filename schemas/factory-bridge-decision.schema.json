@@ -54,6 +54,7 @@
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
     },
+    "human_gate_record_ref": { "type": ["string", "null"], "minLength": 3 },
     "created_at": { "type": "string", "minLength": 10 },
     "authority": {
       "type": "object",
@@ -72,5 +73,5 @@
       "additionalProperties": false
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

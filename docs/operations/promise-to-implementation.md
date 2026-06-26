@@ -65,6 +65,7 @@ state a limit.
 | Class | Examples | What It Proves | What It Does Not Prove |
 | --- | --- | --- | --- |
 | Local contract proof | first run, human gate packet, Product Face contract | The public repo can validate the shape and local command path. | A live product was built or approved. |
+| Deterministic control-plane proof | Factory V2 compiled workflow, commands, event log, decision outbox and promotion packet | The public repo can fail closed when state does not match the V2 contracts. | The operator's current Hermes board advanced or a product was released. |
 | Runtime integration proof | Hermes runtime floor, no-idle watchdog | The adapter/proof path is implemented and test-covered. | The operator's current Hermes is healthy unless current runtime evidence is supplied. |
 | Capability routing proof | modular packs, Solana AI Kit routing | The router selects packs/workers/proof requirements deterministically. | A missing pack is magically executable. |
 | Operator bridge proof | Codex Bridge plugin and durable inbox | The bridge can forward operator context and decisions. | Codex becomes a worker, watcher, approver or source of truth. |

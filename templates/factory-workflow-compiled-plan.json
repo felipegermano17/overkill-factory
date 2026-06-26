@@ -1,0 +1,47 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-workflow-compiled-plan.schema.json",
+  "record_type": "factory_workflow_compiled_plan",
+  "plan_id": "OVERKILL_VFINAL-v1-example",
+  "compiled_at": "2026-06-26T00:00:00+00:00",
+  "catalog_ref": "docs/factory-workflow.catalog.json",
+  "catalog_version": "v1",
+  "phase_count": 1,
+  "phases": [
+    {
+      "phase_id": "F1",
+      "phase_index": 1,
+      "phase_name": "Intake",
+      "required_artifacts": [
+        "operator_interface_profile",
+        "factory_start_conversation",
+        "universal_signal_intake",
+        "source_refs",
+        "source_resolution_packet"
+      ],
+      "required_gates": [
+        "Source Gate"
+      ],
+      "required_workers": [
+        "factory-orchestrator"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "route implementation before source resolution",
+        "create Product SOT from raw input",
+        "require the operator to poll for status"
+      ],
+      "next_phase_id": null,
+      "auto_pass_allowed": false
+    }
+  ],
+  "compiler_guards": {
+    "duplicate_phase_ids_blocked": true,
+    "unknown_next_phase_blocked": true,
+    "human_gate_requires_decision_outbox": true,
+    "worker_materialization_requires_dispatch_readiness": true
+  }
+}
