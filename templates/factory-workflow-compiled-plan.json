@@ -1,15 +1,43 @@
 {
   "$schema": "https://overkill-factory.dev/schemas/factory-workflow-compiled-plan.schema.json",
   "record_type": "factory_workflow_compiled_plan",
-  "plan_id": "OVERKILL_VFINAL-v1-example",
+  "plan_id": "OVERKILL_VFINAL-v1",
   "compiled_at": "2026-06-26T00:00:00+00:00",
   "catalog_ref": "docs/factory-workflow.catalog.json",
   "catalog_version": "v1",
-  "phase_count": 1,
+  "phase_count": 26,
   "phases": [
     {
-      "phase_id": "F1",
+      "phase_id": "F0",
       "phase_index": 1,
+      "phase_name": "Pre-Start / Sealed Source Envelope",
+      "required_artifacts": [
+        "factory_bridge_source_envelope",
+        "factory_bridge_start_request"
+      ],
+      "required_gates": [
+        "Start Boundary"
+      ],
+      "required_workers": [
+        "overkill-factory-gerente",
+        "factory-orchestrator"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "summarize or reinterpret source material in the bridge",
+        "create Hermes board/card directly from bridge",
+        "start without explicit runtime target policy"
+      ],
+      "next_phase_id": "F1",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F1",
+      "phase_index": 2,
       "phase_name": "Intake",
       "required_artifacts": [
         "operator_interface_profile",
@@ -33,6 +61,638 @@
         "route implementation before source resolution",
         "create Product SOT from raw input",
         "require the operator to poll for status"
+      ],
+      "next_phase_id": "F2",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F2",
+      "phase_index": 3,
+      "phase_name": "Source Ledger",
+      "required_artifacts": [
+        "source_refs",
+        "product_source_ledger",
+        "operator_understanding_confirmation"
+      ],
+      "required_gates": [
+        "Source Gate"
+      ],
+      "required_workers": [
+        "source-ledger-worker"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "ask user to reconcile internal source bookkeeping",
+        "create outcome contract or Product SOT before understanding is confirmed"
+      ],
+      "next_phase_id": "F3",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F3",
+      "phase_index": 4,
+      "phase_name": "Source Resolution",
+      "required_artifacts": [
+        "discovery_brief"
+      ],
+      "required_gates": [
+        "Discovery Gate"
+      ],
+      "required_workers": [
+        "source-ledger-worker",
+        "product-sot-planner"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "turn unresolved gaps into execution scope"
+      ],
+      "next_phase_id": "F4",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F4",
+      "phase_index": 5,
+      "phase_name": "Product Outcome And Discovery",
+      "required_artifacts": [
+        "operator_understanding_confirmation",
+        "operator_briefing_package",
+        "outcome_contract",
+        "discovery_brief"
+      ],
+      "required_gates": [
+        "Outcome Gate",
+        "Discovery Gate"
+      ],
+      "required_workers": [
+        "product-sot-planner"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "treat outcome candidate as approved Product SOT",
+        "draft Product SOT before operator understanding confirmation"
+      ],
+      "next_phase_id": "F5",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F5",
+      "phase_index": 6,
+      "phase_name": "Product SOT",
+      "required_artifacts": [
+        "product_sot",
+        "operator_briefing_package",
+        "full_product_sot_scope_coverage",
+        "factory_phase_lock"
+      ],
+      "required_gates": [
+        "Product SOT Gate"
+      ],
+      "required_workers": [
+        "product-sot-planner"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "execute from paper instead of Product SOT",
+        "ask operator to approve Product SOT from a short chat summary only",
+        "start architecture, repo cleanup, human gate or worker packet while Product SOT owner package is missing"
+      ],
+      "next_phase_id": "F6",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F6",
+      "phase_index": 7,
+      "phase_name": "Agentic Method Router",
+      "required_artifacts": [
+        "factory_phase_lock",
+        "method_contract"
+      ],
+      "required_gates": [
+        "Method Gate"
+      ],
+      "required_workers": [
+        "factory-orchestrator"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "ask user to choose internal method machinery",
+        "start architecture or repo cleanup before Method Contract"
+      ],
+      "next_phase_id": "F7",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F7",
+      "phase_index": 8,
+      "phase_name": "Method Contract",
+      "required_artifacts": [
+        "factory_phase_lock",
+        "method_contract"
+      ],
+      "required_gates": [
+        "Method Gate"
+      ],
+      "required_workers": [
+        "factory-orchestrator"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "start implementation with undocumented process choices",
+        "materialize future-phase cards while active frontier is still product_sot or method_contract"
+      ],
+      "next_phase_id": "F8",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F8",
+      "phase_index": 9,
+      "phase_name": "Pack And Product Experience Selection",
+      "required_artifacts": [
+        "capability_pack_contract",
+        "product_experience_plan",
+        "product_face_packet",
+        "project_design_system",
+        "professional_design_process",
+        "surface_evidence_profile",
+        "product_delivery_quality_profile"
+      ],
+      "required_gates": [
+        "Pack Gate",
+        "Product Experience Gate",
+        "Surface Pack Gate"
+      ],
+      "required_workers": [
+        "product-face",
+        "factory-orchestrator"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "activate a pack without proof or coverage",
+        "start product-facing implementation before surface state coverage",
+        "treat generic UI proof as Product Experience proof",
+        "move to implementation with unnamed surface pack or proof profile"
+      ],
+      "next_phase_id": "F9",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F9",
+      "phase_index": 10,
+      "phase_name": "Risk And Authority Gates",
+      "required_artifacts": [
+        "access_capability",
+        "budget_contract"
+      ],
+      "required_gates": [
+        "Access Gate",
+        "Budget Gate",
+        "Human Gate when required"
+      ],
+      "required_workers": [
+        "human-gate-clerk"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "request_decision",
+        "promote"
+      ],
+      "blocked_actions": [
+        "infer approval from silence",
+        "ask for planning-only continuation approval",
+        "ask for architecture or repo cleanup approval while downstream is frozen"
+      ],
+      "next_phase_id": "F10",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F10",
+      "phase_index": 11,
+      "phase_name": "Security Architecture",
+      "required_artifacts": [
+        "factory_phase_lock",
+        "security_architecture_plan"
+      ],
+      "required_gates": [
+        "Security Architecture Gate"
+      ],
+      "required_workers": [
+        "security-orchestrator"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "build material risk before architecture",
+        "start security architecture while Product SOT or Method Contract is still missing"
+      ],
+      "next_phase_id": "F11",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F11",
+      "phase_index": 12,
+      "phase_name": "Executable Plans",
+      "required_artifacts": [
+        "software_development_plan",
+        "spec_graph",
+        "loop_plan"
+      ],
+      "required_gates": [
+        "Ready Gate"
+      ],
+      "required_workers": [
+        "decomposition-planner"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "execute before plans and stop criteria exist"
+      ],
+      "next_phase_id": "F12",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F12",
+      "phase_index": 13,
+      "phase_name": "Autonomy Readiness",
+      "required_artifacts": [
+        "autonomy_readiness_packet"
+      ],
+      "required_gates": [
+        "Access & Capability Gate"
+      ],
+      "required_workers": [
+        "factory-orchestrator"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "start autonomous work with missing access or limits"
+      ],
+      "next_phase_id": "F13",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F13",
+      "phase_index": 14,
+      "phase_name": "Ready Gate",
+      "required_artifacts": [
+        "gate_report"
+      ],
+      "required_gates": [
+        "Ready Gate"
+      ],
+      "required_workers": [
+        "factory-orchestrator"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "dispatch blocked workers"
+      ],
+      "next_phase_id": "F15",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F15",
+      "phase_index": 15,
+      "phase_name": "Runtime Execution",
+      "required_artifacts": [
+        "worker_packets"
+      ],
+      "required_gates": [
+        "Runtime Gate"
+      ],
+      "required_workers": [
+        "implementation-worker",
+        "qa-verification-worker"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "spawn without route readiness"
+      ],
+      "next_phase_id": "F16",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F16",
+      "phase_index": 16,
+      "phase_name": "Worker Results",
+      "required_artifacts": [
+        "worker_results"
+      ],
+      "required_gates": [
+        "Done Gate"
+      ],
+      "required_workers": [
+        "evidence-reconciler"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "promote"
+      ],
+      "blocked_actions": [
+        "treat packet existence as proof"
+      ],
+      "next_phase_id": "F17",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F17",
+      "phase_index": 17,
+      "phase_name": "Verification",
+      "required_artifacts": [
+        "verification_plan",
+        "verification_result"
+      ],
+      "required_gates": [
+        "Verification Gate"
+      ],
+      "required_workers": [
+        "qa-verification-worker"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "promote"
+      ],
+      "blocked_actions": [
+        "claim done without command evidence"
+      ],
+      "next_phase_id": "F18",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F18",
+      "phase_index": 18,
+      "phase_name": "Independent Review",
+      "required_artifacts": [
+        "review_result"
+      ],
+      "required_gates": [
+        "Review Gate"
+      ],
+      "required_workers": [
+        "independent-reviewer"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "allow executor to self-approve"
+      ],
+      "next_phase_id": "F20",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F20",
+      "phase_index": 19,
+      "phase_name": "Closure Summary",
+      "required_artifacts": [
+        "closure_summary"
+      ],
+      "required_gates": [
+        "Closure Gate"
+      ],
+      "required_workers": [
+        "handoff-packer"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "hide unresolved blockers in prose"
+      ],
+      "next_phase_id": "F21",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F21",
+      "phase_index": 20,
+      "phase_name": "Receipt Five",
+      "required_artifacts": [
+        "receipt_five"
+      ],
+      "required_gates": [
+        "Done Gate"
+      ],
+      "required_workers": [
+        "evidence-reconciler"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "promote"
+      ],
+      "blocked_actions": [
+        "mark done without Receipt Five"
+      ],
+      "next_phase_id": "F22",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F22",
+      "phase_index": 21,
+      "phase_name": "Completion Audit",
+      "required_artifacts": [
+        "completion_audit"
+      ],
+      "required_gates": [
+        "Completion Audit"
+      ],
+      "required_workers": [
+        "evidence-reconciler"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "promote"
+      ],
+      "blocked_actions": [
+        "close skipped method or evidence requirements"
+      ],
+      "next_phase_id": "F23",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F23",
+      "phase_index": 22,
+      "phase_name": "Production Operations",
+      "required_artifacts": [
+        "production_readiness_plan"
+      ],
+      "required_gates": [
+        "Release Gate"
+      ],
+      "required_workers": [
+        "release-ops-worker"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "promote",
+        "release"
+      ],
+      "blocked_actions": [
+        "release without owner, rollback or approval"
+      ],
+      "next_phase_id": "F24",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F24",
+      "phase_index": 23,
+      "phase_name": "Release Or Block",
+      "required_artifacts": [
+        "release_decision"
+      ],
+      "required_gates": [
+        "Release Gate",
+        "Human Gate when required"
+      ],
+      "required_workers": [
+        "release-ops-worker",
+        "human-gate-clerk"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "request_decision",
+        "promote",
+        "release"
+      ],
+      "blocked_actions": [
+        "promote without production-strict evidence"
+      ],
+      "next_phase_id": "F25",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F25",
+      "phase_index": 24,
+      "phase_name": "Monitoring Support",
+      "required_artifacts": [
+        "incident_support_plan"
+      ],
+      "required_gates": [
+        "Support Gate"
+      ],
+      "required_workers": [
+        "release-ops-worker"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker"
+      ],
+      "blocked_actions": [
+        "ship without support owner when support is material"
+      ],
+      "next_phase_id": "F26",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F26",
+      "phase_index": 25,
+      "phase_name": "Learnback",
+      "required_artifacts": [
+        "factory_learning_proposal"
+      ],
+      "required_gates": [
+        "Learning Gate"
+      ],
+      "required_workers": [
+        "skill-eval-distiller"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "learnback_candidate"
+      ],
+      "blocked_actions": [
+        "auto-activate critical factory changes"
+      ],
+      "next_phase_id": "F27",
+      "auto_pass_allowed": false
+    },
+    {
+      "phase_id": "F27",
+      "phase_index": 26,
+      "phase_name": "Factory Maturity Audit",
+      "required_artifacts": [
+        "factory_maturity_scorecard"
+      ],
+      "required_gates": [
+        "Maturity Gate"
+      ],
+      "required_workers": [
+        "skill-eval-distiller"
+      ],
+      "allowed_commands": [
+        "advance_phase",
+        "repair_required",
+        "materialize_worker",
+        "learnback_candidate"
+      ],
+      "blocked_actions": [
+        "commit raw study or private evidence"
       ],
       "next_phase_id": null,
       "auto_pass_allowed": false

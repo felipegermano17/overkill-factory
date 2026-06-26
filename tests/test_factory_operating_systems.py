@@ -155,7 +155,7 @@ class FactoryOperatingSystemsTest(unittest.TestCase):
             self.assertEqual(0, code)
             emitted = factoryctl.load_json_like(out)
             self.assertEqual("method_os", emitted["os_id"])
-            self.assertEqual(400, emitted["issue_number"])
+            self.assertEqual(402, emitted["issue_number"])
 
     def test_cli_rejects_unknown_operating_system(self) -> None:
         old_argv = sys.argv[:]

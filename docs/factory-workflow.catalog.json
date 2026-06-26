@@ -5,6 +5,24 @@
   "catalog_version": "v1",
   "phases": [
     {
+      "phase_id": "F0",
+      "phase_name": "Pre-Start / Sealed Source Envelope",
+      "entry_conditions": ["operator intent or external signal exists before factory execution"],
+      "required_artifacts": ["factory_bridge_source_envelope", "factory_bridge_start_request"],
+      "optional_artifacts": ["factory_bridge_handoff"],
+      "required_gates": ["Start Boundary"],
+      "required_workers": ["overkill-factory-gerente", "factory-orchestrator"],
+      "allowed_next_actions": ["seal source envelope", "create start request", "select new_project or existing_project explicitly"],
+      "blocked_actions": ["summarize or reinterpret source material in the bridge", "create Hermes board/card directly from bridge", "start without explicit runtime target policy"],
+      "output_locations": ["card.factory_bridge_source_envelope_ref", "card.factory_bridge_start_request_ref", "run.board_binding"],
+      "completion_detection": ["sealed source envelope exists", "factory_bridge_start_request exists", "board policy is explicit"],
+      "operator_visible_summary": "Factory has a sealed start packet before the production line begins.",
+      "maintainer_visible_details": "Bridge/intake is a handoff boundary, not factory execution. New projects must create a fresh Hermes board through the factory start path.",
+      "related_schema_refs": ["schemas/factory-bridge-source-envelope.schema.json", "schemas/factory-bridge-start-request.schema.json", "schemas/factory-run.schema.json"],
+      "related_command_refs": ["factoryctl validate-factory-run", "factoryctl validate-card"],
+      "related_issue_refs": ["#443"]
+    },
+    {
       "phase_id": "F1",
       "phase_name": "Intake",
       "entry_conditions": ["user material or intent exists", "primary operator interface is selected"],
@@ -132,27 +150,10 @@
     },
     {
       "phase_id": "F8",
-      "phase_name": "Pack Selection",
+      "phase_name": "Pack And Product Experience Selection",
       "entry_conditions": ["method contract exists"],
-      "required_artifacts": ["capability_pack_contract"],
-      "optional_artifacts": ["product_pack", "surface_pack"],
-      "required_gates": ["Pack Gate"],
-      "required_workers": ["factory-orchestrator"],
-      "allowed_next_actions": ["match capability packs", "mark missing capabilities"],
-      "blocked_actions": ["activate a pack without proof or coverage"],
-      "output_locations": ["card.capability_pack_contract"],
-      "completion_detection": ["required surfaces are covered or blocked"],
-      "operator_visible_summary": "Factory is choosing the capability packs needed for the product.",
-      "maintainer_visible_details": "Pack templates are not execution approval.",
-      "related_schema_refs": ["schemas/capability-pack-contract.schema.json"],
-      "related_command_refs": ["factoryctl gate-report"],
-      "related_issue_refs": ["#104", "#99"]
-    },
-    {
-      "phase_id": "F8A",
-      "phase_name": "Product Experience And Surface Pack Gate",
-      "entry_conditions": ["method contract exists", "product-facing surface or surface pack is in scope"],
       "required_artifacts": [
+        "capability_pack_contract",
         "product_experience_plan",
         "product_face_packet",
         "project_design_system",
@@ -160,11 +161,12 @@
         "surface_evidence_profile",
         "product_delivery_quality_profile"
       ],
-      "optional_artifacts": ["reference_quality_waiver"],
-      "required_gates": ["Product Experience Gate", "Surface Pack Gate"],
+      "optional_artifacts": ["product_pack", "surface_pack", "reference_quality_waiver"],
+      "required_gates": ["Pack Gate", "Product Experience Gate", "Surface Pack Gate"],
       "required_workers": ["product-face", "factory-orchestrator"],
-      "allowed_next_actions": ["create Product Experience Plan", "create Product Face Packet", "create Project DESIGN.md contract", "select surface evidence profile"],
+      "allowed_next_actions": ["match capability packs", "mark missing capabilities", "create Product Experience Plan", "create Product Face Packet", "create Project DESIGN.md contract", "select surface evidence profile"],
       "blocked_actions": [
+        "activate a pack without proof or coverage",
         "start product-facing implementation before surface state coverage",
         "treat generic UI proof as Product Experience proof",
         "move to implementation with unnamed surface pack or proof profile"
@@ -177,6 +179,7 @@
         "card.product_delivery_quality_profile_ref"
       ],
       "completion_detection": [
+        "required surfaces are covered or blocked",
         "product_experience_plan exists and names surface_pack",
         "product_face_packet exists and names required states and proof",
         "project_design_system exists and exports an AI-readable DESIGN.md contract",
@@ -184,9 +187,10 @@
         "product_delivery_quality_profile_ref or product_delivery_quality_profile is declared",
         "professional_design_process exists before product-facing implementation"
       ],
-      "operator_visible_summary": "Factory is defining the product surface, states, experience bar and proof before implementation.",
-      "maintainer_visible_details": "Product-facing work cannot use generic implementation planning as a substitute for Product Experience and Product Face contracts.",
+      "operator_visible_summary": "Factory is choosing the capability packs and defining product surfaces, states, experience bar and proof before implementation.",
+      "maintainer_visible_details": "Pack templates are not execution approval. Product-facing work cannot use generic implementation planning as a substitute for Product Experience and Product Face contracts.",
       "related_schema_refs": [
+        "schemas/capability-pack-contract.schema.json",
         "schemas/product-experience-plan.schema.json",
         "schemas/product-face-packet.schema.json",
         "schemas/project-design-system.schema.json",
@@ -288,24 +292,6 @@
       "related_issue_refs": ["#106", "#117"]
     },
     {
-      "phase_id": "F14",
-      "phase_name": "Operator Projection",
-      "entry_conditions": ["gate or runtime state exists"],
-      "required_artifacts": ["project_projection"],
-      "optional_artifacts": ["factory_status_snapshot"],
-      "required_gates": ["Projection Boundary"],
-      "required_workers": ["control-tower-projection-worker"],
-      "allowed_next_actions": ["show compressed state and next action"],
-      "blocked_actions": ["treat projection as source of truth"],
-      "output_locations": ["card.project_projection", "factoryctl status-snapshot"],
-      "completion_detection": ["projection states source-of-truth boundary"],
-      "operator_visible_summary": "Factory shows status without making the user operate internals.",
-      "maintainer_visible_details": "Projection mirrors canonical state and may be stale.",
-      "related_schema_refs": ["schemas/project-projection.schema.json", "schemas/factory-status-snapshot.schema.json"],
-      "related_command_refs": ["factoryctl status-snapshot"],
-      "related_issue_refs": ["#94", "#112", "#117"]
-    },
-    {
       "phase_id": "F15",
       "phase_name": "Runtime Execution",
       "entry_conditions": ["Ready Gate passed"],
@@ -379,24 +365,6 @@
       "related_schema_refs": ["schemas/reviewer-selection-plan.schema.json"],
       "related_command_refs": ["factoryctl worker-packet"],
       "related_issue_refs": ["#102", "#103"]
-    },
-    {
-      "phase_id": "F19",
-      "phase_name": "Human Gate",
-      "entry_conditions": ["authority, risk or release requires human decision"],
-      "required_artifacts": ["human_gate_packet", "operator_briefing_package", "approval_request", "evidence_index", "owner_review", "human_decision_record"],
-      "optional_artifacts": ["diagram", "video_explainer", "animation_html", "audio_explainer"],
-      "required_gates": ["Human Gate"],
-      "required_workers": ["human-gate-clerk"],
-      "allowed_next_actions": ["prepare bounded approval request"],
-      "blocked_actions": ["invent, infer or simulate approval"],
-      "output_locations": ["card.human_gate_packet", "receipt.approvals"],
-      "completion_detection": ["operator decision package was delivered before the question", "real human decision with scope and evidence exists"],
-      "operator_visible_summary": "Factory needs a bounded human decision only after the decision package is delivered.",
-      "maintainer_visible_details": "The user decides authority; the factory prepares the packet.",
-      "related_schema_refs": ["schemas/receipt-five.schema.json"],
-      "related_command_refs": ["factoryctl human-gate-record"],
-      "related_issue_refs": ["#102", "#112"]
     },
     {
       "phase_id": "F20",

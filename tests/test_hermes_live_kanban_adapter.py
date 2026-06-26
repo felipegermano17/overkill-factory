@@ -62,6 +62,10 @@ def human_gate_packet_fixture() -> dict:
         "gate_type": "product_sot_owner_decision",
         "required_approvers": ["product-owner"],
         "decision_state": "pending",
+        "risk_owner": "product-owner",
+        "security_owner": "security-reviewer",
+        "rollback_owner": "factory-orchestrator",
+        "waiver_policy": "no waiver without explicit human record",
         "operator_briefing_package_ref": "reports/product-alpha/operator-briefing-package.md",
         "approval_request_ref": "reports/product-alpha/APPROVAL_REQUEST.json",
         "evidence_index_ref": "reports/product-alpha/EVIDENCE_INDEX.json",
@@ -76,6 +80,7 @@ def human_gate_packet_fixture() -> dict:
         "optional_explainer_assets": ["diagram"],
         "decision_package_delivery": {
             "operator_interface": "telegram",
+            "primary_language": "pt-BR",
             "push_required": True,
             "summary_only_forbidden": True,
             "material_before_question": True,
@@ -86,6 +91,8 @@ def human_gate_packet_fixture() -> dict:
                 "evidence_index_json",
                 "owner_review_markdown",
             ],
+            "delivery_receipt_ref": "reports/product-alpha/DELIVERY_RECEIPT.json",
+            "question_after_material_delivery": True,
         },
     }
 

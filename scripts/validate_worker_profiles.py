@@ -9,6 +9,7 @@ that layer, a worker is only a process role, not an operable agent.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -53,7 +54,36 @@ SECURITY_CRITICAL_WORKERS = {
     "detection-monitoring-worker",
 }
 
-ALLOWED_PHASES = {f"F{index}" for index in range(30)}
+ALLOWED_PHASES = {
+    "F0",
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F6",
+    "F7",
+    "F8",
+    "F9",
+    "F10",
+    "F11",
+    "F12",
+    "F13",
+    "F15",
+    "F16",
+    "F17",
+    "F18",
+    "F20",
+    "F21",
+    "F22",
+    "F23",
+    "F24",
+    "F25",
+    "F26",
+    "F27",
+    "projection:operator_projection",
+    "gate_event:human_gate_event",
+}
 ALLOWED_RISKS = {"R0", "R1", "R2", "R3", "R4"}
 READINESS_STATES = {
     "contract_only",
@@ -74,6 +104,28 @@ EARLY_SECURITY_WORKERS = {
     "detection-monitoring-worker",
 }
 
+PROCESS_AUTHORITY_FORBIDDEN_PATTERNS = [
+    ("choose_route", re.compile(r"\b(choose|decide|select|pick)\s+(the\s+)?(factory\s+)?route\b", re.I)),
+    ("choose_phase", re.compile(r"\b(choose|decide|select|pick)\s+(the\s+)?(factory\s+)?phase\b", re.I)),
+    ("choose_specialist", re.compile(r"\b(choose|decide|select|pick)\s+(the\s+)?specialist\b", re.I)),
+    ("approve_gate", re.compile(r"\bapprove\s+(the\s+)?(human\s+|release\s+|architecture\s+|factory\s+)?gates?\b", re.I)),
+    ("waive_findings", re.compile(r"\bwaive\s+(blocking\s+)?findings?\b", re.I)),
+    ("bypass_gate", re.compile(r"\bbypass\s+(human\s+|release\s+|factory\s+)?gates?\b", re.I)),
+    ("mutate_state", re.compile(r"\bmutate\s+(card\s+|factory\s+|runtime\s+)?state\b", re.I)),
+]
+PROCESS_AUTHORITY_NEGATIONS = (
+    "cannot",
+    "can't",
+    "must not",
+    "mustn't",
+    "never",
+    "not ",
+    "no ",
+    "sem ",
+    "não ",
+    "nao ",
+)
+
 
 def load_json(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -88,6 +140,54 @@ def combined_text(value: Any) -> str:
     if isinstance(value, list):
         return " ".join(combined_text(item) for item in value)
     return str(value)
+
+
+def _iter_strings(value: Any, path: str) -> list[tuple[str, str]]:
+    if isinstance(value, str):
+        return [(path, value)]
+    if isinstance(value, list):
+        items: list[tuple[str, str]] = []
+        for index, item in enumerate(value):
+            items.extend(_iter_strings(item, f"{path}[{index}]"))
+        return items
+    if isinstance(value, dict):
+        items: list[tuple[str, str]] = []
+        for key, item in value.items():
+            items.extend(_iter_strings(item, f"{path}.{key}"))
+        return items
+    return []
+
+
+def _is_negated(text: str, match_start: int) -> bool:
+    prefix = text[max(0, match_start - 160) : match_start].lower()
+    return any(marker in prefix for marker in PROCESS_AUTHORITY_NEGATIONS)
+
+
+def process_authority_leakage_errors(worker_id: str, profile: dict[str, Any], worker: dict[str, Any]) -> list[str]:
+    """Reject agent/profile text that turns deterministic process authority into agent authority."""
+
+    errors: list[str] = []
+    positive_authority_fields: list[tuple[str, str]] = []
+    positive_authority_fields.extend(_iter_strings(profile.get("authority", {}).get("may", []), "profile.authority.may"))
+    positive_authority_fields.extend(_iter_strings(worker.get("authority_max", ""), "registry.authority_max"))
+    positive_authority_fields.extend(_iter_strings(profile.get("mission", ""), "profile.mission"))
+
+    for path, text in positive_authority_fields:
+        for pattern_name, pattern in PROCESS_AUTHORITY_FORBIDDEN_PATTERNS:
+            for match in pattern.finditer(text):
+                if not _is_negated(text, match.start()):
+                    errors.append(
+                        f"{worker_id}: process authority leak in {path}: {pattern_name} must be reducer/registry authority, not profile authority"
+                    )
+
+    if any(word in combined_text(profile.get("activation", {})).lower() for word in ("route", "phase", "gate", "specialist")):
+        must_not = combined_text(profile.get("authority", {}).get("must_not", [])).lower()
+        required_fragments = ("approve", "phase", "route")
+        for fragment in required_fragments:
+            if fragment not in must_not:
+                errors.append(f"{worker_id}: route/phase/gate profile must explicitly forbid {fragment} authority")
+
+    return errors
 
 
 def parse_datetime(value: Any) -> datetime | None:
@@ -355,6 +455,7 @@ def validate(
             findings.append(f"{worker_id}: missing bounded failure contract")
         if len(profile.get("understanding_contract", {}).get("must_record", [])) < 3:
             findings.append(f"{worker_id}: missing operator understanding contract")
+        findings.extend(process_authority_leakage_errors(worker_id, profile, worker))
         phases = set(profile.get("activation", {}).get("phases", []))
         unknown_phases = phases - ALLOWED_PHASES
         if unknown_phases:

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/capability-acquisition-contract.schema.json",
+  "title": "Overkill Factory Capability Acquisition Contract",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "contract_id",
+    "trigger",
+    "resolution_order",
+    "reference_search_policy",
+    "activation_requirements",
+    "block_policy",
+    "forbidden_shortcuts"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/capability-acquisition-contract.schema.json"
+    },
+    "record_type": {
+      "const": "capability_acquisition_contract"
+    },
+    "contract_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["missing_capability_coverage", "unknown_surface", "missing_specialist"],
+      "properties": {
+        "missing_capability_coverage": { "const": true },
+        "unknown_surface": { "const": true },
+        "missing_specialist": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "resolution_order": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "enum": [
+          "match_existing_core_ready_pack",
+          "match_existing_pack_template",
+          "search_reference_repositories_for_best_agent_or_skill",
+          "create_or_install_candidate_capability",
+          "run_smoke_and_eval",
+          "activate_pack_or_block_with_evidence"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "reference_search_policy": {
+      "type": "object",
+      "required": ["required_before_blocking", "search_sources", "must_record_candidates", "must_record_rejections"],
+      "properties": {
+        "required_before_blocking": { "const": true },
+        "search_sources": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        },
+        "must_record_candidates": { "const": true },
+        "must_record_rejections": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "activation_requirements": {
+      "type": "object",
+      "required": ["profile_or_skill_contract", "permission_class", "smoke", "eval", "review", "hermes_binding"],
+      "properties": {
+        "profile_or_skill_contract": { "const": true },
+        "permission_class": { "const": true },
+        "smoke": { "const": true },
+        "eval": { "const": true },
+        "review": { "const": true },
+        "hermes_binding": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "block_policy": {
+      "type": "object",
+      "required": ["block_only_after_search", "block_requires_reason", "block_requires_smallest_safe_next_action"],
+      "properties": {
+        "block_only_after_search": { "const": true },
+        "block_requires_reason": { "const": true },
+        "block_requires_smallest_safe_next_action": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "forbidden_shortcuts": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

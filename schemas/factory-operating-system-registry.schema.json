@@ -34,7 +34,7 @@
     },
     "entries": {
       "type": "array",
-      "minItems": 11,
+        "minItems": 17,
       "items": {
         "type": "object",
         "required": [
@@ -62,16 +62,22 @@
         "properties": {
           "os_id": {
             "enum": [
+              "deterministic_control_plane_os",
               "product_truth_research_os",
               "method_os",
+              "product_architecture_os",
+              "product_experience_design_brand_os",
+              "work_unit_execution_dispatch_os",
               "authority_autonomy_os",
               "hermes_worker_runtime_os",
-              "evidence_product_proof_os",
-              "capability_domain_pack_os",
+              "evidence_receipt_os",
+              "capability_provider_os",
+              "agent_profile_authority_os",
+              "security_os",
+              "quality_verification_os",
               "operator_experience_os",
-              "security_release_os",
-              "product_quality_os",
-              "velocity_cost_os",
+              "release_operations_os",
+              "velocity_cost_throughput_os",
               "factory_learning_os"
             ]
           },

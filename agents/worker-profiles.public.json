@@ -72,7 +72,10 @@
         "must_not": [
           "approve product decisions",
           "waive security findings",
-          "mark specialist evidence as done"
+          "mark specialist evidence as done",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "architecture approval with material risk, cost, access or authority",
@@ -244,7 +247,10 @@
         "must_not": [
           "approve product decisions",
           "hide contradictions",
-          "commit raw private extraction to public artifacts"
+          "commit raw private extraction to public artifacts",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "source conflict changes product scope",
@@ -405,7 +411,10 @@
         "must_not": [
           "approve architecture",
           "debate business viability outside scope",
-          "erase source uncertainty"
+          "erase source uncertainty",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "scope changes the product",
@@ -575,7 +584,10 @@
         "must_not": [
           "bypass human architecture gate",
           "choose deploy authority",
-          "hide unsupported dependencies"
+          "hide unsupported dependencies",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "architecture closure",
@@ -742,7 +754,10 @@
         "must_not": [
           "approve architecture",
           "fake screenshots",
-          "ignore inaccessible states"
+          "ignore inaccessible states",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "brand-critical release",
@@ -903,7 +918,10 @@
         "must_not": [
           "assume Anchor default",
           "deploy programs",
-          "touch keys or funds"
+          "touch keys or funds",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "R3 or R4 onchain waiver",
@@ -1107,7 +1125,10 @@
         "must_not": [
           "waive findings",
           "change production systems",
-          "publish sensitive exploit details"
+          "publish sensitive exploit details",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "blocking finding waiver",
@@ -1283,7 +1304,7 @@
       "activation": {
         "phases": [
           "F7",
-          "F14",
+          "F18",
           "F15"
         ],
         "surfaces": [
@@ -1312,7 +1333,10 @@
         "must_not": [
           "accept residual risk alone",
           "mutate production",
-          "replace Codex Security scans"
+          "replace Codex Security scans",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "auth bypass waiver",
@@ -1485,7 +1509,7 @@
           "F1",
           "F7",
           "F12",
-          "F14"
+          "F18"
         ],
         "surfaces": [
           "agent",
@@ -1513,7 +1537,10 @@
         "must_not": [
           "grant tools",
           "accept untrusted instructions",
-          "store raw private memory publicly"
+          "store raw private memory publicly",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "dangerous tool grant",
@@ -1684,7 +1711,7 @@
       ],
       "activation": {
         "phases": [
-          "F14",
+          "F18",
           "F15"
         ],
         "surfaces": [
@@ -1711,7 +1738,10 @@
         "must_not": [
           "modify implementation artifacts",
           "approve release alone",
-          "review without diff"
+          "review without diff",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "finding waiver",
@@ -1857,7 +1887,10 @@
         "must_not": [
           "receive secrets by default",
           "mutate production",
-          "leave leases running"
+          "leave leases running",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "secret-required proof",
@@ -2007,7 +2040,10 @@
         "must_not": [
           "invent evidence",
           "approve gates",
-          "hide unresolved blockers"
+          "hide unresolved blockers",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "handoff asks for decision",
@@ -2127,7 +2163,7 @@
       ],
       "activation": {
         "phases": [
-          "F14"
+          "F18"
         ],
         "surfaces": [
           "review",
@@ -2157,7 +2193,10 @@
         "must_not": [
           "modify implementation artifacts",
           "replace human gates",
-          "self-review"
+          "self-review",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "R3 or R4 waiver",
@@ -2283,7 +2322,7 @@
       "activation": {
         "phases": [
           "F13",
-          "F14",
+          "F18",
           "F15",
           "F16"
         ],
@@ -2327,7 +2366,10 @@
           "turn a FAIL into PASS",
           "approve human gates",
           "waive security or audit findings",
-          "mutate unrelated Kanban card state directly"
+          "mutate unrelated Kanban card state directly",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "R3 or R4 waiver",
@@ -2513,7 +2555,10 @@
           "mutate product state",
           "ask for approval before material is delivered",
           "treat a chat summary or markdown-only file as a decision package",
-          "present planning-only continuation or specialist routing as approval"
+          "present planning-only continuation or specialist routing as approval",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "human_gate_packet names access, budget, legal, privacy, risk acceptance, R4, release, production, funds, secrets, signing, custody or irreversible action"
@@ -2709,7 +2754,10 @@
         "must_not": [
           "change architecture",
           "authorize implementation",
-          "hide unresolved decisions"
+          "hide unresolved decisions",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "doc changes architecture",
@@ -2869,7 +2917,10 @@
         "must_not": [
           "implement work",
           "approve gates",
-          "remove specialist requirements for convenience"
+          "remove specialist requirements for convenience",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "architecture not approved",
@@ -3030,7 +3081,10 @@
           "expand scope",
           "self-review",
           "approve its own work",
-          "deploy or touch forbidden surfaces"
+          "deploy or touch forbidden surfaces",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "scope expansion",
@@ -3186,7 +3240,10 @@
         "must_not": [
           "waive failed tests",
           "approve release alone",
-          "hide flaky failures"
+          "hide flaky failures",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "test waiver",
@@ -3350,7 +3407,10 @@
         "must_not": [
           "waive findings",
           "replace specialist evidence",
-          "approve release"
+          "approve release",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "security owner missing for R3 or R4",
@@ -3570,7 +3630,10 @@
         "must_not": [
           "mutate production",
           "touch secrets",
-          "approve deploy alone"
+          "approve deploy alone",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "IAM exception",
@@ -3773,7 +3836,10 @@
         "must_not": [
           "touch keys or funds",
           "sign transactions",
-          "store secrets"
+          "store secrets",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "key access",
@@ -3981,7 +4047,10 @@
         "must_not": [
           "deploy without gate",
           "hide blockers",
-          "touch production authority"
+          "touch production authority",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "production promotion",
@@ -4138,7 +4207,10 @@
         "must_not": [
           "turn memory into truth",
           "publish private memory",
-          "ignore poisoning risk"
+          "ignore poisoning risk",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "private memory promotion",
@@ -4309,7 +4381,10 @@
         "must_not": [
           "fake eval success",
           "duplicate broad skills",
-          "publish private source material"
+          "publish private source material",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "public skill includes sensitive workflow",
@@ -4470,7 +4545,10 @@
         "must_not": [
           "approve product risk",
           "publish raw private material",
-          "ignore binary assets"
+          "ignore binary assets",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "sensitive artifact exception",
@@ -4668,7 +4746,10 @@
         "must_not": [
           "waive release blockers",
           "publish secrets",
-          "mutate package registry"
+          "mutate package registry",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "critical dependency waiver",
@@ -4890,7 +4971,10 @@
         "must_not": [
           "approve release alone",
           "mutate production monitors",
-          "hide missing observability"
+          "hide missing observability",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "production release",
@@ -5101,7 +5185,10 @@
         "must_not": [
           "change architecture",
           "approve Product Face result",
-          "mutate backend/onchain scope without a handoff"
+          "mutate backend/onchain scope without a handoff",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "Product Face changes user commitments",
@@ -5257,7 +5344,10 @@
           "change architecture",
           "approve its own work",
           "waive security controls",
-          "invent data contracts"
+          "invent data contracts",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "auth model changes",
@@ -5407,7 +5497,10 @@
           "mutate production data",
           "approve its own work",
           "skip rollback for destructive changes",
-          "invent privacy assumptions"
+          "invent privacy assumptions",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "destructive migration",
@@ -5558,7 +5651,10 @@
           "use Anchor assumptions",
           "approve its own work",
           "deploy mainnet",
-          "touch real keys or funds"
+          "touch real keys or funds",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "R3/R4 onchain work",
@@ -5705,7 +5801,10 @@
         "must_not": [
           "waive Auditor findings",
           "deploy mainnet",
-          "touch real keys or funds"
+          "touch real keys or funds",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "R3/R4 onchain completion",
@@ -5852,7 +5951,10 @@
           "touch real keys",
           "approve its own work",
           "move funds",
-          "hide signer/custody assumptions"
+          "hide signer/custody assumptions",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "funds path",
@@ -5999,7 +6101,10 @@
           "redesign owned components",
           "approve its own work",
           "waive missing builder output",
-          "hide cross-surface risk"
+          "hide cross-surface risk",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "R3/R4 cross-surface risk",
@@ -6151,7 +6256,10 @@
           "rewrite acceptance criteria alone",
           "approve its own work",
           "hide flaky tests",
-          "claim manual proof as automation"
+          "claim manual proof as automation",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "acceptance criteria change",
@@ -6302,7 +6410,10 @@
           "release production alone",
           "approve its own work",
           "store secrets",
-          "mutate cloud without gate"
+          "mutate cloud without gate",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "production-like release",
@@ -6457,7 +6568,10 @@
         "must_not": [
           "widen tool access silently",
           "publish private profile material",
-          "self-approve agent safety"
+          "self-approve agent safety",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "R3/R4 agent autonomy",
@@ -6580,7 +6694,7 @@
       ],
       "activation": {
         "phases": [
-          "F19"
+          "projection:operator_projection"
         ],
         "surfaces": [
           "control-tower",
@@ -6607,7 +6721,10 @@
         "must_not": [
           "approve gates",
           "change runtime state",
-          "hide blocker evidence"
+          "hide blocker evidence",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "approval is requested",
@@ -6727,8 +6844,8 @@
       ],
       "activation": {
         "phases": [
-          "F19",
-          "F29"
+          "projection:operator_projection",
+          "F24"
         ],
         "surfaces": [
           "discord",
@@ -6755,7 +6872,10 @@
         "must_not": [
           "approve for the owner",
           "mutate card state directly",
-          "store secrets or raw private ids"
+          "store secrets or raw private ids",
+          "choose phase outside the deterministic phase graph",
+          "choose route outside the reducer and registry",
+          "approve gates or approvals for the operator"
         ],
         "human_gate_required_when": [
           "approval is requested",

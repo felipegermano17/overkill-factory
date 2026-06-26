@@ -4,8 +4,13 @@
   "title": "Overkill Factory Product Experience Plan",
   "type": "object",
   "required": [
+    "$schema",
     "surface_type",
     "surface_pack",
+    "product_delivery_quality_profile_ref",
+    "project_design_system_ref",
+    "professional_design_process_ref",
+    "surface_evidence_profile",
     "experience_sot",
     "user",
     "job_to_be_done",
@@ -27,6 +32,9 @@
     "product_face_result_required"
   ],
   "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/product-experience-plan.schema.json"
+    },
     "surface_type": {
       "type": "string",
       "minLength": 2
@@ -42,6 +50,19 @@
     "project_design_system_ref": {
       "type": "string",
       "minLength": 3
+    },
+    "professional_design_process_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "reference_quality_waiver": {
+      "type": "object",
+      "required": ["owner", "reason"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 3 },
+        "reason": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
     },
     "domain_proof_required": {
       "type": "array",
@@ -248,5 +269,5 @@
       "additionalProperties": true
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

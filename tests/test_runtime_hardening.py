@@ -104,6 +104,23 @@ class RuntimeHardeningTest(unittest.TestCase):
 
         self.assertIn("agent_runtime_hardening_profile required for tool-using material execution", errors)
 
+    def test_runtime_contract_rejects_unregistered_authority_fields(self) -> None:
+        card = base_card()
+        card["runtime_contract"] = dict(card["runtime_contract"])
+        card["runtime_contract"]["may_auto_approve_human_gate"] = True
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("runtime_contract" in error and "may_auto_approve_human_gate" in error for error in errors), errors)
+
+    def test_security_contract_rejects_prose_receipt_without_boundary(self) -> None:
+        card = base_card()
+        card["security_contract"] = {"security_receipt_ref": "external:later"}
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("security_contract" in error and "security_boundary" in error for error in errors), errors)
+
     def test_unrestricted_network_without_human_gate_blocks(self) -> None:
         card = base_card()
         card["agent_runtime_hardening_profile"]["network_scope"] = "unrestricted"

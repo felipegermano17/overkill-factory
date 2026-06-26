@@ -210,6 +210,38 @@ class WorkerProfilesTest(unittest.TestCase):
         self.assertEqual(timing_policy["runtime_authority"], "hermes_kanban")
         self.assertNotIn("source_of_truth", timing_policy)
 
+    def test_worker_profile_cannot_hold_process_authority(self) -> None:
+        profile = {
+            "mission": "Choose route and phase for the factory from agent context.",
+            "activation": {"phases": ["F4"], "surfaces": ["route", "phase"], "risk_floor": "R0", "trigger_words": ["route"]},
+            "authority": {
+                "may": ["choose route", "approve gates"],
+                "must_not": ["waive findings"],
+                "human_gate_required_when": ["release"],
+            },
+        }
+        worker = {"authority_max": "choose phase and approve gates"}
+
+        errors = profile_validator.process_authority_leakage_errors("bad-router", profile, worker)
+
+        self.assertTrue(any("choose_route" in error for error in errors), errors)
+        self.assertTrue(any("choose_phase" in error for error in errors), errors)
+        self.assertTrue(any("approve_gate" in error for error in errors), errors)
+
+    def test_worker_profile_may_describe_process_authority_only_as_denial(self) -> None:
+        profile = {
+            "mission": "Materialize reducer-approved route records without deciding the factory route.",
+            "activation": {"phases": ["F4"], "surfaces": ["route", "phase"], "risk_floor": "R0", "trigger_words": ["route"]},
+            "authority": {
+                "may": ["materialize reducer-approved worker route records"],
+                "must_not": ["approve gates", "choose phase", "choose route"],
+                "human_gate_required_when": ["release"],
+            },
+        }
+        worker = {"authority_max": "materialize reducer outputs; cannot choose route, phase or approve gates"}
+
+        self.assertEqual([], profile_validator.process_authority_leakage_errors("good-router", profile, worker))
+
 
 if __name__ == "__main__":
     unittest.main()

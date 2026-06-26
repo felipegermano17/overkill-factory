@@ -7,6 +7,19 @@ public releases.
 
 ## Unreleased
 
+- Harden Factory V2 against raw-study simplification: add phase graph,
+  V2 study traceability, worker authority, Product Experience control plane,
+  capability acquisition, Hermes reducer mutation proof and scoped readiness
+  contracts with CLI validation and regression coverage.
+- Require embedded runtime/security contracts on factory cards and first-class
+  Solana AI Kit/onchain work-package receipts for Solana-domain execution.
+- Expand the canonical Operating System registry from 11 broad areas to 17
+  executable ownership systems, including capability provider, Product
+  Experience, agent authority, velocity/cost and factory learning.
+- Update the public README, CLI reference, schemas/templates docs and Codex
+  skill surface so V2 is described as a deterministic control plane, not as an
+  agent-driven vFinal playbook.
+
 ## 2.0.1 - 2026-06-26
 
 - Promote the live Hermes no-idle gate fix into the public Factory V2 release

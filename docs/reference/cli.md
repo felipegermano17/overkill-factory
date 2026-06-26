@@ -48,6 +48,13 @@ factoryctl validate-factory-event-log templates/factory-run-event.json
 factoryctl validate-decision-outbox templates/factory-decision-outbox.json
 factoryctl validate-promotion-packet templates/factory-promotion-packet.json
 factoryctl validate-factory-run templates/factory-run.json
+factoryctl validate-phase-graph templates/factory-phase-graph.json
+factoryctl validate-v2-study-traceability templates/v2-study-traceability.json
+factoryctl validate-worker-authority-contract templates/worker-authority-contract.json
+factoryctl validate-product-experience-control-plane templates/product-experience-control-plane.json
+factoryctl validate-capability-acquisition-contract templates/capability-acquisition-contract.json
+factoryctl validate-hermes-reducer-mutation-proof templates/hermes-reducer-mutation-proof.json
+factoryctl validate-readiness-claim templates/factory-v2-readiness-claim.json
 ```
 
 `compile-workflow` converts `docs/factory-workflow.catalog.json` into a
@@ -67,6 +74,37 @@ auto-approve it.
 `validate-promotion-packet` keeps completion from becoming prose. Promotion
 requires Receipt Five, completion audit, release readiness, rollback, monitoring
 and human gate record when the promotion scope requires human authority.
+
+`validate-phase-graph` enforces the V2 taxonomy: only product phases belong in
+the main line, while human gates and operator projections are events or views,
+not route phases. Legacy labels such as F8A, F14 and F19 must resolve through
+explicit aliases instead of becoming new product stages.
+
+`validate-v2-study-traceability` is the no-simplification guard. Every P0 claim
+from the raw V2 studies must point to implementation, schemas, runtime commands,
+tests and negative fixtures before the factory can claim the study was applied.
+
+`validate-worker-authority-contract` keeps workers as operators, not routers.
+Profiles may produce artifacts, but phase selection, specialist selection, gate
+approval, waivers and promotion stay with reducers, registries and Hermes
+runtime state.
+
+`validate-product-experience-control-plane` makes frontend, design, brand,
+operator UX and Product Face work a governed product surface instead of an
+optional visual layer.
+
+`validate-capability-acquisition-contract` prevents missing specialists from
+becoming a human blocker too early. The factory must first try existing packs,
+templates, reference repositories and install/create paths; only exhausted or
+unsafe routes can block.
+
+`validate-hermes-reducer-mutation-proof` proves the Hermes adapter boundary:
+bridges may observe and carry operator responses, but only the native Hermes
+Kanban reducer may mutate cards, runs, comments and transitions.
+
+`validate-readiness-claim` separates kernel-ready, runtime-ready,
+product-run-ready and production-proven claims so public repository validation
+cannot be confused with a real product in production.
 
 ## Card And Worker Commands
 

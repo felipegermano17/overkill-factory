@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-phase-graph.schema.json",
+  "title": "Overkill Factory Canonical Phase Graph",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "graph_id",
+    "factory_method_version",
+    "product_phases",
+    "gate_events",
+    "projections",
+    "legacy_aliases",
+    "taxonomy_policy"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-phase-graph.schema.json" },
+    "record_type": { "const": "factory_phase_graph" },
+    "graph_id": { "type": "string", "minLength": 3 },
+    "factory_method_version": { "const": "OVERKILL_VFINAL" },
+    "product_phases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["phase_id", "phase_index", "name", "kind", "frontier", "entry_contract_refs", "exit_contract_refs", "next_phase_id"],
+        "properties": {
+          "phase_id": { "type": "string", "pattern": "^F[0-9]+$" },
+          "phase_index": { "type": "integer", "minimum": 0 },
+          "name": { "type": "string", "minLength": 3 },
+          "kind": { "const": "product_phase" },
+          "frontier": { "type": "string", "minLength": 3 },
+          "entry_contract_refs": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "exit_contract_refs": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "next_phase_id": { "type": ["string", "null"], "pattern": "^F[0-9]+$" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "gate_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["event_id", "event_type", "trigger", "required_packet_refs", "forbidden_as_phase"],
+        "properties": {
+          "event_id": { "type": "string", "minLength": 3 },
+          "event_type": { "enum": ["human_gate_event", "release_gate_event", "security_gate_event"] },
+          "trigger": { "type": "string", "minLength": 3 },
+          "required_packet_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+          "forbidden_as_phase": { "const": true }
+        },
+        "additionalProperties": false
+      }
+    },
+    "projections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["projection_id", "projection_type", "source_of_truth", "forbidden_as_phase"],
+        "properties": {
+          "projection_id": { "type": "string", "minLength": 3 },
+          "projection_type": { "enum": ["operator_projection", "status_snapshot", "control_tower_view"] },
+          "source_of_truth": { "type": "string", "minLength": 3 },
+          "forbidden_as_phase": { "const": true }
+        },
+        "additionalProperties": false
+      }
+    },
+    "legacy_aliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["legacy_id", "canonical_ref", "allowed_for_compatibility_only"],
+        "properties": {
+          "legacy_id": { "type": "string", "minLength": 2 },
+          "canonical_ref": { "type": "string", "minLength": 2 },
+          "allowed_for_compatibility_only": { "const": true }
+        },
+        "additionalProperties": false
+      }
+    },
+    "taxonomy_policy": {
+      "type": "object",
+      "required": [
+        "frontier_is_not_phase",
+        "gate_event_is_not_phase",
+        "projection_is_not_phase",
+        "legacy_suffix_phase_ids_forbidden",
+        "single_active_product_phase_required"
+      ],
+      "properties": {
+        "frontier_is_not_phase": { "const": true },
+        "gate_event_is_not_phase": { "const": true },
+        "projection_is_not_phase": { "const": true },
+        "legacy_suffix_phase_ids_forbidden": { "const": true },
+        "single_active_product_phase_required": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

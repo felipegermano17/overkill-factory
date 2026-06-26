@@ -42,7 +42,7 @@
   "reviewer_identity": "security-reviewer",
   "runtime_decision": "codex_advisory",
   "runtime_contract": {"mode": "read_only_gate_test"},
-  "security_contract": {"security_receipt_ref": "required_if_real_scope"},
+  "security_contract": {"security_boundary": "auditor_required"},
   "forbidden_actions": ["code_edit", "deploy", "devnet_write", "mainnet_write", "signing", "key_access"],
   "done_definition": "Gate refuses ready because Auditor/waiver is missing.",
   "transition_event_required": true,

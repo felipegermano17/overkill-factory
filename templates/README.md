@@ -40,11 +40,37 @@ Kanban task IDs. Use stable issue refs such as `github-issue-example`, semantic
 artifact refs, or `kanban:<redacted>` when private runtime traceability exists
 only in Hermes.
 
+## Factory V2 Templates
+
+For deterministic Factory V2 work, start from these templates:
+
+- `factory-phase-graph.json`: the canonical phase graph and legacy aliases.
+- `v2-study-traceability.json`: the ledger proving raw-study claims were not
+  simplified away.
+- `worker-authority-contract.json`: the worker authority boundary.
+- `product-experience-control-plane.json`: the Product Experience governance
+  surface for design, brand, frontend and operator UX.
+- `capability-acquisition-contract.json`: the missing-capability resolution
+  route before any specialist block.
+- `hermes-reducer-mutation-proof.json`: the Hermes mutation boundary proof.
+- `factory-v2-readiness-claim.json`: scoped readiness state.
+
+These templates are not runtime evidence by themselves. They become evidence
+only after the matching `factoryctl validate-*` command passes and the real
+Hermes card or product run references the validated artifact.
+
 ## How It Is Validated
 
 Run template and schema checks:
 
 ```bash
+python scripts/factoryctl.py validate-phase-graph templates/factory-phase-graph.json
+python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
+python scripts/factoryctl.py validate-worker-authority-contract templates/worker-authority-contract.json
+python scripts/factoryctl.py validate-product-experience-control-plane templates/product-experience-control-plane.json
+python scripts/factoryctl.py validate-capability-acquisition-contract templates/capability-acquisition-contract.json
+python scripts/factoryctl.py validate-hermes-reducer-mutation-proof templates/hermes-reducer-mutation-proof.json
+python scripts/factoryctl.py validate-readiness-claim templates/factory-v2-readiness-claim.json
 python scripts/validate_public_json_artifacts.py
 python -m unittest discover -s tests -p "test_*.py" -q
 python scripts/public_safety_scan.py

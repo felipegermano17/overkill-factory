@@ -1,0 +1,38 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-reducer-mutation-proof.schema.json",
+  "record_type": "hermes_reducer_mutation_proof",
+  "proof_id": "hermes-reducer-mutation-proof-v2",
+  "runtime_source_of_truth": {
+    "hermes_kanban": true,
+    "factory_event_log": true,
+    "operator_console": false
+  },
+  "reducer_boundary": {
+    "reducer_must_accept": true,
+    "event_log_required": true,
+    "promotion_packet_required": true
+  },
+  "bridge_boundary": {
+    "bridge_may_execute_factory_work": false,
+    "bridge_may_mutate_board": false,
+    "bridge_may_approve_human_gate": false
+  },
+  "adapter_boundary": {
+    "adapter_may_decide_business_rule": false,
+    "live_mutation_requires_runtime_gate": true,
+    "local_validation_is_production_proof": false
+  },
+  "projection_boundary": {
+    "projection_is_source_of_truth": false,
+    "projection_may_mutate_state": false,
+    "projection_may_hide_blockers": false
+  },
+  "evidence_refs": [
+    "schemas/factory-command.schema.json",
+    "schemas/factory-run-event.schema.json",
+    "schemas/factory-run.schema.json",
+    "schemas/hermes-live-adapter-result.schema.json",
+    "adapters/hermes/live_kanban_adapter.py",
+    "tests/test_hermes_live_kanban_adapter.py"
+  ]
+}

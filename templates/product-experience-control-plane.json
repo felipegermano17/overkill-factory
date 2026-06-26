@@ -1,0 +1,73 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-experience-control-plane.schema.json",
+  "record_type": "product_experience_control_plane",
+  "control_plane_id": "product-experience-control-plane-v2",
+  "phase_id": "F8",
+  "trigger_surfaces": [
+    "frontend",
+    "product-face",
+    "ux",
+    "brand",
+    "visual-design"
+  ],
+  "source_contract_refs": {
+    "product_experience_plan_ref": "templates/product-experience-plan.json",
+    "product_face_packet_ref": "templates/product-face-packet.json",
+    "professional_design_process_ref": "templates/professional-design-process.json",
+    "project_design_system_ref": "templates/project-design-system.json",
+    "reference_quality_packet_ref": "templates/reference-quality-packet.json",
+    "design_md_ref": "templates/DESIGN.md"
+  },
+  "required_artifacts": [
+    "product_experience_plan",
+    "product_face_packet",
+    "professional_design_process",
+    "project_design_system",
+    "DESIGN.md",
+    "product_face_result",
+    "visual_quality_result"
+  ],
+  "required_workers": [
+    "product-face",
+    "frontend-builder",
+    "qa-verification-worker",
+    "independent-reviewer"
+  ],
+  "required_gates": [
+    "Product Experience Gate",
+    "Product Face Gate",
+    "Independent Design Review Gate"
+  ],
+  "evidence_requirements": {
+    "desktop_screenshot_required": true,
+    "responsive_or_mobile_required": true,
+    "state_coverage_required": true,
+    "accessibility_required": true,
+    "visual_review_required": true,
+    "reference_comparison_required": true
+  },
+  "transition_policy": {
+    "frontend_may_start_only_after_contracts": true,
+    "product_face_result_required_before_done": true,
+    "human_gate_only_for_product_or_brand_decision": true,
+    "agent_may_not_waive_visual_quality": true
+  },
+  "completion_policy": {
+    "product_face_result_required": true,
+    "design_md_required": true,
+    "visual_quality_result_required": true,
+    "design_system_match_required": true,
+    "reference_quality_packet_consumed": true
+  },
+  "forbidden_shortcuts": [
+    "frontend implementation from chat summary without Product Experience contracts",
+    "mechanical browser proof treated as visual quality approval",
+    "generic dashboard layout accepted without reference comparison",
+    "human approval requested before owner-readable material exists"
+  ],
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "private_screenshots_not_embedded": true,
+    "no_copying_reference_assets": true
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "fixture_set_id": "v2-p0-negative-fixtures",
+  "description": "Canonical P0 failure shapes from the V2 raw studies. Each case must fail closed through schema, validator or deterministic runtime checks.",
+  "cases": [
+    {
+      "case_id": "p0-agent-route-authority",
+      "forbidden": "worker profile instructs an agent to choose phase, choose route, approve gate or mutate state",
+      "expected_guard": "scripts/validate_worker_profiles.py"
+    },
+    {
+      "case_id": "p0-doc-only-study-claim",
+      "forbidden": "a P0 study finding marked as closed with documentation only",
+      "expected_guard": "factoryctl validate-v2-study-traceability"
+    },
+    {
+      "case_id": "p0-contract-only-study-claim",
+      "forbidden": "a P0 study finding marked as closed with schema but no runtime or test reference",
+      "expected_guard": "factoryctl validate-v2-study-traceability"
+    },
+    {
+      "case_id": "p0-human-gate-summary-only",
+      "forbidden": "human gate asks the operator for approval before material, package and delivery receipt exist",
+      "expected_guard": "schemas/human-gate-packet.schema.json"
+    },
+    {
+      "case_id": "p0-solana-without-domain-brain",
+      "forbidden": "Solana or onchain work passes F4+ without Solana AI Kit provider or usage receipt",
+      "expected_guard": "factoryctl validate-card and board reconcile route repair"
+    },
+    {
+      "case_id": "p0-security-prose-only",
+      "forbidden": "security contract is a prose receipt without boundary, owner, controls or evidence",
+      "expected_guard": "schemas/security-contract.schema.json"
+    },
+    {
+      "case_id": "p0-readiness-overclaim",
+      "forbidden": "repo-only, static or bounded proof is reported as production-ready",
+      "expected_guard": "readiness truth ledger and factory truth packet"
+    },
+    {
+      "case_id": "p0-reference-superiority-without-proof",
+      "forbidden": "public reference superiority claim has no schema, reducer, test and negative fixture proof",
+      "expected_guard": "schemas/reference-superiority-claim.schema.json"
+    }
+  ]
+}
