@@ -3883,7 +3883,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(result["no_idle_state"]["block_loop_detected"])
         self.assertFalse(result["no_idle_state"]["human_gate_required"])
 
-    def test_no_idle_preserves_dependency_wait_before_phase_reconcile(self) -> None:
+    def test_no_idle_preserves_todo_dependency_wait_before_phase_reconcile(self) -> None:
         fake = FakeHermes()
         fake.tasks[MAIN_TASK_ID] = {
             "id": MAIN_TASK_ID,
@@ -3913,6 +3913,25 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(result["no_idle_state"]["human_gate_required"])
         self.assertFalse(result["no_idle_state"]["operator_input_required"])
         self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+
+    def test_no_idle_ready_dependency_wait_history_is_not_current_dependency_wait(self) -> None:
+        fake = FakeHermes()
+        fake.tasks[MAIN_TASK_ID] = {
+            "id": MAIN_TASK_ID,
+            "status": "ready",
+            "assignee": "factory-orchestrator",
+            "body": "{}",
+            "events": [
+                {"kind": "dependency_wait", "payload": {"kind": "dependency"}},
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["mode"], "no-idle")
+        self.assertNotEqual(result["no_idle_state"]["classification"], "hermes_native_dependency_wait")
+        self.assertFalse(result["no_idle_state"]["human_gate_required"])
 
     def test_no_idle_preserves_block_loop_before_phase_reconcile(self) -> None:
         fake = FakeHermes()

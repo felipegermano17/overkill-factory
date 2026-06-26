@@ -7,11 +7,21 @@ public releases.
 
 ## Unreleased
 
+## 2.0.7 - 2026-06-26
+
+- Clarify and test the real Hermes dependency semantics proven by live smoke:
+  durable dependency waiting comes from parent edges or current `todo`
+  `dependency_wait` state; a no-parent `dependency` block can recompute to
+  `ready` and must remain dispatchable instead of becoming a fake wait.
+- Add regression coverage so a `ready` task with historical `dependency_wait`
+  event history is not mistaken for a current native dependency wait; normal
+  ready/reconcile rules still decide the next action.
+
 ## 2.0.6 - 2026-06-26
 
 - Preserve native Hermes `dependency_wait` before phase-engine repair planning:
-  external dependency waits and parent dependency waits now stay in the Hermes
-  dependency lane instead of becoming generic factory remediation.
+  current `todo` dependency waits stay in the Hermes dependency lane instead
+  of becoming generic factory remediation.
 - Add regressions proving typed Hermes dependency/loop events win over the
   board reconciler unless an earlier deterministic phase invariant already
   blocks execution.
