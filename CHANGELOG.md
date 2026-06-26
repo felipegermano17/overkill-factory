@@ -7,6 +7,15 @@ public releases.
 
 ## Unreleased
 
+## 2.0.6 - 2026-06-26
+
+- Preserve native Hermes `dependency_wait` before phase-engine repair planning:
+  external dependency waits and parent dependency waits now stay in the Hermes
+  dependency lane instead of becoming generic factory remediation.
+- Add regressions proving typed Hermes dependency/loop events win over the
+  board reconciler unless an earlier deterministic phase invariant already
+  blocks execution.
+
 ## 2.0.5 - 2026-06-26
 
 - Fix no-idle typed block loop handling against the real Hermes #52848 runtime:
