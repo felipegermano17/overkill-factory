@@ -157,8 +157,8 @@
   "required_workers": [
     {
       "worker_id": "factory-orchestrator",
-      "role": "route-owner",
-      "reason": "Maintains the selected route and blocks execution until required artifacts are present.",
+      "role": "route-record-owner",
+      "reason": "Materializes the reducer-approved route record and blocks execution until required artifacts are present.",
       "required_before_execution": true
     },
     {

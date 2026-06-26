@@ -89,7 +89,7 @@ the card.
 |---|---|---|---|
 | `qa-verification-worker` | closed/hybrid | F13-F15 | Runs tests, screenshots, logs, regressions and evidence checks. |
 | `independent-reviewer` | hybrid | F14 | Reviews another worker's output. Executor and reviewer must differ. |
-| `evidence-reconciler` | deterministic | F13-F16 | Selects current worker results, records superseded stale evidence and blocks Closure Summary, Completion Audit, Receipt Five or done when closure evidence is invalid. |
+| `evidence-reconciler` | deterministic | F13-F16 | Resolves current worker results from evidence freshness rules, records superseded stale evidence and blocks Closure Summary, Completion Audit, Receipt Five or done when closure evidence is invalid. |
 | `autoreview-gate` | closed | F14/F15 | Runs structured pre-landing code review. It finds issues but does not replace independent review. |
 | `remote-proof-runner` | closed | F13-F16 | Uses Crabbox/Testbox/container fallback for heavy or clean-environment proof with TTL, cost and cleanup evidence. |
 | `handoff-packer` | closed | F9-F15 | Creates portable handoff packets for worker transfer, pause, context compaction or phase change; it must not promote future-phase work while `factory_phase_lock` freezes downstream. |
@@ -98,7 +98,7 @@ the card.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `security-orchestrator` | hybrid | F4-F16 | Chooses Security Architecture Plan routes, required security specialists and prevents generic security comments from passing as evidence. |
+| `security-orchestrator` | hybrid | F4-F16 | Resolves Security Architecture Plan routes and required security specialists from the registry, then prevents generic security comments from passing as evidence. |
 | `codex-security` | hybrid | F8/F13 | Runs Codex Security or equivalent scoped scans when the card requires it. |
 | `appsec-owasp-specialist` | hybrid | F7/F14/F15 | Covers OWASP Web/API/AppSec, auth, session, validation and safe errors. |
 | `agentic-ai-security-specialist` | hybrid | F1/F7/F12/F14 | Covers prompt injection, tool misuse, browser risk, memory poisoning and excessive agency. |

@@ -147,9 +147,9 @@ readiness does not satisfy that product proof by itself.
 
 ## Important Boundary
 
-Capability packs do not replace worker packets, reviewers or gates. They run
-before execution to decide whether the Factory is allowed to route the work at
-all.
+Capability packs do not replace worker packets, reviewers or gates. The
+capability-pack reducer computes PASS or BLOCK from registry state and the
+activation ledger before worker routing is materialized.
 
 When a pack is not ready, the right behavior is to block, create the missing
 specialist pack, evaluate it, bind it to Hermes and only then continue.

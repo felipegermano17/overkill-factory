@@ -150,7 +150,8 @@ running on the Hermes adapter.
 - Prefer one operational artifact over scattered notes.
 - Every important factory area needs a simple, deep Area Manual. If another
   agent cannot continue the area from the document, the document is not done.
-- Explain why a proposed gate or worker is better than the alternative.
+- Explain which registry or reducer rule selected a gate or worker, and which
+  alternatives were rejected by contract.
 - Treat older methodology notes as evidence, not as truth by default.
 - Planning may continue with missing access. Material execution must not start
   until indispensable access/capabilities are ready or explicitly blocked.

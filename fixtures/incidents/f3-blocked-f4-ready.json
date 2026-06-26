@@ -1,0 +1,47 @@
+{
+  "incident_id": "f3-blocked-f4-ready",
+  "description": "A future F4 card must not dispatch while an earlier F3 phase is blocked.",
+  "board": "product-alpha",
+  "snapshot": {
+    "rows": {
+      "ready": [
+        {
+          "id": "task-f4-ready",
+          "status": "ready",
+          "title": "F4 outcome planning",
+          "current_step_key": "F4-product-outcome-and-discovery",
+          "body": {
+            "packet_type": "factory_deterministic_reconcile_task",
+            "kanban_workflow_binding": {
+              "workflow_template_id": "overkill-vfinal",
+              "current_step_key": "F4-product-outcome-and-discovery"
+            }
+          }
+        }
+      ],
+      "blocked": [
+        {
+          "id": "task-f3-blocked",
+          "status": "blocked",
+          "title": "F3 source resolution blocked",
+          "current_step_key": "F3-source-resolution",
+          "body": {
+            "packet_type": "factory_deterministic_reconcile_task",
+            "kanban_workflow_binding": {
+              "workflow_template_id": "overkill-vfinal",
+              "current_step_key": "F3-source-resolution"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "expect": {
+    "plan_action": "block_invariant_violation",
+    "native_dispatch_required_next": false,
+    "create_task_allowed": false,
+    "human_gate_required": false,
+    "user_decision_required": false,
+    "blocked_reason_contains": ["F4", "F3"]
+  }
+}

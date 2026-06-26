@@ -30,6 +30,33 @@
       "additionalProperties": true
     },
     "default_card_status": { "enum": ["blocked", "planning"] },
+    "profile_resolution": {
+      "type": "object",
+      "required": ["registry_ref", "decision_to_profile", "fallback_decision"],
+      "properties": {
+        "registry_ref": { "const": "agents/worker-registry.public.json" },
+        "decision_to_profile": {
+          "type": "object",
+          "required": [
+            "critical_factory_change",
+            "needs_human_triage",
+            "documentation_only",
+            "implementation_candidate",
+            "private_operator_only"
+          ],
+          "properties": {
+            "critical_factory_change": { "type": "string", "minLength": 3 },
+            "needs_human_triage": { "type": "string", "minLength": 3 },
+            "documentation_only": { "type": "string", "minLength": 3 },
+            "implementation_candidate": { "type": "string", "minLength": 3 },
+            "private_operator_only": { "type": "string", "minLength": 3 }
+          },
+          "additionalProperties": false
+        },
+        "fallback_decision": { "const": "needs_human_triage" }
+      },
+      "additionalProperties": false
+    },
     "public_comment_policy": { "enum": ["never", "dry_run_only", "after_human_gate"] }
   },
   "additionalProperties": true

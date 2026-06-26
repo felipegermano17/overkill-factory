@@ -224,6 +224,10 @@
             "fallback_route": {
               "type": "string",
               "minLength": 3
+            },
+            "profile_resolution": {
+              "type": "string",
+              "minLength": 3
             }
           },
           "additionalProperties": false

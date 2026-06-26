@@ -79,13 +79,14 @@ Template packs that must be activated before execution:
 See `docs/agents/capability-packs.md` for the full rule.
 
 For Solana/onchain work, Solana AI Kit is loaded as the official domain brain
-through `solana-ai-kit-core`. The worker profile still decides authority,
-queueing and receipt fields; Solana-sensitive planning, architecture, build,
+through `solana-ai-kit-core`. Authority, queueing and receipt fields come from
+the reducer, PhaseGraph and worker registry; the worker profile only executes
+inside that resolved contract. Solana-sensitive planning, architecture, build,
 wallet, QA, integration and security worker packets add `solana-ai-kit`
-dynamically when declared or inferred Solana surfaces are present. The packet
-also carries `input_contract.surface_router` so the worker can see why the
-Factory routed it that way. Real `PASS` results require a Solana AI Kit usage
-receipt.
+when declared or inferred Solana surfaces are present and the Solana AI Kit
+provider record is materialized. The packet also carries
+`input_contract.surface_router` so the worker can see why the Factory resolved
+that route. Real `PASS` results require a Solana AI Kit usage receipt.
 
 ## How To Read The Table
 
@@ -99,7 +100,7 @@ receipt.
 
 | Worker | Responsibility | When it enters | Receives | Delivers | Must not | Evidence | Tooling |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `factory-orchestrator` | Keeps phase, risk, routing, method contract, capability coverage, readiness and blocker state coherent. | F0-F18. | phase, risk, surfaces, done definition, method contract, capability coverage, autonomy readiness. | `orchestration_result`. | Approve gates or waive findings. | gate report, routing decision, method route, readiness blockers, next actions. | Hermes Kanban, `factoryctl gate-report`. |
+| `factory-orchestrator` | Keeps phase, risk, route registry resolution, method contract, capability coverage, readiness and blocker state coherent. | F0-F18. | phase, risk, surfaces, done definition, method contract, capability coverage, autonomy readiness. | `orchestration_result`. | Approve gates, waive findings or choose phases outside the reducer. | gate report, route registry resolution, method route, readiness blockers, next actions. | Hermes Kanban, `factoryctl gate-report`. |
 | `source-ledger-worker` | Separates source facts, inference, decisions, conflicts, stale material and gaps. | F0-F1. | source refs, source state, source conflicts and prior decisions. | `source_ledger_result`. | Promote unsourced decisions. | source map, source resolution notes, promoted/rejected claims, conflict list, gap list. | repo search, browser capture when needed. |
 | `product-sot-planner` | Owns Outcome/Discovery, drafts the Product SOT candidate and delivers the owner-readable SOT review packet. | F2-F5. | source refs, outcome contract, discovery notes, assumptions, scope, acceptance criteria. | `product_sot_result`. | Treat a candidate as approval, turn assumptions into scope silently or leave downstream unfrozen before owner-review material exists. | outcome contract, discovery notes, assumption ledger, SOT candidate, owner review packet, operator briefing package, open questions. | planning templates, decision packet. |
 | `product-architect` | Creates candidate architecture, risk routing and security architecture route when needed. | F10. | Product SOT, full SOT scope coverage, operator briefing package ref, Method Contract, phase lock, scope, risk, runtime contract, dependency map, security architecture plan. | `architecture_result`. | Bypass Product SOT owner review, Method Contract, architecture, security route or human gates. | architecture packet, trust boundaries, tradeoffs, risk matrix, ADR refs. | architecture review workflow. |
@@ -123,7 +124,7 @@ receipt.
 | `remote-proof-runner` | Runs clean or heavy proof with TTL and cleanup evidence. | F13-F16. | runtime, paths, done definition. | `remote_proof_result`. | Receive secrets by default. | logs, artifacts, timing, cleanup, cost note. | Crabbox, Testbox or container fallback. |
 | `evidence-reconciler` | Reconciles Closure Summary, Receipt Five and Completion Audit against current worker results. | F13-F16. | done definition, worker artifacts, transition ref, closure summary, completion audit. | `receipt_five_reconciliation_result`. | Approve gates, waive findings or invent missing proof. | effective result index, supersession ledger, missing/blocking list, closure summary, completion audit verdict. | Receipt Five indexer. |
 | `handoff-packer` | Creates replayable state packets for transfer or pause. | F9-F15. | phase lock, operator briefing package ref, paths, done definition, constraints. | `handoff_packet_result`. | Invent approval or evidence, or promote future-phase work while downstream is frozen. | state, constraints, artifact refs, next action, frozen scope. | handoff workflow. |
-| `security-orchestrator` | Routes Security Architecture Plan, privacy/compliance route and the right security specialists. | F4-F16. | security architecture plan, security contract, privacy/compliance route, risk, scan packet. | `security_orchestration_result`. | Treat generic security comments as evidence or postpone architecture security to final scan. | specialist matrix, owner mapping, blocking policy, required security gates. | security control matrix. |
+| `security-orchestrator` | Materializes Security Architecture Plan, privacy/compliance route and specialist set from the security-domain registry. | F4-F16. | security architecture plan, security contract, privacy/compliance route, risk, scan packet. | `security_orchestration_result`. | Treat generic security comments as evidence, materialize specialists outside registry, or postpone architecture security to final scan. | specialist matrix, owner mapping, blocking policy, required security gates. | security control matrix. |
 | `codex-security` | Runs scoped security scans and reports findings. | F8 and F13. | scan packet, paths, forbidden actions. | `security_scan_result`. | Waive blocking findings. | scan result, scope, tool, evidence refs. | Codex Security or equivalent scanner. |
 | `appsec-owasp-specialist` | Covers web, API, auth, session and validation controls. | F7, F14, F15. | scan packet, paths, criteria. | `appsec_owasp_result`. | Accept unsafe errors or untested auth. | control matrix, test refs, residual risks. | OWASP Web/API/AppSec review. |
 | `agentic-ai-security-specialist` | Covers prompt, tool, memory and browser risk. | F1, F7, F12, F14. | security contract, runtime, forbidden actions. | `agentic_ai_security_result`. | Treat external text as trusted instructions. | tool allowlist, memory trust tier, injection controls. | agentic AI security review. |

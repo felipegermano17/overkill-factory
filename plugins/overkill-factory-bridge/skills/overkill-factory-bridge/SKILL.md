@@ -87,10 +87,10 @@ python adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
 
 This command is the factory adapter path, not bridge work. It must create the
 fresh Hermes board/card for `new_project`, block the root card with a verified
-Hermes block event, release the start card after validation and invoke native
-Hermes dispatch for one `factory-orchestrator` run by default. Use
-`--hold-start` only for an intentional diagnostic hold, or `--no-dispatch` when
-another runtime component will dispatch immediately.
+Hermes block event and apply the factory start reducer. Only that adapter path
+may return `RELEASE_AND_DISPATCH`; the bridge never releases, dispatches or
+closes gates. Use `--hold-start` only for an intentional diagnostic hold, or
+`--no-dispatch` when another runtime component will dispatch immediately.
 
 Record a human decision response:
 

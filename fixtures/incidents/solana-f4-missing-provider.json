@@ -1,0 +1,37 @@
+{
+  "incident_id": "solana-f4-missing-provider",
+  "description": "Solana/onchain F4+ work cannot proceed unless Solana AI Kit is materialized as the official domain brain provider.",
+  "board": "product-alpha",
+  "snapshot": {
+    "rows": {
+      "todo": [
+        {
+          "id": "task-solana-route",
+          "status": "todo",
+          "title": "Solana architecture candidate",
+          "assignee": "product-architect",
+          "body_template": "vfinal",
+          "body_patch": {
+            "phase": "F10",
+            "surfaces": ["architecture", "solana", "onchain"]
+          },
+          "body_remove": [
+            "capability_pack_contract",
+            "domain_brain_provider",
+            "solana_domain_brain_provider",
+            "solana_ai_kit_usage_receipt"
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "plan_action": "repair_domain_brain_route",
+    "native_dispatch_required_next": true,
+    "create_task_allowed": true,
+    "human_gate_required": false,
+    "user_decision_required": false,
+    "create_task_required_output": "solana_ai_kit_domain_brain_route",
+    "blocked_reason_contains": ["Solana AI Kit"]
+  }
+}

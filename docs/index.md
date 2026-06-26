@@ -36,6 +36,9 @@ Packs, Operator Experience, Security/Release, Product Quality, Velocity/Cost and
 Learning. The registry maps owners and proof obligations; it does not claim
 product-specific production readiness by itself.
 
+Use `architecture/deterministic-control-plane.md` before changing dispatch,
+no-idle, bridge start, phase binding, human gates or domain-brain routing.
+
 ## Examples
 
 Use `examples/gallery.md` to choose a minimal, Product Face, security or onchain

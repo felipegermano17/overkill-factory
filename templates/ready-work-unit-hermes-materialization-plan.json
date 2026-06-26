@@ -24,6 +24,8 @@
       "owner_worker": "implementation-worker",
       "reviewer_role": "independent-reviewer",
       "title": "OF ready work unit work-unit-001: Deliver one safe execution slice without reducing the Product SOT scope.",
+      "workflow_template_id": "overkill-vfinal",
+      "current_step_key": "F15-runtime-execution",
       "materialization_state": "planned_pending_hermes_runtime_gate",
       "initial_status": "unassigned_pending_block",
       "body_format": "ready_work_unit_execution_request_json",
@@ -31,6 +33,14 @@
         "packet_id": "ready-work-unit-packet-work-unit-001",
         "packet_type": "ready_work_unit_execution_request",
         "work_unit_id": "work-unit-001",
+        "current_step_key": "F15-runtime-execution",
+        "kanban_workflow_binding": {
+          "workflow_template_id": "overkill-vfinal",
+          "current_step_key": "F15-runtime-execution",
+          "runtime_field_required": true,
+          "fallback_body_binding": true,
+          "route_authority": "factory_phase_engine"
+        },
         "packet_file_name": "work-unit-001-request.json",
         "status": "ready_for_worker_execution",
         "owner_worker": "implementation-worker",
@@ -80,7 +90,7 @@
           "mutate live Hermes without an explicit runtime gate",
           "claim complete product done from one bounded slice"
         ],
-        "phase": "F12",
+        "phase": "F15",
         "risk_effective": "R2",
         "surfaces": [
           "code",
@@ -136,7 +146,7 @@
               "reviewer_role": "independent-reviewer",
               "complete_product_claim_allowed": false
             },
-            "phase": "F12",
+            "phase": "F15",
             "risk_effective": "R2",
             "surfaces": [
               "code",
@@ -217,7 +227,7 @@
                 "reviewer_role": "independent-reviewer",
                 "complete_product_claim_allowed": false
               },
-              "phase": "F12",
+              "phase": "F15",
               "risk_effective": "R2",
               "surfaces": [
                 "code",
@@ -488,7 +498,7 @@
               "reviewer_role": "independent-reviewer",
               "complete_product_claim_allowed": false
             },
-            "phase": "F12",
+            "phase": "F15",
             "risk_effective": "R2",
             "surfaces": [
               "code",

@@ -47,9 +47,10 @@ python adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
 
 That command is the factory/Hermes adapter consuming the bridge request. It
 creates the fresh board/card for `new_project`, verifies a blocked root card and
-then releases and dispatches one `factory-orchestrator` run through native
-Hermes by default. Use `--hold-start` only for an intentional diagnostic hold,
-or `--no-dispatch` when another runtime component will dispatch immediately.
+then applies the factory start reducer. Only the adapter/reducer path may return
+`RELEASE_AND_DISPATCH`; the bridge itself never releases, dispatches or closes a
+gate. Use `--hold-start` only for an intentional diagnostic hold, or
+`--no-dispatch` when another runtime component will dispatch immediately.
 
 For status requests, the bridge must resolve the explicit runtime target for the
 run before reading Hermes. Do not use an ambient/default Hermes store as proof

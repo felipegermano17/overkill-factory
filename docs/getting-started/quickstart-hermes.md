@@ -107,7 +107,7 @@ For your own project:
 5. Run `factoryctl validate-card`.
 6. Run `factoryctl gate-report`.
 7. Generate required worker packets.
-8. Let Hermes create or route worker cards.
+8. Let Hermes materialize worker cards resolved by the PhaseGraph and registry.
 9. Attach worker results and Receipt Five before any `done` transition.
 
 ## Before Release

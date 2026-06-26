@@ -11,7 +11,8 @@ specialty.
 
 ## Routing Rule
 
-1. `security-orchestrator` maps the card to one or more domains.
+1. `security-orchestrator` records the domains resolved by the security-domain
+   registry and reducer.
 2. Domain specialists run or prepare scoped evidence.
 3. `codex-security` runs code/security scans when the card requires tool-backed
    security evidence.

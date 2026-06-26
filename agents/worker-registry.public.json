@@ -18,11 +18,11 @@
       "triggers": [
         "phase change",
         "blocked work",
-        "worker routing",
-        "method routing",
+        "worker route resolution",
+        "method route resolution",
         "method contract",
-        "capability pack selection",
-        "surface pack selection",
+        "capability pack resolution",
+        "surface pack resolution",
         "autonomy readiness",
         "ready gate",
         "access gate",
@@ -45,7 +45,7 @@
         "factoryctl gate-report"
       ],
       "output_contract": "orchestration_result",
-      "authority_max": "route and block; cannot approve gates",
+      "authority_max": "materialize PhaseGraph, reducer and registry route/block outputs; cannot choose route, phase, gate, specialist, transition or approve gates",
       "veto_conditions": [
         "missing phase",
         "missing risk",
@@ -56,7 +56,7 @@
       ],
       "evidence_required": [
         "gate report",
-        "routing decision",
+        "route registry resolution",
         "next action",
         "method contract",
         "capability coverage report",
@@ -853,7 +853,7 @@
         "tests"
       ],
       "output_contract": "implementation_result",
-      "authority_max": "fallback/router for implementation work that has no better specialist builder",
+      "authority_max": "execute only when PhaseGraph and gate report require implementation-worker and the worker registry has no matching specialist builder",
       "veto_conditions": [
         "specialist builder available",
         "scope expansion",
@@ -1398,7 +1398,7 @@
         "threat model router"
       ],
       "output_contract": "security_orchestration_result",
-      "authority_max": "route security work; cannot waive findings",
+      "authority_max": "materialize security-domain registry outputs; cannot choose specialist outside registry or waive findings",
       "veto_conditions": [
         "generic security review",
         "wrong specialist",

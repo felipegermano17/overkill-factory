@@ -807,10 +807,29 @@ def is_human_gate_blocker(record: dict[str, Any]) -> bool:
     )
 
 
+def human_gate_packet_from_record(record: dict[str, Any]) -> dict[str, Any]:
+    body = task_body_json_object(record)
+    packet = body.get("human_gate_packet") if isinstance(body.get("human_gate_packet"), dict) else body
+    return packet if isinstance(packet, dict) else {}
+
+
+def human_gate_decision_package_complete(record: dict[str, Any]) -> bool:
+    packet = human_gate_packet_from_record(record)
+    if not packet:
+        return False
+    try:
+        factoryctl = load_factoryctl()
+        return not factoryctl.validate_human_gate_packet(packet, require_decision_package=True)
+    except Exception:
+        return False
+
+
 def is_human_gate_decision_ready_blocker(record: dict[str, Any]) -> bool:
     if not is_human_gate_blocker(record):
         return False
     if is_operator_input_blocker(record):
+        return False
+    if not human_gate_decision_package_complete(record):
         return False
     text = task_record_text(record)
     return any(
@@ -2997,6 +3016,14 @@ def bridge_start_root_body(
             "dispatch_allowed_without_source_resolution": False,
             "complete_product_claim_allowed": False,
         },
+        "current_step_key": FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        "kanban_workflow_binding": {
+            "workflow_template_id": FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+            "current_step_key": FACTORY_KANBAN_DEFAULT_STEP_KEY,
+            "runtime_field_required": True,
+            "fallback_body_binding": True,
+            "route_authority": "factory_phase_engine",
+        },
         "deterministic_phase_contract": {
             "route_authority": "factory_phase_engine",
             "agent_may_choose_phase": False,
@@ -3029,6 +3056,8 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
         raise RuntimeError("bridge start materialization requires a board")
     if project_mode == "new_project" and board in BRIDGE_START_FORBIDDEN_BOARD_SLUGS:
         raise RuntimeError("new_project bridge start must materialize into a fresh non-default board")
+    if project_mode == "new_project" and args.no_ensure_board and not args.dry_run:
+        raise RuntimeError("new_project bridge start must ensure a fresh Hermes board; --no-ensure-board is diagnostic only")
     if project_mode == "existing_project" and not args.board:
         raise RuntimeError("existing_project bridge start requires an explicit --board")
     hold_start = bool(getattr(args, "hold_start", False))
@@ -3069,6 +3098,8 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
             created_by="overkill-factory",
             workspace=args.workspace,
             blocked_reason=BRIDGE_START_BLOCK_REASON,
+            workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+            current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
             runner=runner,
         )
         if not hold_start:
@@ -3290,6 +3321,12 @@ def create_ready_work_unit_task(
             ),
             runner,
         ).stdout
+    )
+    apply_native_workflow_state(
+        board=board,
+        task_id=task_id,
+        workflow_template_id=str(task.get("workflow_template_id") or FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID),
+        current_step_key=str(task.get("current_step_key") or "F15-runtime-execution"),
     )
     ensure_blocked_event(
         hermes_bin=hermes_bin,
@@ -3937,6 +3974,14 @@ def ready_work_unit_post_repair_review_body(
     return {
         "packet_type": "ready_work_unit_post_repair_review_request",
         "marker": READY_WORK_UNIT_POST_REPAIR_REVIEW_REQUIRED_MARKER,
+        "current_step_key": "F18-independent-review",
+        "kanban_workflow_binding": {
+            "workflow_template_id": FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+            "current_step_key": "F18-independent-review",
+            "runtime_field_required": True,
+            "fallback_body_binding": True,
+            "route_authority": "factory_phase_engine",
+        },
         **ready_work_unit_route_repair_scope_contract(plan_task),
         "parent_packet_id": packet_id,
         "parent_work_unit_id": work_unit_id,
@@ -4020,6 +4065,8 @@ def create_post_repair_review_task(
         created_by="overkill-factory",
         workspace=workspace_ref or task_dispatcher_workspace_ref(parent_payload) or "scratch",
         blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key="F18-independent-review",
         runner=runner,
     )
     run_checked(hermes_kanban(hermes_bin, board, "link", task_id, parent_task_id), runner)
@@ -4140,6 +4187,14 @@ def ready_work_unit_post_repair_authority_body(
     return {
         "packet_type": "ready_work_unit_post_repair_authority_request",
         "marker": READY_WORK_UNIT_POST_REPAIR_AUTHORITY_REQUIRED_MARKER,
+        "current_step_key": "F18-independent-review",
+        "kanban_workflow_binding": {
+            "workflow_template_id": FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+            "current_step_key": "F18-independent-review",
+            "runtime_field_required": True,
+            "fallback_body_binding": True,
+            "route_authority": "factory_phase_engine",
+        },
         **ready_work_unit_route_repair_scope_contract(plan_task),
         "parent_packet_id": packet_id,
         "parent_work_unit_id": work_unit_id,
@@ -4228,6 +4283,8 @@ def create_post_repair_authority_task(
         created_by="overkill-factory",
         workspace=workspace_ref or task_dispatcher_workspace_ref(parent_payload) or "scratch",
         blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key="F18-independent-review",
         runner=runner,
     )
     run_checked(hermes_kanban(hermes_bin, board, "link", task_id, parent_task_id), runner)
@@ -7118,6 +7175,62 @@ def dispatch(args: argparse.Namespace, runner: Runner = default_runner) -> dict[
         for task in before_running
         if str(task.get("task_id") or task.get("id") or "").strip()
     }
+    preflight_rows = {
+        "ready": before_ready,
+        "running": before_running,
+        "todo": list_tasks_by_status(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            status="todo",
+            runner=runner,
+        ),
+        "blocked": list_tasks_by_status(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            status="blocked",
+            runner=runner,
+        ),
+        "done": list_tasks_by_status(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            status="done",
+            runner=runner,
+        ),
+    }
+    reconcile_plan = build_board_reconcile_plan_from_rows(board=args.board, rows=preflight_rows)
+    if reconcile_plan.get("plan_action") != "dispatch_ready":
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "dispatch",
+            "dry_run": bool(args.dry_run),
+            "board": args.board,
+            "blocked": True,
+            "dispatch_skipped": True,
+            "spawned": [],
+            "spawned_by_this_command": [],
+            "already_running_after_dispatch": [],
+            "native_dispatch": None,
+            "board_reconcile_plan": reconcile_plan,
+            "dispatch_observed_state": {
+                "ready_before_count": len(before_ready_ids),
+                "running_before_count": len(before_running_ids),
+                "running_after_count": len(before_running_ids),
+            },
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "Native Hermes dispatch was not called because the deterministic board reconciler "
+                    "did not return dispatch_ready."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
 
     dispatch_args = ["dispatch", "--json"]
     if args.dry_run:
@@ -7184,6 +7297,7 @@ def dispatch(args: argparse.Namespace, runner: Runner = default_runner) -> dict[
         "spawned_by_this_command": spawned_by_this_command,
         "already_running_after_dispatch": already_running_after_dispatch,
         "native_dispatch": native_sanitized,
+        "board_reconcile_plan": reconcile_plan,
         "dispatch_observed_state": {
             "ready_before_count": len(before_ready_ids),
             "running_before_count": len(before_running_ids),
@@ -7213,9 +7327,144 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         for status in ("ready", "running", "todo", "blocked", "done")
     }
     rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
-    classification = classify_no_idle_state(rows)
+    reconcile_plan: dict[str, Any] | None = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
+    if reconcile_plan.get("plan_action") == "block_invariant_violation":
+        classification = {
+            "status": "blocked",
+            "classification": "factory_phase_invariant_violation",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": False,
+            "board_reconcile_plan": reconcile_plan,
+            "blocked_reasons": reconcile_plan.get("blocked_reasons") or [],
+            "next_action": "stop dispatch and repair the earlier blocked factory phase before future-phase work continues",
+            "state": summarize_no_idle_rows(rows),
+        }
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": True,
+            "no_idle_state": classification,
+            "board_reconcile_plan": reconcile_plan,
+            "targeted_remediation_plan": None,
+            "remediation_task_id": None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle stopped because the deterministic board reconciler found a phase invariant violation."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
+    legacy_classification = classify_no_idle_state(rows)
+    if (
+        legacy_classification.get("remediation_required") is not True
+        and (
+            legacy_classification.get("human_gate_required") is True
+            or legacy_classification.get("operator_input_required") is True
+        )
+    ):
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": bool(legacy_classification.get("blocked")),
+            "no_idle_state": legacy_classification,
+            "board_reconcile_plan": reconcile_plan,
+            "targeted_remediation_plan": None,
+            "remediation_task_id": None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle preserved the complete operator/human gate request; "
+                    "the deterministic reconciler remains attached for audit."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
+    reducer_preempts_legacy_classifier = bool(rows.get("ready")) or reconcile_plan.get("plan_action") in {
+        "repair_domain_brain_route",
+        "repair_human_gate_packet",
+        "create_next_artifact_task",
+        "request_operator_input",
+        "request_human_gate_decision",
+    }
+    if (
+        reducer_preempts_legacy_classifier
+        and reconcile_plan.get("plan_action") not in {"dispatch_ready", "observe_running", "no_unfinished_work"}
+    ):
+        remediation_task_id: str | None = None
+        task_runtime: dict[str, Any] = {}
+        create_allowed = reconcile_plan.get("create_task_allowed") is True
+        if create_allowed and args.create_remediation:
+            remediation_task_id = create_deterministic_reconcile_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                plan=reconcile_plan,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+        classification = {
+            "status": "remediation_required" if create_allowed else "blocked",
+            "classification": str(reconcile_plan.get("plan_action") or "board_reconcile_action_required"),
+            "blocked": True,
+            "remediation_required": create_allowed,
+            "human_gate_required": reconcile_plan.get("human_gate_required") is True,
+            "operator_input_required": reconcile_plan.get("operator_input_required") is True,
+            "native_dispatch_required_next": bool(
+                remediation_task_id
+                and reconcile_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next")
+            ),
+            "board_reconcile_plan": reconcile_plan,
+            "blocked_reasons": reconcile_plan.get("blocked_reasons") or [],
+            "remediation_task_ref": remediation_task_id,
+            "next_action": reconcile_plan.get("reason"),
+            "state": summarize_no_idle_rows(rows),
+        }
+        classification.update(task_runtime)
+        return {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": True,
+            "no_idle_state": classification,
+            "board_reconcile_plan": reconcile_plan,
+            "targeted_remediation_plan": None,
+            "remediation_task_id": remediation_task_id,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle followed the deterministic board reconciler instead of the legacy classifier."
+                ),
+            },
+        }
+    classification = legacy_classification
     remediation_task_id: str | None = None
-    reconcile_plan: dict[str, Any] | None = None
     targeted_remediation_plan: dict[str, Any] | None = None
     if classification.get("remediation_required") and args.create_remediation:
         classification = dict(classification)

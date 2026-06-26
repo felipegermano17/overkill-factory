@@ -806,6 +806,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(provider["provider_id"], "solana-ai-kit")
         self.assertEqual(provider["source"], "https://github.com/solanabr/solana-ai-kit")
         self.assertEqual(provider["pinned_ref"], "v2.0.2")
+        self.assertEqual(provider["pinned_commit"], "4fb9d3d619467e068c1cf3120d3933aa933aeb21")
         self.assertTrue(provider["required_before_execution"])
         self.assertTrue(provider["usage_receipt_required"])
         self.assertEqual(provider["usage_receipt_field"], "solana_ai_kit_usage_receipt")
@@ -878,7 +879,7 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertIn(expected, errors)
         self.assertIn(expected, plan["blocked_reasons"])
 
-    def test_vfinal_solana_f4_accepts_structured_solana_ai_kit_intake_route(self) -> None:
+    def test_vfinal_solana_f4_does_not_treat_intake_route_as_materialized_provider(self) -> None:
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
         card["phase"] = "F4"
         card["surfaces"] = ["architecture", "solana", "onchain"]
@@ -898,6 +899,23 @@ class FactoryCtlTest(unittest.TestCase):
             intake_id="intake-solana-bank",
         )
 
+        self.assertFalse(factoryctl.solana_domain_brain_materialized(card))
+        self.assertTrue(factoryctl.validate_solana_domain_brain_route(card))
+
+    def test_vfinal_solana_f4_accepts_complete_solana_ai_kit_provider_record(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        card["phase"] = "F4"
+        card["surfaces"] = ["architecture", "solana", "onchain"]
+        card["domain_brain_provider"] = {
+            "provider_id": "solana-ai-kit",
+            "pack_id": "solana-ai-kit-core",
+            "source": "https://github.com/solanabr/solana-ai-kit",
+            "pinned_ref": "v2.0.2",
+            "pinned_commit": "4fb9d3d619467e068c1cf3120d3933aa933aeb21",
+            "required_before_execution": True,
+            "usage_receipt_required": True,
+        }
+
         self.assertTrue(factoryctl.solana_domain_brain_materialized(card))
         self.assertEqual(factoryctl.validate_solana_domain_brain_route(card), [])
 
@@ -911,8 +929,8 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertTrue(factoryctl.validate_solana_domain_brain_route(card))
 
         card["domain_brain_provider"]["pack_id"] = "solana-ai-kit-core"
-        self.assertTrue(factoryctl.solana_domain_brain_materialized(card))
-        self.assertEqual(factoryctl.validate_solana_domain_brain_route(card), [])
+        self.assertFalse(factoryctl.solana_domain_brain_materialized(card))
+        self.assertTrue(factoryctl.validate_solana_domain_brain_route(card))
 
     def test_real_solana_worker_result_requires_solana_ai_kit_usage_receipt(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")

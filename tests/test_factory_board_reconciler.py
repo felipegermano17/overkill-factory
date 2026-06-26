@@ -285,6 +285,7 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
                         "id": "task-ready",
                         "status": "ready",
                         "title": "Worker task",
+                        "current_step_key": "F15-runtime-execution",
                         "body": "{}",
                     }
                 ]
@@ -297,6 +298,114 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(plan["create_task_allowed"])
         self.assertTrue(plan["native_dispatch_required_next"])
         self.assertIsNone(plan["create_task_contract"])
+
+    def test_ready_work_without_structured_phase_binding_repairs_contract_instead_of_dispatching(self) -> None:
+        snapshot = {
+            "rows": {
+                "ready": [
+                    {
+                        "id": "task-ready-unbound",
+                        "status": "ready",
+                        "title": "Worker task without phase binding",
+                        "body": "{}",
+                    }
+                ]
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "repair_board_contract")
+        self.assertFalse(plan["native_dispatch_required_next"])
+        self.assertTrue(plan["create_task_allowed"])
+        self.assertTrue(any("without structured phase binding" in item for item in plan["blocked_reasons"]))
+
+    def test_ready_future_phase_does_not_dispatch_when_prior_phase_blocked(self) -> None:
+        snapshot = {
+            "rows": {
+                "ready": [
+                    {
+                        "id": "task-f4-ready",
+                        "status": "ready",
+                        "title": "F4 outcome planning",
+                        "current_step_key": "F4-product-outcome-and-discovery",
+                        "body": json.dumps(
+                            {
+                                "packet_type": "factory_deterministic_reconcile_task",
+                                "kanban_workflow_binding": {
+                                    "workflow_template_id": "overkill-vfinal",
+                                    "current_step_key": "F4-product-outcome-and-discovery",
+                                },
+                            }
+                        ),
+                    }
+                ],
+                "blocked": [
+                    {
+                        "id": "task-f3-blocked",
+                        "status": "blocked",
+                        "title": "F3 source resolution blocked",
+                        "current_step_key": "F3-source-resolution",
+                        "body": json.dumps(
+                            {
+                                "packet_type": "factory_deterministic_reconcile_task",
+                                "kanban_workflow_binding": {
+                                    "workflow_template_id": "overkill-vfinal",
+                                    "current_step_key": "F3-source-resolution",
+                                },
+                            }
+                        ),
+                    }
+                ],
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "block_invariant_violation")
+        self.assertFalse(plan["native_dispatch_required_next"])
+        self.assertFalse(plan["create_task_allowed"])
+        self.assertTrue(any("F4" in item and "F3" in item for item in plan["blocked_reasons"]))
+
+    def test_running_future_phase_is_marked_inconsistent_when_prior_phase_blocked(self) -> None:
+        snapshot = {
+            "rows": {
+                "running": [
+                    {
+                        "id": "task-f4-running",
+                        "status": "running",
+                        "title": "F4 outcome planning",
+                        "current_step_key": "F4-product-outcome-and-discovery",
+                    }
+                ],
+                "blocked": [
+                    {
+                        "id": "task-f2-blocked",
+                        "status": "blocked",
+                        "title": "F2 source ledger blocked",
+                        "current_step_key": "F2-source-ledger",
+                    }
+                ],
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "block_invariant_violation")
+        self.assertFalse(plan["native_dispatch_required_next"])
+        self.assertTrue(any("running" in item and "F4" in item and "F2" in item for item in plan["blocked_reasons"]))
+
+    def test_phase_engine_runtime_strict_rejects_template_scaffold_artifacts(self) -> None:
+        card = load_vfinal_card()
+
+        strict_state = factoryctl.factory_phase_engine_state(card, allow_scaffold_artifacts=False)
+        permissive_state = factoryctl.factory_phase_engine_state(card, allow_scaffold_artifacts=True)
+
+        self.assertEqual(strict_state["computed_phase_id"], "F1")
+        self.assertNotEqual(permissive_state["computed_phase_id"], strict_state["computed_phase_id"])
 
     def test_multiple_active_cards_block_instead_of_selecting_from_context(self) -> None:
         card_a = sot_without_owner_packet_card()

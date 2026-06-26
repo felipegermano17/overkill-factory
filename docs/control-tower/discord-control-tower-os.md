@@ -123,7 +123,8 @@ The practical contract is:
   blocker messages.
 
 The owner should not need to remember commands, English words or Hermes
-internals. The GERENTE explains, routes and points to the visual surface.
+internals. The GERENTE explains the runtime state, forwards only contract-bound
+requests and points to the visual surface.
 
 ## Channel UX Map
 
