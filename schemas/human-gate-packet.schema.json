@@ -3,6 +3,22 @@
   "$id": "https://overkill-factory.dev/schemas/human-gate-packet.schema.json",
   "title": "Overkill Factory Human Gate Packet",
   "type": "object",
+  "required": [
+    "gate_type",
+    "required_approvers",
+    "decision_state",
+    "risk_owner",
+    "security_owner",
+    "rollback_owner",
+    "waiver_policy",
+    "operator_briefing_package_ref",
+    "approval_request_ref",
+    "evidence_index_ref",
+    "owner_review_ref",
+    "required_decision_assets",
+    "optional_explainer_assets",
+    "decision_package_delivery"
+  ],
   "properties": {
     "gate_type": { "type": "string", "minLength": 3 },
     "required_approvers": {
@@ -43,20 +59,34 @@
     },
     "decision_package_delivery": {
       "type": "object",
+      "required": [
+        "operator_interface",
+        "primary_language",
+        "push_required",
+        "summary_only_forbidden",
+        "material_before_question",
+        "attachment_order",
+        "delivery_receipt_ref",
+        "question_after_material_delivery"
+      ],
       "properties": {
         "operator_interface": {
           "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"]
         },
-        "push_required": { "type": "boolean" },
-        "summary_only_forbidden": { "type": "boolean" },
-        "material_before_question": { "type": "boolean" },
+        "primary_language": { "enum": ["pt-BR", "en-US"] },
+        "push_required": { "const": true },
+        "summary_only_forbidden": { "const": true },
+        "material_before_question": { "const": true },
         "attachment_order": {
           "type": "array",
+          "minItems": 2,
           "items": { "type": "string", "minLength": 3 }
-        }
+        },
+        "delivery_receipt_ref": { "type": "string", "minLength": 3 },
+        "question_after_material_delivery": { "const": true }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

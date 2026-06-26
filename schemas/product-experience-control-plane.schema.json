@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/product-experience-control-plane.schema.json",
+  "title": "Overkill Factory Product Experience Control Plane",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "control_plane_id",
+    "phase_id",
+    "trigger_surfaces",
+    "source_contract_refs",
+    "required_artifacts",
+    "required_workers",
+    "required_gates",
+    "evidence_requirements",
+    "transition_policy",
+    "completion_policy",
+    "forbidden_shortcuts",
+    "public_private_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/product-experience-control-plane.schema.json"
+    },
+    "record_type": {
+      "const": "product_experience_control_plane"
+    },
+    "control_plane_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "phase_id": {
+      "const": "F8"
+    },
+    "trigger_surfaces": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "minLength": 2 },
+      "uniqueItems": true
+    },
+    "source_contract_refs": {
+      "type": "object",
+      "required": [
+        "product_experience_plan_ref",
+        "product_face_packet_ref",
+        "professional_design_process_ref",
+        "project_design_system_ref",
+        "reference_quality_packet_ref",
+        "design_md_ref"
+      ],
+      "properties": {
+        "product_experience_plan_ref": { "type": "string", "minLength": 3 },
+        "product_face_packet_ref": { "type": "string", "minLength": 3 },
+        "professional_design_process_ref": { "type": "string", "minLength": 3 },
+        "project_design_system_ref": { "type": "string", "minLength": 3 },
+        "reference_quality_packet_ref": { "type": "string", "minLength": 3 },
+        "design_md_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "required_artifacts": {
+      "type": "array",
+      "minItems": 7,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "required_workers": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "required_gates": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "evidence_requirements": {
+      "type": "object",
+      "required": [
+        "desktop_screenshot_required",
+        "responsive_or_mobile_required",
+        "state_coverage_required",
+        "accessibility_required",
+        "visual_review_required",
+        "reference_comparison_required"
+      ],
+      "properties": {
+        "desktop_screenshot_required": { "const": true },
+        "responsive_or_mobile_required": { "const": true },
+        "state_coverage_required": { "const": true },
+        "accessibility_required": { "const": true },
+        "visual_review_required": { "const": true },
+        "reference_comparison_required": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "transition_policy": {
+      "type": "object",
+      "required": [
+        "frontend_may_start_only_after_contracts",
+        "product_face_result_required_before_done",
+        "human_gate_only_for_product_or_brand_decision",
+        "agent_may_not_waive_visual_quality"
+      ],
+      "properties": {
+        "frontend_may_start_only_after_contracts": { "const": true },
+        "product_face_result_required_before_done": { "const": true },
+        "human_gate_only_for_product_or_brand_decision": { "const": true },
+        "agent_may_not_waive_visual_quality": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "completion_policy": {
+      "type": "object",
+      "required": [
+        "product_face_result_required",
+        "design_md_required",
+        "visual_quality_result_required",
+        "design_system_match_required",
+        "reference_quality_packet_consumed"
+      ],
+      "properties": {
+        "product_face_result_required": { "const": true },
+        "design_md_required": { "const": true },
+        "visual_quality_result_required": { "const": true },
+        "design_system_match_required": { "const": true },
+        "reference_quality_packet_consumed": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "forbidden_shortcuts": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "private_screenshots_not_embedded",
+        "no_copying_reference_assets"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "private_screenshots_not_embedded": { "const": true },
+        "no_copying_reference_assets": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

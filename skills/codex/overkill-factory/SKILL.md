@@ -31,22 +31,21 @@ different runtime.
 
 ## Factory Spine
 
-Use this vFinal sequence when the work is Factory VNext/vFinal:
+Use the V2 control plane as the default factory spine:
 
 ```text
-source intake -> source resolution -> outcome/discovery -> Product SOT
--> Agentic Method Router -> method contract -> Product/Surface Pack selection
--> risk, dependency, compliance, access and budget gates
--> security architecture when material risk exists
--> software/product-experience/data/agent-eval plans -> spec graph -> loop plan
--> autonomy readiness -> Ready Gate -> execution -> worker results
--> verification -> independent review -> human gate when needed
--> closure summary -> Receipt Five -> completion audit
--> production operations -> release or block -> monitoring/support
--> learnback -> factory maturity audit
+F0 sealed source envelope -> F1 intake -> F2 source ledger
+-> F3 understanding alignment -> F4 outcome/discovery
+-> F5 Product SOT -> F6 full-scope coverage -> F7 Method Contract
+-> F8 capability and Product Experience selection -> F9 architecture boundary
+-> F10 security/access/budget -> F11 Product Creation Plan
+-> F12 work units and packets -> F13 execution -> F15 verification/review
+-> human gate event only when a real decision is required
+-> Receipt Five -> release/block -> operations -> learnback
 ```
 
-Use this legacy sequence only when handling existing Factory 10/11 cards:
+Use this legacy sequence only when handling existing Factory 10/11 cards or
+compatibility artifacts:
 
 ```text
 source intake -> source resolution -> Product SOT -> alignment questions
@@ -67,11 +66,18 @@ For Factory V2, treat these as the control-plane contracts:
 - `factory_run`
 - `factory_decision_outbox`
 - `factory_promotion_packet`
+- `factory_phase_graph`
+- `v2_study_traceability`
+- `worker_authority_contract`
+- `product_experience_control_plane`
+- `capability_acquisition_contract`
+- `hermes_reducer_mutation_proof`
+- `factory_v2_readiness_claim`
 
 The agent may create artifacts. The route comes from the compiled workflow,
 phase engine, board reconciler, command reducer and Hermes runtime state.
 
-For Factory 10 / Overkill V3.5 cards, require:
+For Factory 10 / Overkill V3.5 compatibility cards, require:
 
 - `factory_method_version`
 - `phase`
@@ -150,6 +156,12 @@ python scripts/factoryctl.py gate-report --card path/to/card.md
 python scripts/factoryctl.py worker-packet --worker all --card path/to/card.md --out path/to/output-dir
 python scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
 python scripts/factoryctl.py validate-factory-run templates/factory-run.json
+python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
+python scripts/factoryctl.py validate-worker-authority-contract templates/worker-authority-contract.json
+python scripts/factoryctl.py validate-product-experience-control-plane templates/product-experience-control-plane.json
+python scripts/factoryctl.py validate-capability-acquisition-contract templates/capability-acquisition-contract.json
+python scripts/factoryctl.py validate-hermes-reducer-mutation-proof templates/hermes-reducer-mutation-proof.json
+python scripts/factoryctl.py validate-readiness-claim templates/factory-v2-readiness-claim.json
 python scripts/validate_worker_profiles.py
 ```
 

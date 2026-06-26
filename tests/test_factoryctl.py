@@ -200,6 +200,40 @@ def solana_ai_kit_usage_receipt() -> dict:
     }
 
 
+def human_gate_packet_fixture() -> dict:
+    return {
+        "gate_type": "R3_security_sensitive",
+        "required_approvers": ["product-owner"],
+        "decision_state": "pending_before_execution",
+        "risk_owner": "product-owner",
+        "security_owner": "security-reviewer",
+        "rollback_owner": "release-owner",
+        "waiver_policy": "no waiver without explicit human record",
+        "operator_briefing_package_ref": "reports/human-gate/operator-briefing-package.json",
+        "approval_request_ref": "reports/human-gate/APPROVAL_REQUEST.json",
+        "evidence_index_ref": "reports/human-gate/EVIDENCE_INDEX.json",
+        "owner_review_ref": "reports/human-gate/OWNER_REVIEW.md",
+        "required_decision_assets": [
+            "markdown_document",
+            "pdf_document",
+            "approval_request_json",
+            "evidence_index_json",
+            "owner_review_markdown",
+        ],
+        "optional_explainer_assets": ["diagram"],
+        "decision_package_delivery": {
+            "operator_interface": "telegram",
+            "primary_language": "pt-BR",
+            "push_required": True,
+            "summary_only_forbidden": True,
+            "material_before_question": True,
+            "attachment_order": ["markdown_document", "pdf_document"],
+            "delivery_receipt_ref": "reports/human-gate/DELIVERY_RECEIPT.json",
+            "question_after_material_delivery": True,
+        },
+    }
+
+
 def human_gate_record(source_card: dict | None = None) -> dict:
     card_id = str((source_card or {}).get("card_id") or "VAL-SOLANA-QUASAR-R3")
     slice_id = str((source_card or {}).get("slice_id") or "VAL_FACTORY_HEAVY_03")
@@ -688,6 +722,25 @@ PRIVATE_PATH_RE = re.compile(
 
 
 class FactoryCtlTest(unittest.TestCase):
+    def test_human_gate_packet_schema_requires_push_material_before_question(self) -> None:
+        card = load_card("v35_valid_security_with_scan.md")
+        packet = human_gate_packet_fixture()
+        packet["decision_package_delivery"] = dict(packet["decision_package_delivery"])
+        packet["decision_package_delivery"]["push_required"] = False
+        card["human_gate_packet"] = packet
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("human_gate_packet" in error and "push_required" in error for error in errors), errors)
+
+        packet["decision_package_delivery"]["push_required"] = True
+        packet["decision_package_delivery"]["material_before_question"] = False
+        card["human_gate_packet"] = packet
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("human_gate_packet" in error and "material_before_question" in error for error in errors), errors)
+
     def terminal_product_face_ref_card(self) -> dict:
         card = dict(factoryctl.load_json_like(ROOT / "examples" / "cards" / "v35_valid_product_face.md"))
         card["phase"] = "F16"
@@ -988,6 +1041,38 @@ class FactoryCtlTest(unittest.TestCase):
         )
 
         self.assertEqual(errors, [])
+
+    def test_onchain_work_package_requires_signer_boundary(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["onchain_work_package"] = dict(card["onchain_work_package"])
+        card["onchain_work_package"].pop("signer_boundary")
+
+        errors = factoryctl.validate_card(card)
+
+        self.assertTrue(any("onchain_work_package" in error and "signer_boundary" in error for error in errors), errors)
+
+    def test_solana_ai_kit_usage_receipt_has_dedicated_schema(self) -> None:
+        schemas = public_json_validator.load_schemas()
+        receipt = solana_ai_kit_usage_receipt()
+
+        self.assertEqual(
+            [],
+            public_json_validator.validate_node(
+                schemas["solana-ai-kit-usage-receipt.schema.json"],
+                receipt,
+                "$",
+                schemas=schemas,
+            ),
+        )
+
+        receipt["pinned_ref"] = "main"
+        errors = public_json_validator.validate_node(
+            schemas["solana-ai-kit-usage-receipt.schema.json"],
+            receipt,
+            "$",
+            schemas=schemas,
+        )
+        self.assertTrue(any("pinned_ref" in error for error in errors), errors)
 
     def test_real_wallet_worker_result_requires_solana_ai_kit_usage_receipt_on_solana_card(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")

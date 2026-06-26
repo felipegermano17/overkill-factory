@@ -129,7 +129,38 @@ class FactoryV2KernelTests(unittest.TestCase):
         for phase_id in ("F1", "F2", "F3", "F4", "F5"):
             self.assertNotIn("request_decision", phase_commands[phase_id])
         self.assertIn("request_decision", phase_commands["F9"])
-        self.assertIn("request_decision", phase_commands["F19"])
+        self.assertIn("request_decision", phase_commands["F24"])
+
+    def test_phase_graph_separates_product_phases_from_gates_and_projections(self) -> None:
+        graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(kernel.validate_factory_phase_graph(graph), [])
+        product_phase_ids = {phase["phase_id"] for phase in graph["product_phases"]}
+        self.assertIn("F0", product_phase_ids)
+        self.assertNotIn("F8A", product_phase_ids)
+        self.assertNotIn("F14", product_phase_ids)
+        self.assertNotIn("F19", product_phase_ids)
+        self.assertIn("human_gate_event", {event["event_id"] for event in graph["gate_events"]})
+        self.assertIn("operator_projection", {projection["projection_id"] for projection in graph["projections"]})
+
+    def test_phase_graph_rejects_legacy_gate_or_projection_as_product_phase(self) -> None:
+        graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
+        graph["product_phases"].append(
+            {
+                "phase_id": "F19",
+                "phase_index": 19,
+                "name": "Human Gate",
+                "kind": "product_phase",
+                "frontier": "human_gate",
+                "entry_contract_refs": ["schemas/human-gate-packet.schema.json"],
+                "exit_contract_refs": ["schemas/human-gate-record.schema.json"],
+                "next_phase_id": "F20",
+            }
+        )
+
+        errors = kernel.validate_factory_phase_graph(graph)
+
+        self.assertTrue(any("legacy non-product phase ids" in error for error in errors), errors)
 
     def test_event_log_hash_chain_rejects_broken_previous_hash(self) -> None:
         first = hashed_event()
@@ -146,7 +177,7 @@ class FactoryV2KernelTests(unittest.TestCase):
         self.assertTrue(any("previous_event_hash" in error for error in errors), errors)
 
     def test_request_decision_command_requires_delivered_packet(self) -> None:
-        command = valid_command("request_decision", phase_id="F19", decision_id="decision-001")
+        command = valid_command("request_decision", phase_id="F9", decision_id="decision-001")
 
         errors = kernel.validate_factory_command(command)
 
@@ -179,6 +210,121 @@ class FactoryV2KernelTests(unittest.TestCase):
                 0,
             )
             self.assertEqual(factoryctl.main_with_args_for_test(["validate-workflow-compiled-plan", str(out)]), 0)
+
+    def test_factoryctl_validates_phase_graph(self) -> None:
+        self.assertEqual(
+            factoryctl.main_with_args_for_test(["validate-phase-graph", "templates/factory-phase-graph.json"]),
+            0,
+        )
+
+    def test_canonical_compiled_workflow_template_is_not_stub(self) -> None:
+        plan = json.loads((ROOT / "templates" / "factory-workflow-compiled-plan.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(kernel.validate_factory_workflow_compiled_plan(plan), [])
+        self.assertGreaterEqual(plan["phase_count"], 26)
+        self.assertEqual(plan["phases"][0]["phase_id"], "F0")
+        self.assertEqual(plan["phases"][0]["next_phase_id"], "F1")
+        self.assertIn("F27", {phase["phase_id"] for phase in plan["phases"]})
+
+    def test_v2_study_traceability_closes_p0_with_runtime_tests_and_negative_fixtures(self) -> None:
+        packet = json.loads((ROOT / "templates" / "v2-study-traceability.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(factoryctl.validate_v2_study_traceability(packet), [])
+        self.assertEqual(
+            factoryctl.main_with_args_for_test(
+                ["validate-v2-study-traceability", "templates/v2-study-traceability.json"]
+            ),
+            0,
+        )
+
+    def test_v2_study_traceability_rejects_doc_only_p0_closure(self) -> None:
+        packet = json.loads((ROOT / "templates" / "v2-study-traceability.json").read_text(encoding="utf-8"))
+        packet["claims"][0]["schema_refs"] = []
+        packet["claims"][0]["runtime_refs"] = []
+        packet["claims"][0]["test_refs"] = []
+        packet["claims"][0]["negative_fixture_refs"] = []
+
+        errors = factoryctl.validate_v2_study_traceability(packet)
+
+        self.assertTrue(any("P0 requires schema_refs" in error for error in errors), errors)
+        self.assertTrue(any("P0 requires runtime_refs" in error for error in errors), errors)
+        self.assertTrue(any("P0 requires test_refs" in error for error in errors), errors)
+        self.assertTrue(any("P0 requires negative_fixture_refs" in error for error in errors), errors)
+
+    def test_product_experience_control_plane_is_validated_by_cli(self) -> None:
+        self.assertEqual(
+            factoryctl.main_with_args_for_test(
+                ["validate-product-experience-control-plane", "templates/product-experience-control-plane.json"]
+            ),
+            0,
+        )
+
+    def test_readiness_claim_blocks_production_overclaim_without_release_evidence(self) -> None:
+        claim = json.loads((ROOT / "templates" / "factory-v2-readiness-claim.json").read_text(encoding="utf-8"))
+        self.assertEqual(factoryctl.validate_factory_v2_readiness_claim(claim), [])
+        self.assertEqual(
+            factoryctl.main_with_args_for_test(
+                ["validate-readiness-claim", "templates/factory-v2-readiness-claim.json"]
+            ),
+            0,
+        )
+
+        claim["claimed_state"] = "PRODUCTION_PROVEN"
+        claim["claim_scope"] = "production_release"
+
+        errors = factoryctl.validate_factory_v2_readiness_claim(claim)
+
+        self.assertTrue(any("release_proof" in error for error in errors), errors)
+        self.assertTrue(any("monitoring_rollback" in error for error in errors), errors)
+        self.assertTrue(any("operator_human_gate" in error for error in errors), errors)
+
+    def test_worker_authority_contract_forbids_agent_route_authority(self) -> None:
+        contract = json.loads((ROOT / "templates" / "worker-authority-contract.json").read_text(encoding="utf-8"))
+        self.assertEqual(factoryctl.validate_worker_authority_contract(contract), [])
+        self.assertEqual(
+            factoryctl.main_with_args_for_test(
+                ["validate-worker-authority-contract", "templates/worker-authority-contract.json"]
+            ),
+            0,
+        )
+
+        contract["forbidden_agent_authorities"].remove("choose_route")
+
+        errors = factoryctl.validate_worker_authority_contract(contract)
+
+        self.assertTrue(any("choose_route" in error for error in errors), errors)
+
+    def test_hermes_reducer_mutation_proof_blocks_bridge_authority(self) -> None:
+        proof = json.loads((ROOT / "templates" / "hermes-reducer-mutation-proof.json").read_text(encoding="utf-8"))
+        self.assertEqual(factoryctl.validate_hermes_reducer_mutation_proof(proof), [])
+        self.assertEqual(
+            factoryctl.main_with_args_for_test(
+                ["validate-hermes-reducer-mutation-proof", "templates/hermes-reducer-mutation-proof.json"]
+            ),
+            0,
+        )
+
+        proof["bridge_boundary"]["bridge_may_mutate_board"] = True
+
+        errors = factoryctl.validate_hermes_reducer_mutation_proof(proof)
+
+        self.assertTrue(any("bridge_may_mutate_board" in error for error in errors), errors)
+
+    def test_capability_acquisition_contract_requires_search_before_block(self) -> None:
+        contract = json.loads((ROOT / "templates" / "capability-acquisition-contract.json").read_text(encoding="utf-8"))
+        self.assertEqual(factoryctl.validate_capability_acquisition_contract(contract), [])
+        self.assertEqual(
+            factoryctl.main_with_args_for_test(
+                ["validate-capability-acquisition-contract", "templates/capability-acquisition-contract.json"]
+            ),
+            0,
+        )
+
+        contract["reference_search_policy"]["required_before_blocking"] = False
+
+        errors = factoryctl.validate_capability_acquisition_contract(contract)
+
+        self.assertTrue(any("required_before_blocking" in error for error in errors), errors)
 
 
 if __name__ == "__main__":

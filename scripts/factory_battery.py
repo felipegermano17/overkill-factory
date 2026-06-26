@@ -194,10 +194,13 @@ def solana_bank_r4_card(factoryctl: Any, *, phase: str) -> dict[str, Any]:
                 "optional_explainer_assets": ["diagram", "video_explainer", "audio_explainer"],
                 "decision_package_delivery": {
                     "operator_interface": "telegram",
+                    "primary_language": "pt-BR",
                     "push_required": True,
                     "summary_only_forbidden": True,
                     "material_before_question": True,
                     "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer"],
+                    "delivery_receipt_ref": "reports/factory-battery-r4/human-gate/DELIVERY_RECEIPT.json",
+                    "question_after_material_delivery": True,
                 },
             },
             "r4_gate": {

@@ -20,6 +20,8 @@ from validate_public_json_artifacts import load_schemas, validate_node
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_WORKFLOW_CATALOG = ROOT / "docs" / "factory-workflow.catalog.json"
+DEFAULT_PHASE_GRAPH = ROOT / "templates" / "factory-phase-graph.json"
+LEGACY_NON_PRODUCT_PHASE_IDS = {"F8A", "F14", "F19"}
 
 
 def utc_now() -> str:
@@ -286,6 +288,51 @@ def validate_factory_workflow_compiled_plan(plan: dict[str, Any], at: str = "fac
             for gate in _as_list(phase.get("required_gates"))
         ):
             errors.append(f"{phase_at}.allowed_commands: request_decision requires human/approval gate")
+    return errors
+
+
+def validate_factory_phase_graph(graph: dict[str, Any], at: str = "factory_phase_graph") -> list[str]:
+    errors = _schema_errors("factory-phase-graph.schema.json", graph, at)
+    product_phases = [phase for phase in graph.get("product_phases", []) if isinstance(phase, dict)]
+    product_phase_ids = [str(phase.get("phase_id") or "") for phase in product_phases]
+    product_phase_id_set = set(product_phase_ids)
+    if "F0" not in product_phase_id_set:
+        errors.append(f"{at}.product_phases: F0 pre-start phase is required")
+    legacy_in_products = sorted(product_phase_id_set & LEGACY_NON_PRODUCT_PHASE_IDS)
+    if legacy_in_products:
+        errors.append(f"{at}.product_phases: legacy non-product phase ids are forbidden: {', '.join(legacy_in_products)}")
+    duplicate_ids = sorted({phase_id for phase_id in product_phase_ids if product_phase_ids.count(phase_id) > 1})
+    if duplicate_ids:
+        errors.append(f"{at}.product_phases: duplicate phase ids {', '.join(duplicate_ids)}")
+    for index, phase in enumerate(product_phases):
+        phase_at = f"{at}.product_phases[{index}]"
+        phase_id = str(phase.get("phase_id") or "")
+        if any(char.isalpha() for char in phase_id[1:]):
+            errors.append(f"{phase_at}.phase_id: suffix phase ids are forbidden in the canonical product graph")
+        next_phase_id = phase.get("next_phase_id")
+        if next_phase_id is not None and next_phase_id not in product_phase_id_set:
+            errors.append(f"{phase_at}.next_phase_id: unknown product phase {next_phase_id}")
+    gate_events = [event for event in graph.get("gate_events", []) if isinstance(event, dict)]
+    if not any(event.get("event_id") == "human_gate_event" for event in gate_events):
+        errors.append(f"{at}.gate_events: human_gate_event is required as a conditional event")
+    projections = [projection for projection in graph.get("projections", []) if isinstance(projection, dict)]
+    if not any(projection.get("projection_id") == "operator_projection" for projection in projections):
+        errors.append(f"{at}.projections: operator_projection is required as a projection, not a product phase")
+    aliases = [alias for alias in graph.get("legacy_aliases", []) if isinstance(alias, dict)]
+    alias_ids = {str(alias.get("legacy_id") or "") for alias in aliases}
+    for legacy_id in sorted(LEGACY_NON_PRODUCT_PHASE_IDS):
+        if legacy_id not in alias_ids:
+            errors.append(f"{at}.legacy_aliases: missing compatibility alias for {legacy_id}")
+    policy = graph.get("taxonomy_policy") if isinstance(graph.get("taxonomy_policy"), dict) else {}
+    for field in (
+        "frontier_is_not_phase",
+        "gate_event_is_not_phase",
+        "projection_is_not_phase",
+        "legacy_suffix_phase_ids_forbidden",
+        "single_active_product_phase_required",
+    ):
+        if policy.get(field) is not True:
+            errors.append(f"{at}.taxonomy_policy.{field}: must be true")
     return errors
 
 

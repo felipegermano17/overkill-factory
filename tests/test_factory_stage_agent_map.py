@@ -65,9 +65,9 @@ class FactoryStageAgentMapTest(unittest.TestCase):
 
     def test_product_experience_is_first_class_catalog_gate(self) -> None:
         phases = {row["phase_id"]: row for row in self.workflow_catalog["phases"]}
-        product_experience = phases["F8A"]
+        product_experience = phases["F8"]
 
-        self.assertEqual(product_experience["phase_name"], "Product Experience And Surface Pack Gate")
+        self.assertEqual(product_experience["phase_name"], "Pack And Product Experience Selection")
         for artifact in [
             "product_experience_plan",
             "product_face_packet",
@@ -80,6 +80,7 @@ class FactoryStageAgentMapTest(unittest.TestCase):
                 self.assertIn(artifact, product_experience["required_artifacts"])
         self.assertIn("product-face", product_experience["required_workers"])
         self.assertIn("Product Experience Gate", product_experience["required_gates"])
+        self.assertNotIn("F8A", phases)
         self.assertNotIn("product_experience_plan", phases["F11"]["optional_artifacts"])
 
     def test_executable_plan_catalog_marks_data_and_docs_as_schema_backed_conditionals(self) -> None:

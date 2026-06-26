@@ -30,6 +30,11 @@ over calling many scripts directly.
 
 ## Factory Operating Systems
 
+Use `architecture/factory-v2-control-plane.md` first when changing phase
+ordering, board reconciliation, bridge behavior, worker authority, human gates
+or readiness claims. V2 state movement belongs to the deterministic control
+plane, not to agent memory or prompt context.
+
 Use `architecture/factory-operating-systems.md` to understand the canonical OS
 registry: Product Truth, Method, Authority, Hermes Runtime, Evidence, Domain
 Packs, Operator Experience, Security/Release, Product Quality, Velocity/Cost and
@@ -38,6 +43,13 @@ product-specific production readiness by itself.
 
 Use `architecture/deterministic-control-plane.md` before changing dispatch,
 no-idle, bridge start, phase binding, human gates or domain-brain routing.
+Use these templates when checking V2 closure:
+`templates/v2-study-traceability.json`,
+`templates/product-experience-control-plane.json`,
+`templates/worker-authority-contract.json`,
+`templates/capability-acquisition-contract.json`,
+`templates/hermes-reducer-mutation-proof.json` and
+`templates/factory-v2-readiness-claim.json`.
 
 ## Examples
 

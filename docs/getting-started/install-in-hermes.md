@@ -133,6 +133,7 @@ product the operator is intentionally replacing.
 
 ## Boundary
 
-Point 5 is intentionally deferred. This guide makes installation easy, but it
-does not claim an official real Hermes E2E harness. Until that harness exists,
-operator-owned Hermes validation must happen in the user's own test runtime.
+This guide does not claim an official real Hermes E2E harness. Public release
+checks validate the CLI, schemas, docs, examples and adapter contracts. A real
+factory run must still be validated in the operator-owned Hermes test runtime
+before the operator treats it as runtime-ready.

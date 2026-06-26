@@ -9,7 +9,7 @@
   "computed_frontier": "product_sot",
   "next_required_artifact": "operator_briefing_package",
   "allowed_current_worker_ids": ["product-sot-planner", "factory-orchestrator"],
-  "blocked_downstream_phase_ids": ["F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F15", "F19", "F24"],
+  "blocked_downstream_phase_ids": ["F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F15", "F16", "F17", "F18", "F20", "F24"],
   "phase_mismatch": true,
   "lock_phase_mismatch": false,
   "lock_frontier_mismatch": false,

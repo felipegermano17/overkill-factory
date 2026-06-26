@@ -83,6 +83,7 @@
     "surface_pack": "web-app-surface-pack",
     "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
     "project_design_system_ref": "examples/cards/v35_valid_product_face.md#project_design_system",
+    "professional_design_process_ref": "examples/cards/v35_valid_product_face.md#professional_design_process",
     "surface_evidence_profile": "web_visual_ui",
     "experience_sot": "The operator can review pilot status, evidence, blockers and next action without generic dashboard filler.",
     "user": "factory operator",

@@ -140,34 +140,7 @@
         "type": "string"
       }
     },
-    "solana_ai_kit_usage_receipt": {
-      "type": "object",
-      "required": [
-        "provider_id",
-        "source",
-        "pinned_ref",
-        "loaded",
-        "loaded_components",
-        "evidence_refs"
-      ],
-      "properties": {
-        "provider_id": { "const": "solana-ai-kit" },
-        "source": { "const": "https://github.com/solanabr/solana-ai-kit" },
-        "pinned_ref": { "const": "v2.0.2" },
-        "loaded": { "const": true },
-        "loaded_components": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "type": "string", "minLength": 3 }
-        },
-        "evidence_refs": {
-          "type": "array",
-          "minItems": 1,
-          "items": { "type": "string", "minLength": 3 }
-        }
-      },
-      "additionalProperties": false
-    },
+    "solana_ai_kit_usage_receipt": { "$ref": "solana-ai-kit-usage-receipt.schema.json" },
     "artifact_readback": {
       "type": "object",
       "description": "Proof that declared artifact refs were read from a separate downstream worker context before closure.",

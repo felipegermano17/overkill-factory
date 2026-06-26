@@ -1,0 +1,48 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/capability-acquisition-contract.schema.json",
+  "record_type": "capability_acquisition_contract",
+  "contract_id": "capability-acquisition-contract-v2",
+  "trigger": {
+    "missing_capability_coverage": true,
+    "unknown_surface": true,
+    "missing_specialist": true
+  },
+  "resolution_order": [
+    "match_existing_core_ready_pack",
+    "match_existing_pack_template",
+    "search_reference_repositories_for_best_agent_or_skill",
+    "create_or_install_candidate_capability",
+    "run_smoke_and_eval",
+    "activate_pack_or_block_with_evidence"
+  ],
+  "reference_search_policy": {
+    "required_before_blocking": true,
+    "search_sources": [
+      "agents/capability-packs.public.json",
+      "agents/worker-registry.public.json",
+      "external:reference-repositories",
+      "external:open-source-agent-skill-repositories"
+    ],
+    "must_record_candidates": true,
+    "must_record_rejections": true
+  },
+  "activation_requirements": {
+    "profile_or_skill_contract": true,
+    "permission_class": true,
+    "smoke": true,
+    "eval": true,
+    "review": true,
+    "hermes_binding": true
+  },
+  "block_policy": {
+    "block_only_after_search": true,
+    "block_requires_reason": true,
+    "block_requires_smallest_safe_next_action": true
+  },
+  "forbidden_shortcuts": [
+    "generic worker replaces a missing specialist without registry proof",
+    "pack template is treated as activated execution capability",
+    "factory blocks for missing specialist before reference search and candidate evaluation",
+    "new capability runs without permission, smoke, eval, review and Hermes binding"
+  ]
+}

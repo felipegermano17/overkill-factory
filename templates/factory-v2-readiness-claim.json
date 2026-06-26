@@ -1,0 +1,35 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-v2-readiness-claim.schema.json",
+  "record_type": "factory_v2_readiness_claim",
+  "claim_id": "overkill-factory-v2-public-kernel-ready-2026-06-26",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "claimed_state": "KERNEL_READY",
+  "claim_scope": "public_kernel",
+  "evidence_levels": [
+    "repo_static",
+    "schema_validated",
+    "test_validated"
+  ],
+  "evidence_refs": [
+    "python scripts/validate_public_json_artifacts.py",
+    "python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json",
+    "python -m unittest discover -q"
+  ],
+  "truth_boundary": {
+    "local_validation_is_production_proof": false,
+    "hermes_required_for_real_run": true,
+    "product_specific_proof_required_for_product_claim": true,
+    "production_claim_requires_release_evidence": true
+  },
+  "forbidden_interpretations": [
+    "KERNEL_READY does not mean a specific product is production-ready.",
+    "KERNEL_READY does not prove a live Hermes runtime or operator board.",
+    "KERNEL_READY does not authorize deploy, funds, custody, signing or release."
+  ],
+  "next_stronger_state": {
+    "state": "RUNTIME_READY",
+    "missing_evidence_levels": [
+      "hermes_runtime_proof"
+    ]
+  }
+}

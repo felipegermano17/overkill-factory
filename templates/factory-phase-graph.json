@@ -1,0 +1,333 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-phase-graph.schema.json",
+  "record_type": "factory_phase_graph",
+  "graph_id": "overkill-vfinal-phase-graph-v2-1",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "product_phases": [
+    {
+      "phase_id": "F0",
+      "phase_index": 0,
+      "name": "Pre-Start / Sealed Source Envelope",
+      "kind": "product_phase",
+      "frontier": "pre_start",
+      "entry_contract_refs": ["schemas/factory-bridge-source-envelope.schema.json"],
+      "exit_contract_refs": ["schemas/factory-bridge-start-request.schema.json", "schemas/factory-run.schema.json"],
+      "next_phase_id": "F1"
+    },
+    {
+      "phase_id": "F1",
+      "phase_index": 1,
+      "name": "Intake",
+      "kind": "product_phase",
+      "frontier": "intake",
+      "entry_contract_refs": ["schemas/factory-start-conversation.schema.json"],
+      "exit_contract_refs": ["schemas/universal-signal-intake.schema.json", "schemas/source-resolution-packet.schema.json"],
+      "next_phase_id": "F2"
+    },
+    {
+      "phase_id": "F2",
+      "phase_index": 2,
+      "name": "Source Ledger",
+      "kind": "product_phase",
+      "frontier": "source_resolution",
+      "entry_contract_refs": ["schemas/source-resolution-packet.schema.json"],
+      "exit_contract_refs": ["schemas/product-source-ledger.schema.json", "schemas/operator-understanding-confirmation.schema.json"],
+      "next_phase_id": "F3"
+    },
+    {
+      "phase_id": "F3",
+      "phase_index": 3,
+      "name": "Source Resolution",
+      "kind": "product_phase",
+      "frontier": "source_resolution",
+      "entry_contract_refs": ["schemas/product-source-ledger.schema.json"],
+      "exit_contract_refs": ["schemas/outcome-contract.schema.json"],
+      "next_phase_id": "F4"
+    },
+    {
+      "phase_id": "F4",
+      "phase_index": 4,
+      "name": "Product Outcome And Discovery",
+      "kind": "product_phase",
+      "frontier": "product_sot",
+      "entry_contract_refs": ["schemas/operator-understanding-confirmation.schema.json"],
+      "exit_contract_refs": ["schemas/outcome-contract.schema.json"],
+      "next_phase_id": "F5"
+    },
+    {
+      "phase_id": "F5",
+      "phase_index": 5,
+      "name": "Product SOT",
+      "kind": "product_phase",
+      "frontier": "product_sot",
+      "entry_contract_refs": ["schemas/outcome-contract.schema.json"],
+      "exit_contract_refs": ["schemas/product-sot.schema.json", "schemas/full-product-sot-scope-coverage.schema.json"],
+      "next_phase_id": "F6"
+    },
+    {
+      "phase_id": "F6",
+      "phase_index": 6,
+      "name": "Agentic Method Router",
+      "kind": "product_phase",
+      "frontier": "method_contract",
+      "entry_contract_refs": ["schemas/full-product-sot-scope-coverage.schema.json"],
+      "exit_contract_refs": ["schemas/method-contract.schema.json"],
+      "next_phase_id": "F7"
+    },
+    {
+      "phase_id": "F7",
+      "phase_index": 7,
+      "name": "Method Contract",
+      "kind": "product_phase",
+      "frontier": "method_contract",
+      "entry_contract_refs": ["schemas/method-contract.schema.json"],
+      "exit_contract_refs": ["schemas/method-contract.schema.json"],
+      "next_phase_id": "F8"
+    },
+    {
+      "phase_id": "F8",
+      "phase_index": 8,
+      "name": "Pack And Product Experience Selection",
+      "kind": "product_phase",
+      "frontier": "pack_selection",
+      "entry_contract_refs": ["schemas/method-contract.schema.json"],
+      "exit_contract_refs": [
+        "schemas/capability-pack-contract.schema.json",
+        "schemas/product-experience-plan.schema.json",
+        "schemas/product-face-packet.schema.json",
+        "schemas/project-design-system.schema.json",
+        "schemas/professional-design-process.schema.json"
+      ],
+      "next_phase_id": "F9"
+    },
+    {
+      "phase_id": "F9",
+      "phase_index": 9,
+      "name": "Risk And Authority Gates",
+      "kind": "product_phase",
+      "frontier": "authority",
+      "entry_contract_refs": ["schemas/capability-pack-contract.schema.json"],
+      "exit_contract_refs": ["schemas/access-capability.schema.json", "schemas/budget-contract.schema.json"],
+      "next_phase_id": "F10"
+    },
+    {
+      "phase_id": "F10",
+      "phase_index": 10,
+      "name": "Security Architecture",
+      "kind": "product_phase",
+      "frontier": "architecture",
+      "entry_contract_refs": ["schemas/method-contract.schema.json"],
+      "exit_contract_refs": ["schemas/security-architecture-plan.schema.json"],
+      "next_phase_id": "F11"
+    },
+    {
+      "phase_id": "F11",
+      "phase_index": 11,
+      "name": "Executable Plans",
+      "kind": "product_phase",
+      "frontier": "ready_gate",
+      "entry_contract_refs": ["schemas/security-architecture-plan.schema.json"],
+      "exit_contract_refs": ["schemas/software-development-plan.schema.json", "schemas/spec-graph.schema.json", "schemas/loop-plan.schema.json"],
+      "next_phase_id": "F12"
+    },
+    {
+      "phase_id": "F12",
+      "phase_index": 12,
+      "name": "Autonomy Readiness",
+      "kind": "product_phase",
+      "frontier": "ready_gate",
+      "entry_contract_refs": ["schemas/software-development-plan.schema.json"],
+      "exit_contract_refs": ["schemas/autonomy-readiness-packet.schema.json"],
+      "next_phase_id": "F13"
+    },
+    {
+      "phase_id": "F13",
+      "phase_index": 13,
+      "name": "Ready Gate",
+      "kind": "product_phase",
+      "frontier": "ready_gate",
+      "entry_contract_refs": ["schemas/autonomy-readiness-packet.schema.json"],
+      "exit_contract_refs": ["schemas/gate-report.schema.json"],
+      "next_phase_id": "F15"
+    },
+    {
+      "phase_id": "F15",
+      "phase_index": 15,
+      "name": "Runtime Execution",
+      "kind": "product_phase",
+      "frontier": "execution",
+      "entry_contract_refs": ["schemas/ready-work-unit-packets.schema.json"],
+      "exit_contract_refs": ["schemas/worker-packet.schema.json"],
+      "next_phase_id": "F16"
+    },
+    {
+      "phase_id": "F16",
+      "phase_index": 16,
+      "name": "Worker Results",
+      "kind": "product_phase",
+      "frontier": "execution",
+      "entry_contract_refs": ["schemas/worker-packet.schema.json"],
+      "exit_contract_refs": ["schemas/worker-result.schema.json"],
+      "next_phase_id": "F17"
+    },
+    {
+      "phase_id": "F17",
+      "phase_index": 17,
+      "name": "Verification",
+      "kind": "product_phase",
+      "frontier": "verification",
+      "entry_contract_refs": ["schemas/worker-result.schema.json"],
+      "exit_contract_refs": ["schemas/qa-verification-plan.schema.json"],
+      "next_phase_id": "F18"
+    },
+    {
+      "phase_id": "F18",
+      "phase_index": 18,
+      "name": "Independent Review",
+      "kind": "product_phase",
+      "frontier": "review",
+      "entry_contract_refs": ["schemas/qa-verification-plan.schema.json"],
+      "exit_contract_refs": ["schemas/reviewer-selection-plan.schema.json"],
+      "next_phase_id": "F20"
+    },
+    {
+      "phase_id": "F20",
+      "phase_index": 20,
+      "name": "Closure Summary",
+      "kind": "product_phase",
+      "frontier": "completion",
+      "entry_contract_refs": ["schemas/worker-result.schema.json"],
+      "exit_contract_refs": ["schemas/worker-closure-summary.schema.json"],
+      "next_phase_id": "F21"
+    },
+    {
+      "phase_id": "F21",
+      "phase_index": 21,
+      "name": "Receipt Five",
+      "kind": "product_phase",
+      "frontier": "completion",
+      "entry_contract_refs": ["schemas/worker-closure-summary.schema.json"],
+      "exit_contract_refs": ["schemas/receipt-five.schema.json"],
+      "next_phase_id": "F22"
+    },
+    {
+      "phase_id": "F22",
+      "phase_index": 22,
+      "name": "Completion Audit",
+      "kind": "product_phase",
+      "frontier": "completion",
+      "entry_contract_refs": ["schemas/receipt-five.schema.json"],
+      "exit_contract_refs": ["schemas/completion-audit.schema.json"],
+      "next_phase_id": "F23"
+    },
+    {
+      "phase_id": "F23",
+      "phase_index": 23,
+      "name": "Production Operations",
+      "kind": "product_phase",
+      "frontier": "release",
+      "entry_contract_refs": ["schemas/completion-audit.schema.json"],
+      "exit_contract_refs": ["schemas/production-readiness-plan.schema.json"],
+      "next_phase_id": "F24"
+    },
+    {
+      "phase_id": "F24",
+      "phase_index": 24,
+      "name": "Release Or Block",
+      "kind": "product_phase",
+      "frontier": "release",
+      "entry_contract_refs": ["schemas/production-readiness-plan.schema.json"],
+      "exit_contract_refs": ["schemas/factory-promotion-packet.schema.json"],
+      "next_phase_id": "F25"
+    },
+    {
+      "phase_id": "F25",
+      "phase_index": 25,
+      "name": "Monitoring Support",
+      "kind": "product_phase",
+      "frontier": "operations",
+      "entry_contract_refs": ["schemas/factory-promotion-packet.schema.json"],
+      "exit_contract_refs": ["schemas/incident-support-plan.schema.json"],
+      "next_phase_id": "F26"
+    },
+    {
+      "phase_id": "F26",
+      "phase_index": 26,
+      "name": "Learnback",
+      "kind": "product_phase",
+      "frontier": "learnback",
+      "entry_contract_refs": ["schemas/receipt-five.schema.json"],
+      "exit_contract_refs": ["schemas/factory-learning-proposal.schema.json"],
+      "next_phase_id": "F27"
+    },
+    {
+      "phase_id": "F27",
+      "phase_index": 27,
+      "name": "Factory Maturity Audit",
+      "kind": "product_phase",
+      "frontier": "factory_maturity",
+      "entry_contract_refs": ["schemas/factory-learning-proposal.schema.json"],
+      "exit_contract_refs": ["schemas/factory-maturity-scorecard.schema.json"],
+      "next_phase_id": null
+    }
+  ],
+  "gate_events": [
+    {
+      "event_id": "human_gate_event",
+      "event_type": "human_gate_event",
+      "trigger": "authority, access, risk, release, funds, secrets, custody, legal/privacy, destructive or irreversible action requires a real human decision",
+      "required_packet_refs": [
+        "schemas/human-gate-packet.schema.json",
+        "schemas/operator-briefing-package.schema.json",
+        "schemas/approval-request.schema.json",
+        "schemas/human-gate-record.schema.json"
+      ],
+      "forbidden_as_phase": true
+    },
+    {
+      "event_id": "release_gate_event",
+      "event_type": "release_gate_event",
+      "trigger": "promotion from completion evidence to production or customer-visible release",
+      "required_packet_refs": ["schemas/factory-promotion-packet.schema.json", "schemas/production-readiness-plan.schema.json"],
+      "forbidden_as_phase": true
+    }
+  ],
+  "projections": [
+    {
+      "projection_id": "operator_projection",
+      "projection_type": "operator_projection",
+      "source_of_truth": "factory_run_event_log_and_hermes_readback",
+      "forbidden_as_phase": true
+    },
+    {
+      "projection_id": "status_snapshot",
+      "projection_type": "status_snapshot",
+      "source_of_truth": "explicit_runtime_target",
+      "forbidden_as_phase": true
+    }
+  ],
+  "legacy_aliases": [
+    {
+      "legacy_id": "F8A",
+      "canonical_ref": "F8#product_experience_gate",
+      "allowed_for_compatibility_only": true
+    },
+    {
+      "legacy_id": "F14",
+      "canonical_ref": "projection:operator_projection",
+      "allowed_for_compatibility_only": true
+    },
+    {
+      "legacy_id": "F19",
+      "canonical_ref": "gate_event:human_gate_event",
+      "allowed_for_compatibility_only": true
+    }
+  ],
+  "taxonomy_policy": {
+    "frontier_is_not_phase": true,
+    "gate_event_is_not_phase": true,
+    "projection_is_not_phase": true,
+    "legacy_suffix_phase_ids_forbidden": true,
+    "single_active_product_phase_required": true
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/runtime-contract.schema.json",
+  "title": "Overkill Factory Runtime Contract",
+  "type": "object",
+  "required": ["mode"],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/runtime-contract.schema.json"
+    },
+    "record_type": {
+      "const": "runtime_contract"
+    },
+    "mode": {
+      "enum": [
+        "planning_only",
+        "local_validation",
+        "read_only_gate_test",
+        "blocked_gate_test",
+        "bounded_worker",
+        "bounded_execution",
+        "material_execution",
+        "production_operation",
+        "human_only"
+      ]
+    },
+    "runtime_source_of_truth": {
+      "enum": ["hermes_kanban", "factoryctl_local_only", "external_runtime"]
+    },
+    "dispatch_authority": {
+      "enum": ["hermes_native_dispatch_only", "local_validation_only", "human_only"]
+    },
+    "worker_results_required": { "type": "boolean" },
+    "receipt_five_required": { "type": "boolean" },
+    "transition_event_required": { "type": "boolean" },
+    "local_validation_is_production_proof": { "const": false },
+    "hermes_required_for_real_run": { "type": "boolean" },
+    "forbidden_actions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "tool_surface": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "remote_proof_required": {
+      "type": "boolean"
+    },
+    "ttl": {
+      "type": "string",
+      "minLength": 3
+    },
+    "cost_owner": {
+      "type": "string",
+      "minLength": 2
+    },
+    "cleanup_plan": {
+      "type": "string",
+      "minLength": 3
+    },
+    "secret_policy": {
+      "type": "string",
+      "minLength": 3
+    },
+    "artifact_policy": {
+      "type": "string",
+      "minLength": 3
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": false
+}

@@ -58,48 +58,30 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
         self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
         self.assertIn('the factory is not "a smart chat."', readme)
-        self.assertIn("v2.0.0", readme)
+        self.assertIn("v2.0.1", readme)
         self.assertIn("Factory V2", readme)
         self.assertIn("docs/architecture/factory-v2-control-plane.md", readme)
         self.assertIn("docs/operations/promise-to-implementation.md", readme)
         self.assertIn("docs/promise-implementation-map.public.json", readme)
+        self.assertIn("templates/v2-study-traceability.json", readme)
+        self.assertIn("templates/factory-v2-readiness-claim.json", readme)
         self.assertNotIn("Para você, como usuário leigo", readme)
         self.assertNotIn("## What It Does Not Do", readme)
 
         for rel in [
             "README.pt-BR.md",
             ".agents/README.md",
-            "plugins/README.md",
+            "docs/index.md",
             "docs/operator/overkill-factory-bridge.md",
             "docs/operator/overkill-factory-bridge-plugin.md",
             "docs/getting-started/quickstart-hermes.md",
-            "docs/governance/document-governance.md",
-            "docs/concepts/factory-flow.md",
-            "docs/concepts/overkill-factory-method.md",
-            "docs/concepts/operator-journey.md",
-            "docs/agents/worker-profiles.md",
-            "agents/README.md",
-            "docs/agents/factory-stage-agent-map.md",
-            "docs/agents/capability-packs.md",
-            "docs/control-tower/open-source-setup.md",
-            "docs/operations/validation-and-release.md",
-            "docs/operations/release-policy.md",
-            "docs/architecture/factory-operating-systems.md",
-            "docs/architecture/factory-v2-control-plane.md",
-            "docs/architecture/hermes-integration.md",
             "docs/getting-started/install-in-hermes.md",
             "docs/reference/cli.md",
-            "docs/examples/gallery.md",
-            "docs/security/oss-security.md",
-            "docs/maintenance/repo-surface.md",
-            "docs/maintenance/hermes-learn-integration.md",
-            "examples/minimal-hermes-project/README.md",
-            "fixtures/README.md",
-            ".env.example",
-            "CHANGELOG.md",
-            "CONTRIBUTING.md",
-            "SECURITY.md",
-            ".codex/README.md",
+            "docs/architecture/factory-v2-control-plane.md",
+            "docs/operations/promise-to-implementation.md",
+            "docs/promise-implementation-map.public.json",
+            "templates/v2-study-traceability.json",
+            "templates/factory-v2-readiness-claim.json",
         ]:
             with self.subTest(link=rel):
                 self.assertIn(rel.replace("\\", "/"), readme)
@@ -108,7 +90,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "factoryctl doctor",
             "factoryctl init",
             "factoryctl run minimal",
-            "factory_no_idle_watchdog.py",
             "codex plugin marketplace add .",
             "codex plugin add overkill-factory-bridge@overkill-factory",
         ]:
@@ -140,10 +121,10 @@ class OpenSourceDocsTest(unittest.TestCase):
             "Mapa público:",
             "A Overkill Factory é uma linha de produção para projetos feitos por agentes.",
             'O ponto mais importante: a fábrica não é "um chat inteligente".',
-            "não um atalho de MVP",
+            "linha de produção em etapas para trabalho de produto controlado",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
-            "v2.0.0",
+            "v2.0.1",
             "Factory V2",
             "docs/architecture/factory-v2-control-plane.md",
             "codex plugin marketplace add .",
@@ -401,7 +382,9 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertTrue(documentation_ref.is_file())
         self.assertIn("professional open-source GitHub stewardship", skill)
         self.assertIn("Product Experience OS/Product Face", skill)
-        self.assertIn("Use this vFinal sequence", skill)
+        self.assertIn("Use the V2 control plane as the default factory spine", skill)
+        self.assertIn("validate-v2-study-traceability", skill)
+        self.assertIn("validate-capability-acquisition-contract", skill)
         self.assertIn("references/open-source-github.md", skill)
         self.assertIn("references/documentation-standard.md", skill)
         self.assertIn("Every public folder needs a burden-of-proof decision", skill)
@@ -499,7 +482,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("CodeQL", oss_security)
         self.assertIn("Dependency Review", oss_security)
         self.assertIn("SBOM", oss_security)
-        self.assertIn("Point 5 is intentionally deferred", release_policy)
+        self.assertIn("must not claim an official real Hermes E2E harness", release_policy)
         for example in [
             "minimal-hermes-project",
             "v35_valid_product_face.md",

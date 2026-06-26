@@ -39,6 +39,6 @@ python scripts/supply_chain_proof.py --check --no-write
 
 ## Deferred Runtime Harness
 
-Point 5 is intentionally deferred. A public release may validate local CLI,
-schemas, docs, examples and adapter compatibility, but it must not claim an
-official real Hermes E2E harness until that harness exists and is tested.
+A public release may validate local CLI, schemas, docs, examples and adapter
+compatibility. It must not claim an official real Hermes E2E harness unless
+that harness exists, is tested, and is named in the release evidence.

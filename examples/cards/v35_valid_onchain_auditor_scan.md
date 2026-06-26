@@ -54,10 +54,13 @@
     "optional_explainer_assets": ["diagram", "video_explainer", "audio_explainer"],
     "decision_package_delivery": {
       "operator_interface": "telegram",
+      "primary_language": "pt-BR",
       "push_required": true,
       "summary_only_forbidden": true,
       "material_before_question": true,
-      "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer"]
+      "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer"],
+      "delivery_receipt_ref": "reports/val-solana-quasar-r3/human-gate/DELIVERY_RECEIPT.json",
+      "question_after_material_delivery": true
     }
   },
   "factory_method_version": "OVERKILL_V3_5_FACTORY_10",
@@ -116,7 +119,14 @@
     "cpi_allowlist": ["none"],
     "compute_unit_budget": "test_only",
     "auditor_required": true,
-    "auditor_tool_ref": "solanabr/Auditor"
+    "auditor_tool_ref": "solanabr/Auditor",
+    "signer_boundary": {
+      "signer_roles": ["test_signer"],
+      "private_key_handling": "mock_only",
+      "human_gate_required_for_signing": true,
+      "mainnet_allowed_without_human_gate": false,
+      "evidence_refs": ["README.md"]
+    }
   },
   "security_scan_packet": {
     "security_owner": "security-reviewer",

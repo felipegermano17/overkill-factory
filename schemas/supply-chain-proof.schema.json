@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/supply-chain-proof.schema.json",
+  "title": "Overkill Factory Supply Chain Proof",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "worker",
+    "result",
+    "tool_or_profile",
+    "executed_by",
+    "evidence_refs",
+    "summary",
+    "next_action",
+    "supply_chain_controls"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/supply-chain-proof.schema.json"
+    },
+    "record_type": {
+      "const": "supply_chain_result"
+    },
+    "worker": {
+      "type": "object",
+      "required": ["id", "role"],
+      "properties": {
+        "id": { "const": "supply-chain-gate" },
+        "role": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "result": {
+      "enum": ["PASS", "FAIL"]
+    },
+    "tool_or_profile": {
+      "type": "string",
+      "minLength": 3
+    },
+    "executed_by": {
+      "const": "supply-chain-gate"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 10
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 10
+    },
+    "supply_chain_controls": {
+      "type": "object",
+      "required": [
+        "workflow_permissions",
+        "pinned_actions",
+        "sbom",
+        "source_inventory"
+      ],
+      "properties": {
+        "workflow_permissions": {
+          "type": "object",
+          "required": ["result"],
+          "properties": {
+            "result": { "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] }
+          },
+          "additionalProperties": true
+        },
+        "pinned_actions": {
+          "type": "object",
+          "required": ["result"],
+          "properties": {
+            "result": { "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] }
+          },
+          "additionalProperties": true
+        },
+        "sbom": {
+          "type": "object",
+          "required": ["result", "format"],
+          "properties": {
+            "result": { "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] },
+            "format": { "type": "string", "minLength": 3 },
+            "sha256": { "type": "string", "minLength": 64 }
+          },
+          "additionalProperties": true
+        },
+        "source_inventory": {
+          "type": "object",
+          "required": ["result"],
+          "properties": {
+            "result": { "enum": ["PASS", "FAIL", "NOT_APPLICABLE"] }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

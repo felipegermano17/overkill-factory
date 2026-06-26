@@ -335,8 +335,8 @@ class OperatorExperienceTest(unittest.TestCase):
             result = run_factoryctl("help-next", "--card", str(card))
             payload = json.loads(result.stdout)
 
-        self.assertEqual(payload["workflow_phase"]["phase_id"], "F8A")
-        self.assertEqual(payload["workflow_phase"]["phase_name"], "Product Experience And Surface Pack Gate")
+        self.assertEqual(payload["workflow_phase"]["phase_id"], "F8")
+        self.assertEqual(payload["workflow_phase"]["phase_name"], "Pack And Product Experience Selection")
         self.assertIn("Product Experience Plan", payload["factory_next_action"]["action"])
         self.assertIn("surface pack", payload["factory_next_action"]["why"].lower())
         self.assertIn("product_experience_plan required for vFinal product-facing surfaces", payload["blocked_because"])

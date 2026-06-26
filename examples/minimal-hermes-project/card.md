@@ -154,6 +154,7 @@
     "surface_pack": "minimal-public-receipt-surface-pack",
     "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
     "project_design_system_ref": "templates/project-design-system.json",
+    "professional_design_process_ref": "examples/minimal-hermes-project/card.md#professional_design_process",
     "surface_evidence_profile": "web_visual_ui",
     "experience_sot": "A first-time operator can see whether the minimal example is ready, blocked or missing Product Face and Receipt Five evidence.",
     "user": "external open-source factory operator",

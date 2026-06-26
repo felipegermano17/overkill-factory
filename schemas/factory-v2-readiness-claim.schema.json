@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-v2-readiness-claim.schema.json",
+  "title": "Overkill Factory V2 Readiness Claim",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "claim_id",
+    "created_at",
+    "claimed_state",
+    "claim_scope",
+    "evidence_levels",
+    "evidence_refs",
+    "truth_boundary",
+    "forbidden_interpretations",
+    "next_stronger_state"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-v2-readiness-claim.schema.json"
+    },
+    "record_type": {
+      "const": "factory_v2_readiness_claim"
+    },
+    "claim_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "claimed_state": {
+      "enum": ["KERNEL_READY", "RUNTIME_READY", "PRODUCT_RUN_READY", "PRODUCTION_PROVEN"]
+    },
+    "claim_scope": {
+      "enum": ["public_kernel", "operator_hermes_runtime", "specific_product_run", "production_release"]
+    },
+    "evidence_levels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "repo_static",
+          "schema_validated",
+          "test_validated",
+          "hermes_runtime_proof",
+          "worker_results",
+          "receipt_five",
+          "release_proof",
+          "monitoring_rollback",
+          "operator_human_gate"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "truth_boundary": {
+      "type": "object",
+      "required": [
+        "local_validation_is_production_proof",
+        "hermes_required_for_real_run",
+        "product_specific_proof_required_for_product_claim",
+        "production_claim_requires_release_evidence"
+      ],
+      "properties": {
+        "local_validation_is_production_proof": { "const": false },
+        "hermes_required_for_real_run": { "const": true },
+        "product_specific_proof_required_for_product_claim": { "const": true },
+        "production_claim_requires_release_evidence": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "forbidden_interpretations": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "next_stronger_state": {
+      "type": "object",
+      "required": ["state", "missing_evidence_levels"],
+      "properties": {
+        "state": {
+          "enum": ["RUNTIME_READY", "PRODUCT_RUN_READY", "PRODUCTION_PROVEN", "none"]
+        },
+        "missing_evidence_levels": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

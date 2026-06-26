@@ -34,7 +34,7 @@ security comment is not enough.
 - F4/F6: threat model architecture and choose required specialists.
 - F8: create `security_scan_packet`.
 - F13: run scans, Auditor and domain checks.
-- F14/F15: independent review and AutoReview.
+- F15: independent review and AutoReview.
 - F16/F17: public safety, release security, monitoring and rollback.
 - F18: turn failures into tests, skills and checklists.
 

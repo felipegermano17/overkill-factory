@@ -75,7 +75,7 @@ Human gates remain human gates.
 
 ## How The Factory Works
 
-The public method is a complete production line, not an MVP shortcut:
+The public method is a staged production line for controlled product work:
 
 ```text
 raw signal
@@ -264,67 +264,32 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory V2 is the current public kernel release line. The latest public release
-is v2.0.0.
+is v2.0.1.
 
-It includes:
+V2 means the public kernel has executable contracts for the factory line:
 
-- a deterministic Factory V2 control plane: workflow compiled plan, command
-  inbox, hash-chained run event log, decision outbox, promotion packets and
-  `FactoryRun` validation;
-- `factoryctl compile-workflow`, `validate-factory-run`,
-  `validate-factory-command`, `validate-factory-event-log`,
-  `validate-decision-outbox`, `validate-promotion-packet` and
-  `validate-workflow-compiled-plan`;
-- bridge hardening so status, question, decision, change, exception and handoff
-  requests require an explicit runtime target instead of ambient Hermes state;
-- formal bridge decision records that require `human_gate_record_ref` for human
-  gate responses, keeping chat approval separate from factory authority;
-- public templates and regression tests for the V2 state contracts;
-- Universal Signal Intake, route registry, Golden Corpus and signal coverage;
-- operator interface profiles for Telegram, Discord, Cockpit and bridge use;
-- conversational start before a formal factory start request exists;
-- operator understanding confirmation before Product SOT for product creation;
-- briefing packages with document/PDF attachments for important decisions;
-- Product SOT, full-scope planning, method contracts and readiness checks;
-- worker registry, Hermes bindings, permissions and capability-pack routing;
-- Solana AI Kit domain-brain routing for Solana and on-chain work;
-- high-risk Solana/on-chain remote proof and R4 routing gates;
-- Codex Bridge plugin docs and package for operator-to-factory handoff;
-- Product Face packet/result contracts plus project design-system and
-  `DESIGN.md` gating;
-- release preflight, public-surface sync, safety scans and Factory v1
-  Completion Gate;
-- deterministic phase lock, single active frontier and downstream freeze before
-  architecture, repo cleanup, human gates or worker packets;
-- deterministic Phase Engine state so materialized artifacts, not agent prose or
-  declared card phase, decide the active frontier and next required artifact;
-- deterministic Hermes/Kanban board reconciliation so a silent board becomes
-  one allowed next-artifact task, native dispatch, or a real bounded gate
-  request instead of agent-chosen phase routing;
-- runtime-strict phase evidence in Hermes reconciliation, so template/example
-  scaffold refs and placeholder packets cannot make a live product board skip
-  F1/F2/F3/F4 boundaries;
-- Kanban-native workflow binding with `workflow_template_id=overkill-vfinal`
-  and deterministic `current_step_key` on factory-created Hermes tasks when the
-  installed Hermes database exposes those fields;
-- no-idle classification that treats missing decision packages, PDF/readback,
-  owner-readable materials and repair tasks gated behind their own blocker as
-  factory-owned repair, not operator approval bureaucracy;
-- no-idle classification that treats pending operator understanding
-  confirmation as operator input, with a clear Telegram-facing request to
-  confirm or correct understanding before Product SOT;
-- blocked Hermes task creation that uses create-unassigned, block-readback,
-  then assign-readback so Kanban dispatch cannot race ahead of a gate;
-- Solana AI Kit route repair when Solana/on-chain F4+ planning lacks the
-  required structured domain-brain record;
-- Hermes completion artifact projection, no-idle remediation controls, Hermes
-  update guard, cron-friendly no-idle watchdog and Fast Autonomy Lane contracts.
+- deterministic phase graph, compiled workflow, command inbox, event log,
+  decision outbox and promotion packets;
+- Hermes/Kanban as the real runtime source of truth for cards, workers and
+  transitions;
+- worker authority contracts: agents produce evidence, but they do not choose
+  the route, phase, human gate or promotion path;
+- Product Experience control plane: product-facing work needs Product
+  Experience Plan, Product Face Packet, professional design process, project
+  design system, `DESIGN.md` and Product Face Result proof;
+- capability acquisition contract: when a specialist is missing, the factory
+  searches existing packs and reference sources before blocking;
+- Solana AI Kit first-class routing for Solana/on-chain work, with usage
+  receipts, signer boundaries and onchain work packages;
+- strict human-gate packets: the operator receives material first, then the
+  decision question;
+- readiness claims that separate public kernel readiness from runtime,
+  product-run and production proof.
 
-That claim is intentionally scoped. Factory V2 means the public kernel has a
-deterministic control plane that can be installed, inspected, validated and
-extended. A product built by the factory still needs its own source material,
-Product SOT, worker execution, evidence, reviews, human gates and production
-readiness proof.
+That claim is intentionally scoped. Factory V2 does not mean a specific product
+is production-ready. A product built by the factory still needs its own source
+material, Product SOT, worker execution, evidence, reviews, human gates and
+production readiness proof.
 Public promises are tracked in
 `docs/operations/promise-to-implementation.md` and
 `docs/promise-implementation-map.public.json`; each major claim must name its
@@ -334,50 +299,12 @@ implementation, proof and boundary.
 
 - `docs/index.md`: documentation home.
 - `docs/getting-started/quickstart-hermes.md`: first run with Hermes context.
-- `docs/getting-started/install-in-hermes.md`: connect the factory to an
-  operator-owned Hermes runtime.
-- `docs/governance/document-governance.md`: document authority and public
-  boundary rules.
+- `docs/getting-started/install-in-hermes.md`: connect to an operator-owned Hermes runtime.
 - `docs/reference/cli.md`: supported `factoryctl` commands.
-- `docs/architecture/factory-operating-systems.md`: OS registry and production
-  claim boundary.
-- `docs/architecture/factory-v2-control-plane.md`: deterministic V2 command,
-  event, decision and promotion contracts.
-- `docs/concepts/factory-flow.md`: production line and state model.
-- `docs/concepts/overkill-factory-method.md`: method guide.
-- `docs/concepts/operator-journey.md`: operator journey.
-- `docs/visuals/README.md`: visual map boundary and validation.
-- `agents/README.md`: human entrypoint for the worker contract directory.
-- `docs/agents/worker-profiles.md`: worker roles, inputs, outputs and limits.
-- `docs/agents/factory-stage-agent-map.md`: stage-to-worker ownership map.
-- `docs/agents/capability-packs.md`: product-type coverage rules.
-- `docs/control-tower/open-source-setup.md`: optional Control Tower setup.
-- `docs/operations/validation-and-release.md`: release validation checklist.
-- `docs/operations/promise-to-implementation.md`: promise-to-proof audit and
-  drift prevention rules.
-- `docs/operations/fast-autonomy-lane.md`: fast autonomous execution limits.
-- `scripts/factory_no_idle_watchdog.py`: Hermes-cron no-idle heartbeat for
-  Telegram-first operation.
-- `factoryctl reconcile-board`: deterministic board-level next action from a
-  Hermes/Kanban snapshot.
-- `docs/operations/release-policy.md`: release and versioning policy.
-- `docs/operations/troubleshooting.md`: common failures and recovery path.
-- `docs/architecture/hermes-integration.md`: Hermes adapter architecture.
-- `docs/operator/overkill-factory-bridge.md`: Codex/operator bridge architecture.
-- `docs/operator/overkill-factory-bridge-plugin.md`: Codex plugin install and
-  hook trust.
-- `docs/examples/gallery.md`: public examples.
-- `docs/security/oss-security.md`: security posture.
-- `docs/maintenance/repo-surface.md`: public surface maintenance rules.
-- `docs/maintenance/hermes-learn-integration.md`: Hermes `/learn` boundary for
-  staged skill candidates.
-- `.agents/README.md`: repo-local Codex plugin marketplace boundary.
-- `plugins/README.md`: public plugin package boundary.
-- `examples/minimal-hermes-project/README.md`: minimal runnable example.
-- `.env.example`: safe environment variable template.
-- `CHANGELOG.md`: public release history.
-- `CONTRIBUTING.md`: contribution rules and required checks.
-- `SECURITY.md`: security reporting and public-boundary policy.
+- `docs/architecture/factory-v2-control-plane.md`: deterministic control plane.
+- `templates/v2-study-traceability.json`: proof that raw V2 study claims were implemented.
+- `templates/factory-v2-readiness-claim.json`: scoped readiness claim contract.
+- `docs/operations/promise-to-implementation.md`: public promise-to-proof audit.
 
 ## Validation
 

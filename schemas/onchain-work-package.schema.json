@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/onchain-work-package.schema.json",
+  "title": "Overkill Factory Onchain Work Package",
+  "type": "object",
+  "required": [
+    "quasar_source_ref",
+    "quasar_required",
+    "framework_default",
+    "account_map",
+    "instruction_abi",
+    "pda_derivation",
+    "cpi_allowlist",
+    "compute_unit_budget",
+    "auditor_required",
+    "auditor_tool_ref",
+    "signer_boundary"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/onchain-work-package.schema.json"
+    },
+    "record_type": {
+      "const": "onchain_work_package"
+    },
+    "quasar_source_ref": { "type": "string", "minLength": 3 },
+    "quasar_required": { "type": "boolean" },
+    "framework_default": {
+      "enum": ["quasar_non_anchor", "quasar", "native_solana", "anchor_allowed_by_exception"]
+    },
+    "account_map": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "instruction_abi": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "pda_derivation": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "cpi_allowlist": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "compute_unit_budget": { "type": "string", "minLength": 3 },
+    "auditor_required": { "const": true },
+    "auditor_tool_ref": { "type": "string", "minLength": 3 },
+    "signer_boundary": {
+      "type": "object",
+      "required": [
+        "signer_roles",
+        "private_key_handling",
+        "human_gate_required_for_signing",
+        "mainnet_allowed_without_human_gate"
+      ],
+      "properties": {
+        "signer_roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 2 }
+        },
+        "private_key_handling": {
+          "enum": ["forbidden", "hardware_signer_only", "mock_only"]
+        },
+        "human_gate_required_for_signing": { "const": true },
+        "mainnet_allowed_without_human_gate": { "const": false },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "solana_ai_kit_usage_receipt": {
+      "$ref": "solana-ai-kit-usage-receipt.schema.json"
+    }
+  },
+  "additionalProperties": false
+}

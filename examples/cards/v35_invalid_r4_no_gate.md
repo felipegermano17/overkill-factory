@@ -42,7 +42,7 @@
   "reviewer_identity": "security-reviewer",
   "runtime_decision": "no_autonomous_runtime",
   "runtime_contract": {"mode": "blocked_gate_test"},
-  "security_contract": {"security_receipt_ref": "required_if_real_scope"},
+  "security_contract": {"security_boundary": "r4_human_gate_required"},
   "security_role_separation": true,
   "forbidden_actions": ["deploy", "IAM", "DNS", "KMS", "secret_access", "production_release"],
   "done_definition": "Gate refuses ready because r4_gate is missing.",

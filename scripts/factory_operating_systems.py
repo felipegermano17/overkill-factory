@@ -13,46 +13,65 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OPERATING_SYSTEM_REGISTRY_PATH = ROOT / "templates" / "factory-operating-system-registry.json"
 
 REQUIRED_OS_IDS = {
+    "deterministic_control_plane_os",
     "product_truth_research_os",
     "method_os",
+    "product_architecture_os",
+    "product_experience_design_brand_os",
+    "work_unit_execution_dispatch_os",
     "authority_autonomy_os",
     "hermes_worker_runtime_os",
-    "evidence_product_proof_os",
-    "capability_domain_pack_os",
+    "evidence_receipt_os",
+    "capability_provider_os",
+    "agent_profile_authority_os",
+    "security_os",
+    "quality_verification_os",
     "operator_experience_os",
-    "security_release_os",
-    "product_quality_os",
-    "velocity_cost_os",
+    "release_operations_os",
+    "velocity_cost_throughput_os",
     "factory_learning_os",
 }
 
 P0_OS_IDS = {
+    "deterministic_control_plane_os",
     "product_truth_research_os",
     "method_os",
+    "product_architecture_os",
+    "product_experience_design_brand_os",
+    "work_unit_execution_dispatch_os",
     "authority_autonomy_os",
     "hermes_worker_runtime_os",
-    "evidence_product_proof_os",
-    "capability_domain_pack_os",
+    "evidence_receipt_os",
+    "capability_provider_os",
+    "agent_profile_authority_os",
+    "security_os",
     "operator_experience_os",
-    "security_release_os",
+    "release_operations_os",
 }
 
 EXPECTED_ISSUES = {
-    "method_os": 400,
+    "deterministic_control_plane_os": 400,
     "product_truth_research_os": 401,
-    "authority_autonomy_os": 402,
-    "hermes_worker_runtime_os": 403,
-    "evidence_product_proof_os": 404,
-    "capability_domain_pack_os": 405,
-    "operator_experience_os": 406,
-    "security_release_os": 407,
-    "product_quality_os": 408,
-    "velocity_cost_os": 409,
-    "factory_learning_os": 410,
+    "method_os": 402,
+    "product_architecture_os": 403,
+    "product_experience_design_brand_os": 404,
+    "work_unit_execution_dispatch_os": 405,
+    "authority_autonomy_os": 406,
+    "hermes_worker_runtime_os": 407,
+    "evidence_receipt_os": 408,
+    "capability_provider_os": 409,
+    "agent_profile_authority_os": 410,
+    "security_os": 411,
+    "quality_verification_os": 412,
+    "operator_experience_os": 413,
+    "release_operations_os": 414,
+    "velocity_cost_throughput_os": 415,
+    "factory_learning_os": 416,
 }
 
 FACTORYCTL_COMMANDS = {
     "briefing-package",
+    "compile-workflow",
     "evidence-graph",
     "evidence-record",
     "export-hermes-evidence",
@@ -68,6 +87,7 @@ FACTORYCTL_COMMANDS = {
     "operating-systems",
     "outcome-contract",
     "product-implementation-readiness",
+    "product-creation-plan",
     "product-sot",
     "ready-work-unit-hermes-plan",
     "ready-work-unit-packets",
@@ -78,10 +98,24 @@ FACTORYCTL_COMMANDS = {
     "status-snapshot",
     "understanding-confirmation",
     "validate-card",
+    "validate-capability-acquisition-contract",
     "validate-completion",
     "validate-evidence-bundle",
+    "validate-factory-command",
+    "validate-factory-event-log",
+    "validate-factory-run",
+    "validate-hermes-reducer-mutation-proof",
     "validate-method-contract",
+    "validate-operating-systems",
+    "validate-phase-graph",
+    "validate-product-experience-control-plane",
+    "validate-v2-study-traceability",
+    "validate-worker-authority-contract",
+    "validate-promotion-packet",
+    "validate-readiness-claim",
     "validate-receipt",
+    "validate-ready-work-unit-packets",
+    "validate-workflow-compiled-plan",
     "worker-packet",
 }
 
@@ -298,8 +332,8 @@ def validate_operating_system_registry_semantics(registry: dict[str, Any], at: s
         "live_hermes_worker_orchestration",
     ):
         errors.append(f"{at}.entries[hermes_worker_runtime_os]: missing live_hermes_worker_orchestration proof")
-    if "capability_domain_pack_os" in entries and not _contains_text(entries["capability_domain_pack_os"], "solana-ai-kit-core"):
-        errors.append(f"{at}.entries[capability_domain_pack_os]: must mention solana-ai-kit-core")
+    if "capability_provider_os" in entries and not _contains_text(entries["capability_provider_os"], "solana-ai-kit-core"):
+        errors.append(f"{at}.entries[capability_provider_os]: must mention solana-ai-kit-core")
     if "operator_experience_os" in entries and not _contains_text(entries["operator_experience_os"], "telegram"):
         errors.append(f"{at}.entries[operator_experience_os]: must mention Telegram-first operation")
     if "product_truth_research_os" in entries and not _contains_text(entries["product_truth_research_os"], "Product SOT"):

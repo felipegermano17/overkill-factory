@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/worker-authority-contract.schema.json",
+  "title": "Overkill Factory Worker Authority Contract",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "contract_id",
+    "source_refs",
+    "deterministic_authorities",
+    "worker_authority",
+    "forbidden_agent_authorities",
+    "enforcement_refs",
+    "failure_policy"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/worker-authority-contract.schema.json"
+    },
+    "record_type": {
+      "const": "worker_authority_contract"
+    },
+    "contract_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "deterministic_authorities": {
+      "type": "object",
+      "required": [
+        "phase_transition",
+        "route_selection",
+        "card_state",
+        "human_decision",
+        "promotion"
+      ],
+      "properties": {
+        "phase_transition": { "type": "string", "minLength": 3 },
+        "route_selection": { "type": "string", "minLength": 3 },
+        "card_state": { "type": "string", "minLength": 3 },
+        "human_decision": { "type": "string", "minLength": 3 },
+        "promotion": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "worker_authority": {
+      "type": "object",
+      "required": [
+        "may",
+        "must",
+        "may_not",
+        "result_boundary"
+      ],
+      "properties": {
+        "may": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        },
+        "must": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        },
+        "may_not": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "type": "string", "minLength": 3 },
+          "uniqueItems": true
+        },
+        "result_boundary": { "type": "string", "minLength": 12 }
+      },
+      "additionalProperties": false
+    },
+    "forbidden_agent_authorities": {
+      "type": "array",
+      "minItems": 6,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "enforcement_refs": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "failure_policy": {
+      "type": "object",
+      "required": [
+        "authority_leak_blocks_profile",
+        "missing_worker_result_blocks_promotion",
+        "ambiguous_route_goes_to_reducer"
+      ],
+      "properties": {
+        "authority_leak_blocks_profile": { "const": true },
+        "missing_worker_result_blocks_promotion": { "const": true },
+        "ambiguous_route_goes_to_reducer": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

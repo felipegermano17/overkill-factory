@@ -14,7 +14,7 @@
     "reducer_or_validator_ref": "scripts/factory_v2_kernel.py",
     "runtime_or_test_ref": "tests/test_factory_v2_kernel.py"
   },
-  "negative_fixture_ref": "fixtures/incidents/phase-jump-blocked-by-earlier-phase.json",
+  "negative_fixture_ref": "fixtures/v2/phase-jump-blocked-by-earlier-phase.json",
   "proof_refs": [
     "tests/test_factory_v2_kernel.py::FactoryV2KernelTests"
   ],

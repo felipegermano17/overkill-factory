@@ -60,6 +60,7 @@ from factory_v2_kernel import (  # noqa: E402
     compile_workflow_catalog,
     load_json_array_or_object,
     normalize_event_log,
+    validate_factory_phase_graph,
     validate_factory_command,
     validate_factory_decision_outbox,
     validate_factory_event_log,
@@ -104,6 +105,7 @@ CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
 CAPABILITY_PACK_ACTIVATION_LEDGER_REF = "agents/capability-pack-activation-ledger.public.json"
 CAPABILITY_PACK_ACTIVATION_LEDGER_PATH = ROOT / CAPABILITY_PACK_ACTIVATION_LEDGER_REF
 DEFAULT_WORKFLOW_CATALOG = ROOT / "docs" / "factory-workflow.catalog.json"
+DEFAULT_PHASE_GRAPH = ROOT / "templates" / "factory-phase-graph.json"
 CANONICAL_RUNTIME_ENFORCEMENT_PATH = CODE_ROOT / "scripts" / "canonical_runtime_enforcement.py"
 DEFAULT_MINIMAL_CARD = ROOT / "examples" / "minimal-hermes-project" / "card.md"
 DEFAULT_QUICKSTART_OUT = Path.cwd() / ".tmp" / "quickstart-result.json"
@@ -186,7 +188,7 @@ VFINAL_CORE_CONTRACTS = {
 }
 
 PRODUCT_SCOPE_INTENTS = {"full_product", "child_slice"}
-PRODUCT_PLANNING_PHASES = {"F11", "F12", "F13", "F14", "F15", "F16", "F17"}
+PRODUCT_PLANNING_PHASES = {"F11", "F12", "F13", "F15", "F16", "F17"}
 FACTORY_PHASE_LOCK_FRONTIERS = {
     "intake",
     "source_resolution",
@@ -1059,7 +1061,7 @@ DOWNSTREAM_PHASE_LOCK_SURFACES = (
     | ONCHAIN_SURFACES
     | PRODUCT_EXPERIENCE_SURFACES
 )
-PRODUCT_FACE_RESULT_PHASES = {"F11", "F13", "F14", "F15", "F16", "F17"}
+PRODUCT_FACE_RESULT_PHASES = {"F11", "F13", "F15", "F16", "F17"}
 HIGH_RISK = {"R3", "R4"}
 REVIEW_RISK = {"R2", "R3", "R4"}
 ALLOWED_SOURCE_STATES = {"backlog", "compiled", "inference", "promoted", "raw", "rejected"}
@@ -1103,6 +1105,10 @@ CAPABILITY_CONTRACT_TEXT_FIELDS = (
 PRODUCT_EXPERIENCE_REQUIRED_FIELDS = (
     "surface_type",
     "surface_pack",
+    "product_delivery_quality_profile_ref",
+    "project_design_system_ref",
+    "professional_design_process_ref",
+    "surface_evidence_profile",
     "experience_sot",
     "user",
     "job_to_be_done",
@@ -1156,6 +1162,7 @@ PROJECT_DESIGN_SYSTEM_REQUIRED_FIELDS = (
     "public_private_boundary",
 )
 PROJECT_DESIGN_SYSTEM_SCHEMA_NAME = "project-design-system.schema.json"
+PRODUCT_EXPERIENCE_CONTROL_PLANE_SCHEMA_NAME = "product-experience-control-plane.schema.json"
 REFERENCE_QUALITY_REQUIRED_FIELDS = (
     "record_type",
     "experience_category",
@@ -1486,7 +1493,7 @@ WORKERS: dict[str, WorkerDefinition] = {
     "independent-reviewer": WorkerDefinition(
         worker_id="independent-reviewer",
         worker_name="Independent Reviewer",
-        factory_phase="F14",
+        factory_phase="F18",
         output_field="independent_review_result",
         tool_required="different Hermes/Codex reviewer identity",
         timing="after worker evidence exists and before done/promotion",
@@ -1723,7 +1730,7 @@ WORKERS: dict[str, WorkerDefinition] = {
     "autoreview-gate": WorkerDefinition(
         worker_id="autoreview-gate",
         worker_name="AutoReview Gate",
-        factory_phase="F14/F15",
+        factory_phase="F18/F15",
         output_field="autoreview_result",
         tool_required="autoreview skill or equivalent structured code-review runner",
         timing="after code/diff evidence and before landing or promotion",
@@ -1743,7 +1750,7 @@ WORKERS: dict[str, WorkerDefinition] = {
     "appsec-owasp-specialist": WorkerDefinition(
         worker_id="appsec-owasp-specialist",
         worker_name="AppSec OWASP Specialist",
-        factory_phase="F7/F14/F15",
+        factory_phase="F10/F17/F18",
         output_field="appsec_owasp_result",
         tool_required="OWASP Web/API/AppSec checklist and code/runtime evidence",
         timing="before done for web, API, auth, backend, frontend or session surfaces",
@@ -1753,7 +1760,7 @@ WORKERS: dict[str, WorkerDefinition] = {
     "agentic-ai-security-specialist": WorkerDefinition(
         worker_id="agentic-ai-security-specialist",
         worker_name="Agentic AI Security Specialist",
-        factory_phase="F1/F7/F12/F14",
+        factory_phase="F1/F10/F12/F18",
         output_field="agentic_ai_security_result",
         tool_required="OWASP LLM/agentic checklist and tool-boundary review",
         timing="when agents, memory, tools, browser, prompts or untrusted text are in scope",
@@ -1763,7 +1770,7 @@ WORKERS: dict[str, WorkerDefinition] = {
     "cloud-infra-security-specialist": WorkerDefinition(
         worker_id="cloud-infra-security-specialist",
         worker_name="Cloud and Infrastructure Security Specialist",
-        factory_phase="F7/F14/F16",
+        factory_phase="F10/F16/F18",
         output_field="cloud_infra_security_result",
         tool_required="cloud/IaC/IAM/KMS/CI/CD posture checks",
         timing="before release for infra, deploy, IAM, KMS, CI/CD, DNS or cloud surfaces",
@@ -1863,7 +1870,7 @@ WORKERS: dict[str, WorkerDefinition] = {
     "control-tower-projection-worker": WorkerDefinition(
         worker_id="control-tower-projection-worker",
         worker_name="Control Tower Projection Worker",
-        factory_phase="F19",
+        factory_phase="projection:operator_projection",
         output_field="project_projection_result",
         tool_required="Hermes readback plus project projection renderer",
         timing="when owner-facing visibility is active and before material work becomes invisible",
@@ -1876,7 +1883,7 @@ WORKERS: dict[str, WorkerDefinition] = {
     "discord-control-tower-bridge": WorkerDefinition(
         worker_id="discord-control-tower-bridge",
         worker_name="Discord Control Tower Bridge",
-        factory_phase="F19/F29",
+        factory_phase="projection:operator_projection/F24",
         output_field="control_tower_bridge_result",
         tool_required="Discord mapping, runtime event bridge and bridge health contract",
         timing="when a Discord Control Tower must show state or register owner responses",
@@ -2708,7 +2715,7 @@ def build_doctor_report(hermes_home: Path | None = None) -> dict[str, Any]:
         doctor_check(
             "hermes_e2e_deferred",
             "INFO",
-            "Point 5 is intentionally deferred: doctor does not claim a real Hermes E2E harness.",
+            "Doctor validates local contracts only; it does not claim a real Hermes E2E harness.",
         )
     )
 
@@ -2784,8 +2791,9 @@ factoryctl worker-packet --worker all --required-only --card cards/minimal-card.
 4. Route generated worker packets into Hermes worker cards.
 5. Attach real worker results and Receipt Five before moving cards to `done`.
 
-Point 5 is intentionally deferred in this generated workspace: it does not claim
-that a real Hermes E2E harness has run.
+This generated workspace validates local contracts only. Treat real Hermes E2E
+readiness as proven only after you run it in your operator-owned Hermes test
+runtime.
 """
     (target / "README.md").write_text(readme, encoding="utf-8")
 
@@ -4489,12 +4497,18 @@ def validate_human_gate_packet(
     if not isinstance(delivery, dict):
         errors.append(f"{at}.decision_package_delivery is required before asking a human for a gate decision")
     else:
+        if not str(delivery.get("primary_language") or "").strip():
+            errors.append(f"{at}.decision_package_delivery.primary_language is required")
         if delivery.get("push_required") is not True:
             errors.append(f"{at}.decision_package_delivery.push_required must be true")
         if delivery.get("summary_only_forbidden") is not True:
             errors.append(f"{at}.decision_package_delivery.summary_only_forbidden must be true")
         if delivery.get("material_before_question") is not True:
             errors.append(f"{at}.decision_package_delivery.material_before_question must be true")
+        if delivery.get("question_after_material_delivery") is not True:
+            errors.append(f"{at}.decision_package_delivery.question_after_material_delivery must be true")
+        if not str(delivery.get("delivery_receipt_ref") or "").strip():
+            errors.append(f"{at}.decision_package_delivery.delivery_receipt_ref is required")
         attachment_order = set(_list_items(delivery.get("attachment_order")))
         if not {"markdown_document", "pdf_document"}.issubset(attachment_order):
             errors.append(f"{at}.decision_package_delivery.attachment_order must include markdown_document and pdf_document")
@@ -4779,7 +4793,7 @@ def _phase_engine_frontier_state(
         "allowed_current_worker_ids": allowed_workers,
         "blocked_downstream_phase_ids": [
             candidate
-            for candidate in ("F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F15", "F19", "F24")
+            for candidate in ("F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F15", "F24")
             if factory_phase_rank(candidate) > computed_rank
         ],
         "phase_mismatch": card_rank > computed_rank,
@@ -5287,10 +5301,10 @@ def validate_product_face_packet(packet: dict[str, Any], *, strict: bool) -> lis
 
 
 def _format_product_experience_schema_error(error: str) -> str:
-    missing = re.fullmatch(r"(product_experience_plan(?:\.[^:]+)?): missing required field ([A-Za-z0-9_]+)", error)
+    missing = re.fullmatch(r"(product_experience_plan(?:\.[^:]+)?): missing required field ([A-Za-z0-9_$]+)", error)
     if missing:
         return f"{missing.group(1)}.{missing.group(2)} is required"
-    expected_type = re.fullmatch(r"(product_experience_plan(?:\.[^:]+)?): expected type ([A-Za-z0-9_]+)", error)
+    expected_type = re.fullmatch(r"(product_experience_plan(?:\.[^:]+)?): expected type ([A-Za-z0-9_$]+)", error)
     if expected_type:
         return f"{expected_type.group(1)} must be {expected_type.group(2)}"
     return error
@@ -5416,6 +5430,14 @@ def validate_project_design_system(contract: dict[str, Any]) -> list[str]:
         errors.append("project_design_system.public_private_boundary.no_private_screenshots_in_repo must be true")
 
     return list(dict.fromkeys(errors))
+
+
+def validate_product_experience_control_plane(packet: dict[str, Any]) -> list[str]:
+    schemas = bundled_schemas()
+    schema = schemas.get(PRODUCT_EXPERIENCE_CONTROL_PLANE_SCHEMA_NAME)
+    if not isinstance(schema, dict):
+        return [f"{PRODUCT_EXPERIENCE_CONTROL_PLANE_SCHEMA_NAME} is unavailable for validation"]
+    return validate_node(schema, packet, "product_experience_control_plane", schemas=schemas, root_schema=schema)
 
 
 
@@ -6329,6 +6351,37 @@ def validate_canonical_runtime_gate(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+CARD_EMBEDDED_CONTRACT_SCHEMAS = {
+    "runtime_contract": "runtime-contract.schema.json",
+    "security_contract": "security-contract.schema.json",
+    "human_gate_packet": "human-gate-packet.schema.json",
+    "method_contract": "method-contract.schema.json",
+    "product_creation_plan": "product-creation-plan.schema.json",
+    "onchain_work_package": "onchain-work-package.schema.json",
+    "access_capability": "access-capability.schema.json",
+    "security_architecture_plan": "security-architecture-plan.schema.json",
+    "privacy_compliance_plan": "privacy-compliance-plan.schema.json",
+}
+
+
+def validate_card_embedded_contract_schemas(card: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    for field, schema_name in CARD_EMBEDDED_CONTRACT_SCHEMAS.items():
+        value = card.get(field)
+        if value is None:
+            continue
+        schema = schemas.get(schema_name)
+        if schema is None:
+            errors.append(f"{field}: missing schema {schema_name}")
+            continue
+        errors.extend(
+            f"{field}: {error}"
+            for error in validate_node(schema, value, f"$.{field}", schemas=schemas, root_schema=schema)
+        )
+    return errors
+
+
 def validate_card(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     missing = sorted(CARD_REQUIRED - set(data))
@@ -6343,6 +6396,7 @@ def validate_card(data: dict[str, Any]) -> list[str]:
     source_state = str(data.get("source_state", "")).strip()
     if source_state and source_state not in ALLOWED_SOURCE_STATES:
         errors.append("source_state must be one of " + ", ".join(sorted(ALLOWED_SOURCE_STATES)))
+    errors.extend(validate_card_embedded_contract_schemas(data))
     errors.extend(validate_vfinal_card_contract(data))
     errors.extend(validate_canonical_runtime_gate(data))
     errors.extend(validate_capability_coverage(data))
@@ -14687,7 +14741,7 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         return required, reason
     if worker_id == "evidence-reconciler":
         required = (
-            phase in {"F13", "F14", "F15", "F16"}
+            phase in {"F13", "F15", "F16", "F20", "F21", "F22"}
             or effective_risk in REVIEW_RISK
             or bool(card.get("transition_event_required"))
             or bool(card.get("kanban_transition_event_ref"))
@@ -14750,7 +14804,7 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         return required, reason
     if worker_id == "solana-quasar-qa-engineer":
         explicit_onchain_qa = bool(surfaces & SOLANA_QA_SURFACES)
-        required = phase in {"F13", "F14", "F15"} and explicit_onchain_qa
+        required = phase in {"F13", "F15", "F17"} and explicit_onchain_qa
         reason = "Solana/Quasar QA or devnet verification surface detected" if required else "no Solana/Quasar QA trigger"
         return required, reason
     if worker_id == "wallet-transaction-builder":
@@ -14777,12 +14831,12 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "agent/Hermes/factory runtime implementation surface detected" if required else "no agent runtime builder trigger"
         return required, reason
     if worker_id == "qa-verification-worker":
-        required = phase in {"F13", "F14", "F15"} or effective_risk in REVIEW_RISK
+        required = phase in {"F13", "F15", "F17"} or effective_risk in REVIEW_RISK
         reason = "verification/review risk detected" if required else "low-risk card without verification trigger"
         return required, reason
     if worker_id == "autoreview-gate":
         code_surfaces = {"code", "frontend", "backend", "api", "infra", "onchain", "solana", "solana-quasar"}
-        required = phase in {"F14", "F15"} or bool(surfaces & code_surfaces) or review.get("autoreview_required") is True
+        required = phase in {"F18", "F15"} or bool(surfaces & code_surfaces) or review.get("autoreview_required") is True
         reason = "code or pre-landing review surface detected" if required else "no code/pre-landing trigger"
         return required, reason
     if worker_id == "security-orchestrator":
@@ -14829,7 +14883,7 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
         reason = "release/promotion surface detected" if required else "not a release/promotion card"
         return required, reason
     if worker_id == "handoff-packer":
-        required = phase in {"F9", "F10", "F11", "F12", "F13", "F14", "F15"} or effective_risk in REVIEW_RISK
+        required = phase in {"F9", "F10", "F11", "F12", "F13", "F15"} or effective_risk in REVIEW_RISK
         reason = "phase or risk requires portable handoff" if required else "handoff not required by current card"
         return required, reason
     if worker_id == "memory-steward":
@@ -14887,7 +14941,7 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
             "approval",
         }
         required = (
-            phase == "F19"
+            phase == "projection:operator_projection"
             or bool(surfaces & control_tower_surfaces)
             or (isinstance(control_tower_contract, dict) and control_tower_contract.get("enabled") is True)
         )
@@ -14906,7 +14960,7 @@ def worker_required(worker_id: str, card: dict[str, Any]) -> tuple[bool, str]:
             "runtime-registration",
         }
         required = (
-            phase in {"F19", "F29"}
+            phase in {"projection:operator_projection", "F24"}
             or bool(surfaces & bridge_surfaces)
             or (isinstance(control_tower_contract, dict) and control_tower_contract.get("discord_bridge_required") is True)
         )
@@ -17991,7 +18045,7 @@ def build_factory_help(
         if isinstance(route, dict)
     ]
     if product_experience_planning_gap(card, _list_items(gate_report.get("card_validation_errors"))):
-        phase_row = workflow_phase_by_id(catalog, "F8A") or phase_row
+        phase_row = workflow_phase_by_id(catalog, "F8") or phase_row
     factory_action = help_action_from_gate(card, gate_report, phase_row)
     factory_owned_routes = [
         route
@@ -19335,6 +19389,177 @@ def command_validate_workflow_compiled_plan(args: argparse.Namespace) -> int:
     return _print_validation_result(validate_factory_workflow_compiled_plan(load_json_like(args.path)))
 
 
+def command_validate_phase_graph(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_factory_phase_graph(load_json_like(args.path)))
+
+
+def _traceability_ref_path(ref: str) -> Path | None:
+    if not ref or ref.startswith(("external:", "factoryctl:", "http://", "https://")):
+        return None
+    path_part = ref.split("::", 1)[0].strip()
+    if not path_part:
+        return None
+    path = Path(path_part)
+    if path.is_absolute():
+        return path
+    return ROOT / path
+
+
+def validate_v2_study_traceability(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("v2-study-traceability.schema.json")
+    if not isinstance(schema, dict):
+        return ["v2-study-traceability schema is not bundled"]
+    errors.extend(validate_node(schema, packet, "v2_study_traceability", schemas=schemas, root_schema=schema))
+
+    source_docs = set(_list_items(packet.get("source_study_docs")))
+    claim_ids: set[str] = set()
+    for index, claim in enumerate(packet.get("claims", []), start=1):
+        if not isinstance(claim, dict):
+            continue
+        claim_id = str(claim.get("claim_id") or f"claim-{index}")
+        if claim_id in claim_ids:
+            errors.append(f"claims[{index}].claim_id duplicates {claim_id}")
+        claim_ids.add(claim_id)
+        source_doc = str(claim.get("source_doc") or "")
+        if source_doc and source_doc not in source_docs:
+            errors.append(f"{claim_id}: source_doc must be listed in source_study_docs")
+
+        priority = str(claim.get("priority") or "")
+        status = str(claim.get("status") or "")
+        if priority == "P0" and status != "implemented":
+            errors.append(f"{claim_id}: P0 study finding must be implemented, got {status or 'missing'}")
+
+        for field in ("schema_refs", "runtime_refs", "test_refs", "negative_fixture_refs"):
+            refs = _list_items(claim.get(field))
+            if priority == "P0" and not refs:
+                errors.append(f"{claim_id}: P0 requires {field}")
+            for ref in refs:
+                path = _traceability_ref_path(str(ref))
+                if path is not None and not path.exists():
+                    errors.append(f"{claim_id}: {field} missing referenced path {ref}")
+
+    return errors
+
+
+def command_validate_v2_study_traceability(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_v2_study_traceability(load_json_like(args.path)))
+
+
+READINESS_REQUIRED_EVIDENCE = {
+    "KERNEL_READY": {"schema_validated", "test_validated"},
+    "RUNTIME_READY": {"schema_validated", "test_validated", "hermes_runtime_proof"},
+    "PRODUCT_RUN_READY": {
+        "schema_validated",
+        "test_validated",
+        "hermes_runtime_proof",
+        "worker_results",
+        "receipt_five",
+    },
+    "PRODUCTION_PROVEN": {
+        "schema_validated",
+        "test_validated",
+        "hermes_runtime_proof",
+        "worker_results",
+        "receipt_five",
+        "release_proof",
+        "monitoring_rollback",
+        "operator_human_gate",
+    },
+}
+
+
+READINESS_SCOPE_FOR_STATE = {
+    "KERNEL_READY": "public_kernel",
+    "RUNTIME_READY": "operator_hermes_runtime",
+    "PRODUCT_RUN_READY": "specific_product_run",
+    "PRODUCTION_PROVEN": "production_release",
+}
+
+
+def validate_factory_v2_readiness_claim(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("factory-v2-readiness-claim.schema.json")
+    if not isinstance(schema, dict):
+        return ["factory-v2-readiness-claim schema is not bundled"]
+    errors.extend(validate_node(schema, packet, "factory_v2_readiness_claim", schemas=schemas, root_schema=schema))
+
+    state = str(packet.get("claimed_state") or "")
+    evidence = set(_list_items(packet.get("evidence_levels")))
+    required = READINESS_REQUIRED_EVIDENCE.get(state, set())
+    missing = sorted(required - evidence)
+    if missing:
+        errors.append(f"claimed_state {state} missing evidence_levels: " + ", ".join(missing))
+
+    expected_scope = READINESS_SCOPE_FOR_STATE.get(state)
+    if expected_scope and packet.get("claim_scope") != expected_scope:
+        errors.append(f"claimed_state {state} requires claim_scope {expected_scope}")
+
+    return errors
+
+
+def command_validate_readiness_claim(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_factory_v2_readiness_claim(load_json_like(args.path)))
+
+
+REQUIRED_FORBIDDEN_WORKER_AUTHORITIES = {
+    "choose_phase",
+    "choose_route",
+    "choose_specialist",
+    "approve_gate",
+    "approve_human_gate",
+    "mutate_state",
+    "promote_work",
+    "waive_blocking_findings",
+}
+
+
+def validate_worker_authority_contract(packet: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("worker-authority-contract.schema.json")
+    if not isinstance(schema, dict):
+        return ["worker-authority-contract schema is not bundled"]
+    errors.extend(validate_node(schema, packet, "worker_authority_contract", schemas=schemas, root_schema=schema))
+
+    forbidden = set(_list_items(packet.get("forbidden_agent_authorities")))
+    missing = sorted(REQUIRED_FORBIDDEN_WORKER_AUTHORITIES - forbidden)
+    if missing:
+        errors.append("worker_authority_contract missing forbidden_agent_authorities: " + ", ".join(missing))
+
+    return errors
+
+
+def command_validate_worker_authority_contract(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_worker_authority_contract(load_json_like(args.path)))
+
+
+def validate_hermes_reducer_mutation_proof(packet: dict[str, Any]) -> list[str]:
+    schemas = bundled_schemas()
+    schema = schemas.get("hermes-reducer-mutation-proof.schema.json")
+    if not isinstance(schema, dict):
+        return ["hermes-reducer-mutation-proof schema is not bundled"]
+    return validate_node(schema, packet, "hermes_reducer_mutation_proof", schemas=schemas, root_schema=schema)
+
+
+def command_validate_hermes_reducer_mutation_proof(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_hermes_reducer_mutation_proof(load_json_like(args.path)))
+
+
+def validate_capability_acquisition_contract(packet: dict[str, Any]) -> list[str]:
+    schemas = bundled_schemas()
+    schema = schemas.get("capability-acquisition-contract.schema.json")
+    if not isinstance(schema, dict):
+        return ["capability-acquisition-contract schema is not bundled"]
+    return validate_node(schema, packet, "capability_acquisition_contract", schemas=schemas, root_schema=schema)
+
+
+def command_validate_capability_acquisition_contract(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_capability_acquisition_contract(load_json_like(args.path)))
+
+
 def command_validate_factory_command(args: argparse.Namespace) -> int:
     return _print_validation_result(validate_factory_command(load_json_like(args.path)))
 
@@ -19518,6 +19743,16 @@ def command_validate_method_contract(args: argparse.Namespace) -> int:
 
 def command_validate_product_creation_plan(args: argparse.Namespace) -> int:
     errors = validate_product_creation_plan(load_json_like(args.path))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_validate_product_experience_control_plane(args: argparse.Namespace) -> int:
+    errors = validate_product_experience_control_plane(load_json_like(args.path))
     if errors:
         for error in errors:
             print(error, file=sys.stderr)
@@ -20439,6 +20674,30 @@ def build_parser() -> argparse.ArgumentParser:
     validate_workflow_plan_parser.add_argument("path", type=Path)
     validate_workflow_plan_parser.set_defaults(func=command_validate_workflow_compiled_plan)
 
+    validate_phase_graph_parser = sub.add_parser("validate-phase-graph")
+    validate_phase_graph_parser.add_argument("path", type=Path, nargs="?", default=DEFAULT_PHASE_GRAPH)
+    validate_phase_graph_parser.set_defaults(func=command_validate_phase_graph)
+
+    validate_traceability_parser = sub.add_parser("validate-v2-study-traceability")
+    validate_traceability_parser.add_argument("path", type=Path)
+    validate_traceability_parser.set_defaults(func=command_validate_v2_study_traceability)
+
+    validate_readiness_claim_parser = sub.add_parser("validate-readiness-claim")
+    validate_readiness_claim_parser.add_argument("path", type=Path)
+    validate_readiness_claim_parser.set_defaults(func=command_validate_readiness_claim)
+
+    validate_worker_authority_parser = sub.add_parser("validate-worker-authority-contract")
+    validate_worker_authority_parser.add_argument("path", type=Path)
+    validate_worker_authority_parser.set_defaults(func=command_validate_worker_authority_contract)
+
+    validate_hermes_reducer_parser = sub.add_parser("validate-hermes-reducer-mutation-proof")
+    validate_hermes_reducer_parser.add_argument("path", type=Path)
+    validate_hermes_reducer_parser.set_defaults(func=command_validate_hermes_reducer_mutation_proof)
+
+    validate_capability_acquisition_parser = sub.add_parser("validate-capability-acquisition-contract")
+    validate_capability_acquisition_parser.add_argument("path", type=Path)
+    validate_capability_acquisition_parser.set_defaults(func=command_validate_capability_acquisition_contract)
+
     validate_factory_command_parser = sub.add_parser("validate-factory-command")
     validate_factory_command_parser.add_argument("path", type=Path)
     validate_factory_command_parser.set_defaults(func=command_validate_factory_command)
@@ -20535,6 +20794,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_product_creation_plan_parser = sub.add_parser("validate-product-creation-plan")
     validate_product_creation_plan_parser.add_argument("path", type=Path)
     validate_product_creation_plan_parser.set_defaults(func=command_validate_product_creation_plan)
+
+    validate_product_experience_control_plane_parser = sub.add_parser("validate-product-experience-control-plane")
+    validate_product_experience_control_plane_parser.add_argument("path", type=Path)
+    validate_product_experience_control_plane_parser.set_defaults(func=command_validate_product_experience_control_plane)
 
     validate_product_implementation_readiness_parser = sub.add_parser("validate-product-implementation-readiness")
     validate_product_implementation_readiness_parser.add_argument("path", type=Path)

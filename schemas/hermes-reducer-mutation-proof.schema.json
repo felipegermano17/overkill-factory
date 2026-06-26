@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-reducer-mutation-proof.schema.json",
+  "title": "Overkill Factory Hermes Reducer Mutation Proof",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "proof_id",
+    "runtime_source_of_truth",
+    "reducer_boundary",
+    "bridge_boundary",
+    "adapter_boundary",
+    "projection_boundary",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/hermes-reducer-mutation-proof.schema.json"
+    },
+    "record_type": {
+      "const": "hermes_reducer_mutation_proof"
+    },
+    "proof_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "runtime_source_of_truth": {
+      "type": "object",
+      "required": ["hermes_kanban", "factory_event_log", "operator_console"],
+      "properties": {
+        "hermes_kanban": { "const": true },
+        "factory_event_log": { "const": true },
+        "operator_console": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "reducer_boundary": {
+      "type": "object",
+      "required": ["reducer_must_accept", "event_log_required", "promotion_packet_required"],
+      "properties": {
+        "reducer_must_accept": { "const": true },
+        "event_log_required": { "const": true },
+        "promotion_packet_required": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "bridge_boundary": {
+      "type": "object",
+      "required": ["bridge_may_execute_factory_work", "bridge_may_mutate_board", "bridge_may_approve_human_gate"],
+      "properties": {
+        "bridge_may_execute_factory_work": { "const": false },
+        "bridge_may_mutate_board": { "const": false },
+        "bridge_may_approve_human_gate": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "adapter_boundary": {
+      "type": "object",
+      "required": ["adapter_may_decide_business_rule", "live_mutation_requires_runtime_gate", "local_validation_is_production_proof"],
+      "properties": {
+        "adapter_may_decide_business_rule": { "const": false },
+        "live_mutation_requires_runtime_gate": { "const": true },
+        "local_validation_is_production_proof": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "projection_boundary": {
+      "type": "object",
+      "required": ["projection_is_source_of_truth", "projection_may_mutate_state", "projection_may_hide_blockers"],
+      "properties": {
+        "projection_is_source_of_truth": { "const": false },
+        "projection_may_mutate_state": { "const": false },
+        "projection_may_hide_blockers": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 4,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

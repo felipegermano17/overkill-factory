@@ -64,10 +64,13 @@
     "optional_explainer_assets": ["diagram", "video_explainer", "audio_explainer"],
     "decision_package_delivery": {
       "operator_interface": "telegram",
+      "primary_language": "pt-BR",
       "push_required": true,
       "summary_only_forbidden": true,
       "material_before_question": true,
-      "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer"]
+      "attachment_order": ["markdown_document", "pdf_document", "diagram", "video_explainer"],
+      "delivery_receipt_ref": "reports/val-security-r3/human-gate/DELIVERY_RECEIPT.json",
+      "question_after_material_delivery": true
     }
   },
   "factory_method_version": "OVERKILL_V3_5_FACTORY_10",

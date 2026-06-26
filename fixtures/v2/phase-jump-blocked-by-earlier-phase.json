@@ -1,0 +1,17 @@
+{
+  "incident_id": "phase-jump-blocked-by-earlier-phase",
+  "description": "A later product phase cannot run while an earlier product phase is blocked.",
+  "source_incident_ref": "fixtures/incidents/f3-blocked-f4-ready.json",
+  "forbidden_state": {
+    "earlier_phase": "F3",
+    "earlier_state": "blocked",
+    "later_phase": "F4",
+    "later_state": "running"
+  },
+  "expected_control_plane_result": {
+    "plan_action": "block_invariant_violation",
+    "native_dispatch_required_next": false,
+    "human_gate_required": false,
+    "agent_route_authority": false
+  }
+}

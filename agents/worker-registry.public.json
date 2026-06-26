@@ -367,7 +367,7 @@
       "mode": "hybrid",
       "phase": [
         "F7",
-        "F14",
+        "F18",
         "F15"
       ],
       "triggers": [
@@ -413,7 +413,7 @@
         "F1",
         "F7",
         "F12",
-        "F14"
+        "F18"
       ],
       "triggers": [
         "agent",
@@ -454,7 +454,7 @@
       "worker_id": "autoreview-gate",
       "mode": "closed",
       "phase": [
-        "F14",
+        "F18",
         "F15"
       ],
       "triggers": [
@@ -584,7 +584,7 @@
       "worker_id": "independent-reviewer",
       "mode": "hybrid",
       "phase": [
-        "F14"
+        "F18"
       ],
       "triggers": [
         "R2",
@@ -627,7 +627,7 @@
       "phase": [
         "F15",
         "F13",
-        "F14",
+        "F18",
         "F16"
       ],
       "triggers": [
@@ -1811,7 +1811,7 @@
       "worker_id": "control-tower-projection-worker",
       "mode": "closed",
       "phase": [
-        "F19"
+        "projection:operator_projection"
       ],
       "triggers": [
         "runtime status changed",
@@ -1853,8 +1853,8 @@
       "worker_id": "discord-control-tower-bridge",
       "mode": "closed",
       "phase": [
-        "F19",
-        "F29"
+        "projection:operator_projection",
+        "F24"
       ],
       "triggers": [
         "control tower event",
