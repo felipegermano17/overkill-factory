@@ -985,6 +985,44 @@ def superseded_review_blocker_refs(done: list[dict[str, Any]]) -> set[str]:
     return refs
 
 
+def done_review_targets_product_sot_candidate(record: dict[str, Any]) -> bool:
+    text = task_record_text(record)
+    non_product_sot_review_markers = (
+        "not a reviewed product sot candidate",
+        "not product sot owner-review material",
+        "not product sot owner review material",
+        "runtime/code patch only",
+        "factory runtime code patch",
+        "factory no-idle runtime",
+        "no-idle da fábrica",
+        "correção no-idle",
+        "patch da correção no-idle",
+        "revisar o patch da correção no-idle",
+        "no-idle runtime classifier patch",
+        "no-idle code",
+        "classifier patch",
+        "live_kanban_adapter.py",
+        "classify_no_idle_state",
+        "done_review_requires_owner_product_sot_gate",
+    )
+    if any(marker in text for marker in non_product_sot_review_markers):
+        return False
+    product_sot_artifact_markers = (
+        "repaired product sot candidate",
+        "product sot candidate package",
+        "product sot candidate",
+        "repaired product sot package",
+        "product sot package",
+        "canonical product sot",
+        "owner-facing product sot",
+        "owner facing product sot",
+        "reviewed product sot",
+        "review product sot package",
+        "review repaired product sot package",
+    )
+    return any(marker in text for marker in product_sot_artifact_markers)
+
+
 def done_review_requires_owner_product_sot_gate(record: dict[str, Any]) -> bool:
     if str(record.get("status") or "").strip().lower() not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
         return False
@@ -1001,6 +1039,8 @@ def done_review_requires_owner_product_sot_gate(record: dict[str, Any]) -> bool:
     )
     if not review_pass:
         return False
+    if not done_review_targets_product_sot_candidate(record):
+        return False
     return any(
         marker in text
         for marker in (
@@ -1011,6 +1051,62 @@ def done_review_requires_owner_product_sot_gate(record: dict[str, Any]) -> bool:
             "before method-contract planning",
             "before method contract planning",
         )
+    )
+
+
+def done_post_review_owner_gate_closed(record: dict[str, Any]) -> bool:
+    if str(record.get("status") or "").strip().lower() not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+        return False
+    body = task_body_json_object(record)
+    text = task_record_text(record)
+    has_post_review_gate_marker = (
+        body.get("marker") == NO_IDLE_POST_REVIEW_GATE_MARKER
+        or NO_IDLE_POST_REVIEW_GATE_MARKER in text
+        or "prepare product sot owner decision package" in text
+    )
+    if not has_post_review_gate_marker:
+        return False
+    still_open_markers = (
+        "no human decision has been recorded",
+        "no owner decision has been recorded",
+        "human decision required",
+        "awaiting human decision",
+        "awaiting owner decision",
+        "choose approve",
+        "request exact changes",
+    )
+    if any(marker in text for marker in still_open_markers):
+        return False
+    closed_markers = (
+        "owner decision recorded",
+        "human decision recorded",
+        "operator decision recorded",
+        "approval recorded",
+        "human gate closed",
+        "owner gate closed",
+        "decision: approved",
+        "decision': 'approved",
+        '"decision": "approved',
+        "approved product sot",
+        "owner approved product sot",
+        "operator approved product sot",
+        "product sot approved",
+        "decision: rejected",
+        "decision': 'rejected",
+        '"decision": "rejected',
+        "rejected product sot",
+        "rebaseline requested",
+        "changes requested",
+        "requested changes recorded",
+    )
+    return any(marker in text for marker in closed_markers)
+
+
+def closed_post_review_owner_gate_refs(done: list[dict[str, Any]]) -> list[str]:
+    return sorted(
+        task_record_id(item)
+        for item in done
+        if task_record_id(item) and done_post_review_owner_gate_closed(item)
     )
 
 
@@ -1267,6 +1363,7 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         if done_review_requires_owner_product_sot_gate(item)
     ]
     post_review_gate_refs = sorted(task_record_id(item) for item in post_review_gate_candidates if task_record_id(item))
+    closed_post_review_gate_refs = closed_post_review_owner_gate_refs(done)
     state = summarize_no_idle_rows(rows)
     if running:
         return {
@@ -1287,6 +1384,26 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "human_gate_required": False,
             "native_dispatch_required_next": True,
             "next_action": "run native Hermes dispatch",
+            "state": state,
+        }
+    if not todo and not blocked and post_review_gate_candidates and closed_post_review_gate_refs:
+        return {
+            "status": "empty_or_complete",
+            "classification": "post_review_owner_product_sot_gate_already_closed",
+            "blocked": False,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "operator_input_task_refs": [],
+            "human_gate_task_refs": [],
+            "closed_human_gate_task_refs": closed_post_review_gate_refs,
+            "post_review_task_refs": post_review_gate_refs,
+            "ignored_superseded_blocked_task_refs": ignored_superseded_blocked_refs,
+            "next_action": (
+                "do not create another Product SOT owner decision package; the prior owner gate "
+                "is closed, so continuation must come from an explicit live next-phase task or "
+                "a precise blocker rather than duplicate gate verification"
+            ),
             "state": state,
         }
     if not todo and not blocked and post_review_gate_candidates:
@@ -1846,6 +1963,36 @@ def build_board_reconcile_plan_from_rows(*, board: str, rows: dict[str, list[dic
     return plan
 
 
+def deterministic_reconcile_task_body(
+    *,
+    plan: dict[str, Any],
+    stale_remediation_task_refs: list[str] | None = None,
+) -> dict[str, Any] | None:
+    contract = plan.get("create_task_contract")
+    if not isinstance(contract, dict):
+        return None
+    body = contract.get("body")
+    if not isinstance(body, dict):
+        return None
+    task_body = copy.deepcopy(body)
+    stale_refs = [str(ref).strip() for ref in (stale_remediation_task_refs or []) if str(ref).strip()]
+    if stale_refs:
+        task_body["runtime_lineage"] = {
+            "lineage_type": "stale_terminal_remediation_replacement",
+            "supersedes_runtime_task_refs": stale_refs,
+            "reason": (
+                "previous idempotent no-idle remediation task is terminal while the board still "
+                "has no runnable safe frontier"
+            ),
+            "native_dispatch_required_next": True,
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+        }
+        task_body["stale_terminal_remediation_replacement"] = True
+        task_body["supersedes_runtime_task_refs"] = stale_refs
+    return task_body
+
+
 def create_deterministic_reconcile_task(
     *,
     hermes_bin: str,
@@ -1853,12 +2000,16 @@ def create_deterministic_reconcile_task(
     workspace: str,
     plan: dict[str, Any],
     runner: Runner,
+    stale_remediation_task_refs: list[str] | None = None,
 ) -> str | None:
     contract = plan.get("create_task_contract")
     if not isinstance(contract, dict):
         return None
-    body = contract.get("body")
-    if not isinstance(body, dict):
+    body = deterministic_reconcile_task_body(
+        plan=plan,
+        stale_remediation_task_refs=stale_remediation_task_refs,
+    )
+    if body is None:
         return None
     digest = idempotency_digest_fragment(contract_digest(body))
     return create_task(
@@ -7551,21 +7702,38 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             )
         else:
             reconcile_plan = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
-            remediation_task_id = create_deterministic_reconcile_task(
-                hermes_bin=args.hermes_bin,
-                board=args.board,
-                workspace=args.workspace,
-                plan=reconcile_plan,
-                runner=runner,
-            )
-            task_runtime = remediation_task_runtime_metadata(
-                hermes_bin=args.hermes_bin,
-                board=args.board,
-                task_id=remediation_task_id,
-                runner=runner,
-            )
+            stale_remediation_task_refs: list[str] = []
+            remediation_replacement_attempts = 0
+            task_runtime: dict[str, Any] = {}
+            for _attempt in range(3):
+                remediation_task_id = create_deterministic_reconcile_task(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    workspace=args.workspace,
+                    plan=reconcile_plan,
+                    runner=runner,
+                    stale_remediation_task_refs=stale_remediation_task_refs,
+                )
+                task_runtime = remediation_task_runtime_metadata(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    task_id=remediation_task_id,
+                    runner=runner,
+                )
+                if not (remediation_task_id and task_runtime.get("remediation_task_stale")):
+                    break
+                if remediation_task_id in stale_remediation_task_refs:
+                    break
+                stale_remediation_task_refs.append(remediation_task_id)
+                remediation_replacement_attempts += 1
             classification["board_reconcile_plan"] = reconcile_plan
             classification["remediation_task_ref"] = remediation_task_id
+            if stale_remediation_task_refs:
+                classification["stale_remediation_task_refs"] = stale_remediation_task_refs
+                classification["remediation_replacement_attempts"] = remediation_replacement_attempts
+                classification["remediation_replacement_strategy"] = (
+                    "create_fresh_reconcile_task_after_terminal_idempotency_replay"
+                )
             classification.update(task_runtime)
             classification["native_dispatch_required_next"] = bool(
                 remediation_task_id
@@ -7573,9 +7741,13 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 and task_runtime.get("native_dispatch_required_next") is True
             )
             classification["classification"] = (
-                "deterministic_board_reconcile_task_created"
-                if remediation_task_id and not classification.get("remediation_task_stale")
-                else str(reconcile_plan.get("plan_action") or classification.get("classification"))
+                "deterministic_board_reconcile_task_created_after_stale_terminal_replacement"
+                if stale_remediation_task_refs and remediation_task_id and not classification.get("remediation_task_stale")
+                else (
+                    "deterministic_board_reconcile_task_created"
+                    if remediation_task_id and not classification.get("remediation_task_stale")
+                    else str(reconcile_plan.get("plan_action") or classification.get("classification"))
+                )
             )
     envelope = {
         "$schema": LIVE_ADAPTER_SCHEMA,

@@ -3972,6 +3972,70 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_creates_fresh_reconcile_card_when_idempotent_card_is_terminal_stale(self) -> None:
+        fake = FakeHermes()
+        todo_id = "t_" + "todo0001"
+        stale_id = "t_" + "stale001"
+        fake.tasks[todo_id] = {
+            "id": todo_id,
+            "status": "todo",
+            "assignee": "factory-orchestrator",
+            "body": json.dumps({"objective": "continue planning"}),
+            "events": [],
+        }
+        fake.tasks[stale_id] = {
+            "id": stale_id,
+            "status": "done",
+            "assignee": "factory-orchestrator",
+            "body": json.dumps({"marker": "factory_deterministic_reconcile"}),
+            "events": [{"type": "completed"}],
+        }
+        rows = {
+            "ready": [],
+            "running": [],
+            "todo": [{"id": todo_id, **fake.tasks[todo_id]}],
+            "blocked": [],
+            "done": [{"id": stale_id, **fake.tasks[stale_id]}],
+        }
+        rows = adapter.enrich_no_idle_rows(hermes_bin="hermes", board=TEST_BOARD, rows=rows, runner=fake)
+        plan = adapter.build_board_reconcile_plan_from_rows(board=TEST_BOARD, rows=rows)
+        body = adapter.deterministic_reconcile_task_body(plan=plan)
+        self.assertIsNotNone(body)
+        digest = adapter.idempotency_digest_fragment(adapter.contract_digest(body))
+        fake.idempotent_task_ids[f"overkill:reconcile:{adapter.public_safe_slug(TEST_BOARD, fallback='board')}:{digest}"] = stale_id
+        fake.calls.clear()
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertEqual(
+            state["classification"],
+            "deterministic_board_reconcile_task_created_after_stale_terminal_replacement",
+        )
+        self.assertTrue(state["remediation_task_created"])
+        self.assertFalse(state["remediation_task_stale"])
+        self.assertEqual(state["remediation_task_status"], "ready")
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertEqual(state["stale_remediation_task_refs"], ["kanban:<redacted>"])
+        self.assertEqual(state["remediation_replacement_attempts"], 1)
+        ready_replacements = [
+            task for task in fake.tasks.values()
+            if task.get("status") == "ready"
+            and adapter.parse_json_object(str(task.get("body") or "{}")).get("stale_terminal_remediation_replacement") is True
+        ]
+        self.assertEqual(len(ready_replacements), 1)
+        replacement_body = adapter.parse_json_object(str(ready_replacements[0].get("body") or "{}"))
+        self.assertEqual(
+            replacement_body["runtime_lineage"]["lineage_type"],
+            "stale_terminal_remediation_replacement",
+        )
+        self.assertEqual(replacement_body["supersedes_runtime_task_refs"], [stale_id])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_reconciles_declared_f9_to_f5_owner_package_before_gate(self) -> None:
         fake = FakeHermes()
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
@@ -4372,6 +4436,113 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(state["remediation_required"])
         self.assertEqual(state["human_gate_task_refs"], ["kanban:<redacted>"])
         self.assertEqual(state["ignored_superseded_blocked_task_refs"], ["kanban:<redacted>"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_ignores_factory_runtime_code_review_pass_that_mentions_product_sot_gate(self) -> None:
+        fake = FakeHermes()
+        code_review_id = "t_" + "review03"
+        fake.tasks[code_review_id] = {
+            "id": code_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Independent review of factory no-idle runtime classifier patch",
+            "latest_summary": (
+                "Independent review PASS for adapters/hermes/live_kanban_adapter.py no-idle code. "
+                "The patch mentions owner/Product SOT approval, Product SOT approval or rebaseline, "
+                "and before method-contract planning because it prevents duplicate gate-package tasks."
+            ),
+            "body": (
+                "Review factory runtime code patch for classify_no_idle_state and "
+                "done_review_requires_owner_product_sot_gate; this is not a reviewed Product SOT candidate."
+            ),
+            "events": [
+                {
+                    "type": "completed",
+                    "payload": {
+                        "summary": (
+                            "Independent review PASS: factory no-idle runtime/code patch only; "
+                            "not Product SOT owner-review material."
+                        )
+                    },
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "empty_or_complete")
+        self.assertEqual(state["classification"], "no_unfinished_work_seen")
+        self.assertFalse(state["remediation_required"])
+        self.assertFalse(state["human_gate_required"])
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_does_not_recreate_post_review_gate_after_owner_gate_closed(self) -> None:
+        fake = FakeHermes()
+        pass_review_id = "t_" + "review02"
+        gate_id = "t_" + "gate0001"
+        fake.tasks[pass_review_id] = {
+            "id": pass_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "F3 - Independent review of repaired Product SOT candidate",
+            "latest_summary": (
+                "Independent review PASS for the repaired Product SOT candidate package; "
+                "next gate is owner/Product SOT approval or rebaseline before method-contract planning."
+            ),
+            "body": "review repaired Product SOT package",
+            "events": [
+                {
+                    "type": "completed",
+                    "payload": {
+                        "summary": (
+                            "Independent review PASS; owner/Product SOT approval or rebaseline "
+                            "is still required before method-contract planning."
+                        )
+                    },
+                }
+            ],
+        }
+        fake.tasks[gate_id] = {
+            "id": gate_id,
+            "status": "done",
+            "assignee": "human-gate-clerk",
+            "title": "Prepare Product SOT owner decision package",
+            "body": json.dumps({"marker": "factory_no_idle_post_review_gate_package"}),
+            "latest_summary": (
+                "Owner decision recorded: approved Product SOT for method-contract planning only. "
+                "Human gate closed; do not recreate a duplicate gate verification task."
+            ),
+            "comments": [
+                {
+                    "author": "human-gate-clerk",
+                    "body": "Operator decision recorded and Product SOT approved for method-contract planning only.",
+                }
+            ],
+            "events": [
+                {
+                    "type": "completed",
+                    "payload": {
+                        "summary": "Owner decision recorded: approved Product SOT; human gate closed."
+                    },
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "empty_or_complete")
+        self.assertEqual(state["classification"], "post_review_owner_product_sot_gate_already_closed")
+        self.assertFalse(state["remediation_required"])
+        self.assertFalse(state["human_gate_required"])
+        self.assertEqual(state["closed_human_gate_task_refs"], ["kanban:<redacted>"])
         self.assertIsNone(result["remediation_task_id"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
