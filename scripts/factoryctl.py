@@ -56,6 +56,17 @@ from factory_operating_systems import (  # noqa: E402
     validate_operating_system_registry_semantics,
     validate_operating_system_scorecard_semantics,
 )
+from factory_v2_kernel import (  # noqa: E402
+    compile_workflow_catalog,
+    load_json_array_or_object,
+    normalize_event_log,
+    validate_factory_command,
+    validate_factory_decision_outbox,
+    validate_factory_event_log,
+    validate_factory_promotion_packet,
+    validate_factory_run,
+    validate_factory_workflow_compiled_plan,
+)
 from validate_public_json_artifacts import load_schemas, validate_node  # noqa: E402
 
 
@@ -19296,6 +19307,55 @@ def command_validate_reconcile_board(args: argparse.Namespace) -> int:
     return 0
 
 
+def _print_validation_result(errors: list[str]) -> int:
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
+def command_compile_workflow(args: argparse.Namespace) -> int:
+    plan = compile_workflow_catalog(
+        load_json_like(args.catalog),
+        catalog_ref=args.catalog_ref,
+        plan_id=args.plan_id,
+        compiled_at=args.compiled_at,
+    )
+    errors = validate_factory_workflow_compiled_plan(plan)
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+    write_json(args.out, plan)
+    return 1 if errors else 0
+
+
+def command_validate_workflow_compiled_plan(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_factory_workflow_compiled_plan(load_json_like(args.path)))
+
+
+def command_validate_factory_command(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_factory_command(load_json_like(args.path)))
+
+
+def command_validate_factory_event_log(args: argparse.Namespace) -> int:
+    events = normalize_event_log(load_json_array_or_object(args.path))
+    return _print_validation_result(validate_factory_event_log(events))
+
+
+def command_validate_decision_outbox(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_factory_decision_outbox(load_json_like(args.path)))
+
+
+def command_validate_promotion_packet(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_factory_promotion_packet(load_json_like(args.path)))
+
+
+def command_validate_factory_run(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_factory_run(load_json_like(args.path)))
+
+
 def command_validate_receipt(args: argparse.Namespace) -> int:
     errors = validate_receipt(load_json_like(args.path))
     if errors:
@@ -20363,6 +20423,41 @@ def build_parser() -> argparse.ArgumentParser:
     validate_reconcile_board_parser = sub.add_parser("validate-reconcile-board")
     validate_reconcile_board_parser.add_argument("path", type=Path)
     validate_reconcile_board_parser.set_defaults(func=command_validate_reconcile_board)
+
+    compile_workflow_parser = sub.add_parser(
+        "compile-workflow",
+        help="Compile the public factory workflow catalog into a deterministic executable phase plan.",
+    )
+    compile_workflow_parser.add_argument("--catalog", type=Path, default=ROOT / "docs" / "factory-workflow.catalog.json")
+    compile_workflow_parser.add_argument("--catalog-ref", default="docs/factory-workflow.catalog.json")
+    compile_workflow_parser.add_argument("--plan-id")
+    compile_workflow_parser.add_argument("--compiled-at")
+    compile_workflow_parser.add_argument("--out", type=Path, default=ROOT / ".tmp" / "factory-workflow-compiled-plan.json")
+    compile_workflow_parser.set_defaults(func=command_compile_workflow)
+
+    validate_workflow_plan_parser = sub.add_parser("validate-workflow-compiled-plan")
+    validate_workflow_plan_parser.add_argument("path", type=Path)
+    validate_workflow_plan_parser.set_defaults(func=command_validate_workflow_compiled_plan)
+
+    validate_factory_command_parser = sub.add_parser("validate-factory-command")
+    validate_factory_command_parser.add_argument("path", type=Path)
+    validate_factory_command_parser.set_defaults(func=command_validate_factory_command)
+
+    validate_factory_event_log_parser = sub.add_parser("validate-factory-event-log")
+    validate_factory_event_log_parser.add_argument("path", type=Path)
+    validate_factory_event_log_parser.set_defaults(func=command_validate_factory_event_log)
+
+    validate_decision_outbox_parser = sub.add_parser("validate-decision-outbox")
+    validate_decision_outbox_parser.add_argument("path", type=Path)
+    validate_decision_outbox_parser.set_defaults(func=command_validate_decision_outbox)
+
+    validate_promotion_packet_parser = sub.add_parser("validate-promotion-packet")
+    validate_promotion_packet_parser.add_argument("path", type=Path)
+    validate_promotion_packet_parser.set_defaults(func=command_validate_promotion_packet)
+
+    validate_factory_run_parser = sub.add_parser("validate-factory-run")
+    validate_factory_run_parser.add_argument("path", type=Path)
+    validate_factory_run_parser.set_defaults(func=command_validate_factory_run)
 
     validate_receipt_parser = sub.add_parser("validate-receipt")
     validate_receipt_parser.add_argument("path", type=Path)

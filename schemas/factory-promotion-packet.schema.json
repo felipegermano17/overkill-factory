@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-promotion-packet.schema.json",
+  "title": "Factory Promotion Packet",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "packet_id",
+    "run_id",
+    "created_at",
+    "promotion_scope",
+    "source_state_ref",
+    "receipt_five_ref",
+    "completion_audit_ref",
+    "release_readiness_ref",
+    "rollback_ref",
+    "monitoring_ref",
+    "decision",
+    "evidence_refs",
+    "authority"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-promotion-packet.schema.json" },
+    "record_type": { "const": "factory_promotion_packet" },
+    "packet_id": { "type": "string", "minLength": 3 },
+    "run_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "promotion_scope": { "enum": ["work_unit", "phase", "slice", "product", "release"] },
+    "source_state_ref": { "type": "string", "minLength": 3 },
+    "receipt_five_ref": { "type": "string", "minLength": 3 },
+    "completion_audit_ref": { "type": "string", "minLength": 3 },
+    "release_readiness_ref": { "type": "string", "minLength": 3 },
+    "rollback_ref": { "type": "string", "minLength": 3 },
+    "monitoring_ref": { "type": "string", "minLength": 3 },
+    "human_gate_record_ref": { "type": ["string", "null"], "minLength": 3 },
+    "decision": { "enum": ["approve", "request_changes", "reject", "block"] },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "authority": {
+      "type": "object",
+      "required": [
+        "promotion_reducer_required",
+        "worker_may_self_promote",
+        "bridge_may_promote",
+        "release_requires_rollback"
+      ],
+      "properties": {
+        "promotion_reducer_required": { "const": true },
+        "worker_may_self_promote": { "const": false },
+        "bridge_may_promote": { "const": false },
+        "release_requires_rollback": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

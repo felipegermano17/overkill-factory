@@ -263,11 +263,23 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 
 ## Current Release State
 
-Factory v1 is the current public kernel release line. The latest public release
-is v1.5.16.
+Factory V2 is the current public kernel release line. The latest public release
+is v2.0.0.
 
 It includes:
 
+- a deterministic Factory V2 control plane: workflow compiled plan, command
+  inbox, hash-chained run event log, decision outbox, promotion packets and
+  `FactoryRun` validation;
+- `factoryctl compile-workflow`, `validate-factory-run`,
+  `validate-factory-command`, `validate-factory-event-log`,
+  `validate-decision-outbox`, `validate-promotion-packet` and
+  `validate-workflow-compiled-plan`;
+- bridge hardening so status, question, decision, change, exception and handoff
+  requests require an explicit runtime target instead of ambient Hermes state;
+- formal bridge decision records that require `human_gate_record_ref` for human
+  gate responses, keeping chat approval separate from factory authority;
+- public templates and regression tests for the V2 state contracts;
 - Universal Signal Intake, route registry, Golden Corpus and signal coverage;
 - operator interface profiles for Telegram, Discord, Cockpit and bridge use;
 - conversational start before a formal factory start request exists;
@@ -308,10 +320,11 @@ It includes:
 - Hermes completion artifact projection, no-idle remediation controls, Hermes
   update guard, cron-friendly no-idle watchdog and Fast Autonomy Lane contracts.
 
-That claim is intentionally scoped. Factory v1 means the public kernel is
-complete enough to install, inspect, validate and extend. A product built by the
-factory still needs its own source material, Product SOT, worker execution,
-evidence, reviews, human gates and production readiness proof.
+That claim is intentionally scoped. Factory V2 means the public kernel has a
+deterministic control plane that can be installed, inspected, validated and
+extended. A product built by the factory still needs its own source material,
+Product SOT, worker execution, evidence, reviews, human gates and production
+readiness proof.
 Public promises are tracked in
 `docs/operations/promise-to-implementation.md` and
 `docs/promise-implementation-map.public.json`; each major claim must name its
@@ -328,6 +341,8 @@ implementation, proof and boundary.
 - `docs/reference/cli.md`: supported `factoryctl` commands.
 - `docs/architecture/factory-operating-systems.md`: OS registry and production
   claim boundary.
+- `docs/architecture/factory-v2-control-plane.md`: deterministic V2 command,
+  event, decision and promotion contracts.
 - `docs/concepts/factory-flow.md`: production line and state model.
 - `docs/concepts/overkill-factory-method.md`: method guide.
 - `docs/concepts/operator-journey.md`: operator journey.

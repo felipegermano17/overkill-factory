@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-command.schema.json",
+  "title": "Factory Command",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "command_id",
+    "run_id",
+    "command_type",
+    "expected_version",
+    "idempotency_key",
+    "created_at",
+    "source",
+    "authority",
+    "payload"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-command.schema.json" },
+    "record_type": { "const": "factory_command" },
+    "command_id": { "type": "string", "minLength": 3 },
+    "run_id": { "type": "string", "minLength": 3 },
+    "command_type": {
+      "enum": [
+        "start_run",
+        "advance_phase",
+        "materialize_worker",
+        "request_decision",
+        "record_decision",
+        "repair_required",
+        "promote",
+        "release",
+        "learnback_candidate"
+      ]
+    },
+    "expected_version": { "type": "integer", "minimum": 0 },
+    "idempotency_key": { "type": "string", "minLength": 8 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "source": {
+      "type": "object",
+      "required": ["source_type", "source_ref"],
+      "properties": {
+        "source_type": {
+          "enum": ["operator", "factoryctl", "hermes_adapter", "worker", "reviewer", "automation", "learnback"]
+        },
+        "source_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "authority": {
+      "type": "object",
+      "required": [
+        "reducer_must_accept",
+        "bridge_may_execute",
+        "bridge_may_approve_human_gate",
+        "adapter_may_decide_business_rule"
+      ],
+      "properties": {
+        "reducer_must_accept": { "const": true },
+        "bridge_may_execute": { "const": false },
+        "bridge_may_approve_human_gate": { "const": false },
+        "adapter_may_decide_business_rule": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "payload": {
+      "type": "object",
+      "required": ["summary"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 3 },
+        "phase_id": { "type": "string", "minLength": 2 },
+        "worker_id": { "type": "string", "minLength": 3 },
+        "decision_id": { "type": "string", "minLength": 3 },
+        "artifact_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "blocked_reason": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

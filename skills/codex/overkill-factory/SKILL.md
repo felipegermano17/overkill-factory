@@ -18,11 +18,14 @@ different runtime.
 3. If Hermes runtime state matters, use the `hermes-kanban` skill and inspect
    the real Hermes runtime/board before mutating anything.
 4. Do not promote work from planning to execution without the matching gate.
-5. For external research, check existing local artifacts/source ledgers before
+5. For Factory V2 work, compile or inspect the workflow plan and validate the
+   `FactoryRun`/command/event/decision/promotion contracts before trusting an
+   agent's route choice.
+6. For external research, check existing local artifacts/source ledgers before
    recapturing browser or social content.
-6. Do not put raw study extraction, screenshots, private ledgers, local paths,
+7. Do not put raw study extraction, screenshots, private ledgers, local paths,
    private links or internal product names into the public factory repository.
-7. If the work touches the public GitHub repository, treat GitHub as a product
+8. If the work touches the public GitHub repository, treat GitHub as a product
    surface for an external operator with their own Hermes, not as an archive of
    this workspace.
 
@@ -55,6 +58,18 @@ source intake -> source resolution -> Product SOT -> alignment questions
 ```
 
 ## Required Contracts
+
+For Factory V2, treat these as the control-plane contracts:
+
+- `factory_workflow_compiled_plan`
+- `factory_command`
+- `factory_run_event`
+- `factory_run`
+- `factory_decision_outbox`
+- `factory_promotion_packet`
+
+The agent may create artifacts. The route comes from the compiled workflow,
+phase engine, board reconciler, command reducer and Hermes runtime state.
 
 For Factory 10 / Overkill V3.5 cards, require:
 
@@ -115,6 +130,8 @@ Load only what is needed:
 - `references/open-source-github.md` when assessing or changing the public
   GitHub repository, README, folder architecture, onboarding, examples, CI,
   release hygiene, public safety, or comparisons with other open-source repos.
+- `docs/architecture/factory-v2-control-plane.md` when working on deterministic
+  state, phase jumps, command/event logs, decision outbox or promotion packets.
 - `agents/worker-registry.public.json`, `agents/worker-profiles.public.json`
   and `agents/hermes-profile-bindings.public.json` before changing worker
   profiles or dispatch behavior.
@@ -131,6 +148,8 @@ When inside the `overkill-factory` repository, prefer the repo-level
 ```bash
 python scripts/factoryctl.py gate-report --card path/to/card.md
 python scripts/factoryctl.py worker-packet --worker all --card path/to/card.md --out path/to/output-dir
+python scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
+python scripts/factoryctl.py validate-factory-run templates/factory-run.json
 python scripts/validate_worker_profiles.py
 ```
 
@@ -152,6 +171,9 @@ running on the Hermes adapter.
   agent cannot continue the area from the document, the document is not done.
 - Explain which registry or reducer rule selected a gate or worker, and which
   alternatives were rejected by contract.
+- Do not let an agent identity select a phase, worker, gate or promotion path.
+  It must point to workflow, phase-engine, board-reconciler, command, event-log,
+  decision-outbox or promotion-packet evidence.
 - Treat older methodology notes as evidence, not as truth by default.
 - Planning may continue with missing access. Material execution must not start
   until indispensable access/capabilities are ready or explicitly blocked.

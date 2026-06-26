@@ -1,0 +1,24 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-decision-outbox.schema.json",
+  "record_type": "factory_decision_outbox",
+  "outbox_id": "outbox-001",
+  "run_id": "run-001",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "pending_decisions": [
+    {
+      "decision_id": "decision-001",
+      "event_id": "event-019",
+      "decision_type": "human_gate",
+      "authority_required": "human_operator",
+      "required_packet_ref": "artifacts/operator-briefing-package.json",
+      "status": "pending",
+      "bridge_may_resolve": false,
+      "factory_may_auto_approve": false
+    }
+  ],
+  "authority": {
+    "operator_decides": true,
+    "bridge_records_only": true,
+    "reducer_consumes_decision": true
+  }
+}

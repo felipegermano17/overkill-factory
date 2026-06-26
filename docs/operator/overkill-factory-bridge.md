@@ -102,9 +102,9 @@ the schedule.
 | `intake_bridge` | The operator brings a new product/request/signal. | Create or update a sealed source envelope. Do not summarize, interpret, scope or select truth for the factory. |
 | `start_bridge` | The operator says to start an approved run. | Create a bridge run record plus `factory_bridge_start_request` for `overkill-factory-gerente` / `factory-orchestrator`. Do not create Hermes boards/cards directly. |
 | `resume_bridge` | Codex restarts or the operator returns later. | Read the inbox and summarize pending state. |
-| `status_bridge` | "Como esta?", "quanto falta?", "status". | Read Hermes/factory artifacts and separate proved, inferred, blocked and next action. |
+| `status_bridge` | "Como esta?", "quanto falta?", "status". | Resolve an explicit board/run target, then read Hermes/factory artifacts and separate proved, inferred, blocked and next action. |
 | `question_bridge` | "Por que bloqueou?", "qual worker falhou?". | Explain from artifacts without mutating runtime state. |
-| `decision_bridge` | Approval, rejection, waiver or gate response. | Record a bridge decision and point to the required factory/human-gate artifact. |
+| `decision_bridge` | Approval, rejection, waiver or gate response. | Record a bridge decision and point to the required factory/human-gate artifact. `human_gate_response` requires `human_gate_record_ref`. |
 | `change_bridge` | Pause, resume, change scope, add/remove requirement. | Classify whether the change needs replan, human gate or runtime action. |
 | `exception_bridge` | Hook/script/runtime bridge failure. | Repair the bridge layer or create an incident-style event. |
 | `handoff_bridge` | Another agent/session must continue. | Create a replayable handoff packet. |
@@ -117,7 +117,7 @@ There are two start modes:
 | Project mode | Required behavior |
 | --- | --- |
 | `new_project` | The bridge must mark `factory_must_create_new_board`. It must not provide or select an existing board. Board creation belongs to the factory start path. |
-| `existing_project` | The bridge must require an explicit existing board or run reference from the operator/runtime. It must not guess a board from nearby state. |
+| `existing_project` | The bridge must require an explicit `kanban:`, `hermes:`, `run:` or `board:` reference from the operator/runtime. It must not guess a board from nearby state. |
 
 The canonical handoff is:
 

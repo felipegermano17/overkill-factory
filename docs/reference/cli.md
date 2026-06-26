@@ -35,6 +35,39 @@ Creates a Hermes-friendly operator workspace for a product.
 factoryctl init --out ../my-product-factory --project-name my-product
 ```
 
+## Factory V2 Control Plane Commands
+
+These commands validate the deterministic state layer. They do not run workers
+and do not mutate Hermes.
+
+```bash
+factoryctl compile-workflow --out .tmp/factory-workflow-compiled-plan.json
+factoryctl validate-workflow-compiled-plan .tmp/factory-workflow-compiled-plan.json
+factoryctl validate-factory-command templates/factory-command.json
+factoryctl validate-factory-event-log templates/factory-run-event.json
+factoryctl validate-decision-outbox templates/factory-decision-outbox.json
+factoryctl validate-promotion-packet templates/factory-promotion-packet.json
+factoryctl validate-factory-run templates/factory-run.json
+```
+
+`compile-workflow` converts `docs/factory-workflow.catalog.json` into a
+machine-checkable phase plan. The compiled plan defines ordered phases, allowed
+commands, blocked actions and compiler guards. It is generated evidence; the
+catalog remains the editable source.
+
+`validate-factory-run` checks the V2 run boundary: explicit Hermes/Kanban target,
+board creation policy, command inbox, hash-chained event log, decision outbox,
+promotion packets and state authority. It fails when a bridge or adapter tries
+to become the state authority.
+
+`validate-decision-outbox` keeps human gates bounded. A pending human decision
+must point to a required packet and neither the bridge nor the factory may
+auto-approve it.
+
+`validate-promotion-packet` keeps completion from becoming prose. Promotion
+requires Receipt Five, completion audit, release readiness, rollback, monitoring
+and human gate record when the promotion scope requires human authority.
+
 ## Card And Worker Commands
 
 ```bash

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/reference-superiority-claim.schema.json",
+  "title": "Reference Superiority Claim",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "claim_id",
+    "created_at",
+    "reference",
+    "claim",
+    "v2_mechanism",
+    "negative_fixture_ref",
+    "proof_refs",
+    "public_claim_allowed"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/reference-superiority-claim.schema.json" },
+    "record_type": { "const": "reference_superiority_claim" },
+    "claim_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "reference": {
+      "type": "object",
+      "required": ["name", "source_ref", "commit_ref"],
+      "properties": {
+        "name": { "type": "string", "minLength": 2 },
+        "source_ref": { "type": "string", "minLength": 3 },
+        "commit_ref": { "type": "string", "minLength": 7 }
+      },
+      "additionalProperties": false
+    },
+    "claim": { "type": "string", "minLength": 12 },
+    "v2_mechanism": {
+      "type": "object",
+      "required": ["schema_ref", "reducer_or_validator_ref", "runtime_or_test_ref"],
+      "properties": {
+        "schema_ref": { "type": "string", "minLength": 3 },
+        "reducer_or_validator_ref": { "type": "string", "minLength": 3 },
+        "runtime_or_test_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": false
+    },
+    "negative_fixture_ref": { "type": "string", "minLength": 3 },
+    "proof_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "public_claim_allowed": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

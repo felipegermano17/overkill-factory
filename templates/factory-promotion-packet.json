@@ -1,0 +1,27 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-promotion-packet.schema.json",
+  "record_type": "factory_promotion_packet",
+  "packet_id": "promotion-001",
+  "run_id": "run-001",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "promotion_scope": "phase",
+  "source_state_ref": "artifacts/factory-run.json",
+  "receipt_five_ref": "artifacts/receipt-five.json",
+  "completion_audit_ref": "artifacts/completion-audit.json",
+  "release_readiness_ref": "artifacts/release-readiness.json",
+  "rollback_ref": "artifacts/rollback-plan.json",
+  "monitoring_ref": "artifacts/monitoring-plan.json",
+  "human_gate_record_ref": null,
+  "decision": "block",
+  "evidence_refs": [
+    "artifacts/receipt-five.json",
+    "artifacts/completion-audit.json",
+    "artifacts/release-readiness.json"
+  ],
+  "authority": {
+    "promotion_reducer_required": true,
+    "worker_may_self_promote": false,
+    "bridge_may_promote": false,
+    "release_requires_rollback": true
+  }
+}

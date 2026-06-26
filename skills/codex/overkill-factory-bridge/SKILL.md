@@ -101,6 +101,7 @@ python scripts/factory_bridge.py decision-record \
   --actor product_owner \
   --summary "Release waits for rollback evidence." \
   --evidence-ref external:operator:release-decision \
+  --human-gate-record-ref external:operator:human-gate-record \
   --out .tmp/factory-runs/example/bridge-decision.json
 ```
 
@@ -115,6 +116,8 @@ python scripts/factory_bridge.py handoff \
 ## Authority Rules
 
 - A bridge decision is not a human gate record.
+- `human_gate_response` requires `human_gate_record_ref`; chat text alone does
+  not close or approve a factory gate.
 - A bridge event is not runtime evidence.
 - A status summary is not Receipt Five.
 - A source envelope is not Product SOT.

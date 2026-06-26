@@ -199,6 +199,14 @@ class FactoryBridgeTest(unittest.TestCase):
         self.assertEqual(run["target_board_policy"]["existing_board_ref"], "kanban:existing-board")
         self.assertFalse(run["target_board_policy"]["requires_new_hermes_board"])
 
+        with self.assertRaises(ValueError):
+            bridge.build_run_record(
+                run_id="run-gamma",
+                goal="Continue existing factory run.",
+                project_mode="existing_project",
+                existing_board_ref="existing-board",
+            )
+
     def test_source_envelope_and_start_request_cli_emit_bridge_only_artifacts(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
             envelope_path = Path(tmp) / "source-envelope.json"
@@ -274,15 +282,50 @@ class FactoryBridgeTest(unittest.TestCase):
                 actor="product_owner",
                 summary="Release waits for rollback evidence.",
                 evidence_refs=["external:operator:release-decision"],
+                human_gate_record_ref="external:operator:human-gate-record",
             )
             handoff = bridge.build_handoff_packet(run_id="run-alpha", inbox_dir=inbox)
 
             self.assertEqual(decision["record_type"], "factory_bridge_decision")
             self.assertEqual(decision["decision"], "changes_requested")
+            self.assertEqual(decision["human_gate_record_ref"], "external:operator:human-gate-record")
+            self.assertIn("external:operator:human-gate-record", decision["evidence_refs"])
             self.assertFalse(decision["authority"]["closes_factory_gate"])
             self.assertIn("record structured response", handoff["safe_next_actions"])
             self.assertIn("close Hermes card without Receipt Five", handoff["forbidden_actions"])
             self.assertEqual(handoff["pending_operator_events"][0]["event_id"], event["event_id"])
+
+            with self.assertRaises(ValueError):
+                bridge.build_decision_record(
+                    run_id="run-alpha",
+                    event_id=event["event_id"],
+                    decision_type="human_gate_response",
+                    decision="approved",
+                    actor="product_owner",
+                    summary="Approved in chat only.",
+                )
+
+    def test_corrupt_or_missing_inbox_is_reported_in_hook_context(self) -> None:
+        bridge = load_bridge()
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            missing_response = bridge.codex_hook_response(
+                {"hook_event_name": "UserPromptSubmit", "prompt": "status da fabrica"},
+                inbox_dir=Path(tmp) / "missing-inbox",
+            )
+            inbox = Path(tmp) / "operator-inbox"
+            inbox.mkdir()
+            (inbox / "pending.jsonl").write_text("{bad json\n", encoding="utf-8")
+            corrupt_response = bridge.codex_hook_response(
+                {"hook_event_name": "UserPromptSubmit", "prompt": "status da fabrica"},
+                inbox_dir=inbox,
+            )
+
+        missing_context = missing_response["hookSpecificOutput"]["additionalContext"]
+        corrupt_context = corrupt_response["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("Inbox health: warning", missing_context)
+        self.assertIn("operator inbox directory does not exist yet", missing_context)
+        self.assertIn("Runtime target: explicit board/run ref required", missing_context)
+        self.assertIn("invalid JSONL record", corrupt_context)
 
     def test_public_skill_and_architecture_document_the_bridge_modes(self) -> None:
         skill = (ROOT / "skills" / "codex" / "overkill-factory-bridge" / "SKILL.md").read_text(encoding="utf-8")

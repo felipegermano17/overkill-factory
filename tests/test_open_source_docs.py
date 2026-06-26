@@ -58,7 +58,9 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
         self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
         self.assertIn('the factory is not "a smart chat."', readme)
-        self.assertIn("v1.5.16", readme)
+        self.assertIn("v2.0.0", readme)
+        self.assertIn("Factory V2", readme)
+        self.assertIn("docs/architecture/factory-v2-control-plane.md", readme)
         self.assertIn("docs/operations/promise-to-implementation.md", readme)
         self.assertIn("docs/promise-implementation-map.public.json", readme)
         self.assertNotIn("Para você, como usuário leigo", readme)
@@ -83,6 +85,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/operations/validation-and-release.md",
             "docs/operations/release-policy.md",
             "docs/architecture/factory-operating-systems.md",
+            "docs/architecture/factory-v2-control-plane.md",
             "docs/architecture/hermes-integration.md",
             "docs/getting-started/install-in-hermes.md",
             "docs/reference/cli.md",
@@ -140,7 +143,9 @@ class OpenSourceDocsTest(unittest.TestCase):
             "não um atalho de MVP",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
-            "v1.5.16",
+            "v2.0.0",
+            "Factory V2",
+            "docs/architecture/factory-v2-control-plane.md",
             "codex plugin marketplace add .",
             "codex plugin add overkill-factory-bridge@overkill-factory",
             "docs/operations/promise-to-implementation.md",

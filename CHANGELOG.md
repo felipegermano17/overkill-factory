@@ -7,6 +7,25 @@ public releases.
 
 ## Unreleased
 
+## 2.0.0 - 2026-06-26
+
+- Add the Factory V2 deterministic control plane: workflow compiled plan,
+  factory command inbox, hash-chained run events, factory run state, decision
+  outbox, promotion packet and reference-superiority claim contracts
+  ([#445](https://github.com/felipegermano17/overkill-factory/issues/445)).
+- Add `scripts/factory_v2_kernel.py` and `factoryctl` commands for compiling the
+  workflow catalog and validating V2 run, command, event log, decision outbox,
+  promotion packet and compiled workflow artifacts.
+- Add public templates and regression coverage for V2 control-plane contracts.
+- Harden the operator bridge so status/question/decision/change/exception/
+  handoff modes require explicit runtime targets, corrupt inbox records are
+  reported instead of hidden, existing-project refs require explicit runtime
+  prefixes and human gate responses require `human_gate_record_ref`.
+- Stop public JSON validation from treating transient `.tmp/factory-runs`
+  runtime evidence as public release surface.
+- Document the Factory V2 control plane and update README/CLI surfaces for the
+  new release line.
+
 ## 1.5.16 - 2026-06-25
 
 - Require Product SOT human gates to deliver a canonical localized Product SOT

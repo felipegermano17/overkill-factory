@@ -1,0 +1,14 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-run-event.schema.json",
+  "record_type": "factory_run_event",
+  "event_id": "event-001",
+  "run_id": "run-001",
+  "sequence": 1,
+  "event_type": "run_started",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "previous_event_hash": null,
+  "payload": {
+    "summary": "Factory run started from explicit operator signal."
+  },
+  "event_hash": "sha256:def33025eb2e667dec61fb2c48f1585364469ae0e91e1f9f9237b36d1207d617"
+}
