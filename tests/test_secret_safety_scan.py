@@ -51,6 +51,26 @@ class SecretSafetyScanTest(unittest.TestCase):
 
         self.assertEqual([], findings)
 
+    def test_ignored_tmp_reference_repos_are_not_scanned(self):
+        scanner = load_scanner()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            ignored = root / ".tmp" / "reference-repos" / "sample.env"
+            ignored.parent.mkdir(parents=True)
+            ignored.write_text("tok" + "en: " + "abcdefghijklmnopqrstuvwxyz123456\n", encoding="utf-8")
+            clean = root / "README.md"
+            clean.write_text("public docs only\n", encoding="utf-8")
+
+            original_root = scanner.ROOT
+            scanner.ROOT = root
+            try:
+                findings = scanner.scan()
+            finally:
+                scanner.ROOT = original_root
+
+        self.assertEqual([], findings)
+
 
 if __name__ == "__main__":
     unittest.main()

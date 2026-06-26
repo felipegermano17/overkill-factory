@@ -14,7 +14,8 @@
     "external:local-study:OVERKILL_FACTORY_V2_MODULARITY_AND_AGENT_MIGRATION_STUDY_2026-06-26.md",
     "external:local-study:OVERKILL_FACTORY_V2_FINAL_REVIEW_AND_HARDENING_2026-06-26.md",
     "external:local-study:OVERKILL_FACTORY_V2_REFERENCE_COMPARISON_FINAL_STUDY_2026-06-26.md",
-    "external:local-study:OVERKILL_FACTORY_V2_STUDY_IMPLEMENTATION_GAP_AUDIT_2026-06-26.md"
+    "external:local-study:OVERKILL_FACTORY_V2_STUDY_IMPLEMENTATION_GAP_AUDIT_2026-06-26.md",
+    "external:local-study:OVERKILL_FACTORY_V2_DOC_IMPLEMENTATION_REAUDIT_2026-06-26.md"
   ],
   "claims": [
     {
@@ -22,6 +23,7 @@
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_STUDY_IMPLEMENTATION_GAP_AUDIT_2026-06-26.md",
       "claim": "Product phases, human gates and operator projections must be distinct so legacy labels cannot let later work run while earlier product phases are blocked.",
+      "claim_boundary": "Public kernel proof: schemas, phase graph, reconciler rules and regression fixtures exist. This is not proof that every live Hermes board is currently healthy.",
       "schema_refs": [
         "schemas/factory-phase-graph.schema.json",
         "schemas/factory-workflow-compiled-plan.schema.json"
@@ -38,13 +40,18 @@
         "fixtures/v2/phase-jump-blocked-by-earlier-phase.json",
         "fixtures/incidents/f3-blocked-f4-ready.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "A specific live Hermes product run still needs runtime evidence before this can be called runtime_proven."
+      ],
+      "next_action": "Attach live Hermes run proof when promoting a specific product board."
     },
     {
       "claim_id": "V2-P0-002-control-plane-owns-route-and-transition",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_FINAL_ARCHITECTURE_2026-06-26.md",
       "claim": "Agents, bridges and adapters may produce work or carry messages, but route choice, phase advance and promotion must be decided by the deterministic control plane.",
+      "claim_boundary": "Public kernel proof covers command, event, decision, promotion and adapter boundaries. It does not yet prove reducer monopoly across every possible Hermes mutation path.",
       "schema_refs": [
         "schemas/factory-command.schema.json",
         "schemas/factory-run-event.schema.json",
@@ -66,13 +73,18 @@
         "fixtures/incidents/f3-blocked-f4-ready.json",
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "Hermes command queue, event replay and reducer monopoly are not yet total across all mutation surfaces."
+      ],
+      "next_action": "Promote to runtime_integrated only after all Hermes mutations flow through command queue and replay checks."
     },
     {
       "claim_id": "V2-P0-003-critical-card-contracts-are-schema-backed",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_CONTRACT_LEDGER_2026-06-26.md",
       "claim": "Runtime, security, method, onchain, access and human-gate fields on a card must be real contracts, not open prose objects.",
+      "claim_boundary": "Public kernel proof validates schema-backed card contracts and negative examples. It does not prove that every private live card has already been migrated.",
       "schema_refs": [
         "schemas/factory-card.schema.json",
         "schemas/runtime-contract.schema.json",
@@ -94,13 +106,18 @@
         "examples/cards/v35_invalid_r4_no_gate.md",
         "fixtures/incidents/text-only-human-gate.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "Private live Hermes cards require separate migration evidence before runtime_proven can be claimed."
+      ],
+      "next_action": "Require migration receipts for live cards before calling a product board compliant."
     },
     {
       "claim_id": "V2-P0-004-operating-systems-are-complete-and-addressable",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_OPERATING_SYSTEMS_ALIGNMENT_STUDY_2026-06-26.md",
       "claim": "The factory operating-system registry must model all seventeen V2 operating systems, with owner, contracts, validations and public issue mapping.",
+      "claim_boundary": "Public kernel proof covers the registry and scorecard. It does not prove every OS has complete runtime automation.",
       "schema_refs": [
         "schemas/factory-operating-system-registry.schema.json"
       ],
@@ -114,13 +131,18 @@
       "negative_fixture_refs": [
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "Some operating systems remain contract-governed rather than end-to-end runtime automated."
+      ],
+      "next_action": "Use the OS scorecard to drive each runtime automation gap to its own implementation proof."
     },
     {
       "claim_id": "V2-P0-005-agent-process-authority-is-forbidden",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_AGENT_CONFIG_PROCESS_EXTRACTION_STUDY_2026-06-26.md",
       "claim": "Worker profiles must not encode route choice, phase choice, gate approval or state mutation as agent identity or memory.",
+      "claim_boundary": "Public kernel proof validates authority boundaries and profile leakage. It does not complete the nominal migration or alias/deprecation plan for every legacy worker id.",
       "schema_refs": [
         "schemas/worker-profile.schema.json",
         "schemas/worker-authority-contract.schema.json"
@@ -135,13 +157,18 @@
       "negative_fixture_refs": [
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "Legacy-to-V2 profile compatibility aliases, expiry and deprecation receipts are still missing."
+      ],
+      "next_action": "Implement the profile compatibility alias ledger before claiming agent migration complete."
     },
     {
       "claim_id": "V2-P0-006-product-experience-is-a-control-plane",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_HERMES_USER_UX_STUDY_2026-06-26.md",
       "claim": "Product, design, frontend, brand and interface work must have explicit experience contracts and evidence instead of being treated as optional polish.",
+      "claim_boundary": "Public kernel proof covers the high-level Product Experience control plane. It does not yet provide every brand, identity, component, accessibility, visual regression and Storybook-equivalent contract.",
       "schema_refs": [
         "schemas/product-experience-control-plane.schema.json",
         "schemas/product-experience-plan.schema.json",
@@ -163,13 +190,18 @@
         "examples/cards/v35_invalid_product_face.md",
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "Detailed brand strategy, identity system, component registry, accessibility report and visual regression artifacts remain obligations."
+      ],
+      "next_action": "Materialize the missing Product Experience evidence stack before claiming full design/frontend runtime maturity."
     },
     {
       "claim_id": "V2-P0-007-solana-ai-kit-is-first-class-domain-brain",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_MODULARITY_AND_AGENT_MIGRATION_STUDY_2026-06-26.md",
       "claim": "Solana or onchain planning and execution must materialize Solana AI Kit as the official domain brain with usage receipts and signer boundaries.",
+      "claim_boundary": "Public kernel proof detects Solana/onchain routing gaps and requires receipts. It does not prove that a specific live Solana product board has used Solana AI Kit unless that board carries a usage receipt.",
       "schema_refs": [
         "schemas/solana-ai-kit-usage-receipt.schema.json",
         "schemas/onchain-work-package.schema.json",
@@ -187,13 +219,18 @@
         "fixtures/incidents/solana-f4-missing-provider.json",
         "examples/cards/v35_invalid_onchain_no_auditor.md"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "A live Solana product run must attach product-specific Solana AI Kit usage receipts before runtime_proven can be claimed."
+      ],
+      "next_action": "Block Solana product promotion unless the live board has a valid Solana AI Kit usage receipt."
     },
     {
       "claim_id": "V2-P0-008-security-is-born-in-architecture",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_FINAL_REVIEW_AND_HARDENING_2026-06-26.md",
       "claim": "Security must be represented as architecture, control, review and supply-chain contracts from planning, not only as a late scan.",
+      "claim_boundary": "Public kernel proof covers core security contracts and gate reports. It does not complete capability brokerage, leases, security profile matrix or every specialist runtime path.",
       "schema_refs": [
         "schemas/security-contract.schema.json",
         "schemas/security-architecture-plan.schema.json",
@@ -212,13 +249,18 @@
         "examples/cards/v35_invalid_security_no_scan.md",
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "Security route contract, capability broker, capability leases and security profile artifacts are not fully materialized."
+      ],
+      "next_action": "Materialize the Security OS specialist matrix and runtime capability controls before claiming runtime_proven security architecture."
     },
     {
       "claim_id": "V2-P0-012-capability-acquisition-before-specialist-block",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_MODULARITY_AND_AGENT_MIGRATION_STUDY_2026-06-26.md",
       "claim": "When a specialist or capability is missing, the factory must search existing packs and reference repositories, create or install a candidate capability, run smoke and eval, and block only if no safe candidate can be activated.",
+      "claim_boundary": "Public contract exists, but the full operational acquisition lane is not implemented end-to-end.",
       "schema_refs": [
         "schemas/capability-acquisition-contract.schema.json",
         "schemas/capability-pack-registry.schema.json",
@@ -235,13 +277,18 @@
       "negative_fixture_refs": [
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "contract_only",
+      "known_gaps": [
+        "The factory does not yet have a complete automated lane that searches references, creates or installs a capability, smokes it and activates it before blocking."
+      ],
+      "next_action": "Build the capability acquisition lane and only then promote this claim to kernel_implemented or runtime_integrated."
     },
     {
       "claim_id": "V2-P0-009-human-gates-require-delivered-decision-packets",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_HERMES_USER_UX_STUDY_2026-06-26.md",
       "claim": "A human gate must deliver structured material before asking for a decision, with language, channel, package, receipt and bounded authority.",
+      "claim_boundary": "Public kernel proof covers human gate packets and decision outbox behavior. It does not yet include the full channel delivery, notification and attachment receipt OS for every operator interface.",
       "schema_refs": [
         "schemas/human-gate-packet.schema.json",
         "schemas/operator-briefing-package.schema.json",
@@ -259,13 +306,18 @@
         "fixtures/incidents/text-only-human-gate.json",
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "Operator delivery receipts, notification policy and channel pack contracts are still missing."
+      ],
+      "next_action": "Add delivery receipts and channel policy before claiming human-gate UX is runtime_proven."
     },
     {
       "claim_id": "V2-P0-010-reference-superiority-claims-need-proof",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_REFERENCE_COMPARISON_FINAL_STUDY_2026-06-26.md",
       "claim": "The factory may claim superiority over reference repositories only when the claim links to schema, reducer or validator, test and negative fixture proof.",
+      "claim_boundary": "The claim schema exists, but there is no full reference-derived fixture corpus and runner that proves superiority across the studied references.",
       "schema_refs": [
         "schemas/reference-superiority-claim.schema.json",
         "schemas/v2-study-traceability.schema.json"
@@ -281,13 +333,18 @@
         "fixtures/v2/phase-jump-blocked-by-earlier-phase.json",
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "contract_only",
+      "known_gaps": [
+        "Reference-derived negative fixture schema, corpus and superiority runner are not implemented."
+      ],
+      "next_action": "Build the reference superiority harness before making broad public superiority claims."
     },
     {
       "claim_id": "V2-P0-011-readiness-claims-use-truth-levels",
       "priority": "P0",
       "source_doc": "external:local-study:OVERKILL_FACTORY_V2_FINAL_REVIEW_AND_HARDENING_2026-06-26.md",
       "claim": "The factory must not report product-run or production readiness from repo-only, static or bounded evidence; readiness must be classified by explicit truth levels.",
+      "claim_boundary": "Public kernel proof covers readiness truth levels and tests. It does not make any specific product run or production release ready by itself.",
       "schema_refs": [
         "schemas/factory-v2-readiness-claim.schema.json",
         "schemas/readiness-truth-ledger.schema.json",
@@ -304,13 +361,18 @@
       "negative_fixture_refs": [
         "fixtures/v2/v2-p0-negative-fixtures.json"
       ],
-      "status": "implemented"
+      "status": "kernel_implemented",
+      "known_gaps": [
+        "Runtime and production readiness require separate Hermes/product/release evidence."
+      ],
+      "next_action": "Keep product and production claims below runtime_proven unless specific evidence is attached."
     }
   ],
   "closure_policy": {
-    "p0_doc_only_forbidden": true,
-    "p0_contract_only_forbidden": true,
-    "runtime_or_test_required_for_every_p0": true,
-    "negative_fixture_required_for_every_p0": true
+    "implemented_status_forbidden": true,
+    "partial_status_requires_known_gaps": true,
+    "truth_level_must_match_evidence": true,
+    "runtime_or_production_claim_requires_runtime_proof": true,
+    "negative_fixture_required_for_kernel_or_stronger_p0": true
   }
 }

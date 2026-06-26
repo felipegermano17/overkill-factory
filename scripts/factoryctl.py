@@ -19405,6 +19405,53 @@ def _traceability_ref_path(ref: str) -> Path | None:
     return ROOT / path
 
 
+V2_TRUTH_LEVEL_RANK = {
+    "missing": 0,
+    "doc_only": 1,
+    "contract_only": 2,
+    "kernel_implemented": 3,
+    "runtime_integrated": 4,
+    "runtime_proven": 5,
+    "production_proven": 6,
+    "blocked_pending_runtime_proof": 2,
+    "deferred_with_reason": 1,
+}
+
+V2_PARTIAL_TRUTH_LEVELS = {
+    "missing",
+    "doc_only",
+    "contract_only",
+    "kernel_implemented",
+    "runtime_integrated",
+    "blocked_pending_runtime_proof",
+    "deferred_with_reason",
+}
+
+
+def _v2_truth_rank(status: str) -> int:
+    return V2_TRUTH_LEVEL_RANK.get(status, -1)
+
+
+def _ref_field_paths_exist(refs: list[Any], *, claim_id: str, field: str, errors: list[str]) -> None:
+    for ref in refs:
+        path = _traceability_ref_path(str(ref))
+        if path is not None and not path.exists():
+            errors.append(f"{claim_id}: {field} missing referenced path {ref}")
+
+
+def _has_runtime_integration_ref(refs: list[Any]) -> bool:
+    for ref in refs:
+        text = str(ref)
+        if text.startswith(("adapters/", "scripts/", "tests/")) or "hermes" in text.lower() or "runtime" in text.lower():
+            return True
+    return False
+
+
+def _has_runtime_proof_ref(refs: list[Any]) -> bool:
+    proof_markers = ("hermes", "runtime", "worker-result", "receipt", "evidence", "replay")
+    return any(any(marker in str(ref).lower() for marker in proof_markers) for ref in refs)
+
+
 def validate_v2_study_traceability(packet: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     schemas = bundled_schemas()
@@ -19428,23 +19475,130 @@ def validate_v2_study_traceability(packet: dict[str, Any]) -> list[str]:
 
         priority = str(claim.get("priority") or "")
         status = str(claim.get("status") or "")
-        if priority == "P0" and status != "implemented":
-            errors.append(f"{claim_id}: P0 study finding must be implemented, got {status or 'missing'}")
+        known_gaps = _list_items(claim.get("known_gaps"))
+        next_action = str(claim.get("next_action") or "").strip()
+        if status == "implemented":
+            errors.append(f"{claim_id}: status 'implemented' is forbidden; use explicit V2 truth levels")
+        if status in V2_PARTIAL_TRUTH_LEVELS and not known_gaps:
+            errors.append(f"{claim_id}: partial truth level {status} requires known_gaps")
+        if status in V2_PARTIAL_TRUTH_LEVELS and not next_action:
+            errors.append(f"{claim_id}: partial truth level {status} requires next_action")
 
         for field in ("schema_refs", "runtime_refs", "test_refs", "negative_fixture_refs"):
             refs = _list_items(claim.get(field))
-            if priority == "P0" and not refs:
-                errors.append(f"{claim_id}: P0 requires {field}")
-            for ref in refs:
-                path = _traceability_ref_path(str(ref))
-                if path is not None and not path.exists():
-                    errors.append(f"{claim_id}: {field} missing referenced path {ref}")
+            _ref_field_paths_exist(refs, claim_id=claim_id, field=field, errors=errors)
+
+        schema_refs = _list_items(claim.get("schema_refs"))
+        runtime_refs = _list_items(claim.get("runtime_refs"))
+        test_refs = _list_items(claim.get("test_refs"))
+        negative_refs = _list_items(claim.get("negative_fixture_refs"))
+        rank = _v2_truth_rank(status)
+        if priority == "P0" and rank >= _v2_truth_rank("contract_only") and not schema_refs:
+            errors.append(f"{claim_id}: {status} P0 claim requires schema_refs")
+        if priority == "P0" and rank >= _v2_truth_rank("kernel_implemented"):
+            if not test_refs:
+                errors.append(f"{claim_id}: {status} P0 claim requires test_refs")
+            if not negative_refs:
+                errors.append(f"{claim_id}: {status} P0 claim requires negative_fixture_refs")
+        if priority == "P0" and rank >= _v2_truth_rank("runtime_integrated") and not runtime_refs:
+            errors.append(f"{claim_id}: {status} P0 claim requires runtime_refs")
+        if priority == "P0" and rank >= _v2_truth_rank("runtime_proven") and not _has_runtime_proof_ref(runtime_refs + test_refs):
+            errors.append(f"{claim_id}: {status} requires runtime proof refs")
+        if priority == "P0" and rank >= _v2_truth_rank("production_proven"):
+            if not any("release" in str(ref).lower() or "production" in str(ref).lower() for ref in runtime_refs + test_refs):
+                errors.append(f"{claim_id}: production_proven requires production or release proof refs")
 
     return errors
 
 
 def command_validate_v2_study_traceability(args: argparse.Namespace) -> int:
     return _print_validation_result(validate_v2_study_traceability(load_json_like(args.path)))
+
+
+def validate_v2_doc_implementation_obligations(
+    packet: dict[str, Any],
+    traceability_packet: dict[str, Any] | None = None,
+) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("v2-doc-implementation-obligations.schema.json")
+    if not isinstance(schema, dict):
+        return ["v2-doc-implementation-obligations schema is not bundled"]
+    errors.extend(validate_node(schema, packet, "v2_doc_implementation_obligations", schemas=schemas, root_schema=schema))
+
+    truth_levels = set(_list_items(packet.get("truth_levels")))
+    if "implemented" in truth_levels:
+        errors.append("truth_levels must not include broad 'implemented'")
+    missing_truth_levels = sorted(set(V2_TRUTH_LEVEL_RANK) - truth_levels)
+    if missing_truth_levels:
+        errors.append("truth_levels missing: " + ", ".join(missing_truth_levels))
+
+    claim_statuses: dict[str, str] = {}
+    if isinstance(traceability_packet, dict):
+        for claim in traceability_packet.get("claims", []):
+            if isinstance(claim, dict):
+                claim_statuses[str(claim.get("claim_id") or "")] = str(claim.get("status") or "")
+
+    obligation_ids: set[str] = set()
+    for index, obligation in enumerate(packet.get("obligations", []), start=1):
+        if not isinstance(obligation, dict):
+            continue
+        obligation_id = str(obligation.get("obligation_id") or f"obligation-{index}")
+        if obligation_id in obligation_ids:
+            errors.append(f"obligations[{index}].obligation_id duplicates {obligation_id}")
+        obligation_ids.add(obligation_id)
+
+        current = str(obligation.get("current_truth_level") or "")
+        minimum = str(obligation.get("minimum_truth_level_required") or "")
+        if current == "implemented" or minimum == "implemented":
+            errors.append(f"{obligation_id}: broad truth level 'implemented' is forbidden")
+        current_rank = _v2_truth_rank(current)
+        minimum_rank = _v2_truth_rank(minimum)
+        gap_summary = str(obligation.get("gap_summary") or "").strip()
+        next_action = str(obligation.get("next_action") or "").strip()
+        if current_rank < minimum_rank and (not gap_summary or not next_action):
+            errors.append(f"{obligation_id}: below minimum truth level requires gap_summary and next_action")
+
+        implemented_refs = _list_items(obligation.get("implemented_artifact_refs"))
+        validation_refs = _list_items(obligation.get("validation_refs"))
+        negative_refs = _list_items(obligation.get("negative_fixture_refs"))
+        if current == "missing" and (implemented_refs or validation_refs or negative_refs):
+            errors.append(f"{obligation_id}: missing obligation must not list implemented, validation or negative refs")
+        if current_rank >= _v2_truth_rank("contract_only") and not implemented_refs:
+            errors.append(f"{obligation_id}: {current} requires implemented_artifact_refs")
+        if current_rank >= _v2_truth_rank("kernel_implemented"):
+            if not validation_refs:
+                errors.append(f"{obligation_id}: {current} requires validation_refs")
+            if not negative_refs:
+                errors.append(f"{obligation_id}: {current} requires negative_fixture_refs")
+        if current_rank >= _v2_truth_rank("runtime_integrated") and not _has_runtime_integration_ref(implemented_refs + validation_refs):
+            errors.append(f"{obligation_id}: {current} requires runtime integration proof refs")
+        if current_rank >= _v2_truth_rank("production_proven") and not any(
+            "release" in str(ref).lower() or "production" in str(ref).lower()
+            for ref in implemented_refs + validation_refs
+        ):
+            errors.append(f"{obligation_id}: production_proven requires production or release proof refs")
+
+        for field in ("implemented_artifact_refs", "validation_refs", "negative_fixture_refs"):
+            _ref_field_paths_exist(_list_items(obligation.get(field)), claim_id=obligation_id, field=field, errors=errors)
+
+        if claim_statuses and current_rank < minimum_rank:
+            for claim_id in _list_items(obligation.get("blocks_claim_ids")):
+                claim_status = claim_statuses.get(claim_id)
+                if claim_status and _v2_truth_rank(claim_status) >= minimum_rank:
+                    errors.append(
+                        f"{obligation_id}: blocks {claim_id}, but traceability status {claim_status} "
+                        f"meets/exceeds required {minimum}"
+                    )
+
+    return errors
+
+
+def command_validate_v2_doc_implementation_obligations(args: argparse.Namespace) -> int:
+    traceability_packet = load_json_like(args.traceability) if args.traceability else None
+    return _print_validation_result(
+        validate_v2_doc_implementation_obligations(load_json_like(args.path), traceability_packet)
+    )
 
 
 READINESS_REQUIRED_EVIDENCE = {
@@ -20681,6 +20835,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate_traceability_parser = sub.add_parser("validate-v2-study-traceability")
     validate_traceability_parser.add_argument("path", type=Path)
     validate_traceability_parser.set_defaults(func=command_validate_v2_study_traceability)
+
+    validate_doc_obligations_parser = sub.add_parser("validate-v2-doc-implementation-obligations")
+    validate_doc_obligations_parser.add_argument("path", type=Path)
+    validate_doc_obligations_parser.add_argument("--traceability", type=Path)
+    validate_doc_obligations_parser.set_defaults(func=command_validate_v2_doc_implementation_obligations)
 
     validate_readiness_claim_parser = sub.add_parser("validate-readiness-claim")
     validate_readiness_claim_parser.add_argument("path", type=Path)

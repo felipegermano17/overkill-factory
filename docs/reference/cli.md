@@ -50,6 +50,7 @@ factoryctl validate-promotion-packet templates/factory-promotion-packet.json
 factoryctl validate-factory-run templates/factory-run.json
 factoryctl validate-phase-graph templates/factory-phase-graph.json
 factoryctl validate-v2-study-traceability templates/v2-study-traceability.json
+factoryctl validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 factoryctl validate-worker-authority-contract templates/worker-authority-contract.json
 factoryctl validate-product-experience-control-plane templates/product-experience-control-plane.json
 factoryctl validate-capability-acquisition-contract templates/capability-acquisition-contract.json
@@ -80,9 +81,15 @@ the main line, while human gates and operator projections are events or views,
 not route phases. Legacy labels such as F8A, F14 and F19 must resolve through
 explicit aliases instead of becoming new product stages.
 
-`validate-v2-study-traceability` is the no-simplification guard. Every P0 claim
-from the raw V2 studies must point to implementation, schemas, runtime commands,
-tests and negative fixtures before the factory can claim the study was applied.
+`validate-v2-study-traceability` is the no-simplification guard. Every raw V2
+claim must declare a bounded truth level, claim boundary, known gaps, next
+action, evidence refs and negative fixtures before the factory can make a public
+claim about it. The old broad status `implemented` is invalid on purpose.
+
+`validate-v2-doc-implementation-obligations` is the overclaim guard. It lists
+documented V2 obligations that still need code, tests, runtime proof or
+production evidence, and fails validation if an obligation claims a stronger
+truth level than its public artifacts support.
 
 `validate-worker-authority-contract` keeps workers as operators, not routers.
 Profiles may produce artifacts, but phase selection, specialist selection, gate

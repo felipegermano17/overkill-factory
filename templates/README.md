@@ -45,8 +45,11 @@ only in Hermes.
 For deterministic Factory V2 work, start from these templates:
 
 - `factory-phase-graph.json`: the canonical phase graph and legacy aliases.
-- `v2-study-traceability.json`: the ledger proving raw-study claims were not
-  simplified away.
+- `v2-study-traceability.json`: the ledger mapping raw-study claims to bounded
+  truth levels, evidence refs, claim boundaries, known gaps and next actions.
+- `v2-doc-implementation-obligations.json`: the ledger of documented V2
+  obligations that still need code, tests or runtime proof before stronger
+  public claims are allowed.
 - `worker-authority-contract.json`: the worker authority boundary.
 - `product-experience-control-plane.json`: the Product Experience governance
   surface for design, brand, frontend and operator UX.
@@ -66,6 +69,7 @@ Run template and schema checks:
 ```bash
 python scripts/factoryctl.py validate-phase-graph templates/factory-phase-graph.json
 python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
+python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 python scripts/factoryctl.py validate-worker-authority-contract templates/worker-authority-contract.json
 python scripts/factoryctl.py validate-product-experience-control-plane templates/product-experience-control-plane.json
 python scripts/factoryctl.py validate-capability-acquisition-contract templates/capability-acquisition-contract.json

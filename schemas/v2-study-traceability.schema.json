@@ -33,22 +33,44 @@
           "priority",
           "source_doc",
           "claim",
+          "claim_boundary",
           "schema_refs",
           "runtime_refs",
           "test_refs",
           "negative_fixture_refs",
-          "status"
+          "status",
+          "known_gaps",
+          "next_action"
         ],
         "properties": {
           "claim_id": { "type": "string", "minLength": 3 },
           "priority": { "enum": ["P0", "P1", "P2"] },
           "source_doc": { "type": "string", "minLength": 3 },
           "claim": { "type": "string", "minLength": 20 },
-          "schema_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
-          "runtime_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
-          "test_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
-          "negative_fixture_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
-          "status": { "enum": ["implemented", "blocked_pending_runtime_proof", "deferred_with_reason"] }
+          "claim_boundary": { "type": "string", "minLength": 20 },
+          "schema_refs": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "runtime_refs": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "test_refs": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "negative_fixture_refs": { "type": "array", "items": { "type": "string", "minLength": 3 }, "uniqueItems": true },
+          "status": {
+            "enum": [
+              "missing",
+              "doc_only",
+              "contract_only",
+              "kernel_implemented",
+              "runtime_integrated",
+              "runtime_proven",
+              "production_proven",
+              "blocked_pending_runtime_proof",
+              "deferred_with_reason"
+            ]
+          },
+          "known_gaps": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 10 },
+            "uniqueItems": true
+          },
+          "next_action": { "type": "string", "minLength": 10 }
         },
         "additionalProperties": false
       }
@@ -56,16 +78,18 @@
     "closure_policy": {
       "type": "object",
       "required": [
-        "p0_doc_only_forbidden",
-        "p0_contract_only_forbidden",
-        "runtime_or_test_required_for_every_p0",
-        "negative_fixture_required_for_every_p0"
+        "implemented_status_forbidden",
+        "partial_status_requires_known_gaps",
+        "truth_level_must_match_evidence",
+        "runtime_or_production_claim_requires_runtime_proof",
+        "negative_fixture_required_for_kernel_or_stronger_p0"
       ],
       "properties": {
-        "p0_doc_only_forbidden": { "const": true },
-        "p0_contract_only_forbidden": { "const": true },
-        "runtime_or_test_required_for_every_p0": { "const": true },
-        "negative_fixture_required_for_every_p0": { "const": true }
+        "implemented_status_forbidden": { "const": true },
+        "partial_status_requires_known_gaps": { "const": true },
+        "truth_level_must_match_evidence": { "const": true },
+        "runtime_or_production_claim_requires_runtime_proof": { "const": true },
+        "negative_fixture_required_for_kernel_or_stronger_p0": { "const": true }
       },
       "additionalProperties": false
     }

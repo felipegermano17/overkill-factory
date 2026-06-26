@@ -305,7 +305,8 @@ apontar sua implementação, prova e limite.
 - `docs/getting-started/install-in-hermes.md`: conectar a um runtime Hermes do operador.
 - `docs/reference/cli.md`: comandos suportados do `factoryctl`.
 - `docs/architecture/factory-v2-control-plane.md`: control plane determinístico.
-- `templates/v2-study-traceability.json`: prova de que os estudos brutos da V2 foram implementados.
+- `templates/v2-study-traceability.json`: ledger dos claims brutos da V2 com nível de verdade, evidência e lacunas conhecidas.
+- `templates/v2-doc-implementation-obligations.json`: obrigações que impedem trabalho documentado de ser confundido com código implementado.
 - `templates/factory-v2-readiness-claim.json`: contrato de readiness com escopo explícito.
 - `docs/operations/promise-to-implementation.md`: auditoria pública promessa-prova.
 
@@ -319,6 +320,8 @@ python scripts/validate_public_json_artifacts.py
 python scripts/validate_worker_profiles.py
 python scripts/validate_promise_implementation_map.py
 python scripts/validate_planning_bundles.py
+python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
+python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 python scripts/public_safety_scan.py
 python scripts/secret_safety_scan.py
 python scripts/validate_public_surface_sync.py --check-published
