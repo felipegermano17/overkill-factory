@@ -58,12 +58,13 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
         self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
         self.assertIn('the factory is not "a smart chat."', readme)
-        self.assertIn("v2.0.1", readme)
+        self.assertIn("v2.0.2", readme)
         self.assertIn("Factory V2", readme)
         self.assertIn("docs/architecture/factory-v2-control-plane.md", readme)
         self.assertIn("docs/operations/promise-to-implementation.md", readme)
         self.assertIn("docs/promise-implementation-map.public.json", readme)
         self.assertIn("templates/v2-study-traceability.json", readme)
+        self.assertIn("templates/v2-doc-implementation-obligations.json", readme)
         self.assertIn("templates/factory-v2-readiness-claim.json", readme)
         self.assertNotIn("Para você, como usuário leigo", readme)
         self.assertNotIn("## What It Does Not Do", readme)
@@ -81,6 +82,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/operations/promise-to-implementation.md",
             "docs/promise-implementation-map.public.json",
             "templates/v2-study-traceability.json",
+            "templates/v2-doc-implementation-obligations.json",
             "templates/factory-v2-readiness-claim.json",
         ]:
             with self.subTest(link=rel):
@@ -124,7 +126,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "linha de produção em etapas para trabalho de produto controlado",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
-            "v2.0.1",
+            "v2.0.2",
             "Factory V2",
             "docs/architecture/factory-v2-control-plane.md",
             "codex plugin marketplace add .",
@@ -133,6 +135,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/promise-implementation-map.public.json",
             "docs/operator/overkill-factory-bridge.md",
             "docs/operator/overkill-factory-bridge-plugin.md",
+            "templates/v2-doc-implementation-obligations.json",
             "fixtures/README.md",
             "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
             "factoryctl run minimal",
