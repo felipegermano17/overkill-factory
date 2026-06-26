@@ -12,11 +12,12 @@ from __future__ import annotations
 import json
 import re
 import sys
+import sysconfig
 from pathlib import Path
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parents[1]
+CODE_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -35,6 +36,34 @@ from factory_operating_systems import (  # noqa: E402
     validate_operating_system_scorecard_semantics,
 )
 
+
+def installed_asset_root() -> Path | None:
+    candidates = [
+        Path(sysconfig.get_path("data") or "") / "share" / "overkill-factory",
+        CODE_ROOT / "share" / "overkill-factory",
+    ]
+    for candidate in candidates:
+        if (
+            (candidate / "agents" / "hermes-profile-bindings.public.json").exists()
+            and (candidate / "examples" / "minimal-hermes-project" / "card.md").exists()
+        ):
+            return candidate
+    return None
+
+
+def default_root() -> Path:
+    cwd = Path.cwd()
+    if (cwd / "agents" / "hermes-profile-bindings.public.json").exists() and (
+        cwd / "examples" / "minimal-hermes-project" / "card.md"
+    ).exists():
+        return cwd
+    installed_root = installed_asset_root()
+    if installed_root is not None:
+        return installed_root
+    return CODE_ROOT
+
+
+ROOT = default_root()
 SCHEMA_DIR = ROOT / "schemas"
 PUBLIC_SCHEMA_DIRS = [
     SCHEMA_DIR,

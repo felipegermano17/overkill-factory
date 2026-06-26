@@ -26,6 +26,11 @@ def load_public_json_validator():
     return module
 
 
+def project_release_tag() -> str:
+    pyproject = tomllib.loads(read_text("pyproject.toml"))
+    return f"v{pyproject['project']['version']}"
+
+
 class OpenSourceDocsTest(unittest.TestCase):
     def test_readme_is_external_user_entrypoint(self) -> None:
         readme = read_text("README.md")
@@ -58,7 +63,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
         self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
         self.assertIn('the factory is not "a smart chat."', readme)
-        self.assertIn("v2.0.2", readme)
+        self.assertIn(project_release_tag(), readme)
         self.assertIn("Factory V2", readme)
         self.assertIn("docs/architecture/factory-v2-control-plane.md", readme)
         self.assertIn("docs/operations/promise-to-implementation.md", readme)
@@ -126,7 +131,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "linha de produção em etapas para trabalho de produto controlado",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",
-            "v2.0.2",
+            project_release_tag(),
             "Factory V2",
             "docs/architecture/factory-v2-control-plane.md",
             "codex plugin marketplace add .",

@@ -51,9 +51,14 @@ factoryctl validate-factory-run templates/factory-run.json
 factoryctl validate-phase-graph templates/factory-phase-graph.json
 factoryctl validate-v2-study-traceability templates/v2-study-traceability.json
 factoryctl validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
+factoryctl validate-v2-runtime-contracts
+factoryctl validate-agent-skill-boundaries
+factoryctl validate-reference-superiority
 factoryctl validate-worker-authority-contract templates/worker-authority-contract.json
 factoryctl validate-product-experience-control-plane templates/product-experience-control-plane.json
 factoryctl validate-capability-acquisition-contract templates/capability-acquisition-contract.json
+factoryctl capability-acquisition-run --capability-gap solana-ai-kit --surface solana --out .tmp/factory-runs/capability/solana-capability-acquisition-run.json
+factoryctl validate-capability-acquisition-run .tmp/factory-runs/capability/solana-capability-acquisition-run.json
 factoryctl validate-hermes-reducer-mutation-proof templates/hermes-reducer-mutation-proof.json
 factoryctl validate-readiness-claim templates/factory-v2-readiness-claim.json
 ```
@@ -91,6 +96,20 @@ documented V2 obligations that still need code, tests, runtime proof or
 production evidence, and fails validation if an obligation claims a stronger
 truth level than its public artifacts support.
 
+`validate-v2-runtime-contracts` validates the runtime-spine contract set added
+around the V2 studies: profile aliases, skill providers, Product Method
+Runtime, operator delivery, Product Experience evidence stack, Security OS
+matrix, Hermes blocked-first policy and capability acquisition receipts.
+
+`validate-agent-skill-boundaries` proves that Hermes profile bindings resolve
+their `skill_refs` through the provider registry and that worker profiles keep
+route, phase, gate, waiver and card-state authority out of agent identity.
+
+`validate-reference-superiority` runs the reference-derived negative fixture
+corpus. It keeps comparisons against Aiox, Tess, Orca, Superpowers and Solana
+AI Kit tied to concrete failure modes and Overkill controls instead of broad
+claims.
+
 `validate-worker-authority-contract` keeps workers as operators, not routers.
 Profiles may produce artifacts, but phase selection, specialist selection, gate
 approval, waivers and promotion stay with reducers, registries and Hermes
@@ -104,6 +123,12 @@ optional visual layer.
 becoming a human blocker too early. The factory must first try existing packs,
 templates, reference repositories and install/create paths; only exhausted or
 unsafe routes can block.
+
+`capability-acquisition-run` is the executable lane for that policy. It reads
+the skill provider registry and capability packs, records selected or rejected
+candidates, and emits a `capability_acquisition_run` receipt. It does not
+install arbitrary software by itself; an absent provider can block only after
+`search_completed=true`.
 
 `validate-hermes-reducer-mutation-proof` proves the Hermes adapter boundary:
 bridges may observe and carry operator responses, but only the native Hermes

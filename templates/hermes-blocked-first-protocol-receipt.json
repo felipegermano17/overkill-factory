@@ -1,0 +1,31 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-blocked-first-protocol-receipt.schema.json",
+  "record_type": "hermes_blocked_first_protocol_receipt",
+  "receipt_id": "overkill-factory-v2-hermes-blocked-first-protocol",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "runtime_authority": "hermes_kanban",
+  "shadow_dispatcher_allowed": false,
+  "hermes_native_primitives_required": [
+    "gateway start",
+    "kanban dispatch",
+    "kanban watch",
+    "kanban tail",
+    "kanban runs",
+    "kanban diagnostics",
+    "kanban notify-subscribe",
+    "kanban notify-list",
+    "kanban notify-unsubscribe"
+  ],
+  "blocked_event_policy": {
+    "create_unassigned_first": true,
+    "block_event_required": true,
+    "verify_show_json_before_assign": true,
+    "dispatch_only_after_release": true
+  },
+  "readback_policy": {
+    "runs_required": true,
+    "tail_required_on_failure": true,
+    "diagnostics_required_on_idle": true,
+    "artifact_readback_required": true
+  }
+}

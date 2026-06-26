@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operator-delivery-receipt.schema.json",
+  "title": "Overkill Factory Operator Delivery Receipt",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "delivery_id",
+    "created_at",
+    "operator_channel",
+    "primary_language",
+    "decision_id",
+    "package_refs",
+    "material_delivered_before_question",
+    "receipt_status",
+    "question_ref"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/operator-delivery-receipt.schema.json" },
+    "record_type": { "const": "operator_delivery_receipt" },
+    "delivery_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "operator_channel": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+    "primary_language": { "enum": ["pt-BR", "en-US"] },
+    "decision_id": { "type": "string", "minLength": 3 },
+    "package_refs": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "material_delivered_before_question": { "const": true },
+    "receipt_status": { "enum": ["delivered", "blocked", "retrying"] },
+    "question_ref": { "type": "string", "minLength": 3 }
+  },
+  "additionalProperties": false
+}

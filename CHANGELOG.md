@@ -7,6 +7,29 @@ public releases.
 
 ## Unreleased
 
+## 2.0.3 - 2026-06-26
+
+- Complete the public Factory V2 runtime-spine contract set with profile
+  compatibility aliases, skill provider registry, Product Method Runtime,
+  operator delivery, Product Experience evidence stack, Security OS matrix,
+  Hermes blocked-first protocol and reference-derived negative fixtures.
+- Add `factoryctl validate-v2-runtime-contracts`,
+  `validate-agent-skill-boundaries`, `validate-reference-superiority`,
+  `capability-acquisition-run` and `validate-capability-acquisition-run`.
+- Make missing capability handling executable: the factory now writes a
+  `capability_acquisition_run` receipt from skill providers, capability packs
+  and reference search refs, and it can block only after `search_completed=true`.
+- Update the Hermes Kanban compatibility contract for the current native
+  primitives: `gateway start`, dispatch/watch/tail/runs/diagnostics and
+  notify-subscribe/list/unsubscribe.
+- Wire the new V2 validators and capability acquisition receipt into release
+  preflight, public docs, README and the Codex `overkill-factory` skill.
+- Extend V2 traceability and doc-implementation obligations so public claims
+  fail validation when they are stronger than the implemented artifacts,
+  tests and negative fixtures.
+
+## 2.0.2 - 2026-06-26
+
 - Harden Factory V2 against raw-study simplification: add phase graph,
   V2 study traceability, worker authority, Product Experience control plane,
   capability acquisition, Hermes reducer mutation proof and scoped readiness

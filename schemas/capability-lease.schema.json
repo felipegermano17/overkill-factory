@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/capability-lease.schema.json",
+  "title": "Overkill Factory Capability Lease",
+  "type": "object",
+  "required": ["$schema", "record_type", "lease_id", "created_at", "capability_id", "holder_worker_id", "scope", "expires_at", "revocation_policy"],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/capability-lease.schema.json" },
+    "record_type": { "const": "capability_lease" },
+    "lease_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "capability_id": { "type": "string", "minLength": 3 },
+    "holder_worker_id": { "type": "string", "minLength": 3 },
+    "scope": { "type": "string", "minLength": 5 },
+    "expires_at": { "type": "string", "minLength": 10 },
+    "revocation_policy": { "type": "string", "minLength": 5 }
+  },
+  "additionalProperties": false
+}

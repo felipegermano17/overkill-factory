@@ -1,0 +1,48 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/reference-derived-negative-fixture.schema.json",
+  "record_type": "reference_derived_negative_fixtures",
+  "corpus_id": "overkill-factory-v2-reference-derived-negative-fixtures",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "fixtures": [
+    {
+      "fixture_id": "aiox-agent-authority-leak",
+      "reference_project": "aiox-core",
+      "failure_mode": "Agent prompt contains process authority that should belong to deterministic control plane.",
+      "overkill_controls": ["worker-authority-contract", "validate_agent_vs_skill_boundaries.py"],
+      "expected_factory_result": "BLOCKED",
+      "regression_test_ref": "tests/test_v2_runtime_contracts.py"
+    },
+    {
+      "fixture_id": "tess-state-without-runtime-replay",
+      "reference_project": "tess",
+      "failure_mode": "State transition is accepted without replayable command/event proof.",
+      "overkill_controls": ["factory-run-event", "hermes-reducer-mutation-proof"],
+      "expected_factory_result": "BLOCKED",
+      "regression_test_ref": "tests/test_factory_v2_kernel.py"
+    },
+    {
+      "fixture_id": "orca-capability-block-before-search",
+      "reference_project": "orca",
+      "failure_mode": "Work blocks for missing specialist before searching existing capability packs and references.",
+      "overkill_controls": ["capability-acquisition-contract", "capability-acquisition-run"],
+      "expected_factory_result": "BLOCKED",
+      "regression_test_ref": "tests/test_v2_runtime_contracts.py"
+    },
+    {
+      "fixture_id": "superpowers-plan-without-runtime-artifacts",
+      "reference_project": "superpowers",
+      "failure_mode": "A written plan is treated as execution readiness without dispatch and evidence contracts.",
+      "overkill_controls": ["factory-run-plan", "work-unit-dispatch-readiness"],
+      "expected_factory_result": "BLOCKED",
+      "regression_test_ref": "tests/test_v2_runtime_contracts.py"
+    },
+    {
+      "fixture_id": "solana-ai-kit-domain-brain-without-factory-gates",
+      "reference_project": "solana-ai-kit",
+      "failure_mode": "Domain provider guidance is treated as sufficient to bypass signer, funds, Mainnet or Auditor gates.",
+      "overkill_controls": ["security-route-contract", "solana-ai-kit-usage-receipt", "capability-lease"],
+      "expected_factory_result": "BLOCKED",
+      "regression_test_ref": "tests/test_v2_runtime_contracts.py"
+    }
+  ]
+}

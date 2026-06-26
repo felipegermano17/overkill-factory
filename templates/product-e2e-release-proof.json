@@ -1,0 +1,22 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/product-e2e-release-proof.schema.json",
+  "record_type": "product_e2e_release_proof",
+  "proof_id": "overkill-factory-v2-product-e2e-release-proof",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "result": "BLOCKED",
+  "journey_proofs": [
+    {
+      "journey_id": "operator-first-success",
+      "result": "PASS",
+      "evidence_refs": ["templates/product-face-result.json", "templates/accessibility-report.json"]
+    },
+    {
+      "journey_id": "release-safety",
+      "result": "BLOCKED",
+      "evidence_refs": ["templates/security-state-ledger.json", "templates/capability-lease.json"]
+    }
+  ],
+  "rollback_ref": "templates/production-readiness-plan.json",
+  "monitoring_ref": "templates/data-metrics-plan.json",
+  "release_decision_boundary": "This proof can prepare a release packet but cannot approve production release by itself."
+}

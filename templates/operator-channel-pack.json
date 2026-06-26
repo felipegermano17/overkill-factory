@@ -1,0 +1,23 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/operator-channel-pack.schema.json",
+  "record_type": "operator_channel_pack",
+  "pack_id": "operator-channel-pack-telegram",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "channel": "telegram",
+  "message_shape": {
+    "max_summary_lines": 12,
+    "plain_language_required": true,
+    "decision_options_required": true
+  },
+  "asset_policy": {
+    "pdf_supported": true,
+    "markdown_supported": true,
+    "json_supported": true,
+    "summary_only_forbidden": true
+  },
+  "ack_policy": {
+    "ack_required_for_gate": true,
+    "retry_on_missing_delivery": true,
+    "runtime_receipt_ref_required": true
+  }
+}

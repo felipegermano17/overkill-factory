@@ -1,0 +1,84 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/factory-run-plan.schema.json",
+  "record_type": "factory_run_plan",
+  "plan_id": "overkill-factory-v2-product-run-plan",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "hermes_runtime_policy": {
+    "runtime_authority": "hermes_kanban",
+    "native_gateway_required": true,
+    "shadow_dispatcher_allowed": false
+  },
+  "phases": [
+    {
+      "phase_id": "F0",
+      "purpose": "Seal source envelope and start request before any board work.",
+      "required_artifacts": ["factory_bridge_source_envelope", "factory_bridge_start_request"],
+      "allowed_commands": ["record_source", "start_run"],
+      "gate_policy": "auto_when_contract_satisfied"
+    },
+    {
+      "phase_id": "F1",
+      "purpose": "Create source inventory and normalize operator intent.",
+      "required_artifacts": ["universal_signal_intake", "product_source_ledger"],
+      "allowed_commands": ["materialize_worker", "advance_phase"],
+      "gate_policy": "auto_when_contract_satisfied"
+    },
+    {
+      "phase_id": "F2",
+      "purpose": "Resolve source claims, conflicts and missing evidence.",
+      "required_artifacts": ["source_resolution_packet"],
+      "allowed_commands": ["materialize_worker", "repair_required", "advance_phase"],
+      "gate_policy": "auto_when_contract_satisfied"
+    },
+    {
+      "phase_id": "F3",
+      "purpose": "Align understanding and owner-readable Product SOT candidate.",
+      "required_artifacts": ["operator_understanding_confirmation", "product_sot"],
+      "allowed_commands": ["materialize_worker", "request_decision", "advance_phase"],
+      "gate_policy": "blocked_until_evidence"
+    },
+    {
+      "phase_id": "F4",
+      "purpose": "Create outcome and discovery boundary before architecture.",
+      "required_artifacts": ["outcome_contract", "discovery_notes"],
+      "allowed_commands": ["materialize_worker", "advance_phase"],
+      "gate_policy": "auto_when_contract_satisfied"
+    },
+    {
+      "phase_id": "F5",
+      "purpose": "Close Product SOT baseline and full product scope coverage.",
+      "required_artifacts": ["product_sot", "full_product_sot_scope_coverage"],
+      "allowed_commands": ["materialize_worker", "request_decision", "advance_phase"],
+      "gate_policy": "blocked_until_evidence"
+    },
+    {
+      "phase_id": "F6",
+      "purpose": "Select method, surfaces and capability acquisition path.",
+      "required_artifacts": ["method_contract", "product_surface_stack_plan", "capability_acquisition_run"],
+      "allowed_commands": ["materialize_worker", "repair_required", "advance_phase"],
+      "gate_policy": "auto_when_contract_satisfied"
+    },
+    {
+      "phase_id": "F7",
+      "purpose": "Define architecture and security route before execution planning.",
+      "required_artifacts": ["security_route_contract", "security_state_ledger", "architecture_candidate"],
+      "allowed_commands": ["materialize_worker", "request_decision", "advance_phase"],
+      "gate_policy": "blocked_until_evidence"
+    },
+    {
+      "phase_id": "F13",
+      "purpose": "Materialize ready work units through Hermes blocked-first dispatch readiness.",
+      "required_artifacts": ["vertical_slice_graph", "work_unit_dispatch_readiness", "hermes_blocked_first_protocol_receipt"],
+      "allowed_commands": ["materialize_worker", "dispatch_ready_work_units"],
+      "gate_policy": "auto_when_contract_satisfied"
+    },
+    {
+      "phase_id": "F15",
+      "purpose": "Verify, repair and review work until Receipt Five can close.",
+      "required_artifacts": ["qa_repair_loop_state", "product_e2e_release_proof", "receipt_five"],
+      "allowed_commands": ["repair_required", "promote", "request_decision"],
+      "gate_policy": "blocked_until_evidence"
+    }
+  ]
+}

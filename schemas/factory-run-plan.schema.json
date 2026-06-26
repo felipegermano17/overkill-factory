@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-run-plan.schema.json",
+  "title": "Overkill Factory Product Run Plan",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "plan_id",
+    "created_at",
+    "factory_method_version",
+    "hermes_runtime_policy",
+    "phases"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/factory-run-plan.schema.json" },
+    "record_type": { "const": "factory_run_plan" },
+    "plan_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "factory_method_version": { "const": "OVERKILL_VFINAL" },
+    "hermes_runtime_policy": {
+      "type": "object",
+      "required": ["runtime_authority", "native_gateway_required", "shadow_dispatcher_allowed"],
+      "properties": {
+        "runtime_authority": { "const": "hermes_kanban" },
+        "native_gateway_required": { "const": true },
+        "shadow_dispatcher_allowed": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "required": ["phase_id", "purpose", "required_artifacts", "allowed_commands", "gate_policy"],
+        "properties": {
+          "phase_id": { "type": "string", "minLength": 2 },
+          "purpose": { "type": "string", "minLength": 10 },
+          "required_artifacts": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "allowed_commands": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "gate_policy": { "enum": ["auto_when_contract_satisfied", "human_only", "blocked_until_evidence"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

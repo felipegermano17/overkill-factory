@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/operator-notification-policy.schema.json",
+  "title": "Overkill Factory Operator Notification Policy",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "policy_id",
+    "created_at",
+    "human_gate_delivery_requires_receipt",
+    "proactive_status_required",
+    "channels",
+    "forbidden_patterns"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/operator-notification-policy.schema.json" },
+    "record_type": { "const": "operator_notification_policy" },
+    "policy_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "human_gate_delivery_requires_receipt": { "const": true },
+    "proactive_status_required": { "const": true },
+    "channels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["channel", "channel_pack_ref", "delivery_receipt_required", "material_before_question_required"],
+        "properties": {
+          "channel": { "enum": ["telegram", "discord", "cockpit", "codex_bridge", "cli", "api"] },
+          "channel_pack_ref": { "type": "string", "minLength": 3 },
+          "delivery_receipt_required": { "const": true },
+          "material_before_question_required": { "const": true }
+        },
+        "additionalProperties": false
+      }
+    },
+    "forbidden_patterns": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

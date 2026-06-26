@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/full-product-run-manifest.schema.json",
+  "title": "Overkill Factory Full Product Run Manifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "manifest_id",
+    "created_at",
+    "run_plan_ref",
+    "surface_stack_plan_ref",
+    "vertical_slice_graph_ref",
+    "coverage_policy",
+    "surfaces"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/full-product-run-manifest.schema.json" },
+    "record_type": { "const": "full_product_run_manifest" },
+    "manifest_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "run_plan_ref": { "type": "string", "minLength": 3 },
+    "surface_stack_plan_ref": { "type": "string", "minLength": 3 },
+    "vertical_slice_graph_ref": { "type": "string", "minLength": 3 },
+    "coverage_policy": {
+      "type": "object",
+      "required": ["every_surface_mapped", "every_slice_has_verification", "release_requires_e2e_proof"],
+      "properties": {
+        "every_surface_mapped": { "const": true },
+        "every_slice_has_verification": { "const": true },
+        "release_requires_e2e_proof": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "surfaces": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

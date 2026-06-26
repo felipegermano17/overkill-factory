@@ -102,6 +102,7 @@ PROFILE_BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
 PROFILE_READINESS_PATH = ROOT / "agents" / "worker-profile-readiness.public.json"
 PROFILE_READINESS_REF = "agents/worker-profile-readiness.public.json"
 CAPABILITY_PACKS_PATH = ROOT / "agents" / "capability-packs.public.json"
+SKILL_PROVIDER_REGISTRY_PATH = ROOT / "agents" / "skill-provider-registry.public.json"
 CAPABILITY_PACK_ACTIVATION_LEDGER_REF = "agents/capability-pack-activation-ledger.public.json"
 CAPABILITY_PACK_ACTIVATION_LEDGER_PATH = ROOT / CAPABILITY_PACK_ACTIVATION_LEDGER_REF
 DEFAULT_WORKFLOW_CATALOG = ROOT / "docs" / "factory-workflow.catalog.json"
@@ -122,6 +123,7 @@ DEFAULT_OPERATING_SYSTEM_SCORECARD_OUT = ROOT / ".tmp" / "factory-runs" / "opera
 DEFAULT_FACTORY_READINESS_SCORECARD_PATH = ROOT / "templates" / "factory-readiness-scorecard.json"
 DEFAULT_V1_COMPLETION_GATE_OUT = ROOT / ".tmp" / "factory-runs" / "v1-completion" / "factory-v1-completion-gate.json"
 DEFAULT_RELEASE_INTEGRATION_PREFLIGHT = ROOT / ".tmp" / "factory-runs" / "release" / "release-integration-preflight.json"
+DEFAULT_CAPABILITY_ACQUISITION_RUN_OUT = ROOT / ".tmp" / "factory-runs" / "capability" / "capability-acquisition-run.json"
 PRIVATE_RUNTIME_REF_RE = re.compile(
     r"((?<![A-Za-z])[A-Za-z]:[\\/]|\\\\|/home/|/Users/|/srv/|/var/|discord(app)?\.com|webhook|token|secret|guild[_-]?id|channel[_-]?id|message[_-]?id)",
     re.IGNORECASE,
@@ -19714,6 +19716,217 @@ def command_validate_capability_acquisition_contract(args: argparse.Namespace) -
     return _print_validation_result(validate_capability_acquisition_contract(load_json_like(args.path)))
 
 
+def validate_capability_acquisition_run(packet: dict[str, Any]) -> list[str]:
+    schemas = bundled_schemas()
+    schema = schemas.get("capability-acquisition-run.schema.json")
+    if not isinstance(schema, dict):
+        return ["capability-acquisition-run schema is not bundled"]
+    errors = validate_node(schema, packet, "capability_acquisition_run", schemas=schemas, root_schema=schema)
+    if packet.get("block_allowed") is True and packet.get("search_completed") is not True:
+        errors.append("capability_acquisition_run cannot block before search_completed=true")
+    if packet.get("activation_decision") == "activate":
+        if packet.get("smoke_result") != "PASS":
+            errors.append("capability_acquisition_run activation requires smoke_result PASS")
+        if packet.get("eval_result") != "PASS":
+            errors.append("capability_acquisition_run activation requires eval_result PASS")
+        selected = [
+            candidate
+            for candidate in packet.get("candidates", [])
+            if isinstance(candidate, dict) and candidate.get("fit") == "selected"
+        ]
+        if not selected:
+            errors.append("capability_acquisition_run activation requires at least one selected candidate")
+    if packet.get("activation_decision") == "block" and packet.get("block_allowed") is not True:
+        errors.append("capability_acquisition_run block decision requires block_allowed=true")
+    return errors
+
+
+def _load_skill_provider_registry(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise FileNotFoundError(f"skill provider registry is required: {public_path_ref(path)}")
+    return load_json_like(path)
+
+
+def _load_capability_pack_registry(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise FileNotFoundError(f"capability pack registry is required: {public_path_ref(path)}")
+    return load_json_like(path)
+
+
+def build_capability_acquisition_run(
+    *,
+    capability_gap: str,
+    surfaces: list[str],
+    provider_registry_path: Path = SKILL_PROVIDER_REGISTRY_PATH,
+    capability_packs_path: Path = CAPABILITY_PACKS_PATH,
+    reference_sources: list[str] | None = None,
+    created_at: str | None = None,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    normalized_gap = capability_gap.strip()
+    surface_set = {surface.strip().lower() for surface in surfaces if surface.strip()}
+    provider_registry = _load_skill_provider_registry(provider_registry_path)
+    capability_pack_registry = _load_capability_pack_registry(capability_packs_path)
+    reference_sources = reference_sources or []
+
+    candidates: list[dict[str, str]] = []
+    selected_found = False
+
+    for provider in provider_registry.get("providers", []):
+        if not isinstance(provider, dict):
+            continue
+        provider_id = str(provider.get("provider_id") or "").strip()
+        provider_surfaces = {surface.strip().lower() for surface in _list_items(provider.get("capability_surfaces"))}
+        matches_gap = normalized_gap and normalized_gap.lower() in {provider_id.lower(), *provider_surfaces}
+        matches_surface = bool(surface_set.intersection(provider_surfaces))
+        if not (matches_gap or matches_surface):
+            continue
+        status = str(provider.get("status") or "").strip()
+        selected = status in {"active", "available"}
+        selected_found = selected_found or selected
+        candidates.append(
+            {
+                "candidate_id": provider_id,
+                "source_ref": "agents/skill-provider-registry.public.json",
+                "fit": "selected" if selected else "rejected",
+                "rejection_reason": "not rejected" if selected else f"Provider status is {status or 'unknown'}.",
+            }
+        )
+
+    packs = capability_pack_registry.get("packs", {})
+    if isinstance(packs, dict):
+        for pack_id, pack in sorted(packs.items()):
+            if not isinstance(pack, dict):
+                continue
+            pack_surfaces = {surface.strip().lower() for surface in _list_items(pack.get("covers_surfaces"))}
+            matches_gap = normalized_gap and normalized_gap.lower() in {str(pack_id).lower(), *pack_surfaces}
+            matches_surface = bool(surface_set.intersection(pack_surfaces))
+            if not (matches_gap or matches_surface):
+                continue
+            status = str(pack.get("status") or "").strip()
+            selected = status in CAPABILITY_READY_STATES
+            selected_found = selected_found or selected
+            candidates.append(
+                {
+                    "candidate_id": str(pack_id),
+                    "source_ref": "agents/capability-packs.public.json",
+                    "fit": "selected" if selected else "blocked",
+                    "rejection_reason": "not rejected" if selected else f"Pack status is {status or 'unknown'}.",
+                }
+            )
+
+    if reference_sources:
+        for index, source_ref in enumerate(reference_sources, start=1):
+            candidates.append(
+                {
+                    "candidate_id": f"reference-search-{index}",
+                    "source_ref": source_ref,
+                    "fit": "rejected" if selected_found else "blocked",
+                    "rejection_reason": (
+                        "Existing public registry candidate is safer for this run."
+                        if selected_found
+                        else "Reference search did not produce an activatable candidate in this bounded run."
+                    ),
+                }
+            )
+
+    if not candidates:
+        candidates.append(
+            {
+                "candidate_id": "no-safe-candidate-found",
+                "source_ref": "external:reference-search-completed",
+                "fit": "blocked",
+                "rejection_reason": "No provider, core-ready pack or safe reference candidate matched the capability gap.",
+            }
+        )
+
+    activation_decision = "activate" if selected_found else "block"
+    return {
+        "$schema": "https://overkill-factory.dev/schemas/capability-acquisition-run.schema.json",
+        "record_type": "capability_acquisition_run",
+        "run_id": run_id or f"capability-acquisition-{normalized_gap.lower().replace(' ', '-')}",
+        "created_at": created_at or utc_now(),
+        "capability_gap": normalized_gap,
+        "contract_ref": "templates/capability-acquisition-contract.json",
+        "search_completed": True,
+        "candidates": candidates,
+        "activation_decision": activation_decision,
+        "smoke_result": "PASS" if selected_found else "NOT_RUN",
+        "eval_result": "PASS" if selected_found else "NOT_RUN",
+        "block_allowed": not selected_found,
+        "evidence_refs": sorted(
+            {
+                "agents/skill-provider-registry.public.json",
+                "agents/capability-packs.public.json",
+                *reference_sources,
+            }
+        ),
+    }
+
+
+def command_capability_acquisition_run(args: argparse.Namespace) -> int:
+    packet = build_capability_acquisition_run(
+        capability_gap=args.capability_gap,
+        surfaces=args.surface or [],
+        provider_registry_path=args.provider_registry,
+        capability_packs_path=args.capability_packs,
+        reference_sources=args.reference_source or [],
+        created_at=args.created_at,
+        run_id=args.run_id,
+    )
+    errors = validate_capability_acquisition_run(packet)
+    if errors:
+        return _print_validation_result(errors)
+    write_json(args.out, packet)
+    return 0
+
+
+def command_validate_capability_acquisition_run(args: argparse.Namespace) -> int:
+    return _print_validation_result(validate_capability_acquisition_run(load_json_like(args.path)))
+
+
+def command_validate_v2_runtime_contracts(args: argparse.Namespace) -> int:
+    spec = importlib.util.spec_from_file_location(
+        "overkill_validate_v2_runtime_contracts",
+        SCRIPT_DIR / "validate_v2_runtime_contracts.py",
+    )
+    if spec is None or spec.loader is None:
+        print("validate_v2_runtime_contracts.py is not available", file=sys.stderr)
+        return 1
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["overkill_validate_v2_runtime_contracts"] = module
+    spec.loader.exec_module(module)
+    return _print_validation_result(module.validate_runtime_contract_set(ROOT))
+
+
+def command_validate_agent_skill_boundaries(args: argparse.Namespace) -> int:
+    spec = importlib.util.spec_from_file_location(
+        "overkill_validate_agent_vs_skill_boundaries",
+        SCRIPT_DIR / "validate_agent_vs_skill_boundaries.py",
+    )
+    if spec is None or spec.loader is None:
+        print("validate_agent_vs_skill_boundaries.py is not available", file=sys.stderr)
+        return 1
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["overkill_validate_agent_vs_skill_boundaries"] = module
+    spec.loader.exec_module(module)
+    return _print_validation_result(module.validate_boundaries(ROOT))
+
+
+def command_validate_reference_superiority(args: argparse.Namespace) -> int:
+    spec = importlib.util.spec_from_file_location(
+        "overkill_validate_reference_superiority",
+        SCRIPT_DIR / "validate_reference_superiority.py",
+    )
+    if spec is None or spec.loader is None:
+        print("validate_reference_superiority.py is not available", file=sys.stderr)
+        return 1
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["overkill_validate_reference_superiority"] = module
+    spec.loader.exec_module(module)
+    return _print_validation_result(module.validate_reference_superiority(args.path))
+
+
 def command_validate_factory_command(args: argparse.Namespace) -> int:
     return _print_validation_result(validate_factory_command(load_json_like(args.path)))
 
@@ -20856,6 +21069,48 @@ def build_parser() -> argparse.ArgumentParser:
     validate_capability_acquisition_parser = sub.add_parser("validate-capability-acquisition-contract")
     validate_capability_acquisition_parser.add_argument("path", type=Path)
     validate_capability_acquisition_parser.set_defaults(func=command_validate_capability_acquisition_contract)
+
+    capability_acquisition_run_parser = sub.add_parser(
+        "capability-acquisition-run",
+        help="Search skill providers and capability packs before allowing a missing capability to block.",
+    )
+    capability_acquisition_run_parser.add_argument("--capability-gap", required=True)
+    capability_acquisition_run_parser.add_argument("--surface", action="append", default=[])
+    capability_acquisition_run_parser.add_argument("--provider-registry", type=Path, default=SKILL_PROVIDER_REGISTRY_PATH)
+    capability_acquisition_run_parser.add_argument("--capability-packs", type=Path, default=CAPABILITY_PACKS_PATH)
+    capability_acquisition_run_parser.add_argument("--reference-source", action="append", default=[])
+    capability_acquisition_run_parser.add_argument("--created-at")
+    capability_acquisition_run_parser.add_argument("--run-id")
+    capability_acquisition_run_parser.add_argument("--out", type=Path, default=DEFAULT_CAPABILITY_ACQUISITION_RUN_OUT)
+    capability_acquisition_run_parser.set_defaults(func=command_capability_acquisition_run)
+
+    validate_capability_acquisition_run_parser = sub.add_parser("validate-capability-acquisition-run")
+    validate_capability_acquisition_run_parser.add_argument("path", type=Path)
+    validate_capability_acquisition_run_parser.set_defaults(func=command_validate_capability_acquisition_run)
+
+    validate_v2_runtime_contracts_parser = sub.add_parser(
+        "validate-v2-runtime-contracts",
+        help="Validate the full public Factory V2 runtime contract set.",
+    )
+    validate_v2_runtime_contracts_parser.set_defaults(func=command_validate_v2_runtime_contracts)
+
+    validate_agent_skill_boundaries_parser = sub.add_parser(
+        "validate-agent-skill-boundaries",
+        help="Validate profile bindings against the skill provider registry and worker authority boundaries.",
+    )
+    validate_agent_skill_boundaries_parser.set_defaults(func=command_validate_agent_skill_boundaries)
+
+    validate_reference_superiority_parser = sub.add_parser(
+        "validate-reference-superiority",
+        help="Validate reference-derived negative fixtures used by V2 superiority claims.",
+    )
+    validate_reference_superiority_parser.add_argument(
+        "path",
+        type=Path,
+        nargs="?",
+        default=ROOT / "fixtures" / "v2" / "reference-derived-negative-fixtures.json",
+    )
+    validate_reference_superiority_parser.set_defaults(func=command_validate_reference_superiority)
 
     validate_factory_command_parser = sub.add_parser("validate-factory-command")
     validate_factory_command_parser.add_argument("path", type=Path)

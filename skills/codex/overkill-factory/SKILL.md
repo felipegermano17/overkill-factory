@@ -68,10 +68,25 @@ For Factory V2, treat these as the control-plane contracts:
 - `factory_promotion_packet`
 - `factory_phase_graph`
 - `v2_study_traceability`
+- `v2_doc_implementation_obligations`
 - `worker_authority_contract`
+- `profile_compatibility_alias`
+- `skill_provider_registry`
+- `skill_ref_resolution_report`
 - `product_experience_control_plane`
+- `product_experience_evidence_stack`
 - `capability_acquisition_contract`
+- `capability_acquisition_run`
 - `hermes_reducer_mutation_proof`
+- `hermes_blocked_first_protocol_receipt`
+- `operator_delivery_receipt`
+- `operator_notification_policy`
+- `operator_channel_pack`
+- `security_route_contract`
+- `security_state_ledger`
+- `capability_broker`
+- `capability_lease`
+- `security_profile`
 - `factory_v2_readiness_claim`
 
 The agent may create artifacts. The route comes from the compiled workflow,
@@ -158,9 +173,14 @@ python scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compil
 python scripts/factoryctl.py validate-factory-run templates/factory-run.json
 python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
 python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
+python scripts/factoryctl.py validate-v2-runtime-contracts
+python scripts/factoryctl.py validate-agent-skill-boundaries
+python scripts/factoryctl.py validate-reference-superiority
 python scripts/factoryctl.py validate-worker-authority-contract templates/worker-authority-contract.json
 python scripts/factoryctl.py validate-product-experience-control-plane templates/product-experience-control-plane.json
 python scripts/factoryctl.py validate-capability-acquisition-contract templates/capability-acquisition-contract.json
+python scripts/factoryctl.py capability-acquisition-run --capability-gap solana-ai-kit --surface solana --out .tmp/factory-runs/capability/skill-capability-acquisition-run.json
+python scripts/factoryctl.py validate-capability-acquisition-run .tmp/factory-runs/capability/skill-capability-acquisition-run.json
 python scripts/factoryctl.py validate-hermes-reducer-mutation-proof templates/hermes-reducer-mutation-proof.json
 python scripts/factoryctl.py validate-readiness-claim templates/factory-v2-readiness-claim.json
 python scripts/validate_worker_profiles.py
@@ -204,6 +224,10 @@ running on the Hermes adapter.
 - Security is a specialist matrix: AppSec/OWASP, agentic AI, cloud/IaC,
   secrets/keys, supply chain, detection/monitoring, privacy/data and
   Solana/Quasar all need the right worker.
+- Missing capability does not go straight to a human blocker. Run the
+  capability acquisition lane against skill providers, capability packs and
+  reference sources; block only after `search_completed=true` and no safe
+  candidate can activate.
 - Use open specialists for exploration and closed specialists only after
   repetition, predictable input and verifiable output.
 - AutoReview is pre-landing evidence, not approval.

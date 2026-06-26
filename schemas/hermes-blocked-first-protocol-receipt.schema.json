@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-blocked-first-protocol-receipt.schema.json",
+  "title": "Overkill Factory Hermes Blocked First Protocol Receipt",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "receipt_id",
+    "created_at",
+    "runtime_authority",
+    "shadow_dispatcher_allowed",
+    "hermes_native_primitives_required",
+    "blocked_event_policy",
+    "readback_policy"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/hermes-blocked-first-protocol-receipt.schema.json"
+    },
+    "record_type": { "const": "hermes_blocked_first_protocol_receipt" },
+    "receipt_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "runtime_authority": { "const": "hermes_kanban" },
+    "shadow_dispatcher_allowed": { "const": false },
+    "hermes_native_primitives_required": {
+      "type": "array",
+      "minItems": 9,
+      "items": { "type": "string", "minLength": 3 },
+      "uniqueItems": true
+    },
+    "blocked_event_policy": {
+      "type": "object",
+      "required": ["create_unassigned_first", "block_event_required", "verify_show_json_before_assign", "dispatch_only_after_release"],
+      "properties": {
+        "create_unassigned_first": { "const": true },
+        "block_event_required": { "const": true },
+        "verify_show_json_before_assign": { "const": true },
+        "dispatch_only_after_release": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "readback_policy": {
+      "type": "object",
+      "required": ["runs_required", "tail_required_on_failure", "diagnostics_required_on_idle", "artifact_readback_required"],
+      "properties": {
+        "runs_required": { "const": true },
+        "tail_required_on_failure": { "const": true },
+        "diagnostics_required_on_idle": { "const": true },
+        "artifact_readback_required": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
