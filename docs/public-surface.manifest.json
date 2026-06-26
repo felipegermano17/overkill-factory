@@ -252,6 +252,8 @@
         "schemas/factory-decision-outbox.schema.json",
         "schemas/factory-promotion-packet.schema.json",
         "templates/factory-run.json",
+        "schemas/hermes-typed-block-policy.schema.json",
+        "templates/hermes-typed-block-policy.json",
         "tests/test_factory_v2_kernel.py"
       ],
       "claim_checks": [
@@ -299,7 +301,8 @@
         "schemas/factory-bridge-handoff.schema.json",
         "schemas/factory-bridge-run.schema.json",
         "schemas/factory-bridge-source-envelope.schema.json",
-        "schemas/factory-bridge-start-request.schema.json"
+        "schemas/factory-bridge-start-request.schema.json",
+        "schemas/hermes-typed-block-policy.schema.json"
       ],
       "claim_checks": [
         "source_refs_exist",
@@ -313,7 +316,8 @@
         "factory_bridge_start_request",
         "overkill-factory-gerente",
         "factory-orchestrator",
-        "act as a factory worker"
+        "act as a factory worker",
+        "dependency_wait"
       ]
     },
     {

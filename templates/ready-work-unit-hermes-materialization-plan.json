@@ -696,12 +696,13 @@
         "create_with_assignee": false,
         "assign_after_block_event_verified": true,
         "no_spawn_protocol": "create-unassigned-default-block-assign-v2",
-        "documented_hermes_cli_shape": "hermes kanban create --json; hermes kanban block; hermes kanban assign",
+        "documented_hermes_cli_shape": "hermes kanban create --json; hermes kanban block --kind transient; hermes kanban assign",
         "target_assignee_profile": "implementation-worker"
       },
       "block_policy": {
         "initial_block_required": true,
         "block_event_required_before_dispatch": true,
+        "block_kind": "transient",
         "final_status_required": "blocked",
         "verify_command": "hermes kanban show --json",
         "blocked_reason": "Ready work unit starts blocked until Hermes readback proves a blocked event for this exact materialized task."

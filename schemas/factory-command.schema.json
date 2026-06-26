@@ -76,10 +76,54 @@
           "type": "array",
           "items": { "type": "string", "minLength": 3 }
         },
-        "blocked_reason": { "type": "string", "minLength": 3 }
+        "blocked_reason": { "type": "string", "minLength": 3 },
+        "block_kind": { "enum": ["dependency", "needs_input", "capability", "transient"] },
+        "cause_key": { "type": "string", "minLength": 3 },
+        "recurrence_count": { "type": "integer", "minimum": 0 },
+        "policy_action": {
+          "enum": ["wait_for_dependency", "request_operator_input", "run_capability_acquisition", "retry_or_repair", "escalate_block_loop"]
+        }
       },
       "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "payload": {
+            "required": ["blocked_reason"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["block_kind", "cause_key", "policy_action"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "payload": {
+            "properties": {
+              "block_kind": { "const": "dependency" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "properties": {
+              "policy_action": { "const": "wait_for_dependency" }
+            }
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

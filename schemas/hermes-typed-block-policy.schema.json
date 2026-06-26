@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/hermes-typed-block-policy.schema.json",
+  "title": "Overkill Factory Hermes Typed Block Policy",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "policy_id",
+    "created_at",
+    "runtime_authority",
+    "native_block_kinds",
+    "kind_rules",
+    "same_cause_loop_policy",
+    "operator_page_policy"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/hermes-typed-block-policy.schema.json" },
+    "record_type": { "const": "hermes_typed_block_policy" },
+    "policy_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "runtime_authority": { "const": "hermes_kanban" },
+    "native_block_kinds": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["dependency", "needs_input", "capability", "transient"] }
+    },
+    "kind_rules": {
+      "type": "object",
+      "required": ["dependency", "needs_input", "capability", "transient"],
+      "properties": {
+        "dependency": {
+          "type": "object",
+          "required": ["route", "operator_page_allowed", "auto_resume_expected", "event_required"],
+          "properties": {
+            "route": { "const": "todo" },
+            "operator_page_allowed": { "const": false },
+            "auto_resume_expected": { "const": true },
+            "event_required": { "const": "dependency_wait" }
+          },
+          "additionalProperties": false
+        },
+        "needs_input": {
+          "type": "object",
+          "required": ["operator_page_allowed", "delivery_receipt_required", "decision_package_required"],
+          "properties": {
+            "operator_page_allowed": { "const": true },
+            "delivery_receipt_required": { "const": true },
+            "decision_package_required": { "const": true }
+          },
+          "additionalProperties": false
+        },
+        "capability": {
+          "type": "object",
+          "required": ["operator_page_allowed", "capability_acquisition_run_required", "search_completed_required"],
+          "properties": {
+            "operator_page_allowed": { "const": false },
+            "capability_acquisition_run_required": { "const": true },
+            "search_completed_required": { "const": true }
+          },
+          "additionalProperties": false
+        },
+        "transient": {
+          "type": "object",
+          "required": ["operator_page_allowed", "retry_or_repair_required", "generic_human_gate_forbidden"],
+          "properties": {
+            "operator_page_allowed": { "const": false },
+            "retry_or_repair_required": { "const": true },
+            "generic_human_gate_forbidden": { "const": true }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "same_cause_loop_policy": {
+      "type": "object",
+      "required": ["cause_key_required", "recurrence_limit", "escalation_event"],
+      "properties": {
+        "cause_key_required": { "const": true },
+        "recurrence_limit": { "const": 2 },
+        "escalation_event": { "const": "block_loop_detected" }
+      },
+      "additionalProperties": false
+    },
+    "operator_page_policy": {
+      "type": "object",
+      "required": ["only_needs_input_pages_operator", "human_gate_requires_delivery_package"],
+      "properties": {
+        "only_needs_input_pages_operator": { "const": true },
+        "human_gate_requires_delivery_package": { "const": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

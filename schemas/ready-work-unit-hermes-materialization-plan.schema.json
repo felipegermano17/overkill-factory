@@ -337,7 +337,7 @@
             "assign_after_block_event_verified": { "const": true },
             "no_spawn_protocol": { "const": "create-unassigned-default-block-assign-v2" },
             "documented_hermes_cli_shape": {
-              "const": "hermes kanban create --json; hermes kanban block; hermes kanban assign"
+              "const": "hermes kanban create --json; hermes kanban block --kind transient; hermes kanban assign"
             },
             "target_assignee_profile": { "type": "string", "minLength": 3 }
           },
@@ -348,6 +348,7 @@
           "required": [
             "initial_block_required",
             "block_event_required_before_dispatch",
+            "block_kind",
             "final_status_required",
             "verify_command",
             "blocked_reason"
@@ -355,6 +356,7 @@
           "properties": {
             "initial_block_required": { "const": true },
             "block_event_required_before_dispatch": { "const": true },
+            "block_kind": { "const": "transient" },
             "final_status_required": { "const": "blocked" },
             "verify_command": { "const": "hermes kanban show --json" },
             "blocked_reason": { "type": "string", "minLength": 8 }

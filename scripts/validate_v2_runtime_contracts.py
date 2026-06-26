@@ -36,6 +36,7 @@ CONTRACT_TEMPLATES = {
     "dispatch_readiness": "templates/work-unit-dispatch-readiness.json",
     "e2e_release_proof": "templates/product-e2e-release-proof.json",
     "qa_repair_loop": "templates/qa-repair-loop-state.json",
+    "typed_block_policy": "templates/hermes-typed-block-policy.json",
     "blocked_first": "templates/hermes-blocked-first-protocol-receipt.json",
     "operator_delivery": "templates/operator-delivery-receipt.json",
     "operator_policy": "templates/operator-notification-policy.json",
@@ -64,6 +65,8 @@ HERMES_NATIVE_PRIMITIVES = {
     "kanban notify-list",
     "kanban notify-unsubscribe",
 }
+
+HERMES_TYPED_BLOCK_KINDS = {"dependency", "needs_input", "capability", "transient"}
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -127,6 +130,7 @@ def validate_runtime_contract_set(root: Path = ROOT) -> list[str]:
     manifest = payloads.get("run_manifest", {})
     dispatch = payloads.get("dispatch_readiness", {})
     blocked_first = payloads.get("blocked_first", {})
+    typed_block_policy = payloads.get("typed_block_policy", {})
     operator_policy = payloads.get("operator_policy", {})
     operator_delivery = payloads.get("operator_delivery", {})
     capability_run = payloads.get("capability_run", {})
@@ -162,6 +166,45 @@ def validate_runtime_contract_set(root: Path = ROOT) -> list[str]:
         errors.append("hermes-blocked-first-protocol-receipt missing native primitives: " + ", ".join(missing_native))
     if blocked_first.get("shadow_dispatcher_allowed") is not False:
         errors.append("hermes-blocked-first-protocol-receipt.shadow_dispatcher_allowed must be false")
+    if blocked_first.get("typed_block_policy_ref") != "templates/hermes-typed-block-policy.json":
+        errors.append("hermes-blocked-first-protocol-receipt must point to templates/hermes-typed-block-policy.json")
+    embedded_typed_block_policy = blocked_first.get("typed_block_policy") if isinstance(blocked_first.get("typed_block_policy"), dict) else {}
+    native_block_kinds = text_set(embedded_typed_block_policy.get("native_block_kinds_required"))
+    missing_block_kinds = sorted(HERMES_TYPED_BLOCK_KINDS - native_block_kinds)
+    if missing_block_kinds:
+        errors.append("hermes-blocked-first-protocol-receipt missing typed block kinds: " + ", ".join(missing_block_kinds))
+    if embedded_typed_block_policy.get("untyped_block_forbidden") is not True:
+        errors.append("hermes-blocked-first-protocol-receipt.typed_block_policy.untyped_block_forbidden must be true")
+    if embedded_typed_block_policy.get("default_runtime_gate_kind") != "transient":
+        errors.append("hermes-blocked-first-protocol-receipt default runtime gate block kind must be transient")
+    dependency_policy = embedded_typed_block_policy.get("dependency_block_behavior") if isinstance(embedded_typed_block_policy.get("dependency_block_behavior"), dict) else {}
+    if dependency_policy.get("operator_page_allowed") is not False or dependency_policy.get("auto_resume_expected") is not True:
+        errors.append("dependency typed blocks must not page the operator and must auto-resume")
+    needs_input_policy = embedded_typed_block_policy.get("needs_input_block_behavior") if isinstance(embedded_typed_block_policy.get("needs_input_block_behavior"), dict) else {}
+    if needs_input_policy.get("operator_delivery_receipt_required") is not True:
+        errors.append("needs_input typed blocks require operator delivery receipt before asking for a decision")
+    capability_policy = embedded_typed_block_policy.get("capability_block_behavior") if isinstance(embedded_typed_block_policy.get("capability_block_behavior"), dict) else {}
+    if capability_policy.get("capability_acquisition_run_required") is not True or capability_policy.get("search_completed_required") is not True:
+        errors.append("capability typed blocks require completed capability acquisition before blocking")
+    if embedded_typed_block_policy.get("recurrence_limit") != 2:
+        errors.append("hermes typed block recurrence_limit must match Hermes BLOCK_RECURRENCE_LIMIT=2")
+    if embedded_typed_block_policy.get("loop_event_required") != "block_loop_detected":
+        errors.append("hermes typed block policy must require block_loop_detected event handling")
+    if embedded_typed_block_policy.get("dependency_wait_event_required") != "dependency_wait":
+        errors.append("hermes typed block policy must require dependency_wait event handling")
+    policy_kinds = text_set(typed_block_policy.get("native_block_kinds"))
+    if HERMES_TYPED_BLOCK_KINDS - policy_kinds:
+        errors.append("hermes-typed-block-policy must declare every native Hermes block kind")
+    kind_rules = typed_block_policy.get("kind_rules") if isinstance(typed_block_policy.get("kind_rules"), dict) else {}
+    dependency_rule = kind_rules.get("dependency") if isinstance(kind_rules.get("dependency"), dict) else {}
+    if dependency_rule.get("route") != "todo" or dependency_rule.get("operator_page_allowed") is not False:
+        errors.append("hermes-typed-block-policy dependency rule must route to todo and never page operator")
+    needs_input_rule = kind_rules.get("needs_input") if isinstance(kind_rules.get("needs_input"), dict) else {}
+    if needs_input_rule.get("delivery_receipt_required") is not True:
+        errors.append("hermes-typed-block-policy needs_input rule must require delivery receipt")
+    loop_policy = typed_block_policy.get("same_cause_loop_policy") if isinstance(typed_block_policy.get("same_cause_loop_policy"), dict) else {}
+    if loop_policy.get("recurrence_limit") != 2 or loop_policy.get("escalation_event") != "block_loop_detected":
+        errors.append("hermes-typed-block-policy loop policy must use recurrence_limit=2 and block_loop_detected")
 
     if operator_policy.get("human_gate_delivery_requires_receipt") is not True:
         errors.append("operator-notification-policy requires human_gate_delivery_requires_receipt=true")

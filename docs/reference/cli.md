@@ -99,7 +99,15 @@ truth level than its public artifacts support.
 `validate-v2-runtime-contracts` validates the runtime-spine contract set added
 around the V2 studies: profile aliases, skill providers, Product Method
 Runtime, operator delivery, Product Experience evidence stack, Security OS
-matrix, Hermes blocked-first policy and capability acquisition receipts.
+matrix, Hermes typed block policy, blocked-first policy and capability
+acquisition receipts.
+
+The Hermes typed block policy is not prose. It requires the four native Kanban
+block kinds: `dependency`, `needs_input`, `capability` and `transient`.
+`dependency` waits without paging the operator; `needs_input` requires a
+delivered decision package; `capability` requires completed acquisition; and
+`transient` routes retry/repair. Same-cause loops escalate through
+`block_loop_detected` at recurrence 2.
 
 `validate-agent-skill-boundaries` proves that Hermes profile bindings resolve
 their `skill_refs` through the provider registry and that worker profiles keep

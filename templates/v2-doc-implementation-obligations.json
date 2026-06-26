@@ -213,12 +213,15 @@
       "required_artifact_refs": [
         "adapters/hermes/live_kanban_adapter.py",
         "schemas/hermes-blocked-first-protocol-receipt.schema.json",
+        "schemas/hermes-typed-block-policy.schema.json",
         "schemas/hermes-reducer-mutation-proof.schema.json",
         "scripts/factory_v2_kernel.py::validate_factory_event_log"
       ],
       "implemented_artifact_refs": [
         "schemas/hermes-blocked-first-protocol-receipt.schema.json",
         "templates/hermes-blocked-first-protocol-receipt.json",
+        "schemas/hermes-typed-block-policy.schema.json",
+        "templates/hermes-typed-block-policy.json",
         "schemas/hermes-reducer-mutation-proof.schema.json",
         "templates/hermes-reducer-mutation-proof.json",
         "adapters/hermes/live_kanban_adapter.py",
@@ -237,7 +240,7 @@
       ],
       "minimum_truth_level_required": "runtime_integrated",
       "current_truth_level": "runtime_integrated",
-      "gap_summary": "Reducer/replay contracts and Hermes blocked-first requirements are validator-enforced; operator-owned runtime replay across every mutation surface remains runtime proof work.",
+      "gap_summary": "Reducer/replay contracts, Hermes typed block policy and Hermes blocked-first requirements are validator-enforced; operator-owned runtime replay across every mutation surface remains runtime proof work.",
       "next_action": "Run a live Hermes board replay audit before claiming runtime_proven reducer monopoly.",
       "blocks_claim_ids": [
         "V2-P0-002-control-plane-owns-route-and-transition"

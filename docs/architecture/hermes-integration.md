@@ -82,6 +82,16 @@ The no-idle layer must not ask for a human gate when the board reconciler says
 `phase_engine.human_gate_allowed=false`; it must create or repair the next
 factory-owned artifact instead.
 
+With current Hermes Kanban typed block reasons, no-idle also preserves the
+native block semantics:
+
+- `dependency_wait` is reported as dependency wait, not as a human decision;
+- `block_loop_detected` routes deterministic triage after repeated same-cause
+  blocks instead of re-blocking forever;
+- `needs_input` may reach the operator only through a delivered decision package;
+- `capability` and `transient` stay factory-owned unless a separate delivered
+  human gate exists.
+
 ## Kanban Workflow Binding
 
 Factory-created Hermes tasks should carry the native workflow fields exposed by
@@ -126,6 +136,11 @@ Those must come from the worker that actually ran.
 Hermes may call `transition_hook.py` with `--operator-inbox` so blocked
 transitions or operator-facing state changes become durable bridge events under
 `.tmp/factory-runs/operator-inbox/`.
+
+The transition hook must not turn every blocked transition into a user page.
+Generic transition blocks are `transient` repair/triage notices, dependency
+blocks are dependency waits, capability blocks go through capability
+acquisition, and only `needs_input` becomes an operator decision request.
 
 The bridge is a view and response channel. It is not a worker, not a human gate
 record and not a second source of truth. Codex hooks can read this inbox on

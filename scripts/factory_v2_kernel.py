@@ -84,6 +84,10 @@ def validate_factory_command(command: dict[str, Any], at: str = "factory_command
         errors.append(f"{at}.payload.artifact_refs: decision requests require an evidence packet")
     if command_type == "repair_required" and not payload.get("blocked_reason"):
         errors.append(f"{at}.payload.blocked_reason: required for repair_required")
+    if command_type == "repair_required":
+        for field in ("block_kind", "cause_key", "policy_action"):
+            if not payload.get(field):
+                errors.append(f"{at}.payload.{field}: required for repair_required")
     if command_type in {"promote", "release"} and not _refs(payload.get("artifact_refs")):
         errors.append(f"{at}.payload.artifact_refs: required for {command_type}")
     return errors

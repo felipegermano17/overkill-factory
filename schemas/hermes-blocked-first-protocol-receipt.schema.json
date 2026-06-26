@@ -10,8 +10,10 @@
     "created_at",
     "runtime_authority",
     "shadow_dispatcher_allowed",
+    "typed_block_policy_ref",
     "hermes_native_primitives_required",
     "blocked_event_policy",
+    "typed_block_policy",
     "readback_policy"
   ],
   "properties": {
@@ -23,6 +25,7 @@
     "created_at": { "type": "string", "minLength": 10 },
     "runtime_authority": { "const": "hermes_kanban" },
     "shadow_dispatcher_allowed": { "const": false },
+    "typed_block_policy_ref": { "const": "templates/hermes-typed-block-policy.json" },
     "hermes_native_primitives_required": {
       "type": "array",
       "minItems": 9,
@@ -37,6 +40,78 @@
         "block_event_required": { "const": true },
         "verify_show_json_before_assign": { "const": true },
         "dispatch_only_after_release": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "typed_block_policy": {
+      "type": "object",
+      "required": [
+        "native_block_kinds_required",
+        "untyped_block_forbidden",
+        "default_runtime_gate_kind",
+        "dependency_block_behavior",
+        "needs_input_block_behavior",
+        "capability_block_behavior",
+        "transient_block_behavior",
+        "recurrence_limit",
+        "loop_event_required",
+        "dependency_wait_event_required"
+      ],
+      "properties": {
+        "native_block_kinds_required": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "enum": ["dependency", "needs_input", "capability", "transient"]
+          },
+          "uniqueItems": true
+        },
+        "untyped_block_forbidden": { "const": true },
+        "default_runtime_gate_kind": { "const": "transient" },
+        "dependency_block_behavior": {
+          "type": "object",
+          "required": ["operator_page_allowed", "expected_route", "auto_resume_expected"],
+          "properties": {
+            "operator_page_allowed": { "const": false },
+            "expected_route": { "const": "todo" },
+            "auto_resume_expected": { "const": true }
+          },
+          "additionalProperties": false
+        },
+        "needs_input_block_behavior": {
+          "type": "object",
+          "required": ["operator_page_allowed", "operator_delivery_receipt_required", "decision_package_required"],
+          "properties": {
+            "operator_page_allowed": { "const": true },
+            "operator_delivery_receipt_required": { "const": true },
+            "decision_package_required": { "const": true }
+          },
+          "additionalProperties": false
+        },
+        "capability_block_behavior": {
+          "type": "object",
+          "required": ["operator_page_allowed", "capability_acquisition_run_required", "search_completed_required"],
+          "properties": {
+            "operator_page_allowed": { "const": false },
+            "capability_acquisition_run_required": { "const": true },
+            "search_completed_required": { "const": true }
+          },
+          "additionalProperties": false
+        },
+        "transient_block_behavior": {
+          "type": "object",
+          "required": ["operator_page_allowed", "retry_or_repair_required", "generic_human_gate_forbidden"],
+          "properties": {
+            "operator_page_allowed": { "const": false },
+            "retry_or_repair_required": { "const": true },
+            "generic_human_gate_forbidden": { "const": true }
+          },
+          "additionalProperties": false
+        },
+        "recurrence_limit": { "const": 2 },
+        "loop_event_required": { "const": "block_loop_detected" },
+        "dependency_wait_event_required": { "const": "dependency_wait" }
       },
       "additionalProperties": false
     },

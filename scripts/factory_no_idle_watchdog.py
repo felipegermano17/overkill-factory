@@ -175,14 +175,18 @@ def emit_operator_event(
     summary: str,
     payload: dict[str, Any] | None,
     inbox_dir: Path,
+    event_type_override: str | None = None,
     runner: Runner = default_runner,
 ) -> None:
     event_type = (
-        "human_gate_required"
-        if status == "human_gate_required"
-        else "decision_requested"
-        if requires_user
-        else "worker_attention_required"
+        event_type_override
+        or (
+            "human_gate_required"
+            if status == "human_gate_required"
+            else "decision_requested"
+            if requires_user
+            else "worker_attention_required"
+        )
     )
     severity = "requires_user" if requires_user else "notice"
     argv = [
@@ -255,6 +259,10 @@ def no_idle_signature(no_idle_result: dict[str, Any], dispatch_result: dict[str,
         "operator_input_request": state.get("operator_input_request")
         if isinstance(state.get("operator_input_request"), dict)
         else None,
+        "typed_block_kind": state.get("typed_block_kind"),
+        "hermes_native_dependency_wait": state.get("hermes_native_dependency_wait") is True,
+        "block_loop_detected": state.get("block_loop_detected") is True,
+        "block_loop_task_refs": sorted(state.get("block_loop_task_refs") or []),
         "dispatch": dispatch_state,
         "spawned_count": len(spawned) if isinstance(spawned, list) else 0,
     }
@@ -284,6 +292,12 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
             f"acao do operador requerida. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
         )
     if status == "remediation_required":
+        if signature.get("block_loop_detected") is True:
+            return (
+                f"[Overkill Factory] {board}: Hermes detectou loop de bloqueio repetido; "
+                f"triagem determinística de causa criada/necessária. todo={counts.get('todo', 0)} "
+                f"blocked={counts.get('blocked', 0)}."
+            )
         if "post_review_owner_gate" in classification:
             if signature.get("remediation_task_created") is True:
                 return (
@@ -325,6 +339,12 @@ def summarize_board(board: str, signature: dict[str, Any]) -> str:
             f"blocked={counts.get('blocked', 0)}."
         )
     if status == "dependency_gated":
+        if signature.get("hermes_native_dependency_wait") is True:
+            return (
+                f"[Overkill Factory] {board}: aguardando dependência nativa do Hermes; "
+                f"auto-resume esperado quando o pai concluir. todo={counts.get('todo', 0)} "
+                f"blocked={counts.get('blocked', 0)}."
+            )
         return (
             f"[Overkill Factory] {board}: fila presa por dependências bloqueadas; "
             f"sem remediação genérica. todo={counts.get('todo', 0)} blocked={counts.get('blocked', 0)}."
@@ -386,6 +406,11 @@ def process_board(
         "remediation_required",
         "dependency_gated",
     }:
+        event_type_override = None
+        if signature.get("hermes_native_dependency_wait") is True:
+            event_type_override = "dependency_wait"
+        elif signature.get("block_loop_detected") is True:
+            event_type_override = "block_loop_detected"
         event_payload = {
             "board": board,
             "status": signature.get("status"),
@@ -400,6 +425,7 @@ def process_board(
             summary=summary,
             payload=event_payload,
             inbox_dir=inbox_dir,
+            event_type_override=event_type_override,
             runner=runner,
         )
     return summary

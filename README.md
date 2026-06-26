@@ -264,7 +264,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory V2 is the current public kernel release line. The latest public release
-is v2.0.3.
+is v2.0.4.
 
 V2 means the public kernel has executable contracts for the factory line:
 
@@ -281,6 +281,9 @@ V2 means the public kernel has executable contracts for the factory line:
   factory searches skill providers, capability packs and reference sources,
   writes a `capability_acquisition_run` receipt, and blocks only after that
   search is complete;
+- Hermes typed block policy: dependency waits do not page the operator,
+  same-cause block loops become triage, capability blocks require acquisition,
+  and transient holds route repair/retry instead of generic human approval;
 - Solana AI Kit first-class routing for Solana/on-chain work, with usage
   receipts, signer boundaries and onchain work packages;
 - strict human-gate packets: the operator receives material first, then the

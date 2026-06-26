@@ -186,10 +186,12 @@ class FakeHermes:
             task["assignee"] = argv[6]
             task.setdefault("events", []).append({"type": "assigned", "profile": argv[6]})
             return subprocess.CompletedProcess(argv, 0, stdout="assigned", stderr="")
-        if len(argv) == 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
-            task = self.tasks.setdefault(argv[5], {"status": "ready", "events": []})
+        if len(argv) == 9 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
+            if argv[5:7] != ["--kind", "transient"]:
+                return subprocess.CompletedProcess(argv, 2, stdout="", stderr="typed block kind required")
+            task = self.tasks.setdefault(argv[7], {"status": "ready", "events": []})
             task["status"] = "blocked"
-            task.setdefault("events", []).append({"type": "blocked", "reason": argv[6]})
+            task.setdefault("events", []).append({"type": "blocked", "payload": {"kind": argv[6], "reason": argv[8]}})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"blocked"}', stderr="")
         if len(argv) >= 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "comment":
             if argv[5] == "--author":
@@ -5681,10 +5683,57 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         self.assertEqual(
             fake.calls[0],
-            ["hermes", "kanban", "--board", TEST_BOARD, "block", MAIN_TASK_ID, "gate"],
+            ["hermes", "kanban", "--board", TEST_BOARD, "block", "--kind", "transient", MAIN_TASK_ID, "gate"],
         )
+        self.assertIn("--kind", fake.calls[0])
         self.assertNotIn("--reason", fake.calls[0])
         self.assertNotIn("--json", fake.calls[0])
+
+    def test_no_idle_classifies_native_dependency_wait_without_human_gate(self) -> None:
+        state = adapter.classify_no_idle_state(
+            {
+                "todo": [
+                    {"id": "t_parent", "status": "todo", "events": []},
+                    {
+                        "id": "t_child",
+                        "status": "todo",
+                        "parents": [{"id": "t_parent"}],
+                        "events": [{"type": "dependency_wait", "payload": {"kind": "dependency"}}],
+                    },
+                ],
+                "blocked": [],
+                "ready": [],
+                "running": [],
+                "done": [],
+            }
+        )
+
+        self.assertEqual(state["status"], "dependency_gated")
+        self.assertEqual(state["classification"], "hermes_native_dependency_wait")
+        self.assertEqual(state["typed_block_kind"], "dependency")
+        self.assertFalse(state["human_gate_required"])
+
+    def test_no_idle_classifies_block_loop_detected_as_internal_triage(self) -> None:
+        state = adapter.classify_no_idle_state(
+            {
+                "todo": [],
+                "blocked": [
+                    {
+                        "id": "t_loop",
+                        "status": "blocked",
+                        "events": [{"type": "block_loop_detected", "payload": {"kind": "transient", "recurrences": 2}}],
+                    }
+                ],
+                "ready": [],
+                "running": [],
+                "done": [],
+            }
+        )
+
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertEqual(state["classification"], "hermes_typed_block_loop_detected")
+        self.assertTrue(state["block_loop_detected"])
+        self.assertFalse(state["human_gate_required"])
 
     def test_complete_main_requires_materialized_live_binding(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
