@@ -7675,7 +7675,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 "dispatch_called_by_this_command": False,
                 "reporting_policy": (
                     "No-idle preserved native Hermes typed block state before phase-engine "
-                    "repair planning; dependency_wait waits natively and block_loop_detected "
+                    "repair planning; current dependency_wait states stay native and block_loop_detected "
                     "routes deterministic triage without a generic human gate."
                 ),
             },
