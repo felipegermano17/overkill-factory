@@ -3883,6 +3883,68 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(result["no_idle_state"]["block_loop_detected"])
         self.assertFalse(result["no_idle_state"]["human_gate_required"])
 
+    def test_no_idle_preserves_dependency_wait_before_phase_reconcile(self) -> None:
+        fake = FakeHermes()
+        fake.tasks[MAIN_TASK_ID] = {
+            "id": MAIN_TASK_ID,
+            "status": "todo",
+            "assignee": "factory-orchestrator",
+            "current_step_key": "F13-runtime-execution",
+            "body": json.dumps(
+                {
+                    "factory_method_version": "OVERKILL_VFINAL",
+                    "card_id": "KFP-DEP-WAIT",
+                    "phase": "F13",
+                    "risk_effective": "R2",
+                    "surfaces": ["backend"],
+                }
+            ),
+            "events": [
+                {"kind": "dependency_wait", "payload": {"kind": "dependency"}},
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["mode"], "no-idle")
+        self.assertEqual(result["no_idle_state"]["classification"], "hermes_native_dependency_wait")
+        self.assertEqual(result["no_idle_state"]["typed_block_kind"], "dependency")
+        self.assertFalse(result["no_idle_state"]["human_gate_required"])
+        self.assertFalse(result["no_idle_state"]["operator_input_required"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+
+    def test_no_idle_preserves_block_loop_before_phase_reconcile(self) -> None:
+        fake = FakeHermes()
+        fake.tasks[MAIN_TASK_ID] = {
+            "id": MAIN_TASK_ID,
+            "status": "triage",
+            "assignee": "factory-orchestrator",
+            "current_step_key": "F13-runtime-execution",
+            "body": json.dumps(
+                {
+                    "factory_method_version": "OVERKILL_VFINAL",
+                    "card_id": "KFP-BLOCK-LOOP",
+                    "phase": "F13",
+                    "risk_effective": "R2",
+                    "surfaces": ["backend"],
+                }
+            ),
+            "events": [
+                {"kind": "block_loop_detected", "payload": {"kind": "transient", "recurrences": 2}},
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["mode"], "no-idle")
+        self.assertEqual(result["no_idle_state"]["classification"], "hermes_typed_block_loop_detected")
+        self.assertTrue(result["no_idle_state"]["block_loop_detected"])
+        self.assertFalse(result["no_idle_state"]["human_gate_required"])
+        self.assertFalse(result["no_idle_state"]["operator_input_required"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+
     def test_native_workflow_state_updates_hermes_sqlite_columns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)

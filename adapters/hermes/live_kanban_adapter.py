@@ -1350,7 +1350,7 @@ def native_dependency_wait_todo_blockers(
             for parent_id in parent_map.get(task_id, [])
             if status_by_id.get(parent_id) not in {None, "", "done"}
         )
-        if blockers:
+        if task_block_event_kind(item) == "dependency":
             blockers_by_todo[task_id] = blockers
     return blockers_by_todo
 
@@ -1639,7 +1639,7 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "human_gate_task_refs": human_gate_refs,
             "dependency_gated_task_refs": sorted(native_dependency_blockers),
             "dependency_blocker_task_refs": sorted({ref for refs in native_dependency_blockers.values() for ref in refs}),
-            "next_action": "wait for Hermes native dependency auto-resume when parent work completes; do not page the operator",
+            "next_action": "wait for Hermes native dependency handling or parent auto-resume; do not page the operator",
             "state": state,
         }
     identified_todo = [item for item in todo if task_record_id(item)]
@@ -7655,6 +7655,35 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             write_json(args.out, public_envelope)
         return public_envelope
     legacy_classification = classify_no_idle_state(rows)
+    if legacy_classification.get("classification") in {
+        "hermes_native_dependency_wait",
+        "hermes_typed_block_loop_detected",
+    }:
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": bool(legacy_classification.get("blocked")),
+            "no_idle_state": legacy_classification,
+            "board_reconcile_plan": reconcile_plan,
+            "targeted_remediation_plan": None,
+            "remediation_task_id": None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle preserved native Hermes typed block state before phase-engine "
+                    "repair planning; dependency_wait waits natively and block_loop_detected "
+                    "routes deterministic triage without a generic human gate."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     if (
         legacy_classification.get("remediation_required") is not True
         and (
