@@ -61,6 +61,32 @@ class V2RuntimeContractsTests(unittest.TestCase):
 
         self.assertTrue(any("material_delivered_before_question" in error for error in errors), errors)
 
+    def test_runtime_contract_rejects_untyped_hermes_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp = Path(tmp_dir)
+            copy_contract_root(tmp)
+            receipt_path = tmp / "templates" / "hermes-blocked-first-protocol-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["typed_block_policy"]["untyped_block_forbidden"] = False
+            receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+
+            errors = runtime_contracts.validate_runtime_contract_set(tmp)
+
+        self.assertTrue(any("untyped_block_forbidden" in error for error in errors), errors)
+
+    def test_runtime_contract_rejects_missing_dependency_typed_block_kind(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp = Path(tmp_dir)
+            copy_contract_root(tmp)
+            receipt_path = tmp / "templates" / "hermes-blocked-first-protocol-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["typed_block_policy"]["native_block_kinds_required"].remove("dependency")
+            receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+
+            errors = runtime_contracts.validate_runtime_contract_set(tmp)
+
+        self.assertTrue(any("dependency" in error and "typed block kinds" in error for error in errors), errors)
+
     def test_agent_binding_rejects_unregistered_skill_ref(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp = Path(tmp_dir)

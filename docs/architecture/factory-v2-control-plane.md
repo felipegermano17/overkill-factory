@@ -34,6 +34,7 @@ outbox, and promotion needs a packet with evidence.
 | Product Experience control plane | Governs design, brand, frontend, operator UX and Product Face as first-class product surfaces. | `schemas/product-experience-control-plane.schema.json`, `templates/product-experience-control-plane.json`, `factoryctl validate-product-experience-control-plane` |
 | Product Experience evidence stack | Requires brand strategy, identity system, component registry, accessibility, visual regression and Storybook-equivalent proof for product-facing work. | `schemas/brand-strategy.schema.json`, `schemas/identity-system.schema.json`, `schemas/component-registry.schema.json`, `schemas/accessibility-report.schema.json`, `schemas/visual-regression-proof.schema.json`, `schemas/storybook-equivalent-catalog.schema.json` |
 | Capability acquisition lane | Searches providers, packs and reference sources, writes a `capability_acquisition_run`, and blocks only after completed search. | `schemas/capability-acquisition-run.schema.json`, `templates/capability-acquisition-run.json`, `factoryctl capability-acquisition-run`, `factoryctl validate-capability-acquisition-run` |
+| Hermes typed block policy | Maps every blocked state to native Hermes `dependency`, `needs_input`, `capability` or `transient`, with dependency auto-resume and loop escalation. | `schemas/hermes-typed-block-policy.schema.json`, `templates/hermes-typed-block-policy.json`, `factoryctl validate-v2-runtime-contracts` |
 | Hermes reducer mutation proof | Proves bridges and adapters cannot become the Kanban mutation authority. | `schemas/hermes-reducer-mutation-proof.schema.json`, `schemas/hermes-blocked-first-protocol-receipt.schema.json`, `templates/hermes-reducer-mutation-proof.json`, `factoryctl validate-v2-runtime-contracts` |
 | Operator delivery OS | Requires channel-aware delivery receipts before asking the operator for a human decision. | `schemas/operator-delivery-receipt.schema.json`, `schemas/operator-notification-policy.schema.json`, `schemas/operator-channel-pack.schema.json`, `factoryctl validate-v2-runtime-contracts` |
 | Security OS matrix | Makes security route, state, capability broker, capability leases and security profiles explicit before material work. | `schemas/security-route-contract.schema.json`, `schemas/security-state-ledger.schema.json`, `schemas/capability-broker.schema.json`, `schemas/capability-lease.schema.json`, `schemas/security-profile.schema.json` |
@@ -71,6 +72,21 @@ That matters because Overkill Factory should not create a shadow dispatcher.
 The factory owns contracts, gates, route decisions, receipts and validation.
 Hermes owns durable cards, workers, runs, comments, transitions and native
 dispatch/notification behavior.
+
+Factory V2 also uses Hermes typed block reasons as a hard runtime contract:
+
+- `dependency` is a native Kanban wait state: it stays in TODO, does not page
+  the operator, and auto-resumes when the parent completes.
+- `needs_input` is the only typed block that may page the operator, and only
+  after a complete operator delivery/decision package exists.
+- `capability` means a provider, profile, model, skill or access capability is
+  missing after capability acquisition has completed.
+- `transient` means runtime/readback/repair/anti-spawn safety hold; it must
+  retry or route repair and must not become a generic human gate.
+
+Repeated same-cause blocks use Hermes `block_loop_detected` after recurrence
+limit 2. The factory treats that as deterministic triage/repair, not as another
+round of the same block and not as an operator approval question.
 
 ## CLI Proof
 

@@ -77,6 +77,7 @@ For Factory V2, treat these as the control-plane contracts:
 - `product_experience_evidence_stack`
 - `capability_acquisition_contract`
 - `capability_acquisition_run`
+- `hermes_typed_block_policy`
 - `hermes_reducer_mutation_proof`
 - `hermes_blocked_first_protocol_receipt`
 - `operator_delivery_receipt`

@@ -75,16 +75,30 @@ def is_blocking_action(action: str) -> bool:
     return action.startswith("block")
 
 
-def operator_event_type_for_action(action: str) -> tuple[str, str, bool]:
+def block_kind_for_transition_reasons(blocked_reasons: list[Any]) -> str:
+    text = " ".join(str(reason or "").lower() for reason in blocked_reasons)
+    if any(marker in text for marker in ("human gate", "human_gate", "decision package", "operator input", "needs_input")):
+        return "needs_input"
+    if any(marker in text for marker in ("profile", "capability", "provider", "credential")):
+        return "capability"
+    if "dependency" in text or "parent" in text:
+        return "dependency"
+    return "transient"
+
+
+def operator_event_type_for_action(action: str, blocked_reasons: list[Any] | None = None) -> tuple[str, str, bool, str | None]:
     if is_blocking_action(action):
-        return ("transition_blocked", "blocked", True)
+        block_kind = block_kind_for_transition_reasons(blocked_reasons or [])
+        if block_kind == "needs_input":
+            return ("decision_requested", "requires_user", True, block_kind)
+        return ("transition_blocked", "warning", False, block_kind)
     if action == ACTION_CREATE_WORKERS:
-        return ("worker_attention_required", "notice", False)
+        return ("worker_attention_required", "notice", False, None)
     if action == "allow_done":
-        return ("receipt_ready", "notice", False)
+        return ("receipt_ready", "notice", False, None)
     if action == "allow_review_ready":
-        return ("worker_attention_required", "notice", False)
-    return ("status_update", "info", False)
+        return ("worker_attention_required", "notice", False, None)
+    return ("status_update", "info", False, None)
 
 
 def emit_operator_bridge_event(
@@ -99,9 +113,9 @@ def emit_operator_bridge_event(
     plan = result.get("plan", {})
     event = plan.get("event", {})
     action = str(result.get("transition_action") or "unknown")
-    event_type, severity, requires_user = operator_event_type_for_action(action)
     card_id = str(event.get("card_id") or card_path.stem or "factory-card")
     blocked_reasons = result.get("blocked_reasons") or []
+    event_type, severity, requires_user, block_kind = operator_event_type_for_action(action, blocked_reasons)
     if blocked_reasons:
         first_reason = str(blocked_reasons[0])
         summary = f"Hermes transition blocked for {card_id}: {first_reason}"
@@ -123,6 +137,18 @@ def emit_operator_bridge_event(
         payload={
             "transition_action": action,
             "blocked_reasons": blocked_reasons,
+            "block_kind": block_kind,
+            "policy_action": (
+                "request_operator_input"
+                if block_kind == "needs_input"
+                else "wait_for_dependency"
+                if block_kind == "dependency"
+                else "run_capability_acquisition"
+                if block_kind == "capability"
+                else "retry_or_repair"
+                if block_kind
+                else None
+            ),
             "from_status": event.get("from_status"),
             "to_status": event.get("to_status"),
             "card_id": card_id,

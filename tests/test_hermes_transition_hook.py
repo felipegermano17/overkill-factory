@@ -357,7 +357,19 @@ class HermesTransitionHookTest(unittest.TestCase):
         self.assertFalse(result["operator_bridge"]["factory_authority"]["can_execute_factory_work"])
         self.assertEqual(events[0]["event_type"], "transition_blocked")
         self.assertEqual(events[0]["source"], "hermes_transition_hook")
-        self.assertTrue(events[0]["requires_user"])
+        self.assertFalse(events[0]["requires_user"])
+        self.assertEqual(events[0]["payload"]["block_kind"], "transient")
+
+    def test_transition_hook_dependency_block_does_not_require_user(self) -> None:
+        event_type, severity, requires_user, block_kind = transition_hook.operator_event_type_for_action(
+            "block_transition",
+            ["dependency parent is not complete"],
+        )
+
+        self.assertEqual(event_type, "transition_blocked")
+        self.assertEqual(severity, "warning")
+        self.assertFalse(requires_user)
+        self.assertEqual(block_kind, "dependency")
 
 
 if __name__ == "__main__":

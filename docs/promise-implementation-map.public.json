@@ -373,7 +373,9 @@
         "scripts/factory_no_idle_watchdog.py",
         "adapters/hermes/live_kanban_adapter.py",
         "schemas/factory-board-reconcile-plan.schema.json",
-        "schemas/factory-bridge-event.schema.json"
+        "schemas/factory-bridge-event.schema.json",
+        "schemas/hermes-typed-block-policy.schema.json",
+        "templates/hermes-typed-block-policy.json"
       ],
       "proof_refs": [
         "tests/test_factory_board_reconciler.py",
@@ -381,7 +383,7 @@
         "tests/test_hermes_live_kanban_adapter.py",
         "tests/test_operator_experience.py"
       ],
-      "boundary": "The watchdog is a board-state controller. Silent boards must pass through deterministic board reconciliation before any remediation card is created. It must not become a shadow scheduler, approve gates, complete work, choose phases from prose or replace native Hermes dispatch.",
+      "boundary": "The watchdog is a board-state controller. Silent boards must pass through deterministic board reconciliation before any remediation card is created. It must not become a shadow scheduler, approve gates, complete work, choose phases from prose or replace native Hermes dispatch. Native Hermes dependency_wait must not page the operator, and block_loop_detected must route deterministic triage instead of repeated same-cause blocking.",
       "boundary_refs": [
         "docs/architecture/hermes-integration.md",
         "docs/operator/overkill-factory-bridge.md"

@@ -282,6 +282,83 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
         self.assertIn("fila presa por dependências bloqueadas", output)
         self.assertNotIn("remediação segura criada", output)
 
+    def test_watchdog_native_dependency_wait_emits_dependency_event_without_user(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": None,
+            "no_idle_state": {
+                "status": "dependency_gated",
+                "classification": "hermes_native_dependency_wait",
+                "typed_block_kind": "dependency",
+                "hermes_native_dependency_wait": True,
+                "dependency_gated_task_refs": {"kanban:redacted-child": ["kanban:redacted-parent"]},
+                "state": {
+                    "todo": {"count": 1},
+                    "blocked": {"count": 0},
+                    "ready": {"count": 0},
+                    "running": {"count": 0},
+                },
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--emit-events",
+                        "--state-file",
+                        str(Path(tmp) / "state.json"),
+                        "--inbox-dir",
+                        str(Path(tmp) / "inbox"),
+                    ],
+                    runner=fake,
+                )
+
+        self.assertIn("aguardando dependência nativa do Hermes", buffer.getvalue())
+        emit_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "emit-event")
+        self.assertIn("dependency_wait", emit_call)
+        self.assertNotIn("--requires-user", emit_call)
+
+    def test_watchdog_block_loop_detected_emits_triage_event_without_user(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": None,
+            "no_idle_state": {
+                "status": "remediation_required",
+                "classification": "hermes_typed_block_loop_detected",
+                "typed_block_kind": "transient",
+                "block_loop_detected": True,
+                "block_loop_task_refs": ["kanban:redacted-loop"],
+                "state": {"blocked": {"count": 1}, "todo": {"count": 0}},
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                watchdog.main(
+                    [
+                        "--board",
+                        "product-alpha",
+                        "--emit-events",
+                        "--state-file",
+                        str(Path(tmp) / "state.json"),
+                        "--inbox-dir",
+                        str(Path(tmp) / "inbox"),
+                    ],
+                    runner=fake,
+                )
+
+        self.assertIn("loop de bloqueio", buffer.getvalue())
+        emit_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "emit-event")
+        self.assertIn("block_loop_detected", emit_call)
+        self.assertNotIn("--requires-user", emit_call)
+
     def test_watchdog_input_required_emits_user_decision_event_without_dispatch(self) -> None:
         fake = FakeRunner()
         fake.no_idle_payloads["product-alpha"] = {

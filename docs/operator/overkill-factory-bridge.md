@@ -223,11 +223,15 @@ The watchdog:
   next action;
 - emits Durable Operator Inbox events for human gates or attention-worthy
   remediation.
+- preserves Hermes typed block reasons: `dependency_wait` does not ask the
+  operator for approval, and `block_loop_detected` becomes deterministic triage
+  instead of repeated reminders.
 
 It does not run product work, close gates, approve human decisions or replace
 Receipt Five. Telegram receives only state changes, remediations and real human
 gate requests; repeated identical states are deduplicated by the watchdog state
-file.
+file, while repeated same-cause Hermes blocks are handled by Hermes typed block
+recurrence and surfaced as loop triage.
 
 ## Public Contracts
 

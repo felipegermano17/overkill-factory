@@ -267,7 +267,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory V2 é a linha atual de release do kernel público. A release pública mais
-recente é v2.0.3.
+recente é v2.0.4.
 
 V2 significa que o kernel público tem contratos executáveis para a linha da
 fábrica:
@@ -283,6 +283,9 @@ fábrica:
 - lane runtime de aquisição de capability: quando falta especialista, a fábrica
   pesquisa skill providers, capability packs e referências, escreve um receipt
   `capability_acquisition_run` e só bloqueia depois da busca completa;
+- política Hermes de bloqueios tipados: espera de dependência não aciona o
+  operador, loops de bloqueio viram triagem, capability exige aquisição e holds
+  transitórios viram reparo/retry em vez de aprovação humana genérica;
 - Solana AI Kit como rota de primeira classe para Solana/on-chain, com usage
   receipt, signer boundary e onchain work package;
 - human gates estritos: o operador recebe o material antes da pergunta de

@@ -12438,13 +12438,14 @@ def build_ready_work_unit_hermes_materialization_plan(
                 "assign_after_block_event_verified": True,
                 "no_spawn_protocol": "create-unassigned-default-block-assign-v2",
                 "documented_hermes_cli_shape": (
-                    "hermes kanban create --json; hermes kanban block; hermes kanban assign"
+                    "hermes kanban create --json; hermes kanban block --kind transient; hermes kanban assign"
                 ),
                 "target_assignee_profile": owner_worker,
             },
             "block_policy": {
                 "initial_block_required": True,
                 "block_event_required_before_dispatch": True,
+                "block_kind": "transient",
                 "final_status_required": "blocked",
                 "verify_command": "hermes kanban show --json",
                 "blocked_reason": (
@@ -12682,6 +12683,8 @@ def validate_ready_work_unit_hermes_materialization_plan(plan: dict[str, Any]) -
             errors.append(
                 f"ready_work_unit_hermes_materialization_plan.tasks[{index}].block_policy.block_event_required_before_dispatch must be true"
             )
+        if block_policy.get("block_kind") != "transient":
+            errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].block_policy.block_kind must be transient")
         if block_policy.get("final_status_required") != "blocked":
             errors.append(f"ready_work_unit_hermes_materialization_plan.tasks[{index}].block_policy.final_status_required must be blocked")
         dispatch_policy = task.get("dispatch_policy") if isinstance(task.get("dispatch_policy"), dict) else {}

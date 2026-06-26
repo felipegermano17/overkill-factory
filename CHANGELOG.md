@@ -7,6 +7,17 @@ public releases.
 
 ## Unreleased
 
+## 2.0.4 - 2026-06-26
+
+- Adapt Factory V2 to Hermes Kanban typed block reasons from upstream #52848:
+  add `hermes_typed_block_policy`, require native `dependency`, `needs_input`,
+  `capability` and `transient` semantics, and validate `block_loop_detected`
+  / `dependency_wait` handling.
+- Update Hermes live adapter, transition hook and no-idle watchdog so generic
+  blocks no longer become human pages: dependency waits remain native waits,
+  same-cause loops route triage, capability blocks require acquisition, and
+  transient blocks route repair/retry.
+
 ## 2.0.3 - 2026-06-26
 
 - Complete the public Factory V2 runtime-spine contract set with profile

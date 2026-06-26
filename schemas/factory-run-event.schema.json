@@ -30,6 +30,8 @@
         "worker_materialized",
         "human_decision_requested",
         "human_decision_recorded",
+        "dependency_wait",
+        "block_loop_detected",
         "repair_required",
         "promotion_packet_created",
         "release_ready",
@@ -57,10 +59,48 @@
         "artifact_refs": {
           "type": "array",
           "items": { "type": "string", "minLength": 3 }
+        },
+        "block_kind": { "enum": ["dependency", "needs_input", "capability", "transient"] },
+        "cause_key": { "type": "string", "minLength": 3 },
+        "recurrences": { "type": "integer", "minimum": 0 },
+        "policy_action": {
+          "enum": ["wait_for_dependency", "request_operator_input", "run_capability_acquisition", "retry_or_repair", "escalate_block_loop"]
         }
       },
       "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": { "properties": { "event_type": { "enum": ["dependency_wait", "block_loop_detected"] } } },
+      "then": { "properties": { "payload": { "required": ["block_kind", "cause_key", "policy_action"] } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "dependency_wait" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "properties": {
+              "block_kind": { "const": "dependency" },
+              "policy_action": { "const": "wait_for_dependency" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "block_loop_detected" } } },
+      "then": {
+        "properties": {
+          "payload": {
+            "properties": {
+              "policy_action": { "const": "escalate_block_loop" }
+            },
+            "required": ["recurrences"]
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

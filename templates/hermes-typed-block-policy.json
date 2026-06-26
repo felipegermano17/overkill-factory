@@ -1,0 +1,45 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/hermes-typed-block-policy.schema.json",
+  "record_type": "hermes_typed_block_policy",
+  "policy_id": "overkill-factory-v2-hermes-typed-block-policy",
+  "created_at": "2026-06-26T00:00:00+00:00",
+  "runtime_authority": "hermes_kanban",
+  "native_block_kinds": [
+    "dependency",
+    "needs_input",
+    "capability",
+    "transient"
+  ],
+  "kind_rules": {
+    "dependency": {
+      "route": "todo",
+      "operator_page_allowed": false,
+      "auto_resume_expected": true,
+      "event_required": "dependency_wait"
+    },
+    "needs_input": {
+      "operator_page_allowed": true,
+      "delivery_receipt_required": true,
+      "decision_package_required": true
+    },
+    "capability": {
+      "operator_page_allowed": false,
+      "capability_acquisition_run_required": true,
+      "search_completed_required": true
+    },
+    "transient": {
+      "operator_page_allowed": false,
+      "retry_or_repair_required": true,
+      "generic_human_gate_forbidden": true
+    }
+  },
+  "same_cause_loop_policy": {
+    "cause_key_required": true,
+    "recurrence_limit": 2,
+    "escalation_event": "block_loop_detected"
+  },
+  "operator_page_policy": {
+    "only_needs_input_pages_operator": true,
+    "human_gate_requires_delivery_package": true
+  }
+}

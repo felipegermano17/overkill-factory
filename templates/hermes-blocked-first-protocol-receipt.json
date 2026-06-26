@@ -5,6 +5,7 @@
   "created_at": "2026-06-26T00:00:00+00:00",
   "runtime_authority": "hermes_kanban",
   "shadow_dispatcher_allowed": false,
+  "typed_block_policy_ref": "templates/hermes-typed-block-policy.json",
   "hermes_native_primitives_required": [
     "gateway start",
     "kanban dispatch",
@@ -21,6 +22,39 @@
     "block_event_required": true,
     "verify_show_json_before_assign": true,
     "dispatch_only_after_release": true
+  },
+  "typed_block_policy": {
+    "native_block_kinds_required": [
+      "dependency",
+      "needs_input",
+      "capability",
+      "transient"
+    ],
+    "untyped_block_forbidden": true,
+    "default_runtime_gate_kind": "transient",
+    "dependency_block_behavior": {
+      "operator_page_allowed": false,
+      "expected_route": "todo",
+      "auto_resume_expected": true
+    },
+    "needs_input_block_behavior": {
+      "operator_page_allowed": true,
+      "operator_delivery_receipt_required": true,
+      "decision_package_required": true
+    },
+    "capability_block_behavior": {
+      "operator_page_allowed": false,
+      "capability_acquisition_run_required": true,
+      "search_completed_required": true
+    },
+    "transient_block_behavior": {
+      "operator_page_allowed": false,
+      "retry_or_repair_required": true,
+      "generic_human_gate_forbidden": true
+    },
+    "recurrence_limit": 2,
+    "loop_event_required": "block_loop_detected",
+    "dependency_wait_event_required": "dependency_wait"
   },
   "readback_policy": {
     "runs_required": true,

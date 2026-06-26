@@ -31,6 +31,8 @@
         "run_started",
         "status_update",
         "transition_blocked",
+        "dependency_wait",
+        "block_loop_detected",
         "human_gate_required",
         "decision_requested",
         "change_requested",

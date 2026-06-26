@@ -183,6 +183,19 @@ class FactoryV2KernelTests(unittest.TestCase):
 
         self.assertTrue(any("artifact_refs" in error for error in errors), errors)
 
+    def test_repair_required_command_requires_typed_block_policy_fields(self) -> None:
+        command = valid_command(
+            "repair_required",
+            phase_id="F4",
+            blocked_reason="runtime readback mismatch",
+        )
+
+        errors = kernel.validate_factory_command(command)
+
+        self.assertTrue(any("block_kind" in error for error in errors), errors)
+        self.assertTrue(any("cause_key" in error for error in errors), errors)
+        self.assertTrue(any("policy_action" in error for error in errors), errors)
+
     def test_factory_run_requires_explicit_non_ambient_hermes_target(self) -> None:
         run = valid_factory_run()
         run["runtime_target"]["ambient_runtime_allowed"] = True

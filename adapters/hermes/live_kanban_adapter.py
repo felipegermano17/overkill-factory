@@ -35,6 +35,8 @@ TASK_ID_RE = PRIVATE_KANBAN_TASK_MARKER_RE
 LIVE_ADAPTER_SCHEMA = "https://overkill-factory.dev/schemas/hermes-live-adapter-result.schema.json"
 ROUTE_READINESS_SCHEMA = "https://overkill-factory.dev/schemas/hermes-worker-route-readiness.schema.json"
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
+HERMES_TYPED_BLOCK_KINDS = {"dependency", "needs_input", "capability", "transient"}
+DEFAULT_RUNTIME_GATE_BLOCK_KIND = "transient"
 RECOVERY_ATTEMPT_MARKER = "factory_recovery_attempt"
 ACTIVE_OR_TERMINAL_STATUSES = {"ready", "running", "done", "complete", "completed"}
 READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES = {"done", "complete", "completed"}
@@ -1299,6 +1301,71 @@ def dependency_gated_todo_blockers(
     return blockers_by_todo
 
 
+def event_type_name(event: Any) -> str:
+    if isinstance(event, dict):
+        return str(event.get("type") or event.get("event") or event.get("action") or event.get("kind") or "").strip().lower()
+    return str(event or "").strip().lower()
+
+
+def event_payload_dict(event: Any) -> dict[str, Any]:
+    if not isinstance(event, dict):
+        return {}
+    payload = event.get("payload")
+    return payload if isinstance(payload, dict) else {}
+
+
+def task_has_event_type(record: dict[str, Any], event_types: set[str]) -> bool:
+    return any(event_type_name(event) in event_types for event in record.get("events") or [])
+
+
+def task_block_event_kind(record: dict[str, Any]) -> str | None:
+    for event in reversed(record.get("events") or []):
+        if event_type_name(event) not in {"block", "blocked", "dependency_wait", "block_loop_detected"}:
+            continue
+        payload = event_payload_dict(event)
+        raw_kind = event.get("block_kind") if isinstance(event, dict) else None
+        if raw_kind is None:
+            raw_kind = payload.get("kind") or payload.get("block_kind")
+        kind = str(raw_kind or "").strip().lower()
+        if kind:
+            return kind
+    return None
+
+
+def native_dependency_wait_todo_blockers(
+    todo: list[dict[str, Any]],
+    rows: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[str]]:
+    status_by_id = no_idle_status_by_task_id(rows)
+    parent_map = no_idle_parent_map(rows)
+    blockers_by_todo: dict[str, list[str]] = {}
+    for item in todo:
+        if not task_has_event_type(item, {"dependency_wait"}):
+            continue
+        task_id = task_record_id(item)
+        if not task_id:
+            continue
+        blockers = sorted(
+            parent_id
+            for parent_id in parent_map.get(task_id, [])
+            if status_by_id.get(parent_id) not in {None, "", "done"}
+        )
+        if blockers:
+            blockers_by_todo[task_id] = blockers
+    return blockers_by_todo
+
+
+def block_loop_detected_refs(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
+    refs: list[str] = []
+    for items in rows.values():
+        for item in items:
+            if task_has_event_type(item, {"block_loop_detected"}):
+                ref = task_record_id(item)
+                if ref:
+                    refs.append(ref)
+    return sorted(set(refs))
+
+
 def enrich_no_idle_rows(
     *,
     hermes_bin: str,
@@ -1358,13 +1425,31 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
         for item in raw_blocked
         if task_record_id(item) in superseded_blocked_refs
     )
+    state = summarize_no_idle_rows(rows)
+    loop_refs = block_loop_detected_refs(rows)
+    if loop_refs:
+        return {
+            "status": "remediation_required",
+            "classification": "hermes_typed_block_loop_detected",
+            "typed_block_kind": "transient",
+            "block_loop_detected": True,
+            "block_loop_task_refs": loop_refs,
+            "blocked": True,
+            "remediation_required": True,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "next_action": (
+                "route the loop to deterministic triage/repair; do not re-block the same task "
+                "and do not ask the operator unless a delivered needs_input decision package exists"
+            ),
+            "state": state,
+        }
     post_review_gate_candidates = [
         item for item in done
         if done_review_requires_owner_product_sot_gate(item)
     ]
     post_review_gate_refs = sorted(task_record_id(item) for item in post_review_gate_candidates if task_record_id(item))
     closed_post_review_gate_refs = closed_post_review_owner_gate_refs(done)
-    state = summarize_no_idle_rows(rows)
     if running:
         return {
             "status": "active",
@@ -1540,6 +1625,23 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "state": state,
         }
     dependency_blockers = dependency_gated_todo_blockers(todo, rows)
+    native_dependency_blockers = native_dependency_wait_todo_blockers(todo, rows)
+    if todo and native_dependency_blockers:
+        return {
+            "status": "dependency_gated",
+            "classification": "hermes_native_dependency_wait",
+            "typed_block_kind": "dependency",
+            "hermes_native_dependency_wait": True,
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "human_gate_task_refs": human_gate_refs,
+            "dependency_gated_task_refs": sorted(native_dependency_blockers),
+            "dependency_blocker_task_refs": sorted({ref for refs in native_dependency_blockers.values() for ref in refs}),
+            "next_action": "wait for Hermes native dependency auto-resume when parent work completes; do not page the operator",
+            "state": state,
+        }
     identified_todo = [item for item in todo if task_record_id(item)]
     if todo and len(identified_todo) == len(todo) and len(dependency_blockers) == len(identified_todo):
         blocked_by_task_id = {task_record_id(item): item for item in blocked if task_record_id(item)}
@@ -2545,6 +2647,34 @@ def task_has_blocked_event(payload: dict[str, Any]) -> bool:
     return False
 
 
+def task_blocked_event_kinds(payload: dict[str, Any]) -> list[str]:
+    kinds: list[str] = []
+    for event in task_readback_events(payload):
+        if not isinstance(event, dict):
+            continue
+        event_type = str(
+            event.get("type") or event.get("event") or event.get("action") or event.get("kind") or ""
+        ).strip().lower()
+        if event_type not in {"block", "blocked"}:
+            continue
+        raw_kind = event.get("block_kind")
+        payload_body = event.get("payload")
+        if raw_kind is None and isinstance(payload_body, dict):
+            raw_kind = payload_body.get("kind") or payload_body.get("block_kind")
+        kind = str(raw_kind or "").strip().lower()
+        if kind:
+            kinds.append(kind)
+    return kinds
+
+
+def task_has_typed_blocked_event(payload: dict[str, Any], *, expected_kind: str) -> bool:
+    expected = str(expected_kind or "").strip().lower()
+    if expected not in HERMES_TYPED_BLOCK_KINDS:
+        raise RuntimeError(f"unsupported Hermes block kind: {expected_kind}")
+    kinds = task_blocked_event_kinds(payload)
+    return expected in kinds if kinds else task_has_blocked_event(payload)
+
+
 def task_has_unblocked_event(payload: dict[str, Any], required_markers: list[str] | None = None) -> bool:
     if task_readback_status(payload) == "blocked":
         return False
@@ -2691,10 +2821,14 @@ def ensure_blocked_event(
     board: str,
     task_id: str,
     reason: str,
+    kind: str = DEFAULT_RUNTIME_GATE_BLOCK_KIND,
     runner: Runner = default_runner,
 ) -> None:
+    block_kind = str(kind or "").strip().lower()
+    if block_kind not in HERMES_TYPED_BLOCK_KINDS:
+        raise RuntimeError(f"Hermes block kind must be one of {sorted(HERMES_TYPED_BLOCK_KINDS)}")
     run_checked(
-        hermes_kanban(hermes_bin, board, "block", task_id, reason),
+        hermes_kanban(hermes_bin, board, "block", "--kind", block_kind, task_id, reason),
         runner,
     )
     shown = run_checked(hermes_kanban(hermes_bin, board, "show", task_id, "--json"), runner)
@@ -2702,7 +2836,7 @@ def ensure_blocked_event(
         payload = json.loads(shown.stdout or "{}")
     except json.JSONDecodeError as exc:
         raise RuntimeError("Hermes show --json did not return JSON while verifying blocked event") from exc
-    if not isinstance(payload, dict) or not task_has_blocked_event(payload):
+    if not isinstance(payload, dict) or not task_has_typed_blocked_event(payload, expected_kind=block_kind):
         raise RuntimeError(f"Hermes task {task_id} is not durably blocked after block command")
 
 
@@ -3066,6 +3200,7 @@ def create_blocked_task_before_assignment(
         board=board,
         task_id=task_id,
         reason=blocked_reason,
+        kind=DEFAULT_RUNTIME_GATE_BLOCK_KIND,
         runner=runner,
     )
     blocked_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
@@ -3487,6 +3622,7 @@ def create_ready_work_unit_task(
             block_policy.get("blocked_reason")
             or "Overkill Factory ready work-unit runtime gate starts blocked until evidence passes."
         ),
+        kind=str(block_policy.get("block_kind") or DEFAULT_RUNTIME_GATE_BLOCK_KIND),
         runner=runner,
     )
     post_ready_work_unit_context_chunks(
@@ -3527,6 +3663,7 @@ def create_ready_work_unit_task(
                 board=board,
                 task_id=task_id,
                 reason="Ready work-unit assignment triggered unsafe non-blocked state; re-blocking before failing closed.",
+                kind=DEFAULT_RUNTIME_GATE_BLOCK_KIND,
                 runner=runner,
             )
         raise
@@ -6697,6 +6834,7 @@ def mark_ready_work_unit_superseded(
                 "Ready work-unit superseded after pre-dispatch runtime activity; "
                 "preserve history and use the clean replacement lineage."
             ),
+            kind=DEFAULT_RUNTIME_GATE_BLOCK_KIND,
             runner=runner,
         )
     comment = compact_json_argument(
