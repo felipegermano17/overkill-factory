@@ -7,6 +7,18 @@ public releases.
 
 ## Unreleased
 
+## 2.0.1 - 2026-06-26
+
+- Promote the live Hermes no-idle gate fix into the public Factory V2 release
+  ([#447](https://github.com/felipegermano17/overkill-factory/issues/447)).
+- Create a fresh lineage-bound remediation card when the deterministic
+  no-idle remediation idempotency key points to a terminal stale task, instead
+  of reporting that remediation exists while the board still has no runnable
+  frontier.
+- Keep factory runtime/code-review PASS records from being treated as Product
+  SOT owner-review evidence, and avoid recreating Product SOT owner decision
+  packages after a recorded owner decision closes the gate.
+
 ## 2.0.0 - 2026-06-26
 
 - Add the Factory V2 deterministic control plane: workflow compiled plan,
