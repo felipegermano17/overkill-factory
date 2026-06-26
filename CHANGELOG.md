@@ -7,6 +7,15 @@ public releases.
 
 ## Unreleased
 
+## 2.0.5 - 2026-06-26
+
+- Fix no-idle typed block loop handling against the real Hermes #52848 runtime:
+  `block_loop_detected` cards move to `triage`, so no-idle now queries and
+  enriches `triage` before classifying loop-breaker state.
+- Add regression coverage for the real Hermes event shape
+  `events[].kind = block_loop_detected` with `payload.kind = transient`, and
+  surface `triage` counts in watchdog loop reports.
+
 ## 2.0.4 - 2026-06-26
 
 - Adapt Factory V2 to Hermes Kanban typed block reasons from upstream #52848:

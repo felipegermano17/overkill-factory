@@ -335,7 +335,7 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
                 "typed_block_kind": "transient",
                 "block_loop_detected": True,
                 "block_loop_task_refs": ["kanban:redacted-loop"],
-                "state": {"blocked": {"count": 1}, "todo": {"count": 0}},
+                "state": {"blocked": {"count": 0}, "todo": {"count": 0}, "triage": {"count": 1}},
             },
         }
         with tempfile.TemporaryDirectory() as tmp:
@@ -355,6 +355,7 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
                 )
 
         self.assertIn("loop de bloqueio", buffer.getvalue())
+        self.assertIn("triage=1", buffer.getvalue())
         emit_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "emit-event")
         self.assertIn("block_loop_detected", emit_call)
         self.assertNotIn("--requires-user", emit_call)
