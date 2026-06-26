@@ -7,6 +7,12 @@ public releases.
 
 ## Unreleased
 
+## 2.0.9 - 2026-06-26
+
+- Republish the public visual map as `v1.0.3` so the current documentation can
+  validate against a fresh public URL instead of waiting for stale storage cache
+  on the previous `v1.0.2` asset.
+
 ## 2.0.8 - 2026-06-26
 
 - Replace the public planning-bundles surface with generated factory reference

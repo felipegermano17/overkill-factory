@@ -55,7 +55,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("README.pt-BR.md", readme)
         self.assertIn("Public map:", readme)
         self.assertIn(
-            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html",
             readme,
         )
         self.assertIn("full Product SOT scope coverage", readme)
@@ -148,7 +148,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/operator/overkill-factory-bridge-plugin.md",
             "templates/v2-doc-implementation-obligations.json",
             "fixtures/README.md",
-            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html",
             "factoryctl run minimal",
         ]:
             with self.subTest(expected=expected):

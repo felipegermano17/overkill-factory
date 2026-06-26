@@ -12,7 +12,7 @@ Ela existe para operadores que querem agentes trabalhando com velocidade sem
 deixar chat, entusiasmo ou demo parcial virar fonte de verdade.
 
 Mapa público:
-https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html
+https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html
 
 ## Explicação Simples
 
@@ -266,7 +266,7 @@ Pastas locais ignoradas como `.tmp/`, `build/`, `dist/`, `site/` e
 ## Estado Atual De Release
 
 Factory V2 é a linha atual de release do kernel público. A release pública mais
-recente é v2.0.8.
+recente é v2.0.9.
 
 V2 significa que o kernel público tem contratos executáveis para a linha da
 fábrica:

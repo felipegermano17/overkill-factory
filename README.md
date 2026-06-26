@@ -12,7 +12,7 @@ It exists for operators who want agents to work with speed without letting chat,
 enthusiasm or a partial demo become the source of truth.
 
 Public map:
-https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html
+https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html
 
 ## Plain Explanation
 
@@ -263,7 +263,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory V2 is the current public kernel release line. The latest public release
-is v2.0.8.
+is v2.0.9.
 
 V2 means the public kernel has executable contracts for the factory line:
 
