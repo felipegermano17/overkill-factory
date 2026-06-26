@@ -109,6 +109,7 @@ FACTORYCTL_COMMANDS = {
     "validate-operating-systems",
     "validate-phase-graph",
     "validate-product-experience-control-plane",
+    "validate-v2-doc-implementation-obligations",
     "validate-v2-study-traceability",
     "validate-worker-authority-contract",
     "validate-promotion-packet",

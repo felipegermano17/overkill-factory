@@ -226,10 +226,18 @@ class FactoryV2KernelTests(unittest.TestCase):
         self.assertEqual(plan["phases"][0]["next_phase_id"], "F1")
         self.assertIn("F27", {phase["phase_id"] for phase in plan["phases"]})
 
-    def test_v2_study_traceability_closes_p0_with_runtime_tests_and_negative_fixtures(self) -> None:
+    def test_v2_study_traceability_uses_bounded_truth_levels(self) -> None:
         packet = json.loads((ROOT / "templates" / "v2-study-traceability.json").read_text(encoding="utf-8"))
 
         self.assertEqual(factoryctl.validate_v2_study_traceability(packet), [])
+        statuses = {claim["status"] for claim in packet["claims"]}
+        self.assertNotIn("implemented", statuses)
+        self.assertIn("kernel_implemented", statuses)
+        self.assertIn("contract_only", statuses)
+        for claim in packet["claims"]:
+            self.assertIn("claim_boundary", claim)
+            self.assertGreater(len(claim["known_gaps"]), 0)
+            self.assertGreater(len(claim["next_action"]), 10)
         self.assertEqual(
             factoryctl.main_with_args_for_test(
                 ["validate-v2-study-traceability", "templates/v2-study-traceability.json"]
@@ -237,19 +245,72 @@ class FactoryV2KernelTests(unittest.TestCase):
             0,
         )
 
-    def test_v2_study_traceability_rejects_doc_only_p0_closure(self) -> None:
+    def test_v2_study_traceability_rejects_broad_implemented_status(self) -> None:
         packet = json.loads((ROOT / "templates" / "v2-study-traceability.json").read_text(encoding="utf-8"))
-        packet["claims"][0]["schema_refs"] = []
-        packet["claims"][0]["runtime_refs"] = []
-        packet["claims"][0]["test_refs"] = []
-        packet["claims"][0]["negative_fixture_refs"] = []
+        packet["claims"][0]["status"] = "implemented"
 
         errors = factoryctl.validate_v2_study_traceability(packet)
 
-        self.assertTrue(any("P0 requires schema_refs" in error for error in errors), errors)
-        self.assertTrue(any("P0 requires runtime_refs" in error for error in errors), errors)
-        self.assertTrue(any("P0 requires test_refs" in error for error in errors), errors)
-        self.assertTrue(any("P0 requires negative_fixture_refs" in error for error in errors), errors)
+        self.assertTrue(any("status 'implemented' is forbidden" in error for error in errors), errors)
+
+    def test_v2_study_traceability_rejects_kernel_claim_without_tests_or_fixtures(self) -> None:
+        packet = json.loads((ROOT / "templates" / "v2-study-traceability.json").read_text(encoding="utf-8"))
+        packet["claims"][0]["test_refs"] = []
+        packet["claims"][0]["negative_fixture_refs"] = []
+        packet["claims"][0]["status"] = "kernel_implemented"
+
+        errors = factoryctl.validate_v2_study_traceability(packet)
+
+        self.assertTrue(any("kernel_implemented P0 claim requires test_refs" in error for error in errors), errors)
+        self.assertTrue(
+            any("kernel_implemented P0 claim requires negative_fixture_refs" in error for error in errors),
+            errors,
+        )
+
+    def test_v2_study_traceability_rejects_runtime_proven_without_runtime_evidence(self) -> None:
+        packet = json.loads((ROOT / "templates" / "v2-study-traceability.json").read_text(encoding="utf-8"))
+        packet["claims"][0]["status"] = "runtime_proven"
+        packet["claims"][0]["known_gaps"] = []
+        packet["claims"][0]["runtime_refs"] = ["scripts/factoryctl.py"]
+        packet["claims"][0]["test_refs"] = ["tests/test_factory_v2_kernel.py"]
+
+        errors = factoryctl.validate_v2_study_traceability(packet)
+
+        self.assertTrue(any("runtime_proven requires runtime proof refs" in error for error in errors), errors)
+
+    def test_v2_doc_implementation_obligations_validate_and_cross_check_traceability(self) -> None:
+        packet = json.loads(
+            (ROOT / "templates" / "v2-doc-implementation-obligations.json").read_text(encoding="utf-8")
+        )
+        traceability = json.loads((ROOT / "templates" / "v2-study-traceability.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(factoryctl.validate_v2_doc_implementation_obligations(packet, traceability), [])
+        self.assertEqual(
+            factoryctl.main_with_args_for_test(
+                [
+                    "validate-v2-doc-implementation-obligations",
+                    "templates/v2-doc-implementation-obligations.json",
+                    "--traceability",
+                    "templates/v2-study-traceability.json",
+                ]
+            ),
+            0,
+        )
+
+    def test_v2_doc_implementation_obligations_reject_overclaim_without_artifacts(self) -> None:
+        packet = json.loads(
+            (ROOT / "templates" / "v2-doc-implementation-obligations.json").read_text(encoding="utf-8")
+        )
+        packet["obligations"][0]["current_truth_level"] = "kernel_implemented"
+        packet["obligations"][0]["implemented_artifact_refs"] = []
+        packet["obligations"][0]["validation_refs"] = []
+        packet["obligations"][0]["negative_fixture_refs"] = []
+
+        errors = factoryctl.validate_v2_doc_implementation_obligations(packet)
+
+        self.assertTrue(any("kernel_implemented requires implemented_artifact_refs" in error for error in errors), errors)
+        self.assertTrue(any("kernel_implemented requires validation_refs" in error for error in errors), errors)
+        self.assertTrue(any("kernel_implemented requires negative_fixture_refs" in error for error in errors), errors)
 
     def test_product_experience_control_plane_is_validated_by_cli(self) -> None:
         self.assertEqual(

@@ -19,7 +19,8 @@ from typing import Iterator
 
 ROOT = Path(__file__).resolve().parents[1]
 SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".pdf", ".tgz", ".zip"}
-SKIP_PARTS = {".git", "__pycache__"}
+SKIP_PARTS = {".git", ".tmp", ".pytest_cache", ".venv", "__pycache__", "build", "dist", "node_modules", "site", "venv"}
+SKIP_PART_SUFFIXES = (".egg-info",)
 
 SECRET_PATTERNS = [
     re.compile(r"-----BEGIN (?:RSA |DSA |EC |OPENSSH |PGP )?PRIVATE KEY-----"),
@@ -59,7 +60,9 @@ def entropy(value: str) -> float:
 def should_scan(path: Path) -> bool:
     if path.suffix.lower() in SKIP_SUFFIXES:
         return False
-    return not any(part in SKIP_PARTS for part in path.parts)
+    if any(part in SKIP_PARTS for part in path.parts):
+        return False
+    return not any(part.endswith(SKIP_PART_SUFFIXES) for part in path.parts)
 
 
 def allowed_fixture_line(line: str) -> bool:
@@ -80,6 +83,8 @@ def iter_scan_paths(root: Path) -> Iterator[Path]:
     for entry in entries:
         try:
             if any(part in SKIP_PARTS for part in entry.parts):
+                continue
+            if any(part.endswith(SKIP_PART_SUFFIXES) for part in entry.parts):
                 continue
             if entry.is_dir():
                 yield from iter_scan_paths(entry)

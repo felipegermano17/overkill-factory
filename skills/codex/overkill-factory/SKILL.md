@@ -157,6 +157,7 @@ python scripts/factoryctl.py worker-packet --worker all --card path/to/card.md -
 python scripts/factoryctl.py compile-workflow --out .tmp/factory-workflow-compiled-plan.json
 python scripts/factoryctl.py validate-factory-run templates/factory-run.json
 python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
+python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 python scripts/factoryctl.py validate-worker-authority-contract templates/worker-authority-contract.json
 python scripts/factoryctl.py validate-product-experience-control-plane templates/product-experience-control-plane.json
 python scripts/factoryctl.py validate-capability-acquisition-contract templates/capability-acquisition-contract.json

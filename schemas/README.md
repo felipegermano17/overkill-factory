@@ -43,7 +43,11 @@ schemas are:
 
 - `factory-phase-graph.schema.json`: canonical product phases plus non-product
   event/view aliases.
-- `v2-study-traceability.schema.json`: raw-study claim to implementation proof.
+- `v2-study-traceability.schema.json`: raw-study claim to bounded truth level,
+  evidence, known gaps and next action.
+- `v2-doc-implementation-obligations.schema.json`: doc-vs-code parity ledger
+  that prevents documented V2 obligations from being overclaimed as
+  implemented.
 - `worker-authority-contract.schema.json`: worker profiles cannot own route,
   gate, waiver or promotion decisions.
 - `product-experience-control-plane.schema.json`: design, brand, frontend,
@@ -67,6 +71,7 @@ Run schema and public artifact checks:
 
 ```bash
 python scripts/factoryctl.py validate-v2-study-traceability templates/v2-study-traceability.json
+python scripts/factoryctl.py validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 python scripts/factoryctl.py validate-worker-authority-contract templates/worker-authority-contract.json
 python scripts/factoryctl.py validate-product-experience-control-plane templates/product-experience-control-plane.json
 python scripts/validate_public_json_artifacts.py

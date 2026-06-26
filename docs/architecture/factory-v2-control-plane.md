@@ -26,7 +26,8 @@ outbox, and promotion needs a packet with evidence.
 | Decision outbox | Human decisions that the factory needs but cannot auto-resolve. | `schemas/factory-decision-outbox.schema.json`, `templates/factory-decision-outbox.json`, `factoryctl validate-decision-outbox` |
 | Promotion packet | Evidence required before phase, product or release promotion. | `schemas/factory-promotion-packet.schema.json`, `templates/factory-promotion-packet.json`, `factoryctl validate-promotion-packet` |
 | Phase graph | Canonical V2 taxonomy: product phases stay linear; human gates and operator projections are events/views, not phases. | `schemas/factory-phase-graph.schema.json`, `templates/factory-phase-graph.json`, `factoryctl validate-phase-graph` |
-| V2 study traceability | No-simplification ledger that binds raw V2 study claims to schemas, runtime commands, tests and negative fixtures. | `schemas/v2-study-traceability.schema.json`, `templates/v2-study-traceability.json`, `factoryctl validate-v2-study-traceability` |
+| V2 study traceability | No-simplification ledger that binds raw V2 study claims to bounded truth levels, evidence refs, claim boundaries, known gaps and next actions. | `schemas/v2-study-traceability.schema.json`, `templates/v2-study-traceability.json`, `factoryctl validate-v2-study-traceability` |
+| V2 doc implementation obligations | Fails validation when documented V2 obligations are overclaimed as implemented without matching public artifacts, tests and fixture proof. | `schemas/v2-doc-implementation-obligations.schema.json`, `templates/v2-doc-implementation-obligations.json`, `factoryctl validate-v2-doc-implementation-obligations` |
 | Worker authority contract | Makes worker profiles operational only; route, gate, waiver and promotion authority stay in reducers and registries. | `schemas/worker-authority-contract.schema.json`, `templates/worker-authority-contract.json`, `factoryctl validate-worker-authority-contract` |
 | Product Experience control plane | Governs design, brand, frontend, operator UX and Product Face as first-class product surfaces. | `schemas/product-experience-control-plane.schema.json`, `templates/product-experience-control-plane.json`, `factoryctl validate-product-experience-control-plane` |
 | Capability acquisition contract | Requires reference search, template match, create/install attempt and smoke/eval before missing capability can block. | `schemas/capability-acquisition-contract.schema.json`, `templates/capability-acquisition-contract.json`, `factoryctl validate-capability-acquisition-contract` |
@@ -68,6 +69,7 @@ factoryctl validate-promotion-packet templates/factory-promotion-packet.json
 factoryctl validate-factory-run templates/factory-run.json
 factoryctl validate-phase-graph templates/factory-phase-graph.json
 factoryctl validate-v2-study-traceability templates/v2-study-traceability.json
+factoryctl validate-v2-doc-implementation-obligations templates/v2-doc-implementation-obligations.json --traceability templates/v2-study-traceability.json
 factoryctl validate-worker-authority-contract templates/worker-authority-contract.json
 factoryctl validate-product-experience-control-plane templates/product-experience-control-plane.json
 factoryctl validate-capability-acquisition-contract templates/capability-acquisition-contract.json
