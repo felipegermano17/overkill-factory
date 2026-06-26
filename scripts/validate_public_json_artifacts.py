@@ -70,7 +70,6 @@ PUBLIC_SCHEMA_DIRS = [
     ROOT / "agents",
     ROOT / "docs",
     ROOT / "examples",
-    ROOT / "planning-bundles",
     ROOT / "fixtures" / "product-validation",
     ROOT / "templates",
 ]
@@ -79,7 +78,6 @@ SCAN_DIRS = [
     ROOT / "agents",
     ROOT / "templates",
     ROOT / "docs",
-    ROOT / "planning-bundles",
     ROOT / "fixtures" / "product-validation",
 ]
 RUNTIME_LOCAL_JSON_DIRS = [

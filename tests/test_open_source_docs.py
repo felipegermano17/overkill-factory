@@ -55,7 +55,7 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("README.pt-BR.md", readme)
         self.assertIn("Public map:", readme)
         self.assertIn(
-            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html",
             readme,
         )
         self.assertIn("full Product SOT scope coverage", readme)
@@ -66,6 +66,8 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn(project_release_tag(), readme)
         self.assertIn("Factory V2", readme)
         self.assertIn("docs/architecture/factory-v2-control-plane.md", readme)
+        self.assertIn("docs/reference/factory-kernel-reference.md", readme)
+        self.assertIn("python scripts/generate_factory_reference_docs.py --check", readme)
         self.assertIn("docs/operations/promise-to-implementation.md", readme)
         self.assertIn("docs/promise-implementation-map.public.json", readme)
         self.assertIn("templates/v2-study-traceability.json", readme)
@@ -83,7 +85,9 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/getting-started/quickstart-hermes.md",
             "docs/getting-started/install-in-hermes.md",
             "docs/reference/cli.md",
+            "docs/reference/factory-kernel-reference.md",
             "docs/architecture/factory-v2-control-plane.md",
+            "docs/operations/telegram-operator-experience.md",
             "docs/operations/promise-to-implementation.md",
             "docs/promise-implementation-map.public.json",
             "templates/v2-study-traceability.json",
@@ -134,6 +138,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             project_release_tag(),
             "Factory V2",
             "docs/architecture/factory-v2-control-plane.md",
+            "docs/reference/factory-kernel-reference.md",
+            "python scripts/generate_factory_reference_docs.py --check",
             "codex plugin marketplace add .",
             "codex plugin add overkill-factory-bridge@overkill-factory",
             "docs/operations/promise-to-implementation.md",
@@ -142,7 +148,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/operator/overkill-factory-bridge-plugin.md",
             "templates/v2-doc-implementation-obligations.json",
             "fixtures/README.md",
-            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html",
+            "https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html",
             "factoryctl run minimal",
         ]:
             with self.subTest(expected=expected):
@@ -163,13 +169,16 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/control-tower/open-source-setup.md",
             "docs/operations/validation-and-release.md",
             "docs/operations/promise-to-implementation.md",
+            "docs/operations/telegram-operator-experience.md",
             "docs/operations/release-policy.md",
             "docs/operations/troubleshooting.md",
             "docs/architecture/factory-operating-systems.md",
+            "docs/architecture/context-spine.md",
             "docs/architecture/hermes-integration.md",
             "docs/index.md",
             "docs/getting-started/install-in-hermes.md",
             "docs/reference/cli.md",
+            "docs/reference/factory-kernel-reference.md",
             "docs/examples/gallery.md",
             "docs/security/oss-security.md",
             "docs/maintenance/repo-surface.md",
@@ -258,7 +267,6 @@ class OpenSourceDocsTest(unittest.TestCase):
             "docs/",
             "examples/",
             "fixtures/",
-            "planning-bundles/",
             "plugins/",
             "schemas/",
             "scripts/",

@@ -12,7 +12,7 @@ It exists for operators who want agents to work with speed without letting chat,
 enthusiasm or a partial demo become the source of truth.
 
 Public map:
-https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.1.html
+https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.2.html
 
 ## Plain Explanation
 
@@ -250,7 +250,6 @@ first, what its source of truth is and how drift is prevented.
 | `docs/` | Human guides for onboarding, concepts, operations, security and maintenance. See `docs/README.md`. |
 | `examples/` | Small public examples and source fixtures for the factory path. See `examples/README.md`. |
 | `fixtures/` | Minimal public-safe regression fixtures, including advanced product-shaped validation fixtures. See `fixtures/README.md`. |
-| `planning-bundles/` | Public-safe planning protocols for candidate artifacts before factory validation. See `planning-bundles/README.md`. |
 | `plugins/` | Public Codex plugin packages, currently the Overkill Factory Bridge. See `plugins/README.md`. |
 | `schemas/` | Machine contracts for cards, receipts, workers, gates and public artifacts. See `schemas/README.md`. |
 | `scripts/` | CLI entrypoints, validation tools, proof helpers and maintainer checks. See `scripts/README.md`. |
@@ -264,7 +263,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory V2 is the current public kernel release line. The latest public release
-is v2.0.7.
+is v2.0.8.
 
 V2 means the public kernel has executable contracts for the factory line:
 
@@ -306,7 +305,9 @@ implementation, proof and boundary.
 - `docs/getting-started/quickstart-hermes.md`: first run with Hermes context.
 - `docs/getting-started/install-in-hermes.md`: connect to an operator-owned Hermes runtime.
 - `docs/reference/cli.md`: supported `factoryctl` commands.
+- `docs/reference/factory-kernel-reference.md`: generated reference of the actual phases, workers, profiles, operating systems, method engines, schemas, templates and public surfaces.
 - `docs/architecture/factory-v2-control-plane.md`: deterministic control plane.
+- `docs/operations/telegram-operator-experience.md`: Telegram-first operator experience without turning Telegram into the runtime source of truth.
 - `templates/v2-study-traceability.json`: raw V2 claim ledger with bounded truth levels, evidence refs and known gaps.
 - `templates/v2-doc-implementation-obligations.json`: obligations that prevent documented V2 work from being mistaken for implemented code.
 - `templates/factory-v2-readiness-claim.json`: scoped readiness claim contract.
@@ -318,10 +319,10 @@ Before publishing public changes:
 
 ```bash
 python scripts/validate_document_governance.py
+python scripts/generate_factory_reference_docs.py --check
 python scripts/validate_public_json_artifacts.py
 python scripts/validate_worker_profiles.py
 python scripts/validate_promise_implementation_map.py
-python scripts/validate_planning_bundles.py
 python scripts/factoryctl.py validate-v2-runtime-contracts
 python scripts/factoryctl.py validate-agent-skill-boundaries
 python scripts/factoryctl.py validate-reference-superiority

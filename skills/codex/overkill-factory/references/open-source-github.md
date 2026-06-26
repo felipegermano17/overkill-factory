@@ -50,6 +50,11 @@ delete it.
 - Do not create partial manual mirrors of registries, schemas, workers, or
   templates. Partial mirrors rot. If human docs are needed, cover the full
   public set or generate them from the canonical contract.
+- If public docs claim to describe the whole factory, require
+  `docs/reference/factory-kernel-reference.md` to be regenerated and checked.
+- Do not keep historical planning bundles, audit logs, hidden plan folders or
+  dated internal review docs in the public repo after their rules have been
+  absorbed into current docs, schemas, tests or issues.
 - Examples must be representative, public-safe and runnable. They should not
   feel like leftover internal validation artifacts.
 - Scripts should converge toward the public CLI or documented maintainer tools.
@@ -87,3 +92,5 @@ Block or revise when:
 - agent docs are partial mirrors of registry data;
 - a public claim is not supported by code, tests, schema, CI, or a current
   source reference.
+- CI still calls a deleted validator or a validator for a removed public
+  surface.

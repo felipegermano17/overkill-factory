@@ -16,8 +16,10 @@ Use this order when documents disagree:
    `docs/concepts/factory-flow.md`, `docs/concepts/overkill-factory-method.md`,
    `docs/concepts/operator-journey.md` and
    `docs/operations/validation-and-release.md`.
-3. Supporting guides: agent, worker, capability, security and Product Face docs.
-4. Machine-readable fixtures under `.tmp/factory-runs/` when a test or script directly
+3. Generated references, especially `docs/reference/factory-kernel-reference.md`,
+   when they are freshly produced by their generator and `--check` passes.
+4. Supporting guides: agent, worker, capability, security and Product Face docs.
+5. Machine-readable fixtures under `.tmp/factory-runs/` when a test or script directly
    needs them.
 
 When prose and runtime disagree, runtime wins. Fix the prose or the runtime, but
@@ -43,6 +45,10 @@ Any other `docs/` file that uses ambiguous planning or status language such as
 `future`, `remaining`, `still open`, `not yet`, `TBD`, `TODO` or `does not
 prove` also needs a status banner. A supporting guide may discuss limits, but it
 must not look like an unowned live task list.
+
+Generated reference docs must say which script produced them and must have a
+`--check` command in validation. Do not hand-edit generated docs to make a test
+pass; update the source registry, contract or generator.
 
 ## Status Labels
 
@@ -73,4 +79,5 @@ Run this check before claiming the docs are clean:
 
 ```bash
 python scripts/validate_document_governance.py
+python scripts/generate_factory_reference_docs.py --check
 ```

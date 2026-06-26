@@ -9,6 +9,8 @@ Scripts provide the public CLI path, validation tools and maintainer checks.
   public-safe and do not replace factory gates.
 - Validation scripts for cards, schemas, worker profiles, public safety and
   release readiness.
+- Generated-documentation scripts that materialize public references from
+  registries and contracts instead of hand-maintained mirrors.
 - Promise-to-implementation validation so public claims stay tied to code,
   tests and explicit boundaries.
 - Runtime maintenance guards such as `hermes_update_guard.py` when they are
@@ -44,6 +46,7 @@ Run the script-facing bundle:
 ```bash
 python scripts/quickstart_smoke.py
 python scripts/validate_worker_profiles.py
+python scripts/generate_factory_reference_docs.py --check
 python scripts/validate_promise_implementation_map.py
 python scripts/hermes_update_guard.py plan
 python scripts/factory_no_idle_watchdog.py --board example-board

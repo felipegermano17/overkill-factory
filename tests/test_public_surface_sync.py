@@ -51,7 +51,7 @@ class PublicSurfaceSyncTest(unittest.TestCase):
         findings = surface_sync.validate_manifest_data(mutated)
 
         self.assertIn(
-            "docs/visuals/overkill-factory-map-v1.0.1.html: manifest worker count 999 does not match registry count 40",
+            "docs/visuals/overkill-factory-map-v1.0.2.html: manifest worker count 999 does not match registry count 40",
             findings,
         )
 
@@ -77,15 +77,15 @@ class PublicSurfaceSyncTest(unittest.TestCase):
 
     def test_runtime_overclaim_is_detected(self) -> None:
         findings = surface_sync.public_doc_overclaim_findings(
-            "docs/visuals/overkill-factory-map-v1.0.1.html",
+            "docs/visuals/overkill-factory-map-v1.0.2.html",
             "The visual map is the source of truth and map proves runtime readiness.",
         )
 
         self.assertEqual(
             findings,
             [
-                "docs/visuals/overkill-factory-map-v1.0.1.html: public surface overclaims runtime authority",
-                "docs/visuals/overkill-factory-map-v1.0.1.html: public surface overclaims runtime authority",
+                "docs/visuals/overkill-factory-map-v1.0.2.html: public surface overclaims runtime authority",
+                "docs/visuals/overkill-factory-map-v1.0.2.html: public surface overclaims runtime authority",
             ],
         )
 
@@ -114,7 +114,7 @@ class PublicSurfaceSyncTest(unittest.TestCase):
         findings = surface_sync.validate_manifest_data(mutated)
 
         self.assertIn(
-            "docs/visuals/overkill-factory-map-v1.0.1.html: fidelity stage node intake title "
+            "docs/visuals/overkill-factory-map-v1.0.2.html: fidelity stage node intake title "
             "'Universal Signal Intake' does not match 'Old Intake Name'",
             findings,
         )
@@ -129,7 +129,7 @@ class PublicSurfaceSyncTest(unittest.TestCase):
         findings = surface_sync.validate_manifest_data(mutated)
 
         self.assertIn(
-            "docs/visuals/overkill-factory-map-v1.0.1.html: fidelity stage node completion "
+            "docs/visuals/overkill-factory-map-v1.0.2.html: fidelity stage node completion "
             "missing output term 'missing closure class'",
             findings,
         )
@@ -146,7 +146,7 @@ class PublicSurfaceSyncTest(unittest.TestCase):
         )
 
         self.assertIn(
-            "docs/visuals/overkill-factory-map-v1.0.1.html: fidelity template_ref has no map coverage: "
+            "docs/visuals/overkill-factory-map-v1.0.2.html: fidelity template_ref has no map coverage: "
             "templates/universal-signal-intake.json",
             findings,
         )

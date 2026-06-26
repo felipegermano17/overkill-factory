@@ -55,8 +55,8 @@ jobs:
         run: python scripts/validate_public_json_artifacts.py
       - name: Promise implementation map validation
         run: python scripts/validate_promise_implementation_map.py
-      - name: Planning bundle validation
-        run: python scripts/validate_planning_bundles.py
+      - name: Generated factory reference validation
+        run: python scripts/generate_factory_reference_docs.py --check
       - name: Public surface sync
         run: python scripts/validate_public_surface_sync.py
       - name: Worker profile validation

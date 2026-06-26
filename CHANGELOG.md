@@ -7,6 +7,18 @@ public releases.
 
 ## Unreleased
 
+## 2.0.8 - 2026-06-26
+
+- Replace the public planning-bundles surface with generated factory reference
+  documentation produced from workflow, worker, profile, OS, method, schema,
+  template and public-surface contracts.
+- Publish visual map `v1.0.2` with simpler operator language while preserving
+  required fidelity terms, risk tiers and public-boundary checks.
+- Remove dated public audit/plan artifacts from `docs/` and promote useful
+  Telegram/operator and context-spine rules into current guides.
+- Update CI, release validation, README docs and the Codex `overkill-factory`
+  skill so generated documentation drift fails closed.
+
 ## 2.0.7 - 2026-06-26
 
 - Clarify and test the real Hermes dependency semantics proven by live smoke:
