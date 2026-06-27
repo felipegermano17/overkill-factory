@@ -4738,6 +4738,71 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         )
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_does_not_loop_on_result_pass_declared_artifact_repair(self) -> None:
+        fake = FakeHermes()
+        repair_id = "t_" + "repair02"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_json = Path(tmpdir) / "declared-artifact-readback-repair.json"
+            missing_md = Path(tmpdir) / "declared-artifact-readback-repair.md"
+            fake.tasks[repair_id] = {
+                "id": repair_id,
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Repair missing declared artifacts for board",
+                "body": json.dumps(
+                    {
+                        "packet_type": "factory_deterministic_reconcile_task",
+                        "plan_action": "repair_declared_artifacts",
+                        "required_output": "declared_artifact_readback_repair",
+                        "agent_may_choose_phase": False,
+                        "kanban_workflow_binding": {
+                            "workflow_template_id": "overkill-vfinal",
+                            "current_step_key": "F1-intake",
+                            "runtime_field_required": True,
+                        },
+                    }
+                ),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "result": "PASS",
+                                "repair_type": "declared_artifact_readback_repair",
+                                "current_repair_artifacts": [str(missing_json), str(missing_md)],
+                                "verification": {"json_parse": "PASS", "sha256sum": "PASS"},
+                                "artifacts": [str(missing_json), str(missing_md)],
+                            }
+                        ),
+                    }
+                ],
+                "events": [
+                    {
+                        "type": "completed",
+                        "payload": {
+                            "summary": "repair PASS",
+                            "artifacts": [str(missing_json), str(missing_md)],
+                        },
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+            result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertNotEqual(state["classification"], "repair_declared_artifacts")
+        self.assertFalse(
+            any(
+                adapter.parse_json_object(str(task.get("body") or "{}")).get("plan_action")
+                == "repair_declared_artifacts"
+                for task in fake.tasks.values()
+                if task.get("id") != repair_id
+            )
+        )
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_normalizes_absolute_workspace_for_remediation_create(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "doneabs1"

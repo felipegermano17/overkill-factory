@@ -7,6 +7,13 @@ public releases.
 
 ## Unreleased
 
+## 2.0.12 - 2026-06-27
+
+- Preserve the declared-artifact repair runtime hotfix in the public release:
+  `declared_artifact_readback_repair` tasks with `repair_type` and
+  `result=PASS` metadata are now treated as self-evidenced, preventing another
+  repair loop without requiring a new remediation card.
+
 ## 2.0.11 - 2026-06-27
 
 - Materialize the Factory Run Graph when a new project starts: F1 is the root

@@ -1927,6 +1927,11 @@ def completed_declared_artifact_readback_repair_is_self_evidenced(record: dict[s
         metadata = parse_json_object(run.get("metadata")) or {}
         if str(metadata.get("repair_status") or "").strip().upper() == "PASS":
             return True
+        if (
+            str(metadata.get("repair_type") or "").strip() == "declared_artifact_readback_repair"
+            and str(metadata.get("result") or "").strip().upper() == "PASS"
+        ):
+            return True
         verification = metadata.get("verification") if isinstance(metadata.get("verification"), dict) else {}
         if str(verification.get("file_readback") or "").strip().upper() == "PASS":
             return True
