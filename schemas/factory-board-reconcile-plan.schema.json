@@ -66,7 +66,12 @@
         "status": { "type": "string", "minLength": 1 },
         "title": { "type": "string", "minLength": 1 },
         "assignee": { "type": "string" },
-        "selection_reason": { "type": "string", "minLength": 1 }
+        "selection_reason": { "type": "string", "minLength": 1 },
+        "target_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "missing_artifact_names": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
       },
       "additionalProperties": false
     },
@@ -127,6 +132,45 @@
             "factory_next_action": { "type": ["object", "null"] },
             "required_output": { "type": "string", "minLength": 1 },
             "reason": { "type": "string", "minLength": 1 },
+            "repair_target": {
+              "type": ["object", "null"],
+              "required": ["task_ref", "status", "title", "assignee", "selection_reason"],
+              "properties": {
+                "task_ref": { "type": "string", "minLength": 1 },
+                "status": { "type": "string", "minLength": 1 },
+                "title": { "type": "string", "minLength": 1 },
+                "assignee": { "type": "string" },
+                "selection_reason": { "type": "string", "minLength": 1 },
+                "target_fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                "missing_artifact_names": {
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 }
+                }
+              },
+              "additionalProperties": false
+            },
+            "repair_blocked_reasons": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "idempotency_scope": {
+              "type": "object",
+              "required": ["scope_type", "target_task_ref", "target_fingerprint", "missing_artifact_names", "blocked_reasons"],
+              "properties": {
+                "scope_type": { "const": "declared_artifact_readback_repair_target" },
+                "target_task_ref": { "type": ["string", "null"] },
+                "target_fingerprint": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+                "missing_artifact_names": {
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 }
+                },
+                "blocked_reasons": {
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 }
+                }
+              },
+              "additionalProperties": false
+            },
             "runtime_authority": { "const": "hermes_kanban" },
             "local_state_authority": { "const": false },
             "agent_may_choose_phase": { "const": false },

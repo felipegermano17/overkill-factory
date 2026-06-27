@@ -4262,8 +4262,63 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(created_task["status"], "ready")
         body = adapter.parse_json_object(str(created_task.get("body") or "{}"))
         self.assertEqual(body["required_output"], "declared_artifact_readback_repair")
+        self.assertEqual(body["repair_target"]["task_ref"], "kanban:<redacted>")
+        self.assertRegex(body["repair_target"]["target_fingerprint"], r"^[0-9a-f]{64}$")
+        self.assertTrue(any("product-sot-result.json" in reason for reason in body["repair_blocked_reasons"]))
+        self.assertEqual(body["idempotency_scope"]["scope_type"], "declared_artifact_readback_repair_target")
+        self.assertEqual(
+            body["idempotency_scope"]["target_fingerprint"],
+            body["repair_target"]["target_fingerprint"],
+        )
         self.assertFalse(body["agent_may_choose_phase"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_declared_artifact_repair_idempotency_is_scoped_to_missing_target(self) -> None:
+        def plan_for_missing(task_id: str, artifact_name: str) -> dict[str, Any]:
+            fake = FakeHermes()
+            with tempfile.TemporaryDirectory() as tmpdir:
+                missing_artifact = Path(tmpdir) / artifact_name
+                fake.tasks[task_id] = {
+                    "id": task_id,
+                    "status": "done",
+                    "assignee": "independent-reviewer",
+                    "title": "Materialize architecture_review_packet for board",
+                    "body": "{}",
+                    "workspace_path": str(Path(tmpdir)),
+                    "runs": [
+                        {
+                            "status": "done",
+                            "outcome": "completed",
+                            "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                        }
+                    ],
+                }
+                rows = {
+                    "ready": [],
+                    "running": [],
+                    "todo": [],
+                    "blocked": [],
+                    "triage": [],
+                    "done": [{"id": task_id, **fake.tasks[task_id]}],
+                }
+                rows = adapter.enrich_no_idle_rows(hermes_bin="hermes", board=TEST_BOARD, rows=rows, runner=fake)
+                return adapter.build_board_reconcile_plan_from_rows(board=TEST_BOARD, rows=rows)
+
+        first = plan_for_missing("t_" + "archrev1", "architecture_review_packet.first.json")
+        second = plan_for_missing("t_" + "archrev2", "architecture_review_packet.second.json")
+
+        first_body = adapter.deterministic_reconcile_task_body(plan=first)
+        second_body = adapter.deterministic_reconcile_task_body(plan=second)
+
+        self.assertIsNotNone(first_body)
+        self.assertIsNotNone(second_body)
+        self.assertNotEqual(adapter.contract_digest(first_body), adapter.contract_digest(second_body))
+        self.assertNotEqual(
+            first_body["idempotency_scope"]["target_fingerprint"],
+            second_body["idempotency_scope"]["target_fingerprint"],
+        )
+        self.assertIn("architecture_review_packet", first_body["repair_blocked_reasons"][0])
+        self.assertIn("architecture_review_packet", second_body["repair_blocked_reasons"][0])
 
     def test_no_idle_replaces_stale_declared_artifact_repair_task(self) -> None:
         fake = FakeHermes()

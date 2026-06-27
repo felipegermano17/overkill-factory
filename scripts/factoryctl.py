@@ -18422,6 +18422,15 @@ def board_reconcile_missing_declared_artifact_blockers(
         missing = task.get("missing_declared_artifacts")
         if not isinstance(missing, list) or not missing:
             continue
+        fingerprint_payload = {
+            "task_id": task.get("id"),
+            "title": _task_public_title(task),
+            "assignee": str(task.get("assignee") or task.get("owner") or "").strip(),
+            "missing_declared_artifacts": missing,
+        }
+        target_fingerprint = hashlib.sha256(
+            json.dumps(fingerprint_payload, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
         names = sorted(
             {
                 str(item.get("artifact_name") or "declared-artifact").strip()
@@ -18440,6 +18449,8 @@ def board_reconcile_missing_declared_artifact_blockers(
         if selected_ref is None:
             selected_ref = board_reconcile_task_ref(task, status="done")
             selected_ref["selection_reason"] = "terminal task selected because declared artifacts are missing at runtime"
+            selected_ref["target_fingerprint"] = target_fingerprint
+            selected_ref["missing_artifact_names"] = names
     return sorted(set(blockers)), selected_ref
 
 
@@ -18770,6 +18781,16 @@ def build_board_reconcile_plan(
             reason=reason,
             assignee="factory-orchestrator",
         )
+        if isinstance(create_task_contract.get("body"), dict):
+            create_task_contract["body"]["repair_target"] = selected_ref
+            create_task_contract["body"]["repair_blocked_reasons"] = list(missing_artifact_blockers)
+            create_task_contract["body"]["idempotency_scope"] = {
+                "scope_type": "declared_artifact_readback_repair_target",
+                "target_task_ref": (selected_ref or {}).get("task_ref") if isinstance(selected_ref, dict) else None,
+                "target_fingerprint": (selected_ref or {}).get("target_fingerprint") if isinstance(selected_ref, dict) else None,
+                "missing_artifact_names": (selected_ref or {}).get("missing_artifact_names") if isinstance(selected_ref, dict) else [],
+                "blocked_reasons": list(missing_artifact_blockers),
+            }
         native_dispatch_required_next = True
     elif running:
         plan_action = "observe_running"
