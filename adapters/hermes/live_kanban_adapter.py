@@ -8054,23 +8054,36 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         remediation_task_id: str | None = None
         task_runtime: dict[str, Any] = {}
         create_allowed = reconcile_plan.get("create_task_allowed") is True
+        stale_remediation_task_refs: list[str] = []
+        remediation_replacement_attempts = 0
         if create_allowed and args.create_remediation:
-            remediation_task_id = create_deterministic_reconcile_task(
-                hermes_bin=args.hermes_bin,
-                board=args.board,
-                workspace=args.workspace,
-                plan=reconcile_plan,
-                runner=runner,
-            )
-            task_runtime = remediation_task_runtime_metadata(
-                hermes_bin=args.hermes_bin,
-                board=args.board,
-                task_id=remediation_task_id,
-                runner=runner,
-            )
+            for _attempt in range(3):
+                remediation_task_id = create_deterministic_reconcile_task(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    workspace=args.workspace,
+                    plan=reconcile_plan,
+                    runner=runner,
+                    stale_remediation_task_refs=stale_remediation_task_refs,
+                )
+                task_runtime = remediation_task_runtime_metadata(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    task_id=remediation_task_id,
+                    runner=runner,
+                )
+                if not (remediation_task_id and task_runtime.get("remediation_task_stale")):
+                    break
+                if remediation_task_id in stale_remediation_task_refs:
+                    break
+                stale_remediation_task_refs.append(remediation_task_id)
+                remediation_replacement_attempts += 1
+        classification_name = str(reconcile_plan.get("plan_action") or "board_reconcile_action_required")
+        if stale_remediation_task_refs and remediation_task_id and not task_runtime.get("remediation_task_stale"):
+            classification_name = "deterministic_board_reconcile_task_created_after_stale_terminal_replacement"
         classification = {
             "status": "remediation_required" if create_allowed else "blocked",
-            "classification": str(reconcile_plan.get("plan_action") or "board_reconcile_action_required"),
+            "classification": classification_name,
             "blocked": True,
             "remediation_required": create_allowed,
             "human_gate_required": reconcile_plan.get("human_gate_required") is True,
@@ -8086,6 +8099,12 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             "next_action": reconcile_plan.get("reason"),
             "state": summarize_no_idle_rows(rows),
         }
+        if stale_remediation_task_refs:
+            classification["stale_remediation_task_refs"] = stale_remediation_task_refs
+            classification["remediation_replacement_attempts"] = remediation_replacement_attempts
+            classification["remediation_replacement_strategy"] = (
+                "create_fresh_reconcile_task_after_terminal_idempotency_replay"
+            )
         classification.update(task_runtime)
         envelope = {
             "$schema": LIVE_ADAPTER_SCHEMA,
