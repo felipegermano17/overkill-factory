@@ -18232,6 +18232,28 @@ def _task_has_approved_product_sot_gate(task: dict[str, Any]) -> bool:
     return False
 
 
+def _task_has_architecture_candidate(task: dict[str, Any]) -> bool:
+    text = _task_search_text(task)
+    if "architecture_result" in text or "architecture_packet" in text:
+        if "candidate_architecture" in text or "architecture packet" in text:
+            return True
+    for run in task.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = _json_object_from_possible_string(run.get("metadata"))
+        if isinstance(metadata, dict) and isinstance(metadata.get("architecture_result"), dict):
+            return True
+    return False
+
+
+def _task_has_architecture_review(task: dict[str, Any]) -> bool:
+    text = _task_search_text(task)
+    assignee = str(task.get("assignee") or "").strip().lower()
+    return "independent-reviewer" in assignee and "architecture" in text and (
+        "pass" in text or "fail" in text or "review" in text
+    )
+
+
 def _factory_card_from_payload(payload: dict[str, Any]) -> dict[str, Any] | None:
     if str(payload.get("factory_method_version") or "").strip() or str(payload.get("record_type") or "") == "factory_card":
         return copy.deepcopy(payload)
@@ -18495,6 +18517,8 @@ def board_reconcile_terminal_planning_continuation(
     done = rows.get("done", [])
     if not done:
         return None, []
+    if any(_task_has_architecture_candidate(task) for task in done):
+        return None, []
 
     gate_refs: list[str] = []
     method_refs: list[str] = []
@@ -18536,6 +18560,42 @@ def board_reconcile_terminal_planning_continuation(
         "factory_next_action": {
             "artifact": FACTORY_PHASE_LOCK_NEXT_ARTIFACTS["architecture"],
             "owner": "product-architect",
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
+def board_reconcile_terminal_architecture_review_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    architecture_refs = [_task_public_ref(task) for task in done if _task_has_architecture_candidate(task)]
+    if not architecture_refs:
+        return None, []
+    if any(_task_has_architecture_review(task) for task in done):
+        return None, []
+    phase_engine = {
+        "computed_frontier": "architecture",
+        "computed_phase_id": FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER["architecture"],
+        "next_required_artifact": "architecture_review_packet",
+        "decision_basis": (
+            "Architecture candidate exists and has not received independent architecture review; "
+            "the next deterministic frontier is architecture review."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(architecture_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": "architecture_review_packet",
+            "owner": "independent-reviewer",
             "why": phase_engine["decision_basis"],
             "evidence_refs": evidence_refs,
         }
@@ -18704,20 +18764,27 @@ def build_board_reconcile_plan(
         reason = "ready Hermes work exists; native Hermes dispatch is the next action"
         native_dispatch_required_next = True
     elif not unfinished:
-        terminal_continuation, terminal_continuation_errors = board_reconcile_terminal_planning_continuation(rows)
+        terminal_continuation, terminal_continuation_errors = (
+            board_reconcile_terminal_architecture_review_continuation(rows)
+        )
+        if terminal_continuation is None:
+            terminal_continuation, terminal_continuation_errors = board_reconcile_terminal_planning_continuation(rows)
         blocked_reasons.extend(terminal_continuation_errors)
         if terminal_continuation is not None:
             phase_engine = terminal_continuation["phase_engine"]
             factory_help = terminal_continuation["factory_help"]
+            next_action = factory_help.get("factory_next_action") if isinstance(factory_help, dict) else {}
+            next_owner = str((next_action or {}).get("owner") or "product-architect")
+            next_artifact = str((next_action or {}).get("artifact") or FACTORY_PHASE_LOCK_NEXT_ARTIFACTS["architecture"])
             selected_ref = {
                 "task_ref": "board:terminal-planning-frontier",
                 "status": "done",
-                "title": "Terminal planning frontier selected from completed Product SOT/Method/Product Face review",
-                "assignee": "product-architect",
-                "selection_reason": "all prerequisites for architecture frontier are terminal and no non-terminal work exists",
+                "title": "Terminal factory frontier selected from completed prerequisite artifacts",
+                "assignee": next_owner,
+                "selection_reason": f"all prerequisites for {next_artifact} are terminal and no non-terminal work exists",
             }
             plan_action = "create_next_artifact_task"
-            reason = str((factory_help.get("factory_next_action") or {}).get("why"))
+            reason = str((next_action or {}).get("why"))
             create_task_contract = _board_reconcile_task_contract(
                 plan_action=plan_action,
                 board=board,
@@ -18725,7 +18792,7 @@ def build_board_reconcile_plan(
                 phase_engine=phase_engine,
                 factory_help=factory_help,
                 reason=reason,
-                assignee="product-architect",
+                assignee=next_owner,
             )
             if isinstance(create_task_contract.get("body"), dict):
                 create_task_contract["body"]["forbidden_actions"].extend(

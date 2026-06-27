@@ -5375,6 +5375,52 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
         self.assertTrue(state["native_dispatch_required_next"])
 
+    def test_no_idle_continues_from_terminal_architecture_to_review(self) -> None:
+        fake = FakeHermes()
+        arch_id = "t_" + "arch0002"
+        fake.tasks[arch_id] = {
+            "id": arch_id,
+            "status": "done",
+            "assignee": "product-architect",
+            "title": "Materialize architecture_packet for board",
+            "latest_summary": "Architecture candidate packet is ready for independent review.",
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {
+                            "architecture_result": {
+                                "status": "candidate_architecture_packet_ready_for_independent_review_not_closed",
+                                "task_id": arch_id,
+                                "review_requirements": ["independent architecture review"],
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "create_next_artifact_task")
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+        created_tasks = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "architecture_review_packet"
+        ]
+        self.assertEqual(len(created_tasks), 1)
+        created = created_tasks[0]
+        body = adapter.parse_json_object(str(created["body"]))
+        self.assertEqual(created["assignee"], "independent-reviewer")
+        self.assertEqual(created["status"], "ready")
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F10-architecture")
+        self.assertFalse(body["phase_engine"]["human_gate_allowed"])
+        self.assertTrue(state["native_dispatch_required_next"])
+
     def test_no_idle_does_not_treat_text_only_human_gate_as_decision_ready(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0001"
