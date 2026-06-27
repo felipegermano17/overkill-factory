@@ -18270,6 +18270,13 @@ def _task_has_architecture_review(task: dict[str, Any]) -> bool:
     return False
 
 
+def _task_has_failed_architecture_review(task: dict[str, Any]) -> bool:
+    if not _task_has_architecture_review(task):
+        return False
+    text = _task_search_text(task)
+    return "fail" in text or "blocking fail" in text or "not reviewable" in text
+
+
 def _factory_card_from_payload(payload: dict[str, Any]) -> dict[str, Any] | None:
     if str(payload.get("factory_method_version") or "").strip() or str(payload.get("record_type") or "") == "factory_card":
         return copy.deepcopy(payload)
@@ -18419,6 +18426,8 @@ def board_reconcile_missing_declared_artifact_blockers(
     blockers: list[str] = []
     selected_ref: dict[str, Any] | None = None
     for task in rows.get("done", []):
+        if _task_has_failed_architecture_review(task):
+            continue
         missing = task.get("missing_declared_artifacts")
         if not isinstance(missing, list) or not missing:
             continue
@@ -18634,6 +18643,40 @@ def board_reconcile_terminal_architecture_review_continuation(
     }, []
 
 
+def board_reconcile_terminal_failed_architecture_review_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    failed_review_refs = [_task_public_ref(task) for task in done if _task_has_failed_architecture_review(task)]
+    if not failed_review_refs:
+        return None, []
+    phase_engine = {
+        "computed_frontier": "architecture",
+        "computed_phase_id": FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER["architecture"],
+        "next_required_artifact": FACTORY_PHASE_LOCK_NEXT_ARTIFACTS["architecture"],
+        "decision_basis": (
+            "Independent architecture review recorded a blocking FAIL; the next deterministic "
+            "frontier is architecture repair/rerun, not human approval or downstream decomposition."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(failed_review_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": FACTORY_PHASE_LOCK_NEXT_ARTIFACTS["architecture"],
+            "owner": "product-architect",
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
 def _board_reconcile_task_contract(
     *,
     plan_action: str,
@@ -18802,8 +18845,12 @@ def build_board_reconcile_plan(
         native_dispatch_required_next = True
     elif not unfinished:
         terminal_continuation, terminal_continuation_errors = (
-            board_reconcile_terminal_architecture_review_continuation(rows)
+            board_reconcile_terminal_failed_architecture_review_continuation(rows)
         )
+        if terminal_continuation is None:
+            terminal_continuation, terminal_continuation_errors = (
+                board_reconcile_terminal_architecture_review_continuation(rows)
+            )
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = board_reconcile_terminal_planning_continuation(rows)
         blocked_reasons.extend(terminal_continuation_errors)
