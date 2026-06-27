@@ -359,6 +359,69 @@ def parse_task_id(output: str) -> str:
     raise RuntimeError(f"could not parse Hermes task id from output: {text!r}")
 
 
+def find_task_id_by_idempotency_key(
+    *,
+    hermes_bin: str,
+    board: str,
+    idempotency_key: str,
+    runner: Runner = default_runner,
+) -> str | None:
+    key = str(idempotency_key or "").strip()
+    if not key:
+        return None
+    db_path = local_kanban_db_path(board)
+    if db_path is not None and db_path.exists():
+        conn = sqlite3.connect(str(db_path))
+        try:
+            cols = {
+                str(row[1])
+                for row in conn.execute("PRAGMA table_info(tasks)").fetchall()
+                if len(row) > 1
+            }
+            if "idempotency_key" in cols:
+                row = conn.execute(
+                    "SELECT id FROM tasks WHERE idempotency_key = ? ORDER BY created_at DESC LIMIT 1",
+                    (key,),
+                ).fetchone()
+                if row and row[0]:
+                    return str(row[0])
+        finally:
+            conn.close()
+    for status in ("ready", "running", "todo", "blocked", "triage", "done", "archived"):
+        try:
+            rows = list_tasks_by_status(hermes_bin=hermes_bin, board=board, status=status, runner=runner)
+        except RuntimeError:
+            continue
+        for task in rows:
+            if str(task.get("idempotency_key") or "").strip() == key:
+                task_id = str(task.get("id") or task.get("task_id") or "").strip()
+                if task_id:
+                    return task_id
+    return None
+
+
+def parse_task_id_or_find_idempotent(
+    *,
+    output: str,
+    hermes_bin: str,
+    board: str,
+    idempotency_key: str,
+    runner: Runner = default_runner,
+) -> str:
+    try:
+        return parse_task_id(output)
+    except RuntimeError:
+        task_id = find_task_id_by_idempotency_key(
+            hermes_bin=hermes_bin,
+            board=board,
+            idempotency_key=idempotency_key,
+            runner=runner,
+        )
+        if task_id:
+            return task_id
+        raise
+
+
 def hermes_kanban(hermes_bin: str, board: str, *args: str) -> list[str]:
     return [hermes_bin, "kanban", "--board", board, *args]
 
@@ -3619,7 +3682,13 @@ def create_task(
         workspace,
         "--json",
     )
-    task_id = parse_task_id(run_checked(args, runner).stdout)
+    task_id = parse_task_id_or_find_idempotent(
+        output=run_checked(args, runner).stdout,
+        hermes_bin=hermes_bin,
+        board=board,
+        idempotency_key=idempotency_key,
+        runner=runner,
+    )
     apply_native_workflow_state(
         board=board,
         task_id=task_id,
@@ -3645,8 +3714,8 @@ def create_blocked_task_before_assignment(
     runner: Runner = default_runner,
 ) -> str:
     ensure_non_empty_body(body)
-    task_id = parse_task_id(
-        run_checked(
+    task_id = parse_task_id_or_find_idempotent(
+        output=run_checked(
             hermes_kanban(
                 hermes_bin,
                 board,
@@ -3663,7 +3732,11 @@ def create_blocked_task_before_assignment(
                 "--json",
             ),
             runner,
-        ).stdout
+        ).stdout,
+        hermes_bin=hermes_bin,
+        board=board,
+        idempotency_key=idempotency_key,
+        runner=runner,
     )
     apply_native_workflow_state(
         board=board,
