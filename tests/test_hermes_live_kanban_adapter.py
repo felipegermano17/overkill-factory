@@ -5499,6 +5499,46 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(len(created_tasks), 1)
         self.assertEqual(created_tasks[0]["assignee"], "independent-reviewer")
 
+    def test_no_idle_routes_failed_architecture_review_to_architecture_repair(self) -> None:
+        fake = FakeHermes()
+        review_id = "t_" + "archrev3"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "architecture_review_packet.final.json"
+            fake.tasks[review_id] = {
+                "id": review_id,
+                "status": "done",
+                "assignee": "independent-reviewer",
+                "title": "Materialize architecture_review_packet for board",
+                "latest_summary": (
+                    "Blocking FAIL: architecture candidate is not reviewable; "
+                    "repair/rerun architecture_packet is required before decomposition."
+                ),
+                "workspace_path": str(Path(tmpdir)),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+            result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+        self.assertEqual(result["board_reconcile_plan"]["create_task_contract"]["body"]["required_output"], "architecture_packet")
+        created_tasks = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "architecture_packet"
+        ]
+        self.assertEqual(len(created_tasks), 1)
+        self.assertEqual(created_tasks[0]["assignee"], "product-architect")
+        body = adapter.parse_json_object(str(created_tasks[0].get("body") or "{}"))
+        self.assertFalse(body["phase_engine"]["human_gate_allowed"])
+        self.assertIn("blocking FAIL", body["reason"])
+
     def test_no_idle_does_not_mistake_planning_review_for_architecture_review(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0003"
