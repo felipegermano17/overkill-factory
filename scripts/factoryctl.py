@@ -18147,6 +18147,7 @@ def build_factory_help(
 TERMINAL_BOARD_STATUSES = {"done", "complete", "completed", "archived", "cancelled", "canceled"}
 BOARD_RECONCILE_CREATE_ACTIONS = {
     "repair_board_contract",
+    "repair_declared_artifacts",
     "create_next_artifact_task",
     "repair_domain_brain_route",
     "repair_human_gate_packet",
@@ -18325,6 +18326,36 @@ def board_reconcile_ready_dispatch_blockers(
     return sorted(set(blockers)), selected_repair_card, selected_repair_ref, selected_repair_action
 
 
+def board_reconcile_missing_declared_artifact_blockers(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[list[str], dict[str, Any] | None]:
+    blockers: list[str] = []
+    selected_ref: dict[str, Any] | None = None
+    for task in rows.get("done", []):
+        missing = task.get("missing_declared_artifacts")
+        if not isinstance(missing, list) or not missing:
+            continue
+        names = sorted(
+            {
+                str(item.get("artifact_name") or "declared-artifact").strip()
+                for item in missing
+                if isinstance(item, dict)
+            }
+        )
+        names = [name for name in names if name]
+        task_ref = _task_public_ref(task)
+        blockers.append(
+            "done task "
+            + task_ref
+            + " declared local artifacts that are absent from the Hermes runtime"
+            + (": " + ", ".join(names[:8]) if names else "")
+        )
+        if selected_ref is None:
+            selected_ref = board_reconcile_task_ref(task, status="done")
+            selected_ref["selection_reason"] = "terminal task selected because declared artifacts are missing at runtime"
+    return sorted(set(blockers)), selected_ref
+
+
 def board_rows_from_snapshot(snapshot: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     rows: dict[str, list[dict[str, Any]]] = {status: [] for status in ("ready", "running", "todo", "blocked", "done")}
     raw_rows = snapshot.get("rows") if isinstance(snapshot.get("rows"), dict) else snapshot.get("tasks_by_status")
@@ -18427,11 +18458,14 @@ def _board_reconcile_task_contract(
     card_id = str((selected_card or {}).get("card_id") or "board").strip() or "board"
     title_action = {
         "repair_board_contract": "Materialize canonical factory card",
+        "repair_declared_artifacts": "Repair missing declared artifacts",
         "create_next_artifact_task": f"Materialize {next_artifact}",
         "repair_domain_brain_route": "Materialize Solana AI Kit route",
         "repair_human_gate_packet": "Repair human gate decision package",
         "request_operator_input": "Prepare bounded operator input request",
     }.get(plan_action, "Reconcile factory board")
+    if plan_action == "repair_declared_artifacts":
+        next_artifact = "declared_artifact_readback_repair"
     return {
         "title": f"{title_action} for {card_id}",
         "assignee": assignee,
@@ -18506,6 +18540,7 @@ def build_board_reconcile_plan(
         ready_repair_ref,
         ready_repair_action,
     ) = board_reconcile_ready_dispatch_blockers(rows)
+    missing_artifact_blockers, missing_artifact_ref = board_reconcile_missing_declared_artifact_blockers(rows)
 
     if active_phase_blockers:
         plan_action = "block_invariant_violation"
@@ -18538,6 +18573,21 @@ def build_board_reconcile_plan(
             assignee="factory-orchestrator",
         )
         native_dispatch_required_next = False
+    elif missing_artifact_blockers:
+        selected_ref = missing_artifact_ref
+        plan_action = "repair_declared_artifacts"
+        reason = "completed Hermes work declared local artifacts that are missing from the runtime"
+        blocked_reasons.extend(missing_artifact_blockers)
+        create_task_contract = _board_reconcile_task_contract(
+            plan_action=plan_action,
+            board=board,
+            selected_card=None,
+            phase_engine=None,
+            factory_help=None,
+            reason=reason,
+            assignee="factory-orchestrator",
+        )
+        native_dispatch_required_next = True
     elif running:
         plan_action = "observe_running"
         reason = "running Hermes work exists; no reconcile task is allowed"

@@ -1394,9 +1394,75 @@ def enrich_no_idle_rows(
             merged["parents"] = task_readback_parents(shown)
             merged["comments"] = task_readback_comments(shown)[-3:]
             merged["events"] = task_readback_events(shown)[-5:]
+            if status == "done":
+                runs = task_run_records(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+                if runs:
+                    merged["runs"] = runs[-3:]
+                missing = missing_declared_local_artifacts(merged)
+                if missing:
+                    merged["missing_declared_artifacts"] = missing
             next_items.append(merged)
         enriched[status] = next_items
     return enriched
+
+
+def declared_artifact_refs_from_mapping(mapping: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for key in ("artifacts", "artifact_paths", "artifact_refs", "evidence_refs"):
+        value = mapping.get(key)
+        if isinstance(value, list):
+            refs.extend(str(item).strip() for item in value if str(item or "").strip())
+        elif isinstance(value, str) and value.strip():
+            refs.append(value.strip())
+    for key in ("artifact_file", "review_packet_file", "source_file", "output_file"):
+        value = str(mapping.get(key) or "").strip()
+        if value:
+            refs.append(value)
+    for value in mapping.values():
+        if isinstance(value, dict):
+            refs.extend(declared_artifact_refs_from_mapping(value))
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    refs.extend(declared_artifact_refs_from_mapping(item))
+    return refs
+
+
+def declared_artifact_refs_from_task_record(record: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for event in record.get("events") or []:
+        if not isinstance(event, dict):
+            continue
+        payload = event.get("payload")
+        payload_obj = parse_json_object(payload)
+        if payload_obj:
+            refs.extend(declared_artifact_refs_from_mapping(payload_obj))
+    for run in record.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        refs.extend(declared_artifact_refs_from_mapping(run))
+        metadata_obj = parse_json_object(run.get("metadata"))
+        if metadata_obj:
+            refs.extend(declared_artifact_refs_from_mapping(metadata_obj))
+    return sorted(set(refs))
+
+
+def missing_declared_local_artifacts(record: dict[str, Any]) -> list[dict[str, Any]]:
+    missing: list[dict[str, Any]] = []
+    for ref in declared_artifact_refs_from_task_record(record):
+        path = Path(ref)
+        if not path.is_absolute():
+            continue
+        if path.exists():
+            continue
+        missing.append(
+            {
+                "artifact_name": path.name or "declared-artifact",
+                "artifact_ref": "local-absolute-path:redacted",
+                "reason": "worker declared a local artifact path but the file is absent from the Hermes runtime",
+            }
+        )
+    return missing
 
 
 def summarize_no_idle_rows(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
@@ -7718,6 +7784,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         return public_envelope
     reducer_preempts_legacy_classifier = bool(rows.get("ready")) or reconcile_plan.get("plan_action") in {
         "repair_domain_brain_route",
+        "repair_declared_artifacts",
         "repair_human_gate_packet",
         "create_next_artifact_task",
         "request_operator_input",
