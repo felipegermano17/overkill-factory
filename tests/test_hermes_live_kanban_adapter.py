@@ -5444,6 +5444,66 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(len(created_tasks), 1)
         self.assertEqual(created_tasks[0]["assignee"], "independent-reviewer")
 
+    def test_no_idle_does_not_mistake_planning_review_for_architecture_review(self) -> None:
+        fake = FakeHermes()
+        gate_id = "t_" + "gate0003"
+        planning_review_id = "t_" + "review04"
+        arch_id = "t_" + "arch0004"
+        fake.tasks[gate_id] = {
+            "id": gate_id,
+            "status": "done",
+            "assignee": "human-gate-clerk",
+            "title": "Prepare Product SOT owner decision package",
+            "body": json.dumps({"marker": "factory_no_idle_post_review_gate_package"}),
+            "latest_summary": "Owner decision recorded: approved Product SOT for method-contract planning only.",
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {
+                            "decision": {
+                                "code": "APPROVE_PRODUCT_SOT",
+                                "value": "approved",
+                                "actor_role": "Factory Owner",
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        fake.tasks[planning_review_id] = {
+            "id": planning_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Review Method Contract and Product Face planning packets",
+            "latest_summary": (
+                "PASS_FOR_PLANNING_USE_ONLY: Method Contract and Product Face planning "
+                "may proceed to architecture."
+            ),
+        }
+        fake.tasks[arch_id] = {
+            "id": arch_id,
+            "status": "done",
+            "assignee": "product-architect",
+            "title": "Materialize architecture_packet for board",
+            "body": "{}",
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "create_next_artifact_task")
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+        created_tasks = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "architecture_review_packet"
+        ]
+        self.assertEqual(len(created_tasks), 1)
+        self.assertEqual(created_tasks[0]["assignee"], "independent-reviewer")
+
     def test_no_idle_does_not_treat_text_only_human_gate_as_decision_ready(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0001"

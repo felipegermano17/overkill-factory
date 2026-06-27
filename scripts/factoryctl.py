@@ -18248,9 +18248,26 @@ def _task_has_architecture_candidate(task: dict[str, Any]) -> bool:
 def _task_has_architecture_review(task: dict[str, Any]) -> bool:
     text = _task_search_text(task)
     assignee = str(task.get("assignee") or "").strip().lower()
-    return "independent-reviewer" in assignee and "architecture" in text and (
-        "pass" in text or "fail" in text or "review" in text
-    )
+    if "independent-reviewer" not in assignee:
+        return False
+    if "architecture_review_packet" in text or "architecture review packet" in text:
+        return True
+    if "architecture candidate" in text and ("pass" in text or "fail" in text or "review" in text):
+        return True
+    if "architecture_result" in text and ("review" in text or "pass" in text or "fail" in text):
+        return True
+    for run in task.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = _json_object_from_possible_string(run.get("metadata"))
+        if not isinstance(metadata, dict):
+            continue
+        if isinstance(metadata.get("architecture_review_result"), dict):
+            return True
+        packet = str(metadata.get("required_output") or metadata.get("artifact") or "").strip().lower()
+        if packet == "architecture_review_packet":
+            return True
+    return False
 
 
 def _factory_card_from_payload(payload: dict[str, Any]) -> dict[str, Any] | None:
