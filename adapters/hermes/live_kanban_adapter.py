@@ -1681,6 +1681,72 @@ def metadata_payload_for_declared_artifact(record: dict[str, Any], artifact_name
     return None
 
 
+def metadata_markdown_payload_for_declared_artifact(record: dict[str, Any], artifact_name: str) -> str | None:
+    if Path(artifact_name).suffix.lower() not in {".md", ".markdown"}:
+        return None
+    artifact_token = normalized_artifact_token(artifact_name)
+    for run in record.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = parse_json_object(run.get("metadata"))
+        if not isinstance(metadata, dict):
+            continue
+        for key, value in metadata.items():
+            if not isinstance(value, dict):
+                continue
+            refs = [
+                str(item)
+                for ref_key in ("artifact_paths", "artifacts", "artifact_files")
+                for item in (value.get(ref_key) if isinstance(value.get(ref_key), list) else [])
+            ]
+            names = {Path(ref).name for ref in refs}
+            key_token = normalized_artifact_token(key)
+            if artifact_name not in names and not (
+                key_token and (key_token in artifact_token or artifact_token in key_token)
+            ):
+                continue
+            lines = [
+                f"# {artifact_name}",
+                "",
+                "Reconstructed Markdown readback from structured Hermes run metadata.",
+                "",
+                f"- Source metadata key: `{key}`",
+                f"- Source status: `{value.get('status') or 'unknown'}`",
+                f"- Source task: `{value.get('task_id') or task_record_id(record) or 'unknown'}`",
+                "",
+            ]
+            for section_key, title in (
+                ("candidate_decisions", "Candidate Decisions"),
+                ("review_requirements", "Review Requirements"),
+                ("downstream_frozen", "Downstream Frozen"),
+            ):
+                items = value.get(section_key)
+                if isinstance(items, list) and items:
+                    lines.extend([f"## {title}", ""])
+                    lines.extend(f"- {str(item)}" for item in items)
+                    lines.append("")
+            validation = value.get("validation")
+            if isinstance(validation, dict) and validation:
+                lines.extend(["## Validation", ""])
+                lines.extend(f"- `{k}`: `{v}`" for k, v in sorted(validation.items()))
+                lines.append("")
+            hashes = value.get("artifact_sha256")
+            if isinstance(hashes, dict) and hashes:
+                lines.extend(["## Artifact Hashes", ""])
+                lines.extend(f"- `{k}`: `{v}`" for k, v in sorted(hashes.items()))
+                lines.append("")
+            lines.extend(
+                [
+                    "## Boundary",
+                    "",
+                    "This reconstructed Markdown is a readback artifact. Hermes run metadata remains the structured source of truth.",
+                    "",
+                ]
+            )
+            return "\n".join(lines)
+    return None
+
+
 def declared_artifact_prefers_metadata(artifact_name: str) -> bool:
     return Path(artifact_name).suffix.lower() == ".json"
 
@@ -1777,7 +1843,10 @@ def materialize_missing_declared_artifacts(
                 if payload is not None and not artifact_payload_is_valid(artifact_name, payload):
                     payload = None
             elif payload is None:
-                source = "worker_log_diff"
+                source = "task_runs.metadata_markdown"
+                payload = metadata_markdown_payload_for_declared_artifact(task, artifact_name)
+                if payload is None:
+                    source = "worker_log_diff"
             if payload is None:
                 records.append(
                     {
