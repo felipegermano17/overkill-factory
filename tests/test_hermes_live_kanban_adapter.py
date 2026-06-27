@@ -4290,6 +4290,43 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         self.assertEqual(missing, [])
 
+    def test_no_idle_does_not_repair_declared_artifact_present_in_decision_package(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "donepkg2"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace = Path(tmpdir)
+            declared_root_path = workspace / "VALIDATION_RECEIPT.final.json"
+            actual_package_path = workspace / "decision-package" / "VALIDATION_RECEIPT.final.json"
+            actual_package_path.parent.mkdir(parents=True, exist_ok=True)
+            actual_package_path.write_text(json.dumps({"status": "valid"}), encoding="utf-8")
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "human-gate-clerk",
+                "title": "Prepare Product SOT owner decision package",
+                "body": "{}",
+                "workspace_path": str(workspace),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(declared_root_path)]}),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertNotEqual(state["classification"], "repair_declared_artifacts")
+        self.assertFalse(any(
+            adapter.parse_json_object(str(task.get("body") or "{}")).get("plan_action") == "repair_declared_artifacts"
+            for task in fake.tasks.values()
+        ))
+
     def test_no_idle_materializes_missing_declared_json_from_run_metadata_before_repair(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "done0002"

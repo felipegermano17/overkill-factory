@@ -1458,7 +1458,18 @@ def enrich_no_idle_rows(
             shown = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
             task = task_readback_task(shown)
             merged = dict(item)
-            for key in ("id", "task_id", "title", "body", "assignee", "status", "priority", "result", "summary"):
+            for key in (
+                "id",
+                "task_id",
+                "title",
+                "body",
+                "assignee",
+                "status",
+                "priority",
+                "result",
+                "summary",
+                "workspace_path",
+            ):
                 if task.get(key) is not None and merged.get(key) is None:
                     merged[key] = task.get(key)
             if shown.get("latest_summary") is not None:
