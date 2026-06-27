@@ -5206,6 +5206,40 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIsNone(result["remediation_task_id"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_blocks_active_task_without_deterministic_runtime_contract(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["t_" + "freef10"] = {
+            "id": "t_" + "freef10",
+            "status": "running",
+            "assignee": "product-architect",
+            "title": "F10 repair/rerun architecture_packet artifacts for Todo Web Local",
+            "body": (
+                "Factory bounded repair route. Phase: F10 architecture. "
+                "Required output: repaired architecture_packet."
+            ),
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "blocked")
+        self.assertEqual(state["classification"], "factory_phase_invariant_violation")
+        self.assertFalse(state["native_dispatch_required_next"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "block_invariant_violation")
+        self.assertEqual(
+            result["board_reconcile_plan"]["reason"],
+            "active Hermes work is missing deterministic runtime contract",
+        )
+        self.assertTrue(
+            any(
+                "cannot proceed without deterministic runtime contract" in reason
+                for reason in result["board_reconcile_plan"]["blocked_reasons"]
+            )
+        )
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_treats_delivered_product_sot_package_as_human_gate(self) -> None:
         fake = FakeHermes()
         failed_review_id = "t_" + "review01"
