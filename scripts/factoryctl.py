@@ -18355,6 +18355,50 @@ def _task_has_product_creation_plan(task: dict[str, Any]) -> bool:
     return False
 
 
+def _task_payload_objects(task: dict[str, Any]) -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
+    for key in ("metadata", "body", "description", "result"):
+        payload = _json_object_from_possible_string(task.get(key))
+        if isinstance(payload, dict):
+            payloads.append(payload)
+    for run in task.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        payload = _json_object_from_possible_string(run.get("metadata"))
+        if isinstance(payload, dict):
+            payloads.append(payload)
+    for event in task.get("events") or []:
+        if not isinstance(event, dict):
+            continue
+        payload = event.get("payload")
+        if isinstance(payload, dict):
+            payloads.append(payload)
+    return payloads
+
+
+def _task_blocked_declared_artifact_repair_result(task: dict[str, Any]) -> dict[str, Any] | None:
+    text = _task_search_text(task)
+    if "declared_artifact_readback_repair" not in text:
+        return None
+    if "runtime_artifact_integrity_blocked" not in text and "readback is still blocked" not in text:
+        return None
+    if "architecture_packet" not in text or "product-architect" not in text:
+        return None
+    for payload in _task_payload_objects(task):
+        result = payload.get("orchestration_result")
+        if not isinstance(result, dict):
+            continue
+        if str(result.get("required_output") or "").strip() != "declared_artifact_readback_repair":
+            continue
+        if str(result.get("readback_status") or "").strip() != "runtime_artifact_integrity_blocked":
+            continue
+        return result
+    return {
+        "required_output": "declared_artifact_readback_repair",
+        "readback_status": "runtime_artifact_integrity_blocked",
+    }
+
+
 def _task_temporal_key(task: dict[str, Any], index: int) -> tuple[int, float, int]:
     for key in ("completed_at", "updated_at", "created_at", "time", "timestamp"):
         value = str(task.get(key) or "").strip()
@@ -18872,6 +18916,57 @@ def board_reconcile_terminal_passed_architecture_review_continuation(
     }, []
 
 
+def board_reconcile_terminal_blocked_artifact_readback_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    blocked_repairs: list[tuple[tuple[int, float, int], dict[str, Any], dict[str, Any]]] = []
+    architecture_repairs: list[tuple[tuple[int, float, int], dict[str, Any]]] = []
+    for index, task in enumerate(done):
+        key = _task_temporal_key(task, index)
+        repair_result = _task_blocked_declared_artifact_repair_result(task)
+        if repair_result is not None:
+            blocked_repairs.append((key, task, repair_result))
+        if _task_has_architecture_candidate(task):
+            architecture_repairs.append((key, task))
+    if not blocked_repairs:
+        return None, []
+    latest_repair_key, latest_repair_task, repair_result = max(blocked_repairs, key=lambda item: item[0])
+    newer_architecture = [task for key, task in architecture_repairs if key > latest_repair_key]
+    if newer_architecture:
+        return None, []
+    next_actions = repair_result.get("next_worker_actions") if isinstance(repair_result, dict) else None
+    next_action_text = "\n".join(str(item) for item in next_actions or [])
+    reason = (
+        "Latest declared-artifact readback repair is still blocked and explicitly routes "
+        "the next bounded repair to product-architect for architecture_packet regeneration."
+    )
+    if next_action_text:
+        reason += " Worker action: " + next_action_text[:500]
+    phase_engine = {
+        "computed_frontier": "architecture",
+        "computed_phase_id": "F10",
+        "next_required_artifact": "architecture_packet",
+        "decision_basis": reason,
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = [_task_public_ref(latest_repair_task)]
+    factory_help = {
+        "factory_next_action": {
+            "artifact": "architecture_packet",
+            "owner": "product-architect",
+            "why": reason,
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
 def _board_reconcile_task_contract(
     *,
     plan_action: str,
@@ -18974,6 +19069,11 @@ def build_board_reconcile_plan(
         ready_repair_action,
     ) = board_reconcile_ready_dispatch_blockers(rows)
     missing_artifact_blockers, missing_artifact_ref = board_reconcile_missing_declared_artifact_blockers(rows)
+    blocked_readback_continuation, blocked_readback_continuation_errors = (
+        board_reconcile_terminal_blocked_artifact_readback_continuation(rows)
+        if not unfinished
+        else (None, [])
+    )
 
     if active_contract_blockers:
         plan_action = "block_invariant_violation"
@@ -19011,6 +19111,32 @@ def build_board_reconcile_plan(
             assignee="factory-orchestrator",
         )
         native_dispatch_required_next = False
+    elif blocked_readback_continuation is not None:
+        blocked_reasons.extend(blocked_readback_continuation_errors)
+        phase_engine = blocked_readback_continuation["phase_engine"]
+        factory_help = blocked_readback_continuation["factory_help"]
+        next_action = factory_help.get("factory_next_action") if isinstance(factory_help, dict) else {}
+        next_owner = str((next_action or {}).get("owner") or "product-architect")
+        next_artifact = str((next_action or {}).get("artifact") or "architecture_packet")
+        selected_ref = {
+            "task_ref": "board:terminal-readback-repair-frontier",
+            "status": "done",
+            "title": "Terminal artifact readback repair selected follow-up worker",
+            "assignee": next_owner,
+            "selection_reason": f"latest declared-artifact repair requires {next_artifact} regeneration",
+        }
+        plan_action = "create_next_artifact_task"
+        reason = str((next_action or {}).get("why"))
+        create_task_contract = _board_reconcile_task_contract(
+            plan_action=plan_action,
+            board=board,
+            selected_card={"card_id": "board"},
+            phase_engine=phase_engine,
+            factory_help=factory_help,
+            reason=reason,
+            assignee=next_owner,
+        )
+        native_dispatch_required_next = True
     elif missing_artifact_blockers:
         selected_ref = missing_artifact_ref
         plan_action = "repair_declared_artifacts"

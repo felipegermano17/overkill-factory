@@ -4381,6 +4381,69 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         workspace_value = create_calls[-1][create_calls[-1].index("--workspace") + 1]
         self.assertTrue(workspace_value.startswith("dir:"))
 
+    def test_no_idle_routes_blocked_readback_repair_to_architecture_regeneration(self) -> None:
+        fake = FakeHermes()
+        stale_arch_id = "t_" + "archstale"
+        repair_id = "t_" + "readback"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "ARCHITECTURE_PACKET.example.md"
+            fake.tasks[stale_arch_id] = {
+                "id": stale_arch_id,
+                "status": "done",
+                "assignee": "product-architect",
+                "title": "Materialize architecture_packet for board",
+                "body": "{}",
+                "workspace_path": str(Path(tmpdir)),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                    }
+                ],
+            }
+            fake.tasks[repair_id] = {
+                "id": repair_id,
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Repair missing declared artifacts for board",
+                "body": json.dumps({"required_output": "declared_artifact_readback_repair"}),
+                "completed_at": "2026-06-27T09:10:00+00:00",
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "orchestration_result": {
+                                    "required_output": "declared_artifact_readback_repair",
+                                    "readback_status": "runtime_artifact_integrity_blocked",
+                                    "next_worker_actions": [
+                                        "product-architect: regenerate/repair architecture_packet artifacts again"
+                                    ],
+                                }
+                            }
+                        ),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+        plan = result["board_reconcile_plan"]
+        self.assertEqual(plan["plan_action"], "create_next_artifact_task")
+        self.assertEqual(plan["create_task_contract"]["body"]["required_output"], "architecture_packet")
+        self.assertEqual(plan["create_task_contract"]["assignee"], "product-architect")
+        created_architecture_repairs = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "architecture_packet"
+        ]
+        self.assertEqual(len(created_architecture_repairs), 1)
+
     def test_no_idle_replaces_stale_declared_artifact_repair_task(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "doneart1"
