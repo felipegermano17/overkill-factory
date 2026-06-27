@@ -1502,6 +1502,10 @@ def metadata_payload_for_declared_artifact(record: dict[str, Any], artifact_name
     return None
 
 
+def declared_artifact_prefers_metadata(artifact_name: str) -> bool:
+    return Path(artifact_name).suffix.lower() == ".json"
+
+
 def log_diff_payload_for_declared_artifact(log_text: str, artifact_name: str) -> str | None:
     lines = log_text.splitlines()
     candidates = [
@@ -1564,7 +1568,11 @@ def materialize_missing_declared_artifacts(
             if path.exists():
                 continue
             source = "task_runs.metadata"
-            payload = metadata_payload_for_declared_artifact(task, artifact_name)
+            payload = (
+                metadata_payload_for_declared_artifact(task, artifact_name)
+                if declared_artifact_prefers_metadata(artifact_name)
+                else None
+            )
             if payload is None:
                 source = "worker_log_diff"
                 if task_id not in log_cache:
