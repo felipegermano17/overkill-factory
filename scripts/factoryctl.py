@@ -18234,9 +18234,8 @@ def _task_has_approved_product_sot_gate(task: dict[str, Any]) -> bool:
 
 def _task_has_architecture_candidate(task: dict[str, Any]) -> bool:
     text = _task_search_text(task)
-    if "architecture_result" in text or "architecture_packet" in text:
-        if "candidate_architecture" in text or "architecture packet" in text:
-            return True
+    if "architecture_result" in text or "architecture_packet" in text or "architecture packet" in text:
+        return True
     for run in task.get("runs") or []:
         if not isinstance(run, dict):
             continue
