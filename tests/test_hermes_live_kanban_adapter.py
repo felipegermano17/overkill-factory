@@ -144,6 +144,7 @@ class FakeHermes:
         self.counter = 0
         self.tasks: dict[str, dict[str, object]] = {}
         self.idempotent_task_ids: dict[str, str] = {}
+        self.logs: dict[str, str] = {}
 
     def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
         self.calls.append(argv)
@@ -275,6 +276,8 @@ class FakeHermes:
         if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "runs":
             payload = self.tasks.get(argv[5], {})
             return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(payload.get("runs") or []), stderr="")
+        if len(argv) >= 6 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "log":
+            return subprocess.CompletedProcess(argv, 0, stdout=self.logs.get(argv[5], ""), stderr="")
         if len(argv) >= 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
             parent_id = argv[5]
             child_id = argv[6]
@@ -4201,6 +4204,118 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(body["required_output"], "declared_artifact_readback_repair")
         self.assertFalse(body["agent_may_choose_phase"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_materializes_missing_declared_json_from_run_metadata_before_repair(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "done0002"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "product-sot-result.json"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "product-sot-planner",
+                "title": "F5 - Product SOT candidate",
+                "body": "{}",
+                "events": [
+                    {
+                        "type": "completed",
+                        "payload": {"artifacts": [str(missing_artifact)]},
+                    }
+                ],
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "product_sot_result": {
+                                    "artifact_file": "product-sot-result.json",
+                                    "status": "candidate_owner_review_required_not_approved",
+                                    "next_required_gate": "Product SOT owner review",
+                                },
+                                "artifacts": [str(missing_artifact)],
+                            }
+                        ),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+            self.assertTrue(missing_artifact.exists())
+            recovered = json.loads(missing_artifact.read_text(encoding="utf-8"))
+            self.assertEqual(
+                recovered["product_sot_result"]["status"],
+                "candidate_owner_review_required_not_approved",
+            )
+            self.assertEqual(result["board_reconcile_plan"]["plan_action"], "no_unfinished_work")
+            self.assertIsNone(result["remediation_task_id"])
+            self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
+            self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "task_runs.metadata")
+            self.assertFalse(
+                any(
+                    adapter.parse_json_object(str(task.get("body") or "{}")).get("plan_action")
+                    == "repair_declared_artifacts"
+                    for task in fake.tasks.values()
+                )
+            )
+
+    def test_no_idle_materializes_missing_markdown_from_worker_log_diff_before_repair(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "done0003"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "product-sot-candidate.md"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "product-sot-planner",
+                "title": "F5 - Product SOT candidate",
+                "body": "{}",
+                "events": [
+                    {
+                        "type": "completed",
+                        "payload": {"artifacts": [str(missing_artifact)]},
+                    }
+                ],
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                    }
+                ],
+            }
+            fake.logs[done_id] = "\n".join(
+                [
+                    "  ┊ review diff",
+                    "a/product-sot-candidate.md -> b/product-sot-candidate.md",
+                    "@@ -0,0 +1,4 @@",
+                    "+# Product SOT candidate - Todo Web Local",
+                    "+",
+                    "+Status: candidate for owner review only.",
+                    "+Next gate: Product SOT owner review.",
+                    "  ┊ ⚡ kanban_complete",
+                ]
+            )
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+            self.assertEqual(
+                missing_artifact.read_text(encoding="utf-8"),
+                "# Product SOT candidate - Todo Web Local\n\n"
+                "Status: candidate for owner review only.\n"
+                "Next gate: Product SOT owner review.\n",
+            )
+            self.assertEqual(result["board_reconcile_plan"]["plan_action"], "no_unfinished_work")
+            self.assertIsNone(result["remediation_task_id"])
+            self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
+            self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "worker_log_diff")
 
     def test_no_idle_reconciles_declared_f9_to_f5_owner_package_before_gate(self) -> None:
         fake = FakeHermes()

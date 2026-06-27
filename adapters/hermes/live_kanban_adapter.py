@@ -445,6 +445,21 @@ def task_run_records(
     return []
 
 
+def task_log_text(
+    *,
+    hermes_bin: str,
+    board: str,
+    task_id: str,
+    runner: Runner = default_runner,
+    tail_bytes: int = 500_000,
+) -> str:
+    completed = run_checked(
+        hermes_kanban(hermes_bin, board, "log", task_id, "--tail", str(tail_bytes)),
+        runner,
+    )
+    return completed.stdout or ""
+
+
 def task_status(payload: dict[str, Any]) -> str:
     return str(payload.get("status") or "").strip().lower()
 
@@ -1459,10 +1474,132 @@ def missing_declared_local_artifacts(record: dict[str, Any]) -> list[dict[str, A
             {
                 "artifact_name": path.name or "declared-artifact",
                 "artifact_ref": "local-absolute-path:redacted",
+                "local_path": str(path),
+                "task_id": task_record_id(record),
                 "reason": "worker declared a local artifact path but the file is absent from the Hermes runtime",
             }
         )
     return missing
+
+
+def metadata_payload_for_declared_artifact(record: dict[str, Any], artifact_name: str) -> str | None:
+    for run in record.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = parse_json_object(run.get("metadata"))
+        if not isinstance(metadata, dict):
+            continue
+        for key, value in metadata.items():
+            if not isinstance(value, dict):
+                continue
+            names = {
+                str(value.get(name_key) or "").strip()
+                for name_key in ("artifact_file", "review_packet_file", "source_file", "output_file")
+            }
+            names.discard("")
+            if artifact_name in names:
+                return json.dumps({key: value}, indent=2, ensure_ascii=False) + "\n"
+    return None
+
+
+def log_diff_payload_for_declared_artifact(log_text: str, artifact_name: str) -> str | None:
+    lines = log_text.splitlines()
+    candidates = [
+        index
+        for index, line in enumerate(lines)
+        if f"b/{artifact_name}" in line and f"a/{artifact_name}" in line
+    ]
+    for marker_index in reversed(candidates):
+        start_index = None
+        for index in range(marker_index + 1, min(len(lines), marker_index + 20)):
+            if lines[index].startswith("@@"):
+                start_index = index + 1
+                break
+        if start_index is None:
+            continue
+        recovered: list[str] = []
+        for line in lines[start_index:]:
+            if recovered and (line.startswith("  ┊") or line.startswith("┌") or line.startswith("╭")):
+                break
+            if line.startswith("+++"):
+                continue
+            if line.startswith("+"):
+                recovered.append(line[1:])
+                continue
+            if line.startswith("@@") or line.startswith("-") or line.startswith(" "):
+                continue
+            if recovered and not line:
+                break
+        if recovered:
+            return "\n".join(recovered) + "\n"
+    return None
+
+
+def materialize_missing_declared_artifacts(
+    *,
+    hermes_bin: str,
+    board: str,
+    rows: dict[str, list[dict[str, Any]]],
+    runner: Runner,
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    log_cache: dict[str, str] = {}
+    for task in rows.get("done", []):
+        missing = task.get("missing_declared_artifacts")
+        if not isinstance(missing, list) or not missing:
+            continue
+        task_id = task_record_id(task)
+        if not task_id:
+            continue
+        for item in missing:
+            if not isinstance(item, dict):
+                continue
+            artifact_name = str(item.get("artifact_name") or "").strip()
+            local_path = str(item.get("local_path") or "").strip()
+            if not artifact_name or not local_path:
+                continue
+            path = Path(local_path)
+            if not path.is_absolute():
+                continue
+            if path.exists():
+                continue
+            source = "task_runs.metadata"
+            payload = metadata_payload_for_declared_artifact(task, artifact_name)
+            if payload is None:
+                source = "worker_log_diff"
+                if task_id not in log_cache:
+                    log_cache[task_id] = task_log_text(
+                        hermes_bin=hermes_bin,
+                        board=board,
+                        task_id=task_id,
+                        runner=runner,
+                    )
+                payload = log_diff_payload_for_declared_artifact(log_cache[task_id], artifact_name)
+            if payload is None:
+                records.append(
+                    {
+                        "task_ref": PUBLIC_SAFE_KANBAN_REF,
+                        "artifact_name": artifact_name,
+                        "materialized": False,
+                        "reason": "no recoverable metadata payload or worker log diff found",
+                    }
+                )
+                continue
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(payload, encoding="utf-8")
+            data = path.read_bytes()
+            records.append(
+                {
+                    "task_ref": PUBLIC_SAFE_KANBAN_REF,
+                    "artifact_name": artifact_name,
+                    "materialized": True,
+                    "recovery_source": source,
+                    "size_bytes": len(data),
+                    "sha256": hashlib.sha256(data).hexdigest(),
+                    "artifact_ref": "local-absolute-path:redacted",
+                }
+            )
+    return records
 
 
 def summarize_no_idle_rows(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
@@ -7683,6 +7820,25 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         for status in ("ready", "running", "todo", "blocked", "triage", "done")
     }
     rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
+    artifact_materialization: list[dict[str, Any]] = []
+    if args.create_remediation:
+        artifact_materialization = materialize_missing_declared_artifacts(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            rows=rows,
+            runner=runner,
+        )
+        if any(item.get("materialized") is True for item in artifact_materialization):
+            rows = {
+                status: list_tasks_by_status(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    status=status,
+                    runner=runner,
+                )
+                for status in ("ready", "running", "todo", "blocked", "triage", "done")
+            }
+            rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
     reconcile_plan: dict[str, Any] | None = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
     if reconcile_plan.get("plan_action") == "block_invariant_violation":
         classification = {
@@ -7705,6 +7861,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             "blocked": True,
             "no_idle_state": classification,
             "board_reconcile_plan": reconcile_plan,
+            "artifact_materialization": artifact_materialization,
             "targeted_remediation_plan": None,
             "remediation_task_id": None,
             "hook": {
@@ -7733,6 +7890,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             "blocked": bool(legacy_classification.get("blocked")),
             "no_idle_state": legacy_classification,
             "board_reconcile_plan": reconcile_plan,
+            "artifact_materialization": artifact_materialization,
             "targeted_remediation_plan": None,
             "remediation_task_id": None,
             "hook": {
@@ -7765,6 +7923,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             "blocked": bool(legacy_classification.get("blocked")),
             "no_idle_state": legacy_classification,
             "board_reconcile_plan": reconcile_plan,
+            "artifact_materialization": artifact_materialization,
             "targeted_remediation_plan": None,
             "remediation_task_id": None,
             "hook": {
@@ -7830,13 +7989,14 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
             "state": summarize_no_idle_rows(rows),
         }
         classification.update(task_runtime)
-        return {
+        envelope = {
             "$schema": LIVE_ADAPTER_SCHEMA,
             "mode": "no-idle",
             "board": args.board,
             "blocked": True,
             "no_idle_state": classification,
             "board_reconcile_plan": reconcile_plan,
+            "artifact_materialization": artifact_materialization,
             "targeted_remediation_plan": None,
             "remediation_task_id": remediation_task_id,
             "hook": {
@@ -7849,6 +8009,10 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 ),
             },
         }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     classification = legacy_classification
     remediation_task_id: str | None = None
     targeted_remediation_plan: dict[str, Any] | None = None
@@ -7991,6 +8155,7 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         "blocked": bool(classification.get("blocked")),
         "no_idle_state": classification,
         "board_reconcile_plan": reconcile_plan,
+        "artifact_materialization": artifact_materialization,
         "targeted_remediation_plan": targeted_remediation_plan,
         "remediation_task_id": remediation_task_id,
         "hook": {
