@@ -1525,7 +1525,7 @@ def missing_declared_local_artifacts(record: dict[str, Any]) -> list[dict[str, A
         path = Path(ref)
         if not path.is_absolute():
             continue
-        if path.exists():
+        if declared_local_artifact_exists(record, path):
             continue
         missing.append(
             {
@@ -1537,6 +1537,30 @@ def missing_declared_local_artifacts(record: dict[str, Any]) -> list[dict[str, A
             }
         )
     return missing
+
+
+def declared_local_artifact_exists(record: dict[str, Any], path: Path) -> bool:
+    if path.exists():
+        return True
+    if not path.name:
+        return False
+    workspace = Path(str(record.get("workspace_path") or ""))
+    if not workspace.is_absolute() or not workspace.exists():
+        return False
+    candidates = [
+        workspace / path.name,
+        workspace / "decision-package" / path.name,
+        workspace / "artifacts" / path.name,
+        workspace / "artifact" / path.name,
+        workspace / "outputs" / path.name,
+        workspace / "output" / path.name,
+    ]
+    if any(candidate.exists() for candidate in candidates):
+        return True
+    try:
+        return any(candidate.is_file() for candidate in workspace.rglob(path.name))
+    except OSError:
+        return False
 
 
 def metadata_payload_for_declared_artifact(record: dict[str, Any], artifact_name: str) -> str | None:

@@ -4265,6 +4265,31 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(body["agent_may_choose_phase"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_missing_declared_artifacts_accepts_decision_package_basename_match(self) -> None:
+        done_id = "t_" + "donepkg1"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace = Path(tmpdir)
+            declared_root_path = workspace / "HUMAN_GATE_RECORD.approved.json"
+            actual_package_path = workspace / "decision-package" / "HUMAN_GATE_RECORD.approved.json"
+            actual_package_path.parent.mkdir(parents=True, exist_ok=True)
+            actual_package_path.write_text(json.dumps({"decision": "approved"}), encoding="utf-8")
+            record = {
+                "id": done_id,
+                "status": "done",
+                "workspace_path": str(workspace),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(declared_root_path)]}),
+                    }
+                ],
+            }
+
+            missing = adapter.missing_declared_local_artifacts(record)
+
+        self.assertEqual(missing, [])
+
     def test_no_idle_materializes_missing_declared_json_from_run_metadata_before_repair(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "done0002"
