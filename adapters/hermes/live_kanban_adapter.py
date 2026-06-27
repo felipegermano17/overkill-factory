@@ -4967,6 +4967,173 @@ def parse_json_object(value: Any) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
+def task_payload_objects(task: dict[str, Any]) -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
+    for key in ("body", "metadata", "result"):
+        payload = parse_json_object(task.get(key))
+        if payload:
+            payloads.append(payload)
+    for run in task.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        payload = parse_json_object(run.get("metadata"))
+        if payload:
+            payloads.append(payload)
+    return payloads
+
+
+def task_has_ready_work_unit_execution_request(task: dict[str, Any]) -> bool:
+    for payload in task_payload_objects(task):
+        if payload.get("packet_type") == "ready_work_unit_execution_request":
+            return True
+        body_contract = payload.get("body_contract")
+        if isinstance(body_contract, dict) and body_contract.get("packet_type") == "ready_work_unit_execution_request":
+            return True
+    return False
+
+
+def task_has_ready_work_unit_materialization_plan(task: dict[str, Any]) -> bool:
+    title = str(task.get("title") or task.get("name") or "").lower()
+    if "ready_work_unit_hermes_materialization_plan" in title:
+        return True
+    for payload in task_payload_objects(task):
+        if payload.get("record_type") == "ready_work_unit_hermes_materialization_plan":
+            return True
+        if (
+            str(payload.get("required_output") or payload.get("artifact") or "").strip()
+            == "ready_work_unit_hermes_materialization_plan"
+        ):
+            return True
+        if isinstance(payload.get("ready_work_unit_hermes_materialization_plan"), dict):
+            return True
+    return False
+
+
+def safe_repo_relative_path(path_ref: Any) -> Path | None:
+    text = str(path_ref or "").strip()
+    if not text:
+        return None
+    candidate = Path(text)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    try:
+        resolved = candidate.resolve()
+        resolved.relative_to(ROOT.resolve())
+    except (OSError, ValueError):
+        return None
+    return resolved
+
+
+def ready_work_unit_materialization_plan_path_from_task(task: dict[str, Any]) -> Path | None:
+    for payload in task_payload_objects(task):
+        if payload.get("record_type") == "ready_work_unit_hermes_materialization_plan":
+            return None
+        artifacts = payload.get("artifacts")
+        if isinstance(artifacts, dict):
+            plan_artifact = artifacts.get("plan")
+            if isinstance(plan_artifact, dict):
+                path = safe_repo_relative_path(plan_artifact.get("path_ref") or plan_artifact.get("path"))
+                if path is not None and path.exists():
+                    return path
+        orchestration_result = payload.get("orchestration_result")
+        if isinstance(orchestration_result, dict):
+            for ref in orchestration_result.get("evidence_refs") or []:
+                path = safe_repo_relative_path(ref)
+                if path is not None and path.exists() and "READY_WORK_UNIT_HERMES_MATERIALIZATION_PLAN" in path.name:
+                    return path
+    return None
+
+
+def latest_ready_work_unit_materialization_plan_path(rows: dict[str, list[dict[str, Any]]]) -> Path | None:
+    candidates: list[tuple[int, Path]] = []
+    for index, task in enumerate(rows.get("done", [])):
+        if not task_has_ready_work_unit_materialization_plan(task):
+            continue
+        path = ready_work_unit_materialization_plan_path_from_task(task)
+        if path is not None:
+            completed = int(task.get("completed_at") or task.get("created_at") or index)
+            candidates.append((completed, path))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda item: item[0])
+    return candidates[-1][1]
+
+
+def board_has_ready_work_unit_execution_requests(rows: dict[str, list[dict[str, Any]]]) -> bool:
+    return any(
+        task_has_ready_work_unit_execution_request(task)
+        for tasks in rows.values()
+        for task in tasks
+    )
+
+
+def auto_materialize_ready_work_units_from_plan(
+    *,
+    hermes_bin: str,
+    board: str,
+    plan_path: Path,
+    worker_assignee_prefix: str,
+    workspace: str,
+    runner: Runner,
+) -> dict[str, Any]:
+    out_dir = ROOT / ".tmp" / "factory-runs"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256(str(plan_path).encode("utf-8")).hexdigest()[:12]
+    route_readiness_path = out_dir / f"ready-work-unit-route-readiness-{board}-{digest}.json"
+    materialization_result_path = out_dir / f"ready-work-unit-materialization-{board}-{digest}.json"
+    release_result_path = out_dir / f"ready-work-unit-release-{board}-{digest}.json"
+
+    route_readiness = collect_route_readiness(
+        argparse.Namespace(
+            plan=plan_path,
+            worker=[],
+            hermes_bin=hermes_bin,
+            required_auth_provider="OpenAI Codex",
+            credential_evidence_ref="external:hermes-status-auth-provider-ready",
+            ledger_ref="external:hermes-worker-route-readiness-ledger",
+            out=route_readiness_path,
+        ),
+        runner=runner,
+    )
+    materialization = materialize_ready_work_units(
+        argparse.Namespace(
+            plan=plan_path,
+            board=board,
+            hermes_bin=hermes_bin,
+            worker_assignee_prefix=worker_assignee_prefix,
+            workspace=workspace,
+            ensure_board=False,
+            dry_run=False,
+            route_readiness=route_readiness_path,
+            out=materialization_result_path,
+        ),
+        runner=runner,
+    )
+    release = release_ready_work_units(
+        argparse.Namespace(
+            plan=plan_path,
+            materialization_result=materialization_result_path,
+            board=board,
+            hermes_bin=hermes_bin,
+            worker_assignee_prefix=worker_assignee_prefix,
+            route_readiness=route_readiness_path,
+            reason=None,
+            dry_run=False,
+            out=release_result_path,
+        ),
+        runner=runner,
+    )
+    return {
+        "plan_path": str(plan_path.relative_to(ROOT)),
+        "route_readiness_path": str(route_readiness_path.relative_to(ROOT)),
+        "materialization_result_path": str(materialization_result_path.relative_to(ROOT)),
+        "release_result_path": str(release_result_path.relative_to(ROOT)),
+        "route_readiness": route_readiness,
+        "materialization": materialization,
+        "release": release,
+    }
+
+
 def string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
@@ -8203,6 +8370,111 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 for status in ("ready", "running", "todo", "blocked", "triage", "done")
             }
             rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
+    plan_path = latest_ready_work_unit_materialization_plan_path(rows)
+    if plan_path is not None and not board_has_ready_work_unit_execution_requests(rows):
+        if not args.create_remediation:
+            classification = {
+                "status": "remediation_required",
+                "classification": "ready_work_unit_runtime_materialization_required",
+                "blocked": True,
+                "remediation_required": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "native_dispatch_required_next": False,
+                "ready_work_unit_hermes_materialization_plan_ref": str(plan_path.relative_to(ROOT)),
+                "next_action": (
+                    "run no-idle with create-remediation so the runtime adapter materializes blocked-first "
+                    "Hermes ready work-unit execution cards from the validated plan"
+                ),
+                "state": summarize_no_idle_rows(rows),
+            }
+            envelope = {
+                "$schema": LIVE_ADAPTER_SCHEMA,
+                "mode": "no-idle",
+                "board": args.board,
+                "blocked": True,
+                "no_idle_state": classification,
+                "board_reconcile_plan": None,
+                "artifact_materialization": artifact_materialization,
+                "targeted_remediation_plan": None,
+                "remediation_task_id": None,
+                "hook": {
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "no_shadow_dispatcher": True,
+                    "dispatch_called_by_this_command": False,
+                    "reporting_policy": (
+                        "No-idle found a validated ready work-unit Hermes plan; live materialization "
+                        "requires create-remediation so the adapter, not a worker, performs the runtime mutation."
+                    ),
+                },
+            }
+            public_envelope = sanitize_public_refs(envelope)
+            if args.out:
+                write_json(args.out, public_envelope)
+            return public_envelope
+        ready_work_unit_runtime_materialization = auto_materialize_ready_work_units_from_plan(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            plan_path=plan_path,
+            worker_assignee_prefix="",
+            workspace=args.workspace,
+            runner=runner,
+        )
+        rows = {
+            status: list_tasks_by_status(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                status=status,
+                runner=runner,
+            )
+            for status in ("ready", "running", "todo", "blocked", "triage", "done")
+        }
+        rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
+        ready_after = rows.get("ready", [])
+        classification = {
+            "status": "dispatch_available" if ready_after else "runtime_materialized",
+            "classification": "ready_work_unit_runtime_materialized",
+            "blocked": False,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": bool(ready_after),
+            "ready_work_unit_hermes_materialization_plan_ref": str(plan_path.relative_to(ROOT)),
+            "runtime_materialization": ready_work_unit_runtime_materialization,
+            "next_action": (
+                "run native Hermes dispatch for released ready work-unit cards"
+                if ready_after
+                else "observe materialized ready work-unit cards and dependencies"
+            ),
+            "state": summarize_no_idle_rows(rows),
+        }
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": False,
+            "no_idle_state": classification,
+            "board_reconcile_plan": None,
+            "artifact_materialization": artifact_materialization,
+            "targeted_remediation_plan": None,
+            "remediation_task_id": None,
+            "ready_work_unit_runtime_materialization": ready_work_unit_runtime_materialization,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle used the runtime adapter to materialize validated ready work-unit plan "
+                    "into blocked-first Hermes cards and release the eligible first wave; native dispatch remains separate."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     reconcile_plan: dict[str, Any] | None = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
     if reconcile_plan.get("plan_action") == "block_invariant_violation":
         classification = {

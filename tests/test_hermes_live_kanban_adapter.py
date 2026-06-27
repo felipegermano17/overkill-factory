@@ -148,6 +148,26 @@ class FakeHermes:
 
     def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
         self.calls.append(argv)
+        if argv == ["hermes", "profile", "list"]:
+            rows = [
+                " Profile          Model                        Gateway      Alias        Distribution",
+                " factory-orchestrator gpt-5.5                      stopped      factory-orchestrator -",
+                " product-face gpt-5.5                      stopped      product-face -",
+                " frontend-builder gpt-5.5                      stopped      frontend-builder -",
+                " data-persistence-builder gpt-5.5                      stopped      data-persistence-builder -",
+                " security-orchestrator gpt-5.5                      stopped      security-orchestrator -",
+                " qa-verification-worker gpt-5.5                      stopped      qa-verification-worker -",
+                " evidence-reconciler gpt-5.5                      stopped      evidence-reconciler -",
+                " implementation-worker gpt-5.5                      stopped      implementation-worker -",
+            ]
+            return subprocess.CompletedProcess(argv, 0, stdout="\n".join(rows), stderr="")
+        if argv == ["hermes", "status"]:
+            return subprocess.CompletedProcess(
+                argv,
+                0,
+                stdout="OpenAI Codex  \u2713 logged in\nGateway Service  \u2713 running\n",
+                stderr="",
+            )
         if argv == ["hermes", "kanban", "boards", "list", "--json"]:
             return subprocess.CompletedProcess(argv, 0, stdout="[]", stderr="")
         if argv[:4] == ["hermes", "kanban", "boards", "create"]:
@@ -6194,6 +6214,68 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(body["phase_engine"]["computed_phase_id"], "F15")
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
         self.assertIn("blocked-first Kanban execution cards", body["phase_engine"]["decision_basis"])
+
+    def test_no_idle_materializes_ready_work_unit_plan_to_native_cards(self) -> None:
+        fake = FakeHermes()
+        tmp_root = ROOT / ".tmp" / "tests"
+        tmp_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=tmp_root) as tmp:
+            tmp_path = Path(tmp)
+            plan = two_step_ready_work_unit_plan()
+            plan["board"] = TEST_BOARD
+            plan_path = tmp_path / "READY_WORK_UNIT_HERMES_MATERIALIZATION_PLAN_test.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            relative_plan = plan_path.relative_to(ROOT)
+            plan_task_id = "t_" + "plan001"
+            fake.tasks[plan_task_id] = {
+                "id": plan_task_id,
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Materialize ready_work_unit_hermes_materialization_plan for board",
+                "body": json.dumps(
+                    {
+                        "packet_type": "factory_deterministic_reconcile_task",
+                        "required_output": "ready_work_unit_hermes_materialization_plan",
+                        "kanban_workflow_binding": {
+                            "workflow_template_id": "overkill-vfinal",
+                            "current_step_key": "F15-execution",
+                            "runtime_field_required": True,
+                        },
+                    }
+                ),
+                "runs": [
+                    {
+                        "status": "done",
+                        "metadata": json.dumps(
+                            {
+                                "artifacts": {
+                                    "plan": {
+                                        "path_ref": str(relative_plan),
+                                    }
+                                },
+                                "orchestration_result": {
+                                    "evidence_refs": [str(relative_plan)],
+                                },
+                            }
+                        ),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+            result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["no_idle_state"]["classification"], "ready_work_unit_runtime_materialized")
+        self.assertTrue(result["no_idle_state"]["native_dispatch_required_next"])
+        self.assertEqual(result["ready_work_unit_runtime_materialization"]["materialization"]["mode"], "materialize-ready-work-units")
+        self.assertEqual(result["ready_work_unit_runtime_materialization"]["release"]["mode"], "release-ready-work-units")
+        created_work_unit_ids = ready_work_unit_task_ids(fake)
+        self.assertEqual(len(created_work_unit_ids), 2)
+        statuses = {task_id: fake.tasks[task_id]["status"] for task_id in created_work_unit_ids}
+        self.assertIn("ready", statuses.values())
+        self.assertIn("blocked", statuses.values())
+        ready_task = next(task for task_id, task in fake.tasks.items() if task_id in created_work_unit_ids and task["status"] == "ready")
+        self.assertEqual(ready_task["assignee"], "implementation-worker")
 
     def test_no_idle_keeps_newer_failed_architecture_review_active_after_older_pass(self) -> None:
         fake = FakeHermes()
