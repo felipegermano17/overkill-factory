@@ -1567,22 +1567,20 @@ def materialize_missing_declared_artifacts(
                 continue
             if path.exists():
                 continue
-            source = "task_runs.metadata"
-            payload = (
-                metadata_payload_for_declared_artifact(task, artifact_name)
-                if declared_artifact_prefers_metadata(artifact_name)
-                else None
-            )
-            if payload is None:
+            source = "worker_log_diff"
+            if task_id not in log_cache:
+                log_cache[task_id] = task_log_text(
+                    hermes_bin=hermes_bin,
+                    board=board,
+                    task_id=task_id,
+                    runner=runner,
+                )
+            payload = log_diff_payload_for_declared_artifact(log_cache[task_id], artifact_name)
+            if payload is None and declared_artifact_prefers_metadata(artifact_name):
+                source = "task_runs.metadata"
+                payload = metadata_payload_for_declared_artifact(task, artifact_name)
+            elif payload is None:
                 source = "worker_log_diff"
-                if task_id not in log_cache:
-                    log_cache[task_id] = task_log_text(
-                        hermes_bin=hermes_bin,
-                        board=board,
-                        task_id=task_id,
-                        runner=runner,
-                    )
-                payload = log_diff_payload_for_declared_artifact(log_cache[task_id], artifact_name)
             if payload is None:
                 records.append(
                     {
