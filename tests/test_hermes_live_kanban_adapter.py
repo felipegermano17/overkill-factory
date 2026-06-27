@@ -4341,6 +4341,46 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIn("architecture_review_packet", first_body["repair_blocked_reasons"][0])
         self.assertIn("architecture_review_packet", second_body["repair_blocked_reasons"][0])
 
+    def test_no_idle_normalizes_absolute_workspace_for_remediation_create(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "doneabs1"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "VALIDATION_RECEIPT.final.json"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Prepare validation receipt",
+                "body": "{}",
+                "workspace_path": str(Path(tmpdir)),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                    }
+                ],
+            }
+            absolute_workspace = str(Path(tmpdir) / "no-idle-workspace")
+            args = adapter.build_parser().parse_args(
+                [
+                    "no-idle",
+                    "--board",
+                    TEST_BOARD,
+                    "--create-remediation",
+                    "--workspace",
+                    absolute_workspace,
+                ]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+        self.assertIsNotNone(result["remediation_task_id"])
+        create_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "create"]
+        self.assertTrue(create_calls)
+        workspace_value = create_calls[-1][create_calls[-1].index("--workspace") + 1]
+        self.assertTrue(workspace_value.startswith("dir:"))
+
     def test_no_idle_replaces_stale_declared_artifact_repair_task(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "doneart1"
