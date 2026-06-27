@@ -158,6 +158,7 @@ class FakeHermes:
                 " security-orchestrator gpt-5.5                      stopped      security-orchestrator -",
                 " qa-verification-worker gpt-5.5                      stopped      qa-verification-worker -",
                 " evidence-reconciler gpt-5.5                      stopped      evidence-reconciler -",
+                " independent-reviewer gpt-5.5                      stopped      independent-reviewer -",
                 " implementation-worker gpt-5.5                      stopped      implementation-worker -",
             ]
             return subprocess.CompletedProcess(argv, 0, stdout="\n".join(rows), stderr="")
@@ -353,6 +354,13 @@ class EmptyStdoutIdempotentHermes(FakeHermes):
         return super().__call__(argv)
 
 
+class BrokenLinkHermes(FakeHermes):
+    def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
+        if len(argv) >= 7 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "link":
+            return subprocess.CompletedProcess(argv, 0, stdout="linked", stderr="")
+        return super().__call__(argv)
+
+
 class FakeRouteReadinessHermes:
     def __init__(self, *, include_implementation_worker: bool = True, auth_ready: bool = True) -> None:
         self.calls: list[list[str]] = []
@@ -371,6 +379,9 @@ class FakeRouteReadinessHermes:
                 rows.append(
                     " implementation-worker gpt-5.5                      stopped      implementation-worker -"
                 )
+            rows.append(
+                " independent-reviewer gpt-5.5                      stopped      independent-reviewer -"
+            )
             return subprocess.CompletedProcess(argv, 0, stdout="\n".join(rows), stderr="")
         if argv == ["hermes", "status"]:
             marker = "\u2713 logged in" if self.auth_ready else "x not logged in"
@@ -845,7 +856,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         assert_route_readiness_schema(self, result)
         self.assertEqual(result["result"], "PASS")
         self.assertEqual(result["blocked_worker_count"], 0)
-        self.assertEqual([check["worker_id"] for check in result["checks"]], ["implementation-worker"])
+        self.assertEqual([check["worker_id"] for check in result["checks"]], ["implementation-worker", "independent-reviewer"])
         self.assertEqual(result["checks"][0]["credential_evidence"], ["external:test-auth"])
         self.assertTrue(wrote_output)
         self.assertEqual(fake.calls, [["hermes", "profile", "list"], ["hermes", "status"]])
@@ -2494,7 +2505,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             for call in fake.calls
             if len(call) >= 5 and call[4] == "list" and "--status" in call
         ]
-        self.assertEqual(sorted(set(queried_statuses)), ["blocked", "done"])
+        self.assertEqual(sorted(set(queried_statuses)), ["blocked", "done", "ready", "running"])
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertEqual(len(unblock_calls), 1)
         released_task = next(task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-002")
@@ -2727,6 +2738,279 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(
             any("ready_work_unit_post_repair_review_task_created" in str(comment.get("body")) for comment in parent_comments)
         )
+
+    def test_reconcile_ready_work_units_fails_closed_when_review_dependency_edge_is_missing(self) -> None:
+        fake = BrokenLinkHermes()
+        plan = two_step_ready_work_unit_plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            materialize_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            upstream_task = next(
+                task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001"
+            )
+            upstream_task["status"] = "blocked"
+            upstream_task.setdefault("events", []).append({"kind": "claimed"})
+            upstream_task.setdefault("events", []).append({"kind": "blocked", "reason": "repair required"})
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "factory-orchestrator",
+                    "body": json.dumps({"marker": "ready_work_unit_repair_completed"}),
+                }
+            )
+            reconcile_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--create-post-repair-review-tasks",
+                ]
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "review dependency edge missing"):
+                adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+
+    def test_reconcile_ready_work_units_infers_review_required_as_review_ready(self) -> None:
+        fake = FakeHermes()
+        plan = two_step_ready_work_unit_plan()
+        plan["tasks"][0]["reviewer_role"] = "qa-verification-worker"
+        plan["tasks"][0]["body_contract"]["reviewer_role"] = "qa-verification-worker"
+        plan["tasks"][0]["body_contract"]["done_definition"]["reviewer_role"] = "qa-verification-worker"
+        plan["tasks"][0]["body_contract"]["worker_input_contract"]["inputs"]["done_definition"][
+            "reviewer_role"
+        ] = "qa-verification-worker"
+        plan["tasks"][0]["body_contract"]["work_unit_context_packet"]["worker_input_contract"]["inputs"][
+            "done_definition"
+        ]["reviewer_role"] = "qa-verification-worker"
+        plan["tasks"][0]["body_contract"]["receipt_five_contract"]["reviewer_role"] = "qa-verification-worker"
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            materialize_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            upstream_task = next(
+                task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-001"
+            )
+            upstream_task["status"] = "blocked"
+            upstream_task["latest_summary"] = (
+                "review-required: implementation completed with evidence refs and passing proof; "
+                "qa-verification-worker must independently review before done."
+            )
+            upstream_task.setdefault("events", []).append({"kind": "claimed"})
+            upstream_task.setdefault("events", []).append({"kind": "blocked", "reason": "review-required"})
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "implementation-worker",
+                    "body": "Receipt Five: evidence refs PASS; artifacts implemented; review-required before completion.",
+                }
+            )
+            reconcile_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--create-post-repair-review-tasks",
+                ]
+            )
+            result = adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+
+        assert_live_adapter_result_schema(self, result)
+        row = result["post_release_reconciliation"]["work-unit-001"]
+        self.assertEqual(row["decision"], "awaiting_repair_review")
+        self.assertTrue(row["repair_completed_inferred_from_review_required"])
+        self.assertFalse(row["repair_completed_explicit"])
+        self.assertEqual(result["post_repair_review_required_work_unit_ids"], ["work-unit-001"])
+        self.assertEqual(result["runtime_gate"]["post_repair_review_task_created_count"], 1)
+        review_tasks = [
+            task
+            for task in fake.tasks.values()
+            if json.loads(str(task.get("body") or "{}")).get("packet_type")
+            == "ready_work_unit_post_repair_review_request"
+        ]
+        self.assertEqual(len(review_tasks), 1)
+        self.assertEqual(review_tasks[0]["assignee"], "qa-verification-worker")
+        review_body = json.loads(str(review_tasks[0]["body"]))
+        self.assertEqual(review_body["reviewer_role"], "qa-verification-worker")
+
+    def test_reconcile_ready_work_units_releases_next_wave_after_completion(self) -> None:
+        fake = FakeHermes()
+        plan = two_step_ready_work_unit_plan()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness_path = tmp_path / "route-readiness.json"
+            materialization_result_path = tmp_path / "materialization-result.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness_path, extra_workers=["decomposition-planner", "implementation-worker"])
+            materialize_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            adapter.release_ready_work_units(release_args, runner=fake)
+            upstream_id, upstream_task = next(
+                (task_id, task)
+                for task_id, task in fake.tasks.items()
+                if json.loads(str(task["body"]))["work_unit_id"] == "work-unit-001"
+            )
+            upstream_task["status"] = "blocked"
+            upstream_task.setdefault("events", []).append({"kind": "claimed"})
+            upstream_task.setdefault("events", []).append({"kind": "blocked", "reason": "review-required"})
+            upstream_task.setdefault("comments", []).append(
+                {
+                    "author": "implementation-worker",
+                    "body": "ready_work_unit_repair_completed with Receipt Five evidence and proof PASS.",
+                }
+            )
+            fake.tasks["review-fixture-complete"] = {
+                "id": "review-fixture-complete",
+                "status": "done",
+                "title": "OF independent review: complete parent",
+                "assignee": "independent-reviewer",
+                "events": [],
+                "comments": [],
+                "runs": [
+                    {
+                        "id": 2,
+                        "profile": "independent-reviewer",
+                        "status": "done",
+                        "outcome": "completed",
+                        "ended_at": 20,
+                        "metadata": {
+                            "marker": adapter.READY_WORK_UNIT_POST_REPAIR_REVIEW_RESULT_MARKER,
+                            "parent_task_ref": upstream_id,
+                            "parent_work_unit_id": "work-unit-001",
+                            "reviewed_repair_card": "repair-fixture-complete",
+                            "review_scope": "post_repair_result_only",
+                            "validation_result": "PASS",
+                            "blocking_findings": False,
+                            "ready_work_unit_repair_review_passed": True,
+                            "ready_work_unit_done_authorized": True,
+                            "ready_work_unit_done_definition_satisfied": True,
+                            "no_forbidden_approvals": {
+                                "implementation": False,
+                                "release": False,
+                                "deploy": False,
+                                "complete_product": False,
+                                "product_face": False,
+                                "security_onchain_waiver": False,
+                                "customer_ready": False,
+                                "mainnet_irreversible": False,
+                                "human_gate": False,
+                            },
+                        },
+                    }
+                ],
+            }
+            reconcile_args = adapter.build_parser().parse_args(
+                [
+                    "reconcile-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(readiness_path),
+                ]
+            )
+            result = adapter.reconcile_ready_work_units(reconcile_args, runner=fake)
+            downstream_task = next(
+                task
+                for task in fake.tasks.values()
+                if json.loads(str(task["body"]))["work_unit_id"] == "work-unit-002"
+            )
+
+        assert_live_adapter_result_schema(self, result)
+        self.assertEqual(result["completed_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
+        self.assertEqual(
+            result["followup_release_result"]["released_ready_work_unit_task_ids"],
+            {"work-unit-002": adapter.PUBLIC_SAFE_KANBAN_REF},
+        )
+        self.assertEqual(result["runtime_gate"]["followup_release_task_count"], 1)
+        self.assertTrue(result["runtime_gate"]["native_dispatch_required_next"])
+        self.assertEqual(downstream_task["status"], "ready")
 
     def test_post_repair_tasks_include_explicit_phase_risk_and_surfaces_contract(self) -> None:
         plan = two_step_ready_work_unit_plan()
@@ -5449,6 +5733,114 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIsNone(result["remediation_task_id"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_closes_over_time_running_task_with_valid_worker_result(self) -> None:
+        fake = FakeHermes()
+        running_id = "t_" + "runclose1"
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        worker_result = factoryctl.build_worker_result(
+            "implementation-worker",
+            card,
+            result="PASS",
+            tool_or_profile="implementation-worker",
+            executed_by="implementation-worker",
+            evidence_refs=["external:test:todo-implementation"],
+            blocking_findings=False,
+            findings_summary="Todo implementation completed with local tests.",
+            next_action="ready for Receipt Five reconciliation",
+        )
+        fake.tasks[running_id] = {
+            "id": running_id,
+            "status": "running",
+            "assignee": "implementation-worker",
+            "title": "F15 implement Todo Web Local",
+            "current_step_key": "F15-runtime-execution",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_deterministic_reconcile_task",
+                    "plan_action": "execute_ready_work_unit",
+                    "agent_may_choose_phase": False,
+                    "kanban_workflow_binding": {
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F15-runtime-execution",
+                        "runtime_field_required": True,
+                    },
+                }
+            ),
+            "runs": [
+                {
+                    "status": "running",
+                    "started_at": "2020-01-01T00:00:00Z",
+                    "metadata": json.dumps({"implementation_result": worker_result}),
+                }
+            ],
+            "events": [{"type": "claimed", "payload": {"run_id": 1}}],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "running_worker_result_closeout_completed")
+        self.assertFalse(state["human_gate_required"])
+        self.assertFalse(state["operator_input_required"])
+        self.assertEqual(fake.tasks[running_id]["status"], "done")
+        self.assertEqual(fake.tasks[running_id]["result"], "DONE")
+        metadata = json.loads(str(fake.tasks[running_id]["metadata"]))
+        self.assertEqual(metadata["marker"], adapter.NO_IDLE_RUNNING_RESULT_CLOSEOUT_MARKER)
+        self.assertEqual(metadata["closed_from_worker_result"]["record_type"], "implementation_result")
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
+    def test_no_idle_reports_running_closeout_without_mutation_when_not_remediating(self) -> None:
+        fake = FakeHermes()
+        running_id = "t_" + "runclose2"
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        worker_result = factoryctl.build_worker_result(
+            "implementation-worker",
+            card,
+            result="PASS",
+            tool_or_profile="implementation-worker",
+            executed_by="implementation-worker",
+            evidence_refs=["external:test:todo-implementation"],
+            blocking_findings=False,
+            findings_summary="Todo implementation completed with local tests.",
+            next_action="ready for Receipt Five reconciliation",
+        )
+        fake.tasks[running_id] = {
+            "id": running_id,
+            "status": "running",
+            "assignee": "implementation-worker",
+            "title": "F15 implement Todo Web Local",
+            "current_step_key": "F15-runtime-execution",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_deterministic_reconcile_task",
+                    "plan_action": "execute_ready_work_unit",
+                    "agent_may_choose_phase": False,
+                    "kanban_workflow_binding": {
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F15-runtime-execution",
+                        "runtime_field_required": True,
+                    },
+                }
+            ),
+            "runs": [
+                {
+                    "status": "running",
+                    "started_at": "2020-01-01T00:00:00Z",
+                    "metadata": json.dumps({"implementation_result": worker_result}),
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["classification"], "running_worker_result_closeout_required")
+        self.assertTrue(state["remediation_required"])
+        self.assertEqual(fake.tasks[running_id]["status"], "running")
+        self.assertFalse(any(len(call) >= 5 and call[4] == "complete" for call in fake.calls))
+
     def test_no_idle_treats_delivered_product_sot_package_as_human_gate(self) -> None:
         fake = FakeHermes()
         failed_review_id = "t_" + "review01"
@@ -6276,6 +6668,122 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIn("blocked", statuses.values())
         ready_task = next(task for task_id, task in fake.tasks.items() if task_id in created_work_unit_ids and task["status"] == "ready")
         self.assertEqual(ready_task["assignee"], "implementation-worker")
+
+    def test_no_idle_prioritizes_ready_work_unit_reconciliation_over_generic_artifact_repair(self) -> None:
+        fake = FakeHermes()
+        tmp_root = ROOT / ".tmp" / "tests"
+        tmp_root.mkdir(parents=True, exist_ok=True)
+        run_root = ROOT / ".tmp" / "factory-runs"
+        run_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=tmp_root) as tmp:
+            tmp_path = Path(tmp)
+            plan = two_step_ready_work_unit_plan()
+            plan["board"] = TEST_BOARD
+            plan_path = tmp_path / "READY_WORK_UNIT_HERMES_MATERIALIZATION_PLAN_test.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            digest = hashlib.sha256(str(plan_path).encode("utf-8")).hexdigest()[:12]
+            route_readiness_path = run_root / f"ready-work-unit-route-readiness-{TEST_BOARD}-{digest}.json"
+            materialization_result_path = run_root / f"ready-work-unit-materialization-{TEST_BOARD}-{digest}.json"
+            write_route_readiness(route_readiness_path, extra_workers=["implementation-worker", "independent-reviewer"])
+
+            materialize_args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--board",
+                    TEST_BOARD,
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(route_readiness_path),
+                    "--workspace",
+                    "dir:/tmp/overkill-factory-test",
+                ]
+            )
+            materialization_result = adapter.materialize_ready_work_units(materialize_args, runner=fake)
+            materialization_result_path.write_text(json.dumps(materialization_result), encoding="utf-8")
+            release_args = adapter.build_parser().parse_args(
+                [
+                    "release-ready-work-units",
+                    "--board",
+                    TEST_BOARD,
+                    "--plan",
+                    str(plan_path),
+                    "--materialization-result",
+                    str(materialization_result_path),
+                    "--route-readiness",
+                    str(route_readiness_path),
+                ]
+            )
+            release = adapter.release_ready_work_units(release_args, runner=fake)
+            self.assertIn("work-unit-001", release["released_ready_work_unit_task_ids"])
+            released_id = next(
+                task_id
+                for task_id in ready_work_unit_task_ids(fake)
+                if adapter.parse_json_object(str(fake.tasks[task_id].get("body") or "{}")).get("work_unit_id")
+                == "work-unit-001"
+            )
+            block_ready_work_unit_after_release(fake, released_id)
+            fake.tasks[released_id].setdefault("comments", []).append(
+                {
+                    "author": "implementation-worker",
+                    "body": "review-required: implementation evidence prepared for deterministic post-repair review",
+                }
+            )
+            relative_plan = plan_path.relative_to(ROOT)
+            fake.tasks["t_plan001"] = {
+                "id": "t_plan001",
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Materialize ready_work_unit_hermes_materialization_plan for board",
+                "body": json.dumps(
+                    {
+                        "packet_type": "factory_deterministic_reconcile_task",
+                        "required_output": "ready_work_unit_hermes_materialization_plan",
+                    }
+                ),
+                "runs": [
+                    {
+                        "status": "done",
+                        "metadata": json.dumps(
+                            {
+                                "artifacts": {"plan": {"path_ref": str(relative_plan)}},
+                                "orchestration_result": {"evidence_refs": [str(relative_plan)]},
+                            }
+                        ),
+                    }
+                ],
+            }
+            fake.tasks["t_workerpkt"] = {
+                "id": "t_workerpkt",
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Materialize worker_packet for board",
+                "body": json.dumps({"packet_type": "factory_deterministic_reconcile_task", "required_output": "worker_packet"}),
+                "latest_summary": "Validated worker_packet manifest exists; next step is Hermes ready work-unit materialization.",
+            }
+            args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+            result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["no_idle_state"]["classification"], "ready_work_unit_reconciliation")
+        self.assertIsNone(result["board_reconcile_plan"])
+        self.assertEqual(result["targeted_remediation_plan"]["plan_action"], "reconcile_ready_work_units")
+        self.assertEqual(
+            [
+                task
+                for task in fake.tasks.values()
+                if adapter.parse_json_object(str(task.get("body") or "{}")).get("plan_action")
+                == "create_next_artifact_task"
+            ],
+            [],
+        )
+        review_tasks = [
+            task
+            for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("packet_type")
+            == "ready_work_unit_post_repair_review_request"
+        ]
+        self.assertEqual(len(review_tasks), 1)
 
     def test_no_idle_keeps_newer_failed_architecture_review_active_after_older_pass(self) -> None:
         fake = FakeHermes()

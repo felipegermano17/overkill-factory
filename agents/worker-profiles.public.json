@@ -2268,15 +2268,22 @@
       },
       "output_contract": {
         "receipt_field": "independent_review_result",
-        "required_sections": [
-          "verdict",
-          "findings",
-          "evidence reviewed",
-          "remaining risk",
-          "review coverage"
-        ],
-        "done_definition": "The reviewer confirms evidence meets the contract or names blockers with enough detail for correction."
-      },
+      "required_sections": [
+        "verdict",
+        "findings",
+        "evidence reviewed",
+        "remaining risk",
+        "review coverage"
+      ],
+      "required_structured_fields": [
+        "promotion_authority.result",
+        "promotion_authority.allowed_transition_scopes",
+        "reviewed_producer_refs or reviewed_requirement_refs",
+        "authorized_downstream_worker_ids when the review permits a next worker",
+        "card_ref.source_card_id when the review runs as a separate Hermes task"
+      ],
+      "done_definition": "The reviewer confirms evidence meets the contract or names blockers with enough detail for correction."
+    },
       "evidence_contract": {
         "trust_floor": "product_specific",
         "required_refs": [

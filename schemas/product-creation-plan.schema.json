@@ -15,6 +15,7 @@
     "complete_product_scope",
     "production_readiness_scope",
     "work_units",
+    "requirement_execution_coverage",
     "execution_order",
     "slice_boundaries",
     "dependency_graph",
@@ -126,6 +127,42 @@
             "then": { "required": ["blocker_id", "blocker_owner", "next_action"] }
           }
         ],
+        "additionalProperties": true
+      }
+    },
+    "requirement_execution_coverage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "requirement_ref",
+          "coverage_status",
+          "work_unit_refs",
+          "proof_ids_required",
+          "owner_worker",
+          "reviewer_role",
+          "source"
+        ],
+        "properties": {
+          "requirement_ref": { "type": "string", "minLength": 3 },
+          "coverage_status": {
+            "enum": ["covered_for_execution", "blocked", "deferred_with_owner", "out_of_scope"]
+          },
+          "work_unit_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "proof_ids_required": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "owner_worker": { "type": "string", "minLength": 3 },
+          "reviewer_role": { "type": "string", "minLength": 3 },
+          "source": { "type": "string", "minLength": 3 }
+        },
         "additionalProperties": true
       }
     },

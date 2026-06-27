@@ -416,6 +416,10 @@
       "product_creation_plan",
       "product_implementation_readiness"
     ],
+    "active_product_sot_requirement_refs": [
+      "product-sot#scope-in-001"
+    ],
+    "blocked_product_sot_requirement_refs": [],
     "method_engine_registry_ref": "templates/method-engine-registry.json",
     "selected_method_engines": [
       {

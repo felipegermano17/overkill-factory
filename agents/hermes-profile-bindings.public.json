@@ -399,7 +399,7 @@
       "result_schema": "schemas/worker-result.schema.json",
       "receipt_field": "independent_review_result",
       "can_mutate_card_state": false,
-      "evidence_path_policy": "Review evidence must identify executor, reviewer and inspected refs.",
+      "evidence_path_policy": "Review evidence must identify executor, reviewer, inspected refs, source_card_id for child review tasks, reviewed_producer_refs/reviewed_requirement_refs, and promotion_authority scope.",
       "factory_gate_timing_policy": {
         "policy_kind": "factory_gate_timing_policy",
         "policy_basis": "factoryctl.worker_gate_timing_class",

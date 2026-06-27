@@ -131,6 +131,28 @@ class EvidenceReconcilerTest(unittest.TestCase):
         self.assertIn("security_scan_result", index["effective_results"])
         self.assertIn("independent_review_result", index["effective_results"])
 
+    def test_receipt_draft_keeps_private_runtime_evidence_out_of_public_artifacts(self) -> None:
+        card = closure_card()
+        private_root = ROOT / ".tmp"
+        private_root.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=private_root) as tmp:
+            results_dir = Path(tmp)
+            write_results(card, results_dir)
+            index = evidence_reconciler.reconcile(card, results_dir)
+            index_ref = factoryctl.source_card_ref(results_dir / "worker-result-index.json")
+            result_ref = factoryctl.source_card_ref(results_dir / "receipt-five-reconciliation-result.json")
+
+            receipt = evidence_reconciler.build_receipt_draft(card, index_ref, result_ref, index)
+
+        self.assertEqual(factoryctl.validate_receipt(receipt), [])
+        public_artifacts = receipt["receipt_five"]["artifact_paths"]
+        event_artifacts = receipt["kanban_transition_event"]["artifact_refs"]
+        self.assertTrue(public_artifacts)
+        self.assertEqual(public_artifacts, event_artifacts)
+        self.assertTrue(all(not ref.startswith(".tmp/") for ref in public_artifacts))
+        self.assertIn(index_ref, receipt["receipt_five"]["private_evidence_refs"])
+        self.assertIn(result_ref, receipt["kanban_transition_event"]["private_evidence_refs"])
+
     def test_unreconciled_background_subagent_result_does_not_satisfy_receipt_five(self) -> None:
         card = closure_card()
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp:

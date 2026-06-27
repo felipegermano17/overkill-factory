@@ -19,6 +19,7 @@
     "scope_intent",
     "factory_route",
     "required_factory_artifacts",
+    "active_product_sot_requirement_refs",
     "method_engine_registry_ref",
     "selected_method_engines",
     "engineering_method_matrix",
@@ -107,6 +108,15 @@
         "type": "string",
         "minLength": 3
       }
+    },
+    "active_product_sot_requirement_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "blocked_product_sot_requirement_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
     },
     "method_engine_registry_ref": {
       "type": "string",

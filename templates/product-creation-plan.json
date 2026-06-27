@@ -52,6 +52,17 @@
       "product_context_packet_ref": "templates/product-context-packet.json"
     }
   ],
+  "requirement_execution_coverage": [
+    {
+      "requirement_ref": "product-sot#scope-in-001",
+      "coverage_status": "covered_for_execution",
+      "work_unit_refs": ["work-unit-001"],
+      "proof_ids_required": ["generic.scope-fit"],
+      "owner_worker": "decomposition-planner",
+      "reviewer_role": "independent-reviewer",
+      "source": "templates/method-contract.json#active_product_sot_requirement_refs"
+    }
+  ],
   "execution_order": ["work-unit-001"],
   "slice_boundaries": ["each slice is reversible and does not redefine product scope"],
   "dependency_graph": [

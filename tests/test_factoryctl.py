@@ -4155,6 +4155,15 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(result["card_ref"]["card_id"], "kanban:<redacted>")
         self.assertEqual(result["card_ref"]["slice_id"], "slice-kanban:<redacted>")
         self.assertNotIn(raw_task, serialized)
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="security_scan_result",
+            expected_worker_id="codex-security",
+            card=card,
+            evidence_root=ROOT,
+        )
+        self.assertNotIn("card_ref.card_id must match current card", errors)
+        self.assertNotIn("card_ref.slice_id must match current card", errors)
 
     def test_artifact_ref_with_raw_kanban_task_marker_is_private(self) -> None:
         raw_task = "t_" + "ready0001"
@@ -4993,6 +5002,68 @@ class FactoryCtlTest(unittest.TestCase):
         self.assertEqual(closure["graph_requirements"][0]["status"], "pending")
         self.assertEqual(closure["unsatisfied_graph_requirements"][0]["producer_field"], "handoff_packet_result")
 
+    def test_child_review_result_can_target_source_card_and_exact_producer_ref(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["card_id"] = "t_source"
+        card["slice_id"] = "source-slice"
+        card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
+        handoff = worker_result("handoff_packet_result", source_card=card, reviewer_required=True)
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmpdir:
+            results_dir = Path(tmpdir)
+            handoff_path = results_dir / "handoff.json"
+            producer_ref = factoryctl.source_card_ref(handoff_path)
+            handoff_path.write_text(json.dumps(handoff), encoding="utf-8")
+
+            review = worker_result("independent_review_result", source_card=card)
+            review["card_ref"] = {
+                "card_id": "t_review",
+                "source_card_id": "t_source",
+                "slice_id": "review-slice",
+                "phase": "F18",
+            }
+            review["evidence_refs"] = [producer_ref]
+            (results_dir / "review.json").write_text(json.dumps(review), encoding="utf-8")
+
+            validation_errors = factoryctl.validate_worker_result_record(
+                review,
+                expected_field="independent_review_result",
+                expected_worker_id="independent-reviewer",
+                card=card,
+                evidence_root=None,
+            )
+            self.assertNotIn("card_ref.card_id must match current card", validation_errors)
+            self.assertNotIn("card_ref.slice_id must match current card", validation_errors)
+
+            closure = factoryctl.build_worker_closure(card, {}, results_dir)
+
+        self.assertEqual(closure["unsatisfied_graph_requirements"], [])
+        self.assertEqual(closure["graph_requirements"][0]["status"], "satisfied")
+        self.assertTrue(closure["workers"]["handoff-packer"]["consumable"])
+
+    def test_child_review_result_rejects_wrong_source_card(self) -> None:
+        card = load_card("v35_valid_onchain_auditor_scan.md")
+        card["card_id"] = "t_source"
+        card["slice_id"] = "source-slice"
+        review = worker_result("independent_review_result", source_card=card)
+        review["card_ref"] = {
+            "card_id": "t_review",
+            "source_card_id": "t_other",
+            "slice_id": "review-slice",
+            "phase": "F18",
+        }
+
+        validation_errors = factoryctl.validate_worker_result_record(
+            review,
+            expected_field="independent_review_result",
+            expected_worker_id="independent-reviewer",
+            card=card,
+            evidence_root=None,
+        )
+
+        self.assertIn("card_ref.card_id must match current card", validation_errors)
+        self.assertIn("card_ref.slice_id must match current card", validation_errors)
+
     def test_worker_closure_uses_matching_review_candidate_not_newest_unrelated_review(self) -> None:
         card = load_card("v35_valid_onchain_auditor_scan.md")
         card["source_refs"] = [*card.get("source_refs", []), "synthetic validation fixture"]
@@ -5160,3 +5231,156 @@ class FactoryCtlTest(unittest.TestCase):
 
         self.assertEqual(plan["transition_action"], "block_transition")
         self.assertIn("codex-security result is invalid before done", plan["blocked_reasons"])
+
+    def test_local_work_unit_closeout_review_ready_is_scoped_not_global_promotion(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = {
+            "card_id": "t_closeout",
+            "slice_id": "WU-07-closeout",
+            "phase": "F15/F16",
+            "risk_effective": "R2",
+            "surfaces": [
+                "receipt-five",
+                "evidence",
+                "worker-results",
+                "kanban-transition",
+                "closure-summary",
+                "completion-audit",
+                "done-readiness",
+            ],
+            "source_refs": ["synthetic validation fixture"],
+            "target_repo_paths": ["README.md"],
+            "complete_product_claim_allowed": False,
+            "executor_identity": "evidence-reconciler",
+            "reviewer_identity": "independent-reviewer",
+            "done_definition": {
+                "complete_product_claim_allowed": False,
+                "required_proof_ids": ["receipt-five.complete", "independent-review.closeout"],
+            },
+        }
+        reconciliation = worker_result(
+            "receipt_five_reconciliation_result",
+            source_card=factoryctl.normalize_transition_card(card),
+            reviewer_required=True,
+        )
+        receipt = {"receipt_five_reconciliation_result": reconciliation}
+
+        plan = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="running",
+            to_status="review-ready",
+            receipt=receipt,
+        )
+
+        self.assertEqual(plan["transition_action"], "allow_review_ready")
+        self.assertEqual(plan["blocked_reasons"], [])
+        self.assertEqual(
+            plan["gate_report"]["closeout_worker_scope"]["required_workers"],
+            ["independent-reviewer", "evidence-reconciler"],
+        )
+        required_workers = plan["completion_reconciliation"]["required_workers"]
+        self.assertNotIn("qa-verification-worker", required_workers)
+        self.assertNotIn("handoff-packer", required_workers)
+        self.assertNotIn("security-orchestrator", required_workers)
+
+    def test_local_work_unit_closeout_done_waits_for_matching_review_then_allows(self) -> None:
+        card_path = ROOT / "examples" / "cards" / "v35_valid_onchain_auditor_scan.md"
+        card = factoryctl.normalize_transition_card(
+            {
+                "card_id": "t_closeout",
+                "slice_id": "WU-07-closeout",
+                "phase": "F15/F16",
+                "risk_effective": "R2",
+                "surfaces": [
+                    "receipt-five",
+                    "evidence",
+                    "worker-results",
+                    "kanban-transition",
+                    "closure-summary",
+                    "completion-audit",
+                    "done-readiness",
+                ],
+                "source_refs": ["synthetic validation fixture"],
+                "target_repo_paths": ["README.md"],
+                "complete_product_claim_allowed": False,
+                "executor_identity": "evidence-reconciler",
+                "reviewer_identity": "independent-reviewer",
+                "done_definition": {
+                    "complete_product_claim_allowed": False,
+                    "required_proof_ids": ["receipt-five.complete", "independent-review.closeout"],
+                },
+            }
+        )
+        reconciliation = worker_result(
+            "receipt_five_reconciliation_result",
+            source_card=card,
+            reviewer_required=True,
+            reviewer_result="PENDING",
+        )
+        receipt_without_review = {
+            "receipt_five": {
+                "changed": "bounded WU closeout",
+                "artifact_paths": ["README.md"],
+                "verification_commands": ["python scripts/factoryctl.py transition-plan"],
+                "verification_result": "PASS",
+                "reviewer_required": True,
+                "reviewer_result": "PENDING",
+                "next_action": "wait for independent review",
+            },
+            "kanban_transition_event": {
+                "from_status": "running",
+                "to_status": "done",
+                "actor": "evidence-reconciler",
+                "worker": "evidence-reconciler",
+                "receipt_refs": ["receipt_five", "receipt_five_reconciliation_result"],
+                "artifact_refs": ["README.md"],
+                "allowed": True,
+            },
+            "receipt_five_reconciliation_result": reconciliation,
+        }
+
+        blocked = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="running",
+            to_status="done",
+            receipt=receipt_without_review,
+        )
+
+        self.assertEqual(blocked["transition_action"], "block_transition")
+        self.assertIn("reviewer_result must be PASS when reviewer_required=true", blocked["blocked_reasons"])
+        self.assertIn("independent_review_result is required when receipt_five.reviewer_required=true", blocked["blocked_reasons"])
+        self.assertIn(
+            "receipt_five_reconciliation_result requires independent-reviewer PASS before downstream consumption",
+            blocked["blocked_reasons"],
+        )
+
+        requirement = factoryctl.declared_graph_requirements(
+            "receipt_five_reconciliation_result",
+            reconciliation,
+            evidence_ref="receipt:receipt_five_reconciliation_result",
+        )[0]
+        review = worker_result("independent_review_result", source_card=card)
+        review["reviewed_requirement_refs"] = [requirement["requirement_id"]]
+        review["reviewed_producer_refs"] = [requirement["producer_ref"]]
+        review["authorized_downstream_worker_ids"] = ["evidence-reconciler"]
+        receipt_with_review = {
+            **receipt_without_review,
+            "receipt_five": {
+                **receipt_without_review["receipt_five"],
+                "reviewer_result": "PASS",
+            },
+            "independent_review_result": review,
+        }
+
+        allowed = factoryctl.build_transition_plan(
+            card,
+            card_path,
+            from_status="running",
+            to_status="done",
+            receipt=receipt_with_review,
+        )
+
+        self.assertEqual(allowed["transition_action"], "allow_done")
+        self.assertEqual(allowed["blocked_reasons"], [])

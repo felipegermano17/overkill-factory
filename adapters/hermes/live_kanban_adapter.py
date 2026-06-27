@@ -13,6 +13,7 @@ import re
 import sqlite3
 import subprocess  # nosec B404
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -40,7 +41,7 @@ DEFAULT_RUNTIME_GATE_BLOCK_KIND = "transient"
 RECOVERY_ATTEMPT_MARKER = "factory_recovery_attempt"
 ACTIVE_OR_TERMINAL_STATUSES = {"ready", "running", "done", "complete", "completed"}
 READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES = {"done", "complete", "completed"}
-READY_WORK_UNIT_RELEASE_QUERY_STATUSES = ["blocked", "done"]
+READY_WORK_UNIT_RELEASE_QUERY_STATUSES = ["blocked", "ready", "running", "done"]
 HISTORY_SOURCE_KEYS = ("events", "history", "timeline", "comments", "runs")
 CONTRACT_DIGEST_ALGORITHM = "sha256"
 IDEMPOTENCY_DIGEST_LENGTH = 16
@@ -65,6 +66,8 @@ NO_IDLE_AUTHOR = "overkill-factory-no-idle"
 NO_IDLE_REMEDIATION_MARKER = "factory_no_idle_remediation"
 NO_IDLE_REVIEW_REPAIR_MARKER = "factory_no_idle_review_repair"
 NO_IDLE_POST_REVIEW_GATE_MARKER = "factory_no_idle_post_review_gate_package"
+NO_IDLE_RUNNING_RESULT_CLOSEOUT_MARKER = "factory_no_idle_running_result_closeout"
+NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
 COMPLETION_ARTIFACT_PROJECTION_MARKER = "completion_artifact_projection"
@@ -111,6 +114,12 @@ BRIDGE_START_RELEASE_READBACK_MARKERS = [
     "product_sot_candidate",
 ]
 READY_WORK_UNIT_REPAIR_COMPLETED_MARKERS = ["ready_work_unit_repair_completed", "repair completed"]
+READY_WORK_UNIT_REPAIR_COMPLETED_INFERRED_MARKERS = [
+    "review-required",
+    "review required",
+    "review_required",
+    "reviewer required",
+]
 READY_WORK_UNIT_REPAIR_REVIEW_PASSED_MARKERS = ["ready_work_unit_repair_review_passed"]
 READY_WORK_UNIT_RETRY_AUTHORIZED_MARKERS = ["ready_work_unit_retry_authorized"]
 READY_WORK_UNIT_DONE_AUTHORIZED_MARKERS = ["ready_work_unit_done_authorized"]
@@ -1513,6 +1522,149 @@ def block_loop_detected_refs(rows: dict[str, list[dict[str, Any]]]) -> list[str]
     return sorted(set(refs))
 
 
+def parse_timestamp_seconds(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.isdigit():
+        return float(text)
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.timestamp()
+
+
+def json_object_from_maybe_string(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def iter_mapping_values(value: Any) -> list[dict[str, Any]]:
+    found: list[dict[str, Any]] = []
+    if isinstance(value, dict):
+        found.append(value)
+        for item in value.values():
+            found.extend(iter_mapping_values(item))
+    elif isinstance(value, list):
+        for item in value:
+            found.extend(iter_mapping_values(item))
+    return found
+
+
+def worker_result_candidate_payloads(record: dict[str, Any]) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for source in [record, *(record.get("runs") or [])]:
+        if not isinstance(source, dict):
+            continue
+        for key in ("metadata", "result_metadata", "output", "payload"):
+            metadata = json_object_from_maybe_string(source.get(key))
+            if metadata is not None:
+                candidates.extend(iter_mapping_values(metadata))
+        if str(source.get("record_type") or "").endswith("_result"):
+            candidates.append(source)
+    unique: list[dict[str, Any]] = []
+    fingerprints: set[str] = set()
+    for candidate in candidates:
+        fingerprint = json.dumps(candidate, sort_keys=True, ensure_ascii=True, default=str)
+        if fingerprint in fingerprints:
+            continue
+        fingerprints.add(fingerprint)
+        unique.append(candidate)
+    return unique
+
+
+def validate_terminal_worker_result_candidate(
+    candidate: dict[str, Any],
+    *,
+    expected_worker_id: str | None,
+) -> tuple[bool, list[str]]:
+    record_type = str(candidate.get("record_type") or "").strip()
+    if not record_type.endswith("_result"):
+        return False, ["record_type is not a worker result"]
+    result = str(candidate.get("result") or "").strip().upper()
+    if result not in {"PASS", "WAIVED"}:
+        return False, [f"result {result or '<missing>'} does not authorize deterministic closeout"]
+    factoryctl = load_factoryctl()
+    expected_field = record_type
+    worker_id = expected_worker_id if expected_worker_id in getattr(factoryctl, "WORKERS", {}) else None
+    errors = factoryctl.validate_worker_result_record(
+        candidate,
+        expected_field=expected_field,
+        expected_worker_id=worker_id,
+        evidence_root=ROOT,
+    )
+    return not errors, [str(error) for error in errors]
+
+
+def running_task_result_closeout_candidate(
+    record: dict[str, Any],
+    *,
+    now_seconds: float | None = None,
+    timeout_seconds: int = NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS,
+) -> dict[str, Any] | None:
+    task_id = task_record_id(record)
+    if not task_id:
+        return None
+    factoryctl = load_factoryctl()
+    if not factoryctl.task_has_structured_runtime_contract(record):
+        return None
+    runs = [item for item in record.get("runs") or [] if isinstance(item, dict)]
+    running_runs = [item for item in runs if str(item.get("status") or "").strip().lower() == "running"]
+    timestamps = [
+        parse_timestamp_seconds(source.get(key))
+        for source in [record, *running_runs, *runs]
+        for key in ("started_at", "claimed_at", "created_at", "updated_at")
+    ]
+    started_at = min(value for value in timestamps if value is not None) if any(value is not None for value in timestamps) else None
+    if started_at is None:
+        return None
+    now = now_seconds if now_seconds is not None else datetime.now(timezone.utc).timestamp()
+    age_seconds = max(0.0, now - started_at)
+    if age_seconds < timeout_seconds:
+        return None
+    validation_errors_by_candidate: list[list[str]] = []
+    expected_worker_id = str(record.get("assignee") or "").strip() or None
+    for candidate in worker_result_candidate_payloads(record):
+        valid, errors = validate_terminal_worker_result_candidate(candidate, expected_worker_id=expected_worker_id)
+        if valid:
+            return {
+                "task_ref": task_id,
+                "title": str(record.get("title") or ""),
+                "assignee": expected_worker_id,
+                "age_seconds": int(age_seconds),
+                "timeout_seconds": timeout_seconds,
+                "worker_result": candidate,
+                "worker_result_record_type": str(candidate.get("record_type") or ""),
+                "worker_result_result": str(candidate.get("result") or "").strip().upper(),
+                "worker_result_created_at": candidate.get("created_at"),
+            }
+        validation_errors_by_candidate.append(errors)
+    return None
+
+
+def running_result_closeout_candidates(rows: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    return [
+        candidate
+        for record in rows.get("running", [])
+        for candidate in [running_task_result_closeout_candidate(record)]
+        if candidate is not None
+    ]
+
+
 def enrich_no_idle_rows(
     *,
     hermes_bin: str,
@@ -1521,9 +1673,9 @@ def enrich_no_idle_rows(
     runner: Runner,
 ) -> dict[str, list[dict[str, Any]]]:
     enriched: dict[str, list[dict[str, Any]]] = {status: list(items) for status, items in rows.items()}
-    if rows.get("ready") or rows.get("running"):
+    if rows.get("ready"):
         return enriched
-    for status in ("todo", "blocked", "triage", "done"):
+    for status in ("running", "todo", "blocked", "triage", "done"):
         next_items: list[dict[str, Any]] = []
         for item in rows.get(status, []):
             task_id = task_record_id(item)
@@ -1552,10 +1704,11 @@ def enrich_no_idle_rows(
             merged["parents"] = task_readback_parents(shown)
             merged["comments"] = task_readback_comments(shown)[-3:]
             merged["events"] = task_readback_events(shown)[-5:]
-            if status == "done":
+            if status in {"running", "done"}:
                 runs = task_run_records(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
                 if runs:
                     merged["runs"] = runs[-3:]
+            if status == "done":
                 missing = missing_declared_local_artifacts(merged)
                 if missing:
                     merged["missing_declared_artifacts"] = missing
@@ -2613,6 +2766,61 @@ def remediation_task_runtime_metadata(
     }
 
 
+def close_running_tasks_with_valid_worker_results(
+    *,
+    hermes_bin: str,
+    board: str,
+    candidates: list[dict[str, Any]],
+    runner: Runner,
+) -> list[dict[str, Any]]:
+    closed: list[dict[str, Any]] = []
+    for candidate in candidates:
+        task_id = str(candidate.get("task_ref") or "").strip()
+        worker_result = candidate.get("worker_result") if isinstance(candidate.get("worker_result"), dict) else {}
+        if not task_id or not worker_result:
+            continue
+        metadata = {
+            "marker": NO_IDLE_RUNNING_RESULT_CLOSEOUT_MARKER,
+            "record_type": "factory_no_idle_running_result_closeout",
+            "runtime_authority": "hermes_kanban",
+            "local_state_authority": False,
+            "task_ref": task_id,
+            "closed_from_worker_result": {
+                "record_type": worker_result.get("record_type"),
+                "result": worker_result.get("result"),
+                "created_at": worker_result.get("created_at"),
+                "worker": worker_result.get("worker"),
+                "promotion_authority": worker_result.get("promotion_authority"),
+            },
+            "age_seconds": candidate.get("age_seconds"),
+            "timeout_seconds": candidate.get("timeout_seconds"),
+            "complete_product_claim_allowed": False,
+            "reason": (
+                "Running Hermes task exceeded the no-idle closeout timeout after producing a valid "
+                "terminal worker result; deterministic runtime closeout prevents a stuck running loop."
+            ),
+        }
+        complete_task(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=task_id,
+            result="DONE",
+            summary="Closed by no-idle after validating terminal worker result evidence.",
+            metadata=metadata,
+            required_readback_markers=[NO_IDLE_RUNNING_RESULT_CLOSEOUT_MARKER],
+            runner=runner,
+        )
+        closed.append(
+            {
+                "task_ref": task_id,
+                "worker_result_record_type": candidate.get("worker_result_record_type"),
+                "worker_result_result": candidate.get("worker_result_result"),
+                "age_seconds": candidate.get("age_seconds"),
+            }
+        )
+    return closed
+
+
 def build_board_reconcile_plan_from_rows(*, board: str, rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
     factoryctl = load_factoryctl()
     plan = factoryctl.build_board_reconcile_plan({"rows": rows}, board=board)
@@ -2786,9 +2994,10 @@ def required_workers_from_ready_plan(path: Path | None) -> list[str]:
     for task in plan.get("tasks", []):
         if not isinstance(task, dict):
             continue
-        worker_id = str(task.get("owner_worker") or "").strip()
-        if worker_id and worker_id not in workers:
-            workers.append(worker_id)
+        for field in ("owner_worker", "reviewer_role"):
+            worker_id = str(task.get(field) or "").strip()
+            if worker_id and worker_id not in workers:
+                workers.append(worker_id)
     return workers
 
 
@@ -4567,6 +4776,12 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
                 plan_task=task,
                 worker_assignee_prefix=args.worker_assignee_prefix,
             )
+        elif status in {"ready", "running"}:
+            task_id, packet_id, work_unit_id = verify_ready_work_unit_identity(
+                payload=matches[0],
+                plan_task=task,
+                worker_assignee_prefix=args.worker_assignee_prefix,
+            )
         else:
             raise RuntimeError(f"Hermes task for ready work unit {key[1]} is not releasable or satisfied: {status}")
         verified.append((task, task_id, packet_id, work_unit_id, status))
@@ -4666,8 +4881,54 @@ def release_ready_work_units(args: argparse.Namespace, runner: Runner = default_
     return public_envelope
 
 
+def ready_work_unit_reviewer_role(plan_task: dict[str, Any]) -> str:
+    body_contract = plan_task.get("body_contract") if isinstance(plan_task.get("body_contract"), dict) else {}
+    done_definition = body_contract.get("done_definition") if isinstance(body_contract.get("done_definition"), dict) else {}
+    context_packet = body_contract.get("work_unit_context_packet")
+    context_packet = context_packet if isinstance(context_packet, dict) else {}
+    embedded_payloads = context_packet.get("embedded_payloads")
+    embedded_payloads = embedded_payloads if isinstance(embedded_payloads, dict) else {}
+    current_work_unit = embedded_payloads.get("current_work_unit")
+    current_work_unit = current_work_unit if isinstance(current_work_unit, dict) else {}
+    current_done_definition = (
+        current_work_unit.get("done_definition")
+        if isinstance(current_work_unit.get("done_definition"), dict)
+        else {}
+    )
+
+    for source in (done_definition, body_contract, current_done_definition, current_work_unit, plan_task):
+        role = str(source.get("reviewer_role") or "").strip() if isinstance(source, dict) else ""
+        if role:
+            return role
+    return "independent-reviewer"
+
+
+def ready_work_unit_reviewer_assignee(plan_task: dict[str, Any], worker_assignee_prefix: str) -> str:
+    return worker_assignee_prefix + ready_work_unit_reviewer_role(plan_task)
+
+
+def ready_work_unit_inferred_repair_completed(payload: dict[str, Any]) -> bool:
+    text = " ".join(
+        part
+        for part in (
+            task_record_text(payload),
+            task_record_text(task_readback_task(payload)),
+        )
+        if part
+    )
+    if not any(marker in text for marker in READY_WORK_UNIT_REPAIR_COMPLETED_INFERRED_MARKERS):
+        return False
+    if not any(signal in text for signal in ("receipt", "evidence", "artifact", "proof", "implemented", "completed", "pass")):
+        return False
+    if any(marker in text for marker in READY_WORK_UNIT_HUMAN_GATE_MARKERS):
+        return False
+    return True
+
+
 def ready_work_unit_post_release_reconciliation_flags(payload: dict[str, Any]) -> dict[str, bool]:
-    repair_completed = history_contains_any_marker(payload, READY_WORK_UNIT_REPAIR_COMPLETED_MARKERS)
+    explicit_repair_completed = history_contains_any_marker(payload, READY_WORK_UNIT_REPAIR_COMPLETED_MARKERS)
+    inferred_repair_completed = ready_work_unit_inferred_repair_completed(payload)
+    repair_completed = explicit_repair_completed or inferred_repair_completed
     repair_review_passed = history_contains_all_markers_anywhere(payload, READY_WORK_UNIT_REPAIR_REVIEW_PASSED_MARKERS)
     retry_authorized = history_contains_all_markers_anywhere(payload, READY_WORK_UNIT_RETRY_AUTHORIZED_MARKERS)
     done_authorized = history_contains_all_markers_anywhere(payload, READY_WORK_UNIT_DONE_AUTHORIZED_MARKERS)
@@ -4678,6 +4939,8 @@ def ready_work_unit_post_release_reconciliation_flags(payload: dict[str, Any]) -
     human_gate_required = history_contains_any_marker(payload, READY_WORK_UNIT_HUMAN_GATE_MARKERS)
     return {
         "repair_completed": repair_completed,
+        "repair_completed_explicit": explicit_repair_completed,
+        "repair_completed_inferred_from_review_required": inferred_repair_completed,
         "repair_review_passed": repair_review_passed,
         "retry_authorized": retry_authorized,
         "done_authorized": done_authorized,
@@ -4842,7 +5105,7 @@ def ready_work_unit_post_repair_review_body(
         "parent_packet_id": packet_id,
         "parent_work_unit_id": work_unit_id,
         "parent_task_ref": parent_task_id,
-        "reviewer_role": "independent-reviewer",
+        "reviewer_role": ready_work_unit_reviewer_role(plan_task),
         "review_scope": "post_repair_result_only",
         "review_must_not_approve": [
             "complete_product",
@@ -4913,7 +5176,7 @@ def create_post_repair_review_task(
         board=board,
         title=f"OF post-repair review for ready work unit {work_unit_id}",
         body=compact_json_argument(body),
-        assignee=worker_assignee_prefix + "independent-reviewer",
+        assignee=ready_work_unit_reviewer_assignee(plan_task, worker_assignee_prefix),
         idempotency_key=ready_work_unit_post_repair_review_idempotency_key(
             plan_task=plan_task,
             parent_task_id=parent_task_id,
@@ -4926,6 +5189,18 @@ def create_post_repair_review_task(
         runner=runner,
     )
     run_checked(hermes_kanban(hermes_bin, board, "link", task_id, parent_task_id), runner)
+    parent_readback = show_task(hermes_bin=hermes_bin, board=board, task_id=parent_task_id, runner=runner)
+    review_readback = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    edge_present = (
+        task_id in task_readback_parents(parent_readback)
+        or task_id in task_readback_children(parent_readback)
+        or parent_task_id in task_readback_parents(review_readback)
+        or parent_task_id in task_readback_children(review_readback)
+    )
+    if not edge_present:
+        raise RuntimeError(
+            f"Hermes review dependency edge missing after link: review {task_id} must hold parent {parent_task_id}"
+        )
     run_checked(
         hermes_kanban(
             hermes_bin,
@@ -4939,7 +5214,7 @@ def create_post_repair_review_task(
                     "marker": READY_WORK_UNIT_POST_REPAIR_REVIEW_CREATED_MARKER,
                     "work_unit_id": work_unit_id,
                     "review_task_ref": task_id,
-                    "reviewer_role": "independent-reviewer",
+                    "reviewer_role": ready_work_unit_reviewer_role(plan_task),
                     "reconciliation_scope": "post_release_ready_work_unit",
                     "runtime_authority": "hermes_kanban",
                     "local_state_authority": False,
@@ -5351,6 +5626,7 @@ def post_repair_review_result_from_run(
     parent_task_id: str,
     work_unit_id: str,
     review_task_id: str,
+    expected_assignee: str = "independent-reviewer",
 ) -> dict[str, Any] | None:
     metadata = run.get("metadata")
     if not isinstance(metadata, dict):
@@ -5384,7 +5660,8 @@ def post_repair_review_result_from_run(
     run_profile = str(run.get("profile") or run.get("assignee") or "").strip()
     if not explicit_marker and not reviewed_repair_card and "repair" not in review_scope and not nested_review_target:
         return None
-    if run_profile and run_profile != "independent-reviewer":
+    allowed_profiles = {"independent-reviewer", expected_assignee}
+    if run_profile and run_profile not in allowed_profiles:
         return None
 
     status = str(run.get("status") or "").strip().lower()
@@ -5454,6 +5731,8 @@ def apply_post_repair_review_result(row: dict[str, Any], result: dict[str, Any] 
     merged["done_definition_satisfied"] = result.get("done_definition_satisfied") is True
     merged["human_gate_required"] = result.get("human_gate_required") is True
 
+    if row.get("decision") == "already_satisfied":
+        return merged
     if merged["human_gate_required"]:
         merged["decision"] = "human_gate_required"
         merged["next_action"] = "wait for explicit human gate; no automatic retry or completion"
@@ -5487,13 +5766,15 @@ def post_repair_review_results_by_work_unit(
     hermes_bin: str,
     board: str,
     parent_task_ids_by_work_unit: dict[str, str],
+    reviewer_assignees_by_work_unit: dict[str, str] | None = None,
     worker_assignee_prefix: str,
     runner: Runner = default_runner,
 ) -> dict[str, dict[str, Any]]:
     results: dict[str, dict[str, Any]] = {}
     latest_sort_key: dict[str, tuple[int, int]] = {}
     seen_task_ids: set[str] = set()
-    expected_assignee = worker_assignee_prefix + "independent-reviewer"
+    expected_assignees = set((reviewer_assignees_by_work_unit or {}).values())
+    expected_assignees.add(worker_assignee_prefix + "independent-reviewer")
     for status in ["done", "blocked", "running"]:
         for record in list_tasks_by_status(hermes_bin=hermes_bin, board=board, status=status, runner=runner):
             task_id = str(record.get("task_id") or record.get("id") or "").strip()
@@ -5501,7 +5782,7 @@ def post_repair_review_results_by_work_unit(
                 continue
             seen_task_ids.add(task_id)
             assignee = str(record.get("assignee") or record.get("profile") or "").strip()
-            if assignee and assignee != expected_assignee:
+            if assignee and assignee not in expected_assignees:
                 continue
             try:
                 runs = task_run_records(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
@@ -5514,6 +5795,10 @@ def post_repair_review_results_by_work_unit(
                         parent_task_id=parent_task_id,
                         work_unit_id=work_unit_id,
                         review_task_id=task_id,
+                        expected_assignee=(reviewer_assignees_by_work_unit or {}).get(
+                            work_unit_id,
+                            worker_assignee_prefix + "independent-reviewer",
+                        ),
                     )
                     if not result:
                         continue
@@ -5919,6 +6204,10 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
         )
         verified.append((task, matches[0], task_id, packet_id, work_unit_id, task_readback_status(matches[0])))
 
+    reviewer_assignees_by_work_unit = {
+        work_unit_id: ready_work_unit_reviewer_assignee(task, args.worker_assignee_prefix)
+        for task, _payload, _task_id, _packet_id, work_unit_id, _status in verified
+    }
     review_results = post_repair_review_results_by_work_unit(
         hermes_bin=args.hermes_bin,
         board=board,
@@ -5926,6 +6215,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             work_unit_id: task_id
             for _task, _payload, task_id, _packet_id, work_unit_id, _status in verified
         },
+        reviewer_assignees_by_work_unit=reviewer_assignees_by_work_unit,
         worker_assignee_prefix=args.worker_assignee_prefix,
         runner=runner,
     )
@@ -6063,7 +6353,12 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
     if not args.dry_run and args.create_post_repair_review_tasks and post_repair_review_candidates:
         readiness_blockers = route_readiness_blockers(
             args.route_readiness,
-            [args.worker_assignee_prefix + "independent-reviewer"],
+            sorted(
+                {
+                    ready_work_unit_reviewer_assignee(task, args.worker_assignee_prefix)
+                    for task, _payload, _task_id, _packet_id, _work_unit_id in post_repair_review_candidates
+                }
+            ),
         )
         if readiness_blockers:
             raise RuntimeError("post-repair review route readiness blocked ready work-unit reconciliation: " + "; ".join(readiness_blockers))
@@ -6086,6 +6381,7 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
     post_repair_authority_task_ids: dict[str, str] = dict(existing_post_repair_authority_task_ids)
     unlinked_superseded_parent_task_ids: dict[str, list[str]] = {}
     promoted_ready_work_unit_task_ids: dict[str, str] = {}
+    followup_release_result: dict[str, Any] | None = None
     retry_reason = str(
         args.reason
         or "ready_work_unit_retry_authorized; ready_work_unit_repair_review_passed; reconciliation_scope=post_release_ready_work_unit; dispatch_separate=true"
@@ -6215,6 +6511,28 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
                 runner=runner,
             )
             completed_ready_work_unit_task_ids[work_unit_id] = task_id
+        if (
+            not args.dry_run
+            and args.route_readiness is not None
+            and not post_repair_review_candidates
+            and not post_repair_authority_candidates
+            and human_gate_count == 0
+            and incomplete_count == 0
+        ):
+            followup_release_result = release_ready_work_units(
+                argparse.Namespace(
+                    plan=args.plan,
+                    materialization_result=args.materialization_result,
+                    board=board,
+                    hermes_bin=args.hermes_bin,
+                    worker_assignee_prefix=args.worker_assignee_prefix,
+                    route_readiness=args.route_readiness,
+                    reason=None,
+                    dry_run=False,
+                    out=None,
+                ),
+                runner=runner,
+            )
 
     envelope = {
         "$schema": LIVE_ADAPTER_SCHEMA,
@@ -6248,12 +6566,17 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             post_repair_authority_required_work_unit_ids
         ),
         "promoted_ready_work_unit_task_ids": promoted_ready_work_unit_task_ids,
+        "followup_release_result": followup_release_result,
         "post_release_reconciliation": reconciliation,
         "release_wave": {
             "held_work_unit_ids": sorted(dependency_blockers.keys()),
             "dependency_blockers": {key: dependency_blockers[key] for key in sorted(dependency_blockers)},
             "release_ready_work_units_required_next": bool(
-                retry_ready_work_unit_task_ids or completed_ready_work_unit_task_ids
+                (retry_ready_work_unit_task_ids or completed_ready_work_unit_task_ids)
+                and not (
+                    isinstance(followup_release_result, dict)
+                    and followup_release_result.get("released_ready_work_unit_task_ids")
+                )
             ),
         },
         "runtime_gate": {
@@ -6282,10 +6605,16 @@ def reconcile_ready_work_units(args: argparse.Namespace, runner: Runner = defaul
             "retry_unblocked_task_count": len(unblocked_ready_work_unit_task_ids),
             "retry_promoted_task_count": len(promoted_ready_work_unit_task_ids),
             "completed_task_count": len(completed_ready_work_unit_task_ids),
+            "followup_release_task_count": len(
+                (followup_release_result or {}).get("released_ready_work_unit_task_ids") or {}
+            ),
             "human_gate_required_count": human_gate_count,
             "incomplete_repair_or_review_count": incomplete_count,
             "dispatch_allowed_by_this_step": False,
-            "native_dispatch_required_next": bool(retry_ready_work_unit_task_ids),
+            "native_dispatch_required_next": bool(
+                retry_ready_work_unit_task_ids
+                or ((followup_release_result or {}).get("released_ready_work_unit_task_ids") or {})
+            ),
             "complete_product_claim_allowed": False,
         },
         "hook": {
@@ -8352,24 +8681,126 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
     }
     rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
     artifact_materialization: list[dict[str, Any]] = []
-    if args.create_remediation:
-        artifact_materialization = materialize_missing_declared_artifacts(
+    running_closeout_candidates = running_result_closeout_candidates(rows)
+    if running_closeout_candidates:
+        if not args.create_remediation:
+            classification = {
+                "status": "remediation_required",
+                "classification": "running_worker_result_closeout_required",
+                "blocked": True,
+                "remediation_required": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+                "native_dispatch_required_next": False,
+                "running_result_closeout_candidates": [
+                    {
+                        "task_ref": item.get("task_ref"),
+                        "worker_result_record_type": item.get("worker_result_record_type"),
+                        "worker_result_result": item.get("worker_result_result"),
+                        "age_seconds": item.get("age_seconds"),
+                        "timeout_seconds": item.get("timeout_seconds"),
+                    }
+                    for item in running_closeout_candidates
+                ],
+                "next_action": (
+                    "run no-idle with create-remediation so the runtime adapter completes running tasks "
+                    "that already produced valid terminal worker results"
+                ),
+                "state": summarize_no_idle_rows(rows),
+            }
+            envelope = {
+                "$schema": LIVE_ADAPTER_SCHEMA,
+                "mode": "no-idle",
+                "board": args.board,
+                "blocked": True,
+                "no_idle_state": classification,
+                "board_reconcile_plan": None,
+                "artifact_materialization": artifact_materialization,
+                "targeted_remediation_plan": {
+                    "record_type": "factory_no_idle_running_result_closeout_plan",
+                    "plan_action": "complete_running_tasks_with_valid_worker_results",
+                    "native_dispatch_required_next": False,
+                    "human_gate_required": False,
+                    "operator_input_required": False,
+                },
+                "remediation_task_id": None,
+                "hook": {
+                    "runtime_authority": "hermes_kanban",
+                    "local_state_authority": False,
+                    "no_shadow_dispatcher": True,
+                    "dispatch_called_by_this_command": False,
+                    "reporting_policy": (
+                        "No-idle found over-time running tasks with valid terminal worker results. "
+                        "Live closeout requires create-remediation because it mutates Hermes task state."
+                    ),
+                },
+            }
+            public_envelope = sanitize_public_refs(envelope)
+            if args.out:
+                write_json(args.out, public_envelope)
+            return public_envelope
+        closed_running_tasks = close_running_tasks_with_valid_worker_results(
             hermes_bin=args.hermes_bin,
             board=args.board,
-            rows=rows,
+            candidates=running_closeout_candidates,
             runner=runner,
         )
-        if any(item.get("materialized") is True for item in artifact_materialization):
-            rows = {
-                status: list_tasks_by_status(
-                    hermes_bin=args.hermes_bin,
-                    board=args.board,
-                    status=status,
-                    runner=runner,
-                )
-                for status in ("ready", "running", "todo", "blocked", "triage", "done")
-            }
-            rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
+        rows = {
+            status: list_tasks_by_status(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                status=status,
+                runner=runner,
+            )
+            for status in ("ready", "running", "todo", "blocked", "triage", "done")
+        }
+        rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
+        classification = {
+            "status": "remediated",
+            "classification": "running_worker_result_closeout_completed",
+            "blocked": False,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": bool(rows.get("ready")),
+            "closed_running_tasks": closed_running_tasks,
+            "next_action": (
+                "run native Hermes dispatch for ready work"
+                if rows.get("ready")
+                else "continue no-idle reconciliation from refreshed Hermes state"
+            ),
+            "state": summarize_no_idle_rows(rows),
+        }
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": False,
+            "no_idle_state": classification,
+            "board_reconcile_plan": None,
+            "artifact_materialization": artifact_materialization,
+            "targeted_remediation_plan": {
+                "record_type": "factory_no_idle_running_result_closeout_plan",
+                "plan_action": "complete_running_tasks_with_valid_worker_results",
+                "native_dispatch_required_next": bool(rows.get("ready")),
+                "human_gate_required": False,
+                "operator_input_required": False,
+            },
+            "remediation_task_id": None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle completed over-time running tasks only after validating terminal worker-result metadata."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     plan_path = latest_ready_work_unit_materialization_plan_path(rows)
     if plan_path is not None and not board_has_ready_work_unit_execution_requests(rows):
         if not args.create_remediation:
@@ -8475,6 +8906,118 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         if args.out:
             write_json(args.out, public_envelope)
         return public_envelope
+    if plan_path is not None and board_has_ready_work_unit_execution_requests(rows):
+        out_dir = ROOT / ".tmp" / "factory-runs"
+        digest = hashlib.sha256(str(plan_path).encode("utf-8")).hexdigest()[:12]
+        route_readiness_path = out_dir / f"ready-work-unit-route-readiness-{args.board}-{digest}.json"
+        materialization_result_path = out_dir / f"ready-work-unit-materialization-{args.board}-{digest}.json"
+        if route_readiness_path.exists() and materialization_result_path.exists():
+            ready_reconciliation = reconcile_ready_work_units(
+                argparse.Namespace(
+                    plan=plan_path,
+                    materialization_result=materialization_result_path,
+                    board=args.board,
+                    hermes_bin=args.hermes_bin,
+                    worker_assignee_prefix="",
+                    route_readiness=route_readiness_path,
+                    reason=(
+                        "no_idle_ready_work_unit_reconciliation; post_release_ready_work_unit; "
+                        "review_required_or_authority_required; dispatch_separate=true"
+                    ),
+                    create_post_repair_review_tasks=bool(args.create_remediation),
+                    create_post_repair_authority_tasks=bool(args.create_remediation),
+                    post_repair_review_workspace=args.workspace,
+                    post_repair_authority_workspace=args.workspace,
+                    completion_result="Ready work-unit no-idle reconciliation satisfied.",
+                    completion_summary="No-idle reconciled post-release ready work-unit evidence.",
+                    dry_run=not bool(args.create_remediation),
+                    out=None,
+                ),
+                runner=runner,
+            )
+            runtime_gate = ready_reconciliation.get("runtime_gate") if isinstance(ready_reconciliation, dict) else {}
+            task_created = int(runtime_gate.get("post_repair_review_task_created_count") or 0) + int(
+                runtime_gate.get("post_repair_authority_task_created_count") or 0
+            )
+            actionable = bool(ready_reconciliation.get("retry_ready_work_unit_task_ids")) or bool(
+                ready_reconciliation.get("completed_ready_work_unit_task_ids")
+            )
+            followup_release = ready_reconciliation.get("followup_release_result")
+            followup_released = (
+                (followup_release or {}).get("released_ready_work_unit_task_ids")
+                if isinstance(followup_release, dict)
+                else {}
+            )
+            actionable = actionable or bool(followup_released)
+            incomplete = int(runtime_gate.get("incomplete_repair_or_review_count") or 0)
+            post_release_blocked = int(runtime_gate.get("post_release_blocked_count") or 0)
+            if task_created or actionable or post_release_blocked:
+                classification = {
+                    "status": "remediation_required" if task_created else "blocked" if incomplete else "observed",
+                    "classification": "ready_work_unit_reconciliation",
+                    "blocked": incomplete > 0 and not task_created and not actionable,
+                    "remediation_required": task_created > 0,
+                    "human_gate_required": int(runtime_gate.get("human_gate_required_count") or 0) > 0,
+                    "operator_input_required": False,
+                    "native_dispatch_required_next": task_created > 0 or bool(followup_released),
+                    "ready_work_unit_hermes_materialization_plan_ref": str(plan_path.relative_to(ROOT)),
+                    "materialization_result_ref": str(materialization_result_path.relative_to(ROOT)),
+                    "ready_work_unit_reconciliation": ready_reconciliation,
+                    "blocked_reasons": [],
+                    "next_action": (
+                        "dispatch Hermes for newly created review/authority or newly released ready work-unit tasks"
+                        if task_created or followup_released
+                        else "continue ready work-unit reconciliation"
+                    ),
+                    "state": summarize_no_idle_rows(rows),
+                }
+                envelope = {
+                    "$schema": LIVE_ADAPTER_SCHEMA,
+                    "mode": "no-idle",
+                    "board": args.board,
+                    "blocked": bool(classification.get("blocked")),
+                    "no_idle_state": classification,
+                    "board_reconcile_plan": None,
+                    "artifact_materialization": artifact_materialization,
+                    "targeted_remediation_plan": {
+                        "record_type": "factory_no_idle_ready_work_unit_reconciliation",
+                        "plan_action": "reconcile_ready_work_units",
+                        "native_dispatch_required_next": task_created > 0 or bool(followup_released),
+                        "human_gate_required": classification["human_gate_required"],
+                    },
+                    "remediation_task_id": None,
+                    "hook": {
+                        "runtime_authority": "hermes_kanban",
+                        "local_state_authority": False,
+                        "no_shadow_dispatcher": True,
+                        "dispatch_called_by_this_command": False,
+                        "reporting_policy": (
+                            "No-idle used the ready-work-unit reconciler instead of generic board remediation."
+                        ),
+                    },
+                }
+                public_envelope = sanitize_public_refs(envelope)
+                if args.out:
+                    write_json(args.out, public_envelope)
+                return public_envelope
+    if args.create_remediation:
+        artifact_materialization = materialize_missing_declared_artifacts(
+            hermes_bin=args.hermes_bin,
+            board=args.board,
+            rows=rows,
+            runner=runner,
+        )
+        if any(item.get("materialized") is True for item in artifact_materialization):
+            rows = {
+                status: list_tasks_by_status(
+                    hermes_bin=args.hermes_bin,
+                    board=args.board,
+                    status=status,
+                    runner=runner,
+                )
+                for status in ("ready", "running", "todo", "blocked", "triage", "done")
+            }
+            rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
     reconcile_plan: dict[str, Any] | None = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
     if reconcile_plan.get("plan_action") == "block_invariant_violation":
         classification = {

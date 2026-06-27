@@ -3259,6 +3259,7 @@ def validate_product_creation_plan_work_unit_graph(plan: dict[str, Any], at: str
     if not isinstance(work_units, list) or not work_units:
         return [f"{at}.work_units must be non-empty"]
     unit_ids: set[str] = set()
+    requirement_refs_from_units: set[str] = set()
     for index, unit in enumerate(work_units):
         unit = unit if isinstance(unit, dict) else {}
         prefix = f"{at}.work_units[{index}]"
@@ -3272,6 +3273,10 @@ def validate_product_creation_plan_work_unit_graph(plan: dict[str, Any], at: str
         for field in ("product_sot_requirement_refs", "scope_in", "scope_out", "verification", "stop_conditions"):
             if not _non_empty_string_list(unit.get(field)):
                 errors.append(f"{prefix}.{field} must be non-empty")
+        for requirement_ref in _list_items(unit.get("product_sot_requirement_refs")):
+            if requirement_ref.endswith("#all-active-product-sot-requirements"):
+                errors.append(f"{prefix}.product_sot_requirement_refs must use concrete Product SOT requirement refs, not aggregate all-active refs")
+            requirement_refs_from_units.add(requirement_ref)
         for field in ("proof_ids_required", "capability_profile_refs", "ready_rules", "blocked_when", "done_rules"):
             if not _non_empty_string_list(unit.get(field)):
                 errors.append(f"{prefix}.{field} must be non-empty")
@@ -3289,6 +3294,43 @@ def validate_product_creation_plan_work_unit_graph(plan: dict[str, Any], at: str
     missing_order_refs = [unit_id for unit_id in execution_order if unit_id not in unit_ids]
     if missing_order_refs:
         errors.append(f"{at}.execution_order references unknown work_units: " + ", ".join(missing_order_refs))
+    missing_from_order = sorted(unit_ids - set(execution_order))
+    if missing_from_order:
+        errors.append(f"{at}.execution_order must include every work_unit: " + ", ".join(missing_from_order))
+
+    coverage_rows = plan.get("requirement_execution_coverage")
+    if not isinstance(coverage_rows, list) or not coverage_rows:
+        errors.append(f"{at}.requirement_execution_coverage must be non-empty and map every active requirement to work units")
+        return errors
+    requirement_refs_from_coverage: set[str] = set()
+    for index, row in enumerate(coverage_rows):
+        row = row if isinstance(row, dict) else {}
+        prefix = f"{at}.requirement_execution_coverage[{index}]"
+        requirement_ref = str(row.get("requirement_ref") or "").strip()
+        if not requirement_ref:
+            errors.append(f"{prefix}.requirement_ref is required")
+        elif requirement_ref in requirement_refs_from_coverage:
+            errors.append(f"{prefix}.requirement_ref must be unique: {requirement_ref}")
+        else:
+            requirement_refs_from_coverage.add(requirement_ref)
+        if requirement_ref.endswith("#all-active-product-sot-requirements"):
+            errors.append(f"{prefix}.requirement_ref must be a concrete Product SOT requirement ref")
+        row_work_units = _list_items(row.get("work_unit_refs"))
+        if not row_work_units:
+            errors.append(f"{prefix}.work_unit_refs must be non-empty")
+        unknown_work_units = [unit_id for unit_id in row_work_units if unit_id not in unit_ids]
+        if unknown_work_units:
+            errors.append(f"{prefix}.work_unit_refs references unknown work_units: " + ", ".join(unknown_work_units))
+        if not _non_empty_string_list(row.get("proof_ids_required")):
+            errors.append(f"{prefix}.proof_ids_required must be non-empty")
+        if str(row.get("coverage_status") or "").strip() not in {"covered_for_execution", "blocked", "deferred_with_owner", "out_of_scope"}:
+            errors.append(f"{prefix}.coverage_status must be covered_for_execution, blocked, deferred_with_owner or out_of_scope")
+    missing_requirement_coverage = sorted(requirement_refs_from_units - requirement_refs_from_coverage)
+    extra_requirement_coverage = sorted(requirement_refs_from_coverage - requirement_refs_from_units)
+    if missing_requirement_coverage:
+        errors.append(f"{at}.requirement_execution_coverage missing refs used by work_units: " + ", ".join(missing_requirement_coverage))
+    if extra_requirement_coverage:
+        errors.append(f"{at}.requirement_execution_coverage refs must appear in work_units: " + ", ".join(extra_requirement_coverage))
     return errors
 
 
@@ -10324,6 +10366,24 @@ def build_method_contract(
             if isinstance(item, dict) and str(item.get("blocker_id") or "").strip()
         ]
     )
+    active_requirement_refs = _dedupe_preserve_order(
+        [
+            str(item.get("requirement_ref") or "").strip()
+            for item in full_scope_coverage.get("requirement_coverage", [])
+            if isinstance(item, dict)
+            and str(item.get("requirement_ref") or "").strip()
+            and str(item.get("status") or "").strip() != "out_of_scope"
+        ]
+    )
+    blocked_requirement_refs = _dedupe_preserve_order(
+        [
+            str(item.get("requirement_ref") or "").strip()
+            for item in full_scope_coverage.get("requirement_coverage", [])
+            if isinstance(item, dict)
+            and str(item.get("requirement_ref") or "").strip()
+            and str(item.get("status") or "").strip() in {"blocked", "human_decision_required", "deferred_with_owner"}
+        ]
+    )
     required_gates = ["Ready Gate", "Review Gate", "Done Gate"]
     if user_decision_required:
         required_gates.insert(0, "Human Scope Gate")
@@ -10359,6 +10419,8 @@ def build_method_contract(
             "product_creation_plan",
             "product_implementation_readiness",
         ],
+        "active_product_sot_requirement_refs": active_requirement_refs,
+        "blocked_product_sot_requirement_refs": blocked_requirement_refs,
         "method_engine_registry_ref": "templates/method-engine-registry.json",
         "selected_method_engines": selected_method_engines,
         "engineering_method_matrix": [
@@ -10488,6 +10550,18 @@ def validate_method_contract(method_contract: dict[str, Any]) -> list[str]:
     for artifact in ("full_product_sot_scope_coverage", "product_creation_plan", "product_implementation_readiness"):
         if artifact not in required_factory_artifacts:
             errors.append(f"method_contract.required_factory_artifacts must include {artifact}")
+
+    active_requirement_refs = _list_items(method_contract.get("active_product_sot_requirement_refs"))
+    if not active_requirement_refs:
+        errors.append("method_contract.active_product_sot_requirement_refs must preserve concrete active Product SOT requirement refs")
+    for index, ref in enumerate(active_requirement_refs):
+        if ref.endswith("#all-active-product-sot-requirements"):
+            errors.append(f"method_contract.active_product_sot_requirement_refs[{index}] must not be an aggregate all-active ref")
+        _validate_public_ref(ref, f"method_contract.active_product_sot_requirement_refs[{index}]", errors)
+    for index, ref in enumerate(_list_items(method_contract.get("blocked_product_sot_requirement_refs"))):
+        if ref not in active_requirement_refs:
+            errors.append(f"method_contract.blocked_product_sot_requirement_refs[{index}] must also be active: {ref}")
+        _validate_public_ref(ref, f"method_contract.blocked_product_sot_requirement_refs[{index}]", errors)
 
     registry_ref = str(method_contract.get("method_engine_registry_ref") or "").strip()
     if registry_ref:
@@ -10706,7 +10780,10 @@ def build_product_creation_plan(
             if "human-gate" in value or "blocker" in value.lower()
         ]
     )
-    base_requirement_refs = [f"{coverage_ref}#all-active-product-sot-requirements"]
+    base_requirement_refs = _list_items(method_contract.get("active_product_sot_requirement_refs"))
+    if not base_requirement_refs:
+        base_requirement_refs = [f"{coverage_ref}#missing-active-product-sot-requirements"]
+    blocked_requirement_refs = set(_list_items(method_contract.get("blocked_product_sot_requirement_refs")))
     common_ready_rules = [
         "Product Creation Plan validates against schema and domain rules",
         "Product Implementation Readiness allows this work unit before material execution",
@@ -10757,17 +10834,57 @@ def build_product_creation_plan(
         )
     )
 
-    for index, row in enumerate(matrix, start=2):
+    next_index = 2
+    for requirement_ref in base_requirement_refs:
+        requirement_slug = slug_for_ref(requirement_ref)
+        unit_status = "blocked" if requirement_ref in blocked_requirement_refs or user_decision_required else "todo"
+        work_units.append(
+            _product_creation_unit(
+                unit_id=f"work-unit-{next_index:03d}-{requirement_slug}",
+                requirement_refs=[requirement_ref],
+                objective=f"Deliver the complete executable implementation coverage for {requirement_ref}.",
+                scope_in=[
+                    f"all behavior, states, data, verification and handoff implied by {requirement_ref}",
+                    "supporting frontend, backend, persistence, integration, QA, security and documentation work needed for this requirement",
+                ],
+                scope_out=[
+                    "other Product SOT requirements except explicit dependencies",
+                    "release or production promotion without later readiness gates",
+                ],
+                verification=[
+                    "requirement-specific acceptance evidence is attached",
+                    "tests or proof commands for this requirement pass or block with owner",
+                    "reviewer_role reviews the produced evidence",
+                ],
+                expected_result="Requirement implementation coverage is PASS, or BLOCKED with owner and recovery route.",
+                owner_worker="implementation-worker",
+                proof_ids=[f"product_creation.{requirement_slug}.implementation", f"product_creation.{requirement_slug}.verification"],
+                ready_rules=[
+                    *common_ready_rules,
+                    f"{requirement_ref} is preserved as the canonical requirement ref",
+                ],
+                blocked_when=common_blocked_when,
+                done_rules=common_done_rules,
+                stop_conditions=common_stop_conditions,
+                status=unit_status,
+                blocker_id=blocker_refs[0] if unit_status == "blocked" and blocker_refs else f"{requirement_slug}-blocker",
+                blocker_owner="human-gate-clerk" if user_decision_required else "factory-orchestrator",
+                next_action="Resolve the blocker before requirement implementation coverage can execute.",
+            )
+        )
+        next_index += 1
+
+    for row_index, row in enumerate(matrix, start=1):
         row = row if isinstance(row, dict) else {}
-        surface = str(row.get("surface_or_component") or f"method-surface-{index - 1}").strip()
-        unit_id = f"work-unit-{index:03d}-{slug_for_ref(surface)}"
+        surface = str(row.get("surface_or_component") or f"method-surface-{row_index}").strip()
+        unit_id = f"work-unit-{next_index:03d}-{slug_for_ref(surface)}"
         row_methods = _list_items(row.get("methods")) or selected_methods or ["spec-first"]
         required_row_artifacts = _list_items(row.get("required_artifacts")) or required_artifacts
         evidence_required = _list_items(row.get("evidence_required")) or ["tests pass", "worker result evidence"]
         work_units.append(
             _product_creation_unit(
                 unit_id=unit_id,
-                requirement_refs=[*base_requirement_refs, f"{method_contract_ref}#engineering-method-matrix-{index - 1:03d}"],
+                requirement_refs=base_requirement_refs,
                 objective=f"Plan and execute the {surface} slice using {', '.join(row_methods)} while preserving full product scope.",
                 scope_in=[
                     f"{surface} requirements from approved Product SOT coverage",
@@ -10791,15 +10908,19 @@ def build_product_creation_plan(
                 blocked_when=common_blocked_when,
                 done_rules=common_done_rules,
                 stop_conditions=common_stop_conditions,
-                status="todo",
+                status="blocked" if user_decision_required else "todo",
+                blocker_id=blocker_refs[0] if user_decision_required and blocker_refs else "human-gate-product-scope",
+                blocker_owner="human-gate-clerk",
+                next_action="Resolve the named human scope decision before method slice planning moves to readiness.",
             )
         )
+        next_index += 1
 
     readiness_unit_id = f"work-unit-{len(work_units) + 1:03d}-implementation-readiness"
     work_units.append(
         _product_creation_unit(
             unit_id=readiness_unit_id,
-            requirement_refs=[*base_requirement_refs, f"{method_contract_ref}#product-implementation-readiness"],
+            requirement_refs=base_requirement_refs,
             objective="Prove artifact alignment before material implementation starts.",
             scope_in=[
                 "Product SOT, full scope coverage, Method Contract and Product Creation Plan",
@@ -10822,7 +10943,7 @@ def build_product_creation_plan(
     work_units.append(
         _product_creation_unit(
             unit_id=promotion_unit_id,
-            requirement_refs=[*base_requirement_refs, f"{method_contract_ref}#production-route"],
+            requirement_refs=base_requirement_refs,
             objective="Plan production, release, rollback, monitoring and support proof before customer-ready claims.",
             scope_in=["production promotion ladder", "rollback", "monitoring", "support", "customer readiness"],
             scope_out=["mainnet, customer, irreversible or production release without explicit promotion gates"],
@@ -10842,6 +10963,32 @@ def build_product_creation_plan(
     dependency_graph = [{"from": method_contract_ref, "to": "work-unit-001-scope-reconciliation"}]
     dependency_graph.extend({"from": "work-unit-001-scope-reconciliation", "to": unit_id} for unit_id in execution_order[1:])
     dependency_graph.append({"from": readiness_unit_id, "to": "product_implementation_readiness"})
+    requirement_execution_coverage = []
+    for requirement_ref in base_requirement_refs:
+        related_units = [
+            str(unit.get("unit_id") or "").strip()
+            for unit in work_units
+            if isinstance(unit, dict) and requirement_ref in _list_items(unit.get("product_sot_requirement_refs"))
+        ]
+        related_proofs = _dedupe_preserve_order(
+            [
+                proof_id
+                for unit in work_units
+                if isinstance(unit, dict) and requirement_ref in _list_items(unit.get("product_sot_requirement_refs"))
+                for proof_id in _list_items(unit.get("proof_ids_required"))
+            ]
+        )
+        requirement_execution_coverage.append(
+            {
+                "requirement_ref": requirement_ref,
+                "coverage_status": "blocked" if requirement_ref in blocked_requirement_refs or user_decision_required else "covered_for_execution",
+                "work_unit_refs": related_units,
+                "proof_ids_required": related_proofs,
+                "owner_worker": "decomposition-planner",
+                "reviewer_role": "independent-reviewer",
+                "source": "method_contract.active_product_sot_requirement_refs",
+            }
+        )
 
     return {
         "$schema": "https://overkill-factory.dev/schemas/product-creation-plan.schema.json",
@@ -10873,6 +11020,7 @@ def build_product_creation_plan(
         ],
         "capability_pack_requirements": ["templates/capability-pack-contract.json"],
         "work_units": work_units,
+        "requirement_execution_coverage": requirement_execution_coverage,
         "execution_order": execution_order,
         "slice_boundaries": [
             "slices are execution order units, not product scope reductions",
@@ -15086,6 +15234,176 @@ def required_worker_ids(card: dict[str, Any]) -> list[str]:
     return [worker_id for worker_id in WORKERS if worker_required(worker_id, card)[0]]
 
 
+LOCAL_WORK_UNIT_CLOSEOUT_SURFACES = {
+    "receipt-five",
+    "receipt_five",
+    "evidence",
+    "worker-results",
+    "worker_results",
+    "kanban-transition",
+    "kanban_transition",
+    "closure-summary",
+    "closure_summary",
+    "completion-audit",
+    "completion_audit",
+    "done-readiness",
+    "done_readiness",
+}
+
+
+def is_local_work_unit_closeout_card(card: dict[str, Any]) -> bool:
+    """Return true for a bounded ready-work-unit closeout card, not product promotion."""
+    phase = str(card.get("phase") or "").upper()
+    actor = str(card.get("owner_worker") or card.get("executor_identity") or card.get("owner_profile") or "").strip()
+    surfaces = normalized_surfaces(card)
+    return (
+        card.get("complete_product_claim_allowed") is False
+        and ("F15" in phase or "F16" in phase)
+        and actor == "evidence-reconciler"
+        and bool(surfaces & LOCAL_WORK_UNIT_CLOSEOUT_SURFACES)
+    )
+
+
+def normalize_transition_card(card: dict[str, Any]) -> dict[str, Any]:
+    """Fill deterministic runtime defaults for generated WU transition cards.
+
+    This is intentionally narrow. It only repairs the adapter-generated
+    closeout card shape used for ready work units, where the source packet
+    already says no complete-product, release, deployment or human approval is
+    being claimed.
+    """
+    normalized = copy.deepcopy(card)
+    if not is_local_work_unit_closeout_card(normalized):
+        return normalized
+
+    card_id = str(normalized.get("card_id") or normalized.get("work_unit_id") or "local-work-unit-closeout").strip()
+    owner = str(normalized.get("owner_worker") or normalized.get("executor_identity") or "evidence-reconciler").strip()
+    reviewer = str(normalized.get("reviewer_identity") or "independent-reviewer").strip()
+    risk_value = str(normalized.get("risk_effective") or normalized.get("risk_initial") or "R2").strip()
+
+    normalized.setdefault("card_id", card_id)
+    normalized.setdefault("slice_id", card_id)
+    normalized.setdefault("factory_method_version", "READY_WORK_UNIT_CLOSEOUT")
+    normalized.setdefault("risk_initial", risk_value)
+    normalized.setdefault("risk_effective", risk_value)
+    normalized.setdefault("authority_max", "ready_work_unit_local_closeout_only")
+    normalized.setdefault("owner_worker", owner)
+    normalized.setdefault("executor_identity", owner)
+    normalized.setdefault("reviewer_identity", reviewer)
+    normalized.setdefault(
+        "forbidden_actions",
+        [
+            "claim complete product acceptance",
+            "release or deploy",
+            "touch production",
+            "touch secrets, funds, custody or signing",
+            "create human approval records",
+        ],
+    )
+    normalized.setdefault(
+        "runtime_contract",
+        {
+            "mode": "local_validation",
+            "runtime_source_of_truth": "hermes_kanban",
+            "dispatch_authority": "hermes_native_dispatch_only",
+            "worker_results_required": True,
+            "receipt_five_required": True,
+            "transition_event_required": True,
+            "local_validation_is_production_proof": False,
+            "hermes_required_for_real_run": True,
+            "forbidden_actions": [
+                "release",
+                "deployment",
+                "production",
+                "product_acceptance",
+            ],
+        },
+    )
+    normalized.setdefault(
+        "runtime_decision",
+        {
+            "runtime_authority": "hermes_kanban",
+            "decision": "close bounded ready work unit only",
+            "forbidden_scope": ["release", "deployment", "production", "product_acceptance"],
+        },
+    )
+    normalized.setdefault(
+        "security_contract",
+        {
+            "security_boundary": (
+                "closeout only; no new material code, production, public runtime, "
+                "secrets, funds, custody or signing mutation"
+            ),
+        },
+    )
+    normalized.setdefault(
+        "reviewer_selection_plan",
+        {
+            "executor_identity": owner,
+            "reviewer_identity": reviewer,
+            "reviewer_must_differ_from_executor": True,
+        },
+    )
+    normalized.setdefault("transition_event_required", True)
+    normalized.setdefault("kanban_transition_event_ref", "receipt:kanban_transition_event")
+    return normalized
+
+
+def closeout_transition_worker_ids(card: dict[str, Any], worker_ids: list[str]) -> list[str]:
+    if not is_local_work_unit_closeout_card(card):
+        return worker_ids
+    allowed = {"evidence-reconciler", "independent-reviewer", "human-gate-clerk"}
+    return [worker_id for worker_id in worker_ids if worker_id in allowed]
+
+
+def gate_report_for_transition(card: dict[str, Any]) -> dict[str, Any]:
+    gate = build_gate_report(card)
+    if not is_local_work_unit_closeout_card(card):
+        return gate
+
+    scoped_workers = closeout_transition_worker_ids(card, list(gate.get("required_workers", [])))
+    scoped_blocked = [worker_id for worker_id in gate.get("blocked_workers", []) if worker_id in scoped_workers]
+    scoped_actions = [
+        action
+        for action in gate.get("next_safe_actions", [])
+        if not isinstance(action, dict) or str(action.get("worker_id") or "") in scoped_workers
+    ]
+    scoped_economics = [
+        item
+        for item in gate.get("blocker_economics", [])
+        if not isinstance(item, dict)
+        or str(item.get("owner") or "") in scoped_workers
+        or str(item.get("blocker_id") or "").startswith("card-validation:")
+    ]
+    validation_errors = list(gate.get("card_validation_errors", []))
+    if validation_errors or scoped_blocked:
+        gate_status = "blocked"
+    elif scoped_workers:
+        gate_status = "ready_for_worker_execution"
+    else:
+        gate_status = "pass_no_workers_required"
+    updated = dict(gate)
+    updated["required_workers"] = scoped_workers
+    updated["blocked_workers"] = scoped_blocked
+    updated["next_safe_actions"] = scoped_actions
+    updated["blocker_economics"] = scoped_economics
+    updated["gate_status"] = gate_status
+    updated["gate_predicate_result"] = "BLOCK" if gate_status == "blocked" else "PASS"
+    updated["promotion_authority"] = {
+        **dict(gate.get("promotion_authority") or {}),
+        "result": "BLOCK" if gate_status == "blocked" else "PASS",
+        "allowed_transition_scopes": [] if gate_status == "blocked" else ["create_worker_tasks"],
+        "predicate": "scoped local ready-work-unit closeout workers are valid for this transition",
+    }
+    updated["closeout_worker_scope"] = {
+        "scope": "ready_work_unit_local_closeout_only",
+        "complete_product_claim_allowed": False,
+        "required_workers_filtered_from": list(gate.get("required_workers", [])),
+        "required_workers": scoped_workers,
+    }
+    return updated
+
+
 def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path) -> dict[str, Any]:
     worker = WORKERS[worker_id]
     profile_binding = load_profile_bindings().get(worker_id)
@@ -15765,14 +16083,42 @@ def _field_mismatch_errors(data: dict[str, Any], card: dict[str, Any] | None) ->
     if card is None:
         return []
     errors: list[str] = []
+    record_type = str(data.get("record_type") or "").strip()
     card_ref_value = data.get("card_ref")
-    card_ref = card_ref_value if isinstance(card_ref_value, dict) else {}
+    record_card_ref = card_ref_value if isinstance(card_ref_value, dict) else {}
     if data.get("record_type") == "human_gate_record" and data.get("card_id") != card.get("card_id"):
         errors.append("card_id must match current card")
-    if card_ref.get("card_id") != card.get("card_id"):
+    expected_public_ref = card_ref(card)
+    expected_card_ids = {
+        str(card.get("card_id") or ""),
+        str(expected_public_ref.get("card_id") or ""),
+    }
+    expected_card_ids.discard("")
+    review_source_card_id = str(
+        record_card_ref.get("source_card_id")
+        or record_card_ref.get("reviewed_parent_card_id")
+        or record_card_ref.get("parent_task_ref")
+        or data.get("source_card_id")
+        or ""
+    ).strip()
+    child_review_targets_current_card = (
+        record_type == "independent_review_result"
+        and bool(review_source_card_id)
+        and review_source_card_id in expected_card_ids
+    )
+    if record_card_ref.get("card_id") not in expected_card_ids and not child_review_targets_current_card:
         errors.append("card_ref.card_id must match current card")
     expected_slice = card.get("slice_id")
-    if expected_slice and card_ref.get("slice_id") != expected_slice:
+    expected_slice_ids = {
+        str(expected_slice or ""),
+        str(expected_public_ref.get("slice_id") or ""),
+    }
+    expected_slice_ids.discard("")
+    if (
+        expected_slice_ids
+        and record_card_ref.get("slice_id") not in expected_slice_ids
+        and not child_review_targets_current_card
+    ):
         errors.append("card_ref.slice_id must match current card")
     return errors
 
@@ -16269,6 +16615,7 @@ def collect_worker_result_fields(card: dict[str, Any], results_dir: Path | None)
             "graph_requirements": graph_requirements,
             "graph_requirement_refs": string_list(data.get("graph_requirement_refs")),
             "review_requirement_refs": string_list(data.get("review_requirement_refs")),
+            "evidence_refs": string_list(data.get("evidence_refs")),
             "reviewed_requirement_refs": string_list(data.get("reviewed_requirement_refs")),
             "reviewed_producer_refs": string_list(data.get("reviewed_producer_refs")),
             "producer_refs_reviewed": string_list(data.get("producer_refs_reviewed")),
@@ -16349,6 +16696,7 @@ def receipt_result_fields(
                 "graph_requirements": graph_requirements,
                 "graph_requirement_refs": string_list(value.get("graph_requirement_refs")),
                 "review_requirement_refs": string_list(value.get("review_requirement_refs")),
+                "evidence_refs": string_list(value.get("evidence_refs")),
                 "reviewed_requirement_refs": string_list(value.get("reviewed_requirement_refs")),
                 "reviewed_producer_refs": string_list(value.get("reviewed_producer_refs")),
                 "producer_refs_reviewed": string_list(value.get("producer_refs_reviewed")),
@@ -16508,6 +16856,9 @@ def review_record_matches_requirement(review_record: dict[str, Any], requirement
     producer_refs = set(string_list(review_record.get("reviewed_producer_refs")))
     producer_refs.update(string_list(review_record.get("producer_refs_reviewed")))
     if producer_ref and producer_ref in producer_refs:
+        return True
+    reviewed_evidence_refs = set(string_list(review_record.get("evidence_refs")))
+    if producer_ref and producer_ref in reviewed_evidence_refs:
         return True
     for authorization in review_record.get("review_task_authorizations", []):
         if not isinstance(authorization, dict):
@@ -16852,6 +17203,7 @@ def build_worker_closure(
     metadata: dict[str, Any] | None,
     results_dir: Path | None,
 ) -> dict[str, Any]:
+    card = normalize_transition_card(card)
     metadata = metadata or {}
     present_fields = receipt_result_fields(card, metadata, evidence_root=ROOT)
     result_files = collect_worker_result_fields(card, results_dir)
@@ -16862,7 +17214,8 @@ def build_worker_closure(
     invalid_blocking: list[str] = []
     unconsumable_blocking: list[str] = []
 
-    for worker_id in required_worker_ids(card):
+    scoped_required_workers = closeout_transition_worker_ids(card, required_worker_ids(card))
+    for worker_id in scoped_required_workers:
         worker = WORKERS[worker_id]
         queue_class = worker_queue_class(worker_id, card)
         required_for_done = queue_class == "blocking-before-done"
@@ -16905,7 +17258,7 @@ def build_worker_closure(
 
     return {
         "closure_type": "worker_result_reconciliation",
-        "required_workers": required_worker_ids(card),
+        "required_workers": scoped_required_workers,
         "missing_blocking_workers": missing_blocking,
         "invalid_blocking_workers": invalid_blocking,
         "unconsumable_blocking_workers": unconsumable_blocking,
@@ -16986,7 +17339,8 @@ def build_transition_plan(
     receipt: dict[str, Any] | None = None,
     worker_results_dir: Path | None = None,
 ) -> dict[str, Any]:
-    gate = build_gate_report(card)
+    card = normalize_transition_card(card)
+    gate = gate_report_for_transition(card)
     normalized_to = to_status.strip().lower()
     blocked_reasons: list[str] = []
     worker_tasks = [

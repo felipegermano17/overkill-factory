@@ -163,8 +163,9 @@ def sort_result_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def required_receipt_fields(card: dict[str, Any]) -> list[str]:
+    card = factoryctl.normalize_transition_card(card)
     fields: list[str] = []
-    for worker_id in factoryctl.required_worker_ids(card):
+    for worker_id in factoryctl.closeout_transition_worker_ids(card, factoryctl.required_worker_ids(card)):
         if worker_id == "evidence-reconciler":
             continue
         if factoryctl.worker_queue_class(worker_id, card) != "blocking-before-done":
@@ -178,6 +179,7 @@ def reconcile(
     results_dir: Path,
     extra_results: list[Path] | None = None,
 ) -> dict[str, Any]:
+    card = factoryctl.normalize_transition_card(card)
     grouped = load_worker_results(card, results_dir, extra_results)
     effective_results: dict[str, dict[str, Any]] = {}
     superseded_results: list[dict[str, Any]] = []
@@ -290,6 +292,7 @@ def reconcile(
 
 
 def build_reconciler_result(card: dict[str, Any], index_ref: str, index: dict[str, Any]) -> dict[str, Any]:
+    card = factoryctl.normalize_transition_card(card)
     blockers = []
     if index["missing_required_fields"]:
         blockers.append("missing required fields: " + ", ".join(index["missing_required_fields"]))
@@ -331,6 +334,7 @@ def build_reconciler_result(card: dict[str, Any], index_ref: str, index: dict[st
 
 
 def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, index: dict[str, Any]) -> dict[str, Any]:
+    card = factoryctl.normalize_transition_card(card)
     verification_result = "PASS" if index["receipt_five_ready"] else "BLOCKED"
     worker_result_refs = {
         field: str(item.get("evidence_ref"))
@@ -344,14 +348,27 @@ def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, i
             *[
                 str(item.get("evidence_ref"))
                 for item in index["effective_results"].values()
-                if item.get("evidence_ref")
+            if item.get("evidence_ref")
             ],
         }
     )
+    public_artifact_paths = [
+        ref
+        for ref in artifact_paths
+        if factoryctl.classify_artifact_ref(ref).get("public_safe") is True
+    ]
+    private_evidence_refs = [
+        ref
+        for ref in artifact_paths
+        if factoryctl.classify_artifact_ref(ref).get("public_safe") is not True
+    ]
+    if not public_artifact_paths:
+        public_artifact_paths = ["external:sanitized:receipt-five-private-evidence-ledger"]
     receipt = {
         "receipt_five": {
             "changed": card.get("done_definition") or "Reconciled worker evidence for done promotion.",
-            "artifact_paths": artifact_paths,
+            "artifact_paths": public_artifact_paths,
+            "private_evidence_refs": private_evidence_refs,
             "verification_commands": [
                 "python scripts/evidence_reconciler.py --card <card> --worker-results-dir <worker-results-dir>"
             ],
@@ -376,6 +393,7 @@ def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, i
             "evidence_ref": result_ref,
             "result": "PASS" if index["receipt_five_ready"] else "BLOCKED",
             "valid": bool(index["receipt_five_ready"]),
+            "private_evidence_refs": private_evidence_refs,
             "sdlc_feedback_loop_refs": index.get("sdlc_feedback_loop_refs", []),
             "promotion_authority": {
                 "result": "PASS" if index["receipt_five_ready"] else "BLOCK",
@@ -397,7 +415,8 @@ def build_receipt_draft(card: dict[str, Any], index_ref: str, result_ref: str, i
                 "receipt_five_reconciliation_result",
                 "worker_result_index",
             ],
-            "artifact_refs": artifact_paths,
+            "artifact_refs": public_artifact_paths,
+            "private_evidence_refs": private_evidence_refs,
             "allowed": bool(index["receipt_five_ready"]),
             "reason": "Receipt Five ready" if index["receipt_five_ready"] else "Receipt Five blocked by evidence reconciliation",
         },

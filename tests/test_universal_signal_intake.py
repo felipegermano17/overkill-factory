@@ -805,6 +805,15 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(method_contract["handoff"]["next_artifact"], "product_creation_plan")
         self.assertEqual(method_contract["handoff"]["next_worker"], "decomposition-planner")
         self.assertFalse(method_contract["acceptance"]["execution_allowed"])
+        expected_requirement_refs = [
+            row["requirement_ref"]
+            for row in coverage["requirement_coverage"]
+            if row["status"] != "out_of_scope"
+        ]
+        self.assertEqual(method_contract["active_product_sot_requirement_refs"], expected_requirement_refs)
+        self.assertFalse(
+            any(ref.endswith("#all-active-product-sot-requirements") for ref in method_contract["active_product_sot_requirement_refs"])
+        )
 
     def test_method_contract_requires_valid_full_scope_coverage(self) -> None:
         source_resolution = factoryctl.build_source_resolution_packet(
@@ -891,6 +900,48 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(plan["handoff"]["next_artifact"], "product_implementation_readiness")
         self.assertEqual(plan["handoff"]["next_worker"], "factory-orchestrator")
         self.assertFalse(plan["acceptance"]["execution_allowed"])
+        active_requirement_refs = set(method_contract["active_product_sot_requirement_refs"])
+        coverage_requirement_refs = {row["requirement_ref"] for row in plan["requirement_execution_coverage"]}
+        self.assertEqual(coverage_requirement_refs, active_requirement_refs)
+        self.assertGreaterEqual(len(plan["work_units"]), len(active_requirement_refs) + 3)
+        self.assertTrue(set(unit["unit_id"] for unit in plan["work_units"]).issubset(set(plan["execution_order"])))
+        for unit in plan["work_units"]:
+            self.assertFalse(
+                any(ref.endswith("#all-active-product-sot-requirements") for ref in unit["product_sot_requirement_refs"]),
+                unit,
+            )
+        for row in plan["requirement_execution_coverage"]:
+            self.assertTrue(row["work_unit_refs"], row)
+            self.assertTrue(row["proof_ids_required"], row)
+
+    def test_product_creation_plan_rejects_aggregate_requirement_coverage(self) -> None:
+        plan = build_valid_product_creation_plan()
+        plan["work_units"][0]["product_sot_requirement_refs"] = [
+            f"{plan['method_contract_ref']}#all-active-product-sot-requirements"
+        ]
+        plan["requirement_execution_coverage"] = [
+            {
+                "requirement_ref": f"{plan['method_contract_ref']}#all-active-product-sot-requirements",
+                "coverage_status": "covered_for_execution",
+                "work_unit_refs": [plan["work_units"][0]["unit_id"]],
+                "proof_ids_required": ["generic.scope-fit"],
+                "owner_worker": "decomposition-planner",
+                "reviewer_role": "independent-reviewer",
+                "source": "regression-test",
+            }
+        ]
+
+        errors = factoryctl.validate_product_creation_plan(plan)
+
+        self.assertTrue(any("aggregate all-active" in error for error in errors), errors)
+
+    def test_product_creation_plan_rejects_missing_requirement_execution_coverage(self) -> None:
+        plan = build_valid_product_creation_plan()
+        plan.pop("requirement_execution_coverage")
+
+        errors = factoryctl.validate_product_creation_plan(plan)
+
+        self.assertTrue(any("requirement_execution_coverage" in error for error in errors), errors)
 
     def test_product_creation_plan_requires_valid_method_contract(self) -> None:
         method_contract = build_valid_method_contract()
@@ -1012,7 +1063,17 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         readiness = factoryctl.build_product_implementation_readiness(plan)
 
         self.assertEqual(readiness["artifact_alignment_result"], "BLOCKED")
-        self.assertEqual(readiness["blocked_work_units"], ["work-unit-001-scope-reconciliation"])
+        expected_blocked = [
+            unit["unit_id"]
+            for unit in plan["work_units"]
+            if unit["status"] == "blocked"
+        ]
+        self.assertEqual(readiness["blocked_work_units"], expected_blocked)
+        self.assertIn("work-unit-001-scope-reconciliation", readiness["blocked_work_units"])
+        self.assertTrue(
+            any(unit_id.startswith("work-unit-002-") for unit_id in readiness["blocked_work_units"]),
+            readiness["blocked_work_units"],
+        )
         self.assertEqual(readiness["ready_work_units"], [])
         self.assertIn("human-gate-method-scope-001", readiness["human_decisions_required"])
         self.assertFalse(readiness["acceptance"]["material_execution_allowed"])
