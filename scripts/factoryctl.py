@@ -4977,6 +4977,12 @@ def factory_phase_engine_state(
 
 def factory_workflow_step_key(phase_engine: dict[str, Any] | None) -> str:
     if isinstance(phase_engine, dict):
+        phase_id = str(phase_engine.get("computed_phase_id") or "").strip().upper()
+        next_artifact = str(phase_engine.get("next_required_artifact") or "").strip()
+        if phase_id == "F11" or next_artifact == "product_creation_plan":
+            return "F11-product-creation-plan"
+        if phase_id == "F12" or next_artifact == "product_implementation_readiness":
+            return "F12-product-implementation-readiness"
         frontier = str(phase_engine.get("computed_frontier") or "").strip()
         if frontier in FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER:
             return FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER[frontier]
@@ -18252,6 +18258,13 @@ def _task_has_architecture_review(task: dict[str, Any]) -> bool:
         return False
     if "architecture_review_packet" in text or "architecture review packet" in text:
         return True
+    if ("architecture_review" in text or "architecture review" in text) and (
+        "pass_for_architecture" in text
+        or "blocking fail" in text
+        or "not reviewable" in text
+        or "repair/rerun architecture" in text
+    ):
+        return True
     if "architecture candidate" in text and ("pass" in text or "fail" in text or "review" in text):
         return True
     if "architecture_result" in text and ("review" in text or "pass" in text or "fail" in text):
@@ -18275,6 +18288,96 @@ def _task_has_failed_architecture_review(task: dict[str, Any]) -> bool:
         return False
     text = _task_search_text(task)
     return "fail" in text or "blocking fail" in text or "not reviewable" in text
+
+
+def _task_has_passed_architecture_review(task: dict[str, Any]) -> bool:
+    if not _task_has_architecture_review(task):
+        return False
+    text = _task_search_text(task)
+    explicit_pass_markers = (
+        "pass_for_architecture_review",
+        "pass for architecture review",
+        "architecture review: pass",
+        "architecture_review_result pass",
+        "architecture_review_result: pass",
+    )
+    if any(marker in text for marker in explicit_pass_markers):
+        return True
+    for run in task.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = _json_object_from_possible_string(run.get("metadata"))
+        if not isinstance(metadata, dict):
+            continue
+        result = metadata.get("architecture_review_result")
+        if not isinstance(result, dict):
+            continue
+        result_text = json.dumps(result, sort_keys=True, default=str).lower()
+        if any(marker in result_text for marker in explicit_pass_markers):
+            return True
+        status = str(
+            result.get("status")
+            or result.get("result")
+            or result.get("decision")
+            or result.get("verdict")
+            or ""
+        ).strip().lower()
+        if status == "pass" or status.startswith("pass_for_architecture_review"):
+            return True
+    return False
+
+
+def _task_has_product_creation_plan(task: dict[str, Any]) -> bool:
+    text = _task_search_text(task)
+    assignee = str(task.get("assignee") or "").strip().lower()
+    if "decomposition-planner" in assignee and (
+        "product_creation_plan" in text or "product creation plan" in text
+    ):
+        return True
+    payloads: list[dict[str, Any]] = []
+    for key in ("metadata", "body", "description", "result"):
+        payload = _json_object_from_possible_string(task.get(key))
+        if isinstance(payload, dict):
+            payloads.append(payload)
+    for run in task.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        payload = _json_object_from_possible_string(run.get("metadata"))
+        if isinstance(payload, dict):
+            payloads.append(payload)
+    for payload in payloads:
+        if payload.get("record_type") == "product_creation_plan":
+            return True
+        if str(payload.get("required_output") or payload.get("artifact") or "").strip() == "product_creation_plan":
+            return True
+        if isinstance(payload.get("product_creation_plan"), dict):
+            return True
+    return False
+
+
+def _task_temporal_key(task: dict[str, Any], index: int) -> tuple[int, float, int]:
+    for key in ("completed_at", "updated_at", "created_at", "time", "timestamp"):
+        value = str(task.get(key) or "").strip()
+        if not value:
+            continue
+        try:
+            normalized = value.replace("Z", "+00:00")
+            return (1, datetime.fromisoformat(normalized).timestamp(), index)
+        except ValueError:
+            continue
+    for event in task.get("events") or []:
+        if not isinstance(event, dict):
+            continue
+        for key in ("at", "time", "timestamp", "created_at"):
+            value = str(event.get(key) or "").strip()
+            if not value:
+                continue
+            try:
+                normalized = value.replace("Z", "+00:00")
+                return (1, datetime.fromisoformat(normalized).timestamp(), index)
+            except ValueError:
+                continue
+    return (0, 0.0, index)
 
 
 def _factory_card_from_payload(payload: dict[str, Any]) -> dict[str, Any] | None:
@@ -18647,9 +18750,21 @@ def board_reconcile_terminal_failed_architecture_review_continuation(
     rows: dict[str, list[dict[str, Any]]],
 ) -> tuple[dict[str, Any] | None, list[str]]:
     done = rows.get("done", [])
-    failed_review_refs = [_task_public_ref(task) for task in done if _task_has_failed_architecture_review(task)]
-    if not failed_review_refs:
+    passed_review_keys = [
+        _task_temporal_key(task, index)
+        for index, task in enumerate(done)
+        if _task_has_passed_architecture_review(task)
+    ]
+    latest_pass_key = max(passed_review_keys) if passed_review_keys else None
+    active_failed_reviews = [
+        task
+        for index, task in enumerate(done)
+        if _task_has_failed_architecture_review(task)
+        and (latest_pass_key is None or _task_temporal_key(task, index) > latest_pass_key)
+    ]
+    if not active_failed_reviews:
         return None, []
+    failed_review_refs = [_task_public_ref(task) for task in active_failed_reviews]
     phase_engine = {
         "computed_frontier": "architecture",
         "computed_phase_id": FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER["architecture"],
@@ -18666,6 +18781,60 @@ def board_reconcile_terminal_failed_architecture_review_continuation(
         "factory_next_action": {
             "artifact": FACTORY_PHASE_LOCK_NEXT_ARTIFACTS["architecture"],
             "owner": "product-architect",
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
+def board_reconcile_terminal_passed_architecture_review_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    architecture_refs = [_task_public_ref(task) for task in done if _task_has_architecture_candidate(task)]
+    passed_reviews = [
+        (index, task)
+        for index, task in enumerate(done)
+        if _task_has_passed_architecture_review(task)
+    ]
+    failed_reviews = [
+        (index, task)
+        for index, task in enumerate(done)
+        if _task_has_failed_architecture_review(task)
+    ]
+    if not architecture_refs or not passed_reviews:
+        return None, []
+    latest_pass = max((_task_temporal_key(task, index), task) for index, task in passed_reviews)
+    latest_fail_key = max(
+        (_task_temporal_key(task, index) for index, task in failed_reviews),
+        default=None,
+    )
+    if latest_fail_key is not None and latest_fail_key > latest_pass[0]:
+        return None, []
+    passed_review_refs = [_task_public_ref(latest_pass[1])]
+    if any(_task_has_product_creation_plan(task) for task in done):
+        return None, []
+    phase_engine = {
+        "computed_frontier": "architecture",
+        "computed_phase_id": "F11",
+        "next_required_artifact": "product_creation_plan",
+        "decision_basis": (
+            "Architecture candidate has an explicit independent PASS; the next deterministic "
+            "frontier is Product Creation Plan before work units, ready gate or implementation."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(architecture_refs + passed_review_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": "product_creation_plan",
+            "owner": DEFAULT_ARTIFACT_OWNERS["product_creation_plan"],
             "why": phase_engine["decision_basis"],
             "evidence_refs": evidence_refs,
         }
@@ -18847,6 +19016,10 @@ def build_board_reconcile_plan(
         terminal_continuation, terminal_continuation_errors = (
             board_reconcile_terminal_failed_architecture_review_continuation(rows)
         )
+        if terminal_continuation is None:
+            terminal_continuation, terminal_continuation_errors = (
+                board_reconcile_terminal_passed_architecture_review_continuation(rows)
+            )
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
                 board_reconcile_terminal_architecture_review_continuation(rows)

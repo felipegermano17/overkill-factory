@@ -5598,6 +5598,158 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
         self.assertIn("blocking FAIL", body["reason"])
 
+    def test_no_idle_supersedes_old_failed_architecture_review_after_pass_rerun(self) -> None:
+        fake = FakeHermes()
+        arch_id = "t_" + "archfix1"
+        failed_review_id = "t_" + "archfail"
+        passed_review_id = "t_" + "archpass"
+        fake.tasks[arch_id] = {
+            "id": arch_id,
+            "status": "done",
+            "assignee": "product-architect",
+            "title": "Materialize architecture_packet for board",
+            "latest_summary": "Repaired architecture candidate packet is ready for independent review.",
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {
+                            "architecture_result": {
+                                "status": "candidate_architecture_packet_ready_for_independent_review_not_closed",
+                                "task_id": arch_id,
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        fake.tasks[failed_review_id] = {
+            "id": failed_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Materialize architecture_review_packet for board",
+            "completed_at": "2026-06-27T01:00:00+00:00",
+            "latest_summary": (
+                "Blocking FAIL: original architecture candidate is not reviewable; "
+                "repair/rerun architecture_packet is required before decomposition."
+            ),
+        }
+        fake.tasks[passed_review_id] = {
+            "id": passed_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Independent architecture review rerun",
+            "completed_at": "2026-06-27T01:05:00+00:00",
+            "latest_summary": (
+                "PASS_FOR_ARCHITECTURE_REVIEW_RERUN: repaired architecture candidate "
+                "is reviewable for Product Creation Plan planning."
+            ),
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {
+                            "architecture_review_result": {
+                                "status": "PASS_FOR_ARCHITECTURE_REVIEW_RERUN",
+                                "target_task_id": arch_id,
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+        self.assertEqual(
+            result["board_reconcile_plan"]["create_task_contract"]["body"]["required_output"],
+            "product_creation_plan",
+        )
+        created_architecture_repairs = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "architecture_packet"
+        ]
+        self.assertEqual(created_architecture_repairs, [])
+        created_product_plans = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "product_creation_plan"
+        ]
+        self.assertEqual(len(created_product_plans), 1)
+        body = adapter.parse_json_object(str(created_product_plans[0].get("body") or "{}"))
+        self.assertEqual(created_product_plans[0]["assignee"], "decomposition-planner")
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F11-product-creation-plan")
+        self.assertEqual(body["phase_engine"]["computed_phase_id"], "F11")
+        self.assertFalse(body["phase_engine"]["human_gate_allowed"])
+        self.assertIn("Product Creation Plan", body["reason"])
+
+    def test_no_idle_keeps_newer_failed_architecture_review_active_after_older_pass(self) -> None:
+        fake = FakeHermes()
+        arch_id = "t_" + "archfix2"
+        passed_review_id = "t_" + "archpass"
+        failed_review_id = "t_" + "archfail"
+        fake.tasks[arch_id] = {
+            "id": arch_id,
+            "status": "done",
+            "assignee": "product-architect",
+            "title": "Materialize architecture_packet for board",
+            "latest_summary": "Architecture candidate packet is ready for independent review.",
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {
+                            "architecture_result": {
+                                "status": "candidate_architecture_packet_ready_for_independent_review_not_closed",
+                                "task_id": arch_id,
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        fake.tasks[passed_review_id] = {
+            "id": passed_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Independent architecture review",
+            "completed_at": "2026-06-27T01:00:00+00:00",
+            "latest_summary": "PASS_FOR_ARCHITECTURE_REVIEW: architecture candidate was reviewable.",
+        }
+        fake.tasks[failed_review_id] = {
+            "id": failed_review_id,
+            "status": "done",
+            "assignee": "independent-reviewer",
+            "title": "Independent architecture review rerun",
+            "completed_at": "2026-06-27T01:10:00+00:00",
+            "latest_summary": (
+                "Blocking FAIL: later architecture review found the packet is not reviewable; "
+                "repair/rerun architecture_packet is required."
+            ),
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+        self.assertEqual(
+            result["board_reconcile_plan"]["create_task_contract"]["body"]["required_output"],
+            "architecture_packet",
+        )
+        created_architecture_repairs = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "architecture_packet"
+        ]
+        self.assertEqual(len(created_architecture_repairs), 1)
+        self.assertEqual(created_architecture_repairs[0]["assignee"], "product-architect")
+
     def test_no_idle_does_not_mistake_planning_review_for_architecture_review(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0003"
