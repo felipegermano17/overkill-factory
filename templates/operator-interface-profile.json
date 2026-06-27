@@ -11,7 +11,10 @@
     "supports_push_notifications": true,
     "supports_threads": false,
     "supports_buttons": true,
-    "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "link"]
+    "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "link"],
+    "message_rendering_mode": "plain_text",
+    "rich_bot_messages_allowed": false,
+    "standard_file_attachments_only": true
   },
   "conversation_policy": {
     "start_mode": "conversational_intake_before_factory_start",

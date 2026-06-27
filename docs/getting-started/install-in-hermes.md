@@ -71,6 +71,20 @@ screenshots or runtime proof from your own Hermes instance.
 If the operator talks only to `overkill-factory-gerente` through Telegram, add a
 Hermes cron job for the no-idle watchdog after the adapter path is installed:
 
+Telegram Desktop should be treated as a plain-text channel. Decision messages
+must be short text plus ordinary markdown/PDF file attachments. Do not enable
+Hermes rich cards, rich drafts, media groups or table-rendered bot messages for
+this profile.
+
+```yaml
+platforms:
+  telegram:
+    extra:
+      rich_messages: false
+      rich_drafts: false
+      plain_text_required_reason: Telegram Desktop does not render Bot API rich messages reliably for factory decision packets.
+```
+
 For a gateway launched with a dedicated profile, put the wrapper in that
 profile's script directory. For a default-profile gateway, `~/.hermes/scripts`
 is also valid.

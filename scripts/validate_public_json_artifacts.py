@@ -1385,6 +1385,12 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             formats = set(text_items(capabilities.get("supported_attachment_formats")))
             if not {"markdown", "pdf"}.issubset(formats):
                 errors.append(f"{at}: telegram interface must support markdown and pdf attachments")
+            if capabilities.get("message_rendering_mode") != "plain_text":
+                errors.append(f"{at}: telegram interface must use plain_text message rendering")
+            if capabilities.get("rich_bot_messages_allowed") is not False:
+                errors.append(f"{at}: telegram interface must disable rich bot messages")
+            if capabilities.get("standard_file_attachments_only") is not True:
+                errors.append(f"{at}: telegram interface must use standard file attachments only")
         conversation = data.get("conversation_policy") if isinstance(data.get("conversation_policy"), dict) else {}
         if conversation.get("status_polling_required") is not False:
             errors.append(f"{at}: operator_interface_profile must not require status polling")

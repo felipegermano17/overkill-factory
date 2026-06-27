@@ -8854,6 +8854,9 @@ def build_operator_interface_profile(
             "supports_threads": False,
             "supports_buttons": True,
             "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "link"],
+            "message_rendering_mode": "plain_text",
+            "rich_bot_messages_allowed": False,
+            "standard_file_attachments_only": True,
         },
         "discord": {
             "max_short_message_chars": 1800,
@@ -8861,6 +8864,9 @@ def build_operator_interface_profile(
             "supports_threads": True,
             "supports_buttons": True,
             "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "link"],
+            "message_rendering_mode": "rich_supported",
+            "rich_bot_messages_allowed": True,
+            "standard_file_attachments_only": False,
         },
         "cockpit": {
             "max_short_message_chars": 5000,
@@ -8868,6 +8874,9 @@ def build_operator_interface_profile(
             "supports_threads": True,
             "supports_buttons": True,
             "supported_attachment_formats": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "html", "link"],
+            "message_rendering_mode": "rich_supported",
+            "rich_bot_messages_allowed": True,
+            "standard_file_attachments_only": False,
         },
         "codex_bridge": {
             "max_short_message_chars": 3500,
@@ -8875,6 +8884,9 @@ def build_operator_interface_profile(
             "supports_threads": True,
             "supports_buttons": False,
             "supported_attachment_formats": ["markdown", "pdf", "json", "link"],
+            "message_rendering_mode": "plain_text",
+            "rich_bot_messages_allowed": False,
+            "standard_file_attachments_only": True,
         },
         "cli": {
             "max_short_message_chars": 8000,
@@ -8882,6 +8894,9 @@ def build_operator_interface_profile(
             "supports_threads": False,
             "supports_buttons": False,
             "supported_attachment_formats": ["markdown", "json", "link"],
+            "message_rendering_mode": "plain_text",
+            "rich_bot_messages_allowed": False,
+            "standard_file_attachments_only": True,
         },
         "api": {
             "max_short_message_chars": 8000,
@@ -8889,6 +8904,9 @@ def build_operator_interface_profile(
             "supports_threads": False,
             "supports_buttons": False,
             "supported_attachment_formats": ["markdown", "pdf", "json", "html", "link"],
+            "message_rendering_mode": "plain_text",
+            "rich_bot_messages_allowed": False,
+            "standard_file_attachments_only": True,
         },
     }
     capabilities = channel_defaults[interface]
@@ -8976,6 +8994,12 @@ def validate_operator_interface_profile(profile: dict[str, Any]) -> list[str]:
         formats = set(_list_items(capabilities.get("supported_attachment_formats")))
         if not {"markdown", "pdf"}.issubset(formats):
             errors.append("operator_interface_profile.telegram must support markdown and pdf attachments")
+        if capabilities.get("message_rendering_mode") != "plain_text":
+            errors.append("operator_interface_profile.telegram must use plain_text message rendering")
+        if capabilities.get("rich_bot_messages_allowed") is not False:
+            errors.append("operator_interface_profile.telegram must disable rich bot messages")
+        if capabilities.get("standard_file_attachments_only") is not True:
+            errors.append("operator_interface_profile.telegram must use standard file attachments only")
     if capabilities.get("supports_push_notifications") is not True:
         errors.append("operator_interface_profile must support push/proactive notifications")
 

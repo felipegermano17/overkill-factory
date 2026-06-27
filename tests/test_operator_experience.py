@@ -160,6 +160,9 @@ class OperatorExperienceTest(unittest.TestCase):
             profile = json.loads(out.read_text(encoding="utf-8"))
 
         self.assertEqual(profile["primary_interface"], "telegram")
+        self.assertEqual(profile["interface_capabilities"]["message_rendering_mode"], "plain_text")
+        self.assertFalse(profile["interface_capabilities"]["rich_bot_messages_allowed"])
+        self.assertTrue(profile["interface_capabilities"]["standard_file_attachments_only"])
         self.assertFalse(profile["conversation_policy"]["status_polling_required"])
         self.assertTrue(profile["conversation_policy"]["operator_not_required_to_poll"])
         self.assertIn("decision_required", profile["proactive_notification_policy"]["notify_on"])

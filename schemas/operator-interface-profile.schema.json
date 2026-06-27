@@ -32,7 +32,10 @@
         "supports_push_notifications",
         "supports_threads",
         "supports_buttons",
-        "supported_attachment_formats"
+        "supported_attachment_formats",
+        "message_rendering_mode",
+        "rich_bot_messages_allowed",
+        "standard_file_attachments_only"
       ],
       "properties": {
         "max_short_message_chars": { "type": "integer", "minimum": 500, "maximum": 10000 },
@@ -46,7 +49,10 @@
           "items": {
             "enum": ["markdown", "pdf", "json", "diagram_png", "video_mp4", "audio_mp3", "html", "link"]
           }
-        }
+        },
+        "message_rendering_mode": { "enum": ["plain_text", "rich_supported"] },
+        "rich_bot_messages_allowed": { "type": "boolean" },
+        "standard_file_attachments_only": { "type": "boolean" }
       },
       "additionalProperties": false
     },

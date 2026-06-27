@@ -1980,7 +1980,7 @@ def no_idle_post_review_gate_body(
             "keep APPROVAL_REQUEST, EVIDENCE_INDEX, OWNER_REVIEW, hashes, schemas and validation receipts as supporting evidence, not as the SOT body",
             "prepare the canonical Product SOT in markdown and PDF before asking for a decision",
             "attach or reference the canonical Product SOT markdown/PDF decision material available to the Telegram-facing manager",
-            "when a primary operator channel such as Telegram is configured, deliver a short decision message and the Product SOT PDF through the manager/operator-facing profile (for Hermes use `hermes send` with `MEDIA:<pdf>` from that profile)",
+            "when a primary operator channel such as Telegram is configured, deliver a short plain-text decision message and the Product SOT markdown/PDF as standard file attachments through the manager/operator-facing profile; do not use Telegram rich cards, rich drafts, media groups or table-rendered bot messages",
             "ask only the bounded Product SOT approve / rebaseline / request changes decision",
         ],
         "forbidden_actions": [
@@ -1989,6 +1989,7 @@ def no_idle_post_review_gate_body(
             "start architecture, implementation, repo cleanup, deployment, cloud mutation, DevNet/Mainnet material action, funds, custody, signing or release",
             "ask for a decision from a chat summary without the decision package material",
             "deliver an operational receipt, approval JSON, evidence index, hash list or worker log as if it were the Product SOT",
+            "send Telegram rich cards, rich drafts, media groups or table-rendered bot messages as the primary decision package",
             "deliver an English-only Product SOT when the operator-facing language is Portuguese",
             "treat a Kanban comment alone as delivered material when a primary operator channel is configured",
             "send the operator-facing gate from a non-manager profile when a manager/operator-facing profile is configured",
