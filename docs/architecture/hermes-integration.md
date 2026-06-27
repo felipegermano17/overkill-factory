@@ -78,6 +78,12 @@ only a board-state controller:
   phase engine.
 
 This closes silent idle without creating a shadow dispatcher or bypassing gates.
+The primary runtime shape should still be a durable Hermes Kanban graph created
+at project start: backbone cards, explicit dependencies, typed blockers and
+bounded expander cards. No-idle is the integrity auditor that notices when the
+graph is missing, stale or inconsistent; it is not the normal source of new
+factory route authority.
+
 The no-idle layer must not ask for a human gate when the board reconciler says
 `phase_engine.human_gate_allowed=false`; it must create or repair the next
 factory-owned artifact instead.

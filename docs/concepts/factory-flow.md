@@ -3,6 +3,16 @@
 Overkill Factory is a gated production line. It is designed to prevent agents
 from jumping straight from a vague request to a confident completion claim.
 
+## Operating Mantra
+
+Less mirabolante, more Kanban-native, more Hermes-native, more deterministic
+and easier to trust.
+
+That means the factory should prefer visible Kanban structure over hidden agent
+interpretation: cards, dependencies, typed blocks, artifacts and native Hermes
+dispatch should carry the run. Watchdogs and no-idle checks are guardrails for
+integrity and recovery, not the main way the factory discovers what work exists.
+
 ## Core Objects
 
 | Object | Meaning |

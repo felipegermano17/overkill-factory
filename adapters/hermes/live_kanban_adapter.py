@@ -70,6 +70,161 @@ NO_IDLE_RUNNING_RESULT_CLOSEOUT_MARKER = "factory_no_idle_running_result_closeou
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
+FACTORY_RUN_GRAPH_RECORD_TYPE = "factory_run_graph"
+FACTORY_RUN_GRAPH_NODE_PACKET_TYPE = "factory_run_graph_node"
+FACTORY_RUN_GRAPH_RUNTIME_SHAPE = "hermes_kanban_backbone_with_bounded_expanders"
+FACTORY_RUNTIME_MANTRA = (
+    "less mirabolante, more Kanban-native, more Hermes-native, "
+    "more deterministic and easier to trust"
+)
+FACTORY_RUN_GRAPH_NO_IDLE_ROLE = "integrity_auditor_not_route_authority"
+FACTORY_RUN_GRAPH_BACKBONE = (
+    {
+        "node_id": "F2-source-ledger",
+        "phase_id": "F2",
+        "step_key": "F2-source-ledger",
+        "title": "F2 - Source Ledger",
+        "assignee": "factory-orchestrator",
+        "required_output": "source_ledger",
+        "activation_rule": "F1-intake done",
+    },
+    {
+        "node_id": "F3-understanding-alignment",
+        "phase_id": "F3",
+        "step_key": "F3-understanding",
+        "title": "F3 - Understanding Alignment",
+        "assignee": "factory-orchestrator",
+        "required_output": "operator_understanding_confirmation",
+        "activation_rule": "F2-source-ledger done",
+    },
+    {
+        "node_id": "F4-outcome-contract",
+        "phase_id": "F4",
+        "step_key": "F4-outcome",
+        "title": "F4 - Outcome Contract",
+        "assignee": "factory-orchestrator",
+        "required_output": "outcome_contract",
+        "activation_rule": "F3-understanding-alignment done",
+    },
+    {
+        "node_id": "F5-product-sot",
+        "phase_id": "F5",
+        "step_key": "F5-product-sot",
+        "title": "F5 - Product SOT",
+        "assignee": "factory-orchestrator",
+        "required_output": "product_sot_candidate",
+        "activation_rule": "F4-outcome-contract done",
+    },
+    {
+        "node_id": "F6-full-scope-coverage",
+        "phase_id": "F6",
+        "step_key": "F6-full-scope-coverage",
+        "title": "F6 - Full-Scope Coverage",
+        "assignee": "factory-orchestrator",
+        "required_output": "full_scope_coverage_matrix",
+        "activation_rule": "F5-product-sot done",
+    },
+    {
+        "node_id": "F7-method-contract",
+        "phase_id": "F7",
+        "step_key": "F7-method-contract",
+        "title": "F7 - Method Contract",
+        "assignee": "factory-orchestrator",
+        "required_output": "method_contract",
+        "activation_rule": "F6-full-scope-coverage done",
+    },
+    {
+        "node_id": "F8-capability-and-product-experience",
+        "phase_id": "F8",
+        "step_key": "F8-capability-product-experience",
+        "title": "F8 - Capability and Product Experience Selection",
+        "assignee": "factory-orchestrator",
+        "required_output": "capability_and_product_experience_selection",
+        "activation_rule": "F7-method-contract done",
+    },
+    {
+        "node_id": "F9-architecture-boundary",
+        "phase_id": "F9",
+        "step_key": "F9-architecture-boundary",
+        "title": "F9 - Architecture Boundary",
+        "assignee": "factory-orchestrator",
+        "required_output": "architecture_boundary_packet",
+        "activation_rule": "F8-capability-and-product-experience done",
+    },
+    {
+        "node_id": "F10-security-access-budget",
+        "phase_id": "F10",
+        "step_key": "F10-security-access-budget",
+        "title": "F10 - Security, Access and Budget",
+        "assignee": "factory-orchestrator",
+        "required_output": "security_access_budget_packet",
+        "activation_rule": "F9-architecture-boundary done",
+    },
+    {
+        "node_id": "F11-product-creation-plan",
+        "phase_id": "F11",
+        "step_key": "F11-product-creation-plan",
+        "title": "F11 - Product Creation Plan",
+        "assignee": "factory-orchestrator",
+        "required_output": "product_creation_plan",
+        "activation_rule": "F10-security-access-budget done",
+    },
+    {
+        "node_id": "F12-work-units",
+        "phase_id": "F12",
+        "step_key": "F12-work-units",
+        "title": "F12 - Work Units and Packets",
+        "assignee": "factory-orchestrator",
+        "required_output": "ready_work_unit_materialization_plan",
+        "activation_rule": "F11-product-creation-plan done",
+    },
+    {
+        "node_id": "F13-execution-expander",
+        "phase_id": "F13",
+        "step_key": "F13-execution",
+        "title": "F13 - Execution Expander",
+        "assignee": "factory-orchestrator",
+        "required_output": "bounded_execution_cards",
+        "activation_rule": "F12-work-units done",
+        "node_kind": "bounded_expander",
+    },
+    {
+        "node_id": "F15-verification-review",
+        "phase_id": "F15",
+        "step_key": "F15-verification-review",
+        "title": "F15 - Verification and Review",
+        "assignee": "factory-orchestrator",
+        "required_output": "verification_review_packet",
+        "activation_rule": "F13-execution-expander done",
+    },
+    {
+        "node_id": "F21-receipt-five",
+        "phase_id": "F21",
+        "step_key": "F21-receipt-five",
+        "title": "F21 - Receipt Five",
+        "assignee": "factory-orchestrator",
+        "required_output": "receipt_five",
+        "activation_rule": "F15-verification-review done",
+    },
+    {
+        "node_id": "F24-release-or-block",
+        "phase_id": "F24",
+        "step_key": "F24-release-or-block",
+        "title": "F24 - Release or Block",
+        "assignee": "factory-orchestrator",
+        "required_output": "release_or_block_packet",
+        "activation_rule": "F21-receipt-five done",
+    },
+    {
+        "node_id": "F26-learnback",
+        "phase_id": "F26",
+        "step_key": "F26-learnback",
+        "title": "F26 - Learnback",
+        "assignee": "factory-orchestrator",
+        "required_output": "learnback_packet",
+        "activation_rule": "F24-release-or-block done",
+    },
+)
 COMPLETION_ARTIFACT_PROJECTION_MARKER = "completion_artifact_projection"
 KANBAN_ARTIFACT_REF_PREFIXES = ("kanban-artifact:", "external:kanban-artifact:", "kanban-attachment:")
 PRIVATE_HERMES_RUNTIME_TOKEN = "/srv/" + "hermes"
@@ -1758,11 +1913,37 @@ def declared_artifact_refs_from_task_record(record: dict[str, Any]) -> list[str]
     return sorted(set(refs))
 
 
+def completed_declared_artifact_readback_repair_is_self_evidenced(record: dict[str, Any]) -> bool:
+    body = parse_json_object(record.get("body")) or {}
+    if str(body.get("plan_action") or "").strip() != "repair_declared_artifacts":
+        return False
+    if str(body.get("required_output") or "").strip() != "declared_artifact_readback_repair":
+        return False
+    for run in record.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        if str(run.get("status") or "").strip().lower() not in {"done", "complete", "completed"}:
+            continue
+        metadata = parse_json_object(run.get("metadata")) or {}
+        if str(metadata.get("repair_status") or "").strip().upper() == "PASS":
+            return True
+        verification = metadata.get("verification") if isinstance(metadata.get("verification"), dict) else {}
+        if str(verification.get("file_readback") or "").strip().upper() == "PASS":
+            return True
+    return False
+
+
 def missing_declared_local_artifacts(record: dict[str, Any]) -> list[dict[str, Any]]:
     missing: list[dict[str, Any]] = []
+    suppress_self_evidenced_repair_refs = completed_declared_artifact_readback_repair_is_self_evidenced(record)
     for ref in declared_artifact_refs_from_task_record(record):
         path = Path(ref)
         if not path.is_absolute():
+            continue
+        if suppress_self_evidenced_repair_refs and path.name in {
+            "declared-artifact-readback-repair.json",
+            "declared-artifact-readback-repair.md",
+        }:
             continue
         valid_path = declared_local_artifact_valid_path(record, path)
         if valid_path is not None:
@@ -3675,6 +3856,22 @@ def promote_task(
         raise RuntimeError(f"Hermes task {task_id} promote readback is missing required retry markers")
 
 
+def link_task_dependency(
+    *,
+    hermes_bin: str,
+    board: str,
+    parent_task_id: str,
+    child_task_id: str,
+    runner: Runner = default_runner,
+) -> None:
+    run_checked(hermes_kanban(hermes_bin, board, "link", parent_task_id, child_task_id), runner)
+    child_payload = show_task(hermes_bin=hermes_bin, board=board, task_id=child_task_id, runner=runner)
+    child_task = task_readback_task(child_payload)
+    parent_ids = {str(item) for item in child_task.get("parents", []) if str(item).strip()}
+    if parent_task_id not in parent_ids:
+        raise RuntimeError(f"Hermes dependency link {parent_task_id} -> {child_task_id} did not persist")
+
+
 def unlink_task_dependency(
     *,
     hermes_bin: str,
@@ -3931,6 +4128,7 @@ def create_blocked_task_before_assignment(
     created_by: str,
     workspace: str,
     blocked_reason: str,
+    block_kind: str = DEFAULT_RUNTIME_GATE_BLOCK_KIND,
     workflow_template_id: str | None = None,
     current_step_key: str | None = None,
     runner: Runner = default_runner,
@@ -3977,7 +4175,7 @@ def create_blocked_task_before_assignment(
         board=board,
         task_id=task_id,
         reason=blocked_reason,
-        kind=DEFAULT_RUNTIME_GATE_BLOCK_KIND,
+        kind=block_kind,
         runner=runner,
     )
     blocked_task = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
@@ -4041,12 +4239,155 @@ def load_optional_source_envelope(path: Path | None) -> dict[str, Any] | None:
     return envelope
 
 
+def build_factory_run_graph(
+    *,
+    start_request: dict[str, Any],
+    source_envelope: dict[str, Any] | None,
+    start_request_ref: str,
+    source_envelope_ref: str | None,
+) -> dict[str, Any]:
+    run_id = str(start_request["run_id"])
+    graph_seed = {
+        "run_id": run_id,
+        "start_request_digest": contract_digest(start_request),
+        "source_envelope_digest": contract_digest(source_envelope or {}),
+        "backbone": FACTORY_RUN_GRAPH_BACKBONE,
+    }
+    graph_id = f"factory-run-graph:{bridge_start_board_slug(run_id)}:{idempotency_digest_fragment(contract_digest(graph_seed))}"
+    root_node = {
+        "node_id": "F1-intake",
+        "phase_id": "F1",
+        "step_key": FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        "title": "F1 - Intake",
+        "assignee": BRIDGE_START_DEFAULT_ASSIGNEE,
+        "required_output": "universal_signal_intake",
+        "activation_rule": "factory_bridge_start_request validated",
+        "node_kind": "root",
+        "task_role": BRIDGE_START_ROOT_TASK_TYPE,
+    }
+    backbone_nodes: list[dict[str, Any]] = []
+    for node in FACTORY_RUN_GRAPH_BACKBONE:
+        materialized_node = dict(node)
+        materialized_node.setdefault("node_kind", "backbone")
+        materialized_node["task_role"] = FACTORY_RUN_GRAPH_NODE_PACKET_TYPE
+        backbone_nodes.append(materialized_node)
+    all_nodes = [root_node, *backbone_nodes]
+    edges = [
+        {"from": all_nodes[index]["node_id"], "to": all_nodes[index + 1]["node_id"], "kind": "dependency"}
+        for index in range(len(all_nodes) - 1)
+    ]
+    return {
+        "record_type": FACTORY_RUN_GRAPH_RECORD_TYPE,
+        "graph_id": graph_id,
+        "run_id": run_id,
+        "runtime_shape": FACTORY_RUN_GRAPH_RUNTIME_SHAPE,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "operating_mantra": FACTORY_RUNTIME_MANTRA,
+        "route_authority": "factory_run_graph_and_phase_engine",
+        "agent_may_choose_phase": False,
+        "no_idle_role": FACTORY_RUN_GRAPH_NO_IDLE_ROLE,
+        "watchdog_role": "guardrail_not_primary_scheduler",
+        "start_request_ref": start_request_ref,
+        "source_envelope_ref": source_envelope_ref or start_request.get("source_envelope_ref"),
+        "nodes": all_nodes,
+        "edges": edges,
+    }
+
+
+def factory_run_graph_node_body(
+    *,
+    graph: dict[str, Any],
+    node: dict[str, Any],
+    parent_node_id: str,
+) -> str:
+    body = {
+        "task_type": FACTORY_RUN_GRAPH_NODE_PACKET_TYPE,
+        "packet_type": FACTORY_RUN_GRAPH_NODE_PACKET_TYPE,
+        "graph_id": graph["graph_id"],
+        "run_id": graph["run_id"],
+        "node_id": node["node_id"],
+        "phase_id": node["phase_id"],
+        "current_step_key": node["step_key"],
+        "node_kind": node.get("node_kind", "backbone"),
+        "required_output": node["required_output"],
+        "activation_rule": node["activation_rule"],
+        "parent_node_id": parent_node_id,
+        "runtime_authority": "hermes_kanban",
+        "local_state_authority": False,
+        "route_authority": graph["route_authority"],
+        "agent_may_choose_phase": False,
+        "block_kind": "dependency",
+        "dependency_semantics": "do_not_page_human; wait for parent card completion or deterministic reducer release",
+        "no_idle_role": graph["no_idle_role"],
+        "operating_mantra": graph["operating_mantra"],
+    }
+    if node.get("node_kind") == "bounded_expander":
+        body["expander_policy"] = {
+            "may_create_child_cards": True,
+            "child_cards_require_parent_edges": True,
+            "child_cards_must_have_ready_work_unit_packets": True,
+            "human_gate_required_for_expansion": False,
+        }
+    return compact_json_argument(body)
+
+
+def materialize_factory_run_graph(
+    *,
+    hermes_bin: str,
+    board: str,
+    graph: dict[str, Any],
+    root_task_id: str,
+    workspace: str,
+    runner: Runner = default_runner,
+) -> dict[str, str]:
+    task_ids: dict[str, str] = {"F1-intake": root_task_id}
+    previous_node_id = "F1-intake"
+    previous_task_id = root_task_id
+    for node in graph["nodes"][1:]:
+        node_id = str(node["node_id"])
+        body = factory_run_graph_node_body(graph=graph, node=node, parent_node_id=previous_node_id)
+        task_id = create_blocked_task_before_assignment(
+            hermes_bin=hermes_bin,
+            board=board,
+            title=str(node["title"]),
+            body=body,
+            assignee=str(node["assignee"]),
+            idempotency_key=(
+                f"overkill:factory-run-graph:{bridge_start_board_slug(str(graph['run_id']))}:"
+                f"{node_id}:{idempotency_digest_fragment(contract_digest(body))}"
+            ),
+            created_by="overkill-factory",
+            workspace=workspace,
+            blocked_reason=(
+                f"factory_run_graph dependency hold: {node_id} waits for {previous_node_id}; "
+                "this is not a human gate."
+            ),
+            block_kind="dependency",
+            workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+            current_step_key=str(node["step_key"]),
+            runner=runner,
+        )
+        link_task_dependency(
+            hermes_bin=hermes_bin,
+            board=board,
+            parent_task_id=previous_task_id,
+            child_task_id=task_id,
+            runner=runner,
+        )
+        task_ids[node_id] = task_id
+        previous_node_id = node_id
+        previous_task_id = task_id
+    return task_ids
+
+
 def bridge_start_root_body(
     *,
     start_request: dict[str, Any],
     source_envelope: dict[str, Any] | None,
     start_request_ref: str,
     source_envelope_ref: str | None,
+    factory_run_graph: dict[str, Any],
 ) -> str:
     body = {
         "task_type": BRIDGE_START_ROOT_TASK_TYPE,
@@ -4058,6 +4399,7 @@ def bridge_start_root_body(
         "factory_bridge_source_envelope_ref": source_envelope_ref or start_request.get("source_envelope_ref"),
         "factory_bridge_start_request": start_request,
         "source_envelope": source_envelope,
+        "factory_run_graph": factory_run_graph,
         "runtime_boundary": {
             "runtime_authority": "hermes_kanban",
             "local_state_authority": False,
@@ -4085,16 +4427,22 @@ def bridge_start_root_body(
             "current_step_key": FACTORY_KANBAN_DEFAULT_STEP_KEY,
             "runtime_field_required": True,
             "fallback_body_binding": True,
-            "route_authority": "factory_phase_engine",
+            "route_authority": "factory_run_graph_and_phase_engine",
         },
         "deterministic_phase_contract": {
-            "route_authority": "factory_phase_engine",
+            "route_authority": "factory_run_graph_and_phase_engine",
             "agent_may_choose_phase": False,
             "initial_phase_id": "F1",
             "initial_frontier": "intake",
             "initial_required_artifact": "universal_signal_intake",
             "promotion_rule": "materialize the next required artifact computed by the phase engine; do not promote from prose, memory, card title or declared phase alone",
             "human_gate_rule": "human gate is allowed only when the phase engine says human_gate_allowed=true and a full decision package has been delivered first",
+        },
+        "no_idle_contract": {
+            "role": FACTORY_RUN_GRAPH_NO_IDLE_ROLE,
+            "normal_route_authority": "factory_run_graph_and_phase_engine",
+            "may_invent_next_phase": False,
+            "may_repair_missing_or_stale_graph": True,
         },
         "next_factory_actions": [
             "compute deterministic phase engine state from materialized artifacts",
@@ -4126,16 +4474,26 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
     hold_start = bool(getattr(args, "hold_start", False))
     no_dispatch = bool(getattr(args, "no_dispatch", False))
 
+    start_request_ref = public_safe_workspace_ref(str(start_path))
+    source_envelope_ref = public_safe_workspace_ref(str(source_path)) if source_path else None
+    factory_run_graph = build_factory_run_graph(
+        start_request=start_request,
+        source_envelope=source_envelope,
+        start_request_ref=start_request_ref,
+        source_envelope_ref=source_envelope_ref,
+    )
     body = bridge_start_root_body(
         start_request=start_request,
         source_envelope=source_envelope,
-        start_request_ref=public_safe_workspace_ref(str(start_path)),
-        source_envelope_ref=public_safe_workspace_ref(str(source_path)) if source_path else None,
+        start_request_ref=start_request_ref,
+        source_envelope_ref=source_envelope_ref,
+        factory_run_graph=factory_run_graph,
     )
     idempotency_key = f"overkill:bridge-start:{bridge_start_board_slug(run_id)}:{idempotency_digest_fragment(contract_digest(start_request))}"
     title = str(args.title or f"Factory start: {run_id}").strip()
     board_created = False
     main_task_id: str | None = None
+    factory_run_graph_task_ids: dict[str, str] = {}
     start_released = False
     dispatch_requested = False
     dispatch_result: dict[str, Any] | None = None
@@ -4163,6 +4521,14 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
             blocked_reason=BRIDGE_START_BLOCK_REASON,
             workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
             current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+            runner=runner,
+        )
+        factory_run_graph_task_ids = materialize_factory_run_graph(
+            hermes_bin=args.hermes_bin,
+            board=board,
+            graph=factory_run_graph,
+            root_task_id=main_task_id,
+            workspace=args.workspace,
             runner=runner,
         )
         if not hold_start:
@@ -4195,11 +4561,13 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
         "board_created": board_created,
         "main_task_id": main_task_id,
         "worker_task_ids": {},
+        "factory_run_graph": factory_run_graph,
+        "factory_run_graph_task_ids": factory_run_graph_task_ids,
         "bridge_start": {
             "run_id": run_id,
             "project_mode": project_mode,
-            "start_request_ref": public_safe_workspace_ref(str(start_path)),
-            "source_envelope_ref": public_safe_workspace_ref(str(source_path)) if source_path else None,
+            "start_request_ref": start_request_ref,
+            "source_envelope_ref": source_envelope_ref,
             "target_assignee": args.assignee,
             "idempotency_key": idempotency_key,
         },
@@ -4213,6 +4581,8 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
             "complete_product_claim_allowed": False,
             "bridge_mutated_hermes": False,
             "factory_start_path_mutated_hermes": not args.dry_run,
+            "factory_run_graph_materialized": bool(factory_run_graph_task_ids) or bool(args.dry_run),
+            "factory_run_graph_future_cards_blocked_by_dependency": True,
         },
         "start_release": {
             "held": hold_start,

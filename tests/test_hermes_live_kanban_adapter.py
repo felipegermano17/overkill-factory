@@ -216,7 +216,7 @@ class FakeHermes:
             task.setdefault("events", []).append({"type": "assigned", "profile": argv[6]})
             return subprocess.CompletedProcess(argv, 0, stdout="assigned", stderr="")
         if len(argv) == 9 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "block":
-            if argv[5:7] != ["--kind", "transient"]:
+            if argv[5] != "--kind" or argv[6] not in adapter.HERMES_TYPED_BLOCK_KINDS:
                 return subprocess.CompletedProcess(argv, 2, stdout="", stderr="typed block kind required")
             task = self.tasks.setdefault(argv[7], {"status": "ready", "events": []})
             task["status"] = "blocked"
@@ -1002,9 +1002,38 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(body["task_type"], "factory_bridge_start_root")
         self.assertEqual(body["initial_gate"]["status"], "blocked_then_released_by_default")
         self.assertFalse(body["initial_gate"]["human_gate_required_for_normal_start"])
-        self.assertEqual(body["deterministic_phase_contract"]["route_authority"], "factory_phase_engine")
+        self.assertEqual(body["deterministic_phase_contract"]["route_authority"], "factory_run_graph_and_phase_engine")
         self.assertFalse(body["deterministic_phase_contract"]["agent_may_choose_phase"])
         self.assertEqual(body["deterministic_phase_contract"]["initial_frontier"], "intake")
+        self.assertEqual(body["factory_run_graph"]["record_type"], "factory_run_graph")
+        self.assertEqual(body["factory_run_graph"]["runtime_shape"], adapter.FACTORY_RUN_GRAPH_RUNTIME_SHAPE)
+        self.assertEqual(body["factory_run_graph"]["no_idle_role"], adapter.FACTORY_RUN_GRAPH_NO_IDLE_ROLE)
+        self.assertFalse(body["factory_run_graph"]["agent_may_choose_phase"])
+        self.assertIn("less mirabolante", body["factory_run_graph"]["operating_mantra"])
+        self.assertEqual(result["factory_run_graph"]["record_type"], "factory_run_graph")
+        self.assertEqual(result["factory_run_graph"]["no_idle_role"], adapter.FACTORY_RUN_GRAPH_NO_IDLE_ROLE)
+        self.assertEqual(result["factory_run_graph_task_ids"]["F1-intake"], "kanban:<redacted>")
+        self.assertEqual(set(result["factory_run_graph_task_ids"]), {node["node_id"] for node in body["factory_run_graph"]["nodes"]})
+        root_task_id = "t" + "_00000001"
+        first_backbone_task_id = "t" + "_00000002"
+        graph_tasks = {task_id: task for task_id, task in fake.tasks.items() if task_id != root_task_id}
+        self.assertEqual(len(graph_tasks), len(adapter.FACTORY_RUN_GRAPH_BACKBONE))
+        first_graph_task = fake.tasks[first_backbone_task_id]
+        self.assertEqual(first_graph_task["status"], "blocked")
+        self.assertEqual(first_graph_task["parents"], [root_task_id])
+        first_graph_body = json.loads(str(first_graph_task["body"]))
+        self.assertEqual(first_graph_body["packet_type"], adapter.FACTORY_RUN_GRAPH_NODE_PACKET_TYPE)
+        self.assertEqual(first_graph_body["node_id"], "F2-source-ledger")
+        self.assertEqual(first_graph_body["block_kind"], "dependency")
+        self.assertFalse(first_graph_body["agent_may_choose_phase"])
+        self.assertEqual(first_graph_body["no_idle_role"], adapter.FACTORY_RUN_GRAPH_NO_IDLE_ROLE)
+        self.assertTrue(all(task["status"] == "blocked" for task in graph_tasks.values()))
+        self.assertTrue(
+            all(
+                any(event.get("payload", {}).get("kind") == "dependency" for event in task.get("events", []))
+                for task in graph_tasks.values()
+            )
+        )
         self.assertFalse(body["bridge_boundary"]["bridge_created_hermes_board"])
         self.assertTrue(body["bridge_boundary"]["factory_start_path_created_runtime_state"])
         assert_live_adapter_result_schema(self, hold_result)
@@ -1016,6 +1045,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         hold_task = hold_fake.tasks["t_" + "00000001"]
         self.assertEqual(hold_task["status"], "blocked")
         self.assertEqual(hold_task["assignee"], "factory-orchestrator")
+        self.assertEqual(len(hold_fake.tasks), 1 + len(adapter.FACTORY_RUN_GRAPH_BACKBONE))
 
     def test_materialize_bridge_start_refuses_default_board_for_new_project(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -4645,6 +4675,69 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertIn("architecture_review_packet", first_body["repair_blocked_reasons"][0])
         self.assertIn("architecture_review_packet", second_body["repair_blocked_reasons"][0])
 
+    def test_no_idle_does_not_loop_on_self_evidenced_declared_artifact_repair(self) -> None:
+        fake = FakeHermes()
+        repair_id = "t_" + "repair01"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_json = Path(tmpdir) / "declared-artifact-readback-repair.json"
+            missing_md = Path(tmpdir) / "declared-artifact-readback-repair.md"
+            fake.tasks[repair_id] = {
+                "id": repair_id,
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Repair missing declared artifacts for board",
+                "body": json.dumps(
+                    {
+                        "packet_type": "factory_deterministic_reconcile_task",
+                        "plan_action": "repair_declared_artifacts",
+                        "required_output": "declared_artifact_readback_repair",
+                        "agent_may_choose_phase": False,
+                        "kanban_workflow_binding": {
+                            "workflow_template_id": "overkill-vfinal",
+                            "current_step_key": "F1-intake",
+                            "runtime_field_required": True,
+                        },
+                    }
+                ),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "repair_status": "PASS",
+                                "verification": {"file_readback": "PASS"},
+                                "artifacts": [str(missing_json), str(missing_md)],
+                            }
+                        ),
+                    }
+                ],
+                "events": [
+                    {
+                        "type": "completed",
+                        "payload": {
+                            "summary": "repair PASS",
+                            "artifacts": [str(missing_json), str(missing_md)],
+                        },
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+            result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertNotEqual(state["classification"], "repair_declared_artifacts")
+        self.assertFalse(
+            any(
+                adapter.parse_json_object(str(task.get("body") or "{}")).get("plan_action")
+                == "repair_declared_artifacts"
+                for task in fake.tasks.values()
+                if task.get("id") != repair_id
+            )
+        )
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_normalizes_absolute_workspace_for_remediation_create(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "doneabs1"
@@ -6730,8 +6823,9 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 }
             )
             relative_plan = plan_path.relative_to(ROOT)
-            fake.tasks["t_plan001"] = {
-                "id": "t_plan001",
+            plan_task_id = "t" + "_plan001"
+            fake.tasks[plan_task_id] = {
+                "id": plan_task_id,
                 "status": "done",
                 "assignee": "factory-orchestrator",
                 "title": "Materialize ready_work_unit_hermes_materialization_plan for board",

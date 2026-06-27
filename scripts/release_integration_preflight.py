@@ -155,6 +155,18 @@ def materialize_preflight_inputs(
                 str(DEFAULT_CAPABILITY_PREFLIGHT),
             ],
         },
+        {
+            "name": "runtime_autonomy_regressions",
+            "output": None,
+            "command": [
+                sys.executable,
+                "-m",
+                "unittest",
+                "tests.test_factory_board_reconciler",
+                "tests.test_factory_no_idle_watchdog",
+                "tests.test_hermes_live_kanban_adapter",
+            ],
+        },
     ]
     runs: list[dict[str, Any]] = []
     for spec in commands:

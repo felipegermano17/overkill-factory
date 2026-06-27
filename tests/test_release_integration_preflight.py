@@ -268,7 +268,7 @@ class ReleaseIntegrationPreflightTest(unittest.TestCase):
         self.assertIn("preflight_materializers_passed", receipt["blocking_items"])
         self.assertIn("preflight_evidence_refs_exist", receipt["blocking_items"])
         self.assertFalse(receipt["materialization"]["all_materializers_passed"])
-        self.assertEqual(len(receipt["materialization"]["failed_materializers"]), 8)
+        self.assertEqual(len(receipt["materialization"]["failed_materializers"]), 9)
         self.assertEqual(len(receipt["missing_evidence_refs"]), 5)
         self.assertNotIn(str(root), json.dumps(receipt))
 

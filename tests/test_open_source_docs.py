@@ -242,6 +242,26 @@ class OpenSourceDocsTest(unittest.TestCase):
             with self.subTest(doc=text[:40]):
                 self.assertIn("hermes-learn-integration.md", text)
 
+    def test_deterministic_runtime_mantra_is_documented_as_control_plane_rule(self) -> None:
+        deterministic = read_text("docs/architecture/deterministic-control-plane.md")
+        hermes = read_text("docs/architecture/hermes-integration.md")
+        flow = read_text("docs/concepts/factory-flow.md")
+        combined = f"{deterministic}\n{hermes}\n{flow}"
+        normalized = " ".join(combined.split())
+
+        for phrase in [
+            "less mirabolante",
+            "Kanban-native",
+            "Hermes-native",
+            "more deterministic",
+            "easier to trust",
+            "No-idle is the integrity auditor",
+            "not the normal source of new factory route authority",
+            "Watchdogs and no-idle checks are guardrails",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, normalized)
+
     def test_public_repo_does_not_commit_generated_example_outputs(self) -> None:
         generated_paths = [
             ROOT / "examples" / "worker-packets",

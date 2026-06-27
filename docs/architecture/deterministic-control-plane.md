@@ -5,6 +5,18 @@ Current authority: scripts/factoryctl.py, schemas/, tests/
 Runtime boundary: Hermes Kanban remains the durable runtime. The factory
 control plane computes whether Hermes may create, release or dispatch work.
 
+## Operating Mantra
+
+Every factory runtime change should make the system less mirabolante, more
+Kanban-native, more Hermes-native, more deterministic and easier to trust.
+
+When solving an autonomy or performance problem, prefer a durable Kanban graph,
+explicit dependencies, typed blocks and native Hermes dispatch before adding a
+new sidecar controller, polling loop, agent memory rule or chat-level
+interpretation. `no-idle` exists as an integrity auditor and recovery path; it
+must not become the main engine that invents the production line after the board
+has already gone silent.
+
 Overkill Factory must not let an agent choose the next phase, worker, gate or
 transition from memory, chat, title, prose or declared phase alone. The runtime
 path is:
