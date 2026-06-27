@@ -4394,6 +4394,63 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             for task in fake.tasks.values()
         ))
 
+    def test_no_idle_materializes_invalid_declared_json_from_metadata(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "donebad1"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            artifact = Path(tmpdir) / "orchestration_result.result.json"
+            artifact.write_text('{"orchestration_result": {"truncated": true}', encoding="utf-8")
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Route approved Product SOT to planning",
+                "body": "{}",
+                "workspace_path": str(Path(tmpdir)),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "orchestration_result": {"status": "completed", "task_id": done_id},
+                                "artifacts": [str(artifact)],
+                            }
+                        ),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+            recovered = json.loads(artifact.read_text(encoding="utf-8"))
+
+        self.assertEqual(recovered["orchestration_result"]["status"], "completed")
+        self.assertTrue(any(
+            item.get("materialized") is True
+            and item.get("artifact_name") == "orchestration_result.result.json"
+            for item in result["artifact_materialization"]
+        ))
+
+    def test_log_diff_payload_recovers_artifact_inside_decision_package(self) -> None:
+        log_text = "\n".join(
+            [
+                "  ┊ review diff",
+                "a/decision-package/HUMAN_GATE_RECORD.approved.json → b/decision-package/HUMAN_GATE_RECORD.approved.json",
+                "@@ -0,0 +1,4 @@",
+                "+{",
+                "+  \"decision\": \"approved\"",
+                "+}",
+                "  ┊ next tool",
+            ]
+        )
+
+        payload = adapter.log_diff_payload_for_declared_artifact(log_text, "HUMAN_GATE_RECORD.approved.json")
+
+        self.assertEqual(json.loads(payload or "{}")["decision"], "approved")
+
     def test_no_idle_materializes_missing_declared_json_from_run_metadata_before_repair(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "done0002"
