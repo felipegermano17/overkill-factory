@@ -7,6 +7,27 @@ public releases.
 
 ## Unreleased
 
+## 2.0.11 - 2026-06-27
+
+- Materialize the Factory Run Graph when a new project starts: F1 is the root
+  runnable card, downstream backbone phases are created as native Hermes Kanban
+  cards, and future phases are linked with explicit `dependency` edges instead
+  of being invented later by agent memory or no-idle recovery.
+- Make the runtime mantra executable and documented: less mirabolante, more
+  Kanban-native, more Hermes-native, more deterministic and easier to trust.
+- Demote no-idle/watchdog authority to integrity audit and graph repair; normal
+  route authority now belongs to the materialized graph plus the phase engine.
+- Add release-preflight runtime autonomy regressions and public-safety coverage
+  for the new start graph behavior.
+
+## 2.0.10 - 2026-06-27
+
+- Harden runtime autonomy after the Todo Web Local end-to-end factory test:
+  no-idle can close over-time running tasks when Hermes has terminal
+  worker-result metadata, post-repair review tasks fail closed when dependency
+  links do not persist, and Receipt Five closeout separates public artifacts
+  from private runtime evidence.
+
 ## 2.0.9 - 2026-06-26
 
 - Republish the public visual map as `v1.0.3` so the current documentation can

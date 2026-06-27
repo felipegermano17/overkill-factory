@@ -263,7 +263,7 @@ Ignored local folders such as `.tmp/`, `build/`, `dist/`, `site/` and
 ## Current Release State
 
 Factory V2 is the current public kernel release line. The latest public release
-is v2.0.9.
+is v2.0.11.
 
 V2 means the public kernel has executable contracts for the factory line:
 
