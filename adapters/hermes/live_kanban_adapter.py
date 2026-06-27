@@ -1536,28 +1536,36 @@ def missing_declared_local_artifacts(record: dict[str, Any]) -> list[dict[str, A
         path = Path(ref)
         if not path.is_absolute():
             continue
-        if declared_local_artifact_exists(record, path):
+        valid_path = declared_local_artifact_valid_path(record, path)
+        if valid_path is not None:
             continue
+        reason = "worker declared a local artifact path but the file is absent from the Hermes runtime"
+        if path.exists() and path.suffix.lower() == ".json":
+            reason = "worker declared a JSON artifact path but the runtime file fails JSON readback"
         missing.append(
             {
                 "artifact_name": path.name or "declared-artifact",
                 "artifact_ref": "local-absolute-path:redacted",
                 "local_path": str(path),
                 "task_id": task_record_id(record),
-                "reason": "worker declared a local artifact path but the file is absent from the Hermes runtime",
+                "reason": reason,
             }
         )
     return missing
 
 
 def declared_local_artifact_exists(record: dict[str, Any], path: Path) -> bool:
+    return declared_local_artifact_valid_path(record, path) is not None
+
+
+def declared_local_artifact_valid_path(record: dict[str, Any], path: Path) -> Path | None:
     if path.exists():
-        return True
+        return path if declared_local_artifact_file_is_valid(path) else None
     if not path.name:
-        return False
+        return None
     workspace = Path(str(record.get("workspace_path") or ""))
     if not workspace.is_absolute() or not workspace.exists():
-        return False
+        return None
     candidates = [
         workspace / path.name,
         workspace / "decision-package" / path.name,
@@ -1566,12 +1574,62 @@ def declared_local_artifact_exists(record: dict[str, Any], path: Path) -> bool:
         workspace / "outputs" / path.name,
         workspace / "output" / path.name,
     ]
-    if any(candidate.exists() for candidate in candidates):
+    for candidate in candidates:
+        if candidate.exists() and declared_local_artifact_file_is_valid(candidate):
+            return candidate
+    try:
+        for candidate in workspace.rglob(path.name):
+            if candidate.is_file() and declared_local_artifact_file_is_valid(candidate):
+                return candidate
+    except OSError:
+        return None
+    return None
+
+
+def declared_local_artifact_file_is_valid(path: Path) -> bool:
+    if not path.exists():
+        return False
+    if path.suffix.lower() != ".json":
         return True
     try:
-        return any(candidate.is_file() for candidate in workspace.rglob(path.name))
-    except OSError:
+        json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return False
+    return True
+
+
+def normalized_artifact_token(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+
+def metadata_payload_candidate_keys(metadata: dict[str, Any], artifact_name: str) -> list[str]:
+    artifact_token = normalized_artifact_token(Path(artifact_name).stem)
+    preferred_keys = []
+    if "orchestration" in artifact_token:
+        preferred_keys.append("orchestration_result")
+    if "methodcontract" in artifact_token or "planningresult" in artifact_token:
+        preferred_keys.append("architecture_result")
+    if "productface" in artifact_token:
+        preferred_keys.append("product_face_packet")
+    if "independentreview" in artifact_token:
+        preferred_keys.append("independent_review_result")
+    if "sourceledger" in artifact_token:
+        preferred_keys.append("source_ledger_result")
+    if "productsot" in artifact_token:
+        preferred_keys.append("product_sot_result")
+
+    dict_keys = [
+        key for key, value in metadata.items()
+        if isinstance(value, dict)
+        and key not in {"hashes", "validation", "decision", "delivery_evidence"}
+    ]
+    for key in dict_keys:
+        key_token = normalized_artifact_token(key)
+        if key_token and (key_token in artifact_token or artifact_token in key_token):
+            preferred_keys.append(key)
+    if len(dict_keys) == 1:
+        preferred_keys.append(dict_keys[0])
+    return list(dict.fromkeys(key for key in preferred_keys if key in metadata and isinstance(metadata.get(key), dict)))
 
 
 def metadata_payload_for_declared_artifact(record: dict[str, Any], artifact_name: str) -> str | None:
@@ -1591,6 +1649,8 @@ def metadata_payload_for_declared_artifact(record: dict[str, Any], artifact_name
             names.discard("")
             if artifact_name in names:
                 return json.dumps({key: value}, indent=2, ensure_ascii=False) + "\n"
+        for key in metadata_payload_candidate_keys(metadata, artifact_name):
+            return json.dumps({key: metadata[key]}, indent=2, ensure_ascii=False) + "\n"
     return None
 
 
@@ -1603,7 +1663,11 @@ def log_diff_payload_for_declared_artifact(log_text: str, artifact_name: str) ->
     candidates = [
         index
         for index, line in enumerate(lines)
-        if f"b/{artifact_name}" in line and f"a/{artifact_name}" in line
+        if artifact_name in line and (
+            ("a/" in line and "b/" in line)
+            or "→" in line
+            or "->" in line
+        )
     ]
     for marker_index in reversed(candidates):
         start_index = None
@@ -1657,7 +1721,7 @@ def materialize_missing_declared_artifacts(
             path = Path(local_path)
             if not path.is_absolute():
                 continue
-            if path.exists():
+            if declared_local_artifact_file_is_valid(path):
                 continue
             source = "worker_log_diff"
             if task_id not in log_cache:
