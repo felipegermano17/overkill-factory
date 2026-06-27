@@ -7860,6 +7860,7 @@ DEFAULT_ARTIFACT_OWNERS = {
     "product_implementation_readiness": "factory-orchestrator",
     "gate_report": "factory-orchestrator",
     "worker_packet": "factory-orchestrator",
+    "ready_work_unit_hermes_materialization_plan": "factory-orchestrator",
     "sdlc_feedback_loop": "skill-eval-distiller",
     "specialist_research_plan": "source-ledger-worker",
     "specialist_decision_packet": "product-architect",
@@ -18446,6 +18447,39 @@ def _task_has_worker_packet(task: dict[str, Any]) -> bool:
     return False
 
 
+def _task_has_ready_work_unit_hermes_materialization_plan(task: dict[str, Any]) -> bool:
+    title_text = " ".join(
+        str(task.get(key) or "")
+        for key in ("title", "name")
+        if isinstance(task.get(key), str)
+    ).lower()
+    if "ready_work_unit_hermes_materialization_plan" in title_text:
+        return True
+    if "ready work-unit hermes materialization plan" in title_text:
+        return True
+    for payload in _task_payload_objects(task):
+        if payload.get("record_type") == "ready_work_unit_hermes_materialization_plan":
+            return True
+        if (
+            str(payload.get("required_output") or payload.get("artifact") or "").strip()
+            == "ready_work_unit_hermes_materialization_plan"
+        ):
+            return True
+        if isinstance(payload.get("ready_work_unit_hermes_materialization_plan"), dict):
+            return True
+    return False
+
+
+def _task_has_ready_work_unit_execution_request(task: dict[str, Any]) -> bool:
+    for payload in _task_payload_objects(task):
+        if payload.get("packet_type") == "ready_work_unit_execution_request":
+            return True
+        body_contract = payload.get("body_contract")
+        if isinstance(body_contract, dict) and body_contract.get("packet_type") == "ready_work_unit_execution_request":
+            return True
+    return False
+
+
 def _task_payload_objects(task: dict[str, Any]) -> list[dict[str, Any]]:
     payloads: list[dict[str, Any]] = []
     for key in ("metadata", "body", "description", "result"):
@@ -19124,6 +19158,50 @@ def board_reconcile_terminal_ready_gate_continuation(
     }, []
 
 
+def board_reconcile_terminal_worker_packet_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    all_tasks = [
+        task
+        for items in rows.values()
+        for task in items
+    ]
+    done = rows.get("done", [])
+    worker_packet_refs = [_task_public_ref(task) for task in done if _task_has_worker_packet(task)]
+    if not worker_packet_refs:
+        return None, []
+    if any(_task_has_ready_work_unit_execution_request(task) for task in all_tasks):
+        return None, []
+    if any(_task_has_ready_work_unit_hermes_materialization_plan(task) for task in done):
+        return None, []
+    phase_engine = {
+        "computed_frontier": "execution",
+        "computed_phase_id": "F15",
+        "next_required_artifact": "ready_work_unit_hermes_materialization_plan",
+        "decision_basis": (
+            "Worker packets exist but no native Hermes ready work-unit execution cards exist; "
+            "the next deterministic frontier is the Hermes materialization plan that turns "
+            "validated packets into blocked-first Kanban execution cards."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(worker_packet_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": "ready_work_unit_hermes_materialization_plan",
+            "owner": DEFAULT_ARTIFACT_OWNERS["ready_work_unit_hermes_materialization_plan"],
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
 def board_reconcile_terminal_blocked_artifact_readback_continuation(
     rows: dict[str, list[dict[str, Any]]],
 ) -> tuple[dict[str, Any] | None, list[str]]:
@@ -19397,6 +19475,10 @@ def build_board_reconcile_plan(
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
                 board_reconcile_terminal_ready_gate_continuation(rows)
+            )
+        if terminal_continuation is None:
+            terminal_continuation, terminal_continuation_errors = (
+                board_reconcile_terminal_worker_packet_continuation(rows)
             )
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
