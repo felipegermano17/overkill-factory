@@ -172,7 +172,14 @@ class FakeHermes:
             body = argv[argv.index("--body") + 1] if "--body" in argv else "{}"
             assignee = argv[argv.index("--assignee") + 1] if "--assignee" in argv else None
             workspace_ref = argv[argv.index("--workspace") + 1] if "--workspace" in argv else "scratch"
-            task = {"id": task_id, "status": initial_status, "events": [], "body": body, "assignee": assignee}
+            task = {
+                "id": task_id,
+                "status": initial_status,
+                "events": [],
+                "body": body,
+                "assignee": assignee,
+                "idempotency_key": idempotency_key,
+            }
             if workspace_ref.startswith("dir:"):
                 task["workspace_kind"] = "dir"
                 task["workspace_path"] = workspace_ref[4:]
@@ -309,6 +316,20 @@ class UnsafePromotionHermes(FakeHermes):
             task.setdefault("events", []).append({"kind": "promoted"})
             task.setdefault("events", []).append({"kind": "claimed"})
             return subprocess.CompletedProcess(argv, 0, stdout=json.dumps(task), stderr="")
+        return super().__call__(argv)
+
+
+class EmptyStdoutIdempotentHermes(FakeHermes):
+    def __call__(self, argv: list[str]) -> subprocess.CompletedProcess[str]:
+        if len(argv) >= 5 and argv[0:3] == ["hermes", "kanban", "--board"] and argv[4] == "create":
+            idempotency_key = argv[argv.index("--idempotency-key") + 1] if "--idempotency-key" in argv else ""
+            if idempotency_key and idempotency_key in self.idempotent_task_ids:
+                task_id = self.idempotent_task_ids[idempotency_key]
+                self.tasks.setdefault(
+                    task_id,
+                    {"id": task_id, "status": "done", "events": [], "idempotency_key": idempotency_key},
+                )
+                return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
         return super().__call__(argv)
 
 
@@ -4386,6 +4407,71 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(len(replacements), 1)
         replacement_body = adapter.parse_json_object(str(replacements[0].get("body") or "{}"))
         self.assertEqual(replacement_body["plan_action"], "repair_declared_artifacts")
+
+    def test_no_idle_recovers_empty_stdout_idempotency_replay_before_replacement(self) -> None:
+        fake = EmptyStdoutIdempotentHermes()
+        done_id = "t_" + "doneart2"
+        stale_id = "t_" + "5a1eaa12"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "ARCHITECTURE_PACKET.example.md"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "product-architect",
+                "title": "Materialize architecture_packet for board",
+                "body": "{}",
+                "workspace_path": str(Path(tmpdir)),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                    }
+                ],
+            }
+            rows = {
+                "ready": [],
+                "running": [],
+                "todo": [],
+                "blocked": [],
+                "triage": [],
+                "done": [{"id": done_id, **fake.tasks[done_id]}],
+            }
+            rows = adapter.enrich_no_idle_rows(hermes_bin="hermes", board=TEST_BOARD, rows=rows, runner=fake)
+            plan = adapter.build_board_reconcile_plan_from_rows(board=TEST_BOARD, rows=rows)
+            body = adapter.deterministic_reconcile_task_body(plan=plan)
+            self.assertIsNotNone(body)
+            digest = adapter.idempotency_digest_fragment(adapter.contract_digest(body))
+            replay_key = f"overkill:reconcile:{adapter.public_safe_slug(TEST_BOARD, fallback='board')}:{digest}"
+            fake.idempotent_task_ids[replay_key] = stale_id
+            fake.tasks[stale_id] = {
+                "id": stale_id,
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Repair missing declared artifacts for board",
+                "body": json.dumps(body),
+                "idempotency_key": replay_key,
+                "events": [{"type": "completed"}],
+            }
+            fake.calls.clear()
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(
+            state["classification"],
+            "deterministic_board_reconcile_task_created_after_stale_terminal_replacement",
+        )
+        self.assertEqual(state["stale_remediation_task_refs"], ["kanban:<redacted>"])
+        replacements = [
+            task for task in fake.tasks.values()
+            if task.get("status") == "ready"
+            and adapter.parse_json_object(str(task.get("body") or "{}")).get("stale_terminal_remediation_replacement") is True
+        ]
+        self.assertEqual(len(replacements), 1)
 
     def test_missing_declared_artifacts_accepts_decision_package_basename_match(self) -> None:
         done_id = "t_" + "donepkg1"
