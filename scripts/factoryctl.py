@@ -7830,6 +7830,7 @@ DEFAULT_ARTIFACT_REFS = {
     "product_creation_plan": "templates/product-creation-plan.json",
     "product_implementation_readiness": "templates/product-implementation-readiness.json",
     "gate_report": "factoryctl:gate-report",
+    "worker_packet": "templates/worker-packet.json",
     "sdlc_feedback_loop": "templates/factory-sdlc-feedback-loop.json",
     "specialist_research_plan": "templates/specialist-research-plan.json",
     "specialist_decision_packet": "templates/specialist-decision-packet.json",
@@ -7858,6 +7859,7 @@ DEFAULT_ARTIFACT_OWNERS = {
     "product_creation_plan": "decomposition-planner",
     "product_implementation_readiness": "factory-orchestrator",
     "gate_report": "factory-orchestrator",
+    "worker_packet": "factory-orchestrator",
     "sdlc_feedback_loop": "skill-eval-distiller",
     "specialist_research_plan": "source-ledger-worker",
     "specialist_decision_packet": "product-architect",
@@ -7889,6 +7891,7 @@ ARTIFACT_REQUIRED_BEFORE = {
     "product_creation_plan": "ready_gate",
     "product_implementation_readiness": "execution",
     "gate_report": "execution",
+    "worker_packet": "execution",
     "sdlc_feedback_loop": "execution",
     "specialist_research_plan": "method_contract",
     "specialist_decision_packet": "method_contract",
@@ -18407,6 +18410,42 @@ def _task_has_gate_report(task: dict[str, Any]) -> bool:
     return False
 
 
+def _task_has_passed_gate_report(task: dict[str, Any]) -> bool:
+    if not _task_has_gate_report(task):
+        return False
+    text = _task_search_text(task)
+    if "ready_for_worker_execution" in text and "pass_for_native_dispatch" in text:
+        return True
+    for payload in _task_payload_objects(task):
+        candidates = [payload]
+        if isinstance(payload.get("gate_report"), dict):
+            candidates.append(payload["gate_report"])
+        for candidate in candidates:
+            gate_status = str(candidate.get("gate_status") or "").strip()
+            predicate = str(candidate.get("gate_predicate_result") or candidate.get("verdict") or "").strip()
+            if gate_status == "ready_for_worker_execution" and predicate.startswith("PASS_FOR_NATIVE_DISPATCH"):
+                return True
+    return False
+
+
+def _task_has_worker_packet(task: dict[str, Any]) -> bool:
+    title_text = " ".join(
+        str(task.get(key) or "")
+        for key in ("title", "name")
+        if isinstance(task.get(key), str)
+    ).lower()
+    if "worker_packet" in title_text or "worker packet" in title_text:
+        return True
+    for payload in _task_payload_objects(task):
+        if payload.get("record_type") == "worker_packet":
+            return True
+        if str(payload.get("required_output") or payload.get("artifact") or "").strip() == "worker_packet":
+            return True
+        if isinstance(payload.get("worker_packet"), dict):
+            return True
+    return False
+
+
 def _task_payload_objects(task: dict[str, Any]) -> list[dict[str, Any]]:
     payloads: list[dict[str, Any]] = []
     for key in ("metadata", "body", "description", "result"):
@@ -19049,6 +19088,42 @@ def board_reconcile_terminal_product_readiness_continuation(
     }, []
 
 
+def board_reconcile_terminal_ready_gate_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    gate_refs = [_task_public_ref(task) for task in done if _task_has_passed_gate_report(task)]
+    if not gate_refs:
+        return None, []
+    if any(_task_has_worker_packet(task) for task in done):
+        return None, []
+    phase_engine = {
+        "computed_frontier": "execution",
+        "computed_phase_id": "F15",
+        "next_required_artifact": "worker_packet",
+        "decision_basis": (
+            "Ready Gate passed for native dispatch input only; the next deterministic "
+            "frontier is worker packet/card materialization before implementation work."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(gate_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": "worker_packet",
+            "owner": DEFAULT_ARTIFACT_OWNERS["worker_packet"],
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
 def board_reconcile_terminal_blocked_artifact_readback_continuation(
     rows: dict[str, list[dict[str, Any]]],
 ) -> tuple[dict[str, Any] | None, list[str]]:
@@ -19318,6 +19393,10 @@ def build_board_reconcile_plan(
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
                 board_reconcile_terminal_product_readiness_continuation(rows)
+            )
+        if terminal_continuation is None:
+            terminal_continuation, terminal_continuation_errors = (
+                board_reconcile_terminal_ready_gate_continuation(rows)
             )
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
