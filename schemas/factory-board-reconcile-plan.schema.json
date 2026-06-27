@@ -47,6 +47,7 @@
         "dispatch_ready",
         "no_unfinished_work",
         "repair_board_contract",
+        "repair_declared_artifacts",
         "create_next_artifact_task",
         "repair_domain_brain_route",
         "repair_human_gate_packet",

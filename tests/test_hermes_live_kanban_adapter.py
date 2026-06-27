@@ -4152,6 +4152,56 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(replacement_body["supersedes_runtime_task_refs"], [stale_id])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_repairs_done_task_with_missing_declared_artifacts(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "done0001"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "product-sot-result.json"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "product-sot-planner",
+                "title": "F5 - Product SOT candidate",
+                "body": json.dumps({"objective": "prepare Product SOT"}),
+                "events": [
+                    {
+                        "type": "completed",
+                        "payload": {
+                            "summary": "declared artifact but did not persist it",
+                            "artifacts": [str(missing_artifact)],
+                        },
+                    }
+                ],
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(state["status"], "remediation_required")
+        self.assertEqual(state["classification"], "repair_declared_artifacts")
+        self.assertTrue(state["remediation_task_created"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "repair_declared_artifacts")
+        self.assertTrue(any("product-sot-result.json" in reason for reason in state["blocked_reasons"]))
+        created_task = next(
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("plan_action") == "repair_declared_artifacts"
+        )
+        self.assertEqual(created_task["status"], "ready")
+        body = adapter.parse_json_object(str(created_task.get("body") or "{}"))
+        self.assertEqual(body["required_output"], "declared_artifact_readback_repair")
+        self.assertFalse(body["agent_may_choose_phase"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_reconciles_declared_f9_to_f5_owner_package_before_gate(self) -> None:
         fake = FakeHermes()
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
