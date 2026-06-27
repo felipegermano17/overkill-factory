@@ -1040,9 +1040,66 @@ def done_review_targets_product_sot_candidate(record: dict[str, Any]) -> bool:
     return any(marker in text for marker in product_sot_artifact_markers)
 
 
+def done_product_sot_candidate_requires_owner_review(record: dict[str, Any]) -> bool:
+    if str(record.get("status") or "").strip().lower() not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
+        return False
+    texts = [task_record_text(record)]
+    for run in record.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = parse_json_object(run.get("metadata"))
+        if metadata:
+            texts.append(json.dumps(metadata, sort_keys=True, ensure_ascii=False).lower())
+        if run.get("summary") is not None:
+            texts.append(str(run.get("summary")).lower())
+    haystack = " ".join(texts)
+    non_product_sot_markers = (
+        "not a reviewed product sot candidate",
+        "not product sot owner-review material",
+        "not product sot owner review material",
+        "runtime/code patch only",
+        "factory runtime code patch",
+        "factory no-idle runtime",
+        "no-idle runtime classifier patch",
+        "live_kanban_adapter.py",
+        "classify_no_idle_state",
+        "done_review_requires_owner_product_sot_gate",
+    )
+    if any(marker in haystack for marker in non_product_sot_markers):
+        return False
+    product_sot_markers = (
+        "product_sot_result",
+        "product_sot_candidate",
+        "product sot candidate",
+        "f5",
+    )
+    review_required_markers = (
+        "candidate_owner_review_required_not_approved",
+        "owner review required",
+        "product sot owner review",
+        "next required gate",
+        "before method contract",
+        "before method-contract",
+    )
+    approved_markers = (
+        "owner approved product sot",
+        "operator approved product sot",
+        "product sot approved",
+        '"decision": "approved',
+        "decision: approved",
+    )
+    if any(marker in haystack for marker in approved_markers):
+        return False
+    return any(marker in haystack for marker in product_sot_markers) and any(
+        marker in haystack for marker in review_required_markers
+    )
+
+
 def done_review_requires_owner_product_sot_gate(record: dict[str, Any]) -> bool:
     if str(record.get("status") or "").strip().lower() not in READY_WORK_UNIT_DEPENDENCY_SATISFIED_STATUSES:
         return False
+    if done_product_sot_candidate_requires_owner_review(record):
+        return True
     text = task_record_text(record)
     review_pass = any(
         marker in text
@@ -1714,7 +1771,7 @@ def classify_no_idle_state(rows: dict[str, list[dict[str, Any]]]) -> dict[str, A
             "ignored_superseded_blocked_task_refs": ignored_superseded_blocked_refs,
             "remediation_strategy": "create_post_review_owner_gate_package_task",
             "remediation_reason": (
-                "A repaired independent review passed and requires owner/Product SOT approval "
+                "A completed Product SOT candidate or Product SOT review requires owner approval "
                 "or rebaseline before method-contract planning, but no live gate package task exists. "
                 "The factory must prepare and deliver the decision package before asking the operator."
             ),

@@ -3841,6 +3841,66 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
 
+    def test_no_idle_creates_owner_gate_package_after_product_sot_candidate_done(self) -> None:
+        fake = FakeHermes()
+        sot_task_id = "t_" + "sotdone1"
+        fake.tasks[sot_task_id] = {
+            "id": sot_task_id,
+            "title": "F5 - Prepare Product SOT candidate",
+            "status": "done",
+            "body": "Product SOT candidate only; no owner approval recorded.",
+            "latest_summary": (
+                "Prepared the Product SOT candidate and named Product SOT owner review "
+                "as the next required gate before Method Contract."
+            ),
+            "events": [{"kind": "completed"}],
+            "runs": [
+                {
+                    "status": "done",
+                    "summary": "Prepared Product SOT candidate; downstream frozen.",
+                    "metadata": {
+                        "product_sot_result": {
+                            "artifact_file": "product-sot-result.json",
+                            "review_packet_file": "product-sot-candidate.md",
+                            "status": "candidate_owner_review_required_not_approved",
+                            "next_required_gate": (
+                                "Product SOT owner review before Method Contract / "
+                                "Product Experience / architecture / implementation routing"
+                            ),
+                            "downstream_frozen": [
+                                "Method Contract",
+                                "Product Experience/Product Face",
+                                "architecture",
+                                "implementation",
+                            ],
+                        }
+                    },
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(
+            state["classification"],
+            "deterministic_post_review_owner_gate_package_task_created",
+        )
+        self.assertTrue(state["remediation_required"])
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertEqual(state["post_review_task_refs"], ["kanban:<redacted>"])
+        created_tasks = [
+            task
+            for task_id, task in fake.tasks.items()
+            if task_id != sot_task_id and task.get("assignee") == "human-gate-clerk"
+        ]
+        self.assertEqual(len(created_tasks), 1)
+        created_body = json.loads(str(created_tasks[0]["body"]))
+        self.assertEqual(created_body["marker"], adapter.NO_IDLE_POST_REVIEW_GATE_MARKER)
+        self.assertIn("markdown/PDF", " ".join(created_body["required_actions"]))
+        self.assertIn("rich cards", " ".join(created_body["forbidden_actions"]))
+
     def test_no_idle_blocks_ready_work_without_structured_phase_binding(self) -> None:
         fake = FakeHermes()
         fake.tasks[READY_TASK_ID] = {
@@ -4252,7 +4312,11 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 "candidate_owner_review_required_not_approved",
             )
             self.assertEqual(result["board_reconcile_plan"]["plan_action"], "no_unfinished_work")
-            self.assertIsNone(result["remediation_task_id"])
+            self.assertIsNotNone(result["remediation_task_id"])
+            self.assertEqual(
+                result["no_idle_state"]["classification"],
+                "deterministic_post_review_owner_gate_package_task_created",
+            )
             self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
             self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "task_runs.metadata")
             self.assertFalse(
@@ -4376,7 +4440,11 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 "Next gate: Product SOT owner review.\n",
             )
             self.assertEqual(result["board_reconcile_plan"]["plan_action"], "no_unfinished_work")
-            self.assertIsNone(result["remediation_task_id"])
+            self.assertIsNotNone(result["remediation_task_id"])
+            self.assertEqual(
+                result["no_idle_state"]["classification"],
+                "deterministic_post_review_owner_gate_package_task_created",
+            )
             self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
             self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "worker_log_diff")
 
