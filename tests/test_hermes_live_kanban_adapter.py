@@ -4265,6 +4265,73 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(body["agent_may_choose_phase"])
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_replaces_stale_declared_artifact_repair_task(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "doneart1"
+        stale_id = "t_" + "5a1eaa11"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "VALIDATION_RECEIPT.final.json"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "human-gate-clerk",
+                "title": "Prepare Product SOT owner decision package",
+                "body": "{}",
+                "workspace_path": str(Path(tmpdir)),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                    }
+                ],
+            }
+            fake.tasks[stale_id] = {
+                "id": stale_id,
+                "status": "done",
+                "assignee": "factory-orchestrator",
+                "title": "Repair missing declared artifacts for board",
+                "body": json.dumps({"marker": "factory_deterministic_reconcile"}),
+                "events": [{"type": "completed"}],
+            }
+            rows = {
+                "ready": [],
+                "running": [],
+                "todo": [],
+                "blocked": [],
+                "triage": [],
+                "done": [{"id": done_id, **fake.tasks[done_id]}, {"id": stale_id, **fake.tasks[stale_id]}],
+            }
+            rows = adapter.enrich_no_idle_rows(hermes_bin="hermes", board=TEST_BOARD, rows=rows, runner=fake)
+            plan = adapter.build_board_reconcile_plan_from_rows(board=TEST_BOARD, rows=rows)
+            body = adapter.deterministic_reconcile_task_body(plan=plan)
+            self.assertIsNotNone(body)
+            digest = adapter.idempotency_digest_fragment(adapter.contract_digest(body))
+            fake.idempotent_task_ids[f"overkill:reconcile:{adapter.public_safe_slug(TEST_BOARD, fallback='board')}:{digest}"] = stale_id
+            fake.calls.clear()
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(
+            state["classification"],
+            "deterministic_board_reconcile_task_created_after_stale_terminal_replacement",
+        )
+        self.assertEqual(state["stale_remediation_task_refs"], ["kanban:<redacted>"])
+        self.assertEqual(state["remediation_replacement_attempts"], 1)
+        self.assertTrue(state["native_dispatch_required_next"])
+        replacements = [
+            task for task in fake.tasks.values()
+            if task.get("status") == "ready"
+            and adapter.parse_json_object(str(task.get("body") or "{}")).get("stale_terminal_remediation_replacement") is True
+        ]
+        self.assertEqual(len(replacements), 1)
+        replacement_body = adapter.parse_json_object(str(replacements[0].get("body") or "{}"))
+        self.assertEqual(replacement_body["plan_action"], "repair_declared_artifacts")
+
     def test_missing_declared_artifacts_accepts_decision_package_basename_match(self) -> None:
         done_id = "t_" + "donepkg1"
         with tempfile.TemporaryDirectory() as tmpdir:
