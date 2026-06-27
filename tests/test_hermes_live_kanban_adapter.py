@@ -5421,6 +5421,29 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
         self.assertTrue(state["native_dispatch_required_next"])
 
+    def test_no_idle_detects_terminal_architecture_from_hermes_list_title(self) -> None:
+        fake = FakeHermes()
+        arch_id = "t_" + "arch0003"
+        fake.tasks[arch_id] = {
+            "id": arch_id,
+            "status": "done",
+            "assignee": "product-architect",
+            "title": "Materialize architecture_packet for board",
+            "body": "{}",
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+        created_tasks = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "architecture_review_packet"
+        ]
+        self.assertEqual(len(created_tasks), 1)
+        self.assertEqual(created_tasks[0]["assignee"], "independent-reviewer")
+
     def test_no_idle_does_not_treat_text_only_human_gate_as_decision_ready(self) -> None:
         fake = FakeHermes()
         gate_id = "t_" + "gate0001"
