@@ -4842,6 +4842,65 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 "task_runs.metadata_markdown",
             )
 
+    def test_no_idle_reconstructs_architecture_markdown_from_artifacts_dict_metadata(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "arch0004"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace = Path(tmpdir)
+            missing_artifact = workspace / f"ARCHITECTURE_PACKET_Todo_Web_Local.{done_id}.md"
+            json_artifact = workspace / f"architecture_packet.{done_id}.json"
+            manifest_artifact = workspace / f"architecture_packet_manifest.{done_id}.json"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "product-architect",
+                "title": "Materialize architecture_packet",
+                "body": "{}",
+                "events": [{"type": "completed", "payload": {"artifacts": [str(missing_artifact)]}}],
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "architecture_result": {
+                                    "status": "candidate_architecture_packet_ready_for_independent_review_not_closed",
+                                    "task_id": done_id,
+                                    "artifacts": {
+                                        "json": str(json_artifact),
+                                        "markdown": str(missing_artifact),
+                                        "manifest": str(manifest_artifact),
+                                    },
+                                    "sha256": {
+                                        json_artifact.name: "a" * 64,
+                                        missing_artifact.name: "b" * 64,
+                                        manifest_artifact.name: "c" * 64,
+                                    },
+                                    "validation": {"missing_required_markdown_sections": []},
+                                    "candidate_decisions": ["local-first browser Todo"],
+                                    "review_requirements": ["independent architecture review rerun"],
+                                    "downstream_frozen": ["implementation", "decomposition"],
+                                },
+                                "artifacts": [str(missing_artifact)],
+                            }
+                        ),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+            recovered = missing_artifact.read_text(encoding="utf-8")
+            self.assertIn("Reconstructed Markdown readback", recovered)
+            self.assertIn("local-first browser Todo", recovered)
+            self.assertIn(missing_artifact.name, recovered)
+            self.assertIn("b" * 64, recovered)
+            self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
+            self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "task_runs.metadata_markdown")
+
     def test_no_idle_reconciles_declared_f9_to_f5_owner_package_before_gate(self) -> None:
         fake = FakeHermes()
         card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")

@@ -1699,6 +1699,10 @@ def metadata_markdown_payload_for_declared_artifact(record: dict[str, Any], arti
                 for ref_key in ("artifact_paths", "artifacts", "artifact_files")
                 for item in (value.get(ref_key) if isinstance(value.get(ref_key), list) else [])
             ]
+            for ref_key in ("artifacts", "artifact_files"):
+                ref_map = value.get(ref_key)
+                if isinstance(ref_map, dict):
+                    refs.extend(str(item) for item in ref_map.values() if isinstance(item, str))
             names = {Path(ref).name for ref in refs}
             key_token = normalized_artifact_token(key)
             if artifact_name not in names and not (
@@ -1731,6 +1735,8 @@ def metadata_markdown_payload_for_declared_artifact(record: dict[str, Any], arti
                 lines.extend(f"- `{k}`: `{v}`" for k, v in sorted(validation.items()))
                 lines.append("")
             hashes = value.get("artifact_sha256")
+            if not isinstance(hashes, dict):
+                hashes = value.get("sha256")
             if isinstance(hashes, dict) and hashes:
                 lines.extend(["## Artifact Hashes", ""])
                 lines.extend(f"- `{k}`: `{v}`" for k, v in sorted(hashes.items()))
