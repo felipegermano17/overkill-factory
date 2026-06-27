@@ -18183,6 +18183,55 @@ def _json_object_from_possible_string(value: Any) -> dict[str, Any] | None:
     return parsed if isinstance(parsed, dict) else None
 
 
+def _task_search_text(task: dict[str, Any]) -> str:
+    values: list[str] = []
+    for key in ("title", "name", "summary", "latest_summary", "body", "result"):
+        value = task.get(key)
+        if isinstance(value, str):
+            values.append(value)
+        elif isinstance(value, dict):
+            values.append(json.dumps(value, sort_keys=True))
+    for comment in task.get("comments") or []:
+        if isinstance(comment, dict) and isinstance(comment.get("body"), str):
+            values.append(comment["body"])
+    for event in task.get("events") or []:
+        if not isinstance(event, dict):
+            continue
+        payload = event.get("payload")
+        if isinstance(payload, dict):
+            values.append(json.dumps(payload, sort_keys=True))
+        elif isinstance(payload, str):
+            values.append(payload)
+    for run in task.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        for key in ("summary", "metadata"):
+            value = run.get(key)
+            if isinstance(value, str):
+                values.append(value)
+            elif isinstance(value, dict):
+                values.append(json.dumps(value, sort_keys=True))
+    return "\n".join(values).lower()
+
+
+def _task_has_approved_product_sot_gate(task: dict[str, Any]) -> bool:
+    text = _task_search_text(task)
+    if "approve_product_sot" in text or ("approved" in text and "product sot" in text):
+        return True
+    for run in task.get("runs") or []:
+        if not isinstance(run, dict):
+            continue
+        metadata = _json_object_from_possible_string(run.get("metadata"))
+        if not isinstance(metadata, dict):
+            continue
+        decision = metadata.get("decision")
+        if isinstance(decision, dict) and decision.get("value") == "approved":
+            code = str(decision.get("code") or "").strip().upper()
+            if code == "APPROVE_PRODUCT_SOT" or "product sot" in text:
+                return True
+    return False
+
+
 def _factory_card_from_payload(payload: dict[str, Any]) -> dict[str, Any] | None:
     if str(payload.get("factory_method_version") or "").strip() or str(payload.get("record_type") or "") == "factory_card":
         return copy.deepcopy(payload)
@@ -18440,6 +18489,64 @@ def select_canonical_board_card(rows: dict[str, list[dict[str, Any]]]) -> tuple[
     return card, selected, []
 
 
+def board_reconcile_terminal_planning_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    if not done:
+        return None, []
+
+    gate_refs: list[str] = []
+    method_refs: list[str] = []
+    product_face_refs: list[str] = []
+    review_refs: list[str] = []
+    for task in done:
+        text = _task_search_text(task)
+        task_ref = _task_public_ref(task)
+        assignee = str(task.get("assignee") or "").strip().lower()
+        if _task_has_approved_product_sot_gate(task):
+            gate_refs.append(task_ref)
+        if "method contract" in text or "method_contract" in text:
+            method_refs.append(task_ref)
+        if "product face" in text or "product_face" in text or "product experience" in text:
+            product_face_refs.append(task_ref)
+        if (
+            "independent-reviewer" in assignee
+            and ("pass" in text or "pass_for_planning" in text)
+            and ("method contract" in text or "product face" in text or "product experience" in text)
+        ):
+            review_refs.append(task_ref)
+
+    if not (gate_refs and method_refs and product_face_refs and review_refs):
+        return None, []
+
+    phase_engine = {
+        "computed_frontier": "architecture",
+        "computed_phase_id": FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER["architecture"],
+        "next_required_artifact": FACTORY_PHASE_LOCK_NEXT_ARTIFACTS["architecture"],
+        "decision_basis": (
+            "Product SOT owner gate is closed and Method Contract/Product Experience planning "
+            "has independent review evidence; the next deterministic frontier is architecture."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(gate_refs + method_refs + product_face_refs + review_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": FACTORY_PHASE_LOCK_NEXT_ARTIFACTS["architecture"],
+            "owner": "product-architect",
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
 def _board_reconcile_task_contract(
     *,
     plan_action: str,
@@ -18597,9 +18704,41 @@ def build_board_reconcile_plan(
         reason = "ready Hermes work exists; native Hermes dispatch is the next action"
         native_dispatch_required_next = True
     elif not unfinished:
-        plan_action = "no_unfinished_work"
-        reason = "no non-terminal Hermes work was observed"
-        native_dispatch_required_next = False
+        terminal_continuation, terminal_continuation_errors = board_reconcile_terminal_planning_continuation(rows)
+        blocked_reasons.extend(terminal_continuation_errors)
+        if terminal_continuation is not None:
+            phase_engine = terminal_continuation["phase_engine"]
+            factory_help = terminal_continuation["factory_help"]
+            selected_ref = {
+                "task_ref": "board:terminal-planning-frontier",
+                "status": "done",
+                "title": "Terminal planning frontier selected from completed Product SOT/Method/Product Face review",
+                "assignee": "product-architect",
+                "selection_reason": "all prerequisites for architecture frontier are terminal and no non-terminal work exists",
+            }
+            plan_action = "create_next_artifact_task"
+            reason = str((factory_help.get("factory_next_action") or {}).get("why"))
+            create_task_contract = _board_reconcile_task_contract(
+                plan_action=plan_action,
+                board=board,
+                selected_card={"card_id": "board"},
+                phase_engine=phase_engine,
+                factory_help=factory_help,
+                reason=reason,
+                assignee="product-architect",
+            )
+            if isinstance(create_task_contract.get("body"), dict):
+                create_task_contract["body"]["forbidden_actions"].extend(
+                    [
+                        "treat Product SOT approval as architecture approval",
+                        "skip architecture evidence and jump directly to decomposition or implementation",
+                    ]
+                )
+            native_dispatch_required_next = True
+        else:
+            plan_action = "no_unfinished_work"
+            reason = "no non-terminal Hermes work was observed"
+            native_dispatch_required_next = False
     else:
         selected_card, selected_ref, selection_errors = select_canonical_board_card(rows)
         blocked_reasons.extend(selection_errors)
