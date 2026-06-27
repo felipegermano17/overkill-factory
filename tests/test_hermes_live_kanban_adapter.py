@@ -6041,6 +6041,57 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(body["phase_engine"]["computed_phase_id"], "F12")
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
 
+    def test_no_idle_routes_implementation_readiness_to_ready_gate_report(self) -> None:
+        fake = FakeHermes()
+        readiness_id = "t_" + "ready001"
+        fake.tasks[readiness_id] = {
+            "id": readiness_id,
+            "status": "done",
+            "assignee": "factory-orchestrator",
+            "title": "Materialize product_implementation_readiness for board",
+            "latest_summary": "Product Implementation Readiness exists; Ready Gate is required next.",
+            "runs": [
+                {
+                    "status": "done",
+                    "outcome": "completed",
+                    "metadata": json.dumps(
+                        {
+                            "product_implementation_readiness": {
+                                "record_type": "product_implementation_readiness",
+                                "readiness_id": "todo-web-local-readiness",
+                                "handoff": {
+                                    "factory_owned_next_step": True,
+                                    "next_artifact": "gate_report",
+                                    "next_worker": "factory-orchestrator",
+                                },
+                            }
+                        }
+                    ),
+                }
+            ],
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+        self.assertEqual(
+            result["board_reconcile_plan"]["create_task_contract"]["body"]["required_output"],
+            "gate_report",
+        )
+        created_gate_reports = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "gate_report"
+        ]
+        self.assertEqual(len(created_gate_reports), 1)
+        created = created_gate_reports[0]
+        self.assertEqual(created["assignee"], "factory-orchestrator")
+        body = adapter.parse_json_object(str(created.get("body") or "{}"))
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F13-ready-gate")
+        self.assertEqual(body["phase_engine"]["computed_phase_id"], "F13")
+        self.assertFalse(body["phase_engine"]["human_gate_allowed"])
+
     def test_no_idle_keeps_newer_failed_architecture_review_active_after_older_pass(self) -> None:
         fake = FakeHermes()
         arch_id = "t_" + "archfix2"

@@ -7829,6 +7829,7 @@ DEFAULT_ARTIFACT_REFS = {
     "method_contract": "templates/method-contract.json",
     "product_creation_plan": "templates/product-creation-plan.json",
     "product_implementation_readiness": "templates/product-implementation-readiness.json",
+    "gate_report": "factoryctl:gate-report",
     "sdlc_feedback_loop": "templates/factory-sdlc-feedback-loop.json",
     "specialist_research_plan": "templates/specialist-research-plan.json",
     "specialist_decision_packet": "templates/specialist-decision-packet.json",
@@ -7856,6 +7857,7 @@ DEFAULT_ARTIFACT_OWNERS = {
     "method_contract": "factory-orchestrator",
     "product_creation_plan": "decomposition-planner",
     "product_implementation_readiness": "factory-orchestrator",
+    "gate_report": "factory-orchestrator",
     "sdlc_feedback_loop": "skill-eval-distiller",
     "specialist_research_plan": "source-ledger-worker",
     "specialist_decision_packet": "product-architect",
@@ -7886,6 +7888,7 @@ ARTIFACT_REQUIRED_BEFORE = {
     "method_contract": "ready_gate",
     "product_creation_plan": "ready_gate",
     "product_implementation_readiness": "execution",
+    "gate_report": "execution",
     "sdlc_feedback_loop": "execution",
     "specialist_research_plan": "method_contract",
     "specialist_decision_packet": "method_contract",
@@ -18385,6 +18388,25 @@ def _task_has_product_implementation_readiness(task: dict[str, Any]) -> bool:
     return False
 
 
+def _task_has_gate_report(task: dict[str, Any]) -> bool:
+    title_text = " ".join(
+        str(task.get(key) or "")
+        for key in ("title", "name")
+        if isinstance(task.get(key), str)
+    ).lower()
+    assignee = str(task.get("assignee") or "").strip().lower()
+    if "factory-orchestrator" in assignee and ("gate_report" in title_text or "gate report" in title_text):
+        return True
+    for payload in _task_payload_objects(task):
+        if payload.get("record_type") == "gate_report":
+            return True
+        if str(payload.get("required_output") or payload.get("artifact") or "").strip() == "gate_report":
+            return True
+        if isinstance(payload.get("gate_report"), dict):
+            return True
+    return False
+
+
 def _task_payload_objects(task: dict[str, Any]) -> list[dict[str, Any]]:
     payloads: list[dict[str, Any]] = []
     for key in ("metadata", "body", "description", "result"):
@@ -18991,6 +19013,42 @@ def board_reconcile_terminal_product_creation_plan_continuation(
     }, []
 
 
+def board_reconcile_terminal_product_readiness_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    readiness_refs = [_task_public_ref(task) for task in done if _task_has_product_implementation_readiness(task)]
+    if not readiness_refs:
+        return None, []
+    if any(_task_has_gate_report(task) for task in done):
+        return None, []
+    phase_engine = {
+        "computed_frontier": "ready_gate",
+        "computed_phase_id": "F13",
+        "next_required_artifact": "gate_report",
+        "decision_basis": (
+            "Product Implementation Readiness exists; the next deterministic frontier is "
+            "Ready Gate before work units or implementation."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(readiness_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": "gate_report",
+            "owner": DEFAULT_ARTIFACT_OWNERS["gate_report"],
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
 def board_reconcile_terminal_blocked_artifact_readback_continuation(
     rows: dict[str, list[dict[str, Any]]],
 ) -> tuple[dict[str, Any] | None, list[str]]:
@@ -19256,6 +19314,10 @@ def build_board_reconcile_plan(
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
                 board_reconcile_terminal_product_creation_plan_continuation(rows)
+            )
+        if terminal_continuation is None:
+            terminal_continuation, terminal_continuation_errors = (
+                board_reconcile_terminal_product_readiness_continuation(rows)
             )
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
