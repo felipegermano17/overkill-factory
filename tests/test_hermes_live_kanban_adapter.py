@@ -4567,6 +4567,56 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
             self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "worker_log_diff")
 
+    def test_no_idle_rejects_invalid_log_diff_json_and_falls_back_to_metadata(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "done0005"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "source-ledger-result.json"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "source-ledger-worker",
+                "title": "F2 - Source ledger",
+                "body": "{}",
+                "events": [{"type": "completed", "payload": {"artifacts": [str(missing_artifact)]}}],
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "source_ledger_result": {
+                                    "artifact_file": "source-ledger-result.json",
+                                    "valid_payload_from_metadata": True,
+                                },
+                                "artifacts": [str(missing_artifact)],
+                            }
+                        ),
+                    }
+                ],
+            }
+            fake.logs[done_id] = "\n".join(
+                [
+                    "  ┊ review diff",
+                    "a/source-ledger-result.json -> b/source-ledger-result.json",
+                    "@@ -0,0 +1,5 @@",
+                    "+{",
+                    "+  \"source_ledger_result\": {",
+                    "+    \"broken\": true",
+                    "  ┊ ⚡ kanban_complete",
+                ]
+            )
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+            recovered = json.loads(missing_artifact.read_text(encoding="utf-8"))
+            self.assertTrue(recovered["source_ledger_result"]["valid_payload_from_metadata"])
+            self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
+            self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "task_runs.metadata")
+
     def test_no_idle_materializes_missing_markdown_from_worker_log_diff_before_repair(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "done0003"
