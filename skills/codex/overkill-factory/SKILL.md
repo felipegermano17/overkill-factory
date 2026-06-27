@@ -31,6 +31,17 @@ different runtime.
 
 ## Factory Spine
 
+## Operating Mantra
+
+Less mirabolante, more Kanban-native, more Hermes-native, more deterministic
+and easier to trust.
+
+Use this as the default test for every autonomy, performance or routing fix:
+prefer durable Hermes Kanban graph state, explicit dependencies, typed blocks
+and native dispatch over sidecar loops, chat memory, agent interpretation or
+workers inventing the next phase. No-idle and watchdog code are integrity
+auditors and recovery paths, not the normal route authority.
+
 Use the V2 control plane as the default factory spine:
 
 ```text

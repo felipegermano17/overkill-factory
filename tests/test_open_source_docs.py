@@ -246,7 +246,8 @@ class OpenSourceDocsTest(unittest.TestCase):
         deterministic = read_text("docs/architecture/deterministic-control-plane.md")
         hermes = read_text("docs/architecture/hermes-integration.md")
         flow = read_text("docs/concepts/factory-flow.md")
-        combined = f"{deterministic}\n{hermes}\n{flow}"
+        skill = read_text("skills/codex/overkill-factory/SKILL.md")
+        combined = f"{deterministic}\n{hermes}\n{flow}\n{skill}"
         normalized = " ".join(combined.split())
 
         for phrase in [
@@ -258,6 +259,7 @@ class OpenSourceDocsTest(unittest.TestCase):
             "No-idle is the integrity auditor",
             "not the normal source of new factory route authority",
             "Watchdogs and no-idle checks are guardrails",
+            "No-idle and watchdog code are integrity auditors and recovery paths",
         ]:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, normalized)
@@ -418,6 +420,8 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertTrue(documentation_ref.is_file())
         self.assertIn("professional open-source GitHub stewardship", skill)
         self.assertIn("Product Experience OS/Product Face", skill)
+        self.assertIn("Less mirabolante, more Kanban-native, more Hermes-native", skill)
+        self.assertIn("workers inventing the next phase", skill)
         self.assertIn("Use the V2 control plane as the default factory spine", skill)
         self.assertIn("validate-v2-study-traceability", skill)
         self.assertIn("validate-capability-acquisition-contract", skill)

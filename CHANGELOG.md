@@ -7,6 +7,13 @@ public releases.
 
 ## Unreleased
 
+## 2.0.13 - 2026-06-27
+
+- Promote the Kanban-native runtime mantra into the public Codex
+  `overkill-factory` skill so operators and agents receive the same rule as the
+  architecture docs: prefer durable Hermes Kanban graph state, dependencies,
+  typed blocks and native dispatch over sidecar loops or agent interpretation.
+
 ## 2.0.12 - 2026-06-27
 
 - Preserve the declared-artifact repair runtime hotfix in the public release:
