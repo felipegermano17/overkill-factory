@@ -18447,6 +18447,32 @@ def structured_phase_id_from_task(task: dict[str, Any]) -> str:
     return ""
 
 
+def task_has_structured_runtime_contract(task: dict[str, Any]) -> bool:
+    if structured_phase_id_from_task(task):
+        return True
+    body = _json_object_from_possible_string(task.get("body"))
+    if isinstance(body, dict):
+        binding = body.get("kanban_workflow_binding")
+        if isinstance(binding, dict) and binding.get("runtime_field_required") is True:
+            return True
+        if body.get("agent_may_choose_phase") is False and body.get("plan_action"):
+            return True
+    return False
+
+
+def board_reconcile_active_contract_blockers(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
+    blockers: list[str] = []
+    for status in ("running", "in_progress", "doing"):
+        for task in rows.get(status, []):
+            if task_has_structured_runtime_contract(task):
+                continue
+            task_ref = _task_public_ref(task)
+            blockers.append(
+                f"active {status} task {task_ref} cannot proceed without deterministic runtime contract"
+            )
+    return sorted(set(blockers))
+
+
 def board_reconcile_active_phase_blockers(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
     active: list[tuple[str, dict[str, Any], str, int]] = []
     for status in ("running", "in_progress", "doing", "ready"):
@@ -18939,6 +18965,7 @@ def build_board_reconcile_plan(
     human_gate_required = False
     operator_input_required = False
     create_task_contract: dict[str, Any] | None = None
+    active_contract_blockers = board_reconcile_active_contract_blockers(rows)
     active_phase_blockers = board_reconcile_active_phase_blockers(rows)
     (
         ready_dispatch_blockers,
@@ -18948,7 +18975,12 @@ def build_board_reconcile_plan(
     ) = board_reconcile_ready_dispatch_blockers(rows)
     missing_artifact_blockers, missing_artifact_ref = board_reconcile_missing_declared_artifact_blockers(rows)
 
-    if active_phase_blockers:
+    if active_contract_blockers:
+        plan_action = "block_invariant_violation"
+        reason = "active Hermes work is missing deterministic runtime contract"
+        blocked_reasons.extend(active_contract_blockers)
+        native_dispatch_required_next = False
+    elif active_phase_blockers:
         plan_action = "block_invariant_violation"
         reason = "active future-phase Hermes work is blocked by an earlier unresolved factory phase"
         blocked_reasons.extend(active_phase_blockers)
