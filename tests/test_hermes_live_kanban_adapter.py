@@ -4284,7 +4284,16 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     {
                         "status": "done",
                         "outcome": "completed",
-                        "metadata": json.dumps({"artifacts": [str(missing_artifact)]}),
+                        "metadata": json.dumps(
+                            {
+                                "product_sot_result": {
+                                    "artifact_file": "product-sot-result.json",
+                                    "review_packet_file": "product-sot-candidate.md",
+                                    "status": "candidate_owner_review_required_not_approved",
+                                },
+                                "artifacts": [str(missing_artifact)],
+                            }
+                        ),
                     }
                 ],
             }
