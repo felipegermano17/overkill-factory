@@ -438,6 +438,18 @@ def public_safe_workspace_ref(value: Any) -> str:
     return text
 
 
+def hermes_workspace_arg(value: str) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return "scratch"
+    normalized = text.replace("\\", "/")
+    if normalized in {"scratch", "worktree"} or normalized.startswith(("dir:", "worktree:")):
+        return text
+    if re.match(r"^[A-Za-z]:/", normalized) or normalized.startswith("/"):
+        return "dir:" + text
+    return text
+
+
 def normalize_task_record(record: dict[str, Any]) -> dict[str, Any]:
     task_id = str(record.get("task_id") or record.get("id") or "")
     normalized: dict[str, Any] = {"task_id": task_id}
@@ -3665,6 +3677,7 @@ def create_task(
             current_step_key=current_step_key,
             runner=runner,
         )
+    workspace_arg = hermes_workspace_arg(workspace)
     args = hermes_kanban(
         hermes_bin,
         board,
@@ -3679,7 +3692,7 @@ def create_task(
         "--created-by",
         created_by,
         "--workspace",
-        workspace,
+        workspace_arg,
         "--json",
     )
     task_id = parse_task_id_or_find_idempotent(
@@ -3728,7 +3741,7 @@ def create_blocked_task_before_assignment(
                 "--created-by",
                 created_by,
                 "--workspace",
-                workspace,
+                hermes_workspace_arg(workspace),
                 "--json",
             ),
             runner,
