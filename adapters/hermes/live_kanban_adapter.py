@@ -1632,6 +1632,30 @@ def metadata_payload_candidate_keys(metadata: dict[str, Any], artifact_name: str
     return list(dict.fromkeys(key for key in preferred_keys if key in metadata and isinstance(metadata.get(key), dict)))
 
 
+def human_gate_record_payload_for_declared_artifact(metadata: dict[str, Any], artifact_name: str) -> str | None:
+    artifact_token = normalized_artifact_token(artifact_name)
+    if "humangaterecord" not in artifact_token or "approved" not in artifact_token:
+        return None
+    decision = metadata.get("decision")
+    if not isinstance(decision, dict) or decision.get("value") != "approved":
+        return None
+    record = {
+        "artifact_file": artifact_name,
+        "record_type": "human_gate_record",
+        "decision_state": "approved",
+        "decision": decision,
+        "approval_scope": metadata.get("approval_scope") or [],
+        "forbidden_scope": metadata.get("forbidden_scope") or [],
+        "delivery_evidence": metadata.get("delivery_evidence") or [],
+        "validation": metadata.get("validation") or {},
+        "hashes": metadata.get("hashes") or {},
+        "next_child_task": metadata.get("next_child_task"),
+        "next_frontier": metadata.get("next_frontier") or [],
+        "reconstructed_from": "task_runs.metadata",
+    }
+    return json.dumps({"human_gate_record": record}, indent=2, ensure_ascii=False) + "\n"
+
+
 def metadata_payload_for_declared_artifact(record: dict[str, Any], artifact_name: str) -> str | None:
     for run in record.get("runs") or []:
         if not isinstance(run, dict):
@@ -1639,6 +1663,9 @@ def metadata_payload_for_declared_artifact(record: dict[str, Any], artifact_name
         metadata = parse_json_object(run.get("metadata"))
         if not isinstance(metadata, dict):
             continue
+        human_gate_payload = human_gate_record_payload_for_declared_artifact(metadata, artifact_name)
+        if human_gate_payload is not None:
+            return human_gate_payload
         for key, value in metadata.items():
             if not isinstance(value, dict):
                 continue

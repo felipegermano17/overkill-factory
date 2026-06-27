@@ -4617,6 +4617,59 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
             self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "task_runs.metadata")
 
+    def test_no_idle_reconstructs_human_gate_record_from_run_metadata(self) -> None:
+        fake = FakeHermes()
+        done_id = "t_" + "gate0001"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / "decision-package" / "HUMAN_GATE_RECORD.approved.json"
+            fake.tasks[done_id] = {
+                "id": done_id,
+                "status": "done",
+                "assignee": "human-gate-clerk",
+                "title": "Prepare Product SOT owner decision package",
+                "body": "{}",
+                "events": [{"type": "completed", "payload": {"artifacts": [str(missing_artifact)]}}],
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "decision": {
+                                    "actor_role": "Factory Owner",
+                                    "captured_at": "2026-06-27T04:21:22Z",
+                                    "code": "APPROVE_PRODUCT_SOT",
+                                    "recorded_at": "2026-06-27T04:23:36Z",
+                                    "value": "approved",
+                                },
+                                "approval_scope": ["Product SOT boundary only"],
+                                "forbidden_scope": ["implementation", "deployment"],
+                                "delivery_evidence": ["telegram_delivery:message_ref:1139"],
+                                "validation": {"json_valid": True},
+                                "hashes": {"HUMAN_GATE_RECORD.approved.md": "abc123"},
+                                "next_child_task": "task:next-planning",
+                                "next_frontier": ["Method Contract planning"],
+                                "artifacts": [str(missing_artifact)],
+                            }
+                        ),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+            recovered = json.loads(missing_artifact.read_text(encoding="utf-8"))
+            record = recovered["human_gate_record"]
+            self.assertEqual(record["decision"]["code"], "APPROVE_PRODUCT_SOT")
+            self.assertEqual(record["decision_state"], "approved")
+            self.assertIn("Product SOT boundary only", record["approval_scope"])
+            self.assertEqual(record["reconstructed_from"], "task_runs.metadata")
+            self.assertEqual(result["artifact_materialization"][0]["materialized"], True)
+            self.assertEqual(result["artifact_materialization"][0]["recovery_source"], "task_runs.metadata")
+
     def test_no_idle_materializes_missing_markdown_from_worker_log_diff_before_repair(self) -> None:
         fake = FakeHermes()
         done_id = "t_" + "done0003"
