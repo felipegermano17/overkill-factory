@@ -4387,12 +4387,16 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             body["required_actions"],
         )
         self.assertIn(
-            "when a primary operator channel such as Telegram is configured, deliver a short decision message and the Product SOT PDF through the manager/operator-facing profile (for Hermes use `hermes send` with `MEDIA:<pdf>` from that profile)",
+            "when a primary operator channel such as Telegram is configured, deliver a short plain-text decision message and the Product SOT markdown/PDF as standard file attachments through the manager/operator-facing profile; do not use Telegram rich cards, rich drafts, media groups or table-rendered bot messages",
             body["required_actions"],
         )
         self.assertIn("ask for a decision from a chat summary without the decision package material", body["forbidden_actions"])
         self.assertIn(
             "deliver an operational receipt, approval JSON, evidence index, hash list or worker log as if it were the Product SOT",
+            body["forbidden_actions"],
+        )
+        self.assertIn(
+            "send Telegram rich cards, rich drafts, media groups or table-rendered bot messages as the primary decision package",
             body["forbidden_actions"],
         )
         self.assertIn(

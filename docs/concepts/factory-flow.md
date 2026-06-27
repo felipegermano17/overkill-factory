@@ -11,7 +11,7 @@ from jumping straight from a vague request to a confident completion claim.
 | Operator interface profile | The selected human interface, such as Telegram, Discord or Cockpit, with proactive notification and attachment rules. |
 | Factory start conversation | The open conversational start that confirms the product understanding before a formal start request. |
 | Source resolution | The step that separates source facts, inference, decisions, conflicts and gaps. |
-| Operator briefing package | The deep review package for important decisions: short projection plus markdown/PDF attachments and optional explainers. |
+| Operator briefing package | The deep review package for important decisions: short plain-text projection plus markdown/PDF attachments and optional explainers. |
 | Product SOT | The source-of-truth candidate for the complete product scope, non-goals and acceptance criteria. |
 | Full Product SOT scope coverage | The map that prevents a first slice from silently becoming the whole product. |
 | Specialist research decision | A public-safe research result that changes SOT, architecture, method, gate, worker, proof or blocker state. |
@@ -121,6 +121,11 @@ For Telegram-first operation, important decisions should not be made from a
 short chat summary alone. The operator should receive a briefing package with a
 deep document and PDF attachment, and the bot should proactively push meaningful
 state changes instead of waiting for the operator to poll.
+
+Telegram delivery is plain-text first. Markdown/PDF are ordinary file
+attachments; Telegram rich cards, rich drafts, media groups and table-rendered
+bot messages are not the primary decision package because Telegram Desktop may
+render them as unsupported messages.
 
 ## What Blocks A Card
 
