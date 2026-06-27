@@ -18269,6 +18269,12 @@ def _task_has_architecture_review(task: dict[str, Any]) -> bool:
         return True
     if "architecture_result" in text and ("review" in text or "pass" in text or "fail" in text):
         return True
+    if (
+        "independent_review_result" in text
+        and ("architecture_packet" in text or "architecture packet" in text)
+        and ("reviewed_task_id" in text or "reviewed task" in text or "reviewed_task" in text)
+    ):
+        return True
     for run in task.get("runs") or []:
         if not isinstance(run, dict):
             continue
@@ -18277,6 +18283,11 @@ def _task_has_architecture_review(task: dict[str, Any]) -> bool:
             continue
         if isinstance(metadata.get("architecture_review_result"), dict):
             return True
+        result = metadata.get("independent_review_result")
+        if isinstance(result, dict):
+            result_text = json.dumps(result, sort_keys=True, default=str).lower()
+            if "architecture_packet" in result_text or "architecture packet" in result_text:
+                return True
         packet = str(metadata.get("required_output") or metadata.get("artifact") or "").strip().lower()
         if packet == "architecture_review_packet":
             return True
@@ -18296,7 +18307,9 @@ def _task_has_passed_architecture_review(task: dict[str, Any]) -> bool:
     text = _task_search_text(task)
     explicit_pass_markers = (
         "pass_for_architecture_review",
+        "pass_for_review_input_readiness_only",
         "pass for architecture review",
+        "pass for review input readiness",
         "architecture review: pass",
         "architecture_review_result pass",
         "architecture_review_result: pass",
@@ -18598,8 +18611,17 @@ def board_reconcile_missing_declared_artifact_blockers(
 ) -> tuple[list[str], dict[str, Any] | None]:
     blockers: list[str] = []
     selected_ref: dict[str, Any] | None = None
-    for task in rows.get("done", []):
+    done = rows.get("done", [])
+    architecture_review_keys = [
+        _task_temporal_key(review_task, review_index)
+        for review_index, review_task in enumerate(done)
+        if _task_has_architecture_review(review_task)
+    ]
+    for task_index, task in enumerate(done):
         if _task_has_failed_architecture_review(task):
+            continue
+        task_key = _task_temporal_key(task, task_index)
+        if _task_has_architecture_candidate(task) and any(key > task_key for key in architecture_review_keys):
             continue
         missing = task.get("missing_declared_artifacts")
         if not isinstance(missing, list) or not missing:

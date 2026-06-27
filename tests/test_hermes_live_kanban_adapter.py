@@ -5911,6 +5911,85 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
         self.assertIn("Product Creation Plan", body["reason"])
 
+    def test_no_idle_does_not_repair_architecture_artifact_after_newer_independent_pass(self) -> None:
+        fake = FakeHermes()
+        arch_id = "t_" + "archpasssrc"
+        passed_review_id = "t_" + "archinputpass"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_artifact = Path(tmpdir) / f"ARCHITECTURE_PACKET_Todo_Web_Local.{arch_id}.md"
+            fake.tasks[arch_id] = {
+                "id": arch_id,
+                "status": "done",
+                "assignee": "product-architect",
+                "title": "Materialize architecture_packet for board",
+                "created_at": "2026-06-27T10:00:00+00:00",
+                "latest_summary": "Architecture candidate packet is ready for independent review.",
+                "workspace_path": str(Path(tmpdir)),
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "architecture_result": {
+                                    "status": "candidate_architecture_packet_ready_for_independent_review_not_closed",
+                                    "task_id": arch_id,
+                                    "artifact_paths": [str(missing_artifact)],
+                                },
+                                "artifacts": [str(missing_artifact)],
+                            }
+                        ),
+                    }
+                ],
+            }
+            fake.tasks[passed_review_id] = {
+                "id": passed_review_id,
+                "status": "done",
+                "assignee": "independent-reviewer",
+                "title": "Independent review — repaired architecture_packet for Todo Web Local",
+                "completed_at": "2026-06-27T10:05:00+00:00",
+                "latest_summary": "PASS_FOR_REVIEW_INPUT_READINESS_ONLY_NOT_ARCHITECTURE_CLOSURE.",
+                "runs": [
+                    {
+                        "status": "done",
+                        "outcome": "completed",
+                        "metadata": json.dumps(
+                            {
+                                "independent_review_result": {
+                                    "verdict": "PASS_FOR_REVIEW_INPUT_READINESS_ONLY_NOT_ARCHITECTURE_CLOSURE",
+                                    "reviewed_task_id": arch_id,
+                                    "reviewed_artifact_type": "architecture_packet",
+                                    "blocking_findings": [],
+                                }
+                            }
+                        ),
+                    }
+                ],
+            }
+            args = adapter.build_parser().parse_args(
+                ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+            )
+
+            result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
+        self.assertEqual(
+            result["board_reconcile_plan"]["create_task_contract"]["body"]["required_output"],
+            "product_creation_plan",
+        )
+        created_repairs = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("plan_action")
+            == "repair_declared_artifacts"
+        ]
+        self.assertEqual(created_repairs, [])
+        created_product_plans = [
+            task for task in fake.tasks.values()
+            if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
+            == "product_creation_plan"
+        ]
+        self.assertEqual(len(created_product_plans), 1)
+
     def test_no_idle_keeps_newer_failed_architecture_review_active_after_older_pass(self) -> None:
         fake = FakeHermes()
         arch_id = "t_" + "archfix2"
