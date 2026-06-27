@@ -18368,6 +18368,23 @@ def _task_has_product_creation_plan(task: dict[str, Any]) -> bool:
     return False
 
 
+def _task_has_product_implementation_readiness(task: dict[str, Any]) -> bool:
+    text = _task_search_text(task)
+    assignee = str(task.get("assignee") or "").strip().lower()
+    if "factory-orchestrator" in assignee and (
+        "product_implementation_readiness" in text or "product implementation readiness" in text
+    ):
+        return True
+    for payload in _task_payload_objects(task):
+        if payload.get("record_type") == "product_implementation_readiness":
+            return True
+        if str(payload.get("required_output") or payload.get("artifact") or "").strip() == "product_implementation_readiness":
+            return True
+        if isinstance(payload.get("product_implementation_readiness"), dict):
+            return True
+    return False
+
+
 def _task_payload_objects(task: dict[str, Any]) -> list[dict[str, Any]]:
     payloads: list[dict[str, Any]] = []
     for key in ("metadata", "body", "description", "result"):
@@ -18938,6 +18955,42 @@ def board_reconcile_terminal_passed_architecture_review_continuation(
     }, []
 
 
+def board_reconcile_terminal_product_creation_plan_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    product_creation_refs = [_task_public_ref(task) for task in done if _task_has_product_creation_plan(task)]
+    if not product_creation_refs:
+        return None, []
+    if any(_task_has_product_implementation_readiness(task) for task in done):
+        return None, []
+    phase_engine = {
+        "computed_frontier": "ready_gate",
+        "computed_phase_id": "F12",
+        "next_required_artifact": "product_implementation_readiness",
+        "decision_basis": (
+            "Product Creation Plan exists; the next deterministic frontier is Product "
+            "Implementation Readiness before ready gate, work units or implementation."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(product_creation_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": "product_implementation_readiness",
+            "owner": DEFAULT_ARTIFACT_OWNERS["product_implementation_readiness"],
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
 def board_reconcile_terminal_blocked_artifact_readback_continuation(
     rows: dict[str, list[dict[str, Any]]],
 ) -> tuple[dict[str, Any] | None, list[str]]:
@@ -19199,6 +19252,10 @@ def build_board_reconcile_plan(
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
                 board_reconcile_terminal_passed_architecture_review_continuation(rows)
+            )
+        if terminal_continuation is None:
+            terminal_continuation, terminal_continuation_errors = (
+                board_reconcile_terminal_product_creation_plan_continuation(rows)
             )
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
