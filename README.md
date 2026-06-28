@@ -14,6 +14,41 @@ enthusiasm or a partial demo become the source of truth.
 Public map:
 https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html
 
+## What It Is Technologically
+
+Overkill Factory is an open-source factory kernel for agentic product
+execution. Technologically, it is not a hosted SaaS, not a chatbot, not a fork
+of Hermes and not a standalone agent runtime.
+
+It is a Python package, CLI, contract library, Hermes adapter and public
+operator toolkit that makes product work deterministic enough for agents to run
+without inventing the route.
+
+The technology split is:
+
+| Layer | What owns it | What it does |
+| --- | --- | --- |
+| Runtime | Hermes Kanban | Durable boards, cards, parent/child dependencies, typed blocks, dispatcher, worker processes, comments, runs, logs, workspaces and schedules. |
+| Factory kernel | Overkill Factory | Phase graph, method contracts, schemas, templates, validation, gates, capability routing, worker authority rules, Product Experience, security/release checks and Receipt Five evidence rules. |
+| CLI and validators | `factoryctl` and scripts | Generate, inspect and validate cards, packets, receipts, workflows, worker profiles, public docs and release readiness. |
+| Runtime adapter | `adapters/hermes/` | Connects factory contracts to the real Hermes Kanban state without replacing Hermes as the source of truth. |
+| Worker catalog | `agents/`, `skills/`, `templates/` | Defines what specialist workers are allowed to do, which skills/capabilities they need and what evidence they must return. |
+| Operator bridge | Codex Bridge plugin/hooks | Lets Codex act as a human-operator bridge for intake, status and human gates. It does not run the factory or approve work. |
+
+So the short version is:
+
+```text
+Hermes runs the factory floor.
+Overkill Factory defines the production method and checks.
+Agents execute bounded cards.
+Humans only decide real human gates.
+```
+
+The repository contains the public kernel: schemas, templates, docs, examples,
+fixtures, tests, worker/profile registries, Hermes integration code and Codex
+bridge material. A real product run still needs an operator-owned Hermes
+runtime where the actual cards, workers, results and evidence live.
+
 ## Plain Explanation
 
 Overkill Factory is a production line for projects built by agents.

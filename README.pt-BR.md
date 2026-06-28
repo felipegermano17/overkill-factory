@@ -14,6 +14,42 @@ deixar chat, entusiasmo ou demo parcial virar fonte de verdade.
 Mapa público:
 https://storage.googleapis.com/overkill-factory-public-assets-20apy/overkill-factory-map-v1.0.3.html
 
+## O Que É Tecnicamente
+
+Overkill Factory é um kernel open-source de fábrica para execução de produto
+por agentes. Tecnicamente, ela não é um SaaS hospedado, não é um chatbot, não é
+um fork do Hermes e não é um runtime autônomo de agentes.
+
+Ela é um pacote Python, CLI, biblioteca de contratos, adapter Hermes e toolkit
+público de operação que torna trabalho de produto determinístico o suficiente
+para agentes executarem sem inventar a rota.
+
+A divisão tecnológica é:
+
+| Camada | Quem é dono | O que faz |
+| --- | --- | --- |
+| Runtime | Hermes Kanban | Boards duráveis, cards, dependências parent/child, typed blocks, dispatcher, processos de workers, comentários, runs, logs, workspaces e schedules. |
+| Kernel da fábrica | Overkill Factory | Phase graph, method contracts, schemas, templates, validação, gates, roteamento de capabilities, regras de autoridade de worker, Product Experience, checks de segurança/release e regras de evidência Receipt Five. |
+| CLI e validadores | `factoryctl` e scripts | Geram, inspecionam e validam cards, pacotes, receipts, workflows, worker profiles, docs públicas e readiness de release. |
+| Adapter de runtime | `adapters/hermes/` | Conecta os contratos da fábrica ao estado real do Hermes Kanban sem substituir o Hermes como fonte de verdade. |
+| Catálogo de workers | `agents/`, `skills/`, `templates/` | Define o que especialistas podem fazer, quais skills/capabilities precisam e qual evidência devem devolver. |
+| Ponte do operador | Plugin/hooks Codex Bridge | Permite que o Codex atue como ponte do operador humano para intake, status e human gates. Ele não roda a fábrica nem aprova trabalho. |
+
+Então a versão curta é:
+
+```text
+Hermes roda o chão da fábrica.
+Overkill Factory define o método de produção e as checagens.
+Agentes executam cards com escopo fechado.
+Humanos só decidem gates humanos reais.
+```
+
+O repositório contém o kernel público: schemas, templates, docs, exemplos,
+fixtures, testes, registries de workers/profiles, integração Hermes e material
+do Codex Bridge. Uma execução real de produto ainda precisa de um runtime
+Hermes do operador, onde vivem os cards, workers, resultados e evidências
+reais.
+
 ## Explicação Simples
 
 A Overkill Factory é uma linha de produção para projetos feitos por agentes.
