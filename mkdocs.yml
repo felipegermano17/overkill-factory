@@ -60,6 +60,8 @@ nav:
       - Public Visual Surfaces: visuals/README.md
   - Maintainer Internals:
       - Repo Surface: maintenance/repo-surface.md
+      - Swiss Watch Reliability Program: maintenance/swiss-watch-reliability-program.md
+      - Swiss Watch Gear Matrix: maintenance/swiss-watch-gear-matrix.md
       - Factory Learning OS: maintenance/factory-learning-skill-evolution-os.md
       - Hermes Learn Integration: maintenance/hermes-learn-integration.md
       - Self Improvement Loop: maintenance/self-improvement-loop.md

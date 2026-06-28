@@ -262,6 +262,24 @@
     "reusable_for_product": {
       "type": "boolean"
     },
+    "quality_floor": {
+      "type": "object",
+      "description": "Worker-specific quality floor proof for real reusable PASS results that must not be shallow or generic.",
+      "properties": {
+        "result": { "enum": ["PASS", "FAIL", "BLOCKED"] },
+        "anti_generic_checked": { "type": "boolean" },
+        "source_traceability_checked": { "type": "boolean" },
+        "requirement_graph_checked": { "type": "boolean" },
+        "operator_readability_checked": { "type": "boolean" },
+        "rejects_shallow_output": { "type": "boolean" },
+        "depth_dimensions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "basis": { "type": "string", "minLength": 12 }
+      },
+      "additionalProperties": true
+    },
     "async_subagent": {
       "type": "object",
       "required": [

@@ -11,6 +11,7 @@ venv/
 __pycache__/
 .pytest_cache/
 .tmp/
+.worktrees/
 *.egg-info/
 dist/
 build/

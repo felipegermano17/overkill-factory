@@ -132,6 +132,21 @@ class PublicSafetyScanTest(unittest.TestCase):
         self.assertEqual(len(findings), 2)
         self.assertTrue(all(finding.startswith("docs/") for finding in findings), findings)
 
+    def test_worktree_scan_skips_local_worktree_scratch_space(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "docs").mkdir()
+            (root / ".worktrees" / "task" / "factory-artifacts").mkdir(parents=True)
+            (root / "docs" / "public.md").write_text("public factory docs", encoding="utf-8")
+            (root / ".worktrees" / "task" / "factory-artifacts" / "private.md").write_text(
+                PRIVATE_MARKER,
+                encoding="utf-8",
+            )
+
+            findings = public_safety_scan.scan_worktree(root)
+
+        self.assertEqual(findings, [])
+
     def test_worktree_scan_tolerates_missing_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             missing = Path(tmp) / "already-gone"

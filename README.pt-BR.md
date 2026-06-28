@@ -90,9 +90,22 @@ sua ideia/material
 -> aprendizados para melhorar a fábrica
 ```
 
-O ponto mais importante: a fábrica não é "um chat inteligente". Ela é um
-sistema para impedir que agentes pulem entendimento, inventem escopo, ignorem
-segurança ou digam que algo está pronto sem prova.
+O ponto mais importante: a fábrica não é "um chat inteligente" e não é um
+mini-Hermes. O Hermes é dono do chão de runtime nativo: Kanban, typed blocks,
+dependências, dispatch e execução dos workers. A Overkill Factory adiciona o
+método de produto, contratos e gates apenas onde o Hermes precisa de uma camada
+específica de fábrica.
+
+A auditoria Swiss Watch torna essa regra executável:
+
+```bash
+python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+```
+
+Ela verifica se as engrenagens da linha de produção têm contrato, autoridade
+Hermes-native, proteção no-idle, regras de UX do operador, classificação de
+bloqueios, fronteiras de segurança, controle de loop e piso de qualidade dos
+workers.
 
 ## Por Que Existe
 

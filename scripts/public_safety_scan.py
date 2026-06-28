@@ -26,7 +26,19 @@ from public_refs import (  # noqa: E402
 )
 
 SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".pdf", ".tgz", ".zip"}
-SKIP_PARTS = {".git", ".tmp", ".pytest_cache", ".venv", "__pycache__", "build", "dist", "node_modules", "site", "venv"}
+SKIP_PARTS = {
+    ".git",
+    ".tmp",
+    ".pytest_cache",
+    ".venv",
+    ".worktrees",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    "site",
+    "venv",
+}
 SKIP_PART_SUFFIXES = (".egg-info",)
 PUBLIC_REPO_URL = "https://github.com/felipegermano17/overkill-factory"
 

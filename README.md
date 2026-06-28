@@ -89,9 +89,20 @@ your idea/material
 -> learnback to improve the factory
 ```
 
-The most important point: the factory is not "a smart chat." It is a system for
-preventing agents from skipping understanding, inventing scope, ignoring
-security or claiming work is done without proof.
+The most important point: the factory is not "a smart chat" and not a
+mini-Hermes. Hermes owns the native runtime floor: Kanban state, typed blocks,
+dependencies, dispatch and worker execution. Overkill Factory adds the product
+method, contracts and gates only where Hermes needs a factory-specific layer.
+
+The Swiss Watch reliability audit makes that rule executable:
+
+```bash
+python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+```
+
+It checks that the production-line gears have contracts, Hermes-native
+authority, no-idle safeguards, operator UX rules, block classification,
+security boundaries, loop control and worker quality floors.
 
 ## Why This Exists
 

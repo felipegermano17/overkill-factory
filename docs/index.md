@@ -101,6 +101,12 @@ Codex was closed.
 Use `maintenance/repo-surface.md` to decide whether a file belongs in the
 operator surface, maintainer internals or generated output.
 
+Use `maintenance/swiss-watch-reliability-program.md` when improving autonomy,
+operator experience, no-idle behavior, worker output quality, performance,
+security or Hermes-native runtime alignment without reducing factory stages.
+Use `maintenance/swiss-watch-gear-matrix.md` as the generated phase-by-phase
+baseline for gear input/output/authority/proof audits.
+
 Use `maintenance/self-improvement-loop.md` for learnback issue candidates,
 missing-capability completion plans, owner issue intake, reasoning policy,
 factory readiness scorecards, SDLC feedback loops, reference quality packets
