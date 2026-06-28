@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/factory-method-excellence-registry.schema.json",
+  "title": "Overkill Factory Method Excellence Registry",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "registry_id",
+    "mission",
+    "runtime_boundary",
+    "coverage_policy",
+    "public_private_boundary",
+    "method_families"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/factory-method-excellence-registry.schema.json"
+    },
+    "record_type": {
+      "const": "factory_method_excellence_registry"
+    },
+    "registry_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "mission": {
+      "type": "string",
+      "minLength": 20
+    },
+    "runtime_boundary": {
+      "type": "object",
+      "required": [
+        "hermes_owns_runtime_floor",
+        "overkill_owns_method_contracts_and_gates",
+        "no_mini_hermes_runtime",
+        "use_hermes_native_kanban_typed_blocks_dependencies_dispatch_first"
+      ],
+      "properties": {
+        "hermes_owns_runtime_floor": { "const": true },
+        "overkill_owns_method_contracts_and_gates": { "const": true },
+        "no_mini_hermes_runtime": { "const": true },
+        "use_hermes_native_kanban_typed_blocks_dependencies_dispatch_first": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "coverage_policy": {
+      "type": "object",
+      "required": [
+        "method_label_cannot_authorize_execution",
+        "operator_does_not_choose_internal_method_by_taste",
+        "all_method_families_require_artifacts_gates_workers_proof_and_forbidden_shortcuts",
+        "anti_mediocrity_quality_floor_required",
+        "learnback_required_for_method_failures"
+      ],
+      "properties": {
+        "method_label_cannot_authorize_execution": { "const": true },
+        "operator_does_not_choose_internal_method_by_taste": { "const": true },
+        "all_method_families_require_artifacts_gates_workers_proof_and_forbidden_shortcuts": { "const": true },
+        "anti_mediocrity_quality_floor_required": { "const": true },
+        "learnback_required_for_method_failures": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "method_families": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "required": [
+          "family_id",
+          "display_name",
+          "reference_methods",
+          "route_triggers",
+          "surface_triggers",
+          "required_artifacts",
+          "required_gates",
+          "required_workers",
+          "proof_requirements",
+          "forbidden_shortcuts",
+          "legacy_method_engine_ids",
+          "learnback_hooks"
+        ],
+        "properties": {
+          "family_id": { "type": "string", "minLength": 3 },
+          "display_name": { "type": "string", "minLength": 3 },
+          "reference_methods": {
+            "type": "array",
+            "minItems": 3,
+            "items": { "type": "string", "minLength": 2 },
+            "uniqueItems": true
+          },
+          "route_triggers": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "surface_triggers": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "required_artifacts": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "required_gates": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "required_workers": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "proof_requirements": {
+            "type": "array",
+            "minItems": 3,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "forbidden_shortcuts": {
+            "type": "array",
+            "minItems": 2,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "legacy_method_engine_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          },
+          "learnback_hooks": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

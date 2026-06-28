@@ -11,6 +11,7 @@ Use this before editing cards, docs or examples:
 factoryctl doctor
 factoryctl run minimal
 python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+python scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
@@ -150,6 +151,7 @@ For a stronger local pass:
 factoryctl doctor
 factoryctl run minimal
 python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
+python scripts/factory_method_excellence_audit.py --out .tmp/factory-method-excellence-audit.json --markdown .tmp/factory-method-excellence-audit.md
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
