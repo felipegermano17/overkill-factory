@@ -442,6 +442,46 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(plan["create_task_allowed"])
         self.assertEqual(plan["blocked_reasons"], [])
 
+    def test_structured_phase_work_card_without_canonical_card_preserves_native_block_state(self) -> None:
+        snapshot = {
+            "rows": {
+                "blocked": [
+                    {
+                        "task": {
+                            "id": "task-product-face-blocked",
+                            "status": "blocked",
+                            "title": "F8 - Product Face consumption review",
+                            "body": json.dumps(
+                                {
+                                    "packet_type": "factory_phase_work_card",
+                                    "phase": "F8_product_face_consumption",
+                                    "route_authority": "factory_phase_graph_and_compiled_workflow_plan",
+                                    "done_definition": "Produce product_face_result or typed blockers.",
+                                }
+                            ),
+                        },
+                        "events": [
+                            {
+                                "kind": "blocked",
+                                "payload": {
+                                    "kind": "needs_input",
+                                    "reason": "target_repo_paths missing",
+                                },
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "observe_structured_blocked_work")
+        self.assertFalse(plan["create_task_allowed"])
+        self.assertIsNone(plan["create_task_contract"])
+        self.assertFalse(plan["human_gate_required"])
+
     def test_ready_work_without_structured_phase_binding_repairs_contract_instead_of_dispatching(self) -> None:
         snapshot = {
             "rows": {

@@ -20115,6 +20115,11 @@ def _structured_phase_id_from_payload(payload: dict[str, Any]) -> str:
     computed = str(phase_engine.get("computed_phase_id") or "").strip().upper()
     if factory_phase_rank(computed) >= 0:
         return computed
+    for key in ("phase_id", "phase"):
+        value = str(payload.get(key) or "").strip()
+        phase_id = factory_phase_id_from_title(value)
+        if phase_id:
+            return phase_id
     for key in ("current_step_key", "step_key"):
         phase_id = factory_phase_id_from_step_key(payload.get(key))
         if phase_id:
@@ -20201,7 +20206,7 @@ def _looks_like_factory_runtime_task(task: dict[str, Any]) -> bool:
 
 def factory_phase_id_from_title(value: Any) -> str:
     text = str(value or "").strip().upper()
-    match = re.match(r"^F\s*(\d+)\b", text)
+    match = re.match(r"^F\s*(\d+)(?:\b|_)", text)
     if not match:
         return ""
     return f"F{int(match.group(1))}"
@@ -20280,12 +20285,18 @@ def task_has_structured_runtime_contract(task: dict[str, Any]) -> bool:
         return True
     body = _json_object_from_possible_string(task.get("body"))
     if isinstance(body, dict):
+        if body.get("packet_type") in {"factory_phase_work_card", "factory_run_graph_node"} and _structured_phase_id_from_payload(body):
+            return True
         binding = body.get("kanban_workflow_binding")
         if isinstance(binding, dict) and binding.get("runtime_field_required") is True:
             return True
         if body.get("agent_may_choose_phase") is False and body.get("plan_action"):
             return True
     return False
+
+
+def all_unfinished_work_has_structured_runtime_contract(tasks: list[dict[str, Any]]) -> bool:
+    return bool(tasks) and all(task_has_structured_runtime_contract(task) for task in tasks)
 
 
 def board_reconcile_active_contract_blockers(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
@@ -21406,17 +21417,25 @@ def build_board_reconcile_plan(
             plan_action = "block_invariant_violation"
             reason = selection_errors[0]
         elif selected_card is None:
-            plan_action = "repair_board_contract"
-            reason = "unfinished board has no canonical factory card; phase cannot be inferred from task prose"
-            create_task_contract = _board_reconcile_task_contract(
-                plan_action=plan_action,
-                board=board,
-                selected_card=None,
-                phase_engine=None,
-                factory_help=None,
-                reason=reason,
-            )
-            native_dispatch_required_next = True
+            if all_unfinished_work_has_structured_runtime_contract(unfinished):
+                plan_action = "observe_structured_blocked_work"
+                reason = (
+                    "unfinished Hermes work has deterministic phase contracts; preserve native "
+                    "Hermes block/dependency state instead of materializing a parallel canonical card"
+                )
+                native_dispatch_required_next = False
+            else:
+                plan_action = "repair_board_contract"
+                reason = "unfinished board has no canonical factory card; phase cannot be inferred from task prose"
+                create_task_contract = _board_reconcile_task_contract(
+                    plan_action=plan_action,
+                    board=board,
+                    selected_card=None,
+                    phase_engine=None,
+                    factory_help=None,
+                    reason=reason,
+                )
+                native_dispatch_required_next = True
         else:
             phase_engine = factory_phase_engine_state(selected_card, allow_scaffold_artifacts=False)
             factory_help = build_factory_help(
