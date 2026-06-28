@@ -284,6 +284,79 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(plan["create_task_contract"]["body"]["agent_may_choose_phase"])
         self.assertFalse(plan["human_gate_required"])
 
+    def test_reconciled_blocked_frontier_resumes_existing_task_instead_of_repairing_contract(self) -> None:
+        frontier_task_id = "t_f8canonical"
+        snapshot = {
+            "rows": {
+                "blocked": [
+                    {
+                        "id": frontier_task_id,
+                        "status": "blocked",
+                        "title": "F8 - Product Experience / Capability Pack selection",
+                        "assignee": "factory-orchestrator",
+                        "current_step_key": "F8-capability-and-product-experience-selection",
+                        "body": json.dumps(
+                            {
+                                "packet_type": "factory_deterministic_reconcile_task",
+                                "kanban_workflow_binding": {
+                                    "workflow_template_id": "overkill-vfinal",
+                                    "current_step_key": "F8-capability-and-product-experience-selection",
+                                    "runtime_field_required": True,
+                                },
+                                "blocked_until_reducer_adapter_authorizes_resume_or_rerun": True,
+                            }
+                        ),
+                        "comments": [
+                            {
+                                "body": (
+                                    "FRONTIER_RECONCILIATION_RESULT: this is the single canonical "
+                                    "frontier; resume_or_rerun only through reducer/adapter."
+                                )
+                            }
+                        ],
+                    },
+                    {
+                        "id": "t_oldf7",
+                        "status": "blocked",
+                        "title": "F7 - superseded stale branch",
+                        "current_step_key": "F7-method-contract",
+                        "body": json.dumps({"stale_non_consumable": True}),
+                    },
+                ],
+                "done": [
+                    {
+                        "id": "t_reconcile",
+                        "status": "done",
+                        "title": "F7/F8 deterministic frontier reconciliation",
+                        "completed_at": "2026-06-28T18:00:00Z",
+                        "metadata": json.dumps(
+                            {
+                                "orchestration_result": {
+                                    "frontier_reconciliation_result": "selected_single_canonical_frontier",
+                                    "canonical_frontier_task_id": frontier_task_id,
+                                    "canonical_frontier_status": (
+                                        "blocked_until_reducer_adapter_authorizes_resume_or_rerun"
+                                    ),
+                                    "stale_non_consumable_tasks": ["t_oldf7"],
+                                }
+                            }
+                        ),
+                    }
+                ],
+            }
+        }
+
+        plan = factoryctl.build_board_reconcile_plan(snapshot, board="product-alpha")
+
+        self.assertEqual(factoryctl.validate_board_reconcile_plan(plan), [])
+        self.assertEqual(plan["plan_action"], "resume_canonical_frontier_task")
+        self.assertFalse(plan["create_task_allowed"])
+        self.assertIsNone(plan["create_task_contract"])
+        self.assertTrue(plan["native_dispatch_required_next"])
+        self.assertFalse(plan["human_gate_required"])
+        self.assertEqual(plan["phase_engine"]["computed_phase_id"], "F8")
+        self.assertIn("resume the existing Hermes task", plan["selected_card"]["selection_reason"])
+
     def test_manual_factory_start_card_without_run_graph_repairs_contract(self) -> None:
         snapshot = {
             "rows": {

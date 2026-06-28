@@ -21,7 +21,7 @@ import sysconfig
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PureWindowsPath
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
 
 CODE_ROOT = Path(__file__).resolve().parents[1]
@@ -20470,6 +20470,120 @@ def board_reconcile_task_ref(task: dict[str, Any], *, status: str) -> dict[str, 
     )
 
 
+def _task_raw_id(task: dict[str, Any]) -> str:
+    return str(task.get("id") or task.get("task_id") or task.get("card_id") or "").strip()
+
+
+def _iter_nested_objects(value: Any, *, max_depth: int = 4) -> Iterator[dict[str, Any]]:
+    if max_depth < 0:
+        return
+    if isinstance(value, dict):
+        yield value
+        for item in value.values():
+            yield from _iter_nested_objects(item, max_depth=max_depth - 1)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _iter_nested_objects(item, max_depth=max_depth - 1)
+
+
+def _canonical_frontier_task_id_from_reconciliation(task: dict[str, Any]) -> str:
+    for payload in _task_payload_objects(task):
+        for candidate in _iter_nested_objects(payload):
+            for key in (
+                "canonical_frontier_task_id",
+                "selected_frontier_task_id",
+                "frontier_task_id",
+                "canonical_task_id",
+            ):
+                value = str(candidate.get(key) or "").strip()
+                if value:
+                    return value
+    text = _task_search_text(task)
+    patterns = (
+        r"canonical_frontier_task_id[^a-z0-9_]+([a-z0-9_-]+)",
+        r"selected_frontier_task_id[^a-z0-9_]+([a-z0-9_-]+)",
+        r"frontier_task_id[^a-z0-9_]+([a-z0-9_-]+)",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    return ""
+
+
+def _task_is_safe_canonical_frontier_resume_target(task: dict[str, Any], receipt_task: dict[str, Any]) -> bool:
+    if _task_status(task) != "blocked":
+        return False
+    combined = _task_search_text(task) + "\n" + _task_search_text(receipt_task)
+    if any(
+        marker in combined
+        for marker in (
+            '"human_gate_required": true',
+            "human_gate_required=true",
+            "needs_input",
+            "awaiting felipe",
+            "owner decision required",
+            "decision package delivered",
+        )
+    ):
+        return False
+    return any(
+        marker in combined
+        for marker in (
+            "frontier_reconciliation_result",
+            "canonical_frontier_task_id",
+            "selected_frontier_task_id",
+            "single canonical",
+            "canonical frontier",
+            "resume_or_rerun",
+            "resume or rerun",
+            "reducer_adapter",
+            "reducer/adapter",
+            "adapter authorizes",
+        )
+    )
+
+
+def select_reconciled_canonical_frontier_task(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None, list[str]]:
+    active_by_id: dict[str, tuple[str, dict[str, Any]]] = {}
+    for status, items in rows.items():
+        normalized_status = str(status or "").strip().lower()
+        if normalized_status in TERMINAL_BOARD_STATUSES:
+            continue
+        for task in items:
+            task_id = _task_raw_id(task)
+            if task_id:
+                active_by_id[task_id] = (normalized_status, task)
+
+    done = sorted(
+        enumerate(rows.get("done", [])),
+        key=lambda item: _task_temporal_key(item[1], item[0]),
+        reverse=True,
+    )
+    for _receipt_index, receipt_task in done:
+        frontier_task_id = _canonical_frontier_task_id_from_reconciliation(receipt_task)
+        if not frontier_task_id:
+            continue
+        target = active_by_id.get(frontier_task_id)
+        if target is None:
+            continue
+        status, task = target
+        if not _task_is_safe_canonical_frontier_resume_target(task, receipt_task):
+            continue
+        selected = board_reconcile_task_ref(task, status=status)
+        selected["selection_reason"] = (
+            "terminal frontier reconciliation selected this single canonical task; "
+            "resume the existing Hermes task instead of materializing another board card"
+        )
+        return task, selected, [
+            "terminal frontier reconciliation already selected a single canonical blocked task",
+            "existing canonical frontier must be resumed through Hermes unblock/native dispatch, not replaced",
+        ]
+    return None, None, []
+
+
 def select_canonical_board_card(rows: dict[str, list[dict[str, Any]]]) -> tuple[dict[str, Any] | None, dict[str, Any] | None, list[str]]:
     candidates: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
     for status, items in rows.items():
@@ -21052,6 +21166,9 @@ def build_board_reconcile_plan(
     ) = board_reconcile_ready_dispatch_blockers(rows)
     runtime_contract_blockers, runtime_contract_ref = board_reconcile_runtime_contract_blockers(rows)
     missing_artifact_blockers, missing_artifact_ref = board_reconcile_missing_declared_artifact_blockers(rows)
+    canonical_frontier_task, canonical_frontier_ref, canonical_frontier_reasons = (
+        select_reconciled_canonical_frontier_task(rows)
+    )
     blocked_readback_continuation, blocked_readback_continuation_errors = (
         board_reconcile_terminal_blocked_artifact_readback_continuation(rows)
         if not unfinished
@@ -21094,6 +21211,23 @@ def build_board_reconcile_plan(
             assignee="factory-orchestrator",
         )
         native_dispatch_required_next = False
+    elif canonical_frontier_task is not None:
+        selected_ref = canonical_frontier_ref
+        phase_id = structured_phase_id_from_task(canonical_frontier_task)
+        plan_action = "resume_canonical_frontier_task"
+        reason = (
+            "terminal frontier reconciliation selected a blocked canonical Hermes task; "
+            "resume that existing task instead of materializing another canonical board card"
+        )
+        blocked_reasons.extend(canonical_frontier_reasons)
+        if phase_id:
+            selected_phase_engine = {
+                "computed_phase_id": phase_id,
+                "decision_basis": "terminal frontier reconciliation receipt selected the active canonical task",
+                "human_gate_allowed": False,
+            }
+            phase_engine = selected_phase_engine
+        native_dispatch_required_next = True
     elif runtime_contract_blockers:
         selected_ref = runtime_contract_ref
         plan_action = "repair_board_contract"

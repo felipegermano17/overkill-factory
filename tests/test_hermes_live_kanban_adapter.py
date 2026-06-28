@@ -4446,6 +4446,80 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
 
+    def test_no_idle_resumes_reconciled_canonical_frontier_without_creating_parallel_card(self) -> None:
+        fake = FakeHermes()
+        frontier_task_id = "t_f8canonical"
+        fake.tasks[frontier_task_id] = {
+            "id": frontier_task_id,
+            "status": "blocked",
+            "title": "F8 - Product Experience / Capability Pack selection",
+            "assignee": "factory-orchestrator",
+            "current_step_key": "F8-capability-and-product-experience-selection",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_deterministic_reconcile_task",
+                    "kanban_workflow_binding": {
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F8-capability-and-product-experience-selection",
+                        "runtime_field_required": True,
+                    },
+                    "blocked_until_reducer_adapter_authorizes_resume_or_rerun": True,
+                }
+            ),
+            "comments": [
+                {
+                    "body": (
+                        "FRONTIER_RECONCILIATION_RESULT: single canonical frontier; "
+                        "resume_or_rerun through reducer/adapter."
+                    )
+                }
+            ],
+            "events": [{"type": "blocked", "payload": {"kind": "transient", "reason": "adapter authorizes resume"}}],
+        }
+        fake.tasks["t_oldf7"] = {
+            "id": "t_oldf7",
+            "status": "blocked",
+            "title": "F7 - superseded stale branch",
+            "current_step_key": "F7-method-contract",
+            "body": json.dumps({"stale_non_consumable": True}),
+            "events": [{"type": "blocked"}],
+        }
+        fake.tasks["t_reconcile"] = {
+            "id": "t_reconcile",
+            "status": "done",
+            "title": "F7/F8 deterministic frontier reconciliation",
+            "completed_at": "2026-06-28T18:00:00Z",
+            "metadata": json.dumps(
+                {
+                    "orchestration_result": {
+                        "frontier_reconciliation_result": "selected_single_canonical_frontier",
+                        "canonical_frontier_task_id": frontier_task_id,
+                        "canonical_frontier_status": "blocked_until_reducer_adapter_authorizes_resume_or_rerun",
+                        "stale_non_consumable_tasks": ["t_oldf7"],
+                    }
+                }
+            ),
+            "events": [{"type": "completed"}],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "resume_canonical_frontier_task")
+        self.assertEqual(state["classification"], "canonical_frontier_task_resumed")
+        self.assertFalse(result["blocked"])
+        self.assertFalse(state["human_gate_required"])
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertEqual(fake.tasks[frontier_task_id]["status"], "ready")
+        unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
+        self.assertEqual(len(unblock_calls), 1)
+        self.assertEqual(unblock_calls[0][5], frontier_task_id)
+        self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
+
     def test_no_idle_creates_owner_gate_package_after_product_sot_candidate_done(self) -> None:
         fake = FakeHermes()
         sot_task_id = "t_" + "sotdone1"

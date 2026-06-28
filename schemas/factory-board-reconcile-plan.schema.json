@@ -53,6 +53,7 @@
         "repair_human_gate_packet",
         "request_operator_input",
         "request_human_gate_decision",
+        "resume_canonical_frontier_task",
         "block_invariant_violation"
       ]
     },

@@ -67,6 +67,7 @@ NO_IDLE_REMEDIATION_MARKER = "factory_no_idle_remediation"
 NO_IDLE_REVIEW_REPAIR_MARKER = "factory_no_idle_review_repair"
 NO_IDLE_POST_REVIEW_GATE_MARKER = "factory_no_idle_post_review_gate_package"
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_MARKER = "factory_no_idle_running_result_closeout"
+NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER = "factory_no_idle_canonical_frontier_resume"
 NO_IDLE_RUNNING_RESULT_CLOSEOUT_TIMEOUT_SECONDS = 5 * 60
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_KANBAN_DEFAULT_STEP_KEY = "F1-intake"
@@ -1532,6 +1533,25 @@ def no_idle_parent_map(rows: dict[str, list[dict[str, Any]]]) -> dict[str, list[
             if task_id:
                 parent_map[task_id] = no_idle_parent_refs(item)
     return parent_map
+
+
+def canonical_frontier_resume_target(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any] | None:
+    factoryctl = load_factoryctl()
+    selector = getattr(factoryctl, "select_reconciled_canonical_frontier_task", None)
+    if not callable(selector):
+        return None
+    task, selected_ref, reasons = selector(rows)
+    if not isinstance(task, dict):
+        return None
+    task_id = task_record_id(task)
+    if not task_id:
+        return None
+    return {
+        "task_id": task_id,
+        "task": task,
+        "selected_ref": selected_ref if isinstance(selected_ref, dict) else None,
+        "blocked_reasons": reasons if isinstance(reasons, list) else [],
+    }
 
 
 def blocked_ancestor_refs(
@@ -9620,6 +9640,82 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
                 "dispatch_called_by_this_command": False,
                 "reporting_policy": (
                     "No-idle stopped because the deterministic board reconciler found a phase invariant violation."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
+    if reconcile_plan.get("plan_action") == "resume_canonical_frontier_task":
+        target = canonical_frontier_resume_target(rows)
+        target_task_id = str((target or {}).get("task_id") or "").strip()
+        resumed = False
+        if target_task_id and args.create_remediation:
+            reason = (
+                f"{NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER}; "
+                "terminal frontier reconciliation selected this single canonical Hermes task; "
+                "resume existing task for native dispatch; create_new_card=false; "
+                "human_gate_required=false; dispatch_separate=true"
+            )
+            unblock_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=target_task_id,
+                reason=reason,
+                required_readback_markers=[NO_IDLE_CANONICAL_FRONTIER_RESUME_MARKER],
+                runner=runner,
+            )
+            resumed = True
+        classification = {
+            "status": "dispatch_available" if resumed else "remediation_required",
+            "classification": (
+                "canonical_frontier_task_resumed"
+                if resumed
+                else "canonical_frontier_task_resume_required"
+            ),
+            "blocked": not resumed,
+            "remediation_required": not resumed,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": resumed,
+            "board_reconcile_plan": reconcile_plan,
+            "selected_frontier_task_ref": target_task_id if target_task_id else None,
+            "blocked_reasons": reconcile_plan.get("blocked_reasons") or [],
+            "next_action": (
+                "run native Hermes dispatch after the canonical frontier task was resumed"
+                if resumed
+                else "run no-idle with create-remediation so the adapter resumes the canonical frontier task"
+            ),
+            "state": summarize_no_idle_rows(rows),
+        }
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": not resumed,
+            "no_idle_state": classification,
+            "board_reconcile_plan": reconcile_plan,
+            "artifact_materialization": artifact_materialization,
+            "targeted_remediation_plan": {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "resume_canonical_frontier_task",
+                "board": args.board,
+                "target_task_ref": target_task_id if target_task_id else None,
+                "create_new_card": False,
+                "native_dispatch_required_next": resumed,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            },
+            "remediation_task_id": target_task_id if resumed else None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle consumed a deterministic frontier reconciliation by resuming the "
+                    "existing Hermes task instead of materializing a parallel board card."
                 ),
             },
         }
