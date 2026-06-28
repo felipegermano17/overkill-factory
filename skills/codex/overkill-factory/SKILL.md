@@ -31,6 +31,40 @@ different runtime.
 
 ## Factory Spine
 
+## Mandatory Factory Start
+
+For a new product/project, a manager, bridge, or operator must not create a
+Hermes board or first phase card by hand. A new project only starts through the
+factory start path:
+
+1. Create or point to a sealed `factory_bridge_source_envelope`.
+2. Create a `factory_bridge_start_request` with `project_mode=new_project`.
+3. Run the Hermes adapter:
+
+```bash
+python adapters/hermes/live_kanban_adapter.py materialize-bridge-start \
+  --start-request <factory_bridge_start_request.json> \
+  --source-envelope <factory_bridge_source_envelope.json>
+```
+
+This path creates the fresh Hermes board/card and writes the start-path
+metadata. Direct `hermes kanban boards create`, `hermes kanban create`, or
+agent-authored F1 cards are defects for new products, even when the card text
+looks correct.
+
+After start, verify the runtime state before claiming the factory is active:
+
+- the board was created by `materialize-bridge-start`;
+- the root card metadata says `factory_start_path=true` or equivalent
+  start-path proof;
+- the source envelope and start request refs are present;
+- the next route comes from the phase graph/reconciler, not from prose, memory,
+  title, or agent judgement.
+
+If any of those proofs are missing, stop the product flow and classify it as a
+factory integration defect. Do not continue by having an agent "act like" the
+factory.
+
 ## Operating Mantra
 
 Less mirabolante, more Kanban-native, more Hermes-native, more deterministic
