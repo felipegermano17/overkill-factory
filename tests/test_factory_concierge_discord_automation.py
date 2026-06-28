@@ -401,7 +401,10 @@ class FactoryConciergeDiscordAutomationTest(unittest.TestCase):
                 timeout=1.0,
                 apply=True,
             )
-            with patch.dict(automation.os.environ, {"DISCORD_BOT_TOKEN": "test-token"}), patch.object(
+            with patch.dict(
+                automation.os.environ,
+                {"DISCORD_BOT_TOKEN": "test-token", "DISCORD_GUILD_ID": ""},
+            ), patch.object(
                 automation.bridge, "DiscordApi", return_value=client
             ):
                 receipt = automation.run_automation(args)

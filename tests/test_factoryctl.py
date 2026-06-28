@@ -1301,6 +1301,57 @@ class FactoryCtlTest(unittest.TestCase):
             ),
         )
 
+    def test_real_product_sot_worker_result_rejects_shallow_pass_without_quality_floor(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        result = worker_result("product_sot_result", source_card=card)
+        result["evidence_kind"] = "real"
+        result["reusable_for_product"] = True
+        result["findings_summary"] = "done"
+        result["next_action"] = "continue"
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="product_sot_result",
+            card=card,
+        )
+
+        self.assertIn("product_sot_result reusable PASS requires quality_floor", errors)
+
+    def test_real_product_sot_worker_result_accepts_quality_floor_pass(self) -> None:
+        card = factoryctl.load_json_like(ROOT / "templates" / "vfinal-factory-card.json")
+        result = worker_result("product_sot_result", source_card=card)
+        result["evidence_kind"] = "real"
+        result["reusable_for_product"] = True
+        result["findings_summary"] = "Product SOT covers source traceability, requirement graph, scope boundaries, risks, operations, metrics and open decisions with product-specific evidence."
+        result["next_action"] = "Route the approved Product SOT into full-scope coverage and Method Contract checks."
+        result["quality_floor"] = {
+            "result": "PASS",
+            "anti_generic_checked": True,
+            "source_traceability_checked": True,
+            "requirement_graph_checked": True,
+            "operator_readability_checked": True,
+            "depth_dimensions": [
+                "source_traceability",
+                "scope_boundaries",
+                "requirement_graph",
+                "risks",
+                "operations",
+                "metrics",
+                "open_decisions",
+            ],
+            "rejects_shallow_output": True,
+            "basis": "Quality floor confirms this Product SOT is product-specific and not a generic summary.",
+        }
+
+        errors = factoryctl.validate_worker_result_record(
+            result,
+            expected_field="product_sot_result",
+            card=card,
+        )
+
+        self.assertNotIn("product_sot_result reusable PASS requires quality_floor", errors)
+        self.assertFalse([error for error in errors if error.startswith("quality_floor")], errors)
+
     def test_worker_result_schema_declares_sdlc_feedback_loop_ref(self) -> None:
         schema = json.loads((ROOT / "schemas" / "worker-result.schema.json").read_text(encoding="utf-8"))
 

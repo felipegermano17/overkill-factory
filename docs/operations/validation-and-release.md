@@ -10,6 +10,7 @@ Use this before editing cards, docs or examples:
 ```bash
 factoryctl doctor
 factoryctl run minimal
+python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
 python -m unittest discover -s tests
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check
@@ -148,6 +149,7 @@ For a stronger local pass:
 ```bash
 factoryctl doctor
 factoryctl run minimal
+python scripts/swiss_watch_audit.py --out .tmp/swiss-watch-audit.json --markdown .tmp/swiss-watch-audit.md
 python scripts/factory_battery.py
 python scripts/validate_document_governance.py
 python scripts/generate_factory_reference_docs.py --check

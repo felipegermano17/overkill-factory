@@ -4448,7 +4448,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
     def test_no_idle_resumes_reconciled_canonical_frontier_without_creating_parallel_card(self) -> None:
         fake = FakeHermes()
-        frontier_task_id = "t_f8canonical"
+        frontier_task_id = "fixture-frontier-canonical"
         fake.tasks[frontier_task_id] = {
             "id": frontier_task_id,
             "status": "blocked",
@@ -4476,8 +4476,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             ],
             "events": [{"type": "blocked", "payload": {"kind": "transient", "reason": "adapter authorizes resume"}}],
         }
-        fake.tasks["t_oldf7"] = {
-            "id": "t_oldf7",
+        fake.tasks["fixture-old-f7"] = {
+            "id": "fixture-old-f7",
             "status": "blocked",
             "title": "F7 - superseded stale branch",
             "current_step_key": "F7-method-contract",
@@ -4495,7 +4495,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                         "frontier_reconciliation_result": "selected_single_canonical_frontier",
                         "canonical_frontier_task_id": frontier_task_id,
                         "canonical_frontier_status": "blocked_until_reducer_adapter_authorizes_resume_or_rerun",
-                        "stale_non_consumable_tasks": ["t_oldf7"],
+                        "stale_non_consumable_tasks": ["fixture-old-f7"],
                     }
                 }
             ),

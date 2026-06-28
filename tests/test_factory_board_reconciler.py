@@ -285,7 +285,7 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
         self.assertFalse(plan["human_gate_required"])
 
     def test_reconciled_blocked_frontier_resumes_existing_task_instead_of_repairing_contract(self) -> None:
-        frontier_task_id = "t_f8canonical"
+        frontier_task_id = "fixture-frontier-canonical"
         snapshot = {
             "rows": {
                 "blocked": [
@@ -316,7 +316,7 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
                         ],
                     },
                     {
-                        "id": "t_oldf7",
+                        "id": "fixture-old-f7",
                         "status": "blocked",
                         "title": "F7 - superseded stale branch",
                         "current_step_key": "F7-method-contract",
@@ -337,7 +337,7 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
                                     "canonical_frontier_status": (
                                         "blocked_until_reducer_adapter_authorizes_resume_or_rerun"
                                     ),
-                                    "stale_non_consumable_tasks": ["t_oldf7"],
+                                    "stale_non_consumable_tasks": ["fixture-old-f7"],
                                 }
                             }
                         ),

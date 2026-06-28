@@ -62,7 +62,8 @@ class OpenSourceDocsTest(unittest.TestCase):
         self.assertIn("Hermes Kanban remains the source of truth", readme)
         self.assertIn("Hermes and Receipt Five remain the source of truth", readme)
         self.assertIn("Overkill Factory is a production line for projects built by agents.", readme)
-        self.assertIn('the factory is not "a smart chat."', readme)
+        self.assertIn('the factory is not "a smart chat" and not a', readme)
+        self.assertIn("mini-Hermes", readme)
         self.assertIn(project_release_tag(), readme)
         self.assertIn("Factory V2", readme)
         self.assertIn("docs/architecture/factory-v2-control-plane.md", readme)
@@ -131,7 +132,8 @@ class OpenSourceDocsTest(unittest.TestCase):
             "[English](README.md)",
             "Mapa público:",
             "A Overkill Factory é uma linha de produção para projetos feitos por agentes.",
-            'O ponto mais importante: a fábrica não é "um chat inteligente".',
+            'O ponto mais importante: a fábrica não é "um chat inteligente" e não é um',
+            "mini-Hermes",
             "linha de produção em etapas para trabalho de produto controlado",
             "Hermes Kanban continua sendo a fonte de verdade",
             "Hermes e Receipt Five continuam sendo a fonte de verdade",

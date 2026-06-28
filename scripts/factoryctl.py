@@ -17694,6 +17694,56 @@ def validate_worker_result_record(
     errors.extend(_record_specific_errors(data, evidence_kind))
     if record_type == "product_face_result" and card is not None:
         errors.extend(validate_product_face_result_against_card(data, card))
+    errors.extend(worker_quality_floor_errors(data, evidence_kind=evidence_kind))
+    return errors
+
+
+WORKER_QUALITY_FLOOR_REQUIRED_DIMENSIONS = {
+    "product_sot_result": {
+        "source_traceability",
+        "scope_boundaries",
+        "requirement_graph",
+        "risks",
+        "operations",
+        "metrics",
+        "open_decisions",
+    }
+}
+
+
+def worker_quality_floor_errors(data: dict[str, Any], *, evidence_kind: str) -> list[str]:
+    record_type = str(data.get("record_type") or "").strip()
+    if record_type not in WORKER_QUALITY_FLOOR_REQUIRED_DIMENSIONS:
+        return []
+    if str(data.get("result") or "").strip() != "PASS":
+        return []
+    if evidence_kind != "real" or data.get("reusable_for_product") is not True:
+        return []
+
+    errors: list[str] = []
+    floor = data.get("quality_floor")
+    if not isinstance(floor, dict):
+        return [f"{record_type} reusable PASS requires quality_floor"]
+    if str(floor.get("result") or "").strip() != "PASS":
+        errors.append("quality_floor.result must be PASS")
+    for field in (
+        "anti_generic_checked",
+        "source_traceability_checked",
+        "requirement_graph_checked",
+        "operator_readability_checked",
+        "rejects_shallow_output",
+    ):
+        if floor.get(field) is not True:
+            errors.append(f"quality_floor.{field} must be true")
+    dimensions = set(string_list(floor.get("depth_dimensions")))
+    missing_dimensions = sorted(WORKER_QUALITY_FLOOR_REQUIRED_DIMENSIONS[record_type] - dimensions)
+    if missing_dimensions:
+        errors.append("quality_floor.depth_dimensions missing: " + ", ".join(missing_dimensions))
+    if not _non_empty_text(floor.get("basis")):
+        errors.append("quality_floor.basis is required")
+    summary_words = str(data.get("findings_summary") or "").split()
+    if len(summary_words) < 12:
+        errors.append(f"{record_type}.findings_summary must describe product-specific evidence, not a shallow completion note")
     return errors
 
 
@@ -20557,7 +20607,7 @@ def _task_is_safe_canonical_frontier_resume_target(task: dict[str, Any], receipt
             '"human_gate_required": true',
             "human_gate_required=true",
             "needs_input",
-            "awaiting felipe",
+            "awaiting operator",
             "owner decision required",
             "decision package delivered",
         )
