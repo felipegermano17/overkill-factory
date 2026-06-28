@@ -2751,6 +2751,59 @@ def create_no_idle_remediation_task(
     )
 
 
+def create_factory_package_dependency_remediation_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    workspace: str,
+    assignee: str,
+    classification: dict[str, Any],
+    runner: Runner,
+) -> str:
+    body = no_idle_remediation_body(board=board, classification=classification)
+    body["objective"] = (
+        "Repair factory-owned package/readback or dependency blockers so native Hermes dependencies can resume."
+    )
+    body["targeted_remediation"] = {
+        "plan_action": "repair_factory_owned_package_dependency_blocker",
+        "factory_owned_package_task_refs": classification.get("factory_owned_package_task_refs") or [],
+        "dependency_gated_task_refs": classification.get("dependency_gated_task_refs") or [],
+        "dependency_blocker_task_refs": classification.get("dependency_blocker_task_refs") or [],
+        "create_new_canonical_card": False,
+        "human_gate_required": False,
+        "operator_input_required": False,
+        "repair_task_must_not_be_child_of_blocker_it_repairs": True,
+    }
+    body["allowed_actions"] = [
+        "inspect blocked package/readback tasks and their typed block reasons",
+        "repair missing package fields, readback artifacts, or dependency graph links",
+        "complete or unblock only factory-owned blockers after structured evidence exists",
+        "leave human gates untouched unless a complete decision package already exists",
+    ]
+    body["forbidden_actions"].extend(
+        [
+            "create a new canonical factory card just because a structured phase work card is blocked",
+            "ask the operator to approve an internal package/dependency repair",
+            "make the repair task a child of the blocker it is supposed to repair",
+        ]
+    )
+    digest = idempotency_digest_fragment(contract_digest(body))
+    return create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title="Repair factory package/dependency blockers",
+        body=compact_json_argument(body),
+        assignee=assignee,
+        idempotency_key=f"overkill:no-idle-package-repair:{public_safe_slug(board, fallback='board')}:{digest}",
+        created_by=NO_IDLE_AUTHOR,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
+        current_step_key=FACTORY_KANBAN_DEFAULT_STEP_KEY,
+        runner=runner,
+    )
+
+
 def no_idle_review_repair_assignee(blockers: list[dict[str, Any]], fallback: str) -> str:
     text = " ".join(task_record_text(item) for item in blockers)
     if any(
@@ -9904,7 +9957,51 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
     targeted_remediation_plan: dict[str, Any] | None = None
     if classification.get("remediation_required") and args.create_remediation:
         classification = dict(classification)
-        if classification.get("remediation_strategy") == "create_targeted_review_repair_task":
+        if classification.get("classification") in {
+            "only_factory_owned_package_blockers_seen",
+            "todo_dependency_gated_by_factory_owned_package_blocker",
+            "factory_repair_task_dependency_gated_by_blocker_it_repairs",
+        }:
+            targeted_remediation_plan = {
+                "record_type": "factory_no_idle_targeted_repair_plan",
+                "plan_action": "repair_factory_owned_package_dependency_blocker",
+                "board": args.board,
+                "factory_owned_package_task_refs": classification.get("factory_owned_package_task_refs") or [],
+                "dependency_gated_task_refs": classification.get("dependency_gated_task_refs") or [],
+                "dependency_blocker_task_refs": classification.get("dependency_blocker_task_refs") or [],
+                "assignee": args.assignee,
+                "native_dispatch_required_next": True,
+                "human_gate_required": False,
+                "operator_input_required": False,
+            }
+            remediation_task_id = create_factory_package_dependency_remediation_task(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                workspace=args.workspace,
+                assignee=args.assignee,
+                classification=classification,
+                runner=runner,
+            )
+            task_runtime = remediation_task_runtime_metadata(
+                hermes_bin=args.hermes_bin,
+                board=args.board,
+                task_id=remediation_task_id,
+                runner=runner,
+            )
+            classification["targeted_remediation_plan"] = targeted_remediation_plan
+            classification["remediation_task_ref"] = remediation_task_id
+            classification.update(task_runtime)
+            classification["native_dispatch_required_next"] = bool(
+                remediation_task_id
+                and targeted_remediation_plan.get("native_dispatch_required_next") is True
+                and task_runtime.get("native_dispatch_required_next") is True
+            )
+            classification["classification"] = (
+                "deterministic_factory_package_dependency_repair_task_created"
+                if remediation_task_id and not classification.get("remediation_task_stale")
+                else "factory_package_dependency_repair_task_not_created"
+            )
+        elif classification.get("remediation_strategy") == "create_targeted_review_repair_task":
             blockers = [
                 item for item in rows.get("blocked", [])
                 if is_review_failed_factory_repair_blocker(item)

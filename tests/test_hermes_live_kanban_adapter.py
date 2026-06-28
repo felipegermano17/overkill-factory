@@ -4520,6 +4520,68 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(any(len(call) >= 5 and call[4] == "create" for call in fake.calls))
         self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
+    def test_no_idle_creates_targeted_package_dependency_repair(self) -> None:
+        fake = FakeHermes()
+        blocker_id = "t_packageblock"
+        child_id = "t_childtodo"
+        fake.tasks[blocker_id] = {
+            "id": blocker_id,
+            "status": "blocked",
+            "title": "F8 - Product Face material package missing readback",
+            "assignee": "product-face",
+            "current_step_key": "F8-capability-and-product-experience-selection",
+            "body": json.dumps(
+                {
+                    "packet_type": "factory_phase_work_card",
+                    "phase": "F8_product_face_consumption",
+                    "done_definition": "Produce product_face_result or typed blockers.",
+                    "blocker": "material package missing readback",
+                }
+            ),
+            "events": [
+                {
+                    "kind": "blocked",
+                    "payload": {"kind": "needs_input", "reason": "material package missing readback"},
+                }
+            ],
+        }
+        fake.tasks[child_id] = {
+            "id": child_id,
+            "status": "todo",
+            "title": "F9 - downstream architecture boundary",
+            "current_step_key": "F9-architecture-boundary",
+            "body": json.dumps({"packet_type": "factory_phase_work_card", "phase": "F9"}),
+            "parents": [blocker_id],
+            "events": [{"kind": "created"}],
+        }
+        args = adapter.build_parser().parse_args(
+            ["no-idle", "--board", TEST_BOARD, "--create-remediation", "--workspace", "scratch"]
+        )
+
+        result = adapter.no_idle(args, runner=fake)
+
+        state = result["no_idle_state"]
+        self.assertEqual(
+            state["classification"],
+            "deterministic_factory_package_dependency_repair_task_created",
+        )
+        self.assertTrue(state["native_dispatch_required_next"])
+        self.assertFalse(state["human_gate_required"])
+        create_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "create"]
+        self.assertEqual(len(create_calls), 1)
+        created_task = next(
+            task
+            for task in fake.tasks.values()
+            if task.get("title") == "Repair factory package/dependency blockers"
+        )
+        created_body = json.loads(created_task["body"])
+        self.assertEqual(
+            created_body["targeted_remediation"]["plan_action"],
+            "repair_factory_owned_package_dependency_blocker",
+        )
+        self.assertFalse(created_body["targeted_remediation"]["create_new_canonical_card"])
+        self.assertNotIn("parents", created_task)
+
     def test_no_idle_creates_owner_gate_package_after_product_sot_candidate_done(self) -> None:
         fake = FakeHermes()
         sot_task_id = "t_" + "sotdone1"
@@ -6042,7 +6104,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         state = result["no_idle_state"]
         self.assertEqual(state["status"], "remediation_required")
-        self.assertEqual(state["classification"], "deterministic_board_reconcile_task_created")
+        self.assertEqual(state["classification"], "deterministic_factory_package_dependency_repair_task_created")
         self.assertFalse(state["human_gate_required"])
         self.assertFalse(state["operator_input_required"])
         self.assertIn("factory-owned", state["remediation_reason"])
@@ -7496,7 +7558,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         state = result["no_idle_state"]
         self.assertEqual(state["status"], "remediation_required")
-        self.assertEqual(state["classification"], "deterministic_board_reconcile_task_created")
+        self.assertEqual(state["classification"], "deterministic_factory_package_dependency_repair_task_created")
         self.assertFalse(state["human_gate_required"])
         self.assertTrue(state["remediation_required"])
         self.assertTrue(state["native_dispatch_required_next"])
