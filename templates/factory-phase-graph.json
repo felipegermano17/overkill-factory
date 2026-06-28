@@ -151,8 +151,7 @@
         "schemas/software-development-plan.schema.json",
         "schemas/spec-graph.schema.json",
         "schemas/loop-plan.schema.json",
-        "schemas/product-creation-plan.schema.json",
-        "schemas/decomposition-coverage-review.schema.json"
+        "schemas/product-creation-plan.schema.json"
       ],
       "next_phase_id": "F12"
     },
@@ -162,8 +161,12 @@
       "name": "Autonomy Readiness",
       "kind": "product_phase",
       "frontier": "ready_gate",
-      "entry_contract_refs": ["schemas/decomposition-coverage-review.schema.json"],
-      "exit_contract_refs": ["schemas/product-implementation-readiness.schema.json", "schemas/autonomy-readiness-packet.schema.json"],
+      "entry_contract_refs": ["schemas/product-creation-plan.schema.json"],
+      "exit_contract_refs": [
+        "schemas/decomposition-coverage-review.schema.json",
+        "schemas/product-implementation-readiness.schema.json",
+        "schemas/autonomy-readiness-packet.schema.json"
+      ],
       "next_phase_id": "F13"
     },
     {

@@ -20,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = ROOT / "agents" / "worker-registry.public.json"
 PROFILES_PATH = ROOT / "agents" / "worker-profiles.public.json"
 BINDINGS_PATH = ROOT / "agents" / "hermes-profile-bindings.public.json"
+PROFILE_ALIASES_PATH = ROOT / "agents" / "profile-compatibility-aliases.public.json"
+WORKFLOW_CATALOG_PATH = ROOT / "docs" / "factory-workflow.catalog.json"
 SECURITY_MATRIX_PATH = ROOT / "docs" / "agents" / "security-specialist-matrix.md"
 PROFILE_SMOKE_PATH = ROOT / ".tmp" / "factory-runs" / "hermes-live" / "factory12-agent-profile-smoke.json"
 PROFILE_READINESS_PATH = ROOT / "agents" / "worker-profile-readiness.public.json"
@@ -132,6 +134,25 @@ def load_json(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return data
+
+
+def load_profile_aliases(path: Path = PROFILE_ALIASES_PATH) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    aliases_doc = load_json(path)
+    aliases: dict[str, str] = {}
+    for index, item in enumerate(aliases_doc.get("aliases", [])):
+        if not isinstance(item, dict):
+            continue
+        legacy_id = str(item.get("legacy_id") or "").strip()
+        target_worker_id = str(item.get("target_worker_id") or "").strip()
+        if legacy_id and target_worker_id:
+            aliases[legacy_id] = target_worker_id
+    return aliases
+
+
+def resolve_worker_alias(worker_id: str, aliases: dict[str, str]) -> str:
+    return aliases.get(worker_id, worker_id)
 
 
 def combined_text(value: Any) -> str:
@@ -294,6 +315,88 @@ def validate_readiness_ledger(
     return findings, rows
 
 
+def validate_workflow_catalog_alignment(
+    workers: dict[str, dict[str, Any]],
+    profiles: dict[str, Any],
+    bindings: dict[str, Any],
+    aliases: dict[str, str],
+) -> list[str]:
+    findings: list[str] = []
+    if not WORKFLOW_CATALOG_PATH.exists():
+        return ["docs/factory-workflow.catalog.json is missing"]
+
+    try:
+        workflow = load_json(WORKFLOW_CATALOG_PATH)
+    except (json.JSONDecodeError, ValueError) as exc:
+        return [f"docs/factory-workflow.catalog.json is invalid: {exc}"]
+
+    phases = workflow.get("phases", [])
+    if not isinstance(phases, list):
+        return ["docs/factory-workflow.catalog.json phases must be an array"]
+
+    for alias, target in sorted(aliases.items()):
+        if target not in workers:
+            findings.append(f"{alias}: profile alias target has no registered worker: {target}")
+        if target not in profiles:
+            findings.append(f"{alias}: profile alias target has no worker profile: {target}")
+        if target not in bindings:
+            findings.append(f"{alias}: profile alias target has no Hermes binding: {target}")
+
+    for phase in phases:
+        if not isinstance(phase, dict):
+            findings.append("workflow phase rows must be objects")
+            continue
+        phase_id = str(phase.get("phase_id") or "").strip()
+        if phase_id not in ALLOWED_PHASES:
+            findings.append(f"workflow phase has unknown phase_id {phase_id!r}")
+            continue
+
+        required_workers_raw = phase.get("required_workers", [])
+        if not isinstance(required_workers_raw, list):
+            findings.append(f"{phase_id}: required_workers must be an array")
+            required_workers_raw = []
+        required_workers = [resolve_worker_alias(str(worker_id), aliases) for worker_id in required_workers_raw]
+
+        for raw_worker_id, worker_id in zip(required_workers_raw, required_workers):
+            raw_worker_id = str(raw_worker_id)
+            if worker_id not in workers:
+                findings.append(f"{phase_id}: required worker {raw_worker_id} resolves to missing registry worker {worker_id}")
+                continue
+            if worker_id not in profiles:
+                findings.append(f"{phase_id}: required worker {raw_worker_id} resolves to missing profile {worker_id}")
+                continue
+            if worker_id not in bindings:
+                findings.append(f"{phase_id}: required worker {raw_worker_id} resolves to missing Hermes binding {worker_id}")
+                continue
+
+            registry_phases = set(workers[worker_id].get("phase", []))
+            profile_phases = set(profiles[worker_id].get("activation", {}).get("phases", []))
+            if phase_id not in registry_phases:
+                findings.append(f"{phase_id}: required worker {worker_id} missing registry phase coverage")
+            if phase_id not in profile_phases:
+                findings.append(f"{phase_id}: required worker {worker_id} missing profile activation phase")
+
+        required_artifacts = set(phase.get("required_artifacts", []))
+        worker_set = set(required_workers)
+        if "product_creation_plan" in required_artifacts and "decomposition-planner" not in worker_set:
+            findings.append(f"{phase_id}: product_creation_plan requires decomposition-planner as required worker")
+        if "decomposition_coverage_review" in required_artifacts and "independent-reviewer" not in worker_set:
+            findings.append(f"{phase_id}: decomposition_coverage_review requires independent-reviewer as required worker")
+        if "product_implementation_readiness" in required_artifacts:
+            if "decomposition_coverage_review" not in required_artifacts:
+                findings.append(
+                    f"{phase_id}: product_implementation_readiness must require decomposition_coverage_review in the same phase"
+                )
+            if "factory-orchestrator" not in worker_set:
+                findings.append(f"{phase_id}: product_implementation_readiness requires factory-orchestrator as required worker")
+        if phase_id == "F11" and "decomposition_coverage_review" in required_artifacts:
+            findings.append("F11 must hand off to decomposition_coverage_review; it must not self-require the review it creates inputs for")
+        if phase_id == "F12" and not {"decomposition_coverage_review", "product_implementation_readiness"} <= required_artifacts:
+            findings.append("F12 must be the decomposition coverage and implementation readiness phase")
+
+    return findings
+
+
 def validate(
     *,
     readiness_ledger_path: Path = PROFILE_READINESS_PATH,
@@ -303,6 +406,7 @@ def validate(
     registry = load_json(REGISTRY_PATH)
     profiles_doc = load_json(PROFILES_PATH)
     bindings_doc = load_json(BINDINGS_PATH)
+    aliases = load_profile_aliases()
     smoke_doc_present = PROFILE_SMOKE_PATH.exists()
     smoke_doc = load_json(PROFILE_SMOKE_PATH) if smoke_doc_present else {}
 
@@ -328,6 +432,7 @@ def validate(
     worker_ids = set(workers)
     profile_ids = set(profiles)
     binding_ids = set(bindings)
+    findings.extend(validate_workflow_catalog_alignment(workers, profiles, bindings, aliases))
     readiness_findings, _ = validate_readiness_ledger(
         worker_ids,
         profiles,

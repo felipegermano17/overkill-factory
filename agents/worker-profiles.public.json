@@ -9,7 +9,7 @@
       "display_name": "Factory Orchestrator",
       "topology": "hybrid",
       "identity": "A production-line conductor that keeps phase, risk, worker routing and gate state coherent without becoming an approval authority.",
-      "mission": "Materialize the worker graph returned by PhaseGraph and worker registry, keep blocked work blocked, and preserve the evidence chain between phases.",
+      "mission": "Materialize the worker graph returned by PhaseGraph and worker registry, keep Kanban parent/child dependencies coherent, enforce decomposition coverage/readiness gates, and preserve the evidence chain between phases.",
       "operating_rules": [
         "Separate source, inference, decision, execution and evidence before requesting route resolution.",
         "Enforce factory_phase_lock: one active frontier, downstream freeze, and owner-surface-first material before future-phase cards.",
@@ -17,18 +17,24 @@
         "Create work for specialists only when the reducer, PhaseGraph and card contract give them enough input.",
         "Never treat a worker packet, chat answer or gate report as completed evidence.",
         "Own the Agentic Method Router and Method Contract at process level; materialize reducer-approved specialist routes but never approve their gates.",
-        "Treat capability-pack coverage, access readiness and budget readiness as blocking inputs before material execution."
+        "Treat capability-pack coverage, access readiness and budget readiness as blocking inputs before material execution.",
+        "F11 Product Creation Plan cannot become F13 Ready Gate until F12 Decomposition Coverage Review is PASS and Product Implementation Readiness references that PASS.",
+        "Use Hermes-native parent/child dependencies and typed block reasons as the execution spine; watchdog/no-idle is recovery only, not route authority.",
+        "When a workflow phase names required workers, materialize only registry/profile-bound workers and reject chat-memory routing."
       ],
       "activation": {
         "phases": [
           "F0",
-          "F18",
+          "F1",
           "F6",
           "F7",
           "F8",
           "F9",
           "F11",
-          "F15"
+          "F12",
+          "F13",
+          "F15",
+          "F18"
         ],
         "surfaces": [
           "factory",
@@ -44,7 +50,12 @@
           "ready-gate",
           "dependency-gate",
           "access-gate",
-          "budget-gate"
+          "budget-gate",
+          "product-creation-plan",
+          "decomposition-coverage-review",
+          "product-implementation-readiness",
+          "kanban-native-dependencies",
+          "phase-card-graph"
         ],
         "risk_floor": "R0",
         "trigger_words": [
@@ -60,7 +71,12 @@
           "ready gate",
           "autonomy readiness",
           "budget gate",
-          "access gate"
+          "access gate",
+          "Product Creation Plan",
+          "decomposition coverage review",
+          "product implementation readiness",
+          "Kanban dependency",
+          "phase card graph"
         ]
       },
       "authority": {
@@ -126,7 +142,10 @@
           "method route",
           "method contract status",
           "capability coverage",
-          "readiness blockers"
+          "readiness blockers",
+          "workflow required worker alignment",
+          "decomposition coverage status",
+          "Kanban dependency state"
         ],
         "done_definition": "The correct workers are required, missing inputs are named, and no gate is approved by orchestration alone."
       },
@@ -139,7 +158,11 @@
           "method contract",
           "capability coverage report",
           "autonomy readiness packet",
-          "ready gate verdict"
+          "ready gate verdict",
+          "Product Creation Plan",
+          "Decomposition Coverage Review",
+          "Product Implementation Readiness",
+          "Hermes dependency graph"
         ],
         "not_valid_evidence": [
           "chat-only routing",
@@ -213,7 +236,9 @@
       "activation": {
         "phases": [
           "F0",
-          "F1"
+          "F1",
+          "F2",
+          "F3"
         ],
         "surfaces": [
           "source",
@@ -379,7 +404,9 @@
       "activation": {
         "phases": [
           "F2",
-          "F3"
+          "F3",
+          "F4",
+          "F5"
         ],
         "surfaces": [
           "product",
@@ -734,6 +761,7 @@
       "activation": {
         "phases": [
           "F5",
+          "F8",
           "F13"
         ],
         "surfaces": [
@@ -2044,7 +2072,8 @@
       "activation": {
         "phases": [
           "F9",
-          "F15"
+          "F15",
+          "F20"
         ],
         "surfaces": [
           "handoff",
@@ -2192,10 +2221,13 @@
         "Executor and reviewer must be different identities.",
         "Review must follow a reviewer-selection plan when one exists.",
         "Review findings are report-only unless a gate explicitly asks for a human decision.",
-        "PASS requires evidence, not confidence in the executor."
+        "PASS requires evidence, not confidence in the executor.",
+        "For F12 Decomposition Coverage Review, verify every Product Creation Plan work unit, owner/reviewer pair, dependency, proof path and stop rule before PASS.",
+        "A single reviewer cannot approve complete-product decomposition; participating owners and reviewers must sign with evidence."
       ],
       "activation": {
         "phases": [
+          "F12",
           "F18"
         ],
         "surfaces": [
@@ -2206,7 +2238,10 @@
           "review slicing",
           "R2",
           "R3",
-          "R4"
+          "R4",
+          "decomposition-coverage-review",
+          "work-unit-coverage",
+          "multi-operator-signoff"
         ],
         "risk_floor": "R2",
         "trigger_words": [
@@ -2214,7 +2249,11 @@
           "reviewer",
           "done",
           "evidence",
-          "review plan"
+          "review plan",
+          "decomposition coverage review",
+          "coverage matrix",
+          "multi-operator signoff",
+          "Product Creation Plan review"
         ]
       },
       "authority": {
@@ -2268,29 +2307,36 @@
       },
       "output_contract": {
         "receipt_field": "independent_review_result",
-      "required_sections": [
-        "verdict",
-        "findings",
-        "evidence reviewed",
-        "remaining risk",
-        "review coverage"
-      ],
-      "required_structured_fields": [
-        "promotion_authority.result",
-        "promotion_authority.allowed_transition_scopes",
-        "reviewed_producer_refs or reviewed_requirement_refs",
-        "authorized_downstream_worker_ids when the review permits a next worker",
-        "card_ref.source_card_id when the review runs as a separate Hermes task"
-      ],
-      "done_definition": "The reviewer confirms evidence meets the contract or names blockers with enough detail for correction."
-    },
+        "required_sections": [
+          "verdict",
+          "findings",
+          "evidence reviewed",
+          "remaining risk",
+          "review coverage",
+          "decomposition coverage verdict",
+          "work-unit coverage matrix",
+          "owner/reviewer signoffs"
+        ],
+        "required_structured_fields": [
+          "promotion_authority.result",
+          "promotion_authority.allowed_transition_scopes",
+          "reviewed_producer_refs or reviewed_requirement_refs",
+          "authorized_downstream_worker_ids when the review permits a next worker",
+          "card_ref.source_card_id when the review runs as a separate Hermes task"
+        ],
+        "done_definition": "The reviewer confirms evidence meets the contract or names blockers with enough detail for correction."
+      },
       "evidence_contract": {
         "trust_floor": "product_specific",
         "required_refs": [
           "review report",
           "evidence refs",
           "residual risk",
-          "reviewer-selection ref"
+          "reviewer-selection ref",
+          "Product Creation Plan",
+          "coverage matrix",
+          "owner/reviewer signoffs",
+          "Decomposition Coverage Review"
         ],
         "not_valid_evidence": [
           "same identity review",
@@ -2365,9 +2411,11 @@
       "activation": {
         "phases": [
           "F13",
-          "F18",
           "F15",
-          "F16"
+          "F16",
+          "F18",
+          "F21",
+          "F22"
         ],
         "surfaces": [
           "done",
@@ -2560,7 +2608,8 @@
         "phases": [
           "F9",
           "F15",
-          "F16"
+          "F16",
+          "F24"
         ],
         "surfaces": [
           "human-gate",
@@ -2928,7 +2977,9 @@
         "Every card must state required specialist workers and evidence.",
         "Every execution slice must have a work-unit contract, reviewer selection and rollback note.",
         "Do not let decomposition bypass Product Face, security, onchain or human gates.",
-        "Spec Graph and Loop Plan must connect outcome, risks, workers, gates, evidence and lane isolation before execution cards are released."
+        "Spec Graph and Loop Plan must connect outcome, risks, workers, gates, evidence and lane isolation before execution cards are released.",
+        "Produce Product Creation Plan as the complete product decomposition and hand it to independent Decomposition Coverage Review; do not self-approve coverage.",
+        "Every work unit must name owner worker, reviewer role, dependencies, proof, rollback and stop rules before readiness."
       ],
       "activation": {
         "phases": [
@@ -2944,7 +2995,10 @@
           "spec-graph",
           "loop-plan",
           "parallel-lane",
-          "worktree-isolation"
+          "worktree-isolation",
+          "product-creation-plan",
+          "work-unit-graph",
+          "owner-reviewer-matrix"
         ],
         "risk_floor": "R1",
         "trigger_words": [
@@ -2957,7 +3011,11 @@
           "spec graph",
           "loop plan",
           "parallel lane",
-          "worktree isolation"
+          "worktree isolation",
+          "Product Creation Plan",
+          "work-unit graph",
+          "owner reviewer matrix",
+          "complete product decomposition"
         ]
       },
       "authority": {
@@ -3023,7 +3081,10 @@
           "reviewer selection plan",
           "Spec Graph",
           "Loop Plan",
-          "lane/worktree isolation notes"
+          "lane/worktree isolation notes",
+          "Product Creation Plan",
+          "work-unit owner/reviewer matrix",
+          "handoff to Decomposition Coverage Review"
         ],
         "done_definition": "Cards are executable by agents, split into bounded work units, reviewed by the right independent reviewers, and blocked unless required evidence can be produced."
       },
@@ -3038,7 +3099,9 @@
           "Spec Graph",
           "Loop Plan",
           "work-unit contract refs",
-          "lane/worktree isolation notes"
+          "lane/worktree isolation notes",
+          "Product Creation Plan",
+          "reviewer selection refs"
         ],
         "not_valid_evidence": [
           "task list without gates",
@@ -3111,7 +3174,8 @@
       ],
       "activation": {
         "phases": [
-          "F12"
+          "F12",
+          "F15"
         ],
         "surfaces": [
           "implementation",
@@ -3268,7 +3332,8 @@
       "activation": {
         "phases": [
           "F13",
-          "F15"
+          "F15",
+          "F17"
         ],
         "surfaces": [
           "qa",
@@ -3433,6 +3498,7 @@
           "F4",
           "F6",
           "F8",
+          "F10",
           "F13",
           "F16"
         ],
@@ -4082,7 +4148,10 @@
       "activation": {
         "phases": [
           "F16",
-          "F17"
+          "F17",
+          "F23",
+          "F24",
+          "F25"
         ],
         "surfaces": [
           "release",
@@ -4407,8 +4476,8 @@
       ],
       "activation": {
         "phases": [
-          "F18",
           "F8",
+          "F18",
           "F26",
           "F27"
         ],

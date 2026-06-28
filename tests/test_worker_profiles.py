@@ -61,6 +61,29 @@ class WorkerProfilesTest(unittest.TestCase):
     def test_worker_profiles_are_complete_and_bound_to_hermes(self) -> None:
         self.assertEqual(profile_validator.validate(), [])
 
+    def test_workflow_required_workers_must_have_phase_coverage(self) -> None:
+        registry = json.loads((ROOT / "agents" / "worker-registry.public.json").read_text(encoding="utf-8"))
+        profiles = json.loads((ROOT / "agents" / "worker-profiles.public.json").read_text(encoding="utf-8"))
+        bindings = json.loads((ROOT / "agents" / "hermes-profile-bindings.public.json").read_text(encoding="utf-8"))
+        aliases = profile_validator.load_profile_aliases()
+
+        workers = {worker["worker_id"]: worker for worker in registry["workers"]}
+        worker = workers["independent-reviewer"]
+        worker["phase"] = [phase for phase in worker["phase"] if phase != "F12"]
+        profiles["profiles"]["independent-reviewer"]["activation"]["phases"] = [
+            phase for phase in profiles["profiles"]["independent-reviewer"]["activation"]["phases"] if phase != "F12"
+        ]
+
+        findings = profile_validator.validate_workflow_catalog_alignment(
+            workers,
+            profiles["profiles"],
+            bindings["bindings"],
+            aliases,
+        )
+
+        self.assertIn("F12: required worker independent-reviewer missing registry phase coverage", findings)
+        self.assertIn("F12: required worker independent-reviewer missing profile activation phase", findings)
+
     def test_missing_worker_profile_readiness_ledger_blocks_profile_readiness_claim(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             missing_path = Path(tempdir) / "missing-readiness.json"

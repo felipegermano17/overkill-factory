@@ -55,11 +55,11 @@ needed.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `factory-orchestrator` | hybrid | F0-F18 | Maintains phase, risk, routing, Method Contract, capability coverage, readiness and blockers, then emits semantic transition/recovery intent for Hermes. It does not own Kanban runtime state or approve product, security or R3/R4 gates. |
-| `source-ledger-worker` | open | F0-F1 | Separates source, inference, decision, conflict, stale material and gap before any SOT claim is promoted. |
+| `factory-orchestrator` | hybrid | F0/F1/F6-F9/F11-F13/F15/F18 | Maintains phase, risk, routing, Method Contract, capability coverage, Kanban-native dependencies, decomposition readiness and blockers, then emits semantic transition/recovery intent for Hermes. It does not own Kanban runtime state or approve product, security or R3/R4 gates. |
+| `source-ledger-worker` | open | F0-F3 | Separates source, inference, decision, conflict, stale material and gap before any SOT claim is promoted. |
 | `product-sot-planner` | open | F2-F5 | Owns Outcome/Discovery and turns source ledger plus answers into a Product SOT candidate plus owner-readable review packet. Candidate is not approval. |
-| `product-architect` | open | F10 | Creates architecture candidate, boundaries, tradeoffs, trust boundaries and risk map only after owner-readable Product SOT material and Method Contract exist. |
-| `product-face` | hybrid | F5/F13 | Defines and validates Product Experience Plan, Product Face packet, screens, states, mobile, wallet UX, accessibility, performance and visual evidence. |
+| `product-architect` | open | F4-F6 | Creates architecture candidate, boundaries, tradeoffs, trust boundaries and risk map only after owner-readable Product SOT material and Method Contract exist. |
+| `product-face` | hybrid | F5/F8/F13 | Defines and validates Product Experience Plan, Product Face packet, screens, states, mobile, wallet UX, accessibility, performance and visual evidence. |
 | `docs-os-worker` | closed/hybrid | F10 | Converts approved architecture into specs, ADRs, diagrams, contracts and evidence paths. |
 | `decomposition-planner` | closed | F11 | Produces Spec Graph, Loop Plan, work packages and Hermes card graph with risk, runtime, reviewer, lane/worktree and gate contracts. |
 
@@ -81,18 +81,18 @@ the card.
 | `test-automation-builder` | hybrid | F12-F13/F18 | Turns acceptance criteria into repeatable unit, integration, E2E, visual or eval proof. |
 | `infra-devops-builder` | hybrid | F12/F16 | Builds scoped CI/CD, runtime, environment and deploy wiring with smoke and rollback evidence. |
 | `agent-runtime-builder` | hybrid | F12/F18 | Builds factory/Hermes adapter, profile, skill, MCP and worker-routing changes with profile validation. |
-| `implementation-worker` | hybrid fallback | F12 | Executes or routes only generic/legacy implementation work that no specialist builder owns. |
+| `implementation-worker` | hybrid fallback | F12/F15 | Executes or routes only generic/legacy implementation work that no specialist builder owns. |
 
 ## Proof, Review And Handoff
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `qa-verification-worker` | closed/hybrid | F13-F15 | Runs tests, screenshots, logs, regressions and evidence checks. |
-| `independent-reviewer` | hybrid | F15 | Reviews another worker's output. Executor and reviewer must differ. |
-| `evidence-reconciler` | deterministic | F13-F16 | Resolves current worker results from evidence freshness rules, records superseded stale evidence and blocks Closure Summary, Completion Audit, Receipt Five or done when closure evidence is invalid. |
+| `qa-verification-worker` | closed/hybrid | F13/F15/F17 | Runs tests, screenshots, logs, regressions and evidence checks. |
+| `independent-reviewer` | hybrid | F12/F18 | Reviews decomposition coverage and another worker's output. Executor and reviewer must differ, and a single reviewer cannot approve complete-product decomposition alone. |
+| `evidence-reconciler` | deterministic | F13/F15/F16/F18/F21/F22 | Resolves current worker results from evidence freshness rules, records superseded stale evidence and blocks Closure Summary, Completion Audit, Receipt Five or done when closure evidence is invalid. |
 | `autoreview-gate` | closed | F15 | Runs structured pre-landing code review. It finds issues but does not replace independent review. |
 | `remote-proof-runner` | closed | F13-F16 | Uses Crabbox/Testbox/container fallback for heavy or clean-environment proof with TTL, cost and cleanup evidence. |
-| `handoff-packer` | closed | F9-F15 | Creates portable handoff packets for worker transfer, pause, context compaction or phase change; it must not promote future-phase work while `factory_phase_lock` freezes downstream. |
+| `handoff-packer` | closed | F9/F15/F20 | Creates portable handoff packets for worker transfer, pause, context compaction or phase change; it must not promote future-phase work while `factory_phase_lock` freezes downstream. |
 
 ## Security And Onchain
 
@@ -112,8 +112,8 @@ the card.
 
 | Worker | Mode | Enters | What it does |
 |---|---|---|---|
-| `human-gate-clerk` | human-support | F9/F15/F16 | Prepares and records real human decisions for authority, access, budget, waiver, material risk and release. It must deliver the operator decision package before asking for a decision, obey `factory_phase_lock`, and must not ask approval for planning-only continuation, source resolution, method routing, specialist routing or downstream work that is still frozen. |
-| `release-ops-worker` | closed/hybrid | F16-F17 | Handles release channel, production operations, promotion packet, smoke, canary, rollback readiness and monitoring. |
+| `human-gate-clerk` | human-support | F9/F15/F16/F24 | Prepares and records real human decisions for authority, access, budget, waiver, material risk and release. It must deliver the operator decision package before asking for a decision, obey `factory_phase_lock`, and must not ask approval for planning-only continuation, source resolution, method routing, specialist routing or downstream work that is still frozen. |
+| `release-ops-worker` | closed/hybrid | F16/F17/F23-F25 | Handles release channel, production operations, promotion packet, smoke, canary, rollback readiness and monitoring. |
 | `public-safety-gate` | closed | F16-F17 | Blocks public artifacts containing private paths, internal names, raw source extraction or private links. |
 | `memory-steward` | hybrid | F0/F1/F18 | Treats memory as a risk surface with source, trust tier, freshness and poisoning controls. |
 | `skill-eval-distiller` | hybrid | F8/F18/F26/F27 | Owns Agent Quality, Learnback and Factory Maturity audits, then turns repeated success/failure into compact skills, evals, templates, checklists or pack/worker changes. |

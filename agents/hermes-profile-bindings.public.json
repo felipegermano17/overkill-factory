@@ -539,7 +539,8 @@
         ]
       },
       "routing_moments": [
-        "security-scan-plan"
+        "security-scan-plan",
+        "implementation"
       ],
       "profile_manifest_ref": "docs/agents/hermes-profile-manifest.md",
       "profile_description_ref": "agents/worker-profiles.public.json",
