@@ -36,7 +36,7 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 226 | `schemas/*.json` |
+| JSON schemas | 227 | `schemas/*.json` |
 | Templates | 140 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
@@ -237,6 +237,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/devnet-read-proof.schema.json`
 - `schemas/discord-control-tower-mapping.schema.json`
 - `schemas/discord-control-tower-owner-setup.schema.json`
+- `schemas/discovery-brief.schema.json`
 - `schemas/evidence-graph.schema.json`
 - `schemas/execution-learnback-record.schema.json`
 - `schemas/factory-automation-run-record.schema.json`
@@ -583,6 +584,7 @@ The generated reference checks the command surface by scanning `scripts/factoryc
 - `factoryctl method-routing`
 - `factoryctl operating-system-scorecard`
 - `factoryctl validate-agent-skill-boundaries`
+- `factoryctl validate-phase-sources`
 - `factoryctl validate-product-creation-plan passes`
 - `factoryctl validate-reference-superiority`
 - `factoryctl validate-v2-runtime-contracts`

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/discovery-brief.schema.json",
+  "title": "Overkill Factory Discovery Brief",
+  "type": "object",
+  "required": [
+    "$schema",
+    "record_type",
+    "brief_id",
+    "created_at",
+    "factory_method_version",
+    "source_ledger_ref",
+    "operator_understanding_confirmation_ref",
+    "known_facts",
+    "open_gaps",
+    "conflict_resolutions",
+    "bounded_human_questions",
+    "blocked_decisions",
+    "handoff",
+    "public_private_boundary",
+    "acceptance"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://overkill-factory.dev/schemas/discovery-brief.schema.json"
+    },
+    "record_type": {
+      "const": "discovery_brief"
+    },
+    "brief_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 10
+    },
+    "factory_method_version": {
+      "const": "OVERKILL_VFINAL"
+    },
+    "source_ledger_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "operator_understanding_confirmation_ref": {
+      "type": "string",
+      "minLength": 3
+    },
+    "known_facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim", "source_refs"],
+        "properties": {
+          "claim": { "type": "string", "minLength": 3 },
+          "source_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "open_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gap", "owner", "impact"],
+        "properties": {
+          "gap": { "type": "string", "minLength": 3 },
+          "owner": { "type": "string", "minLength": 2 },
+          "impact": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "conflict_resolutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["conflict", "resolution_state"],
+        "properties": {
+          "conflict": { "type": "string", "minLength": 3 },
+          "resolution_state": {
+            "enum": ["resolved", "blocked_with_owner", "deferred_with_owner", "not_applicable"]
+          },
+          "owner": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "bounded_human_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question", "why_human", "decision_scope"],
+        "properties": {
+          "question": { "type": "string", "minLength": 3 },
+          "why_human": { "type": "string", "minLength": 3 },
+          "decision_scope": { "type": "string", "minLength": 3 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "blocked_decisions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "handoff": {
+      "type": "object",
+      "required": ["factory_owned_next_step", "next_artifact", "execution_allowed"],
+      "properties": {
+        "factory_owned_next_step": { "const": true },
+        "next_artifact": { "const": "outcome_contract" },
+        "execution_allowed": { "const": false }
+      },
+      "additionalProperties": true
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": ["public_safe_refs_only", "raw_private_evidence_embedded"],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false }
+      },
+      "additionalProperties": true
+    },
+    "acceptance": {
+      "type": "object",
+      "required": ["discovery_brief_created", "product_sot_created", "execution_allowed"],
+      "properties": {
+        "discovery_brief_created": { "const": true },
+        "product_sot_created": { "const": false },
+        "execution_allowed": { "const": false }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

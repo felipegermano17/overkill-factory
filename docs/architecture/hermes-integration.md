@@ -84,6 +84,15 @@ bounded expander cards. No-idle is the integrity auditor that notices when the
 graph is missing, stale or inconsistent; it is not the normal source of new
 factory route authority.
 
+Phase progress must also use native links. A factory phase card may expand into
+work-unit cards when the method says that work is known. If those work units are
+required before the following phase, they must be linked as Hermes parents of
+the following phase card before that following phase can promote to `ready`.
+Late-discovered work is allowed only when it is attached to the Kanban graph
+while the downstream phase is still in the native dependency-wait state. A
+downstream phase that is already `ready`, `running` or `done` before its
+required parent work is attached is a graph invariant violation.
+
 The no-idle layer must not ask for a human gate when the board reconciler says
 `phase_engine.human_gate_allowed=false`; it must create or repair the next
 factory-owned artifact instead.

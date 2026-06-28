@@ -335,6 +335,78 @@ class UserFacingAutonomyHelpRouterTest(unittest.TestCase):
         self.assertEqual(payload["phase_engine"]["next_required_artifact"], "operator_briefing_package")
         self.assertEqual(payload["user_decision_required"], [])
 
+    def test_phase_engine_walks_source_resolution_before_product_sot_without_agent_shortcuts(self) -> None:
+        card = {
+            "factory_method_version": "OVERKILL_VFINAL",
+            "phase": "F5",
+            "surfaces": ["planning"],
+            "complete_product_required": True,
+            "universal_signal_intake_ref": "external:sanitized-intake",
+        }
+
+        state = factoryctl.factory_phase_engine_state(card)
+        self.assertEqual(state["computed_phase_id"], "F2")
+        self.assertEqual(state["next_required_artifact"], "product_source_ledger")
+
+        card["product_source_ledger_ref"] = "external:sanitized-source-ledger"
+        state = factoryctl.factory_phase_engine_state(card)
+        self.assertEqual(state["computed_phase_id"], "F2")
+        self.assertEqual(state["next_required_artifact"], "operator_understanding_confirmation")
+
+        card["operator_understanding_confirmation_ref"] = "external:sanitized-understanding"
+        state = factoryctl.factory_phase_engine_state(card)
+        self.assertEqual(state["computed_phase_id"], "F3")
+        self.assertEqual(state["next_required_artifact"], "discovery_brief")
+
+        card["discovery_brief_ref"] = "external:sanitized-discovery"
+        state = factoryctl.factory_phase_engine_state(card)
+        self.assertEqual(state["computed_phase_id"], "F4")
+        self.assertEqual(state["next_required_artifact"], "outcome_contract")
+
+        card["outcome_contract_ref"] = "external:sanitized-outcome"
+        state = factoryctl.factory_phase_engine_state(card)
+        self.assertEqual(state["computed_phase_id"], "F5")
+        self.assertEqual(state["next_required_artifact"], "product_sot")
+
+    def test_phase_engine_does_not_skip_pack_selection_or_authority_before_architecture(self) -> None:
+        card = load_vfinal_card()
+        card["phase"] = "F10"
+        card["surfaces"] = ["architecture"]
+        card.pop("capability_pack_contract", None)
+
+        state = factoryctl.factory_phase_engine_state(card)
+        self.assertEqual(state["computed_phase_id"], "F8")
+        self.assertEqual(state["computed_frontier"], "pack_selection")
+        self.assertEqual(state["next_required_artifact"], "capability_pack_contract")
+
+        card = load_vfinal_card()
+        card["phase"] = "F10"
+        card["surfaces"] = ["architecture"]
+        card.pop("access_capability", None)
+
+        state = factoryctl.factory_phase_engine_state(card)
+        self.assertEqual(state["computed_phase_id"], "F9")
+        self.assertEqual(state["computed_frontier"], "authority")
+        self.assertEqual(state["next_required_artifact"], "access_capability")
+
+    def test_workflow_step_key_uses_concrete_phase_before_frontier_fallback(self) -> None:
+        self.assertEqual(
+            factoryctl.factory_workflow_step_key({"computed_phase_id": "F4", "computed_frontier": "product_sot"}),
+            "F4-product-outcome-and-discovery",
+        )
+        self.assertEqual(
+            factoryctl.factory_workflow_step_key({"computed_phase_id": "F8", "computed_frontier": "pack_selection"}),
+            "F8-pack-and-product-experience-selection",
+        )
+        self.assertEqual(
+            factoryctl.factory_workflow_step_key({"computed_phase_id": "F9", "computed_frontier": "authority"}),
+            "F9-risk-and-authority-gates",
+        )
+        self.assertEqual(
+            factoryctl.factory_workflow_step_key({"computed_phase_id": "F10", "computed_frontier": "architecture"}),
+            "F10-security-architecture",
+        )
+
     def test_repo_cleanup_is_frozen_until_ready_gate(self) -> None:
         card = load_vfinal_card()
         card["phase"] = "F11"

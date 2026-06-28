@@ -183,6 +183,13 @@ class FactoryBoardReconcilerTest(unittest.TestCase):
             "canonical_scope_source": "external:operator:product-sot",
             "required_artifacts": ["architecture_packet", "product_creation_plan"],
         }
+        card["capability_pack_contract_ref"] = "external:sanitized-capability-pack-contract"
+        card["product_experience_plan_ref"] = "external:sanitized-product-experience-plan"
+        card["product_face_packet_ref"] = "external:sanitized-product-face-packet"
+        card["project_design_system_ref"] = "external:sanitized-project-design-system"
+        card["professional_design_process_ref"] = "external:sanitized-professional-design-process"
+        card["access_capability_ref"] = "external:sanitized-access-capability"
+        card["budget_contract_ref"] = "external:sanitized-budget-contract"
         snapshot = {
             "rows": {
                 "todo": [

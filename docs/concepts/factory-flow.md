@@ -13,6 +13,11 @@ interpretation: cards, dependencies, typed blocks, artifacts and native Hermes
 dispatch should carry the run. Watchdogs and no-idle checks are guardrails for
 integrity and recovery, not the main way the factory discovers what work exists.
 
+In simple terms: the factory lays the rails, Hermes moves the train. When a
+phase creates required work, that work becomes native Kanban dependency, not a
+private note inside an agent. The next phase waits until the required parent work
+is actually done.
+
 ## Core Objects
 
 | Object | Meaning |

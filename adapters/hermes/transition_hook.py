@@ -28,6 +28,7 @@ HOOK_SCHEMA = "https://overkill-factory.dev/schemas/hermes-transition-hook.schem
 ACTION_CREATE_WORKERS = "allow_and_create_worker_tasks"
 ACTION_BLOCK_TRANSITION = "block_transition"
 WORKER_LEDGER_HINT = "worker-ledger"
+HERMES_TYPED_BLOCK_KINDS = {"dependency", "needs_input", "capability", "transient"}
 
 
 def load_factoryctl() -> Any:
@@ -75,10 +76,22 @@ def is_blocking_action(action: str) -> bool:
     return action.startswith("block")
 
 
+def structured_block_kind(reason: Any) -> str | None:
+    if not isinstance(reason, dict):
+        return None
+    for field in ("block_kind", "typed_block_kind", "hermes_block_kind"):
+        candidate = str(reason.get(field) or "").strip()
+        if candidate in HERMES_TYPED_BLOCK_KINDS:
+            return candidate
+    return None
+
+
 def block_kind_for_transition_reasons(blocked_reasons: list[Any]) -> str:
+    for reason in blocked_reasons:
+        candidate = structured_block_kind(reason)
+        if candidate:
+            return candidate
     text = " ".join(str(reason or "").lower() for reason in blocked_reasons)
-    if any(marker in text for marker in ("human gate", "human_gate", "decision package", "operator input", "needs_input")):
-        return "needs_input"
     if any(marker in text for marker in ("profile", "capability", "provider", "credential")):
         return "capability"
     if "dependency" in text or "parent" in text:

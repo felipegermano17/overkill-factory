@@ -42,6 +42,13 @@ and native dispatch over sidecar loops, chat memory, agent interpretation or
 workers inventing the next phase. No-idle and watchdog code are integrity
 auditors and recovery paths, not the normal route authority.
 
+Treat Hermes `parent -> child` links as execution dependencies, not visual
+nesting. When a phase creates required work-unit cards, attach those cards as
+native parents of the downstream phase/closure card before that downstream phase
+can promote. If required work is discovered late, link it while the downstream
+phase is still `todo`; if the downstream phase is already `ready`, `running` or
+`done`, that is a factory invariant violation.
+
 Use the V2 control plane as the default factory spine:
 
 ```text

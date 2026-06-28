@@ -102,8 +102,6 @@ cd /path/to/overkill-factory
 python scripts/factory_no_idle_watchdog.py \
   --all-nonempty-boards \
   --exclude-board old-product-board-if-not-archived \
-  --create-remediation \
-  --dispatch \
   --emit-events
 SH
 chmod +x "$HERMES_PROFILE_HOME/scripts/overkill_factory_no_idle_watchdog.sh"
@@ -115,9 +113,27 @@ hermes --profile "$FACTORY_GATEWAY_PROFILE" cron create "every 5m" \
 ```
 
 This gives the factory a heartbeat without giving the watchdog authority over
-the product. It may create safe remediation work and trigger native dispatch. It
-must not close human gates, execute factory work as the manager, or approve
-production, mainnet, funds, signing, secrets, billing or destructive actions.
+the product. A global `--all-nonempty-boards` scan is audit-only by default: it
+can report drift, repeated blockers and missing operator packages, but it should
+not mutate every discovered board just because it exists.
+
+For one active product board that should keep moving, add a second explicit
+cron job scoped to that board:
+
+```bash
+python scripts/factory_no_idle_watchdog.py \
+  --board active-product-board-slug \
+  --create-remediation \
+  --dispatch \
+  --emit-events
+```
+
+That explicit-board job may create safe remediation work and trigger native
+Hermes dispatch. It must not close human gates, execute factory work as the
+manager, or approve production, mainnet, funds, signing, secrets, billing or
+destructive actions. If an operator intentionally wants a discovered-board scan
+to mutate boards, they must add `--allow-discovered-board-mutation`; this is not
+the default because abandoned boards and active boards need different authority.
 When unfinished work is silent, the adapter first runs the deterministic
 `factoryctl reconcile-board` plan. That plan either points to native dispatch,
 repairs the canonical factory card, creates the next required artifact from the

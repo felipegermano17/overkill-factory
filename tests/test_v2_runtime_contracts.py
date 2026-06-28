@@ -100,6 +100,32 @@ class V2RuntimeContractsTests(unittest.TestCase):
 
         self.assertTrue(any("missing-specialist-provider" in error for error in errors), errors)
 
+    def test_agent_alias_target_must_exist_in_worker_registry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp = Path(tmp_dir)
+            copy_contract_root(tmp)
+            aliases_path = tmp / "agents" / "profile-compatibility-aliases.public.json"
+            aliases = json.loads(aliases_path.read_text(encoding="utf-8"))
+            aliases["aliases"][0]["target_worker_id"] = "missing-worker"
+            aliases_path.write_text(json.dumps(aliases, indent=2) + "\n", encoding="utf-8")
+
+            errors = agent_skill_boundaries.validate_boundaries(tmp)
+
+        self.assertTrue(any("missing-worker" in error and "worker registry" in error for error in errors), errors)
+
+    def test_authority_sounding_worker_id_requires_cannot_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp = Path(tmp_dir)
+            copy_contract_root(tmp)
+            registry_path = tmp / "agents" / "worker-registry.public.json"
+            registry = json.loads(registry_path.read_text(encoding="utf-8"))
+            registry["workers"][0]["authority_max"] = "routes the factory"
+            registry_path.write_text(json.dumps(registry, indent=2) + "\n", encoding="utf-8")
+
+            errors = agent_skill_boundaries.validate_boundaries(tmp)
+
+        self.assertTrue(any("authority-suggesting worker id" in error for error in errors), errors)
+
     def test_reference_superiority_fixture_must_block_regression(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             fixture_path = Path(tmp_dir) / "reference-derived-negative-fixtures.json"

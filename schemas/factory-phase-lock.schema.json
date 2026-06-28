@@ -20,15 +20,23 @@
     "active_phase_id": { "type": "string", "pattern": "^F[0-9]+[A-Z]?$" },
     "active_frontier": {
       "enum": [
+        "pre_start",
         "intake",
         "source_resolution",
         "product_sot",
         "method_contract",
+        "pack_selection",
+        "authority",
         "architecture",
         "ready_gate",
         "execution",
+        "verification",
+        "review",
+        "completion",
         "release",
-        "completion"
+        "operations",
+        "learnback",
+        "factory_maturity"
       ]
     },
     "single_active_frontier": { "const": true },

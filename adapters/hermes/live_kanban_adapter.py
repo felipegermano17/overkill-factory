@@ -78,153 +78,52 @@ FACTORY_RUNTIME_MANTRA = (
     "more deterministic and easier to trust"
 )
 FACTORY_RUN_GRAPH_NO_IDLE_ROLE = "integrity_auditor_not_route_authority"
-FACTORY_RUN_GRAPH_BACKBONE = (
-    {
-        "node_id": "F2-source-ledger",
-        "phase_id": "F2",
-        "step_key": "F2-source-ledger",
-        "title": "F2 - Source Ledger",
-        "assignee": "factory-orchestrator",
-        "required_output": "source_ledger",
-        "activation_rule": "F1-intake done",
-    },
-    {
-        "node_id": "F3-understanding-alignment",
-        "phase_id": "F3",
-        "step_key": "F3-understanding",
-        "title": "F3 - Understanding Alignment",
-        "assignee": "factory-orchestrator",
-        "required_output": "operator_understanding_confirmation",
-        "activation_rule": "F2-source-ledger done",
-    },
-    {
-        "node_id": "F4-outcome-contract",
-        "phase_id": "F4",
-        "step_key": "F4-outcome",
-        "title": "F4 - Outcome Contract",
-        "assignee": "factory-orchestrator",
-        "required_output": "outcome_contract",
-        "activation_rule": "F3-understanding-alignment done",
-    },
-    {
-        "node_id": "F5-product-sot",
-        "phase_id": "F5",
-        "step_key": "F5-product-sot",
-        "title": "F5 - Product SOT",
-        "assignee": "factory-orchestrator",
-        "required_output": "product_sot_candidate",
-        "activation_rule": "F4-outcome-contract done",
-    },
-    {
-        "node_id": "F6-full-scope-coverage",
-        "phase_id": "F6",
-        "step_key": "F6-full-scope-coverage",
-        "title": "F6 - Full-Scope Coverage",
-        "assignee": "factory-orchestrator",
-        "required_output": "full_scope_coverage_matrix",
-        "activation_rule": "F5-product-sot done",
-    },
-    {
-        "node_id": "F7-method-contract",
-        "phase_id": "F7",
-        "step_key": "F7-method-contract",
-        "title": "F7 - Method Contract",
-        "assignee": "factory-orchestrator",
-        "required_output": "method_contract",
-        "activation_rule": "F6-full-scope-coverage done",
-    },
-    {
-        "node_id": "F8-capability-and-product-experience",
-        "phase_id": "F8",
-        "step_key": "F8-capability-product-experience",
-        "title": "F8 - Capability and Product Experience Selection",
-        "assignee": "factory-orchestrator",
-        "required_output": "capability_and_product_experience_selection",
-        "activation_rule": "F7-method-contract done",
-    },
-    {
-        "node_id": "F9-architecture-boundary",
-        "phase_id": "F9",
-        "step_key": "F9-architecture-boundary",
-        "title": "F9 - Architecture Boundary",
-        "assignee": "factory-orchestrator",
-        "required_output": "architecture_boundary_packet",
-        "activation_rule": "F8-capability-and-product-experience done",
-    },
-    {
-        "node_id": "F10-security-access-budget",
-        "phase_id": "F10",
-        "step_key": "F10-security-access-budget",
-        "title": "F10 - Security, Access and Budget",
-        "assignee": "factory-orchestrator",
-        "required_output": "security_access_budget_packet",
-        "activation_rule": "F9-architecture-boundary done",
-    },
-    {
-        "node_id": "F11-product-creation-plan",
-        "phase_id": "F11",
-        "step_key": "F11-product-creation-plan",
-        "title": "F11 - Product Creation Plan",
-        "assignee": "factory-orchestrator",
-        "required_output": "product_creation_plan",
-        "activation_rule": "F10-security-access-budget done",
-    },
-    {
-        "node_id": "F12-work-units",
-        "phase_id": "F12",
-        "step_key": "F12-work-units",
-        "title": "F12 - Work Units and Packets",
-        "assignee": "factory-orchestrator",
-        "required_output": "ready_work_unit_materialization_plan",
-        "activation_rule": "F11-product-creation-plan done",
-    },
-    {
-        "node_id": "F13-execution-expander",
-        "phase_id": "F13",
-        "step_key": "F13-execution",
-        "title": "F13 - Execution Expander",
-        "assignee": "factory-orchestrator",
-        "required_output": "bounded_execution_cards",
-        "activation_rule": "F12-work-units done",
-        "node_kind": "bounded_expander",
-    },
-    {
-        "node_id": "F15-verification-review",
-        "phase_id": "F15",
-        "step_key": "F15-verification-review",
-        "title": "F15 - Verification and Review",
-        "assignee": "factory-orchestrator",
-        "required_output": "verification_review_packet",
-        "activation_rule": "F13-execution-expander done",
-    },
-    {
-        "node_id": "F21-receipt-five",
-        "phase_id": "F21",
-        "step_key": "F21-receipt-five",
-        "title": "F21 - Receipt Five",
-        "assignee": "factory-orchestrator",
-        "required_output": "receipt_five",
-        "activation_rule": "F15-verification-review done",
-    },
-    {
-        "node_id": "F24-release-or-block",
-        "phase_id": "F24",
-        "step_key": "F24-release-or-block",
-        "title": "F24 - Release or Block",
-        "assignee": "factory-orchestrator",
-        "required_output": "release_or_block_packet",
-        "activation_rule": "F21-receipt-five done",
-    },
-    {
-        "node_id": "F26-learnback",
-        "phase_id": "F26",
-        "step_key": "F26-learnback",
-        "title": "F26 - Learnback",
-        "assignee": "factory-orchestrator",
-        "required_output": "learnback_packet",
-        "activation_rule": "F24-release-or-block done",
-    },
-)
+FACTORY_WORKFLOW_CATALOG_PATH = ROOT / "docs" / "factory-workflow.catalog.json"
+FACTORY_RUN_GRAPH_DEFAULT_ASSIGNEE = "factory-orchestrator"
+
+
+def slugify_phase_node(value: Any) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", str(value or "").strip().lower()).strip("-")
+    return slug or "phase"
+
+
+def load_factory_run_graph_backbone_from_catalog(path: Path = FACTORY_WORKFLOW_CATALOG_PATH) -> tuple[dict[str, Any], ...]:
+    catalog = json.loads(path.read_text(encoding="utf-8"))
+    phases = catalog.get("phases")
+    if not isinstance(phases, list) or not phases:
+        raise RuntimeError(f"Factory workflow catalog has no phases: {path}")
+
+    nodes: list[dict[str, Any]] = []
+    previous_node_id = "F1-intake"
+    for phase in phases:
+        if not isinstance(phase, dict):
+            continue
+        phase_id = str(phase.get("phase_id") or "").strip()
+        if phase_id in {"F0", "F1"}:
+            continue
+        phase_name = str(phase.get("phase_name") or phase_id).strip()
+        node_id = f"{phase_id}-{slugify_phase_node(phase_name)}"
+        required_artifacts = phase.get("required_artifacts") if isinstance(phase.get("required_artifacts"), list) else []
+        required_workers = phase.get("required_workers") if isinstance(phase.get("required_workers"), list) else []
+        required_output = str(required_artifacts[0] if required_artifacts else f"{phase_id.lower()}_phase_output").strip()
+        assignee = str(required_workers[0] if required_workers else FACTORY_RUN_GRAPH_DEFAULT_ASSIGNEE).strip()
+        node = {
+            "node_id": node_id,
+            "phase_id": phase_id,
+            "step_key": node_id,
+            "title": f"{phase_id} - {phase_name}",
+            "assignee": assignee or FACTORY_RUN_GRAPH_DEFAULT_ASSIGNEE,
+            "required_output": required_output,
+            "activation_rule": f"{previous_node_id} done",
+        }
+        if phase_id == "F15":
+            node["node_kind"] = "bounded_expander"
+        nodes.append(node)
+        previous_node_id = node_id
+    return tuple(nodes)
+
+
+FACTORY_RUN_GRAPH_BACKBONE = load_factory_run_graph_backbone_from_catalog()
 COMPLETION_ARTIFACT_PROJECTION_MARKER = "completion_artifact_projection"
 KANBAN_ARTIFACT_REF_PREFIXES = ("kanban-artifact:", "external:kanban-artifact:", "kanban-attachment:")
 PRIVATE_HERMES_RUNTIME_TOKEN = "/srv/" + "hermes"
@@ -4070,6 +3969,7 @@ def create_task(
     blocked: bool,
     workflow_template_id: str | None = None,
     current_step_key: str | None = None,
+    parent_task_ids: list[str] | None = None,
     runner: Runner = default_runner,
 ) -> str:
     ensure_non_empty_body(body)
@@ -4104,8 +4004,12 @@ def create_task(
         created_by,
         "--workspace",
         workspace_arg,
-        "--json",
     )
+    for parent_task_id in parent_task_ids or []:
+        parent_ref = str(parent_task_id or "").strip()
+        if parent_ref:
+            args.extend(["--parent", parent_ref])
+    args.append("--json")
     task_id = parse_task_id_or_find_idempotent(
         output=run_checked(args, runner).stdout,
         hermes_bin=hermes_bin,
@@ -4119,6 +4023,56 @@ def create_task(
         workflow_template_id=workflow_template_id,
         current_step_key=current_step_key,
     )
+    if parent_task_ids:
+        readback = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+        parent_refs = {str(item).strip() for item in parent_task_ids if str(item or "").strip()}
+        persisted_refs = set(task_readback_parents(readback))
+        missing_refs = sorted(parent_refs - persisted_refs)
+        if missing_refs:
+            raise RuntimeError(
+                f"Hermes parent dependency edge did not persist for task {task_id}: {', '.join(missing_refs)}"
+            )
+    return task_id
+
+
+def create_native_dependency_wait_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    title: str,
+    body: str,
+    assignee: str,
+    parent_task_id: str,
+    idempotency_key: str,
+    created_by: str,
+    workspace: str,
+    workflow_template_id: str | None = None,
+    current_step_key: str | None = None,
+    runner: Runner = default_runner,
+) -> str:
+    task_id = create_task(
+        hermes_bin=hermes_bin,
+        board=board,
+        title=title,
+        body=body,
+        assignee=assignee,
+        idempotency_key=idempotency_key,
+        created_by=created_by,
+        workspace=workspace,
+        blocked=False,
+        workflow_template_id=workflow_template_id,
+        current_step_key=current_step_key,
+        parent_task_ids=[parent_task_id],
+        runner=runner,
+    )
+    readback = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+    status = task_readback_status(readback)
+    if status not in {"todo", "ready", "running", "done"}:
+        raise RuntimeError(f"Hermes native dependency task {task_id} has unexpected status {status!r}")
+    if status != "todo":
+        ensure_no_pre_dispatch_activity(readback, task_id=task_id)
+    if parent_task_id not in task_readback_parents(readback):
+        raise RuntimeError(f"Hermes native dependency task {task_id} lost parent {parent_task_id}")
     return task_id
 
 
@@ -4322,8 +4276,8 @@ def factory_run_graph_node_body(
         "local_state_authority": False,
         "route_authority": graph["route_authority"],
         "agent_may_choose_phase": False,
-        "block_kind": "dependency",
-        "dependency_semantics": "do_not_page_human; wait for parent card completion or deterministic reducer release",
+        "dependency_mechanism": "hermes_task_links_parent_child",
+        "dependency_semantics": "native Hermes todo dependency wait; dispatcher promotes to ready when parent is done; never page human",
         "no_idle_role": graph["no_idle_role"],
         "operating_mantra": graph["operating_mantra"],
     }
@@ -4352,7 +4306,7 @@ def materialize_factory_run_graph(
     for node in graph["nodes"][1:]:
         node_id = str(node["node_id"])
         body = factory_run_graph_node_body(graph=graph, node=node, parent_node_id=previous_node_id)
-        task_id = create_blocked_task_before_assignment(
+        task_id = create_native_dependency_wait_task(
             hermes_bin=hermes_bin,
             board=board,
             title=str(node["title"]),
@@ -4364,20 +4318,9 @@ def materialize_factory_run_graph(
             ),
             created_by="overkill-factory",
             workspace=workspace,
-            blocked_reason=(
-                f"factory_run_graph dependency hold: {node_id} waits for {previous_node_id}; "
-                "this is not a human gate."
-            ),
-            block_kind="dependency",
+            parent_task_id=previous_task_id,
             workflow_template_id=FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID,
             current_step_key=str(node["step_key"]),
-            runner=runner,
-        )
-        link_task_dependency(
-            hermes_bin=hermes_bin,
-            board=board,
-            parent_task_id=previous_task_id,
-            child_task_id=task_id,
             runner=runner,
         )
         task_ids[node_id] = task_id
@@ -4587,7 +4530,8 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
             "bridge_mutated_hermes": False,
             "factory_start_path_mutated_hermes": not args.dry_run,
             "factory_run_graph_materialized": bool(factory_run_graph_task_ids) or bool(args.dry_run),
-            "factory_run_graph_future_cards_blocked_by_dependency": True,
+            "factory_run_graph_future_cards_native_dependency_wait": True,
+            "factory_run_graph_dependency_mechanism": "hermes_create_parent_task_links",
         },
         "start_release": {
             "held": hold_start,
@@ -4822,6 +4766,117 @@ def create_ready_work_unit_task(
     return task_id
 
 
+def phase_id_from_step_key(step_key: Any) -> str:
+    text = str(step_key or "").strip()
+    if not text or "-" not in text:
+        return text
+    return text.split("-", 1)[0]
+
+
+def next_backbone_phase_id(phase_id: str) -> str | None:
+    phase_ids = [str(node.get("phase_id") or "").strip() for node in FACTORY_RUN_GRAPH_BACKBONE]
+    phase_ids = [item for item in phase_ids if item]
+    try:
+        index = phase_ids.index(str(phase_id or "").strip())
+    except ValueError:
+        return None
+    if index + 1 >= len(phase_ids):
+        return None
+    return phase_ids[index + 1]
+
+
+def find_factory_run_graph_phase_task(
+    *,
+    hermes_bin: str,
+    board: str,
+    phase_id: str,
+    runner: Runner = default_runner,
+) -> tuple[str, str] | None:
+    target_phase_id = str(phase_id or "").strip()
+    if not target_phase_id:
+        return None
+    for status in ("todo", "ready", "blocked", "running", "done"):
+        for record in list_tasks_by_status(hermes_bin=hermes_bin, board=board, status=status, runner=runner):
+            task_id = str(record.get("task_id") or record.get("id") or "").strip()
+            if not task_id:
+                continue
+            body = task_body_json_object(record)
+            payload: dict[str, Any] | None = None
+            if body.get("packet_type") != FACTORY_RUN_GRAPH_NODE_PACKET_TYPE:
+                payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+                body = parse_json_object(task_readback_body(payload))
+            if body.get("packet_type") != FACTORY_RUN_GRAPH_NODE_PACKET_TYPE:
+                continue
+            if str(body.get("phase_id") or "").strip() != target_phase_id:
+                continue
+            if payload is None:
+                payload = show_task(hermes_bin=hermes_bin, board=board, task_id=task_id, runner=runner)
+            return task_id, task_readback_status(payload) or status
+    return None
+
+
+def link_ready_work_units_to_next_phase_closure(
+    *,
+    hermes_bin: str,
+    board: str,
+    plan_tasks: list[dict[str, Any]],
+    ready_work_unit_task_ids: dict[str, str],
+    runner: Runner = default_runner,
+) -> dict[str, Any]:
+    phase_parent_task_ids: dict[str, list[str]] = {}
+    for task in plan_tasks:
+        work_unit_id = str(task.get("work_unit_id") or "").strip()
+        task_id = ready_work_unit_task_ids.get(work_unit_id)
+        if not work_unit_id or not task_id:
+            continue
+        phase_id = phase_id_from_step_key(task.get("current_step_key"))
+        next_phase_id = next_backbone_phase_id(phase_id)
+        if not next_phase_id:
+            continue
+        phase_parent_task_ids.setdefault(next_phase_id, []).append(task_id)
+
+    linked: dict[str, list[str]] = {}
+    skipped: dict[str, str] = {}
+    for next_phase_id, parent_task_ids in sorted(phase_parent_task_ids.items()):
+        next_phase_task = find_factory_run_graph_phase_task(
+            hermes_bin=hermes_bin,
+            board=board,
+            phase_id=next_phase_id,
+            runner=runner,
+        )
+        if next_phase_task is None:
+            skipped[next_phase_id] = "next phase backbone card not present on this board"
+            continue
+        next_phase_task_id, next_phase_status = next_phase_task
+        if next_phase_status != "todo":
+            raise RuntimeError(
+                f"next phase {next_phase_id} is already {next_phase_status}; cannot attach newly materialized work-unit closure dependencies"
+            )
+        next_phase_payload = show_task(
+            hermes_bin=hermes_bin,
+            board=board,
+            task_id=next_phase_task_id,
+            runner=runner,
+        )
+        existing_parents = set(task_readback_parents(next_phase_payload))
+        for parent_task_id in parent_task_ids:
+            if parent_task_id in existing_parents:
+                continue
+            link_task_dependency(
+                hermes_bin=hermes_bin,
+                board=board,
+                parent_task_id=parent_task_id,
+                child_task_id=next_phase_task_id,
+                runner=runner,
+            )
+            linked.setdefault(next_phase_id, []).append(parent_task_id)
+    return {
+        "strategy": "native_hermes_phase_closure_dependencies",
+        "linked_parent_task_ids_by_next_phase": linked,
+        "skipped_next_phase_ids": skipped,
+    }
+
+
 def materialize_ready_work_units(args: argparse.Namespace, runner: Runner = default_runner) -> dict[str, Any]:
     plan = load_ready_work_unit_materialization_plan(args.plan.resolve())
     board = str(args.board or plan.get("board") or "").strip()
@@ -4869,9 +4924,8 @@ def materialize_ready_work_units(args: argparse.Namespace, runner: Runner = defa
 
     ready_work_unit_task_ids: dict[str, str] = {}
     packet_task_ids: dict[str, str] = {}
-    for task in plan.get("tasks", []):
-        if not isinstance(task, dict):
-            continue
+    plan_tasks = [task for task in plan.get("tasks", []) if isinstance(task, dict)]
+    for task in plan_tasks:
         task_id = create_ready_work_unit_task(
             hermes_bin=args.hermes_bin,
             board=board,
@@ -4886,6 +4940,13 @@ def materialize_ready_work_units(args: argparse.Namespace, runner: Runner = defa
             ready_work_unit_task_ids[work_unit_id] = task_id
         if packet_id:
             packet_task_ids[packet_id] = task_id
+    phase_closure_links = link_ready_work_units_to_next_phase_closure(
+        hermes_bin=args.hermes_bin,
+        board=board,
+        plan_tasks=plan_tasks,
+        ready_work_unit_task_ids=ready_work_unit_task_ids,
+        runner=runner,
+    )
 
     envelope = {
         "$schema": LIVE_ADAPTER_SCHEMA,
@@ -4896,9 +4957,11 @@ def materialize_ready_work_units(args: argparse.Namespace, runner: Runner = defa
         "materialization_plan_id": plan.get("plan_id"),
         "ready_work_unit_task_ids": ready_work_unit_task_ids,
         "packet_task_ids": packet_task_ids,
+        "phase_closure_dependency_links": phase_closure_links,
         "runtime_gate": {
             **(plan.get("runtime_gate") if isinstance(plan.get("runtime_gate"), dict) else {}),
             "blocked_event_verified_task_ids": ready_work_unit_task_ids,
+            "phase_closure_dependencies_attached": bool(phase_closure_links["linked_parent_task_ids_by_next_phase"]),
             "dispatch_allowed_by_this_step": False,
             "live_hermes_mutated": True,
             "runtime_authority": "hermes_kanban",
@@ -9055,6 +9118,44 @@ def no_idle(args: argparse.Namespace, runner: Runner = default_runner) -> dict[s
         for status in ("ready", "running", "todo", "blocked", "triage", "done")
     }
     rows = enrich_no_idle_rows(hermes_bin=args.hermes_bin, board=args.board, rows=rows, runner=runner)
+    initial_reconcile_plan = build_board_reconcile_plan_from_rows(board=args.board, rows=rows)
+    if initial_reconcile_plan.get("plan_action") == "block_invariant_violation":
+        classification = {
+            "status": "blocked",
+            "classification": "factory_phase_invariant_violation",
+            "blocked": True,
+            "remediation_required": False,
+            "human_gate_required": False,
+            "operator_input_required": False,
+            "native_dispatch_required_next": False,
+            "next_action": "repair the Kanban invariant violation before no-idle may close out, materialize or remediate work",
+            "state": summarize_no_idle_rows(rows),
+        }
+        envelope = {
+            "$schema": LIVE_ADAPTER_SCHEMA,
+            "mode": "no-idle",
+            "board": args.board,
+            "blocked": True,
+            "no_idle_state": classification,
+            "board_reconcile_plan": initial_reconcile_plan,
+            "artifact_materialization": [],
+            "targeted_remediation_plan": None,
+            "remediation_task_id": None,
+            "hook": {
+                "runtime_authority": "hermes_kanban",
+                "local_state_authority": False,
+                "no_shadow_dispatcher": True,
+                "dispatch_called_by_this_command": False,
+                "reporting_policy": (
+                    "No-idle is an integrity auditor first. It refuses to mutate Hermes while "
+                    "the board reconciler reports a deterministic phase/dependency invariant violation."
+                ),
+            },
+        }
+        public_envelope = sanitize_public_refs(envelope)
+        if args.out:
+            write_json(args.out, public_envelope)
+        return public_envelope
     artifact_materialization: list[dict[str, Any]] = []
     running_closeout_candidates = running_result_closeout_candidates(rows)
     if running_closeout_candidates:

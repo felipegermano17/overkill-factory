@@ -230,6 +230,66 @@ class FactoryV2KernelTests(unittest.TestCase):
             0,
         )
 
+    def test_phase_sources_stay_synchronized_with_runtime_frontiers(self) -> None:
+        graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
+        catalog = json.loads((ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
+        plan = json.loads((ROOT / "templates" / "factory-workflow-compiled-plan.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            kernel.validate_phase_sources_sync(
+                phase_graph=graph,
+                workflow_catalog=catalog,
+                compiled_plan=plan,
+                frontier_order=factoryctl.FACTORY_PHASE_ENGINE_FRONTIER_ORDER,
+                phase_by_frontier=factoryctl.FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER,
+                step_key_by_frontier=factoryctl.FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER,
+            ),
+            [],
+        )
+        self.assertEqual(factoryctl.main_with_args_for_test(["validate-phase-sources"]), 0)
+
+    def test_phase_source_sync_rejects_missing_canonical_frontier_mapping(self) -> None:
+        graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
+        catalog = json.loads((ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
+        plan = json.loads((ROOT / "templates" / "factory-workflow-compiled-plan.json").read_text(encoding="utf-8"))
+        frontier_order = [
+            frontier for frontier in factoryctl.FACTORY_PHASE_ENGINE_FRONTIER_ORDER if frontier != "pack_selection"
+        ]
+
+        errors = kernel.validate_phase_sources_sync(
+            phase_graph=graph,
+            workflow_catalog=catalog,
+            compiled_plan=plan,
+            frontier_order=frontier_order,
+            phase_by_frontier=factoryctl.FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER,
+            step_key_by_frontier=factoryctl.FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER,
+        )
+
+        self.assertTrue(any("frontier_order" in error and "pack_selection" in error for error in errors), errors)
+
+    def test_phase_source_sync_rejects_required_artifact_schema_drift(self) -> None:
+        graph = json.loads((ROOT / "templates" / "factory-phase-graph.json").read_text(encoding="utf-8"))
+        catalog = json.loads((ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
+        plan = json.loads((ROOT / "templates" / "factory-workflow-compiled-plan.json").read_text(encoding="utf-8"))
+        for phase in catalog["phases"]:
+            if phase["phase_id"] == "F3":
+                phase["related_schema_refs"] = ["schemas/outcome-contract.schema.json"]
+        for phase in graph["product_phases"]:
+            if phase["phase_id"] == "F3":
+                phase["exit_contract_refs"] = ["schemas/outcome-contract.schema.json"]
+
+        errors = kernel.validate_phase_sources_sync(
+            phase_graph=graph,
+            workflow_catalog=catalog,
+            compiled_plan=plan,
+            frontier_order=factoryctl.FACTORY_PHASE_ENGINE_FRONTIER_ORDER,
+            phase_by_frontier=factoryctl.FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER,
+            step_key_by_frontier=factoryctl.FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER,
+        )
+
+        self.assertTrue(any("F3.related_schema_refs" in error and "discovery-brief" in error for error in errors), errors)
+        self.assertTrue(any("F3.exit_contract_refs" in error and "discovery-brief" in error for error in errors), errors)
+
     def test_canonical_compiled_workflow_template_is_not_stub(self) -> None:
         plan = json.loads((ROOT / "templates" / "factory-workflow-compiled-plan.json").read_text(encoding="utf-8"))
 

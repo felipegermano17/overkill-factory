@@ -340,6 +340,158 @@ def validate_factory_phase_graph(graph: dict[str, Any], at: str = "factory_phase
     return errors
 
 
+def _phase_identity_from_graph(graph: dict[str, Any]) -> list[dict[str, Any]]:
+    phases = [phase for phase in graph.get("product_phases", []) if isinstance(phase, dict)]
+    return [
+        {
+            "phase_id": str(phase.get("phase_id") or ""),
+            "phase_name": str(phase.get("name") or ""),
+            "frontier": str(phase.get("frontier") or ""),
+            "next_phase_id": phase.get("next_phase_id"),
+        }
+        for phase in phases
+    ]
+
+
+def _phase_identity_from_catalog(catalog: dict[str, Any]) -> list[dict[str, Any]]:
+    phases = [phase for phase in catalog.get("phases", []) if isinstance(phase, dict)]
+    return [
+        {
+            "phase_id": str(phase.get("phase_id") or ""),
+            "phase_name": str(phase.get("phase_name") or ""),
+            "next_phase_id": (
+                str(phases[index + 1].get("phase_id"))
+                if index + 1 < len(phases) and isinstance(phases[index + 1], dict)
+                else None
+            ),
+        }
+        for index, phase in enumerate(phases)
+    ]
+
+
+def _phase_identity_from_compiled_plan(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    phases = [phase for phase in plan.get("phases", []) if isinstance(phase, dict)]
+    return [
+        {
+            "phase_id": str(phase.get("phase_id") or ""),
+            "phase_name": str(phase.get("phase_name") or ""),
+            "next_phase_id": phase.get("next_phase_id"),
+        }
+        for phase in phases
+    ]
+
+
+def _artifact_schema_ref(artifact: str) -> str | None:
+    normalized = str(artifact or "").strip()
+    if not normalized:
+        return None
+    candidate = ROOT / "schemas" / f"{normalized.replace('_', '-')}.schema.json"
+    if not candidate.exists():
+        return None
+    return f"schemas/{candidate.name}"
+
+
+def _catalog_output_artifact_names(phase: dict[str, Any]) -> set[str]:
+    names: set[str] = set()
+    for location in _as_list(phase.get("output_locations")):
+        text = str(location or "").strip()
+        if not text.startswith("card."):
+            continue
+        field = text.removeprefix("card.")
+        if field.endswith("_ref"):
+            field = field[: -len("_ref")]
+        if field:
+            names.add(field)
+    return names
+
+
+def validate_phase_sources_sync(
+    *,
+    phase_graph: dict[str, Any],
+    workflow_catalog: dict[str, Any],
+    compiled_plan: dict[str, Any],
+    frontier_order: list[str] | tuple[str, ...],
+    phase_by_frontier: dict[str, str],
+    step_key_by_frontier: dict[str, str],
+    at: str = "phase_sources",
+) -> list[str]:
+    """Validate that every public phase surface derives from one phase graph.
+
+    The full F0-F27 graph is canonical. Runtime reducers may group phases into
+    frontiers, but those frontiers must be declared and validated rather than
+    living as an implicit subset in factoryctl.
+    """
+    errors: list[str] = []
+    errors.extend(validate_factory_phase_graph(phase_graph, f"{at}.phase_graph"))
+    errors.extend(validate_factory_workflow_compiled_plan(compiled_plan, f"{at}.compiled_plan"))
+
+    graph_identity = _phase_identity_from_graph(phase_graph)
+    catalog_identity = _phase_identity_from_catalog(workflow_catalog)
+    compiled_identity = _phase_identity_from_compiled_plan(compiled_plan)
+
+    graph_pairs = [(item["phase_id"], item["phase_name"], item["next_phase_id"]) for item in graph_identity]
+    catalog_pairs = [(item["phase_id"], item["phase_name"], item["next_phase_id"]) for item in catalog_identity]
+    compiled_pairs = [(item["phase_id"], item["phase_name"], item["next_phase_id"]) for item in compiled_identity]
+
+    if catalog_pairs != graph_pairs:
+        errors.append(f"{at}.workflow_catalog: phase ids/names/next links must match factory-phase-graph")
+    if compiled_pairs != graph_pairs:
+        errors.append(f"{at}.compiled_plan: phase ids/names/next links must match factory-phase-graph")
+
+    graph_by_phase = {
+        str(phase.get("phase_id") or ""): phase
+        for phase in phase_graph.get("product_phases", [])
+        if isinstance(phase, dict)
+    }
+    for phase in workflow_catalog.get("phases", []):
+        if not isinstance(phase, dict):
+            continue
+        phase_id = str(phase.get("phase_id") or "").strip()
+        related_schema_refs = {str(ref) for ref in _as_list(phase.get("related_schema_refs"))}
+        required_artifacts = [str(item) for item in _as_list(phase.get("required_artifacts"))]
+        output_artifacts = _catalog_output_artifact_names(phase)
+        graph_phase = graph_by_phase.get(phase_id)
+        exit_contract_refs = set(_as_list(graph_phase.get("exit_contract_refs"))) if isinstance(graph_phase, dict) else set()
+        for artifact in required_artifacts:
+            schema_ref = _artifact_schema_ref(artifact)
+            if not schema_ref:
+                continue
+            if schema_ref not in related_schema_refs:
+                errors.append(
+                    f"{at}.workflow_catalog.{phase_id}.related_schema_refs: missing {schema_ref} for required artifact {artifact}"
+                )
+            if artifact in output_artifacts and schema_ref not in exit_contract_refs:
+                errors.append(
+                    f"{at}.phase_graph.{phase_id}.exit_contract_refs: missing {schema_ref} for output artifact {artifact}"
+                )
+
+    graph_frontiers = [item["frontier"] for item in graph_identity if item["frontier"]]
+    graph_frontier_set = set(graph_frontiers)
+    frontier_order_set = set(frontier_order)
+    missing_from_order = sorted(graph_frontier_set - frontier_order_set)
+    if missing_from_order:
+        errors.append(f"{at}.frontier_order: missing canonical frontiers {', '.join(missing_from_order)}")
+
+    missing_phase_mapping = sorted(frontier for frontier in graph_frontier_set if frontier not in phase_by_frontier)
+    if missing_phase_mapping:
+        errors.append(f"{at}.phase_by_frontier: missing canonical frontiers {', '.join(missing_phase_mapping)}")
+
+    missing_step_mapping = sorted(frontier for frontier in graph_frontier_set if frontier not in step_key_by_frontier)
+    if missing_step_mapping:
+        errors.append(f"{at}.step_key_by_frontier: missing canonical frontiers {', '.join(missing_step_mapping)}")
+
+    graph_phase_ids = {item["phase_id"] for item in graph_identity}
+    for frontier, phase_id in phase_by_frontier.items():
+        if frontier in graph_frontier_set and phase_id not in graph_phase_ids:
+            errors.append(f"{at}.phase_by_frontier.{frontier}: unknown phase {phase_id}")
+
+    for frontier, step_key in step_key_by_frontier.items():
+        if frontier in graph_frontier_set and not str(step_key).startswith(str(phase_by_frontier.get(frontier, "")) + "-"):
+            errors.append(f"{at}.step_key_by_frontier.{frontier}: step key must start with mapped phase id")
+
+    return errors
+
+
 def validate_factory_run(run: dict[str, Any], at: str = "factory_run") -> list[str]:
     errors = _schema_errors("factory-run.schema.json", run, at)
 

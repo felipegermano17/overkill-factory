@@ -362,6 +362,7 @@ def process_board(
     hermes_bin: str,
     create_remediation: bool,
     dispatch: bool,
+    mutations_suppressed: bool,
     max_dispatch: int,
     workspace: str,
     assignee: str,
@@ -390,6 +391,11 @@ def process_board(
             runner=runner,
         )
     signature = no_idle_signature(no_idle_result, dispatch_result)
+    if mutations_suppressed:
+        signature["mutation_suppressed"] = True
+        signature["mutation_suppressed_reason"] = (
+            "all-nonempty discovered boards are audit-only unless --allow-discovered-board-mutation is set"
+        )
     previous = state.setdefault("boards", {}).get(board)
     state["boards"][board] = signature
     if previous == signature:
@@ -439,6 +445,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hermes-bin", default="hermes")
     parser.add_argument("--create-remediation", action="store_true")
     parser.add_argument("--dispatch", action="store_true", help="Call native Hermes dispatch when no-idle says it is next.")
+    parser.add_argument(
+        "--allow-discovered-board-mutation",
+        action="store_true",
+        help=(
+            "Allow --all-nonempty-boards to create remediation or dispatch. "
+            "Without this, discovered boards are audit-only; explicitly named --board entries may still mutate."
+        ),
+    )
     parser.add_argument("--max-dispatch", type=int, default=1)
     parser.add_argument("--workspace", default="scratch")
     parser.add_argument("--assignee", default="factory-orchestrator")
@@ -450,7 +464,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None, *, runner: Runner = default_runner) -> int:
     args = build_parser().parse_args(argv)
-    boards = list(dict.fromkeys(args.board))
+    explicit_boards = list(dict.fromkeys(args.board))
+    boards = list(explicit_boards)
+    discovered: list[str] = []
     if args.all_nonempty_boards:
         discovered = discover_boards(
             hermes_bin=args.hermes_bin,
@@ -462,12 +478,18 @@ def main(argv: list[str] | None = None, *, runner: Runner = default_runner) -> i
         return 0
     state = load_state(args.state_file)
     messages: list[str] = []
+    explicit_board_set = set(explicit_boards)
+    discovered_board_set = set(discovered)
     for board in boards:
+        discovered_only = board in discovered_board_set and board not in explicit_board_set
+        mutations_allowed = (not discovered_only) or args.allow_discovered_board_mutation
+        mutation_requested = args.create_remediation or args.dispatch
         message = process_board(
             board=board,
             hermes_bin=args.hermes_bin,
-            create_remediation=args.create_remediation,
-            dispatch=args.dispatch,
+            create_remediation=args.create_remediation and mutations_allowed,
+            dispatch=args.dispatch and mutations_allowed,
+            mutations_suppressed=bool(discovered_only and mutation_requested and not mutations_allowed),
             max_dispatch=args.max_dispatch,
             workspace=args.workspace,
             assignee=args.assignee,

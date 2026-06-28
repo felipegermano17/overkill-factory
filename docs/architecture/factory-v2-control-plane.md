@@ -88,6 +88,27 @@ Repeated same-cause blocks use Hermes `block_loop_detected` after recurrence
 limit 2. The factory treats that as deterministic triage/repair, not as another
 round of the same block and not as an operator approval question.
 
+## Phase Cards And Native Dependencies
+
+Each project should load the factory rail as visible Hermes Kanban cards at the
+start of the run. Those cards are not a decorative checklist and they are not
+agent memory. They are the durable rail that makes the next allowed phase
+visible.
+
+Hermes `parent -> child` links are execution dependencies, not visual nesting.
+If phase F15 creates required work-unit cards, the closure/advance card for the
+next phase must carry those work-unit cards as parents. The next phase can only
+be promoted after the required parents are `done` or otherwise terminal by
+contract. If a required child card is discovered later, it must be linked while
+the next phase is still `todo`. If the next phase is already `ready`, `running`
+or `done`, that is a factory invariant violation, not something an agent may
+explain away.
+
+This keeps modular/adaptive work Kanban-native: known work can be born when a
+phase opens, unknown work can be born when the method deterministically discovers
+it, and the phase rail still advances through Hermes dependencies instead of a
+sidecar scheduler.
+
 ## CLI Proof
 
 Compile and validate the control plane:

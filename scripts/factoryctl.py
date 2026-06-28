@@ -60,6 +60,7 @@ from factory_v2_kernel import (  # noqa: E402
     compile_workflow_catalog,
     load_json_array_or_object,
     normalize_event_log,
+    validate_phase_sources_sync,
     validate_factory_phase_graph,
     validate_factory_command,
     validate_factory_decision_outbox,
@@ -191,74 +192,156 @@ VFINAL_CORE_CONTRACTS = {
 
 PRODUCT_SCOPE_INTENTS = {"full_product", "child_slice"}
 PRODUCT_PLANNING_PHASES = {"F11", "F12", "F13", "F15", "F16", "F17"}
+FACTORY_PRODUCT_PHASE_IDS = [
+    "F0",
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F6",
+    "F7",
+    "F8",
+    "F9",
+    "F10",
+    "F11",
+    "F12",
+    "F13",
+    "F15",
+    "F16",
+    "F17",
+    "F18",
+    "F20",
+    "F21",
+    "F22",
+    "F23",
+    "F24",
+    "F25",
+    "F26",
+    "F27",
+]
 FACTORY_PHASE_LOCK_FRONTIERS = {
+    "pre_start",
     "intake",
     "source_resolution",
     "product_sot",
     "method_contract",
+    "pack_selection",
+    "authority",
     "architecture",
     "ready_gate",
     "execution",
+    "verification",
+    "review",
     "release",
     "completion",
+    "operations",
+    "learnback",
+    "factory_maturity",
 }
 FACTORY_PHASE_LOCK_NEXT_ARTIFACTS = {
+    "pre_start": "factory_bridge_start_request",
     "intake": "source_resolution_packet",
     "source_resolution": "operator_understanding_confirmation",
     "product_sot": "operator_briefing_package",
     "method_contract": "method_contract",
+    "pack_selection": "capability_pack_contract",
+    "authority": "access_capability",
     "architecture": "architecture_packet",
     "ready_gate": "gate_report",
     "execution": "worker_packet",
-    "release": "production_promotion_packet",
+    "verification": "qa_verification_plan",
+    "review": "reviewer_selection_plan",
     "completion": "receipt_five",
+    "release": "production_promotion_packet",
+    "operations": "incident_support_plan",
+    "learnback": "factory_learning_proposal",
+    "factory_maturity": "factory_maturity_scorecard",
 }
 FACTORY_PHASE_ENGINE_FRONTIER_ORDER = [
+    "pre_start",
     "intake",
     "source_resolution",
     "product_sot",
     "method_contract",
+    "pack_selection",
+    "authority",
     "architecture",
     "ready_gate",
     "execution",
-    "release",
+    "verification",
+    "review",
     "completion",
+    "release",
+    "operations",
+    "learnback",
+    "factory_maturity",
 ]
 FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER = {
+    "pre_start": "F0",
     "intake": "F1",
     "source_resolution": "F2",
     "product_sot": "F5",
     "method_contract": "F6",
+    "pack_selection": "F8",
+    "authority": "F9",
     "architecture": "F10",
     "ready_gate": "F13",
     "execution": "F15",
-    "release": "F24",
+    "verification": "F17",
+    "review": "F18",
     "completion": "F22",
+    "release": "F24",
+    "operations": "F25",
+    "learnback": "F26",
+    "factory_maturity": "F27",
 }
 FACTORY_KANBAN_WORKFLOW_TEMPLATE_ID = "overkill-vfinal"
 FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER = {
+    "pre_start": "F0-pre-start",
     "intake": "F1-intake",
     "source_resolution": "F2-source-resolution",
     "product_sot": "F5-product-sot",
     "method_contract": "F6-method-contract",
+    "pack_selection": "F8-pack-selection",
+    "authority": "F9-authority",
     "architecture": "F10-architecture",
     "ready_gate": "F13-ready-gate",
     "execution": "F15-execution",
-    "release": "F24-release",
+    "verification": "F17-verification",
+    "review": "F18-review",
     "completion": "F22-completion",
+    "release": "F24-release",
+    "operations": "F25-operations",
+    "learnback": "F26-learnback",
+    "factory_maturity": "F27-factory-maturity",
 }
 FACTORY_PHASE_ENGINE_WORKERS_BY_FRONTIER = {
+    "pre_start": ["factory-orchestrator"],
     "intake": ["factory-orchestrator"],
     "source_resolution": ["source-ledger-worker", "factory-orchestrator"],
     "product_sot": ["product-sot-planner", "factory-orchestrator"],
     "method_contract": ["factory-orchestrator"],
+    "pack_selection": ["factory-orchestrator", "product-face"],
+    "authority": ["factory-orchestrator", "human-gate-clerk"],
     "architecture": ["product-architect", "security-orchestrator", "factory-orchestrator"],
     "ready_gate": ["factory-orchestrator", "decomposition-planner"],
     "execution": ["implementation-worker", "qa-verification-worker", "evidence-reconciler"],
-    "release": ["release-ops-worker", "human-gate-clerk"],
+    "verification": ["qa-verification-worker", "evidence-reconciler"],
+    "review": ["independent-reviewer", "autoreview-gate"],
     "completion": ["evidence-reconciler", "handoff-packer"],
+    "release": ["release-ops-worker", "human-gate-clerk"],
+    "operations": ["release-ops-worker", "detection-monitoring-worker"],
+    "learnback": ["skill-eval-distiller", "memory-steward"],
+    "factory_maturity": ["skill-eval-distiller"],
 }
 FACTORY_PHASE_LOCK_SURFACE_ALLOWLIST = {
+    "pre_start": {
+        "pre-start",
+        "start",
+        "source-envelope",
+        "bridge",
+    },
     "intake": {
         "intake",
         "source",
@@ -296,8 +379,28 @@ FACTORY_PHASE_LOCK_SURFACE_ALLOWLIST = {
         "method_routing",
         "specialist-routing",
         "specialist_routing",
+    },
+    "pack_selection": {
+        "planning",
         "capability-pack",
         "surface-pack",
+        "product-experience",
+        "product_experience",
+        "product-face",
+        "product_face",
+        "design-system",
+        "design_system",
+        "professional-design-process",
+        "professional_design_process",
+    },
+    "authority": {
+        "planning",
+        "authority",
+        "access",
+        "budget",
+        "risk",
+        "human-gate",
+        "human_gate",
     },
     "architecture": {
         "planning",
@@ -316,6 +419,58 @@ FACTORY_PHASE_LOCK_SURFACE_ALLOWLIST = {
         "access-gate",
         "budget-gate",
         "worker-packet",
+    },
+    "execution": {
+        "execution",
+        "implementation",
+        "worker-packet",
+        "worker-result",
+        "code",
+    },
+    "verification": {
+        "verification",
+        "qa",
+        "test",
+        "tests",
+        "evidence",
+    },
+    "review": {
+        "review",
+        "independent-review",
+        "autoreview",
+    },
+    "completion": {
+        "completion",
+        "closure",
+        "receipt",
+        "receipt-five",
+        "audit",
+    },
+    "release": {
+        "release",
+        "production",
+        "deploy",
+        "promotion",
+        "staging",
+        "mainnet",
+    },
+    "operations": {
+        "operations",
+        "monitoring",
+        "support",
+        "incident",
+        "rollback",
+    },
+    "learnback": {
+        "learnback",
+        "learning",
+        "memory",
+        "improvement",
+    },
+    "factory_maturity": {
+        "factory-maturity",
+        "factory_maturity",
+        "scorecard",
     },
 }
 PRODUCTION_SURFACES = {
@@ -4837,7 +4992,7 @@ def _phase_engine_frontier_state(
         "allowed_current_worker_ids": allowed_workers,
         "blocked_downstream_phase_ids": [
             candidate
-            for candidate in ("F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F15", "F24")
+            for candidate in FACTORY_PRODUCT_PHASE_IDS
             if factory_phase_rank(candidate) > computed_rank
         ],
         "phase_mismatch": card_rank > computed_rank,
@@ -4864,8 +5019,11 @@ def factory_phase_engine_state(
     source_input = _phase_engine_any_materialized(
         card,
         "universal_signal_intake",
+        "universal_signal_intake_ref",
         "factory_start_conversation",
+        "factory_start_conversation_ref",
         "source_resolution_packet",
+        "source_resolution_packet_ref",
         "source_refs",
         allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
@@ -4876,12 +5034,12 @@ def factory_phase_engine_state(
         "canonical_product_sot_ref",
         allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
-    source_resolution = (
+    source_ledger = (
         product_sot
         or _phase_engine_any_materialized(
             card,
             "product_source_ledger",
-            "source_resolution_packet",
+            "product_source_ledger_ref",
             allow_scaffold_artifacts=allow_scaffold_artifacts,
         )
     )
@@ -4890,14 +5048,20 @@ def factory_phase_engine_state(
         or _phase_engine_any_materialized(
             card,
             "operator_understanding_confirmation",
-            "outcome_contract",
+            "operator_understanding_confirmation_ref",
             allow_scaffold_artifacts=allow_scaffold_artifacts,
         )
+    )
+    discovery_done = product_sot or _phase_engine_any_materialized(
+        card,
+        "discovery_brief",
+        "discovery_brief_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
     outcome = product_sot or _phase_engine_any_materialized(
         card,
         "outcome_contract",
-        "discovery_brief",
+        "outcome_contract_ref",
         allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
     full_scope = _phase_engine_any_materialized(
@@ -4911,6 +5075,48 @@ def factory_phase_engine_state(
         allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
     method_done = method_contract_materialized(card, allow_scaffold_artifacts=allow_scaffold_artifacts)
+    capability_pack_done = _phase_engine_any_materialized(
+        card,
+        "capability_pack_contract",
+        "capability_pack_contract_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    product_experience_done = _phase_engine_any_materialized(
+        card,
+        "product_experience_plan",
+        "product_experience_plan_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    product_face_packet_done = _phase_engine_any_materialized(
+        card,
+        "product_face_packet",
+        "product_face_packet_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    project_design_done = _phase_engine_any_materialized(
+        card,
+        "project_design_system",
+        "project_design_system_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    professional_design_done = _phase_engine_any_materialized(
+        card,
+        "professional_design_process",
+        "professional_design_process_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    access_capability_done = _phase_engine_any_materialized(
+        card,
+        "access_capability",
+        "access_capability_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    budget_contract_done = _phase_engine_any_materialized(
+        card,
+        "budget_contract",
+        "budget_contract_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
     architecture_done = _phase_engine_any_materialized(
         card,
         "architecture_packet",
@@ -4931,19 +5137,116 @@ def factory_phase_engine_state(
         allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
     ready_gate_done = ready_gate_materialized(card, allow_scaffold_artifacts=allow_scaffold_artifacts)
+    worker_results_done = _phase_engine_any_materialized(
+        card,
+        "worker_results",
+        "worker_results_ref",
+        "worker_result",
+        "worker_result_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    verification_done = _phase_engine_any_materialized(
+        card,
+        "qa_verification_plan",
+        "qa_verification_plan_ref",
+        "qa_verification_result",
+        "qa_verification_result_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    review_done = _phase_engine_any_materialized(
+        card,
+        "reviewer_selection_plan",
+        "reviewer_selection_plan_ref",
+        "independent_review_result",
+        "independent_review_result_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    closure_done = _phase_engine_any_materialized(
+        card,
+        "closure_summary",
+        "closure_summary_ref",
+        "worker_closure_summary",
+        "worker_closure_summary_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    receipt_done = _phase_engine_any_materialized(
+        card,
+        "receipt_five",
+        "receipt_five_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    completion_audit_done = _phase_engine_any_materialized(
+        card,
+        "completion_audit",
+        "completion_audit_ref",
+        "factory_completion_audit",
+        "factory_completion_audit_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    production_readiness_done = _phase_engine_any_materialized(
+        card,
+        "production_readiness_plan",
+        "production_readiness_plan_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    promotion_done = _phase_engine_any_materialized(
+        card,
+        "factory_promotion_packet",
+        "factory_promotion_packet_ref",
+        "production_promotion_packet",
+        "production_promotion_packet_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    operations_done = _phase_engine_any_materialized(
+        card,
+        "incident_support_plan",
+        "incident_support_plan_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    learnback_done = _phase_engine_any_materialized(
+        card,
+        "factory_learning_proposal",
+        "factory_learning_proposal_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
+    maturity_done = _phase_engine_any_materialized(
+        card,
+        "factory_maturity_scorecard",
+        "factory_maturity_scorecard_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
     artifacts = {
         "source_input": source_input,
-        "source_resolution": source_resolution,
+        "product_source_ledger": source_ledger,
         "operator_understanding_confirmation": understanding,
+        "discovery_brief": discovery_done,
         "outcome_contract": outcome,
         "product_sot": product_sot,
         "full_product_sot_scope_coverage": full_scope,
         "product_sot_owner_surface_delivered": owner_surface,
         "method_contract": method_done,
+        "capability_pack_contract": capability_pack_done,
+        "product_experience_plan": product_experience_done,
+        "product_face_packet": product_face_packet_done,
+        "project_design_system": project_design_done,
+        "professional_design_process": professional_design_done,
+        "access_capability": access_capability_done,
+        "budget_contract": budget_contract_done,
         "architecture_packet": architecture_done,
         "product_creation_plan": product_creation_done,
         "product_implementation_readiness": readiness_done,
         "ready_gate": ready_gate_done,
+        "worker_results": worker_results_done,
+        "qa_verification_plan": verification_done,
+        "reviewer_selection_plan": review_done,
+        "closure_summary": closure_done,
+        "receipt_five": receipt_done,
+        "completion_audit": completion_audit_done,
+        "production_readiness_plan": production_readiness_done,
+        "factory_promotion_packet": promotion_done,
+        "incident_support_plan": operations_done,
+        "factory_learning_proposal": learnback_done,
+        "factory_maturity_scorecard": maturity_done,
     }
 
     def state(frontier: str, phase_id: str, artifact: str, reason: str) -> dict[str, Any]:
@@ -4959,7 +5262,7 @@ def factory_phase_engine_state(
     if not source_input and not product_sot:
         return state("intake", "F1", "universal_signal_intake", "no source intake artifact is materialized")
     if not product_sot:
-        if not source_resolution:
+        if not source_ledger:
             return state("source_resolution", "F2", "product_source_ledger", "source claims are not resolved into a ledger")
         if not understanding:
             return state(
@@ -4968,8 +5271,10 @@ def factory_phase_engine_state(
                 "operator_understanding_confirmation",
                 "operator understanding is not confirmed before Product SOT",
             )
+        if not discovery_done:
+            return state("source_resolution", "F3", "discovery_brief", "source conflicts/gaps are not resolved into a discovery brief")
         if not outcome:
-            return state("source_resolution", "F3", "outcome_contract", "outcome/discovery is not materialized")
+            return state("product_sot", "F4", "outcome_contract", "outcome contract is not materialized before Product SOT")
         return state("product_sot", "F5", "product_sot", "resolved source material has not become Product SOT")
     if card.get("complete_product_required") is True and not full_scope:
         return state(
@@ -4987,6 +5292,20 @@ def factory_phase_engine_state(
         )
     if not method_done:
         return state("method_contract", "F6", "method_contract", "Method Contract is not materialized")
+    if not capability_pack_done:
+        return state("pack_selection", "F8", "capability_pack_contract", "Capability Pack Contract is not materialized")
+    if not product_experience_done:
+        return state("pack_selection", "F8", "product_experience_plan", "Product Experience Plan is not materialized")
+    if not product_face_packet_done:
+        return state("pack_selection", "F8", "product_face_packet", "Product Face Packet is not materialized")
+    if not project_design_done:
+        return state("pack_selection", "F8", "project_design_system", "Project Design System is not materialized")
+    if not professional_design_done:
+        return state("pack_selection", "F8", "professional_design_process", "Professional Design Process is not materialized")
+    if not access_capability_done:
+        return state("authority", "F9", "access_capability", "Access Capability is not materialized")
+    if not budget_contract_done:
+        return state("authority", "F9", "budget_contract", "Budget Contract is not materialized")
 
     architecture_needed = bool(
         surfaces
@@ -5010,11 +5329,48 @@ def factory_phase_engine_state(
     if not ready_gate_done:
         return state("ready_gate", "F13", "gate_report", "Ready Gate is not materialized")
 
-    if card_phase_rank >= factory_phase_rank("F24"):
-        return state("release", "F24", "production_promotion_packet", "ready gate is materialized and release is claimed")
     if card_phase_rank >= factory_phase_rank("F15"):
-        return state("execution", "F15", "worker_packet", "ready gate is materialized and execution is claimed")
+        if not worker_results_done:
+            return state("execution", "F15", "worker_results", "execution is claimed but worker results are not materialized")
+        if card_phase_rank >= factory_phase_rank("F17") and not verification_done:
+            return state("verification", "F17", "qa_verification_plan", "verification is claimed but QA verification is not materialized")
+        if card_phase_rank >= factory_phase_rank("F18") and not review_done:
+            return state("review", "F18", "reviewer_selection_plan", "review is claimed but reviewer selection or review result is not materialized")
+        if card_phase_rank >= factory_phase_rank("F20") and not closure_done:
+            return state("completion", "F20", "closure_summary", "completion is claimed but closure summary is not materialized")
+        if card_phase_rank >= factory_phase_rank("F21") and not receipt_done:
+            return state("completion", "F21", "receipt_five", "Receipt Five is not materialized")
+        if card_phase_rank >= factory_phase_rank("F22") and not completion_audit_done:
+            return state("completion", "F22", "completion_audit", "completion audit is not materialized")
+        if card_phase_rank >= factory_phase_rank("F23") and not production_readiness_done:
+            return state("release", "F23", "production_readiness_plan", "production readiness plan is not materialized")
+        if card_phase_rank >= factory_phase_rank("F24") and not promotion_done:
+            return state("release", "F24", "production_promotion_packet", "production promotion packet is not materialized")
+        if card_phase_rank >= factory_phase_rank("F25") and not operations_done:
+            return state("operations", "F25", "incident_support_plan", "incident support plan is not materialized")
+        if card_phase_rank >= factory_phase_rank("F26") and not learnback_done:
+            return state("learnback", "F26", "factory_learning_proposal", "factory learning proposal is not materialized")
+        if card_phase_rank >= factory_phase_rank("F27") and not maturity_done:
+            return state("factory_maturity", "F27", "factory_maturity_scorecard", "factory maturity scorecard is not materialized")
+        return state("execution", "F15", "worker_packet", "ready gate is materialized and execution evidence is current")
     return state("ready_gate", "F13", "gate_report", "ready gate materialized; runtime may execute only through routed workers")
+
+
+def factory_workflow_step_key_by_phase_id(phase_id: str) -> str | None:
+    phase = str(phase_id or "").strip().upper()
+    if not phase:
+        return None
+    try:
+        catalog = load_workflow_catalog()
+        row = workflow_phase_by_id(catalog, phase)
+    except Exception:
+        row = None
+    if isinstance(row, dict):
+        phase_name = str(row.get("phase_name") or "").strip()
+        if phase_name:
+            slug = re.sub(r"[^a-z0-9]+", "-", phase_name.lower()).strip("-")
+            return f"{phase}-{slug or 'phase'}"
+    return None
 
 
 def factory_workflow_step_key(phase_engine: dict[str, Any] | None) -> str:
@@ -5025,6 +5381,9 @@ def factory_workflow_step_key(phase_engine: dict[str, Any] | None) -> str:
             return "F11-product-creation-plan"
         if phase_id == "F12" or next_artifact == "product_implementation_readiness":
             return "F12-product-implementation-readiness"
+        phase_step_key = factory_workflow_step_key_by_phase_id(phase_id)
+        if phase_step_key:
+            return phase_step_key
         frontier = str(phase_engine.get("computed_frontier") or "").strip()
         if frontier in FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER:
             return FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER[frontier]
@@ -5050,15 +5409,7 @@ def _factory_phase_lock_current_phase_id(card: dict[str, Any]) -> str:
 
 def _phase_lock_allowed_surfaces(frontier: str) -> set[str]:
     allowed: set[str] = set()
-    order = [
-        "intake",
-        "source_resolution",
-        "product_sot",
-        "method_contract",
-        "architecture",
-        "ready_gate",
-    ]
-    for item in order:
+    for item in FACTORY_PHASE_ENGINE_FRONTIER_ORDER:
         allowed.update(FACTORY_PHASE_LOCK_SURFACE_ALLOWLIST.get(item, set()))
         if item == frontier:
             break
@@ -18207,6 +18558,14 @@ def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], pha
     phase_lock = factory_phase_lock_projection(card)
     phase_engine = factory_phase_engine_state(card)
 
+    if product_experience_planning_gap(card, errors):
+        return {
+            "owner": "factory",
+            "action": "create or repair the Product Experience Plan, Product Face Packet, project design system and professional design process before implementation",
+            "why": "Product-facing work needs named surface states, surface pack, project-level design contract, proof profile and design-quality bar before builders run.",
+            "command_refs": command_refs,
+        }
+
     if any("factory_phase_lock" in error or "factory_phase_engine" in error for error in errors):
         next_artifact = str(phase_engine.get("next_required_artifact") or phase_lock.get("next_required_artifact") or "operator_briefing_package")
         artifact_label = next_artifact.replace("_", " ").title()
@@ -18217,13 +18576,6 @@ def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], pha
             "command_refs": ["factoryctl phase-engine", "factoryctl validate-card", "factoryctl help-next", "factoryctl gate-report"],
         }
 
-    if product_experience_planning_gap(card, errors):
-        return {
-            "owner": "factory",
-            "action": "create or repair the Product Experience Plan, Product Face Packet, project design system and professional design process before implementation",
-            "why": "Product-facing work needs named surface states, surface pack, project-level design contract, proof profile and design-quality bar before builders run.",
-            "command_refs": command_refs,
-        }
     if any("product_sot" in error.lower() for error in errors):
         return {
             "owner": "factory",
@@ -20749,6 +21101,18 @@ def command_validate_phase_graph(args: argparse.Namespace) -> int:
     return _print_validation_result(validate_factory_phase_graph(load_json_like(args.path)))
 
 
+def command_validate_phase_sources(args: argparse.Namespace) -> int:
+    errors = validate_phase_sources_sync(
+        phase_graph=load_json_like(args.phase_graph),
+        workflow_catalog=load_json_like(args.workflow_catalog),
+        compiled_plan=load_json_like(args.compiled_plan),
+        frontier_order=FACTORY_PHASE_ENGINE_FRONTIER_ORDER,
+        phase_by_frontier=FACTORY_PHASE_ENGINE_PHASE_BY_FRONTIER,
+        step_key_by_frontier=FACTORY_WORKFLOW_STEP_KEY_BY_FRONTIER,
+    )
+    return _print_validation_result(errors)
+
+
 def _traceability_ref_path(ref: str) -> Path | None:
     if not ref or ref.startswith(("external:", "factoryctl:", "http://", "https://")):
         return None
@@ -22398,6 +22762,23 @@ def build_parser() -> argparse.ArgumentParser:
     validate_phase_graph_parser = sub.add_parser("validate-phase-graph")
     validate_phase_graph_parser.add_argument("path", type=Path, nargs="?", default=DEFAULT_PHASE_GRAPH)
     validate_phase_graph_parser.set_defaults(func=command_validate_phase_graph)
+
+    validate_phase_sources_parser = sub.add_parser(
+        "validate-phase-sources",
+        help="Validate phase graph, workflow catalog, compiled plan and runtime frontier mappings stay synchronized.",
+    )
+    validate_phase_sources_parser.add_argument("--phase-graph", type=Path, default=DEFAULT_PHASE_GRAPH)
+    validate_phase_sources_parser.add_argument(
+        "--workflow-catalog",
+        type=Path,
+        default=ROOT / "docs" / "factory-workflow.catalog.json",
+    )
+    validate_phase_sources_parser.add_argument(
+        "--compiled-plan",
+        type=Path,
+        default=ROOT / "templates" / "factory-workflow-compiled-plan.json",
+    )
+    validate_phase_sources_parser.set_defaults(func=command_validate_phase_sources)
 
     validate_traceability_parser = sub.add_parser("validate-v2-study-traceability")
     validate_traceability_parser.add_argument("path", type=Path)

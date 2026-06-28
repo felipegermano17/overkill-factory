@@ -189,7 +189,12 @@ class FakeHermes:
                 return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
             self.counter += 1
             task_id = "t_" + f"{self.counter:08x}"
-            initial_status = "blocked" if "--initial-status" in argv and "blocked" in argv else "ready"
+            parent_ids = [
+                argv[index + 1]
+                for index, value in enumerate(argv)
+                if value == "--parent" and index + 1 < len(argv)
+            ]
+            initial_status = "todo" if parent_ids else "blocked" if "--initial-status" in argv and "blocked" in argv else "ready"
             body = argv[argv.index("--body") + 1] if "--body" in argv else "{}"
             assignee = argv[argv.index("--assignee") + 1] if "--assignee" in argv else None
             workspace_ref = argv[argv.index("--workspace") + 1] if "--workspace" in argv else "scratch"
@@ -201,12 +206,19 @@ class FakeHermes:
                 "assignee": assignee,
                 "idempotency_key": idempotency_key,
             }
+            if parent_ids:
+                task["parents"] = list(parent_ids)
             if workspace_ref.startswith("dir:"):
                 task["workspace_kind"] = "dir"
                 task["workspace_path"] = workspace_ref[4:]
             else:
                 task["workspace_kind"] = workspace_ref
             self.tasks[task_id] = task
+            for parent_id in parent_ids:
+                parent = self.tasks.setdefault(parent_id, {"status": "blocked", "events": [], "body": "{}", "assignee": None})
+                parent.setdefault("children", [])
+                if task_id not in parent["children"]:
+                    parent["children"].append(task_id)
             if idempotency_key:
                 self.idempotent_task_ids[idempotency_key] = task_id
             return subprocess.CompletedProcess(argv, 0, stdout=f'{{"id":"{task_id}"}}', stderr="")
@@ -219,6 +231,10 @@ class FakeHermes:
             if argv[5] != "--kind" or argv[6] not in adapter.HERMES_TYPED_BLOCK_KINDS:
                 return subprocess.CompletedProcess(argv, 2, stdout="", stderr="typed block kind required")
             task = self.tasks.setdefault(argv[7], {"status": "ready", "events": []})
+            if argv[6] == "dependency":
+                task["status"] = "todo"
+                task.setdefault("events", []).append({"type": "dependency_wait", "payload": {"kind": argv[6], "reason": argv[8]}})
+                return subprocess.CompletedProcess(argv, 0, stdout='{"status":"todo"}', stderr="")
             task["status"] = "blocked"
             task.setdefault("events", []).append({"type": "blocked", "payload": {"kind": argv[6], "reason": argv[8]}})
             return subprocess.CompletedProcess(argv, 0, stdout='{"status":"blocked"}', stderr="")
@@ -896,6 +912,32 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(result["result"], "BLOCKED")
         self.assertIn("credential_not_proven", result["checks"][0]["blocked_reasons"])
 
+    def test_factory_run_graph_backbone_is_derived_from_workflow_catalog(self) -> None:
+        catalog = json.loads((ROOT / "docs" / "factory-workflow.catalog.json").read_text(encoding="utf-8"))
+        expected_phase_ids = [
+            phase["phase_id"]
+            for phase in catalog["phases"]
+            if phase["phase_id"] not in {"F0", "F1"}
+        ]
+        expected_names = [
+            phase["phase_name"]
+            for phase in catalog["phases"]
+            if phase["phase_id"] not in {"F0", "F1"}
+        ]
+
+        self.assertEqual([node["phase_id"] for node in adapter.FACTORY_RUN_GRAPH_BACKBONE], expected_phase_ids)
+        self.assertEqual(
+            [node["title"] for node in adapter.FACTORY_RUN_GRAPH_BACKBONE],
+            [f"{phase_id} - {name}" for phase_id, name in zip(expected_phase_ids, expected_names)],
+        )
+        self.assertEqual(adapter.FACTORY_RUN_GRAPH_BACKBONE[0]["node_id"], "F2-source-ledger")
+        self.assertTrue(
+            any(node["phase_id"] == "F9" and "Risk And Authority Gates" in node["title"] for node in adapter.FACTORY_RUN_GRAPH_BACKBONE)
+        )
+        self.assertTrue(
+            any(node["phase_id"] == "F10" and "Security Architecture" in node["title"] for node in adapter.FACTORY_RUN_GRAPH_BACKBONE)
+        )
+
     def test_materialize_bridge_start_releases_and_dispatches_root_by_default(self) -> None:
         fake = FakeHermes()
         with tempfile.TemporaryDirectory() as tmp:
@@ -1019,17 +1061,18 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         graph_tasks = {task_id: task for task_id, task in fake.tasks.items() if task_id != root_task_id}
         self.assertEqual(len(graph_tasks), len(adapter.FACTORY_RUN_GRAPH_BACKBONE))
         first_graph_task = fake.tasks[first_backbone_task_id]
-        self.assertEqual(first_graph_task["status"], "blocked")
+        self.assertEqual(first_graph_task["status"], "todo")
         self.assertEqual(first_graph_task["parents"], [root_task_id])
         first_graph_body = json.loads(str(first_graph_task["body"]))
         self.assertEqual(first_graph_body["packet_type"], adapter.FACTORY_RUN_GRAPH_NODE_PACKET_TYPE)
         self.assertEqual(first_graph_body["node_id"], "F2-source-ledger")
-        self.assertEqual(first_graph_body["block_kind"], "dependency")
+        self.assertEqual(first_graph_body["dependency_mechanism"], "hermes_task_links_parent_child")
         self.assertFalse(first_graph_body["agent_may_choose_phase"])
         self.assertEqual(first_graph_body["no_idle_role"], adapter.FACTORY_RUN_GRAPH_NO_IDLE_ROLE)
-        self.assertTrue(all(task["status"] == "blocked" for task in graph_tasks.values()))
-        self.assertTrue(
-            all(
+        self.assertTrue(all(task["status"] == "todo" for task in graph_tasks.values()))
+        self.assertTrue(all(task.get("parents") for task in graph_tasks.values()))
+        self.assertFalse(
+            any(
                 any(event.get("payload", {}).get("kind") == "dependency" for event in task.get("events", []))
                 for task in graph_tasks.values()
             )
@@ -1118,6 +1161,92 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(fake.tasks[materialized_task_id]["status"], "blocked")
         self.assertEqual(fake.tasks[materialized_task_id]["assignee"], "implementation-worker")
         self.assertTrue(fake.tasks[materialized_task_id]["events"])
+
+    def test_materialized_work_units_become_native_parents_of_next_phase_card(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["phase-f16-node"] = {
+            "status": "todo",
+            "body": json.dumps(
+                {
+                    "packet_type": adapter.FACTORY_RUN_GRAPH_NODE_PACKET_TYPE,
+                    "phase_id": "F16",
+                    "node_id": "F16-worker-results",
+                }
+            ),
+            "parents": [],
+            "events": [],
+        }
+        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan["board"] = TEST_BOARD
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            plan_path = tmp_path / "plan.json"
+            readiness = tmp_path / "route-readiness.json"
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            write_route_readiness(readiness, extra_workers=["implementation-worker"])
+            args = adapter.build_parser().parse_args(
+                [
+                    "materialize-ready-work-units",
+                    "--plan",
+                    str(plan_path),
+                    "--route-readiness",
+                    str(readiness),
+                    "--workspace",
+                    "scratch",
+                ]
+            )
+            result = adapter.materialize_ready_work_units(args, runner=fake)
+
+        work_unit_task_id = ready_work_unit_task_ids(fake)[0]
+        self.assertIn(work_unit_task_id, fake.tasks["phase-f16-node"]["parents"])
+        link_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "link"]
+        self.assertEqual(link_calls, [["hermes", "kanban", "--board", TEST_BOARD, "link", work_unit_task_id, "phase-f16-node"]])
+        self.assertTrue(result["runtime_gate"]["phase_closure_dependencies_attached"])
+        blocked_promote = fake(["hermes", "kanban", "--board", TEST_BOARD, "promote", "phase-f16-node"])
+        self.assertNotEqual(blocked_promote.returncode, 0)
+        self.assertIn("parents not satisfied", blocked_promote.stderr)
+        fake.tasks[work_unit_task_id]["status"] = "done"
+        allowed_promote = fake(["hermes", "kanban", "--board", TEST_BOARD, "promote", "phase-f16-node"])
+        self.assertEqual(allowed_promote.returncode, 0)
+        self.assertEqual(fake.tasks["phase-f16-node"]["status"], "ready")
+
+    def test_materialized_work_units_refuse_late_phase_closure_links(self) -> None:
+        for phase_status in ("ready", "running", "done"):
+            with self.subTest(phase_status=phase_status):
+                fake = FakeHermes()
+                fake.tasks["phase-f16-node"] = {
+                    "status": phase_status,
+                    "body": json.dumps(
+                        {
+                            "packet_type": adapter.FACTORY_RUN_GRAPH_NODE_PACKET_TYPE,
+                            "phase_id": "F16",
+                            "node_id": "F16-worker-results",
+                        }
+                    ),
+                    "parents": [],
+                    "events": [],
+                }
+                plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+                plan["board"] = TEST_BOARD
+                with tempfile.TemporaryDirectory() as tmp:
+                    tmp_path = Path(tmp)
+                    plan_path = tmp_path / "plan.json"
+                    readiness = tmp_path / "route-readiness.json"
+                    plan_path.write_text(json.dumps(plan), encoding="utf-8")
+                    write_route_readiness(readiness, extra_workers=["implementation-worker"])
+                    args = adapter.build_parser().parse_args(
+                        [
+                            "materialize-ready-work-units",
+                            "--plan",
+                            str(plan_path),
+                            "--route-readiness",
+                            str(readiness),
+                            "--workspace",
+                            "scratch",
+                        ]
+                    )
+                    with self.assertRaisesRegex(RuntimeError, f"next phase F16 is already {phase_status}"):
+                        adapter.materialize_ready_work_units(args, runner=fake)
 
     def test_materialize_ready_work_units_chunks_large_body_without_losing_context(self) -> None:
         fake = FakeHermes()
@@ -2535,7 +2664,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             for call in fake.calls
             if len(call) >= 5 and call[4] == "list" and "--status" in call
         ]
-        self.assertEqual(sorted(set(queried_statuses)), ["blocked", "done", "ready", "running"])
+        self.assertEqual(sorted(set(queried_statuses)), ["blocked", "done", "ready", "running", "todo"])
+        self.assertNotIn("triage", queried_statuses)
         unblock_calls = [call for call in fake.calls if len(call) >= 5 and call[4] == "unblock"]
         self.assertEqual(len(unblock_calls), 1)
         released_task = next(task for task in fake.tasks.values() if json.loads(task["body"])["work_unit_id"] == "work-unit-002")
@@ -4274,6 +4404,53 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(result["no_idle_state"]["blocked"])
         self.assertFalse(result["no_idle_state"]["native_dispatch_required_next"])
         self.assertIsNone(result["remediation_task_id"])
+
+    def test_no_idle_checks_board_invariants_before_any_remediation(self) -> None:
+        fake = FakeHermes()
+        fake.tasks["blocked-f3-card"] = {
+            "id": "blocked-f3-card",
+            "status": "blocked",
+            "assignee": "source-ledger-worker",
+            "title": "F3 source resolution blocked",
+            "current_step_key": "F3-source-resolution",
+            "body": json.dumps(
+                {
+                    "kanban_workflow_binding": {
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F3-source-resolution",
+                        "runtime_field_required": True,
+                    }
+                }
+            ),
+            "events": [{"kind": "blocked", "payload": {"kind": "transient"}}],
+        }
+        fake.tasks["running-f4-card"] = {
+            "id": "running-f4-card",
+            "status": "running",
+            "assignee": "product-sot-planner",
+            "title": "F4 outcome contract running",
+            "current_step_key": "F4-product-outcome-and-discovery",
+            "body": json.dumps(
+                {
+                    "kanban_workflow_binding": {
+                        "workflow_template_id": "overkill-vfinal",
+                        "current_step_key": "F4-product-outcome-and-discovery",
+                        "runtime_field_required": True,
+                    }
+                }
+            ),
+        }
+        args = adapter.build_parser().parse_args(["no-idle", "--board", TEST_BOARD, "--create-remediation"])
+
+        result = adapter.no_idle(args, runner=fake)
+
+        self.assertEqual(result["mode"], "no-idle")
+        self.assertEqual(result["no_idle_state"]["classification"], "factory_phase_invariant_violation")
+        self.assertTrue(result["no_idle_state"]["blocked"])
+        self.assertFalse(result["no_idle_state"]["native_dispatch_required_next"])
+        self.assertEqual(result["board_reconcile_plan"]["plan_action"], "block_invariant_violation")
+        self.assertIsNone(result["remediation_task_id"])
+        self.assertFalse(any(len(call) >= 5 and call[4] == "dispatch" for call in fake.calls))
 
     def test_no_idle_reads_hermes_triage_block_loop_detected(self) -> None:
         fake = FakeHermes()
@@ -6278,7 +6455,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(created["assignee"], "product-architect")
         self.assertEqual(created["status"], "ready")
         self.assertEqual(body["required_output"], "architecture_packet")
-        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F10-architecture")
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F10-security-architecture")
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
         self.assertTrue(state["native_dispatch_required_next"])
 
@@ -6324,7 +6501,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         body = adapter.parse_json_object(str(created["body"]))
         self.assertEqual(created["assignee"], "independent-reviewer")
         self.assertEqual(created["status"], "ready")
-        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F10-architecture")
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F10-security-architecture")
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
         self.assertTrue(state["native_dispatch_required_next"])
 
@@ -6709,7 +6886,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         created = created_worker_packets[0]
         self.assertEqual(created["assignee"], "factory-orchestrator")
         body = adapter.parse_json_object(str(created.get("body") or "{}"))
-        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F15-execution")
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F15-runtime-execution")
         self.assertEqual(body["phase_engine"]["computed_phase_id"], "F15")
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
 
@@ -6727,7 +6904,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     "required_output": "worker_packet",
                     "kanban_workflow_binding": {
                         "workflow_template_id": "overkill-vfinal",
-                        "current_step_key": "F15-execution",
+                        "current_step_key": "F15-runtime-execution",
                         "runtime_field_required": True,
                     },
                     "phase_engine": {
@@ -6760,7 +6937,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         created = created_plans[0]
         self.assertEqual(created["assignee"], "factory-orchestrator")
         body = adapter.parse_json_object(str(created.get("body") or "{}"))
-        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F15-execution")
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F15-runtime-execution")
         self.assertEqual(body["phase_engine"]["computed_phase_id"], "F15")
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
         self.assertIn("blocked-first Kanban execution cards", body["phase_engine"]["decision_basis"])
@@ -6788,7 +6965,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                         "required_output": "ready_work_unit_hermes_materialization_plan",
                         "kanban_workflow_binding": {
                             "workflow_template_id": "overkill-vfinal",
-                            "current_step_key": "F15-execution",
+                            "current_step_key": "F15-runtime-execution",
                             "runtime_field_required": True,
                         },
                     }

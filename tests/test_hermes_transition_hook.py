@@ -371,6 +371,28 @@ class HermesTransitionHookTest(unittest.TestCase):
         self.assertFalse(requires_user)
         self.assertEqual(block_kind, "dependency")
 
+    def test_transition_hook_human_gate_text_does_not_page_user_without_structured_block_kind(self) -> None:
+        event_type, severity, requires_user, block_kind = transition_hook.operator_event_type_for_action(
+            "block_transition",
+            ["human gate decision package is required"],
+        )
+
+        self.assertEqual(event_type, "transition_blocked")
+        self.assertEqual(severity, "warning")
+        self.assertFalse(requires_user)
+        self.assertEqual(block_kind, "transient")
+
+    def test_transition_hook_structured_needs_input_pages_user(self) -> None:
+        event_type, severity, requires_user, block_kind = transition_hook.operator_event_type_for_action(
+            "block_transition",
+            [{"typed_block_kind": "needs_input", "decision_package_ref": "kanban-artifact:decision-package"}],
+        )
+
+        self.assertEqual(event_type, "decision_requested")
+        self.assertEqual(severity, "requires_user")
+        self.assertTrue(requires_user)
+        self.assertEqual(block_kind, "needs_input")
+
 
 if __name__ == "__main__":
     unittest.main()

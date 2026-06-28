@@ -74,6 +74,74 @@ class FactoryNoIdleWatchdogTest(unittest.TestCase):
 
         self.assertEqual(boards, ["product-alpha"])
 
+    def test_all_nonempty_boards_is_audit_only_even_when_mutation_flags_are_requested(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": None,
+            "no_idle_state": {
+                "status": "remediation_required",
+                "classification": "unfinished_work_without_ready_running_or_human_gate_only_block",
+                "native_dispatch_required_next": True,
+                "state": {"todo": {"count": 3}, "blocked": {"count": 2}},
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            state_file = Path(tmp) / "state.json"
+            with redirect_stdout(io.StringIO()):
+                result = watchdog.main(
+                    [
+                        "--all-nonempty-boards",
+                        "--create-remediation",
+                        "--dispatch",
+                        "--state-file",
+                        str(state_file),
+                    ],
+                    runner=fake,
+                )
+
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, 0)
+        no_idle_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "no-idle")
+        self.assertNotIn("--create-remediation", no_idle_call)
+        self.assertFalse(any(len(call) > 2 and call[2] == "dispatch" for call in fake.calls))
+        self.assertTrue(state["boards"]["product-alpha"]["mutation_suppressed"])
+
+    def test_all_nonempty_board_mutation_requires_explicit_allow_flag(self) -> None:
+        fake = FakeRunner()
+        fake.no_idle_payloads["product-alpha"] = {
+            "mode": "no-idle",
+            "board": "product-alpha",
+            "remediation_task_id": "kanban:redacted",
+            "no_idle_state": {
+                "status": "remediation_required",
+                "classification": "unfinished_work_without_ready_running_or_human_gate_only_block",
+                "native_dispatch_required_next": True,
+                "state": {"todo": {"count": 3}, "blocked": {"count": 2}},
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            with redirect_stdout(io.StringIO()):
+                result = watchdog.main(
+                    [
+                        "--all-nonempty-boards",
+                        "--create-remediation",
+                        "--dispatch",
+                        "--allow-discovered-board-mutation",
+                        "--state-file",
+                        str(Path(tmp) / "state.json"),
+                    ],
+                    runner=fake,
+                )
+
+        self.assertEqual(result, 0)
+        no_idle_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "no-idle")
+        dispatch_call = next(call for call in fake.calls if len(call) > 2 and call[2] == "dispatch")
+        self.assertIn("--create-remediation", no_idle_call)
+        self.assertEqual(dispatch_call[2], "dispatch")
+
     def test_watchdog_creates_remediation_then_calls_native_dispatch(self) -> None:
         fake = FakeRunner()
         fake.no_idle_payloads["product-alpha"] = {

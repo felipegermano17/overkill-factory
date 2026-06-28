@@ -72,7 +72,7 @@
       "completion_detection": ["open gaps are resolved, blocked or owner-assigned"],
       "operator_visible_summary": "Factory is deciding what can be known safely.",
       "maintainer_visible_details": "Only authority/access/risk questions should reach the user.",
-      "related_schema_refs": ["schemas/outcome-contract.schema.json"],
+      "related_schema_refs": ["schemas/discovery-brief.schema.json"],
       "related_command_refs": ["factoryctl help-next"],
       "related_issue_refs": ["#111", "#112"]
     },
@@ -90,7 +90,7 @@
       "completion_detection": ["operator understanding confirmation exists when needed", "operator briefing package exists for decision artifacts", "outcome, user, problem and success signals exist"],
       "operator_visible_summary": "Factory is turning confirmed understanding into a product outcome.",
       "maintainer_visible_details": "Outcome is still candidate until Product SOT approval or bounded acceptance. Product creation cannot skip understanding confirmation.",
-      "related_schema_refs": ["schemas/operator-understanding-confirmation.schema.json", "schemas/operator-briefing-package.schema.json", "schemas/outcome-contract.schema.json"],
+      "related_schema_refs": ["schemas/operator-understanding-confirmation.schema.json", "schemas/operator-briefing-package.schema.json", "schemas/outcome-contract.schema.json", "schemas/discovery-brief.schema.json"],
       "related_command_refs": ["factoryctl understanding-confirmation", "factoryctl briefing-package", "factoryctl outcome-contract", "factoryctl validate-outcome-contract", "factoryctl validate-card"],
       "related_issue_refs": ["#108", "#112"]
     },
@@ -108,7 +108,7 @@
       "completion_detection": ["product_sot exists and scope is explicit", "operator briefing package includes markdown and PDF when a decision is needed", "factory_phase_lock.owner_surface_first.product_sot_review_packet_delivered is true before downstream phases", "product_sot.handoff.next_artifact points to full_product_sot_scope_coverage"],
       "operator_visible_summary": "Factory has a candidate source of truth and a deep review package for the product.",
       "maintainer_visible_details": "SOT can evolve beyond the input paper; paper is source, not final authority. The operator must not approve from a shallow message when a deep briefing is required.",
-      "related_schema_refs": ["schemas/product-sot.schema.json", "schemas/operator-briefing-package.schema.json", "schemas/full-product-sot-scope-coverage.schema.json", "schemas/user-facing-autonomy-contract.schema.json"],
+      "related_schema_refs": ["schemas/product-sot.schema.json", "schemas/operator-briefing-package.schema.json", "schemas/full-product-sot-scope-coverage.schema.json", "schemas/factory-phase-lock.schema.json", "schemas/user-facing-autonomy-contract.schema.json"],
       "related_command_refs": ["factoryctl product-sot", "factoryctl briefing-package", "factoryctl validate-product-sot", "factoryctl full-scope-coverage", "factoryctl validate-full-scope-coverage", "factoryctl help-next"],
       "related_issue_refs": ["#108", "#112"]
     },
@@ -126,7 +126,7 @@
       "completion_detection": ["selected method, gates, workers and evidence are recorded", "factory_phase_lock can advance only after method_contract is materialized"],
       "operator_visible_summary": "Factory is choosing the safest production path.",
       "maintainer_visible_details": "The router records decisions; it does not hand method selection to the user.",
-      "related_schema_refs": ["schemas/method-contract.schema.json"],
+      "related_schema_refs": ["schemas/factory-phase-lock.schema.json", "schemas/method-contract.schema.json"],
       "related_command_refs": ["factoryctl method-contract", "factoryctl validate-method-contract", "factoryctl gate-report"],
       "related_issue_refs": ["#110", "#117"]
     },
@@ -144,7 +144,7 @@
       "completion_detection": ["required artifacts and workers are named"],
       "operator_visible_summary": "Factory has recorded how the work will be produced.",
       "maintainer_visible_details": "Any omitted method needs a reason, not silence.",
-      "related_schema_refs": ["schemas/method-contract.schema.json"],
+      "related_schema_refs": ["schemas/factory-phase-lock.schema.json", "schemas/method-contract.schema.json"],
       "related_command_refs": ["factoryctl validate-card"],
       "related_issue_refs": ["#110"]
     },
@@ -232,7 +232,7 @@
       "completion_detection": ["controls, threats and reviewers are named"],
       "operator_visible_summary": "Factory is planning security before build work.",
       "maintainer_visible_details": "Security review is not a substitute for architecture.",
-      "related_schema_refs": ["schemas/security-architecture-plan.schema.json"],
+      "related_schema_refs": ["schemas/factory-phase-lock.schema.json", "schemas/security-architecture-plan.schema.json"],
       "related_command_refs": ["factoryctl worker-packet"],
       "related_issue_refs": ["#113"]
     },

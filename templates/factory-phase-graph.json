@@ -11,7 +11,11 @@
       "kind": "product_phase",
       "frontier": "pre_start",
       "entry_contract_refs": ["schemas/factory-bridge-source-envelope.schema.json"],
-      "exit_contract_refs": ["schemas/factory-bridge-start-request.schema.json", "schemas/factory-run.schema.json"],
+      "exit_contract_refs": [
+        "schemas/factory-bridge-source-envelope.schema.json",
+        "schemas/factory-bridge-start-request.schema.json",
+        "schemas/factory-run.schema.json"
+      ],
       "next_phase_id": "F1"
     },
     {
@@ -21,7 +25,12 @@
       "kind": "product_phase",
       "frontier": "intake",
       "entry_contract_refs": ["schemas/factory-start-conversation.schema.json"],
-      "exit_contract_refs": ["schemas/universal-signal-intake.schema.json", "schemas/source-resolution-packet.schema.json"],
+      "exit_contract_refs": [
+        "schemas/operator-interface-profile.schema.json",
+        "schemas/factory-start-conversation.schema.json",
+        "schemas/universal-signal-intake.schema.json",
+        "schemas/source-resolution-packet.schema.json"
+      ],
       "next_phase_id": "F2"
     },
     {
@@ -41,7 +50,7 @@
       "kind": "product_phase",
       "frontier": "source_resolution",
       "entry_contract_refs": ["schemas/product-source-ledger.schema.json"],
-      "exit_contract_refs": ["schemas/outcome-contract.schema.json"],
+      "exit_contract_refs": ["schemas/discovery-brief.schema.json"],
       "next_phase_id": "F4"
     },
     {
@@ -51,7 +60,12 @@
       "kind": "product_phase",
       "frontier": "product_sot",
       "entry_contract_refs": ["schemas/operator-understanding-confirmation.schema.json"],
-      "exit_contract_refs": ["schemas/outcome-contract.schema.json"],
+      "exit_contract_refs": [
+        "schemas/operator-understanding-confirmation.schema.json",
+        "schemas/operator-briefing-package.schema.json",
+        "schemas/outcome-contract.schema.json",
+        "schemas/discovery-brief.schema.json"
+      ],
       "next_phase_id": "F5"
     },
     {
@@ -61,7 +75,12 @@
       "kind": "product_phase",
       "frontier": "product_sot",
       "entry_contract_refs": ["schemas/outcome-contract.schema.json"],
-      "exit_contract_refs": ["schemas/product-sot.schema.json", "schemas/full-product-sot-scope-coverage.schema.json"],
+      "exit_contract_refs": [
+        "schemas/product-sot.schema.json",
+        "schemas/operator-briefing-package.schema.json",
+        "schemas/full-product-sot-scope-coverage.schema.json",
+        "schemas/factory-phase-lock.schema.json"
+      ],
       "next_phase_id": "F6"
     },
     {
@@ -71,7 +90,7 @@
       "kind": "product_phase",
       "frontier": "method_contract",
       "entry_contract_refs": ["schemas/full-product-sot-scope-coverage.schema.json"],
-      "exit_contract_refs": ["schemas/method-contract.schema.json"],
+      "exit_contract_refs": ["schemas/factory-phase-lock.schema.json", "schemas/method-contract.schema.json"],
       "next_phase_id": "F7"
     },
     {
@@ -81,7 +100,7 @@
       "kind": "product_phase",
       "frontier": "method_contract",
       "entry_contract_refs": ["schemas/method-contract.schema.json"],
-      "exit_contract_refs": ["schemas/method-contract.schema.json"],
+      "exit_contract_refs": ["schemas/factory-phase-lock.schema.json", "schemas/method-contract.schema.json"],
       "next_phase_id": "F8"
     },
     {
@@ -96,7 +115,8 @@
         "schemas/product-experience-plan.schema.json",
         "schemas/product-face-packet.schema.json",
         "schemas/project-design-system.schema.json",
-        "schemas/professional-design-process.schema.json"
+        "schemas/professional-design-process.schema.json",
+        "schemas/product-delivery-quality-profile.schema.json"
       ],
       "next_phase_id": "F9"
     },
@@ -117,7 +137,7 @@
       "kind": "product_phase",
       "frontier": "architecture",
       "entry_contract_refs": ["schemas/method-contract.schema.json"],
-      "exit_contract_refs": ["schemas/security-architecture-plan.schema.json"],
+      "exit_contract_refs": ["schemas/factory-phase-lock.schema.json", "schemas/security-architecture-plan.schema.json"],
       "next_phase_id": "F11"
     },
     {

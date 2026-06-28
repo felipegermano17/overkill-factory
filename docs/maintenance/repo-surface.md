@@ -35,6 +35,12 @@ Generated output belongs in `.tmp/`, release artifacts or the operator's private
 evidence store. Do not commit generated worker packets, gate reports, old
 screenshots, raw logs or historical proof.
 
+Product-specific working folders such as `products/`, `planning-bundles/`,
+`pilots/`, raw research dumps and private operator materials do not belong in
+the public repository. Public examples must be small, rerunnable and
+domain-neutral unless a production-lane validator explicitly needs a realistic
+fixture under `fixtures/`.
+
 ## Maintenance Rule
 
 If a workflow becomes common for users, expose it through `factoryctl`. If a

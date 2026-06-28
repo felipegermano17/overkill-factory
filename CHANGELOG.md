@@ -7,6 +7,29 @@ public releases.
 
 ## Unreleased
 
+## 2.0.14 - 2026-06-27
+
+- Make the Factory Run Graph more Hermes-native: downstream backbone phase cards
+  are created with native parent dependencies, and materialized work-unit cards
+  become parents of the next phase/closure card while that next phase is still
+  in the native dependency-wait state.
+- Fail closed on phase ordering drift: no-idle now reports a
+  `factory_phase_invariant_violation` before remediation when the Kanban graph
+  shows a later phase running while an earlier required phase is blocked, and
+  late work-unit dependencies cannot be attached after the downstream phase is
+  already `ready`, `running` or `done`.
+- Treat typed Hermes blocks as a structured contract: free-text "human gate" or
+  "decision package" wording no longer pages the operator unless the block kind
+  is explicitly `needs_input`; dependency, capability and transient blocks stay
+  factory-owned.
+- Make all-board watchdog scans audit-only by default. Discovered boards no
+  longer receive remediation or dispatch unless explicitly named or the operator
+  opts in with `--allow-discovered-board-mutation`.
+- Add the `discovery_brief` contract and strengthen phase-source validation so
+  catalog output artifacts, phase graph exit refs and schemas cannot drift.
+- Extend public docs, install guidance and Codex skills with the same
+  Kanban-native dependency rule and public repo surface cleanup policy.
+
 ## 2.0.13 - 2026-06-27
 
 - Promote the Kanban-native runtime mantra into the public Codex

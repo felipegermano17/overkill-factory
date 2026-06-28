@@ -35,6 +35,26 @@ runtime treats them differently:
 This distinction matters. A gate can be operable without being a builder, and a
 builder can be autonomous without being allowed to approve itself.
 
+## Naming And Compatibility
+
+Worker IDs are runtime API, not branding. A name such as
+`factory-orchestrator`, `security-orchestrator` or `human-gate-clerk` does not
+grant authority. Authority comes from `factoryctl`, schemas, Hermes bindings,
+permission classes, worker packets, phase graph and gate receipts.
+
+Because worker IDs appear in cards, tests, profile bindings, templates and
+release evidence, renaming them is a migration, not a find-and-replace. The
+public `agents/profile-compatibility-aliases.public.json` file records which
+human-facing or legacy names are aliases and whether they are active,
+deprecated, blocked or removed. Any future rename must preserve a binding,
+profile, migration evidence and expiry policy.
+
+The checked validator enforces two rules:
+
+- authority-sounding IDs must declare explicit `cannot` boundaries in the
+  worker registry;
+- aliases must point to real registered workers, profiles and Hermes bindings.
+
 ## Conceptual Role Drift Rule
 
 Some canonical-stage names are intentionally plain: Method Router, Product
