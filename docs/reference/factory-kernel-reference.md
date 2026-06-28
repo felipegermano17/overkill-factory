@@ -36,8 +36,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | Hermes profile bindings | 40 | `agents/hermes-profile-bindings.public.json` |
 | Operating systems | 17 | `templates/factory-operating-system-registry.json` |
 | Method engines | 8 | `templates/method-engine-registry.json` |
-| JSON schemas | 227 | `schemas/*.json` |
-| Templates | 140 | `templates/*` |
+| JSON schemas | 228 | `schemas/*.json` |
+| Templates | 141 | `templates/*` |
 | Public surfaces | 19 | `docs/public-surface.manifest.json` |
 
 ## Factory Phases
@@ -55,8 +55,8 @@ Done without evidence is only a claim. Receipt Five, review, runtime state and p
 | F8 | Pack And Product Experience Selection | capability_pack_contract, product_experience_plan, product_face_packet, project_design_system, professional_design_process, +2 more | Pack Gate, Product Experience Gate, Surface Pack Gate | product-face, factory-orchestrator | activate a pack without proof or coverage, start product-facing implementation before surface state coverage, treat generic UI proof as Product Experience proof, +1 more |
 | F9 | Risk And Authority Gates | access_capability, budget_contract | Access Gate, Budget Gate, Human Gate when required | human-gate-clerk | infer approval from silence, ask for planning-only continuation approval, ask for architecture or repo cleanup approval while downstream is frozen |
 | F10 | Security Architecture | factory_phase_lock, security_architecture_plan | Security Architecture Gate | security-orchestrator | build material risk before architecture, start security architecture while Product SOT or Method Contract is still missing |
-| F11 | Executable Plans | software_development_plan, spec_graph, loop_plan | Ready Gate | decomposition-planner | execute before plans and stop criteria exist |
-| F12 | Autonomy Readiness | autonomy_readiness_packet | Access & Capability Gate | factory-orchestrator | start autonomous work with missing access or limits |
+| F11 | Executable Plans | software_development_plan, spec_graph, loop_plan, product_creation_plan, decomposition_coverage_review | Ready Gate | decomposition-planner | execute before plans, coverage review and stop criteria exist |
+| F12 | Autonomy Readiness | decomposition_coverage_review, product_implementation_readiness, autonomy_readiness_packet | Access & Capability Gate | factory-orchestrator | start autonomous work with missing review, access or limits |
 | F13 | Ready Gate | gate_report | Ready Gate | factory-orchestrator | dispatch blocked workers |
 | F15 | Runtime Execution | worker_packets | Runtime Gate | implementation-worker, qa-verification-worker | spawn without route readiness |
 | F16 | Worker Results | worker_results | Done Gate | evidence-reconciler | treat packet existence as proof |
@@ -233,6 +233,7 @@ These are the public JSON schemas the factory exposes. They are not decoration; 
 - `schemas/control-tower-readonly-smoke.schema.json`
 - `schemas/customer-readiness-gate.schema.json`
 - `schemas/data-metrics-plan.schema.json`
+- `schemas/decomposition-coverage-review.schema.json`
 - `schemas/dependency-map.schema.json`
 - `schemas/devnet-read-proof.schema.json`
 - `schemas/discord-control-tower-mapping.schema.json`
@@ -456,6 +457,7 @@ Templates are starter records paired with schemas. They are examples of valid sh
 - `templates/control-tower-event.json`
 - `templates/customer-readiness-gate.json`
 - `templates/data-metrics-plan.json`
+- `templates/decomposition-coverage-review.json`
 - `templates/dependency-map.json`
 - `templates/discord-control-tower-mapping.json`
 - `templates/discord-control-tower-owner-setup.json`

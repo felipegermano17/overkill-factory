@@ -2404,6 +2404,7 @@ def solana_domain_brain_required_for_card(card: dict[str, Any]) -> bool:
         "security_architecture_plan",
         "specialist_decision_packet",
         "product_creation_plan",
+        "decomposition_coverage_review",
         "product_implementation_readiness",
         "onchain_work_package",
     )
@@ -3513,7 +3514,12 @@ def validate_product_scope_planning_contract(card: dict[str, Any]) -> list[str]:
     if not _non_empty_text(method.get("factory_route")):
         errors.append("method_contract.factory_route is required")
     required_artifacts = set(_list_items(method.get("required_factory_artifacts")))
-    for artifact in ("full_product_sot_scope_coverage", "product_creation_plan", "product_implementation_readiness"):
+    for artifact in (
+        "full_product_sot_scope_coverage",
+        "product_creation_plan",
+        "decomposition_coverage_review",
+        "product_implementation_readiness",
+    ):
         if artifact not in required_artifacts:
             errors.append(f"method_contract.required_factory_artifacts must include {artifact}")
     matrix = method.get("engineering_method_matrix")
@@ -3623,6 +3629,8 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
         errors.append("product_creation_plan or product_creation_plan_ref is required before material product implementation")
     if not _has_ref_or_object(card, "product_context_packet"):
         errors.append("product_context_packet or product_context_packet_ref is required for product-specific implementation workers")
+    if not _has_ref_or_object(card, "decomposition_coverage_review"):
+        errors.append("decomposition_coverage_review or decomposition_coverage_review_ref is required before material product implementation")
     if not _has_ref_or_object(card, "product_implementation_readiness"):
         errors.append("product_implementation_readiness or product_implementation_readiness_ref is required before material product implementation")
 
@@ -3639,6 +3647,13 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
         if not _non_empty_string_list(plan.get("release_promotion_ladder_refs")):
             errors.append("product_creation_plan.release_promotion_ladder_refs is required")
         errors.extend(validate_product_creation_plan_work_unit_graph(plan))
+    decomposition_review = _load_required_repo_local_contract(card, "decomposition_coverage_review", errors)
+    if decomposition_review:
+        errors.extend(validate_decomposition_coverage_review(decomposition_review))
+        if plan:
+            errors.extend(validate_decomposition_coverage_review_against_plan(decomposition_review, plan))
+        if str(decomposition_review.get("review_result") or "").strip().upper() != "PASS":
+            errors.append("decomposition_coverage_review.review_result must be PASS before material implementation")
     errors.extend(_product_delivery_quality_profile_ref_errors(card))
     profile = _product_delivery_quality_profile(card)
     if profile:
@@ -3651,6 +3666,8 @@ def validate_product_creation_readiness_contract(card: dict[str, Any]) -> list[s
         result = str(readiness.get("artifact_alignment_result") or "").strip().upper()
         if result in {"FAIL", "BLOCKED"}:
             errors.append("product_implementation_readiness.artifact_alignment_result blocks material implementation")
+        if str(readiness.get("decomposition_coverage_review_result") or "").strip().upper() != "PASS":
+            errors.append("product_implementation_readiness.decomposition_coverage_review_result must be PASS")
         if result == "PASS" and not _non_empty_string_list(readiness.get("ready_work_units")):
             errors.append("product_implementation_readiness PASS requires ready_work_units")
         errors.extend(validate_product_implementation_concerns(readiness))
@@ -4539,6 +4556,7 @@ def inferred_surface_routes(card: dict[str, Any]) -> list[dict[str, str]]:
         "product_sot": card.get("product_sot"),
         "product_context_packet": card.get("product_context_packet"),
         "product_creation_plan": card.get("product_creation_plan"),
+        "decomposition_coverage_review": card.get("decomposition_coverage_review"),
         "product_implementation_readiness": card.get("product_implementation_readiness"),
         "security_contract": card.get("security_contract"),
         "security_architecture_plan": card.get("security_architecture_plan"),
@@ -5130,6 +5148,12 @@ def factory_phase_engine_state(
         "product_creation_plan_ref",
         allow_scaffold_artifacts=allow_scaffold_artifacts,
     )
+    decomposition_coverage_review_done = _phase_engine_any_materialized(
+        card,
+        "decomposition_coverage_review",
+        "decomposition_coverage_review_ref",
+        allow_scaffold_artifacts=allow_scaffold_artifacts,
+    )
     readiness_done = _phase_engine_any_materialized(
         card,
         "product_implementation_readiness",
@@ -5234,6 +5258,7 @@ def factory_phase_engine_state(
         "budget_contract": budget_contract_done,
         "architecture_packet": architecture_done,
         "product_creation_plan": product_creation_done,
+        "decomposition_coverage_review": decomposition_coverage_review_done,
         "product_implementation_readiness": readiness_done,
         "ready_gate": ready_gate_done,
         "worker_results": worker_results_done,
@@ -5324,6 +5349,13 @@ def factory_phase_engine_state(
         return state("architecture", "F10", "architecture_packet", "architecture frontier is claimed but no architecture packet exists")
     if not product_creation_done:
         return state("architecture", "F11", "product_creation_plan", "execution plan is not materialized")
+    if not decomposition_coverage_review_done:
+        return state(
+            "ready_gate",
+            "F12",
+            "decomposition_coverage_review",
+            "multi-operator decomposition coverage review is not materialized",
+        )
     if not readiness_done:
         return state("ready_gate", "F12", "product_implementation_readiness", "implementation readiness is not materialized")
     if not ready_gate_done:
@@ -5379,6 +5411,8 @@ def factory_workflow_step_key(phase_engine: dict[str, Any] | None) -> str:
         next_artifact = str(phase_engine.get("next_required_artifact") or "").strip()
         if phase_id == "F11" or next_artifact == "product_creation_plan":
             return "F11-product-creation-plan"
+        if next_artifact == "decomposition_coverage_review":
+            return "F12-decomposition-coverage-review"
         if phase_id == "F12" or next_artifact == "product_implementation_readiness":
             return "F12-product-implementation-readiness"
         phase_step_key = factory_workflow_step_key_by_phase_id(phase_id)
@@ -5912,6 +5946,7 @@ def _product_delivery_quality_profile(card: dict[str, Any]) -> dict[str, Any]:
     containers: list[dict[str, Any]] = [card]
     for field in (
         "product_creation_plan",
+        "decomposition_coverage_review",
         "product_implementation_readiness",
         "product_experience_plan",
         "product_face_packet",
@@ -5936,6 +5971,7 @@ def _product_delivery_quality_profile_ref_errors(card: dict[str, Any]) -> list[s
     containers: list[tuple[str, dict[str, Any]]] = [("card", card)]
     for field in (
         "product_creation_plan",
+        "decomposition_coverage_review",
         "product_implementation_readiness",
         "product_experience_plan",
         "product_face_packet",
@@ -6758,6 +6794,7 @@ CARD_EMBEDDED_CONTRACT_SCHEMAS = {
     "human_gate_packet": "human-gate-packet.schema.json",
     "method_contract": "method-contract.schema.json",
     "product_creation_plan": "product-creation-plan.schema.json",
+    "decomposition_coverage_review": "decomposition-coverage-review.schema.json",
     "onchain_work_package": "onchain-work-package.schema.json",
     "access_capability": "access-capability.schema.json",
     "security_architecture_plan": "security-architecture-plan.schema.json",
@@ -8221,6 +8258,7 @@ DEFAULT_ARTIFACT_REFS = {
     "full_product_sot_scope_coverage": "templates/full-product-sot-scope-coverage.json",
     "method_contract": "templates/method-contract.json",
     "product_creation_plan": "templates/product-creation-plan.json",
+    "decomposition_coverage_review": "templates/decomposition-coverage-review.json",
     "product_implementation_readiness": "templates/product-implementation-readiness.json",
     "gate_report": "factoryctl:gate-report",
     "worker_packet": "templates/worker-packet.json",
@@ -8250,6 +8288,7 @@ DEFAULT_ARTIFACT_OWNERS = {
     "full_product_sot_scope_coverage": "product-sot-planner",
     "method_contract": "factory-orchestrator",
     "product_creation_plan": "decomposition-planner",
+    "decomposition_coverage_review": "independent-reviewer",
     "product_implementation_readiness": "factory-orchestrator",
     "gate_report": "factory-orchestrator",
     "worker_packet": "factory-orchestrator",
@@ -8283,6 +8322,7 @@ ARTIFACT_REQUIRED_BEFORE = {
     "full_product_sot_scope_coverage": "method_contract",
     "method_contract": "ready_gate",
     "product_creation_plan": "ready_gate",
+    "decomposition_coverage_review": "ready_gate",
     "product_implementation_readiness": "execution",
     "gate_report": "execution",
     "worker_packet": "execution",
@@ -10768,6 +10808,7 @@ def build_method_contract(
         "required_factory_artifacts": [
             "full_product_sot_scope_coverage",
             "product_creation_plan",
+            "decomposition_coverage_review",
             "product_implementation_readiness",
         ],
         "active_product_sot_requirement_refs": active_requirement_refs,
@@ -10780,7 +10821,12 @@ def build_method_contract(
                 "methods": selected_methods,
                 "method_engine_ids": selected_engine_ids,
                 "reason": "Coverage requires every Product SOT requirement to be planned before implementation starts.",
-                "required_artifacts": ["product_creation_plan", "spec_graph", "work_unit_contract"],
+                "required_artifacts": [
+                    "product_creation_plan",
+                    "decomposition_coverage_review",
+                    "spec_graph",
+                    "work_unit_contract",
+                ],
                 "evidence_required": ["full scope coverage", "worker result evidence", "tests pass"],
             }
         ],
@@ -10805,6 +10851,7 @@ def build_method_contract(
         ],
         "required_artifacts": [
             "product_creation_plan",
+            "decomposition_coverage_review",
             "software_development_plan",
             "loop_plan",
             "product_implementation_readiness",
@@ -10829,6 +10876,7 @@ def build_method_contract(
             [
                 coverage_ref,
                 "product_creation_plan",
+                "decomposition_coverage_review",
                 "product_implementation_readiness",
                 "Receipt Five",
                 *[
@@ -10843,12 +10891,14 @@ def build_method_contract(
         "done_criteria": [
             "method contract validates",
             "Product Creation Plan exists",
+            "Decomposition Coverage Review is PASS for every work unit owner and reviewer",
             "implementation readiness gate is blocked or passed with explicit evidence",
             "execution remains blocked until Ready Gate",
         ],
         "blocking_rules": {
             "full_scope_coverage_required": True,
             "product_creation_plan_required": True,
+            "decomposition_coverage_review_required": True,
             "execution_blocked_until_ready_gate": True,
             "raw_private_evidence_must_stay_external": True,
             "operator_must_not_choose_internal_method": True,
@@ -10872,7 +10922,7 @@ def build_method_contract(
             "scope_reduction_detected": False,
             "blocked_reason": (
                 "Method contract exists, but execution remains blocked until product creation plan, "
-                "readiness, required gates and workers pass."
+                "multi-operator decomposition coverage review, readiness, required gates and workers pass."
             ),
             "evidence_refs": ["schemas/method-contract.schema.json", coverage_ref],
         },
@@ -10898,7 +10948,12 @@ def validate_method_contract(method_contract: dict[str, Any]) -> list[str]:
         errors.append("method_contract.scope_intent is not valid")
 
     required_factory_artifacts = set(_list_items(method_contract.get("required_factory_artifacts")))
-    for artifact in ("full_product_sot_scope_coverage", "product_creation_plan", "product_implementation_readiness"):
+    for artifact in (
+        "full_product_sot_scope_coverage",
+        "product_creation_plan",
+        "decomposition_coverage_review",
+        "product_implementation_readiness",
+    ):
         if artifact not in required_factory_artifacts:
             errors.append(f"method_contract.required_factory_artifacts must include {artifact}")
 
@@ -10998,6 +11053,7 @@ def validate_method_contract(method_contract: dict[str, Any]) -> list[str]:
     for field in (
         "full_scope_coverage_required",
         "product_creation_plan_required",
+        "decomposition_coverage_review_required",
         "execution_blocked_until_ready_gate",
         "raw_private_evidence_must_stay_external",
         "operator_must_not_choose_internal_method",
@@ -11137,10 +11193,12 @@ def build_product_creation_plan(
     blocked_requirement_refs = set(_list_items(method_contract.get("blocked_product_sot_requirement_refs")))
     common_ready_rules = [
         "Product Creation Plan validates against schema and domain rules",
+        "Decomposition Coverage Review is PASS before execution packets are materialized",
         "Product Implementation Readiness allows this work unit before material execution",
         "required capability profile and reviewer are available",
     ]
     common_blocked_when = [
+        "Decomposition Coverage Review is missing, BLOCKED or stale",
         "Product Implementation Readiness is FAIL or BLOCKED",
         "required capability pack, access, worker or reviewer is unavailable",
         "Product SOT, Method Contract or full scope coverage has drifted",
@@ -11313,6 +11371,7 @@ def build_product_creation_plan(
     execution_order = [str(unit["unit_id"]) for unit in work_units]
     dependency_graph = [{"from": method_contract_ref, "to": "work-unit-001-scope-reconciliation"}]
     dependency_graph.extend({"from": "work-unit-001-scope-reconciliation", "to": unit_id} for unit_id in execution_order[1:])
+    dependency_graph.append({"from": "decomposition_coverage_review", "to": "product_implementation_readiness"})
     dependency_graph.append({"from": readiness_unit_id, "to": "product_implementation_readiness"})
     requirement_execution_coverage = []
     for requirement_ref in base_requirement_refs:
@@ -11416,14 +11475,15 @@ def build_product_creation_plan(
         "blocking_rules": {
             "product_sot_required": True,
             "method_contract_required": True,
+            "decomposition_coverage_review_required": True,
             "product_implementation_readiness_required": True,
             "execution_blocked_until_ready_gate": True,
             "raw_private_evidence_must_stay_external": True,
         },
         "handoff": {
-            "next_artifact": "product_implementation_readiness",
-            "next_worker": "factory-orchestrator",
-            "next_safe_action": "Create Product Implementation Readiness before material work units or execution.",
+            "next_artifact": "decomposition_coverage_review",
+            "next_worker": "independent-reviewer",
+            "next_safe_action": "Run Decomposition Coverage Review before Product Implementation Readiness, worker packets or execution.",
             "user_decision_required": user_decision_required,
             "factory_owned_next_step": True,
         },
@@ -11514,6 +11574,7 @@ def validate_product_creation_plan(plan: dict[str, Any]) -> list[str]:
     for field in (
         "product_sot_required",
         "method_contract_required",
+        "decomposition_coverage_review_required",
         "product_implementation_readiness_required",
         "execution_blocked_until_ready_gate",
         "raw_private_evidence_must_stay_external",
@@ -11524,8 +11585,8 @@ def validate_product_creation_plan(plan: dict[str, Any]) -> list[str]:
     handoff = plan.get("handoff") if isinstance(plan.get("handoff"), dict) else {}
     if handoff.get("factory_owned_next_step") is not True:
         errors.append("product_creation_plan.handoff.factory_owned_next_step must be true")
-    if handoff.get("next_artifact") != "product_implementation_readiness":
-        errors.append("product_creation_plan.handoff.next_artifact must be product_implementation_readiness")
+    if handoff.get("next_artifact") != "decomposition_coverage_review":
+        errors.append("product_creation_plan.handoff.next_artifact must be decomposition_coverage_review")
     next_worker = str(handoff.get("next_worker") or "").strip()
     if next_worker and next_worker not in WORKERS:
         errors.append(f"product_creation_plan.handoff.next_worker must be a registered worker: {next_worker}")
@@ -11557,6 +11618,535 @@ def validate_product_creation_plan(plan: dict[str, Any]) -> list[str]:
     return errors
 
 
+DECOMPOSITION_COVERAGE_REQUIRED_CHECKS = {
+    "requirements_covered",
+    "work_units_mapped",
+    "proofs_mapped",
+    "reviewers_assigned",
+    "all_work_unit_owners_reviewed",
+    "dependency_graph_present",
+    "f15_blocked_until_pass",
+}
+
+
+def _decomposition_coverage_review_id(product_creation_plan_ref: str) -> str:
+    return f"decomposition-coverage-review-{slug_for_ref(product_creation_plan_ref)}"
+
+
+def build_decomposition_coverage_review(
+    product_creation_plan: dict[str, Any],
+    *,
+    created_at: str | None = None,
+    review_id: str | None = None,
+    product_creation_plan_ref: str | None = None,
+) -> dict[str, Any]:
+    plan_errors = validate_product_creation_plan(product_creation_plan)
+    if plan_errors:
+        raise ValueError("; ".join(plan_errors))
+
+    plan_ref = product_creation_plan_ref or str(product_creation_plan.get("plan_id") or "product-creation-plan")
+    final_review_id = review_id or _decomposition_coverage_review_id(plan_ref)
+    created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    work_units = [unit for unit in product_creation_plan.get("work_units", []) if isinstance(unit, dict)]
+    coverage_rows = [
+        row for row in product_creation_plan.get("requirement_execution_coverage", []) if isinstance(row, dict)
+    ]
+    profile_ref = str(product_creation_plan.get("product_delivery_quality_profile_ref") or "").strip()
+    profile = _load_repo_local_json_ref(profile_ref) if profile_ref else {}
+    delivery_profile_proof_ids = (
+        _delivery_profile_required_proof_ids(
+            profile,
+            "before_implementation",
+            card={"product_creation_plan": product_creation_plan},
+        )
+        if profile
+        else []
+    )
+    proof_ids = _dedupe_preserve_order(
+        [
+            *_product_creation_plan_proof_ids(product_creation_plan),
+            *delivery_profile_proof_ids,
+        ]
+    )
+    requirement_refs = _dedupe_preserve_order(
+        [str(row.get("requirement_ref") or "").strip() for row in coverage_rows if str(row.get("requirement_ref") or "").strip()]
+    )
+    blocked_rows = [
+        str(row.get("requirement_ref") or "").strip()
+        for row in coverage_rows
+        if str(row.get("coverage_status") or "").strip() in {"blocked", "deferred_with_owner"}
+    ]
+    missing_review_or_proof = [
+        str(unit.get("unit_id") or "").strip()
+        for unit in work_units
+        if not _non_empty_text(unit.get("reviewer_role")) or not _non_empty_string_list(unit.get("proof_ids_required"))
+    ]
+    dependency_graph = product_creation_plan.get("dependency_graph") if isinstance(product_creation_plan.get("dependency_graph"), list) else []
+    reviewer_matrix: list[dict[str, Any]] = []
+    participant_roles: list[str] = []
+    for unit in work_units:
+        unit_id = str(unit.get("unit_id") or "").strip()
+        owner_worker = str(unit.get("owner_worker") or "").strip()
+        reviewer_role = str(unit.get("reviewer_role") or "").strip()
+        required_participants = _dedupe_preserve_order([role for role in (owner_worker, reviewer_role) if role])
+        participant_roles.extend(required_participants)
+        unit_blocked = str(unit.get("status") or "").strip() in {"blocked", "rejected", "superseded", "needs_refresh"}
+        unit_has_missing_review = unit_id in missing_review_or_proof
+        participant_signoffs = [
+            {
+                "role": role,
+                "decision": "BLOCKED" if unit_blocked or unit_has_missing_review else "PASS",
+                "evidence_refs": [plan_ref],
+                "notes": (
+                    "Participant cannot pass this unit until blocker, reviewer and proof gaps are resolved."
+                    if unit_blocked or unit_has_missing_review
+                    else "Participant coverage review passes for this work unit."
+                ),
+            }
+            for role in required_participants
+        ]
+        reviewer_matrix.append(
+            {
+                "unit_id": unit_id,
+                "owner_worker": owner_worker,
+                "reviewer_role": reviewer_role,
+                "required_participant_roles": required_participants,
+                "participant_signoffs": participant_signoffs,
+                "coverage_decision": "BLOCKED" if unit_blocked or unit_has_missing_review else "PASS",
+                "evidence_refs": [plan_ref],
+            }
+        )
+
+    participant_roles = _dedupe_preserve_order(participant_roles)
+    all_required_participants_present = bool(participant_roles) and all(
+        isinstance(row, dict) and set(_list_items(row.get("required_participant_roles"))).issubset(
+            {
+                str(signoff.get("role") or "").strip()
+                for signoff in row.get("participant_signoffs", [])
+                if isinstance(signoff, dict)
+            }
+        )
+        for row in reviewer_matrix
+    )
+    all_participant_signoffs_passed = all(
+        isinstance(row, dict)
+        and str(row.get("coverage_decision") or "").strip().upper() == "PASS"
+        and all(
+            isinstance(signoff, dict) and str(signoff.get("decision") or "").strip().upper() == "PASS"
+            for signoff in row.get("participant_signoffs", [])
+        )
+        for row in reviewer_matrix
+    )
+    review_result = (
+        "BLOCKED"
+        if blocked_rows
+        or missing_review_or_proof
+        or not dependency_graph
+        or not all_required_participants_present
+        or not all_participant_signoffs_passed
+        else "PASS"
+    )
+
+    checks = [
+        {
+            "check_id": "requirements_covered",
+            "status": "BLOCKED" if blocked_rows else "PASS",
+            "evidence_refs": [plan_ref],
+            "notes": "Every requirement row must be covered, blocked with owner, deferred with owner or out of scope.",
+        },
+        {
+            "check_id": "work_units_mapped",
+            "status": "PASS" if work_units and coverage_rows else "BLOCKED",
+            "evidence_refs": [plan_ref],
+            "notes": "Every coverage row must point to concrete work_unit refs.",
+        },
+        {
+            "check_id": "proofs_mapped",
+            "status": "PASS" if proof_ids else "BLOCKED",
+            "evidence_refs": [plan_ref],
+            "notes": "Every executable work unit needs proof ids before dispatch.",
+        },
+        {
+            "check_id": "reviewers_assigned",
+            "status": "BLOCKED" if missing_review_or_proof else "PASS",
+            "evidence_refs": [plan_ref],
+            "notes": "Every work unit must have a reviewer and proof ids.",
+        },
+        {
+            "check_id": "all_work_unit_owners_reviewed",
+            "status": "PASS" if all_required_participants_present and all_participant_signoffs_passed else "BLOCKED",
+            "evidence_refs": [plan_ref],
+            "notes": "Every owner_worker and reviewer_role participating in work units must sign off the decomposition slice they own.",
+        },
+        {
+            "check_id": "dependency_graph_present",
+            "status": "PASS" if dependency_graph else "BLOCKED",
+            "evidence_refs": [plan_ref],
+            "notes": "Hermes-native materialization needs a declared dependency graph.",
+        },
+        {
+            "check_id": "f15_blocked_until_pass",
+            "status": "PASS",
+            "evidence_refs": [plan_ref],
+            "notes": "F15 worker packets are forbidden until this review is PASS.",
+        },
+    ]
+
+    return sanitize_public_refs(
+        {
+            "$schema": "https://overkill-factory.dev/schemas/decomposition-coverage-review.schema.json",
+            "record_type": "decomposition_coverage_review",
+            "review_id": final_review_id,
+            "created_at": created,
+            "factory_method_version": "OVERKILL_VFINAL",
+            "product_creation_plan_ref": plan_ref,
+            "reviewer_role": "independent-reviewer",
+            "participating_reviewer_roles": participant_roles,
+            "reviewer_matrix": reviewer_matrix,
+            "reviewer_consensus": {
+                "all_required_participants_present": all_required_participants_present,
+                "all_participant_signoffs_passed": all_participant_signoffs_passed,
+                "single_reviewer_approval_forbidden": True,
+            },
+            "review_result": review_result,
+            "complete_product_decomposition_required": True,
+            "coverage_basis": {
+                "product_sot_ref": str(product_creation_plan.get("product_sot_ref") or "").strip(),
+                "method_contract_ref": str(product_creation_plan.get("method_contract_ref") or "").strip(),
+                "work_units_accounted": len(work_units),
+                "requirement_refs_accounted": requirement_refs,
+                "proof_ids_accounted": proof_ids,
+                "dependency_graph_ref": f"{plan_ref}#dependency_graph",
+            },
+            "coverage_rows": [
+                {
+                    "requirement_ref": str(row.get("requirement_ref") or "").strip(),
+                    "coverage_status": str(row.get("coverage_status") or "").strip(),
+                    "work_unit_refs": _list_items(row.get("work_unit_refs")),
+                    "proof_ids_required": _list_items(row.get("proof_ids_required")),
+                    "reviewer_role": str(row.get("reviewer_role") or "independent-reviewer").strip(),
+                    "evidence_refs": [plan_ref],
+                }
+                for row in coverage_rows
+            ],
+            "work_unit_readiness_findings": [
+                {
+                    "unit_id": str(unit.get("unit_id") or "").strip(),
+                    "status": (
+                        "blocked"
+                        if str(unit.get("status") or "").strip() == "blocked"
+                        else ("needs_refresh" if str(unit.get("status") or "").strip() == "needs_refresh" else "ready")
+                    ),
+                    "owner_worker": str(unit.get("owner_worker") or "").strip(),
+                    "reviewer_role": str(unit.get("reviewer_role") or "").strip(),
+                    "issues": [
+                        issue
+                        for issue in [
+                            "missing reviewer_role" if not _non_empty_text(unit.get("reviewer_role")) else "",
+                            "missing proof_ids_required" if not _non_empty_string_list(unit.get("proof_ids_required")) else "",
+                            "blocked by Product Creation Plan" if str(unit.get("status") or "").strip() == "blocked" else "",
+                        ]
+                        if issue
+                    ],
+                    "evidence_refs": [plan_ref],
+                }
+                for unit in work_units
+            ],
+            "checks": checks,
+            "blocking_rules": {
+                "no_f15_without_pass": True,
+                "all_active_requirements_accounted": True,
+                "work_units_need_reviewer_and_proof": True,
+                "all_work_unit_owners_must_review": True,
+                "single_reviewer_approval_forbidden": True,
+                "hermes_graph_required_before_materialization": True,
+                "complete_product_claim_forbidden_until_reconciled": True,
+                "raw_private_evidence_must_stay_external": True,
+            },
+            "handoff": {
+                "next_artifact": "product_implementation_readiness",
+                "next_worker": "factory-orchestrator",
+                "next_safe_action": "Create Product Implementation Readiness only after Decomposition Coverage Review PASS.",
+                "user_decision_required": False,
+                "factory_owned_next_step": True,
+            },
+            "public_private_boundary": {
+                "public_safe_refs_only": True,
+                "raw_private_evidence_embedded": False,
+                "private_context_retained_outside_public_repo": True,
+            },
+            "acceptance": {
+                "decomposition_coverage_review_created": True,
+                "review_result": review_result,
+                "f15_execution_allowed": review_result == "PASS",
+                "all_requirements_accounted": not blocked_rows,
+                "all_required_participants_present": all_required_participants_present,
+                "all_participant_signoffs_passed": all_participant_signoffs_passed,
+                "all_work_units_have_reviewers": not missing_review_or_proof,
+                "all_work_units_have_proofs": not missing_review_or_proof,
+                "evidence_refs": ["schemas/decomposition-coverage-review.schema.json", plan_ref],
+            },
+            "evidence_refs": ["schemas/decomposition-coverage-review.schema.json", plan_ref],
+        }
+    )
+
+
+def validate_decomposition_coverage_review(review: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    schemas = bundled_schemas()
+    schema = schemas.get("decomposition-coverage-review.schema.json")
+    if not schema:
+        return ["decomposition_coverage_review schema is not bundled"]
+    errors.extend(validate_node(schema, review, "decomposition_coverage_review", schemas=schemas, root_schema=schema))
+    if review.get("record_type") != "decomposition_coverage_review":
+        errors.append("decomposition_coverage_review.record_type must be decomposition_coverage_review")
+
+    for field in ("product_creation_plan_ref",):
+        value = str(review.get(field) or "").strip()
+        if value:
+            _validate_public_ref(value, f"decomposition_coverage_review.{field}", errors)
+    reviewer = str(review.get("reviewer_role") or "").strip()
+    if reviewer and reviewer not in WORKERS:
+        errors.append(f"decomposition_coverage_review.reviewer_role must be a registered worker: {reviewer}")
+    for index, role in enumerate(_list_items(review.get("participating_reviewer_roles"))):
+        if role not in WORKERS:
+            errors.append(f"decomposition_coverage_review.participating_reviewer_roles[{index}] must be a registered worker: {role}")
+
+    result = str(review.get("review_result") or "").strip().upper()
+    check_ids = {
+        str(item.get("check_id") or "").strip()
+        for item in review.get("checks", [])
+        if isinstance(item, dict) and str(item.get("check_id") or "").strip()
+    }
+    missing_checks = sorted(DECOMPOSITION_COVERAGE_REQUIRED_CHECKS - check_ids)
+    if missing_checks:
+        errors.append("decomposition_coverage_review.checks missing required checks: " + ", ".join(missing_checks))
+    blocking_checks = [
+        str(item.get("check_id") or "").strip()
+        for item in review.get("checks", [])
+        if isinstance(item, dict) and str(item.get("status") or "").strip().upper() == "BLOCKED"
+    ]
+    if result == "PASS" and blocking_checks:
+        errors.append("decomposition_coverage_review PASS cannot contain BLOCKED checks: " + ", ".join(blocking_checks))
+    if result == "BLOCKED" and not blocking_checks:
+        errors.append("decomposition_coverage_review BLOCKED requires at least one BLOCKED check")
+
+    reviewer_matrix = review.get("reviewer_matrix") if isinstance(review.get("reviewer_matrix"), list) else []
+    participating_roles = set(_list_items(review.get("participating_reviewer_roles")))
+    matrix_roles: set[str] = set()
+    blocked_signoffs: list[str] = []
+    for index, row in enumerate(reviewer_matrix):
+        if not isinstance(row, dict):
+            errors.append(f"decomposition_coverage_review.reviewer_matrix[{index}] must be an object")
+            continue
+        owner = str(row.get("owner_worker") or "").strip()
+        row_reviewer = str(row.get("reviewer_role") or "").strip()
+        for field_name, role in (("owner_worker", owner), ("reviewer_role", row_reviewer)):
+            if role and role not in WORKERS:
+                errors.append(f"decomposition_coverage_review.reviewer_matrix[{index}].{field_name} must be registered: {role}")
+        required_participants = set(_list_items(row.get("required_participant_roles")))
+        if owner and owner not in required_participants:
+            errors.append(f"decomposition_coverage_review.reviewer_matrix[{index}].required_participant_roles must include owner_worker")
+        if row_reviewer and row_reviewer not in required_participants:
+            errors.append(f"decomposition_coverage_review.reviewer_matrix[{index}].required_participant_roles must include reviewer_role")
+        signoffs = row.get("participant_signoffs") if isinstance(row.get("participant_signoffs"), list) else []
+        signed_roles = {
+            str(signoff.get("role") or "").strip()
+            for signoff in signoffs
+            if isinstance(signoff, dict) and str(signoff.get("role") or "").strip()
+        }
+        missing_signoffs = sorted(required_participants - signed_roles)
+        if missing_signoffs:
+            errors.append(
+                f"decomposition_coverage_review.reviewer_matrix[{index}].participant_signoffs missing roles: "
+                + ", ".join(missing_signoffs)
+            )
+        matrix_roles.update(required_participants)
+        for signoff_index, signoff in enumerate(signoffs):
+            if not isinstance(signoff, dict):
+                errors.append(f"decomposition_coverage_review.reviewer_matrix[{index}].participant_signoffs[{signoff_index}] must be an object")
+                continue
+            role = str(signoff.get("role") or "").strip()
+            if role and role not in WORKERS:
+                errors.append(
+                    f"decomposition_coverage_review.reviewer_matrix[{index}].participant_signoffs[{signoff_index}].role must be registered: {role}"
+                )
+            decision = str(signoff.get("decision") or "").strip().upper()
+            if decision == "BLOCKED":
+                blocked_signoffs.append(f"{row.get('unit_id')}:{role}")
+            if not _non_empty_string_list(signoff.get("evidence_refs")):
+                errors.append(
+                    f"decomposition_coverage_review.reviewer_matrix[{index}].participant_signoffs[{signoff_index}].evidence_refs must be non-empty"
+                )
+        coverage_decision = str(row.get("coverage_decision") or "").strip().upper()
+        if coverage_decision == "PASS" and any(
+            isinstance(signoff, dict) and str(signoff.get("decision") or "").strip().upper() == "BLOCKED"
+            for signoff in signoffs
+        ):
+            errors.append(f"decomposition_coverage_review.reviewer_matrix[{index}].coverage_decision cannot PASS with BLOCKED signoff")
+
+    if not reviewer_matrix:
+        errors.append("decomposition_coverage_review.reviewer_matrix must be non-empty")
+    missing_from_participating = sorted(matrix_roles - participating_roles)
+    if missing_from_participating:
+        errors.append(
+            "decomposition_coverage_review.participating_reviewer_roles missing matrix roles: "
+            + ", ".join(missing_from_participating)
+        )
+    if participating_roles == {reviewer} and len(matrix_roles) > 1:
+        errors.append("decomposition_coverage_review cannot be approved by only the lead reviewer when multiple participants exist")
+    consensus = review.get("reviewer_consensus") if isinstance(review.get("reviewer_consensus"), dict) else {}
+    if consensus.get("single_reviewer_approval_forbidden") is not True:
+        errors.append("decomposition_coverage_review.reviewer_consensus.single_reviewer_approval_forbidden must be true")
+    if result == "PASS":
+        if consensus.get("all_required_participants_present") is not True:
+            errors.append("decomposition_coverage_review PASS requires all_required_participants_present=true")
+        if consensus.get("all_participant_signoffs_passed") is not True:
+            errors.append("decomposition_coverage_review PASS requires all_participant_signoffs_passed=true")
+        if blocked_signoffs:
+            errors.append("decomposition_coverage_review PASS cannot include BLOCKED participant signoffs: " + ", ".join(blocked_signoffs))
+
+    basis = review.get("coverage_basis") if isinstance(review.get("coverage_basis"), dict) else {}
+    if basis.get("work_units_accounted", 0) < 1:
+        errors.append("decomposition_coverage_review.coverage_basis.work_units_accounted must be at least 1")
+    if not _non_empty_string_list(basis.get("requirement_refs_accounted")):
+        errors.append("decomposition_coverage_review.coverage_basis.requirement_refs_accounted must be non-empty")
+    if not _non_empty_string_list(basis.get("proof_ids_accounted")):
+        errors.append("decomposition_coverage_review.coverage_basis.proof_ids_accounted must be non-empty")
+
+    coverage_rows = review.get("coverage_rows") if isinstance(review.get("coverage_rows"), list) else []
+    for index, row in enumerate(coverage_rows):
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("requirement_ref") or "").strip().endswith("#all-active-product-sot-requirements"):
+            errors.append(f"decomposition_coverage_review.coverage_rows[{index}].requirement_ref must be concrete")
+        if not _non_empty_string_list(row.get("work_unit_refs")):
+            errors.append(f"decomposition_coverage_review.coverage_rows[{index}].work_unit_refs must be non-empty")
+        if not _non_empty_string_list(row.get("proof_ids_required")):
+            errors.append(f"decomposition_coverage_review.coverage_rows[{index}].proof_ids_required must be non-empty")
+        row_reviewer = str(row.get("reviewer_role") or "").strip()
+        if row_reviewer and row_reviewer not in WORKERS:
+            errors.append(f"decomposition_coverage_review.coverage_rows[{index}].reviewer_role must be registered: {row_reviewer}")
+
+    findings = review.get("work_unit_readiness_findings") if isinstance(review.get("work_unit_readiness_findings"), list) else []
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            continue
+        owner = str(finding.get("owner_worker") or "").strip()
+        reviewer = str(finding.get("reviewer_role") or "").strip()
+        if owner and owner not in WORKERS:
+            errors.append(f"decomposition_coverage_review.work_unit_readiness_findings[{index}].owner_worker must be registered: {owner}")
+        if reviewer and reviewer not in WORKERS:
+            errors.append(f"decomposition_coverage_review.work_unit_readiness_findings[{index}].reviewer_role must be registered: {reviewer}")
+
+    blocking_rules = review.get("blocking_rules") if isinstance(review.get("blocking_rules"), dict) else {}
+    for field in (
+        "no_f15_without_pass",
+        "all_active_requirements_accounted",
+        "work_units_need_reviewer_and_proof",
+        "all_work_unit_owners_must_review",
+        "single_reviewer_approval_forbidden",
+        "hermes_graph_required_before_materialization",
+        "complete_product_claim_forbidden_until_reconciled",
+        "raw_private_evidence_must_stay_external",
+    ):
+        if blocking_rules.get(field) is not True:
+            errors.append(f"decomposition_coverage_review.blocking_rules.{field} must be true")
+
+    handoff = review.get("handoff") if isinstance(review.get("handoff"), dict) else {}
+    if handoff.get("factory_owned_next_step") is not True:
+        errors.append("decomposition_coverage_review.handoff.factory_owned_next_step must be true")
+    if handoff.get("next_artifact") != "product_implementation_readiness":
+        errors.append("decomposition_coverage_review.handoff.next_artifact must be product_implementation_readiness")
+    next_worker = str(handoff.get("next_worker") or "").strip()
+    if next_worker and next_worker not in WORKERS:
+        errors.append(f"decomposition_coverage_review.handoff.next_worker must be a registered worker: {next_worker}")
+
+    boundary = review.get("public_private_boundary") if isinstance(review.get("public_private_boundary"), dict) else {}
+    if boundary.get("public_safe_refs_only") is not True:
+        errors.append("decomposition_coverage_review requires public_safe_refs_only=true")
+    if boundary.get("raw_private_evidence_embedded") is not False:
+        errors.append("decomposition_coverage_review must not embed raw private evidence")
+    if boundary.get("private_context_retained_outside_public_repo") is not True:
+        errors.append("decomposition_coverage_review private context must stay outside the public repo")
+
+    acceptance = review.get("acceptance") if isinstance(review.get("acceptance"), dict) else {}
+    if acceptance.get("decomposition_coverage_review_created") is not True:
+        errors.append("decomposition_coverage_review acceptance.decomposition_coverage_review_created must be true")
+    if acceptance.get("review_result") != result:
+        errors.append("decomposition_coverage_review acceptance.review_result must match review_result")
+    if result == "PASS" and acceptance.get("f15_execution_allowed") is not True:
+        errors.append("decomposition_coverage_review PASS requires f15_execution_allowed=true")
+    if result == "BLOCKED" and acceptance.get("f15_execution_allowed") is not False:
+        errors.append("decomposition_coverage_review BLOCKED requires f15_execution_allowed=false")
+    for field in (
+        "all_requirements_accounted",
+        "all_required_participants_present",
+        "all_participant_signoffs_passed",
+        "all_work_units_have_reviewers",
+        "all_work_units_have_proofs",
+    ):
+        if result == "PASS" and acceptance.get(field) is not True:
+            errors.append(f"decomposition_coverage_review PASS requires acceptance.{field}=true")
+    _validate_lifecycle_refs(
+        _list_items(acceptance.get("evidence_refs")),
+        "decomposition_coverage_review.acceptance.evidence_refs",
+        errors,
+    )
+    _validate_lifecycle_refs(_list_items(review.get("evidence_refs")), "decomposition_coverage_review.evidence_refs", errors)
+    return errors
+
+
+def validate_decomposition_coverage_review_against_plan(
+    review: dict[str, Any], product_creation_plan: dict[str, Any]
+) -> list[str]:
+    errors: list[str] = []
+    plan_id = str(product_creation_plan.get("plan_id") or "").strip()
+    review_plan_ref = str(review.get("product_creation_plan_ref") or "").strip()
+    if plan_id and review_plan_ref and review_plan_ref != plan_id:
+        errors.append("decomposition_coverage_review.product_creation_plan_ref must match Product Creation Plan plan_id")
+
+    work_units = [
+        unit for unit in product_creation_plan.get("work_units", []) if isinstance(unit, dict) and str(unit.get("unit_id") or "").strip()
+    ]
+    unit_ids = {str(unit.get("unit_id") or "").strip() for unit in work_units}
+    basis = review.get("coverage_basis") if isinstance(review.get("coverage_basis"), dict) else {}
+    if basis.get("work_units_accounted") != len(work_units):
+        errors.append("decomposition_coverage_review.coverage_basis.work_units_accounted must match Product Creation Plan work_units length")
+
+    plan_requirement_refs = {
+        str(row.get("requirement_ref") or "").strip()
+        for row in product_creation_plan.get("requirement_execution_coverage", [])
+        if isinstance(row, dict) and str(row.get("requirement_ref") or "").strip()
+    }
+    review_requirement_refs = {
+        str(row.get("requirement_ref") or "").strip()
+        for row in review.get("coverage_rows", [])
+        if isinstance(row, dict) and str(row.get("requirement_ref") or "").strip()
+    }
+    if review_requirement_refs != plan_requirement_refs:
+        errors.append("decomposition_coverage_review.coverage_rows must match Product Creation Plan requirement_execution_coverage refs")
+
+    finding_unit_ids = {
+        str(finding.get("unit_id") or "").strip()
+        for finding in review.get("work_unit_readiness_findings", [])
+        if isinstance(finding, dict) and str(finding.get("unit_id") or "").strip()
+    }
+    if finding_unit_ids != unit_ids:
+        errors.append("decomposition_coverage_review.work_unit_readiness_findings must include every Product Creation Plan work_unit")
+
+    for index, row in enumerate(review.get("coverage_rows", []) if isinstance(review.get("coverage_rows"), list) else []):
+        if not isinstance(row, dict):
+            continue
+        unknown = [unit_id for unit_id in _list_items(row.get("work_unit_refs")) if unit_id not in unit_ids]
+        if unknown:
+            errors.append(
+                f"decomposition_coverage_review.coverage_rows[{index}].work_unit_refs references unknown Product Creation Plan units: "
+                + ", ".join(unknown)
+            )
+    return errors
+
+
 def _product_implementation_readiness_id(product_creation_plan_ref: str) -> str:
     return f"product-implementation-readiness-{slug_for_ref(product_creation_plan_ref)}"
 
@@ -11574,6 +12164,7 @@ def _product_creation_plan_proof_ids(plan: dict[str, Any]) -> list[str]:
 
 def build_product_implementation_readiness(
     product_creation_plan: dict[str, Any],
+    decomposition_coverage_review: dict[str, Any],
     *,
     created_at: str | None = None,
     readiness_id: str | None = None,
@@ -11581,12 +12172,26 @@ def build_product_implementation_readiness(
     plan_errors = validate_product_creation_plan(product_creation_plan)
     if plan_errors:
         raise ValueError("; ".join(plan_errors))
+    review_errors = validate_decomposition_coverage_review(decomposition_coverage_review)
+    review_errors.extend(validate_decomposition_coverage_review_against_plan(decomposition_coverage_review, product_creation_plan))
+    if review_errors:
+        raise ValueError("; ".join(review_errors))
 
-    handoff = product_creation_plan.get("handoff") if isinstance(product_creation_plan.get("handoff"), dict) else {}
-    if str(handoff.get("next_artifact") or "").strip() != "product_implementation_readiness":
-        raise ValueError("product_creation_plan does not hand off to Product Implementation Readiness")
+    plan_handoff = product_creation_plan.get("handoff") if isinstance(product_creation_plan.get("handoff"), dict) else {}
+    if str(plan_handoff.get("next_artifact") or "").strip() != "decomposition_coverage_review":
+        raise ValueError("product_creation_plan must hand off to Decomposition Coverage Review")
+    review_handoff = (
+        decomposition_coverage_review.get("handoff")
+        if isinstance(decomposition_coverage_review.get("handoff"), dict)
+        else {}
+    )
+    if str(review_handoff.get("next_artifact") or "").strip() != "product_implementation_readiness":
+        raise ValueError("decomposition_coverage_review does not hand off to Product Implementation Readiness")
+    if str(decomposition_coverage_review.get("review_result") or "").strip().upper() != "PASS":
+        raise ValueError("Decomposition Coverage Review must be PASS before Product Implementation Readiness")
 
     plan_ref = str(product_creation_plan.get("plan_id") or "product-creation-plan")
+    review_ref = str(decomposition_coverage_review.get("review_id") or "decomposition-coverage-review")
     final_readiness_id = readiness_id or _product_implementation_readiness_id(plan_ref)
     created = created_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     work_units = [unit for unit in product_creation_plan.get("work_units", []) if isinstance(unit, dict)]
@@ -11613,7 +12218,23 @@ def build_product_implementation_readiness(
             )
         ]
     )
-    proof_ids = _product_creation_plan_proof_ids(product_creation_plan)
+    profile_ref = str(product_creation_plan.get("product_delivery_quality_profile_ref") or "").strip()
+    profile = _load_repo_local_json_ref(profile_ref) if profile_ref else {}
+    delivery_profile_proof_ids = (
+        _delivery_profile_required_proof_ids(
+            profile,
+            "before_implementation",
+            card={"product_creation_plan": product_creation_plan},
+        )
+        if profile
+        else []
+    )
+    proof_ids = _dedupe_preserve_order(
+        [
+            *_product_creation_plan_proof_ids(product_creation_plan),
+            *delivery_profile_proof_ids,
+        ]
+    )
     access_requirement_count = len(_list_items(product_creation_plan.get("access_and_secret_requirements")))
     alignment_result = "BLOCKED" if blocked_units else "CONCERNS"
     material_execution_allowed = alignment_result == "CONCERNS" and bool(ready_units)
@@ -11692,6 +12313,8 @@ def build_product_implementation_readiness(
         "product_sot_ref": str(product_creation_plan.get("product_sot_ref") or ""),
         "method_contract_ref": str(product_creation_plan.get("method_contract_ref") or ""),
         "product_creation_plan_ref": plan_ref,
+        "decomposition_coverage_review_ref": review_ref,
+        "decomposition_coverage_review_result": "PASS",
         "product_delivery_quality_profile_ref": str(product_creation_plan.get("product_delivery_quality_profile_ref") or ""),
         "product_delivery_quality_profile_trace": _dedupe_preserve_order(
             [
@@ -11704,6 +12327,10 @@ def build_product_implementation_readiness(
         "requirements_trace": requirements_trace,
         "cross_slice_decision_coverage": [
             "Product Creation Plan dependency graph and execution order are the current cross-slice decision authority."
+        ],
+        "decomposition_review_trace": [
+            review_ref,
+            "Decomposition Coverage Review PASS is required before ready_work_units can become worker packets.",
         ],
         "experience_trace": ["Product Experience refs must be attached when visible surfaces exist."],
         "security_trace": ["Security architecture, scan or explicit non-applicability must be attached for sensitive surfaces."],
@@ -11724,6 +12351,8 @@ def build_product_implementation_readiness(
         "forbidden_next_actions": forbidden_next_actions,
         "blocking_rules": {
             "product_creation_plan_required": True,
+            "decomposition_coverage_review_required": True,
+            "blocked_or_failed_decomposition_review_blocks_execution": True,
             "blocked_or_failed_readiness_blocks_execution": True,
             "concerns_allow_only_ready_work_units": True,
             "complete_product_claim_forbidden_until_all_scope_reconciled": True,
@@ -11750,9 +12379,9 @@ def build_product_implementation_readiness(
             "material_execution_allowed": material_execution_allowed,
             "allowed_execution_scope": allowed_execution_scope,
             "complete_product_claim_allowed": False,
-            "evidence_refs": ["schemas/product-implementation-readiness.schema.json", plan_ref],
+            "evidence_refs": ["schemas/product-implementation-readiness.schema.json", plan_ref, review_ref],
         },
-        "evidence_refs": ["schemas/product-implementation-readiness.schema.json", plan_ref],
+        "evidence_refs": ["schemas/product-implementation-readiness.schema.json", plan_ref, review_ref],
     }
     if concern_items:
         readiness["concern_items"] = concern_items
@@ -11772,10 +12401,18 @@ def validate_product_implementation_readiness(readiness: dict[str, Any]) -> list
     if result not in {"PASS", "CONCERNS", "FAIL", "BLOCKED"}:
         errors.append("product_implementation_readiness.artifact_alignment_result must be PASS, CONCERNS, FAIL or BLOCKED")
 
-    for field in ("product_sot_ref", "method_contract_ref", "product_creation_plan_ref", "product_delivery_quality_profile_ref"):
+    for field in (
+        "product_sot_ref",
+        "method_contract_ref",
+        "product_creation_plan_ref",
+        "decomposition_coverage_review_ref",
+        "product_delivery_quality_profile_ref",
+    ):
         value = str(readiness.get(field) or "").strip()
         if value:
             _validate_public_ref(value, f"product_implementation_readiness.{field}", errors)
+    if str(readiness.get("decomposition_coverage_review_result") or "").strip().upper() != "PASS":
+        errors.append("product_implementation_readiness.decomposition_coverage_review_result must be PASS")
 
     for field in (
         "product_delivery_quality_profile_trace",
@@ -11813,6 +12450,8 @@ def validate_product_implementation_readiness(readiness: dict[str, Any]) -> list
     blocking_rules = readiness.get("blocking_rules") if isinstance(readiness.get("blocking_rules"), dict) else {}
     for field in (
         "product_creation_plan_required",
+        "decomposition_coverage_review_required",
+        "blocked_or_failed_decomposition_review_blocks_execution",
         "blocked_or_failed_readiness_blocks_execution",
         "concerns_allow_only_ready_work_units",
         "complete_product_claim_forbidden_until_all_scope_reconciled",
@@ -11889,6 +12528,7 @@ def _ready_work_unit_dependency_refs(plan: dict[str, Any], work_unit_id: str) ->
 def _ready_work_unit_context_boundary(
     *,
     plan_ref: str,
+    decomposition_review_ref: str,
     readiness_ref: str,
     unit: dict[str, Any],
     dependency_refs: list[str],
@@ -11897,6 +12537,7 @@ def _ready_work_unit_context_boundary(
     allowed_context_refs = _dedupe_preserve_order(
         [
             plan_ref,
+            decomposition_review_ref,
             readiness_ref,
             *_list_items(unit.get("product_sot_requirement_refs")),
             *dependency_refs,
@@ -12262,10 +12903,20 @@ def _ready_work_unit_worker_input_contract(
     }
 
 
-def _ready_work_unit_ref_resolver_entry(ref: str, *, plan_ref: str, readiness_ref: str, work_unit_id: str) -> dict[str, Any]:
+def _ready_work_unit_ref_resolver_entry(
+    ref: str,
+    *,
+    plan_ref: str,
+    decomposition_review_ref: str,
+    readiness_ref: str,
+    work_unit_id: str,
+) -> dict[str, Any]:
     if ref == plan_ref:
         status = "embedded_public_safe_payload"
         payload_key = "product_creation_plan"
+    elif ref == decomposition_review_ref:
+        status = "embedded_public_safe_payload"
+        payload_key = "decomposition_coverage_review"
     elif ref == readiness_ref:
         status = "embedded_public_safe_payload"
         payload_key = "product_implementation_readiness"
@@ -12290,6 +12941,7 @@ def _ready_work_unit_context_packet(
     product_creation_plan: dict[str, Any],
     product_implementation_readiness: dict[str, Any],
     plan_ref: str,
+    decomposition_review_ref: str,
     readiness_ref: str,
     unit: dict[str, Any],
     context_boundary: dict[str, Any],
@@ -12313,7 +12965,13 @@ def _ready_work_unit_context_packet(
         )
     allowed_refs = _list_items(context_boundary.get("allowed_context_refs"))
     resolver = [
-        _ready_work_unit_ref_resolver_entry(ref, plan_ref=plan_ref, readiness_ref=readiness_ref, work_unit_id=work_unit_id)
+        _ready_work_unit_ref_resolver_entry(
+            ref,
+            plan_ref=plan_ref,
+            decomposition_review_ref=decomposition_review_ref,
+            readiness_ref=readiness_ref,
+            work_unit_id=work_unit_id,
+        )
         for ref in allowed_refs
     ]
     return sanitize_public_refs(
@@ -12338,6 +12996,12 @@ def _ready_work_unit_context_packet(
                     "complete_product_done_criteria": _list_items(product_creation_plan.get("complete_product_done_criteria")),
                     "slice_done_criteria": _list_items(product_creation_plan.get("slice_done_criteria")),
                     "related_work_units": related_work_units,
+                },
+                "decomposition_coverage_review": {
+                    "resolved_ref": decomposition_review_ref,
+                    "review_result": str(product_implementation_readiness.get("decomposition_coverage_review_result") or "").strip(),
+                    "product_creation_plan_ref": str(product_implementation_readiness.get("product_creation_plan_ref") or "").strip(),
+                    "no_f15_without_pass": True,
                 },
                 "product_implementation_readiness": {
                     "resolved_ref": readiness_ref,
@@ -12466,7 +13130,12 @@ def _validate_ready_work_unit_context_packet(
                 f"{index_path}.work_unit_context_packet.context_resolver[{resolver_index}] ref must be present in embedded payload"
             )
 
-    for payload_key in ("product_creation_plan", "product_implementation_readiness", "current_work_unit"):
+    for payload_key in (
+        "product_creation_plan",
+        "decomposition_coverage_review",
+        "product_implementation_readiness",
+        "current_work_unit",
+    ):
         if not isinstance(embedded_payloads.get(payload_key), dict):
             errors.append(f"{index_path}.work_unit_context_packet.embedded_payloads.{payload_key} must be embedded")
 
@@ -12502,6 +13171,11 @@ def build_ready_work_unit_packet_manifest(
     )
     material_execution_allowed = readiness_acceptance.get("material_execution_allowed") is True
     allowed_scope = str(readiness_acceptance.get("allowed_execution_scope") or "").strip()
+    decomposition_review_ref = str(product_implementation_readiness.get("decomposition_coverage_review_ref") or "").strip()
+    if not decomposition_review_ref:
+        raise ValueError("Product Implementation Readiness requires decomposition_coverage_review_ref")
+    if str(product_implementation_readiness.get("decomposition_coverage_review_result") or "").strip().upper() != "PASS":
+        raise ValueError("Product Implementation Readiness requires Decomposition Coverage Review PASS before packet materialization")
     if readiness_result not in {"PASS", "CONCERNS"} or not material_execution_allowed:
         raise ValueError("Product Implementation Readiness does not allow ready work-unit packet materialization")
     if allowed_scope not in {"ready_work_units_only", "all_ready_work_units"}:
@@ -12577,6 +13251,7 @@ def build_ready_work_unit_packet_manifest(
         )
         context_boundary = _ready_work_unit_context_boundary(
             plan_ref=plan_ref,
+            decomposition_review_ref=decomposition_review_ref,
             readiness_ref=readiness_ref,
             unit=unit,
             dependency_refs=dependency_refs,
@@ -12628,6 +13303,7 @@ def build_ready_work_unit_packet_manifest(
                 product_creation_plan=product_creation_plan,
                 product_implementation_readiness=product_implementation_readiness,
                 plan_ref=plan_ref,
+                decomposition_review_ref=decomposition_review_ref,
                 readiness_ref=readiness_ref,
                 unit=unit_for_context,
                 context_boundary=context_boundary,
@@ -12659,6 +13335,7 @@ def build_ready_work_unit_packet_manifest(
         "created_at": created,
         "factory_method_version": "OVERKILL_VFINAL",
         "product_creation_plan_ref": plan_ref,
+        "decomposition_coverage_review_ref": decomposition_review_ref,
         "product_implementation_readiness_ref": readiness_ref,
         "readiness_result": readiness_result,
         "allowed_execution_scope": allowed_scope,
@@ -12674,6 +13351,7 @@ def build_ready_work_unit_packet_manifest(
         "blocked_work_units_not_materialized": _list_items(product_implementation_readiness.get("blocked_work_units")),
         "blocking_rules": {
             "validated_product_creation_plan_required": True,
+            "validated_decomposition_coverage_review_required": True,
             "validated_product_implementation_readiness_required": True,
             "only_ready_work_units_materialized": True,
             "failed_or_blocked_readiness_blocks_packet_creation": True,
@@ -12705,12 +13383,14 @@ def build_ready_work_unit_packet_manifest(
             "evidence_refs": [
                 "schemas/ready-work-unit-packets.schema.json",
                 plan_ref,
+                decomposition_review_ref,
                 readiness_ref,
             ],
         },
         "evidence_refs": [
             "schemas/ready-work-unit-packets.schema.json",
             plan_ref,
+            decomposition_review_ref,
             readiness_ref,
         ],
     }
@@ -12727,7 +13407,7 @@ def validate_ready_work_unit_packet_manifest(manifest: dict[str, Any]) -> list[s
     if manifest.get("record_type") != "ready_work_unit_packet_manifest":
         errors.append("ready_work_unit_packet_manifest.record_type must be ready_work_unit_packet_manifest")
 
-    for field in ("product_creation_plan_ref", "product_implementation_readiness_ref"):
+    for field in ("product_creation_plan_ref", "decomposition_coverage_review_ref", "product_implementation_readiness_ref"):
         value = str(manifest.get(field) or "").strip()
         if value:
             _validate_public_ref(value, f"ready_work_unit_packet_manifest.{field}", errors)
@@ -12845,6 +13525,14 @@ def validate_ready_work_unit_packet_manifest(manifest: dict[str, Any]) -> list[s
 
     if manifest.get("complete_product_claim_allowed") is not False:
         errors.append("ready_work_unit_packet_manifest.complete_product_claim_allowed must be false")
+    blocking_rules = manifest.get("blocking_rules") if isinstance(manifest.get("blocking_rules"), dict) else {}
+    for field in (
+        "validated_product_creation_plan_required",
+        "validated_decomposition_coverage_review_required",
+        "validated_product_implementation_readiness_required",
+    ):
+        if blocking_rules.get(field) is not True:
+            errors.append(f"ready_work_unit_packet_manifest.blocking_rules.{field} must be true")
     acceptance = manifest.get("acceptance") if isinstance(manifest.get("acceptance"), dict) else {}
     if acceptance.get("packet_count") != len(packets):
         errors.append("ready_work_unit_packet_manifest.acceptance.packet_count must match packets length")
@@ -15821,6 +16509,12 @@ def build_worker_packet(worker_id: str, card: dict[str, Any], source_path: Path)
             "canonical_product_sot_ref": card.get("canonical_product_sot_ref") or "card.product_sot",
             "product_creation_plan_ref": card.get("product_creation_plan_ref")
             or ("card.product_creation_plan" if isinstance(card.get("product_creation_plan"), dict) else None),
+            "decomposition_coverage_review_ref": card.get("decomposition_coverage_review_ref")
+            or (
+                "card.decomposition_coverage_review"
+                if isinstance(card.get("decomposition_coverage_review"), dict)
+                else None
+            ),
             "product_context_packet_ref": card.get("product_context_packet_ref")
             or ("card.product_context_packet" if isinstance(card.get("product_context_packet"), dict) else None),
             "product_implementation_readiness_ref": card.get("product_implementation_readiness_ref")
@@ -18590,6 +19284,13 @@ def help_action_from_gate(card: dict[str, Any], gate_report: dict[str, Any], pha
             "why": "Execution slices cannot replace the complete production-ready product plan.",
             "command_refs": command_refs,
         }
+    if any("decomposition_coverage_review" in error.lower() for error in errors):
+        return {
+            "owner": "factory",
+            "action": "create or attach the multi-operator Decomposition Coverage Review before readiness or dispatch",
+            "why": "Every work-unit owner and reviewer must prove that the decomposition covers the product before execution packets exist.",
+            "command_refs": command_refs,
+        }
     if any("product_implementation_readiness" in error.lower() for error in errors):
         return {
             "owner": "factory",
@@ -19094,6 +19795,23 @@ def _task_has_product_implementation_readiness(task: dict[str, Any]) -> bool:
         if str(payload.get("required_output") or payload.get("artifact") or "").strip() == "product_implementation_readiness":
             return True
         if isinstance(payload.get("product_implementation_readiness"), dict):
+            return True
+    return False
+
+
+def _task_has_decomposition_coverage_review(task: dict[str, Any]) -> bool:
+    text = _task_search_text(task)
+    assignee = str(task.get("assignee") or "").strip().lower()
+    if "independent-reviewer" in assignee and (
+        "decomposition_coverage_review" in text or "decomposition coverage review" in text
+    ):
+        return True
+    for payload in _task_payload_objects(task):
+        if payload.get("record_type") == "decomposition_coverage_review":
+            return True
+        if str(payload.get("required_output") or payload.get("artifact") or "").strip() == "decomposition_coverage_review":
+            return True
+        if isinstance(payload.get("decomposition_coverage_review"), dict):
             return True
     return False
 
@@ -19763,6 +20481,43 @@ def board_reconcile_terminal_product_creation_plan_continuation(
     product_creation_refs = [_task_public_ref(task) for task in done if _task_has_product_creation_plan(task)]
     if not product_creation_refs:
         return None, []
+    if any(_task_has_decomposition_coverage_review(task) for task in done):
+        return None, []
+    phase_engine = {
+        "computed_frontier": "ready_gate",
+        "computed_phase_id": "F12",
+        "next_required_artifact": "decomposition_coverage_review",
+        "decision_basis": (
+            "Product Creation Plan exists; the next deterministic frontier is Product "
+            "Decomposition Coverage Review by every required work-unit owner and reviewer before "
+            "readiness, work units or implementation."
+        ),
+        "human_gate_allowed": False,
+        "phase_mismatch": False,
+    }
+    evidence_refs = sorted(set(product_creation_refs))
+    factory_help = {
+        "factory_next_action": {
+            "artifact": "decomposition_coverage_review",
+            "owner": DEFAULT_ARTIFACT_OWNERS["decomposition_coverage_review"],
+            "why": phase_engine["decision_basis"],
+            "evidence_refs": evidence_refs,
+        }
+    }
+    return {
+        "phase_engine": phase_engine,
+        "factory_help": factory_help,
+        "evidence_refs": evidence_refs,
+    }, []
+
+
+def board_reconcile_terminal_decomposition_coverage_review_continuation(
+    rows: dict[str, list[dict[str, Any]]],
+) -> tuple[dict[str, Any] | None, list[str]]:
+    done = rows.get("done", [])
+    review_refs = [_task_public_ref(task) for task in done if _task_has_decomposition_coverage_review(task)]
+    if not review_refs:
+        return None, []
     if any(_task_has_product_implementation_readiness(task) for task in done):
         return None, []
     phase_engine = {
@@ -19770,13 +20525,13 @@ def board_reconcile_terminal_product_creation_plan_continuation(
         "computed_phase_id": "F12",
         "next_required_artifact": "product_implementation_readiness",
         "decision_basis": (
-            "Product Creation Plan exists; the next deterministic frontier is Product "
+            "Decomposition Coverage Review exists; the next deterministic frontier is Product "
             "Implementation Readiness before ready gate, work units or implementation."
         ),
         "human_gate_allowed": False,
         "phase_mismatch": False,
     }
-    evidence_refs = sorted(set(product_creation_refs))
+    evidence_refs = sorted(set(review_refs))
     factory_help = {
         "factory_next_action": {
             "artifact": "product_implementation_readiness",
@@ -20173,6 +20928,10 @@ def build_board_reconcile_plan(
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
                 board_reconcile_terminal_product_creation_plan_continuation(rows)
+            )
+        if terminal_continuation is None:
+            terminal_continuation, terminal_continuation_errors = (
+                board_reconcile_terminal_decomposition_coverage_review_continuation(rows)
             )
         if terminal_continuation is None:
             terminal_continuation, terminal_continuation_errors = (
@@ -21836,6 +22595,19 @@ def command_validate_product_creation_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_validate_decomposition_coverage_review(args: argparse.Namespace) -> int:
+    review = load_json_like(args.path)
+    errors = validate_decomposition_coverage_review(review)
+    if args.product_creation_plan:
+        errors.extend(validate_decomposition_coverage_review_against_plan(review, load_json_like(args.product_creation_plan)))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    print("OK")
+    return 0
+
+
 def command_validate_product_experience_control_plane(args: argparse.Namespace) -> int:
     errors = validate_product_experience_control_plane(load_json_like(args.path))
     if errors:
@@ -22220,15 +22992,37 @@ def command_product_creation_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_decomposition_coverage_review(args: argparse.Namespace) -> int:
+    try:
+        review = build_decomposition_coverage_review(
+            load_json_like(args.product_creation_plan),
+            created_at=args.created_at,
+            review_id=args.review_id,
+            product_creation_plan_ref=args.product_creation_plan_ref,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    errors = validate_decomposition_coverage_review(review)
+    errors.extend(validate_decomposition_coverage_review_against_plan(review, load_json_like(args.product_creation_plan)))
+    if errors:
+        for error in errors:
+            print(error, file=sys.stderr)
+        return 1
+    write_json(args.out, review)
+    return 0
+
+
 def command_product_implementation_readiness(args: argparse.Namespace) -> int:
     try:
         readiness = build_product_implementation_readiness(
             load_json_like(args.product_creation_plan),
+            load_json_like(args.decomposition_coverage_review),
             created_at=args.created_at,
             readiness_id=args.readiness_id,
         )
     except ValueError as exc:
-        print("product_creation_plan failed validation; run validate-product-creation-plan for public-safe details", file=sys.stderr)
+        print(str(exc), file=sys.stderr)
         return 1
     errors = validate_product_implementation_readiness(readiness)
     if errors:
@@ -22944,6 +23738,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate_product_creation_plan_parser.add_argument("path", type=Path)
     validate_product_creation_plan_parser.set_defaults(func=command_validate_product_creation_plan)
 
+    validate_decomposition_coverage_review_parser = sub.add_parser("validate-decomposition-coverage-review")
+    validate_decomposition_coverage_review_parser.add_argument("path", type=Path)
+    validate_decomposition_coverage_review_parser.add_argument("--product-creation-plan", type=Path)
+    validate_decomposition_coverage_review_parser.set_defaults(func=command_validate_decomposition_coverage_review)
+
     validate_product_experience_control_plane_parser = sub.add_parser("validate-product-experience-control-plane")
     validate_product_experience_control_plane_parser.add_argument("path", type=Path)
     validate_product_experience_control_plane_parser.set_defaults(func=command_validate_product_experience_control_plane)
@@ -23137,11 +23936,23 @@ def build_parser() -> argparse.ArgumentParser:
     product_creation_plan_parser.add_argument("--out", type=Path)
     product_creation_plan_parser.set_defaults(func=command_product_creation_plan)
 
+    decomposition_coverage_review_parser = sub.add_parser(
+        "decomposition-coverage-review",
+        help="Build the multi-operator decomposition coverage review required before implementation readiness.",
+    )
+    decomposition_coverage_review_parser.add_argument("--product-creation-plan", type=Path, required=True)
+    decomposition_coverage_review_parser.add_argument("--product-creation-plan-ref")
+    decomposition_coverage_review_parser.add_argument("--created-at")
+    decomposition_coverage_review_parser.add_argument("--review-id")
+    decomposition_coverage_review_parser.add_argument("--out", type=Path, required=True)
+    decomposition_coverage_review_parser.set_defaults(func=command_decomposition_coverage_review)
+
     product_implementation_readiness_parser = sub.add_parser(
         "product-implementation-readiness",
-        help="Build Product Implementation Readiness from a validated Product Creation Plan without executing work.",
+        help="Build Product Implementation Readiness from a validated Product Creation Plan and Decomposition Coverage Review without executing work.",
     )
     product_implementation_readiness_parser.add_argument("--product-creation-plan", type=Path, required=True)
+    product_implementation_readiness_parser.add_argument("--decomposition-coverage-review", type=Path, required=True)
     product_implementation_readiness_parser.add_argument("--created-at")
     product_implementation_readiness_parser.add_argument("--readiness-id")
     product_implementation_readiness_parser.add_argument("--out", type=Path, required=True)

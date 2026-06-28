@@ -125,6 +125,8 @@ sinal bruto
 -> capability pack e roteamento de risco
 -> arquitetura, segurança e gates de acesso
 -> Product Creation Plan e work units
+-> Decomposition Coverage Review multi-operador
+-> Product Implementation Readiness
 -> pacotes de worker no Hermes
 -> execução, verificação e revisão independente
 -> Receipt Five

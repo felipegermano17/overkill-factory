@@ -5482,7 +5482,8 @@ def ready_work_unit_route_repair_scope_contract(plan_task: dict[str, Any]) -> di
                     return items
         return []
 
-    phase = first_text("phase")
+    runtime_phase = phase_id_from_step_key(first_text("current_step_key"))
+    phase = runtime_phase or first_text("phase")
     risk_effective = first_text("risk_effective")
     surfaces = first_list("surfaces")
     missing = [

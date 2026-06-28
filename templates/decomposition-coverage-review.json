@@ -1,0 +1,381 @@
+{
+  "$schema": "https://overkill-factory.dev/schemas/decomposition-coverage-review.schema.json",
+  "record_type": "decomposition_coverage_review",
+  "review_id": "decomposition-coverage-review-public-template",
+  "created_at": "2026-06-17T00:00:00+00:00",
+  "factory_method_version": "OVERKILL_VFINAL",
+  "product_creation_plan_ref": "product-creation-plan-public-template",
+  "reviewer_role": "independent-reviewer",
+  "participating_reviewer_roles": [
+    "decomposition-planner",
+    "independent-reviewer",
+    "implementation-worker",
+    "factory-orchestrator",
+    "release-ops-worker"
+  ],
+  "reviewer_matrix": [
+    {
+      "unit_id": "work-unit-001-scope-reconciliation",
+      "owner_worker": "decomposition-planner",
+      "reviewer_role": "independent-reviewer",
+      "required_participant_roles": [
+        "decomposition-planner",
+        "independent-reviewer"
+      ],
+      "participant_signoffs": [
+        {
+          "role": "decomposition-planner",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        },
+        {
+          "role": "independent-reviewer",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        }
+      ],
+      "coverage_decision": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    },
+    {
+      "unit_id": "work-unit-002-product-sot-scope-in-001",
+      "owner_worker": "implementation-worker",
+      "reviewer_role": "independent-reviewer",
+      "required_participant_roles": [
+        "implementation-worker",
+        "independent-reviewer"
+      ],
+      "participant_signoffs": [
+        {
+          "role": "implementation-worker",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        },
+        {
+          "role": "independent-reviewer",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        }
+      ],
+      "coverage_decision": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    },
+    {
+      "unit_id": "work-unit-003-complete-product-scope",
+      "owner_worker": "implementation-worker",
+      "reviewer_role": "independent-reviewer",
+      "required_participant_roles": [
+        "implementation-worker",
+        "independent-reviewer"
+      ],
+      "participant_signoffs": [
+        {
+          "role": "implementation-worker",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        },
+        {
+          "role": "independent-reviewer",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        }
+      ],
+      "coverage_decision": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    },
+    {
+      "unit_id": "work-unit-004-implementation-readiness",
+      "owner_worker": "factory-orchestrator",
+      "reviewer_role": "independent-reviewer",
+      "required_participant_roles": [
+        "factory-orchestrator",
+        "independent-reviewer"
+      ],
+      "participant_signoffs": [
+        {
+          "role": "factory-orchestrator",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        },
+        {
+          "role": "independent-reviewer",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        }
+      ],
+      "coverage_decision": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    },
+    {
+      "unit_id": "work-unit-005-release-operations-readiness",
+      "owner_worker": "release-ops-worker",
+      "reviewer_role": "independent-reviewer",
+      "required_participant_roles": [
+        "release-ops-worker",
+        "independent-reviewer"
+      ],
+      "participant_signoffs": [
+        {
+          "role": "release-ops-worker",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        },
+        {
+          "role": "independent-reviewer",
+          "decision": "PASS",
+          "evidence_refs": [
+            "product-creation-plan-public-template"
+          ],
+          "notes": "Participant coverage review passes for this work unit."
+        }
+      ],
+      "coverage_decision": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    }
+  ],
+  "reviewer_consensus": {
+    "all_required_participants_present": true,
+    "all_participant_signoffs_passed": true,
+    "single_reviewer_approval_forbidden": true
+  },
+  "review_result": "PASS",
+  "complete_product_decomposition_required": true,
+  "coverage_basis": {
+    "product_sot_ref": "full-scope-coverage-public-template#approved-product-sot",
+    "method_contract_ref": "method-contract-public-template",
+    "work_units_accounted": 5,
+    "requirement_refs_accounted": [
+      "product-sot#scope-in-001"
+    ],
+    "proof_ids_accounted": [
+      "product_creation.scope_reconciliation",
+      "product_creation.no_scope_reduction",
+      "product_creation.product-sot-scope-in-001.implementation",
+      "product_creation.product-sot-scope-in-001.verification",
+      "product_creation.complete-product-scope.scope_fit",
+      "product_creation.complete-product-scope.verification",
+      "product_creation.implementation_readiness",
+      "product_creation.gate_alignment",
+      "product_creation.release_path",
+      "product_creation.operations_readiness",
+      "generic.scope-fit"
+    ],
+    "dependency_graph_ref": "product-creation-plan-public-template#dependency_graph"
+  },
+  "coverage_rows": [
+    {
+      "requirement_ref": "product-sot#scope-in-001",
+      "coverage_status": "covered_for_execution",
+      "work_unit_refs": [
+        "work-unit-001-scope-reconciliation",
+        "work-unit-002-product-sot-scope-in-001",
+        "work-unit-003-complete-product-scope",
+        "work-unit-004-implementation-readiness",
+        "work-unit-005-release-operations-readiness"
+      ],
+      "proof_ids_required": [
+        "product_creation.scope_reconciliation",
+        "product_creation.no_scope_reduction",
+        "product_creation.product-sot-scope-in-001.implementation",
+        "product_creation.product-sot-scope-in-001.verification",
+        "product_creation.complete-product-scope.scope_fit",
+        "product_creation.complete-product-scope.verification",
+        "product_creation.implementation_readiness",
+        "product_creation.gate_alignment",
+        "product_creation.release_path",
+        "product_creation.operations_readiness"
+      ],
+      "reviewer_role": "independent-reviewer",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    }
+  ],
+  "work_unit_readiness_findings": [
+    {
+      "unit_id": "work-unit-001-scope-reconciliation",
+      "status": "ready",
+      "owner_worker": "decomposition-planner",
+      "reviewer_role": "independent-reviewer",
+      "issues": [],
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    },
+    {
+      "unit_id": "work-unit-002-product-sot-scope-in-001",
+      "status": "ready",
+      "owner_worker": "implementation-worker",
+      "reviewer_role": "independent-reviewer",
+      "issues": [],
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    },
+    {
+      "unit_id": "work-unit-003-complete-product-scope",
+      "status": "ready",
+      "owner_worker": "implementation-worker",
+      "reviewer_role": "independent-reviewer",
+      "issues": [],
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    },
+    {
+      "unit_id": "work-unit-004-implementation-readiness",
+      "status": "ready",
+      "owner_worker": "factory-orchestrator",
+      "reviewer_role": "independent-reviewer",
+      "issues": [],
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    },
+    {
+      "unit_id": "work-unit-005-release-operations-readiness",
+      "status": "ready",
+      "owner_worker": "release-ops-worker",
+      "reviewer_role": "independent-reviewer",
+      "issues": [],
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "requirements_covered",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "notes": "Every requirement row must be covered, blocked with owner, deferred with owner or out of scope."
+    },
+    {
+      "check_id": "work_units_mapped",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "notes": "Every coverage row must point to concrete work_unit refs."
+    },
+    {
+      "check_id": "proofs_mapped",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "notes": "Every executable work unit needs proof ids before dispatch."
+    },
+    {
+      "check_id": "reviewers_assigned",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "notes": "Every work unit must have a reviewer and proof ids."
+    },
+    {
+      "check_id": "all_work_unit_owners_reviewed",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "notes": "Every owner_worker and reviewer_role participating in work units must sign off the decomposition slice they own."
+    },
+    {
+      "check_id": "dependency_graph_present",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "notes": "Hermes-native materialization needs a declared dependency graph."
+    },
+    {
+      "check_id": "f15_blocked_until_pass",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "notes": "F15 worker packets are forbidden until this review is PASS."
+    }
+  ],
+  "blocking_rules": {
+    "no_f15_without_pass": true,
+    "all_active_requirements_accounted": true,
+    "work_units_need_reviewer_and_proof": true,
+    "all_work_unit_owners_must_review": true,
+    "single_reviewer_approval_forbidden": true,
+    "hermes_graph_required_before_materialization": true,
+    "complete_product_claim_forbidden_until_reconciled": true,
+    "raw_private_evidence_must_stay_external": true
+  },
+  "handoff": {
+    "next_artifact": "product_implementation_readiness",
+    "next_worker": "factory-orchestrator",
+    "next_safe_action": "Create Product Implementation Readiness only after Decomposition Coverage Review PASS.",
+    "user_decision_required": false,
+    "factory_owned_next_step": true
+  },
+  "public_private_boundary": {
+    "public_safe_refs_only": true,
+    "raw_private_evidence_embedded": false,
+    "private_context_retained_outside_public_repo": true
+  },
+  "acceptance": {
+    "decomposition_coverage_review_created": true,
+    "review_result": "PASS",
+    "f15_execution_allowed": true,
+    "all_requirements_accounted": true,
+    "all_required_participants_present": true,
+    "all_participant_signoffs_passed": true,
+    "all_work_units_have_reviewers": true,
+    "all_work_units_have_proofs": true,
+    "evidence_refs": [
+      "schemas/decomposition-coverage-review.schema.json",
+      "product-creation-plan-public-template"
+    ]
+  },
+  "evidence_refs": [
+    "schemas/decomposition-coverage-review.schema.json",
+    "product-creation-plan-public-template"
+  ]
+}

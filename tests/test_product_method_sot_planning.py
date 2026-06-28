@@ -452,7 +452,7 @@ class ProductMethodSotPlanningTest(unittest.TestCase):
         card["product_implementation_readiness"]["concern_items"][0]["allowed_ready_work_units"] = ["other-unit"]
 
         self.assertIn(
-            "product_implementation_readiness.CONCERNS ready_work_units must be covered by concern_items[0].allowed_ready_work_units: work-unit-001",
+            "product_implementation_readiness.CONCERNS ready_work_units must be covered by concern_items[0].allowed_ready_work_units: work-unit-001-scope-reconciliation, work-unit-002-product-sot-scope-in-001, work-unit-003-complete-product-scope, work-unit-004-implementation-readiness, work-unit-005-release-operations-readiness",
             factoryctl.validate_card(card),
         )
 

@@ -11,6 +11,8 @@
     "product_sot_ref",
     "method_contract_ref",
     "product_creation_plan_ref",
+    "decomposition_coverage_review_ref",
+    "decomposition_coverage_review_result",
     "product_delivery_quality_profile_trace",
     "artifact_alignment_result",
     "requirements_trace",
@@ -35,6 +37,8 @@
     "product_sot_ref": { "type": "string", "minLength": 3 },
     "method_contract_ref": { "type": "string", "minLength": 3 },
     "product_creation_plan_ref": { "type": "string", "minLength": 3 },
+    "decomposition_coverage_review_ref": { "type": "string", "minLength": 3 },
+    "decomposition_coverage_review_result": { "const": "PASS" },
     "product_delivery_quality_profile_ref": { "type": "string", "minLength": 3 },
     "product_delivery_quality_profile_trace": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
     "delivery_profile_proof_coverage": {
@@ -125,6 +129,8 @@
       "type": "object",
       "required": [
         "product_creation_plan_required",
+        "decomposition_coverage_review_required",
+        "blocked_or_failed_decomposition_review_blocks_execution",
         "blocked_or_failed_readiness_blocks_execution",
         "concerns_allow_only_ready_work_units",
         "complete_product_claim_forbidden_until_all_scope_reconciled",
@@ -132,6 +138,8 @@
       ],
       "properties": {
         "product_creation_plan_required": { "const": true },
+        "decomposition_coverage_review_required": { "const": true },
+        "blocked_or_failed_decomposition_review_blocks_execution": { "const": true },
         "blocked_or_failed_readiness_blocks_execution": { "const": true },
         "concerns_allow_only_ready_work_units": { "const": true },
         "complete_product_claim_forbidden_until_all_scope_reconciled": { "const": true },

@@ -4,64 +4,273 @@
   "readiness_id": "product-implementation-readiness-public-template",
   "created_at": "2026-06-17T00:00:00+00:00",
   "factory_method_version": "OVERKILL_VFINAL",
-  "product_sot_ref": "templates/product-sot.json",
-  "method_contract_ref": "templates/method-contract.json",
+  "product_sot_ref": "full-scope-coverage-public-template#approved-product-sot",
+  "method_contract_ref": "method-contract-public-template",
   "product_creation_plan_ref": "product-creation-plan-public-template",
+  "decomposition_coverage_review_ref": "decomposition-coverage-review-public-template",
+  "decomposition_coverage_review_result": "PASS",
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
   "product_delivery_quality_profile_trace": [
-    "templates/product-delivery-quality-profile.json#generic-software-product-v1",
+    "templates/product-delivery-quality-profile.json",
+    "product_creation.scope_reconciliation is required before implementation",
+    "product_creation.no_scope_reduction is required before implementation",
+    "product_creation.product-sot-scope-in-001.implementation is required before implementation",
+    "product_creation.product-sot-scope-in-001.verification is required before implementation",
+    "product_creation.complete-product-scope.scope_fit is required before implementation",
+    "product_creation.complete-product-scope.verification is required before implementation",
+    "product_creation.implementation_readiness is required before implementation",
+    "product_creation.gate_alignment is required before implementation",
+    "product_creation.release_path is required before implementation",
+    "product_creation.operations_readiness is required before implementation",
     "generic.scope-fit is required before implementation"
   ],
   "delivery_profile_proof_coverage": [
     {
-      "proof_id": "generic.scope-fit",
+      "proof_id": "product_creation.scope_reconciliation",
       "status": "PASS",
-      "evidence_refs": ["templates/full-product-sot-scope-coverage.json"],
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
       "owner": "factory-orchestrator",
       "reviewer": "independent-reviewer",
       "reviewer_role": "independent-reviewer",
       "evidence_kind": "contract",
-      "basis": "The ready work unit maps to Product SOT scope and does not redefine complete-product scope."
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.no_scope_reduction",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.product-sot-scope-in-001.implementation",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.product-sot-scope-in-001.verification",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.complete-product-scope.scope_fit",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.complete-product-scope.verification",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.implementation_readiness",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.gate_alignment",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.release_path",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "product_creation.operations_readiness",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
+    },
+    {
+      "proof_id": "generic.scope-fit",
+      "status": "PASS",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ],
+      "owner": "factory-orchestrator",
+      "reviewer": "independent-reviewer",
+      "reviewer_role": "independent-reviewer",
+      "evidence_kind": "contract",
+      "basis": "Product Creation Plan requires this proof before the work unit can close."
     }
   ],
   "artifact_alignment_result": "CONCERNS",
-  "concern_items": [
-    {
-      "concern_id": "scope-fit-bounded-slice",
-      "severity": "MEDIUM",
-      "owner": "factory-orchestrator",
-      "impact": "The first work unit may execute, but it cannot claim complete-product acceptance until the remaining Product SOT scope is proven.",
-      "allowed_actions": ["execute work-unit-001 within Product SOT scope"],
-      "forbidden_actions": ["claim complete product done from one bounded slice"],
-      "allowed_ready_work_units": ["work-unit-001"],
-      "expiry": "until Product SOT scope coverage changes",
-      "next_action": "execute work-unit-001 and preserve the complete-product scope gate for later units",
-      "evidence_refs": ["templates/full-product-sot-scope-coverage.json"]
-    }
-  ],
   "requirements_trace": [
     {
       "requirement_ref": "product-sot#scope-in-001",
-      "work_unit_refs": ["work-unit-001"],
-      "proof_refs": ["test-plan#slice-001"],
+      "work_unit_refs": [
+        "work-unit-001-scope-reconciliation"
+      ],
+      "proof_refs": [
+        "product_creation.scope_reconciliation",
+        "product_creation.no_scope_reduction"
+      ],
+      "status": "mapped"
+    },
+    {
+      "requirement_ref": "product-sot#scope-in-001",
+      "work_unit_refs": [
+        "work-unit-002-product-sot-scope-in-001"
+      ],
+      "proof_refs": [
+        "product_creation.product-sot-scope-in-001.implementation",
+        "product_creation.product-sot-scope-in-001.verification"
+      ],
+      "status": "mapped"
+    },
+    {
+      "requirement_ref": "product-sot#scope-in-001",
+      "work_unit_refs": [
+        "work-unit-003-complete-product-scope"
+      ],
+      "proof_refs": [
+        "product_creation.complete-product-scope.scope_fit",
+        "product_creation.complete-product-scope.verification"
+      ],
+      "status": "mapped"
+    },
+    {
+      "requirement_ref": "product-sot#scope-in-001",
+      "work_unit_refs": [
+        "work-unit-004-implementation-readiness"
+      ],
+      "proof_refs": [
+        "product_creation.implementation_readiness",
+        "product_creation.gate_alignment"
+      ],
+      "status": "mapped"
+    },
+    {
+      "requirement_ref": "product-sot#scope-in-001",
+      "work_unit_refs": [
+        "work-unit-005-release-operations-readiness"
+      ],
+      "proof_refs": [
+        "product_creation.release_path",
+        "product_creation.operations_readiness"
+      ],
       "status": "mapped"
     }
   ],
-  "cross_slice_decision_coverage": ["architecture and method decisions are linked before implementation"],
-  "experience_trace": ["Product Experience refs are mapped when visible surfaces exist"],
-  "security_trace": ["security architecture or explicit non-applicability is recorded"],
-  "capability_pack_trace": ["required packs are ready or blocked"],
-  "access_and_secret_trace": ["required access is granted or blocked before execution"],
-  "proof_coverage": ["work units include verification commands and expected results"],
+  "cross_slice_decision_coverage": [
+    "Product Creation Plan dependency graph and execution order are the current cross-slice decision authority."
+  ],
+  "decomposition_review_trace": [
+    "decomposition-coverage-review-public-template",
+    "Decomposition Coverage Review PASS is required before ready_work_units can become worker packets."
+  ],
+  "experience_trace": [
+    "Product Experience refs must be attached when visible surfaces exist."
+  ],
+  "security_trace": [
+    "Security architecture, scan or explicit non-applicability must be attached for sensitive surfaces."
+  ],
+  "capability_pack_trace": [
+    "templates/capability-pack-contract.json"
+  ],
+  "access_and_secret_trace": [
+    "1 access/secret requirement(s) must be resolved by the readiness gate or worker packets; no secret values are embedded."
+  ],
+  "proof_coverage": [
+    "product_creation.scope_reconciliation",
+    "product_creation.no_scope_reduction",
+    "product_creation.product-sot-scope-in-001.implementation",
+    "product_creation.product-sot-scope-in-001.verification",
+    "product_creation.complete-product-scope.scope_fit",
+    "product_creation.complete-product-scope.verification",
+    "product_creation.implementation_readiness",
+    "product_creation.gate_alignment",
+    "product_creation.release_path",
+    "product_creation.operations_readiness",
+    "generic.scope-fit"
+  ],
   "stale_artifacts": [],
   "contradictions": [],
-  "ready_work_units": ["work-unit-001"],
+  "ready_work_units": [
+    "work-unit-001-scope-reconciliation",
+    "work-unit-002-product-sot-scope-in-001",
+    "work-unit-003-complete-product-scope",
+    "work-unit-004-implementation-readiness",
+    "work-unit-005-release-operations-readiness"
+  ],
   "blocked_work_units": [],
   "human_decisions_required": [],
-  "allowed_next_actions": ["execute ready work units without changing canonical Product SOT scope"],
-  "forbidden_next_actions": ["claim complete product done from one bounded slice"],
+  "allowed_next_actions": [
+    "execute ready_work_units only, preserving canonical Product SOT scope"
+  ],
+  "forbidden_next_actions": [
+    "claim complete product done from one bounded slice",
+    "execute blocked or unlisted work units",
+    "release, deploy, mainnet, customer-ready or irreversible changes before promotion gates"
+  ],
   "blocking_rules": {
     "product_creation_plan_required": true,
+    "decomposition_coverage_review_required": true,
+    "blocked_or_failed_decomposition_review_blocks_execution": true,
     "blocked_or_failed_readiness_blocks_execution": true,
     "concerns_allow_only_ready_work_units": true,
     "complete_product_claim_forbidden_until_all_scope_reconciled": true,
@@ -85,9 +294,41 @@
     "allowed_execution_scope": "ready_work_units_only",
     "complete_product_claim_allowed": false,
     "evidence_refs": [
-      "templates/product-implementation-readiness.json",
-      "templates/product-creation-plan.json"
+      "schemas/product-implementation-readiness.schema.json",
+      "product-creation-plan-public-template",
+      "decomposition-coverage-review-public-template"
     ]
   },
-  "evidence_refs": ["templates/product-creation-plan.json"]
+  "evidence_refs": [
+    "schemas/product-implementation-readiness.schema.json",
+    "product-creation-plan-public-template",
+    "decomposition-coverage-review-public-template"
+  ],
+  "concern_items": [
+    {
+      "concern_id": "bounded-ready-work-units-not-product-completion",
+      "severity": "MEDIUM",
+      "owner": "factory-orchestrator",
+      "impact": "Ready work units may execute, but they cannot claim complete-product acceptance until every active Product SOT requirement is reconciled.",
+      "allowed_actions": [
+        "execute explicitly listed ready work units without changing Product SOT scope"
+      ],
+      "forbidden_actions": [
+        "claim complete product done from a bounded slice",
+        "execute work units not listed in ready_work_units"
+      ],
+      "allowed_ready_work_units": [
+        "work-unit-001-scope-reconciliation",
+        "work-unit-002-product-sot-scope-in-001",
+        "work-unit-003-complete-product-scope",
+        "work-unit-004-implementation-readiness",
+        "work-unit-005-release-operations-readiness"
+      ],
+      "expiry": "until Product SOT, Method Contract, Product Creation Plan or work-unit state changes",
+      "next_action": "materialize ready work units through Hermes worker packets with Receipt Five evidence.",
+      "evidence_refs": [
+        "product-creation-plan-public-template"
+      ]
+    }
+  ]
 }

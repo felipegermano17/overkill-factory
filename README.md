@@ -124,6 +124,8 @@ raw signal
 -> capability pack and risk routing
 -> architecture, security and access gates
 -> Product Creation Plan and work units
+-> multi-operator Decomposition Coverage Review
+-> Product Implementation Readiness
 -> Hermes worker packets
 -> execution, verification and independent review
 -> Receipt Five

@@ -182,6 +182,8 @@
     "software_development_plan": { "type": "object" },
     "product_creation_plan": { "$ref": "product-creation-plan.schema.json" },
     "product_creation_plan_ref": { "type": "string" },
+    "decomposition_coverage_review": { "$ref": "decomposition-coverage-review.schema.json" },
+    "decomposition_coverage_review_ref": { "type": "string" },
     "product_delivery_quality_profile": { "$ref": "product-delivery-quality-profile.schema.json" },
     "product_delivery_quality_profile_ref": { "type": "string" },
     "product_context_packet": { "type": "object" },

@@ -15,6 +15,7 @@
   "specialist_decision_packet_ref": "templates/specialist-decision-packet.json",
   "production_promotion_ladder_ref": "templates/production-promotion-ladder.json",
   "product_creation_plan_ref": "templates/product-creation-plan.json",
+  "decomposition_coverage_review_ref": "templates/decomposition-coverage-review.json",
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
   "product_context_packet_ref": "templates/product-context-packet.json",
   "product_implementation_readiness_ref": "templates/product-implementation-readiness.json",
@@ -41,6 +42,9 @@
       "full_product_sot_scope_coverage_ref": "templates/full-product-sot-scope-coverage.json",
       "operator_briefing_package_ref": "templates/operator-briefing-package.json",
       "method_contract_ref": "templates/method-contract.json",
+      "product_creation_plan_ref": "templates/product-creation-plan.json",
+      "decomposition_coverage_review_ref": "templates/decomposition-coverage-review.json",
+      "product_implementation_readiness_ref": "templates/product-implementation-readiness.json",
       "ready_gate_ref": "factoryctl:gate-report"
     },
     "frozen_phase_ids": [],
@@ -414,6 +418,7 @@
     "required_factory_artifacts": [
       "full_product_sot_scope_coverage",
       "product_creation_plan",
+      "decomposition_coverage_review",
       "product_implementation_readiness"
     ],
     "active_product_sot_requirement_refs": [
@@ -431,6 +436,7 @@
           "method_contract",
           "spec_graph",
           "product_creation_plan",
+          "decomposition_coverage_review",
           "work_unit_contract"
         ],
         "required_gates": [
@@ -491,6 +497,8 @@
         ],
         "reason": "Product SOT requirements need stable contracts and regression proof.",
         "required_artifacts": [
+          "product_creation_plan",
+          "decomposition_coverage_review",
           "spec_graph",
           "work_unit_contract"
         ],
@@ -524,8 +532,11 @@
       }
     ],
     "required_artifacts": [
+      "product_creation_plan",
+      "decomposition_coverage_review",
       "software_development_plan",
-      "loop_plan"
+      "loop_plan",
+      "product_implementation_readiness"
     ],
     "required_workers": [
       "factory-orchestrator",
@@ -537,6 +548,9 @@
       "independent-reviewer"
     ],
     "evidence_requirements": [
+      "product_creation_plan",
+      "decomposition_coverage_review",
+      "product_implementation_readiness",
       "tests pass",
       "independent review",
       "Receipt Five"
@@ -544,12 +558,14 @@
     "authority_limit": "bounded_execution only; no release without gate",
     "done_criteria": [
       "required artifacts exist",
+      "Decomposition Coverage Review is PASS for every work-unit owner and reviewer",
       "required workers returned evidence",
       "Receipt Five ready"
     ],
     "blocking_rules": {
       "full_scope_coverage_required": true,
       "product_creation_plan_required": true,
+      "decomposition_coverage_review_required": true,
       "execution_blocked_until_ready_gate": true,
       "raw_private_evidence_must_stay_external": true,
       "operator_must_not_choose_internal_method": true
@@ -571,7 +587,7 @@
       "execution_allowed": false,
       "selected_method_is_factory_owned": true,
       "scope_reduction_detected": false,
-      "blocked_reason": "Method contract exists, but execution remains blocked until product creation plan, readiness, required gates and workers pass.",
+      "blocked_reason": "Method contract exists, but execution remains blocked until product creation plan, multi-operator decomposition coverage review, readiness, required gates and workers pass.",
       "evidence_refs": [
         "templates/method-contract.json",
         "templates/full-product-sot-scope-coverage.json"

@@ -4,12 +4,14 @@
   "contract_id": "method-contract-public-template",
   "created_at": "2026-06-17T00:00:00+00:00",
   "factory_method_version": "OVERKILL_VFINAL",
-  "full_product_sot_scope_coverage_ref": "templates/full-product-sot-scope-coverage.json",
-  "selected_method": "spec-first | test-first | behavior-first | discovery-first | prototype-first | legacy-diagnosis | incident-first",
-  "why_this_method": "Explain in plain language why this method fits this work.",
+  "full_product_sot_scope_coverage_ref": "full-scope-coverage-public-template",
+  "selected_method": "spec-first",
+  "why_this_method": "Full Product SOT scope coverage is accounted, so the factory can route through spec-first and test-first planning without asking the operator to choose internal methods.",
   "risk_tier": "R2",
   "required_plans": [
-    "software_development_plan"
+    "product_creation_plan",
+    "software_development_plan",
+    "loop_plan"
   ],
   "required_gates": [
     "Ready Gate",
@@ -23,6 +25,7 @@
   "required_factory_artifacts": [
     "full_product_sot_scope_coverage",
     "product_creation_plan",
+    "decomposition_coverage_review",
     "product_implementation_readiness"
   ],
   "active_product_sot_requirement_refs": [
@@ -35,33 +38,81 @@
       "engine_id": "spec_first_sdd",
       "method": "spec-first",
       "method_family": "spec_first",
-      "why_selected": "Product SOT requirements need a spec graph before execution.",
-      "required_artifacts": ["method_contract", "spec_graph", "product_creation_plan", "work_unit_contract"],
-      "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
-      "required_workers": ["factory-orchestrator", "decomposition-planner", "qa-verification-worker"],
-      "proof_requirements": ["spec artifacts exist", "tasks trace to Product SOT", "Receipt Five cites spec evidence"],
+      "why_selected": "spec-first is selected by the factory Method OS for the current scope, risk and blockers.",
+      "required_artifacts": [
+        "method_contract",
+        "spec_graph",
+        "product_creation_plan",
+        "work_unit_contract"
+      ],
+      "required_gates": [
+        "Ready Gate",
+        "Review Gate",
+        "Done Gate"
+      ],
+      "required_workers": [
+        "factory-orchestrator",
+        "decomposition-planner",
+        "qa-verification-worker"
+      ],
+      "proof_requirements": [
+        "spec artifacts exist",
+        "tasks trace to Product SOT",
+        "Receipt Five cites spec evidence"
+      ],
       "execution_allowed_by_engine_selection": false
     },
     {
       "engine_id": "test_first_tdd",
       "method": "test-first",
       "method_family": "test_first",
-      "why_selected": "Product SOT requirements need regression proof before completion.",
-      "required_artifacts": ["test_plan", "regression_tests", "verification_commands"],
-      "required_gates": ["Ready Gate", "Review Gate", "Done Gate"],
-      "required_workers": ["qa-verification-worker", "test-automation-builder", "independent-reviewer"],
-      "proof_requirements": ["failing or target test defined before implementation", "tests pass after implementation", "Receipt Five cites commands"],
+      "why_selected": "test-first is selected by the factory Method OS for the current scope, risk and blockers.",
+      "required_artifacts": [
+        "test_plan",
+        "regression_tests",
+        "verification_commands"
+      ],
+      "required_gates": [
+        "Ready Gate",
+        "Review Gate",
+        "Done Gate"
+      ],
+      "required_workers": [
+        "qa-verification-worker",
+        "test-automation-builder",
+        "independent-reviewer"
+      ],
+      "proof_requirements": [
+        "failing or target test defined before implementation",
+        "tests pass after implementation",
+        "Receipt Five cites commands"
+      ],
       "execution_allowed_by_engine_selection": false
     }
   ],
   "engineering_method_matrix": [
     {
-      "surface_or_component": "product core",
-      "methods": ["spec-first", "test-first"],
-      "method_engine_ids": ["spec_first_sdd", "test_first_tdd"],
-      "reason": "Product SOT requirements need stable contracts and regression proof.",
-      "required_artifacts": ["spec_graph", "work_unit_contract"],
-      "evidence_required": ["tests pass", "worker result evidence"]
+      "surface_or_component": "complete product scope",
+      "methods": [
+        "spec-first",
+        "test-first"
+      ],
+      "method_engine_ids": [
+        "spec_first_sdd",
+        "test_first_tdd"
+      ],
+      "reason": "Coverage requires every Product SOT requirement to be planned before implementation starts.",
+      "required_artifacts": [
+        "product_creation_plan",
+        "decomposition_coverage_review",
+        "spec_graph",
+        "work_unit_contract"
+      ],
+      "evidence_required": [
+        "full scope coverage",
+        "worker result evidence",
+        "tests pass"
+      ]
     }
   ],
   "slice_execution_policy": {
@@ -69,10 +120,10 @@
     "canonical_scope_must_not_shrink": true,
     "first_slice_completion_is_not_product_completion": true
   },
-  "production_route_decision": "Use the production promotion ladder when product intent reaches customers, production, mainnet or irreversible release.",
-  "research_decision_refs": ["templates/specialist-decision-packet.json"],
-  "research_route_impacts": ["research decisions may add gates, methods, workers or proof requirements"],
-  "work_type": "feature | bug | product-experience | critical-api | complex-product | legacy | agent-skill | R4-release",
+  "production_route_decision": "Use the production promotion ladder only after product creation plan, readiness, required gates and Receipt Five evidence pass.",
+  "research_decision_refs": [],
+  "research_route_impacts": [],
+  "work_type": "complex-product",
   "selected_methods": [
     "spec-first",
     "test-first"
@@ -80,36 +131,58 @@
   "skipped_methods": [
     {
       "method": "prototype-first",
-      "reason": "No material uncertainty that requires prototype before planning."
+      "reason": "Prototype work is not selected before method, scope and readiness gates require it."
     }
   ],
   "required_artifacts": [
+    "product_creation_plan",
+    "decomposition_coverage_review",
     "software_development_plan",
-    "loop_plan"
+    "loop_plan",
+    "product_implementation_readiness",
+    "method_contract",
+    "spec_graph",
+    "product_creation_plan",
+    "work_unit_contract",
+    "test_plan",
+    "regression_tests",
+    "verification_commands"
   ],
   "required_workers": [
     "factory-orchestrator",
     "decomposition-planner",
     "qa-verification-worker",
-    "independent-reviewer"
+    "independent-reviewer",
+    "test-automation-builder"
   ],
   "reviewers": [
     "independent-reviewer"
   ],
   "evidence_requirements": [
-    "tests pass",
-    "independent review",
-    "Receipt Five"
+    "full-scope-coverage-public-template",
+    "product_creation_plan",
+    "decomposition_coverage_review",
+    "product_implementation_readiness",
+    "Receipt Five",
+    "spec artifacts exist",
+    "tasks trace to Product SOT",
+    "Receipt Five cites spec evidence",
+    "failing or target test defined before implementation",
+    "tests pass after implementation",
+    "Receipt Five cites commands"
   ],
-  "authority_limit": "bounded_execution only; no release without gate",
+  "authority_limit": "bounded_planning_only; no implementation or release without ready gates",
   "done_criteria": [
-    "required artifacts exist",
-    "required workers returned evidence",
-    "Receipt Five ready"
+    "method contract validates",
+    "Product Creation Plan exists",
+    "Decomposition Coverage Review is PASS for every work unit owner and reviewer",
+    "implementation readiness gate is blocked or passed with explicit evidence",
+    "execution remains blocked until Ready Gate"
   ],
   "blocking_rules": {
     "full_scope_coverage_required": true,
     "product_creation_plan_required": true,
+    "decomposition_coverage_review_required": true,
     "execution_blocked_until_ready_gate": true,
     "raw_private_evidence_must_stay_external": true,
     "operator_must_not_choose_internal_method": true
@@ -131,10 +204,10 @@
     "execution_allowed": false,
     "selected_method_is_factory_owned": true,
     "scope_reduction_detected": false,
-    "blocked_reason": "Method contract exists, but execution remains blocked until product creation plan, readiness, required gates and workers pass.",
+    "blocked_reason": "Method contract exists, but execution remains blocked until product creation plan, multi-operator decomposition coverage review, readiness, required gates and workers pass.",
     "evidence_refs": [
-      "templates/method-contract.json",
-      "templates/full-product-sot-scope-coverage.json"
+      "schemas/method-contract.schema.json",
+      "full-scope-coverage-public-template"
     ]
   }
 }

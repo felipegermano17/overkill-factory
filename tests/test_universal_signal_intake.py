@@ -50,6 +50,16 @@ def build_valid_product_creation_plan() -> dict:
     return factoryctl.build_product_creation_plan(build_valid_method_contract())
 
 
+def build_valid_decomposition_coverage_review(plan: dict | None = None) -> dict:
+    return factoryctl.build_decomposition_coverage_review(plan or build_valid_product_creation_plan())
+
+
+def build_valid_product_implementation_readiness(plan: dict | None = None) -> dict:
+    product_creation_plan = plan or build_valid_product_creation_plan()
+    review = build_valid_decomposition_coverage_review(product_creation_plan)
+    return factoryctl.build_product_implementation_readiness(product_creation_plan, review)
+
+
 class UniversalSignalIntakeTest(unittest.TestCase):
     def test_public_template_validates(self) -> None:
         errors = factoryctl.validate_universal_signal_intake(signal_intake())
@@ -897,8 +907,8 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(plan["method_contract_ref"], method_contract["contract_id"])
         self.assertTrue(plan["complete_product_required"])
         self.assertIn("work-unit-001-scope-reconciliation", plan["execution_order"])
-        self.assertEqual(plan["handoff"]["next_artifact"], "product_implementation_readiness")
-        self.assertEqual(plan["handoff"]["next_worker"], "factory-orchestrator")
+        self.assertEqual(plan["handoff"]["next_artifact"], "decomposition_coverage_review")
+        self.assertEqual(plan["handoff"]["next_worker"], "independent-reviewer")
         self.assertFalse(plan["acceptance"]["execution_allowed"])
         active_requirement_refs = set(method_contract["active_product_sot_requirement_refs"])
         coverage_requirement_refs = {row["requirement_ref"] for row in plan["requirement_execution_coverage"]}
@@ -913,6 +923,38 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         for row in plan["requirement_execution_coverage"]:
             self.assertTrue(row["work_unit_refs"], row)
             self.assertTrue(row["proof_ids_required"], row)
+
+    def test_decomposition_coverage_review_from_product_creation_plan_is_multi_operator(self) -> None:
+        plan = build_valid_product_creation_plan()
+
+        review = factoryctl.build_decomposition_coverage_review(plan)
+
+        self.assertEqual(factoryctl.validate_decomposition_coverage_review(review), [])
+        self.assertEqual(factoryctl.validate_decomposition_coverage_review_against_plan(review, plan), [])
+        self.assertEqual(public_json_validator.validate_domain_rules(review, "$"), [])
+        self.assertEqual(review["record_type"], "decomposition_coverage_review")
+        self.assertEqual(review["product_creation_plan_ref"], plan["plan_id"])
+        self.assertEqual(review["review_result"], "PASS")
+        self.assertTrue(review["reviewer_consensus"]["single_reviewer_approval_forbidden"])
+        owner_roles = {unit["owner_worker"] for unit in plan["work_units"]}
+        participating_roles = set(review["participating_reviewer_roles"])
+        self.assertTrue(owner_roles.issubset(participating_roles))
+        for row in review["reviewer_matrix"]:
+            required_roles = set(row["required_participant_roles"])
+            signoff_roles = {signoff["role"] for signoff in row["participant_signoffs"]}
+            self.assertIn(row["owner_worker"], required_roles)
+            self.assertIn(row["reviewer_role"], required_roles)
+            self.assertTrue(required_roles.issubset(signoff_roles))
+
+    def test_decomposition_coverage_review_rejects_single_reviewer_shortcut(self) -> None:
+        plan = build_valid_product_creation_plan()
+        review = factoryctl.build_decomposition_coverage_review(plan)
+        review["participating_reviewer_roles"] = ["independent-reviewer"]
+        review["reviewer_consensus"]["all_required_participants_present"] = True
+
+        errors = factoryctl.validate_decomposition_coverage_review(review)
+
+        self.assertTrue(any("cannot be approved by only the lead reviewer" in error for error in errors), errors)
 
     def test_product_creation_plan_rejects_aggregate_requirement_coverage(self) -> None:
         plan = build_valid_product_creation_plan()
@@ -1001,7 +1043,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
     def test_product_implementation_readiness_from_product_creation_plan_is_valid(self) -> None:
         plan = build_valid_product_creation_plan()
 
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
 
         self.assertEqual(factoryctl.validate_product_implementation_readiness(readiness), [])
         self.assertEqual(public_json_validator.validate_domain_rules(readiness, "$"), [])
@@ -1017,20 +1059,25 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         plan["acceptance"]["execution_allowed"] = True
 
         with self.assertRaisesRegex(ValueError, "execution_allowed"):
-            factoryctl.build_product_implementation_readiness(plan)
+            build_valid_product_implementation_readiness(plan)
 
     def test_product_implementation_readiness_cli_generates_public_safe_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             product_creation_plan_path = Path(tmpdir) / "product-creation-plan.json"
+            decomposition_review_path = Path(tmpdir) / "decomposition-coverage-review.json"
             out_path = Path(tmpdir) / "product-implementation-readiness.json"
             plan = build_valid_product_creation_plan()
+            review = build_valid_decomposition_coverage_review(plan)
             product_creation_plan_path.write_text(json.dumps(plan), encoding="utf-8")
+            decomposition_review_path.write_text(json.dumps(review), encoding="utf-8")
 
             result = factoryctl.main_with_args_for_test(
                 [
                     "product-implementation-readiness",
                     "--product-creation-plan",
                     str(product_creation_plan_path),
+                    "--decomposition-coverage-review",
+                    str(decomposition_review_path),
                     "--out",
                     str(out_path),
                 ]
@@ -1043,7 +1090,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         self.assertEqual(factoryctl.validate_product_implementation_readiness(readiness), [])
         self.assertEqual(public_json_validator.validate_domain_rules(readiness, "$"), [])
 
-    def test_product_implementation_readiness_preserves_human_scope_gate(self) -> None:
+    def test_decomposition_coverage_review_preserves_human_scope_gate_before_readiness(self) -> None:
         source_resolution = factoryctl.build_source_resolution_packet(
             signal_intake(),
             intake_ref_public_safe="external:sanitized-universal-signal-intake",
@@ -1060,27 +1107,31 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         method_contract = factoryctl.build_method_contract(coverage)
         plan = factoryctl.build_product_creation_plan(method_contract)
 
-        readiness = factoryctl.build_product_implementation_readiness(plan)
-
-        self.assertEqual(readiness["artifact_alignment_result"], "BLOCKED")
+        review = factoryctl.build_decomposition_coverage_review(plan)
         expected_blocked = [
             unit["unit_id"]
             for unit in plan["work_units"]
             if unit["status"] == "blocked"
         ]
-        self.assertEqual(readiness["blocked_work_units"], expected_blocked)
-        self.assertIn("work-unit-001-scope-reconciliation", readiness["blocked_work_units"])
+        blocked_findings = [
+            finding["unit_id"]
+            for finding in review["work_unit_readiness_findings"]
+            if finding["status"] == "blocked"
+        ]
+
+        self.assertEqual(review["review_result"], "BLOCKED")
+        self.assertEqual(blocked_findings, expected_blocked)
+        self.assertIn("work-unit-001-scope-reconciliation", blocked_findings)
         self.assertTrue(
-            any(unit_id.startswith("work-unit-002-") for unit_id in readiness["blocked_work_units"]),
-            readiness["blocked_work_units"],
+            any(unit_id.startswith("work-unit-002-") for unit_id in blocked_findings),
+            blocked_findings,
         )
-        self.assertEqual(readiness["ready_work_units"], [])
-        self.assertIn("human-gate-method-scope-001", readiness["human_decisions_required"])
-        self.assertFalse(readiness["acceptance"]["material_execution_allowed"])
+        with self.assertRaisesRegex(ValueError, "Decomposition Coverage Review must be PASS"):
+            factoryctl.build_product_implementation_readiness(plan, review)
 
     def test_ready_work_unit_packets_from_readiness_are_valid(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
 
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
@@ -1109,6 +1160,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
             self.assertEqual(context_boundary["context_drift_action"], "BLOCK_AND_REPORT")
             self.assertFalse(context_boundary["operator_action_required_for_missing_context"])
             self.assertIn("external:sanitized-product-creation-plan", context_boundary["allowed_context_refs"])
+            self.assertIn(manifest["decomposition_coverage_review_ref"], context_boundary["allowed_context_refs"])
             self.assertIn("external:sanitized-product-implementation-readiness", context_boundary["allowed_context_refs"])
             self.assertIn("done_definition", packet)
             self.assertIn("phase", packet)
@@ -1147,7 +1199,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_packets_reject_unbounded_context_boundary(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1164,7 +1216,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_packets_reject_context_boundary_conflicts_and_bad_owner(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1182,7 +1234,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_packets_reject_missing_worker_context(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1198,7 +1250,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_packets_reject_unresolved_context_refs(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1222,7 +1274,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_packets_reject_context_contract_divergence(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1257,14 +1309,15 @@ class UniversalSignalIntakeTest(unittest.TestCase):
         coverage["requirement_coverage"][0]["blocker_id"] = "human-gate-method-scope-001"
         method_contract = factoryctl.build_method_contract(coverage)
         plan = factoryctl.build_product_creation_plan(method_contract)
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        review = factoryctl.build_decomposition_coverage_review(plan)
 
-        with self.assertRaisesRegex(ValueError, "does not allow ready work-unit packet materialization"):
-            factoryctl.build_ready_work_unit_packet_manifest(plan, readiness)
+        self.assertEqual(review["review_result"], "BLOCKED")
+        with self.assertRaisesRegex(ValueError, "Decomposition Coverage Review must be PASS"):
+            factoryctl.build_product_implementation_readiness(plan, review)
 
     def test_ready_work_unit_packets_reject_unknown_ready_unit(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         readiness["ready_work_units"].append("missing-work-unit")
 
         with self.assertRaisesRegex(ValueError, "ready_work_units not found in Product Creation Plan"):
@@ -1272,7 +1325,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_packets_cli_generates_manifest_and_requests(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_path = Path(tmpdir) / "product-creation-plan.json"
@@ -1313,7 +1366,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_hermes_plan_from_packets_is_valid_and_blocked_first(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1375,7 +1428,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_hermes_plan_rejects_context_boundary_mismatch(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1397,7 +1450,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_hermes_plan_rejects_context_packet_mismatch(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1420,7 +1473,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_hermes_plan_schema_rejects_unresolved_context_packet(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1443,7 +1496,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_hermes_plan_rejects_context_boundary_conflicts_and_bad_owner(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1468,7 +1521,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_hermes_plan_rejects_dispatch_without_runtime_gate(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
         manifest = factoryctl.build_ready_work_unit_packet_manifest(
             plan,
             readiness,
@@ -1490,7 +1543,7 @@ class UniversalSignalIntakeTest(unittest.TestCase):
 
     def test_ready_work_unit_hermes_plan_cli_generates_and_validates_plan(self) -> None:
         plan = build_valid_product_creation_plan()
-        readiness = factoryctl.build_product_implementation_readiness(plan)
+        readiness = build_valid_product_implementation_readiness(plan)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             plan_path = Path(tmpdir) / "product-creation-plan.json"

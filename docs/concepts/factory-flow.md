@@ -31,6 +31,7 @@ is actually done.
 | Full Product SOT scope coverage | The map that prevents a first slice from silently becoming the whole product. |
 | Specialist research decision | A public-safe research result that changes SOT, architecture, method, gate, worker, proof or blocker state. |
 | Product Creation Plan | The complete product decomposition into safe execution slices, proof and stop rules. |
+| Decomposition Coverage Review | The multi-operator review proving every work unit has its owner, reviewer, participant signoffs, evidence and dependency coverage before readiness. |
 | Product Implementation Readiness | The gate that checks SOT, method, research, architecture, work units, packs, access and proof before material execution. |
 | Factory Phase Engine | The deterministic state calculator that reads materialized artifacts and decides the active frontier, next required artifact and whether a declared card phase is allowed. |
 | Factory card | The machine-checkable work contract consumed by Hermes and `factoryctl.py`. |
@@ -54,6 +55,7 @@ operator interface profile
 -> architecture and risk routing
 -> method contract
 -> Product Creation Plan
+-> Decomposition Coverage Review
 -> Product Implementation Readiness
 -> ready work-unit packets
 -> Product Face or surface-specific plan
@@ -150,7 +152,7 @@ A card should stay blocked when:
 - Product SOT or architecture is only a candidate but treated as approval;
 - a first slice exists but the full Product SOT scope coverage is missing;
 - research is required but no specialist research plan exists;
-- Product Creation Plan or Product Implementation Readiness is missing for complete-product work;
+- Product Creation Plan, Decomposition Coverage Review or Product Implementation Readiness is missing for complete-product work;
 - production or mainnet intent lacks a promotion ladder with environment-specific proof;
 - a required worker packet exists but the worker result does not;
 - Product Face, security, Auditor, QA or review evidence is missing;

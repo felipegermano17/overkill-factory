@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://overkill-factory.dev/schemas/decomposition-coverage-review.schema.json",
+  "title": "Overkill Factory Decomposition Coverage Review",
+  "type": "object",
+  "required": [
+    "record_type",
+    "review_id",
+    "created_at",
+    "factory_method_version",
+    "product_creation_plan_ref",
+    "reviewer_role",
+    "participating_reviewer_roles",
+    "reviewer_matrix",
+    "reviewer_consensus",
+    "review_result",
+    "complete_product_decomposition_required",
+    "coverage_basis",
+    "coverage_rows",
+    "work_unit_readiness_findings",
+    "checks",
+    "blocking_rules",
+    "handoff",
+    "public_private_boundary",
+    "acceptance",
+    "evidence_refs"
+  ],
+  "properties": {
+    "$schema": { "const": "https://overkill-factory.dev/schemas/decomposition-coverage-review.schema.json" },
+    "record_type": { "const": "decomposition_coverage_review" },
+    "review_id": { "type": "string", "minLength": 3 },
+    "created_at": { "type": "string", "minLength": 10 },
+    "factory_method_version": { "const": "OVERKILL_VFINAL" },
+    "product_creation_plan_ref": { "type": "string", "minLength": 3 },
+    "reviewer_role": { "type": "string", "minLength": 3 },
+    "participating_reviewer_roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "reviewer_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "unit_id",
+          "owner_worker",
+          "reviewer_role",
+          "required_participant_roles",
+          "participant_signoffs",
+          "coverage_decision",
+          "evidence_refs"
+        ],
+        "properties": {
+          "unit_id": { "type": "string", "minLength": 3 },
+          "owner_worker": { "type": "string", "minLength": 3 },
+          "reviewer_role": { "type": "string", "minLength": 3 },
+          "required_participant_roles": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "participant_signoffs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["role", "decision", "evidence_refs"],
+              "properties": {
+                "role": { "type": "string", "minLength": 3 },
+                "decision": { "enum": ["PASS", "BLOCKED"] },
+                "evidence_refs": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "minLength": 3 }
+                },
+                "notes": { "type": "string" }
+              },
+              "additionalProperties": true
+            }
+          },
+          "coverage_decision": { "enum": ["PASS", "BLOCKED"] },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "reviewer_consensus": {
+      "type": "object",
+      "required": [
+        "all_required_participants_present",
+        "all_participant_signoffs_passed",
+        "single_reviewer_approval_forbidden"
+      ],
+      "properties": {
+        "all_required_participants_present": { "type": "boolean" },
+        "all_participant_signoffs_passed": { "type": "boolean" },
+        "single_reviewer_approval_forbidden": { "const": true }
+      },
+      "additionalProperties": true
+    },
+    "review_result": { "enum": ["PASS", "BLOCKED"] },
+    "complete_product_decomposition_required": { "const": true },
+    "coverage_basis": {
+      "type": "object",
+      "required": [
+        "product_sot_ref",
+        "method_contract_ref",
+        "work_units_accounted",
+        "requirement_refs_accounted",
+        "proof_ids_accounted",
+        "dependency_graph_ref"
+      ],
+      "properties": {
+        "product_sot_ref": { "type": "string", "minLength": 3 },
+        "method_contract_ref": { "type": "string", "minLength": 3 },
+        "work_units_accounted": { "type": "integer", "minimum": 1 },
+        "requirement_refs_accounted": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "proof_ids_accounted": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "dependency_graph_ref": { "type": "string", "minLength": 3 }
+      },
+      "additionalProperties": true
+    },
+    "coverage_rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "requirement_ref",
+          "coverage_status",
+          "work_unit_refs",
+          "proof_ids_required",
+          "reviewer_role",
+          "evidence_refs"
+        ],
+        "properties": {
+          "requirement_ref": { "type": "string", "minLength": 3 },
+          "coverage_status": {
+            "enum": ["covered_for_execution", "blocked", "deferred_with_owner", "out_of_scope"]
+          },
+          "work_unit_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "proof_ids_required": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "reviewer_role": { "type": "string", "minLength": 3 },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "work_unit_readiness_findings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["unit_id", "status", "owner_worker", "reviewer_role", "issues", "evidence_refs"],
+        "properties": {
+          "unit_id": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["ready", "blocked", "needs_refresh"] },
+          "owner_worker": { "type": "string", "minLength": 3 },
+          "reviewer_role": { "type": "string", "minLength": 3 },
+          "issues": { "type": "array", "items": { "type": "string" } },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["check_id", "status", "evidence_refs"],
+        "properties": {
+          "check_id": { "type": "string", "minLength": 3 },
+          "status": { "enum": ["PASS", "BLOCKED"] },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 3 }
+          },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "blocking_rules": {
+      "type": "object",
+      "required": [
+        "no_f15_without_pass",
+        "all_active_requirements_accounted",
+        "work_units_need_reviewer_and_proof",
+        "all_work_unit_owners_must_review",
+        "single_reviewer_approval_forbidden",
+        "hermes_graph_required_before_materialization",
+        "complete_product_claim_forbidden_until_reconciled",
+        "raw_private_evidence_must_stay_external"
+      ],
+      "properties": {
+        "no_f15_without_pass": { "const": true },
+        "all_active_requirements_accounted": { "const": true },
+        "work_units_need_reviewer_and_proof": { "const": true },
+        "all_work_unit_owners_must_review": { "const": true },
+        "single_reviewer_approval_forbidden": { "const": true },
+        "hermes_graph_required_before_materialization": { "const": true },
+        "complete_product_claim_forbidden_until_reconciled": { "const": true },
+        "raw_private_evidence_must_stay_external": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "next_artifact",
+        "next_worker",
+        "next_safe_action",
+        "user_decision_required",
+        "factory_owned_next_step"
+      ],
+      "properties": {
+        "next_artifact": { "const": "product_implementation_readiness" },
+        "next_worker": { "type": "string", "minLength": 3 },
+        "next_safe_action": { "type": "string", "minLength": 6 },
+        "user_decision_required": { "type": "boolean" },
+        "factory_owned_next_step": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "public_private_boundary": {
+      "type": "object",
+      "required": [
+        "public_safe_refs_only",
+        "raw_private_evidence_embedded",
+        "private_context_retained_outside_public_repo"
+      ],
+      "properties": {
+        "public_safe_refs_only": { "const": true },
+        "raw_private_evidence_embedded": { "const": false },
+        "private_context_retained_outside_public_repo": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "decomposition_coverage_review_created",
+        "review_result",
+        "f15_execution_allowed",
+        "all_requirements_accounted",
+        "all_required_participants_present",
+        "all_participant_signoffs_passed",
+        "all_work_units_have_reviewers",
+        "all_work_units_have_proofs",
+        "evidence_refs"
+      ],
+      "properties": {
+        "decomposition_coverage_review_created": { "const": true },
+        "review_result": { "enum": ["PASS", "BLOCKED"] },
+        "f15_execution_allowed": { "type": "boolean" },
+        "all_requirements_accounted": { "type": "boolean" },
+        "all_required_participants_present": { "type": "boolean" },
+        "all_participant_signoffs_passed": { "type": "boolean" },
+        "all_work_units_have_reviewers": { "type": "boolean" },
+        "all_work_units_have_proofs": { "type": "boolean" },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  },
+  "additionalProperties": true
+}

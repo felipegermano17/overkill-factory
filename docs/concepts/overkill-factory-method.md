@@ -105,6 +105,7 @@ flow, `factoryctl help-next` and the workflow catalog compress them into:
 | SDLC Feedback Loop | The signal thread that connects source signal, triage, model/profile route, execution evidence and learnback. Material autonomous work must not lose this thread. |
 | Material Autonomy Routing | The executable autonomy decision on a material card: autonomy mode, agent readiness basis, model/profile routing decision and fallback route. |
 | Product Creation Plan | The complete product decomposition from Product SOT into work units, slices, proof, stop rules and reconciliation. |
+| Decomposition Coverage Review | The multi-operator coverage review where every planned work-unit owner and reviewer signs the decomposition before readiness or dispatch can exist. |
 | Product Context Packet | The compact product-specific rules that implementation and review workers load instead of relying on chat memory. |
 | Product Implementation Readiness | The alignment gate across SOT, method, research, architecture, experience, work units, packs, access and proof. |
 | Production Promotion Ladder | The environment path and proof boundaries from local or test environments to production, mainnet or live customer use. |
@@ -180,30 +181,31 @@ record why a step is omitted.
 15. Risk, Authority, Dependency, Compliance, Access and Budget Gates
 16. Security Architecture Plan when material risk exists
 17. Product Creation Plan
-18. Software Development Plan
-19. Product Experience Plan when a product surface exists
-20. Data, Metrics & Analytics Plan when success must be measured
-21. Agent Quality & Evals Plan when agents, skills or models matter
-22. Spec Graph
-23. Loop Plan
-24. Product Context Packet
-25. Product Implementation Readiness
-26. SDLC Feedback Loop for material autonomous work
-27. Autonomy Readiness Packet and material autonomy routing
-28. Ready Gate
-29. Operator Projection
-30. Runtime execution
-31. Worker Results
-32. Verification
-33. Independent Review
-34. Human Gate when required
-35. Closure Summary
-36. Receipt Five
-37. Completion Audit
-38. Production Promotion Ladder and Operations
-39. Release or Block
-40. Monitoring, Incident and Support when needed
-41. Learnback
+18. Decomposition Coverage Review
+19. Software Development Plan
+20. Product Experience Plan when a product surface exists
+21. Data, Metrics & Analytics Plan when success must be measured
+22. Agent Quality & Evals Plan when agents, skills or models matter
+23. Spec Graph
+24. Loop Plan
+25. Product Context Packet
+26. Product Implementation Readiness
+27. SDLC Feedback Loop for material autonomous work
+28. Autonomy Readiness Packet and material autonomy routing
+29. Ready Gate
+30. Operator Projection
+31. Runtime execution
+32. Worker Results
+33. Verification
+34. Independent Review
+35. Human Gate when required
+36. Closure Summary
+37. Receipt Five
+38. Completion Audit
+39. Production Promotion Ladder and Operations
+40. Release or Block
+41. Monitoring, Incident and Support when needed
+42. Learnback
 42. Factory Maturity Audit
 ```
 
@@ -220,6 +222,7 @@ The method uses different units for different parts of the line:
 | Specialist Research Plan / Decision Packet | Converts research questions into operational decisions, blockers or proof requirements. |
 | Method Contract | Records canonical scope, factory route, engineering methods and required gates. |
 | Product Creation Plan | Decomposes the complete product into safe execution slices and reconciliation rules. |
+| Decomposition Coverage Review | Prevents one reviewer or one agent from approving a whole-product decomposition alone; all participating owners/reviewers must sign with evidence. |
 | Product Context Packet | Gives workers compact product-specific implementation rules. |
 | Product Implementation Readiness | Blocks execution when planning artifacts are missing, stale or contradictory. |
 | Product Pack | Keeps product-specific context out of the public core. |

@@ -138,6 +138,7 @@ RESEARCH_RECORD_TYPES = {
     "specialist_decision_packet",
     "product_context_packet",
     "product_creation_plan",
+    "decomposition_coverage_review",
     "product_implementation_readiness",
     "project_design_system",
 }
@@ -1780,7 +1781,12 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         }:
             errors.append(f"{at}.canonical_scope_source must be approved Product SOT")
         required_factory_artifacts = set(data.get("required_factory_artifacts") if isinstance(data.get("required_factory_artifacts"), list) else [])
-        for artifact in ("full_product_sot_scope_coverage", "product_creation_plan", "product_implementation_readiness"):
+        for artifact in (
+            "full_product_sot_scope_coverage",
+            "product_creation_plan",
+            "decomposition_coverage_review",
+            "product_implementation_readiness",
+        ):
             if artifact not in required_factory_artifacts:
                 errors.append(f"{at}.required_factory_artifacts must include {artifact}")
         matrix = data.get("engineering_method_matrix") if isinstance(data.get("engineering_method_matrix"), list) else []
@@ -1934,6 +1940,7 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         for field in (
             "product_sot_required",
             "method_contract_required",
+            "decomposition_coverage_review_required",
             "product_implementation_readiness_required",
             "execution_blocked_until_ready_gate",
             "raw_private_evidence_must_stay_external",
@@ -1941,8 +1948,8 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             if blocking_rules.get(field) is not True:
                 errors.append(f"{at}.blocking_rules.{field} must be true")
         handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
-        if handoff.get("next_artifact") != "product_implementation_readiness":
-            errors.append(f"{at}.handoff.next_artifact must be product_implementation_readiness")
+        if handoff.get("next_artifact") != "decomposition_coverage_review":
+            errors.append(f"{at}.handoff.next_artifact must be decomposition_coverage_review")
         if handoff.get("factory_owned_next_step") is not True:
             errors.append(f"{at}: product_creation_plan.handoff.factory_owned_next_step must be true")
         next_worker = str(handoff.get("next_worker") or "").strip()
@@ -1968,8 +1975,104 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             reason = public_artifact_ref_error(ref)
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
+    if data.get("record_type") == "decomposition_coverage_review":
+        reason = public_artifact_ref_error(data.get("product_creation_plan_ref"))
+        if reason:
+            errors.append(f"{at}.product_creation_plan_ref: {reason}")
+        if data.get("complete_product_decomposition_required") is not True:
+            errors.append(f"{at}.complete_product_decomposition_required must be true")
+        result = str(data.get("review_result") or "").strip().upper()
+        if result not in {"PASS", "BLOCKED"}:
+            errors.append(f"{at}.review_result must be PASS or BLOCKED")
+        matrix = data.get("reviewer_matrix") if isinstance(data.get("reviewer_matrix"), list) else []
+        if not matrix:
+            errors.append(f"{at}.reviewer_matrix must be non-empty")
+        participating_roles = set(
+            str(role or "").strip()
+            for role in data.get("participating_reviewer_roles", [])
+            if isinstance(data.get("participating_reviewer_roles"), list)
+        )
+        for index, row in enumerate(matrix):
+            if not isinstance(row, dict):
+                continue
+            owner = str(row.get("owner_worker") or "").strip()
+            reviewer = str(row.get("reviewer_role") or "").strip()
+            for role_field, role in (("owner_worker", owner), ("reviewer_role", reviewer)):
+                if role and role not in public_worker_ids():
+                    errors.append(f"{at}.reviewer_matrix[{index}].{role_field} must be a registered worker: {role}")
+            required_roles = set(
+                str(role or "").strip()
+                for role in row.get("required_participant_roles", [])
+                if isinstance(row.get("required_participant_roles"), list)
+            )
+            signoff_roles = set(
+                str(signoff.get("role") or "").strip()
+                for signoff in row.get("participant_signoffs", [])
+                if isinstance(row.get("participant_signoffs"), list) and isinstance(signoff, dict)
+            )
+            if owner and owner not in required_roles:
+                errors.append(f"{at}.reviewer_matrix[{index}].required_participant_roles must include owner_worker")
+            if reviewer and reviewer not in required_roles:
+                errors.append(f"{at}.reviewer_matrix[{index}].required_participant_roles must include reviewer_role")
+            missing_signoffs = sorted(role for role in required_roles if role and role not in signoff_roles)
+            if missing_signoffs:
+                errors.append(f"{at}.reviewer_matrix[{index}].participant_signoffs missing roles: {', '.join(missing_signoffs)}")
+            if row.get("coverage_decision") == "PASS":
+                for signoff in row.get("participant_signoffs", []) if isinstance(row.get("participant_signoffs"), list) else []:
+                    if isinstance(signoff, dict) and signoff.get("decision") == "BLOCKED":
+                        errors.append(f"{at}.reviewer_matrix[{index}].coverage_decision cannot PASS with BLOCKED signoff")
+            for ref_index, ref in enumerate(row.get("evidence_refs", []) if isinstance(row.get("evidence_refs"), list) else []):
+                reason = public_artifact_ref_error(ref)
+                if reason:
+                    errors.append(f"{at}.reviewer_matrix[{index}].evidence_refs[{ref_index}]: {reason}")
+        missing_roles = sorted(role for role in participating_roles if role and role not in public_worker_ids())
+        if missing_roles:
+            errors.append(f"{at}.participating_reviewer_roles must be registered workers: {', '.join(missing_roles)}")
+        consensus = data.get("reviewer_consensus") if isinstance(data.get("reviewer_consensus"), dict) else {}
+        if consensus.get("single_reviewer_approval_forbidden") is not True:
+            errors.append(f"{at}.reviewer_consensus.single_reviewer_approval_forbidden must be true")
+        if result == "PASS":
+            for field in ("all_required_participants_present", "all_participant_signoffs_passed"):
+                if consensus.get(field) is not True:
+                    errors.append(f"{at}.reviewer_consensus.{field} must be true for PASS")
+        blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
+        for field in (
+            "no_f15_without_pass",
+            "all_active_requirements_accounted",
+            "work_units_need_reviewer_and_proof",
+            "all_work_unit_owners_must_review",
+            "single_reviewer_approval_forbidden",
+            "hermes_graph_required_before_materialization",
+            "complete_product_claim_forbidden_until_reconciled",
+            "raw_private_evidence_must_stay_external",
+        ):
+            if blocking_rules.get(field) is not True:
+                errors.append(f"{at}.blocking_rules.{field} must be true")
+        handoff = data.get("handoff") if isinstance(data.get("handoff"), dict) else {}
+        if handoff.get("next_artifact") != "product_implementation_readiness":
+            errors.append(f"{at}.handoff.next_artifact must be product_implementation_readiness")
+        if handoff.get("factory_owned_next_step") is not True:
+            errors.append(f"{at}: decomposition_coverage_review.handoff.factory_owned_next_step must be true")
+        boundary = data.get("public_private_boundary") if isinstance(data.get("public_private_boundary"), dict) else {}
+        if boundary.get("public_safe_refs_only") is not True:
+            errors.append(f"{at}: decomposition_coverage_review requires public_safe_refs_only=true")
+        if boundary.get("raw_private_evidence_embedded") is not False:
+            errors.append(f"{at}: decomposition_coverage_review must not embed raw private evidence")
+        if boundary.get("private_context_retained_outside_public_repo") is not True:
+            errors.append(f"{at}: decomposition_coverage_review private context must stay outside the public repo")
+        acceptance = data.get("acceptance") if isinstance(data.get("acceptance"), dict) else {}
+        if acceptance.get("decomposition_coverage_review_created") is not True:
+            errors.append(f"{at}: decomposition_coverage_review acceptance.decomposition_coverage_review_created must be true")
+        if acceptance.get("review_result") != result:
+            errors.append(f"{at}: decomposition_coverage_review acceptance.review_result must match review_result")
     if data.get("record_type") == "product_implementation_readiness":
-        for field in ("product_sot_ref", "method_contract_ref", "product_creation_plan_ref", "product_delivery_quality_profile_ref"):
+        for field in (
+            "product_sot_ref",
+            "method_contract_ref",
+            "product_creation_plan_ref",
+            "decomposition_coverage_review_ref",
+            "product_delivery_quality_profile_ref",
+        ):
             reason = public_artifact_ref_error(data.get(field))
             if reason:
                 errors.append(f"{at}.{field}: {reason}")
@@ -2034,6 +2137,8 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
         blocking_rules = data.get("blocking_rules") if isinstance(data.get("blocking_rules"), dict) else {}
         for field in (
             "product_creation_plan_required",
+            "decomposition_coverage_review_required",
+            "blocked_or_failed_decomposition_review_blocks_execution",
             "blocked_or_failed_readiness_blocks_execution",
             "concerns_allow_only_ready_work_units",
             "complete_product_claim_forbidden_until_all_scope_reconciled",
@@ -2078,7 +2183,7 @@ def validate_domain_rules(data: dict[str, Any], at: str) -> list[str]:
             if reason:
                 errors.append(f"{at}.acceptance.evidence_refs[{index}]: {reason}")
     if data.get("record_type") == "ready_work_unit_packet_manifest":
-        for field in ("product_creation_plan_ref", "product_implementation_readiness_ref"):
+        for field in ("product_creation_plan_ref", "decomposition_coverage_review_ref", "product_implementation_readiness_ref"):
             reason = public_artifact_ref_error(data.get(field))
             if reason:
                 errors.append(f"{at}.{field}: {reason}")

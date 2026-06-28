@@ -4,51 +4,323 @@
   "plan_id": "product-creation-plan-public-template",
   "created_at": "2026-06-17T00:00:00+00:00",
   "factory_method_version": "OVERKILL_VFINAL",
-  "product_sot_ref": "templates/product-sot.json",
-  "method_contract_ref": "templates/method-contract.json",
+  "product_sot_ref": "full-scope-coverage-public-template#approved-product-sot",
+  "method_contract_ref": "method-contract-public-template",
   "product_delivery_quality_profile_ref": "templates/product-delivery-quality-profile.json",
-  "research_decision_refs": ["templates/specialist-decision-packet.json"],
-  "architecture_decision_refs": ["templates/architecture-review-packet.md"],
+  "research_decision_refs": [],
+  "architecture_decision_refs": [],
   "complete_product_required": true,
-  "complete_product_scope": ["every meaningful Product SOT capability, operation, proof and release requirement"],
-  "complete_product_non_goals": ["anything explicitly marked out of scope by the Product SOT"],
-  "production_readiness_scope": ["release path", "rollback", "monitoring", "support", "customer readiness"],
+  "complete_product_scope": [
+    "all active Product SOT requirements accounted by full-scope-coverage-public-template",
+    "all Method Contract required artifacts, gates, workers, reviewers and evidence requirements",
+    "production, operations, release and support requirements when product intent reaches real users"
+  ],
+  "complete_product_non_goals": [
+    "anything explicitly marked out of scope by the approved Product SOT or human-gated rebaseline"
+  ],
+  "production_readiness_scope": [
+    "release path",
+    "rollback",
+    "monitoring",
+    "support",
+    "customer readiness"
+  ],
   "surface_matrix": [
     {
-      "surface": "code",
-      "required_pack": "web-saas-core",
-      "proof": "tests and review",
-      "structured_proofs_required": ["generic.scope-fit", "generic.operator-usability"]
+      "surface": "complete product scope",
+      "methods": [
+        "spec-first",
+        "test-first"
+      ],
+      "proof": [
+        "full scope coverage",
+        "worker result evidence",
+        "tests pass"
+      ]
     }
   ],
-  "capability_pack_requirements": ["templates/capability-pack-contract.json"],
+  "capability_pack_requirements": [
+    "templates/capability-pack-contract.json"
+  ],
   "work_units": [
     {
-      "unit_id": "work-unit-001",
-      "product_sot_requirement_refs": ["product-sot#scope-in-001"],
-      "objective": "Deliver one safe execution slice without reducing the Product SOT scope.",
-      "scope_in": ["the named Product SOT requirement refs"],
-      "scope_out": ["unrelated Product SOT requirements"],
-      "verification": ["run the checks named by the work unit"],
-      "expected_result": "PASS or explicit BLOCK with owner",
-      "proof_ids_required": ["generic.scope-fit"],
-      "owner_worker": "implementation-worker",
+      "unit_id": "work-unit-001-scope-reconciliation",
+      "product_sot_requirement_refs": [
+        "product-sot#scope-in-001"
+      ],
+      "objective": "Reconcile the complete Product SOT scope into executable work without reducing the product promise.",
+      "scope_in": [
+        "all active Product SOT requirements represented by full scope coverage",
+        "method, gates, workers, reviewers and evidence requirements from Method Contract"
+      ],
+      "scope_out": [
+        "raw private source material",
+        "implementation or release state"
+      ],
+      "verification": [
+        "validate-product-creation-plan passes",
+        "every planned slice links back to Method Contract and full scope coverage"
+      ],
+      "expected_result": "PASS or explicit BLOCK with owner before any work unit can execute",
+      "proof_ids_required": [
+        "product_creation.scope_reconciliation",
+        "product_creation.no_scope_reduction"
+      ],
+      "owner_worker": "decomposition-planner",
       "reviewer_role": "independent-reviewer",
-      "capability_profile_refs": ["agents/hermes-profile-bindings.public.json#implementation-worker"],
+      "capability_profile_refs": [
+        "agents/hermes-profile-bindings.public.json#decomposition-planner",
+        "agents/hermes-profile-bindings.public.json#independent-reviewer"
+      ],
       "ready_rules": [
-        "Product SOT requirement refs resolve to the approved Product SOT",
-        "required proof ids are mapped before execution starts"
+        "Product Creation Plan validates against schema and domain rules",
+        "Decomposition Coverage Review is PASS before execution packets are materialized",
+        "Product Implementation Readiness allows this work unit before material execution",
+        "required capability profile and reviewer are available"
       ],
       "blocked_when": [
-        "required proof cannot be produced",
-        "owner worker or reviewer role is unavailable"
+        "Decomposition Coverage Review is missing, BLOCKED or stale",
+        "Product Implementation Readiness is FAIL or BLOCKED",
+        "required capability pack, access, worker or reviewer is unavailable",
+        "Product SOT, Method Contract or full scope coverage has drifted"
       ],
       "done_rules": [
-        "all proof_ids_required have PASS or valid waiver evidence",
-        "reviewer_role has reviewed the work-unit evidence"
+        "all proof_ids_required have PASS, BLOCK with owner, or valid human-gated waiver evidence",
+        "independent-reviewer reviewed the work-unit evidence",
+        "Receipt Five can reference the produced evidence without private refs"
       ],
-      "stop_conditions": ["Product SOT drifted", "required context packet is stale"],
-      "status": "ready",
+      "stop_conditions": [
+        "Product SOT scope changes without a refreshed plan",
+        "worker would need to infer private source material or hidden operator context",
+        "execution tries to treat one slice as complete-product completion"
+      ],
+      "status": "todo",
+      "product_context_packet_ref": "templates/product-context-packet.json"
+    },
+    {
+      "unit_id": "work-unit-002-product-sot-scope-in-001",
+      "product_sot_requirement_refs": [
+        "product-sot#scope-in-001"
+      ],
+      "objective": "Deliver the complete executable implementation coverage for product-sot#scope-in-001.",
+      "scope_in": [
+        "all behavior, states, data, verification and handoff implied by product-sot#scope-in-001",
+        "supporting frontend, backend, persistence, integration, QA, security and documentation work needed for this requirement"
+      ],
+      "scope_out": [
+        "other Product SOT requirements except explicit dependencies",
+        "release or production promotion without later readiness gates"
+      ],
+      "verification": [
+        "requirement-specific acceptance evidence is attached",
+        "tests or proof commands for this requirement pass or block with owner",
+        "reviewer_role reviews the produced evidence"
+      ],
+      "expected_result": "Requirement implementation coverage is PASS, or BLOCKED with owner and recovery route.",
+      "proof_ids_required": [
+        "product_creation.product-sot-scope-in-001.implementation",
+        "product_creation.product-sot-scope-in-001.verification"
+      ],
+      "owner_worker": "implementation-worker",
+      "reviewer_role": "independent-reviewer",
+      "capability_profile_refs": [
+        "agents/hermes-profile-bindings.public.json#implementation-worker",
+        "agents/hermes-profile-bindings.public.json#independent-reviewer"
+      ],
+      "ready_rules": [
+        "Product Creation Plan validates against schema and domain rules",
+        "Decomposition Coverage Review is PASS before execution packets are materialized",
+        "Product Implementation Readiness allows this work unit before material execution",
+        "required capability profile and reviewer are available",
+        "product-sot#scope-in-001 is preserved as the canonical requirement ref"
+      ],
+      "blocked_when": [
+        "Decomposition Coverage Review is missing, BLOCKED or stale",
+        "Product Implementation Readiness is FAIL or BLOCKED",
+        "required capability pack, access, worker or reviewer is unavailable",
+        "Product SOT, Method Contract or full scope coverage has drifted"
+      ],
+      "done_rules": [
+        "all proof_ids_required have PASS, BLOCK with owner, or valid human-gated waiver evidence",
+        "independent-reviewer reviewed the work-unit evidence",
+        "Receipt Five can reference the produced evidence without private refs"
+      ],
+      "stop_conditions": [
+        "Product SOT scope changes without a refreshed plan",
+        "worker would need to infer private source material or hidden operator context",
+        "execution tries to treat one slice as complete-product completion"
+      ],
+      "status": "todo",
+      "product_context_packet_ref": "templates/product-context-packet.json"
+    },
+    {
+      "unit_id": "work-unit-003-complete-product-scope",
+      "product_sot_requirement_refs": [
+        "product-sot#scope-in-001"
+      ],
+      "objective": "Plan and execute the complete product scope slice using spec-first, test-first while preserving full product scope.",
+      "scope_in": [
+        "complete product scope requirements from approved Product SOT coverage",
+        "required artifact: product_creation_plan",
+        "required artifact: decomposition_coverage_review",
+        "required artifact: spec_graph",
+        "required artifact: work_unit_contract"
+      ],
+      "scope_out": [
+        "requirements not represented by the approved Product SOT",
+        "release or production promotion without later readiness gates"
+      ],
+      "verification": [
+        "full scope coverage",
+        "worker result evidence",
+        "tests pass",
+        "Product Implementation Readiness confirms this slice is allowed"
+      ],
+      "expected_result": "Slice evidence is PASS, or BLOCKED with owner and recovery route.",
+      "proof_ids_required": [
+        "product_creation.complete-product-scope.scope_fit",
+        "product_creation.complete-product-scope.verification"
+      ],
+      "owner_worker": "implementation-worker",
+      "reviewer_role": "independent-reviewer",
+      "capability_profile_refs": [
+        "agents/hermes-profile-bindings.public.json#implementation-worker",
+        "agents/hermes-profile-bindings.public.json#independent-reviewer"
+      ],
+      "ready_rules": [
+        "Product Creation Plan validates against schema and domain rules",
+        "Decomposition Coverage Review is PASS before execution packets are materialized",
+        "Product Implementation Readiness allows this work unit before material execution",
+        "required capability profile and reviewer are available",
+        "methods selected for this slice are fixed: spec-first, test-first"
+      ],
+      "blocked_when": [
+        "Decomposition Coverage Review is missing, BLOCKED or stale",
+        "Product Implementation Readiness is FAIL or BLOCKED",
+        "required capability pack, access, worker or reviewer is unavailable",
+        "Product SOT, Method Contract or full scope coverage has drifted"
+      ],
+      "done_rules": [
+        "all proof_ids_required have PASS, BLOCK with owner, or valid human-gated waiver evidence",
+        "independent-reviewer reviewed the work-unit evidence",
+        "Receipt Five can reference the produced evidence without private refs"
+      ],
+      "stop_conditions": [
+        "Product SOT scope changes without a refreshed plan",
+        "worker would need to infer private source material or hidden operator context",
+        "execution tries to treat one slice as complete-product completion"
+      ],
+      "status": "todo",
+      "product_context_packet_ref": "templates/product-context-packet.json"
+    },
+    {
+      "unit_id": "work-unit-004-implementation-readiness",
+      "product_sot_requirement_refs": [
+        "product-sot#scope-in-001"
+      ],
+      "objective": "Prove artifact alignment before material implementation starts.",
+      "scope_in": [
+        "Product SOT, full scope coverage, Method Contract and Product Creation Plan",
+        "work-unit proof, reviewer, blocker and stop-rule coverage"
+      ],
+      "scope_out": [
+        "executing workers",
+        "approving production readiness without evidence"
+      ],
+      "verification": [
+        "validate product_implementation_readiness artifact",
+        "gate report blocks or allows explicit slices"
+      ],
+      "expected_result": "Product Implementation Readiness returns PASS, CONCERNS, FAIL or BLOCKED with allowed next actions.",
+      "proof_ids_required": [
+        "product_creation.implementation_readiness",
+        "product_creation.gate_alignment"
+      ],
+      "owner_worker": "factory-orchestrator",
+      "reviewer_role": "independent-reviewer",
+      "capability_profile_refs": [
+        "agents/hermes-profile-bindings.public.json#factory-orchestrator",
+        "agents/hermes-profile-bindings.public.json#independent-reviewer"
+      ],
+      "ready_rules": [
+        "Product Creation Plan validates against schema and domain rules",
+        "Decomposition Coverage Review is PASS before execution packets are materialized",
+        "Product Implementation Readiness allows this work unit before material execution",
+        "required capability profile and reviewer are available"
+      ],
+      "blocked_when": [
+        "Decomposition Coverage Review is missing, BLOCKED or stale",
+        "Product Implementation Readiness is FAIL or BLOCKED",
+        "required capability pack, access, worker or reviewer is unavailable",
+        "Product SOT, Method Contract or full scope coverage has drifted"
+      ],
+      "done_rules": [
+        "all proof_ids_required have PASS, BLOCK with owner, or valid human-gated waiver evidence",
+        "independent-reviewer reviewed the work-unit evidence",
+        "Receipt Five can reference the produced evidence without private refs"
+      ],
+      "stop_conditions": [
+        "Product SOT scope changes without a refreshed plan",
+        "worker would need to infer private source material or hidden operator context",
+        "execution tries to treat one slice as complete-product completion"
+      ],
+      "status": "todo",
+      "product_context_packet_ref": "templates/product-context-packet.json"
+    },
+    {
+      "unit_id": "work-unit-005-release-operations-readiness",
+      "product_sot_requirement_refs": [
+        "product-sot#scope-in-001"
+      ],
+      "objective": "Plan production, release, rollback, monitoring and support proof before customer-ready claims.",
+      "scope_in": [
+        "production promotion ladder",
+        "rollback",
+        "monitoring",
+        "support",
+        "customer readiness"
+      ],
+      "scope_out": [
+        "mainnet, customer, irreversible or production release without explicit promotion gates"
+      ],
+      "verification": [
+        "production promotion ladder is referenced",
+        "release readiness evidence is attached before promotion"
+      ],
+      "expected_result": "Release path is ready, blocked with owner, or explicitly out of scope by human-gated SOT rebaseline.",
+      "proof_ids_required": [
+        "product_creation.release_path",
+        "product_creation.operations_readiness"
+      ],
+      "owner_worker": "release-ops-worker",
+      "reviewer_role": "independent-reviewer",
+      "capability_profile_refs": [
+        "agents/hermes-profile-bindings.public.json#release-ops-worker",
+        "agents/hermes-profile-bindings.public.json#independent-reviewer"
+      ],
+      "ready_rules": [
+        "Product Creation Plan validates against schema and domain rules",
+        "Decomposition Coverage Review is PASS before execution packets are materialized",
+        "Product Implementation Readiness allows this work unit before material execution",
+        "required capability profile and reviewer are available"
+      ],
+      "blocked_when": [
+        "Decomposition Coverage Review is missing, BLOCKED or stale",
+        "Product Implementation Readiness is FAIL or BLOCKED",
+        "required capability pack, access, worker or reviewer is unavailable",
+        "Product SOT, Method Contract or full scope coverage has drifted"
+      ],
+      "done_rules": [
+        "all proof_ids_required have PASS, BLOCK with owner, or valid human-gated waiver evidence",
+        "independent-reviewer reviewed the work-unit evidence",
+        "Receipt Five can reference the produced evidence without private refs"
+      ],
+      "stop_conditions": [
+        "Product SOT scope changes without a refreshed plan",
+        "worker would need to infer private source material or hidden operator context",
+        "execution tries to treat one slice as complete-product completion"
+      ],
+      "status": "todo",
       "product_context_packet_ref": "templates/product-context-packet.json"
     }
   ],
@@ -56,32 +328,101 @@
     {
       "requirement_ref": "product-sot#scope-in-001",
       "coverage_status": "covered_for_execution",
-      "work_unit_refs": ["work-unit-001"],
-      "proof_ids_required": ["generic.scope-fit"],
+      "work_unit_refs": [
+        "work-unit-001-scope-reconciliation",
+        "work-unit-002-product-sot-scope-in-001",
+        "work-unit-003-complete-product-scope",
+        "work-unit-004-implementation-readiness",
+        "work-unit-005-release-operations-readiness"
+      ],
+      "proof_ids_required": [
+        "product_creation.scope_reconciliation",
+        "product_creation.no_scope_reduction",
+        "product_creation.product-sot-scope-in-001.implementation",
+        "product_creation.product-sot-scope-in-001.verification",
+        "product_creation.complete-product-scope.scope_fit",
+        "product_creation.complete-product-scope.verification",
+        "product_creation.implementation_readiness",
+        "product_creation.gate_alignment",
+        "product_creation.release_path",
+        "product_creation.operations_readiness"
+      ],
       "owner_worker": "decomposition-planner",
       "reviewer_role": "independent-reviewer",
-      "source": "templates/method-contract.json#active_product_sot_requirement_refs"
+      "source": "method_contract.active_product_sot_requirement_refs"
     }
   ],
-  "execution_order": ["work-unit-001"],
-  "slice_boundaries": ["each slice is reversible and does not redefine product scope"],
+  "execution_order": [
+    "work-unit-001-scope-reconciliation",
+    "work-unit-002-product-sot-scope-in-001",
+    "work-unit-003-complete-product-scope",
+    "work-unit-004-implementation-readiness",
+    "work-unit-005-release-operations-readiness"
+  ],
+  "slice_boundaries": [
+    "slices are execution order units, not product scope reductions",
+    "each slice must remain reversible or explicitly gated before irreversible change",
+    "no slice may claim whole-product completion without full Product SOT reconciliation"
+  ],
   "dependency_graph": [
     {
-      "from": "product-sot#scope-in-001",
-      "to": "work-unit-001"
+      "from": "method-contract-public-template",
+      "to": "work-unit-001-scope-reconciliation"
+    },
+    {
+      "from": "work-unit-001-scope-reconciliation",
+      "to": "work-unit-002-product-sot-scope-in-001"
+    },
+    {
+      "from": "work-unit-001-scope-reconciliation",
+      "to": "work-unit-003-complete-product-scope"
+    },
+    {
+      "from": "work-unit-001-scope-reconciliation",
+      "to": "work-unit-004-implementation-readiness"
+    },
+    {
+      "from": "work-unit-001-scope-reconciliation",
+      "to": "work-unit-005-release-operations-readiness"
+    },
+    {
+      "from": "decomposition_coverage_review",
+      "to": "product_implementation_readiness"
+    },
+    {
+      "from": "work-unit-004-implementation-readiness",
+      "to": "product_implementation_readiness"
     }
   ],
-  "risk_map": ["scope shrinkage is blocked by the full Product SOT coverage map"],
-  "access_and_secret_requirements": ["no secrets required by default"],
-  "release_promotion_ladder_refs": ["templates/production-promotion-ladder.json"],
-  "complete_product_done_criteria": [
-    "scope-accounted completion may record done, blocked, deferred-with-owner or out-of-scope requirements for traceability",
-    "production-complete or customer-ready acceptance requires every active SOT requirement to be DONE unless a human-gated SOT rebaseline explicitly supersedes that scope"
+  "risk_map": [
+    "method risk tier: R2",
+    "scope shrinkage is blocked by full Product SOT coverage",
+    "execution is blocked until Product Implementation Readiness and Ready Gate pass"
   ],
-  "slice_done_criteria": ["slice verification passes and evidence refs are attached"],
-  "drift_check": "Refresh this plan when Product SOT, method, architecture, capability packs or landed slices change.",
-  "stop_conditions": ["missing Product SOT coverage", "missing promotion ladder for production intent", "stale product context"],
-  "reconciliation_policy": "Mark work units todo, ready, blocked, done, rejected, superseded or needs_refresh; never treat a done slice as whole-product completion.",
+  "access_and_secret_requirements": [
+    "declare required access in Product Implementation Readiness before material execution"
+  ],
+  "release_promotion_ladder_refs": [
+    "templates/production-promotion-ladder.json"
+  ],
+  "complete_product_done_criteria": [
+    "every active Product SOT requirement is done, blocked with owner, or explicitly rebaselined by human gate",
+    "all required work units carry PASS/BLOCK/waiver evidence and independent review",
+    "production/customer-ready claims have release, rollback, monitoring and support evidence"
+  ],
+  "slice_done_criteria": [
+    "slice verification passes and evidence refs are attached",
+    "reviewer_role has reviewed the slice evidence",
+    "slice result updates Product Creation Plan reconciliation state"
+  ],
+  "drift_check": "Refresh this plan when Product SOT, full scope coverage, Method Contract, capability packs, landed slices or repo state change.",
+  "stop_conditions": [
+    "missing Product SOT coverage",
+    "Method Contract changed after this plan was created",
+    "required proof cannot be produced",
+    "execution attempts to bypass Product Implementation Readiness"
+  ],
+  "reconciliation_policy": "Mark work units todo, ready, blocked, in_progress, done, rejected, superseded or needs_refresh; never treat a done slice as whole-product completion.",
   "runtime_boundary": {
     "state_role": "planning_only",
     "runtime_authority": "hermes_kanban",
@@ -91,14 +432,15 @@
   "blocking_rules": {
     "product_sot_required": true,
     "method_contract_required": true,
+    "decomposition_coverage_review_required": true,
     "product_implementation_readiness_required": true,
     "execution_blocked_until_ready_gate": true,
     "raw_private_evidence_must_stay_external": true
   },
   "handoff": {
-    "next_artifact": "product_implementation_readiness",
-    "next_worker": "factory-orchestrator",
-    "next_safe_action": "Create Product Implementation Readiness before material work units or execution.",
+    "next_artifact": "decomposition_coverage_review",
+    "next_worker": "independent-reviewer",
+    "next_safe_action": "Run Decomposition Coverage Review before Product Implementation Readiness, worker packets or execution.",
     "user_decision_required": false,
     "factory_owned_next_step": true
   },
@@ -111,12 +453,17 @@
     "product_creation_plan_created": true,
     "execution_allowed": false,
     "scope_reduction_detected": false,
-    "work_units_accounted": 1,
+    "work_units_accounted": 5,
     "blocked_reason": "Product Creation Plan exists, but execution remains blocked until implementation readiness, Ready Gate, required workers and proof pass.",
     "evidence_refs": [
-      "templates/product-creation-plan.json",
-      "templates/method-contract.json"
+      "schemas/product-creation-plan.schema.json",
+      "method-contract-public-template",
+      "full-scope-coverage-public-template"
     ]
   },
-  "evidence_refs": ["templates/full-product-sot-scope-coverage.json"]
+  "evidence_refs": [
+    "schemas/product-creation-plan.schema.json",
+    "method-contract-public-template",
+    "full-scope-coverage-public-template"
+  ]
 }

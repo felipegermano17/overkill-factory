@@ -56,6 +56,7 @@
         "docs/operations/validation-and-release.md",
         "templates/universal-signal-intake.json",
         "templates/product-creation-plan.json",
+        "templates/decomposition-coverage-review.json",
         "templates/product-implementation-readiness.json",
         "templates/professional-design-process.json",
         "templates/product-delivery-quality-profile.json",

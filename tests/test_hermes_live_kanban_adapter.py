@@ -159,7 +159,9 @@ class FakeHermes:
                 " qa-verification-worker gpt-5.5                      stopped      qa-verification-worker -",
                 " evidence-reconciler gpt-5.5                      stopped      evidence-reconciler -",
                 " independent-reviewer gpt-5.5                      stopped      independent-reviewer -",
+                " decomposition-planner gpt-5.5                      stopped      decomposition-planner -",
                 " implementation-worker gpt-5.5                      stopped      implementation-worker -",
+                " release-ops-worker gpt-5.5                      stopped      release-ops-worker -",
             ]
             return subprocess.CompletedProcess(argv, 0, stdout="\n".join(rows), stderr="")
         if argv == ["hermes", "status"]:
@@ -390,6 +392,8 @@ class FakeRouteReadinessHermes:
                 " Profile          Model                        Gateway      Alias        Distribution",
                 " default          gpt-5.5                      stopped      -            -",
                 " factory-orchestrator gpt-5.5                      stopped      factory-orchestrator -",
+                " decomposition-planner gpt-5.5                      stopped      decomposition-planner -",
+                " release-ops-worker gpt-5.5                      stopped      release-ops-worker -",
             ]
             if self.include_implementation_worker:
                 rows.append(
@@ -521,7 +525,10 @@ def write_route_readiness(path: Path, extra_workers: list[str] | None = None) ->
         "evidence-reconciler",
         "human-gate-clerk",
         "factory-orchestrator",
+        "decomposition-planner",
         "source-ledger-worker",
+        "implementation-worker",
+        "release-ops-worker",
         "qa-verification-worker",
         "autoreview-gate",
         "security-orchestrator",
@@ -566,8 +573,102 @@ def write_route_readiness(path: Path, extra_workers: list[str] | None = None) ->
     )
 
 
-def two_step_ready_work_unit_plan() -> dict[str, object]:
+def _replace_nested_text(value: object, replacements: dict[str, str]) -> object:
+    if isinstance(value, str):
+        result = value
+        for old, new in replacements.items():
+            result = result.replace(old, new)
+        return result
+    if isinstance(value, list):
+        return [_replace_nested_text(item, replacements) for item in value]
+    if isinstance(value, dict):
+        return {key: _replace_nested_text(item, replacements) for key, item in value.items()}
+    return value
+
+
+def single_ready_work_unit_plan() -> dict[str, object]:
     plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+    source_task = next(
+        (
+            task
+            for task in plan.get("tasks", [])
+            if isinstance(task, dict) and task.get("owner_worker") == "implementation-worker"
+        ),
+        plan["tasks"][0],
+    )
+    old_work_unit_id = str(source_task.get("work_unit_id") or "work-unit-001")
+    old_packet_id = str(source_task.get("packet_id") or f"ready-work-unit-packet-{old_work_unit_id}")
+    task = _replace_nested_text(
+        copy.deepcopy(source_task),
+        {
+            old_work_unit_id: "work-unit-001",
+            old_packet_id: "ready-work-unit-packet-work-unit-001",
+        },
+    )
+    task["work_unit_id"] = "work-unit-001"
+    task["packet_id"] = "ready-work-unit-packet-work-unit-001"
+    task["idempotency_key"] = "overkill:test:work-unit-001"
+    task["title"] = "OF ready work unit work-unit-001"
+    task["dependency_refs"] = []
+    body_contract = task.get("body_contract") if isinstance(task.get("body_contract"), dict) else {}
+    body_contract["work_unit_id"] = "work-unit-001"
+    body_contract["packet_id"] = "ready-work-unit-packet-work-unit-001"
+    body_contract["dependency_refs"] = []
+    context_packet = body_contract.get("work_unit_context_packet") if isinstance(body_contract.get("work_unit_context_packet"), dict) else {}
+    context_packet["work_unit_id"] = "work-unit-001"
+    embedded = context_packet.get("embedded_payloads") if isinstance(context_packet.get("embedded_payloads"), dict) else {}
+    current = embedded.get("current_work_unit") if isinstance(embedded.get("current_work_unit"), dict) else {}
+    current["unit_id"] = "work-unit-001"
+    current["dependency_refs"] = []
+    product_plan = embedded.get("product_creation_plan") if isinstance(embedded.get("product_creation_plan"), dict) else {}
+    product_plan["execution_order"] = ["work-unit-001"]
+    product_plan["dependency_graph"] = []
+    task["work_unit_context_packet"] = body_contract["work_unit_context_packet"]
+    plan["tasks"] = [task]
+    plan["acceptance"]["task_count"] = 1
+    return plan
+
+
+def single_product_creation_plan() -> dict[str, object]:
+    product_plan = factoryctl.load_json_like(ROOT / "templates" / "product-creation-plan.json")
+    source_unit = next(
+        (
+            unit
+            for unit in product_plan.get("work_units", [])
+            if isinstance(unit, dict) and unit.get("owner_worker") == "implementation-worker"
+        ),
+        product_plan["work_units"][0],
+    )
+    old_work_unit_id = str(source_unit.get("unit_id") or "work-unit-001")
+    rewritten = _replace_nested_text(copy.deepcopy(product_plan), {old_work_unit_id: "work-unit-001"})
+    unit = _replace_nested_text(copy.deepcopy(source_unit), {old_work_unit_id: "work-unit-001"})
+    rewritten["work_units"] = [unit]
+    rewritten["execution_order"] = ["work-unit-001"]
+    rewritten["dependency_graph"] = [
+        {"from": "method-contract-public-template", "to": "work-unit-001"},
+        {"from": "decomposition_coverage_review", "to": "product_implementation_readiness"},
+    ]
+    for row in rewritten.get("requirement_execution_coverage") or []:
+        if isinstance(row, dict):
+            row["work_unit_refs"] = ["work-unit-001"]
+    rewritten["acceptance"]["work_units_accounted"] = 1
+    return rewritten
+
+
+def write_single_product_creation_plan(path: Path) -> None:
+    path.write_text(json.dumps(single_product_creation_plan()), encoding="utf-8")
+
+
+def task_comment_bodies(task: dict[str, object]) -> list[str]:
+    return [
+        str(comment.get("body") or "")
+        for comment in task.get("comments", []) or []
+        if isinstance(comment, dict)
+    ]
+
+
+def two_step_ready_work_unit_plan() -> dict[str, object]:
+    plan = single_ready_work_unit_plan()
     first = copy.deepcopy(plan["tasks"][0])
     second = copy.deepcopy(plan["tasks"][0])
 
@@ -610,7 +711,7 @@ def materialize_template_ready_work_unit(
     tmp_path: Path,
     workspace: str = "scratch",
 ) -> tuple[dict[str, object], Path, Path, Path]:
-    plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+    plan = single_ready_work_unit_plan()
     plan_path = tmp_path / "plan.json"
     readiness_path = tmp_path / "route-readiness.json"
     materialization_result_path = tmp_path / "materialization-result.json"
@@ -872,7 +973,16 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         assert_route_readiness_schema(self, result)
         self.assertEqual(result["result"], "PASS")
         self.assertEqual(result["blocked_worker_count"], 0)
-        self.assertEqual([check["worker_id"] for check in result["checks"]], ["implementation-worker", "independent-reviewer"])
+        self.assertEqual(
+            [check["worker_id"] for check in result["checks"]],
+            [
+                "decomposition-planner",
+                "independent-reviewer",
+                "implementation-worker",
+                "factory-orchestrator",
+                "release-ops-worker",
+            ],
+        )
         self.assertEqual(result["checks"][0]["credential_evidence"], ["external:test-auth"])
         self.assertTrue(wrote_output)
         self.assertEqual(fake.calls, [["hermes", "profile", "list"], ["hermes", "status"]])
@@ -1121,7 +1231,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
     def test_materialize_ready_work_units_creates_blocked_tasks_without_dispatch(self) -> None:
         fake = FakeHermes()
-        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan = single_ready_work_unit_plan()
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             plan_path = tmp_path / "plan.json"
@@ -1176,7 +1286,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             "parents": [],
             "events": [],
         }
-        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan = single_ready_work_unit_plan()
         plan["board"] = TEST_BOARD
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -1226,7 +1336,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     "parents": [],
                     "events": [],
                 }
-                plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+                plan = single_ready_work_unit_plan()
                 plan["board"] = TEST_BOARD
                 with tempfile.TemporaryDirectory() as tmp:
                     tmp_path = Path(tmp)
@@ -1250,7 +1360,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
     def test_materialize_ready_work_units_chunks_large_body_without_losing_context(self) -> None:
         fake = FakeHermes()
-        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan = single_ready_work_unit_plan()
         body_contract = plan["tasks"][0]["body_contract"]
         body_contract["work_unit_context_packet"]["embedded_payloads"]["large_context"] = "x" * 40000
         plan["tasks"][0]["work_unit_context_packet"] = body_contract["work_unit_context_packet"]
@@ -1292,7 +1402,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
     def test_materialize_ready_work_units_dry_run_does_not_touch_hermes(self) -> None:
         fake = FakeHermes()
-        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan = single_ready_work_unit_plan()
         with tempfile.TemporaryDirectory() as tmp:
             plan_path = Path(tmp) / "plan.json"
             plan_path.write_text(json.dumps(plan), encoding="utf-8")
@@ -1314,7 +1424,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
     def test_materialize_ready_work_units_rejects_unsafe_plan(self) -> None:
         fake = FakeHermes()
-        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan = single_ready_work_unit_plan()
         plan["tasks"][0]["dispatch_policy"]["dispatch_allowed_without_runtime_gate"] = True
         with tempfile.TemporaryDirectory() as tmp:
             plan_path = Path(tmp) / "plan.json"
@@ -1335,7 +1445,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
     def test_materialize_ready_work_units_rejects_pre_dispatch_activity(self) -> None:
         fake = UnsafePromotionHermes()
-        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan = single_ready_work_unit_plan()
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             plan_path = tmp_path / "plan.json"
@@ -1596,10 +1706,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 tmp_path=tmp_path,
             )
             product_creation_plan_path = tmp_path / "product-creation-plan.json"
-            product_creation_plan_path.write_text(
-                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
+            write_single_product_creation_plan(product_creation_plan_path)
             release_args = adapter.build_parser().parse_args(
                 [
                     "release-ready-work-units",
@@ -1701,10 +1808,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 tmp_path=tmp_path,
             )
             product_creation_plan_path = tmp_path / "product-creation-plan.json"
-            product_creation_plan_path.write_text(
-                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
+            write_single_product_creation_plan(product_creation_plan_path)
             release_args = adapter.build_parser().parse_args(
                 [
                     "release-ready-work-units",
@@ -1781,10 +1885,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 tmp_path=tmp_path,
             )
             product_creation_plan_path = tmp_path / "product-creation-plan.json"
-            product_creation_plan_path.write_text(
-                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
+            write_single_product_creation_plan(product_creation_plan_path)
             release_args = adapter.build_parser().parse_args(
                 [
                     "release-ready-work-units",
@@ -1863,10 +1964,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 tmp_path=tmp_path,
             )
             product_creation_plan_path = tmp_path / "product-creation-plan.json"
-            product_creation_plan_path.write_text(
-                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
+            write_single_product_creation_plan(product_creation_plan_path)
             release_args = adapter.build_parser().parse_args(
                 [
                     "release-ready-work-units",
@@ -1979,10 +2077,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 tmp_path=tmp_path,
             )
             product_creation_plan_path = tmp_path / "product-creation-plan.json"
-            product_creation_plan_path.write_text(
-                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
+            write_single_product_creation_plan(product_creation_plan_path)
             release_args = adapter.build_parser().parse_args(
                 [
                     "release-ready-work-units",
@@ -2060,10 +2155,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 tmp_path=tmp_path,
             )
             product_creation_plan_path = tmp_path / "product-creation-plan.json"
-            product_creation_plan_path.write_text(
-                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
+            write_single_product_creation_plan(product_creation_plan_path)
             release_args = adapter.build_parser().parse_args(
                 [
                     "release-ready-work-units",
@@ -2116,10 +2208,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 tmp_path=tmp_path,
             )
             product_creation_plan_path = tmp_path / "product-creation-plan.json"
-            product_creation_plan_path.write_text(
-                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
+            write_single_product_creation_plan(product_creation_plan_path)
             original_task_id = ready_work_unit_task_ids(fake)[0]
             duplicate = copy.deepcopy(fake.tasks[original_task_id])
             duplicate["id"] = "t_duplicate"
@@ -2156,10 +2245,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                 tmp_path=tmp_path,
             )
             product_creation_plan_path = tmp_path / "product-creation-plan.json"
-            product_creation_plan_path.write_text(
-                (ROOT / "templates" / "product-creation-plan.json").read_text(encoding="utf-8"),
-                encoding="utf-8",
-            )
+            write_single_product_creation_plan(product_creation_plan_path)
             private_ref = "C:" + "\\private\\release-readiness.json"
             args = adapter.build_parser().parse_args(
                 [
@@ -2371,7 +2457,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(result["recovery_plan"]["work-unit-001"]["status"], "replacement_planned")
         self.assertFalse(result["recovery_plan"]["work-unit-001"]["complete_product_claim_allowed"])
         self.assertEqual(len([call for call in fake.calls if len(call) >= 5 and call[4] == "create"]), create_call_count)
-        self.assertEqual(fake.tasks[task_id].get("comments"), None)
+        self.assertFalse(any(adapter.READY_WORK_UNIT_SUPERSESSION_MARKER in body for body in task_comment_bodies(fake.tasks[task_id])))
 
     def test_recover_ready_work_units_creates_replacement_and_release_ignores_superseded_task(self) -> None:
         fake = FakeHermes()
@@ -2420,7 +2506,12 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(recovery["dry_run"])
         self.assertEqual(recovery["runtime_gate"]["replacement_created_count"], 1)
         self.assertEqual(recovery["runtime_gate"]["superseded_task_count"], 1)
-        self.assertIn(adapter.READY_WORK_UNIT_SUPERSESSION_MARKER, fake.tasks[contaminated_task_id]["comments"][0]["body"])
+        self.assertTrue(
+            any(
+                adapter.READY_WORK_UNIT_SUPERSESSION_MARKER in body
+                for body in task_comment_bodies(fake.tasks[contaminated_task_id])
+            )
+        )
         self.assertEqual(fake.tasks[contaminated_task_id]["status"], "blocked")
         self.assertEqual(fake.tasks[replacement_task_id]["status"], "ready")
         self.assertEqual(release["released_ready_work_unit_task_ids"], {"work-unit-001": adapter.PUBLIC_SAFE_KANBAN_REF})
@@ -2500,9 +2591,11 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
         assert_live_adapter_result_schema(self, recovery)
         self.assertEqual(recovery["runtime_gate"]["replacement_created_count"], 1)
-        self.assertIn(
-            adapter.READY_WORK_UNIT_SUPERSESSION_MARKER,
-            fake.tasks[contaminated_task_id]["comments"][0]["body"],
+        self.assertTrue(
+            any(
+                adapter.READY_WORK_UNIT_SUPERSESSION_MARKER in body
+                for body in task_comment_bodies(fake.tasks[contaminated_task_id])
+            )
         )
         partial_comments = fake.tasks[partial_replacement_task_id].get("comments", [])
         partial_repaired_or_superseded = (
@@ -2514,10 +2607,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             any(
                 task_id != contaminated_task_id
                 and str(task.get("assignee") or "") == "implementation-worker"
-                and not any(
-                    adapter.READY_WORK_UNIT_SUPERSESSION_MARKER in str(comment.get("body") or "")
-                    for comment in task.get("comments", [])
-                )
+                and not adapter.task_has_ready_work_unit_supersession(task)
                 for task_id, task in fake.tasks.items()
             )
         )
@@ -3200,7 +3290,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             self.assertEqual(body["risk_effective"], "R2")
             self.assertEqual(
                 body["surfaces"],
-                ["code", "release path", "rollback", "monitoring", "support", "customer readiness"],
+                ["complete product scope", "release path", "rollback", "monitoring", "support", "customer readiness"],
             )
             self.assertEqual(body["route_repair_contract"]["phase"], "F15")
             self.assertEqual(body["route_repair_contract"]["risk_effective"], "R2")
@@ -4002,7 +4092,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
 
     def test_release_ready_work_units_requires_real_materialization_result(self) -> None:
         fake = FakeHermes()
-        plan = factoryctl.load_json_like(ROOT / "templates" / "ready-work-unit-hermes-materialization-plan.json")
+        plan = single_ready_work_unit_plan()
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             plan_path = tmp_path / "plan.json"
@@ -6737,7 +6827,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         ]
         self.assertEqual(len(created_product_plans), 1)
 
-    def test_no_idle_routes_product_creation_plan_to_implementation_readiness(self) -> None:
+    def test_no_idle_routes_product_creation_plan_to_decomposition_coverage_review(self) -> None:
         fake = FakeHermes()
         product_plan_id = "t_" + "prodplan1"
         fake.tasks[product_plan_id] = {
@@ -6745,7 +6835,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             "status": "done",
             "assignee": "decomposition-planner",
             "title": "Materialize product_creation_plan for board",
-            "latest_summary": "Product Creation Plan created; implementation readiness is required next.",
+            "latest_summary": "Product Creation Plan created; decomposition coverage review is required next.",
             "runs": [
                 {
                     "status": "done",
@@ -6757,8 +6847,8 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                                 "plan_id": "todo-web-local-product-creation-plan",
                                 "handoff": {
                                     "factory_owned_next_step": True,
-                                    "next_artifact": "product_implementation_readiness",
-                                    "next_worker": "factory-orchestrator",
+                                    "next_artifact": "decomposition_coverage_review",
+                                    "next_worker": "independent-reviewer",
                                 },
                             }
                         }
@@ -6773,18 +6863,18 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertEqual(result["board_reconcile_plan"]["plan_action"], "create_next_artifact_task")
         self.assertEqual(
             result["board_reconcile_plan"]["create_task_contract"]["body"]["required_output"],
-            "product_implementation_readiness",
+            "decomposition_coverage_review",
         )
-        created_readiness_tasks = [
+        created_review_tasks = [
             task for task in fake.tasks.values()
             if adapter.parse_json_object(str(task.get("body") or "{}")).get("required_output")
-            == "product_implementation_readiness"
+            == "decomposition_coverage_review"
         ]
-        self.assertEqual(len(created_readiness_tasks), 1)
-        created = created_readiness_tasks[0]
-        self.assertEqual(created["assignee"], "factory-orchestrator")
+        self.assertEqual(len(created_review_tasks), 1)
+        created = created_review_tasks[0]
+        self.assertEqual(created["assignee"], "independent-reviewer")
         body = adapter.parse_json_object(str(created.get("body") or "{}"))
-        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F12-product-implementation-readiness")
+        self.assertEqual(body["kanban_workflow_binding"]["current_step_key"], "F12-decomposition-coverage-review")
         self.assertEqual(body["phase_engine"]["computed_phase_id"], "F12")
         self.assertFalse(body["phase_engine"]["human_gate_allowed"])
 

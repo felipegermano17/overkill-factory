@@ -9,6 +9,7 @@
     "created_at",
     "factory_method_version",
     "product_creation_plan_ref",
+    "decomposition_coverage_review_ref",
     "product_implementation_readiness_ref",
     "readiness_result",
     "allowed_execution_scope",
@@ -29,6 +30,7 @@
     "created_at": { "type": "string", "minLength": 10 },
     "factory_method_version": { "const": "OVERKILL_VFINAL" },
     "product_creation_plan_ref": { "type": "string", "minLength": 3 },
+    "decomposition_coverage_review_ref": { "type": "string", "minLength": 3 },
     "product_implementation_readiness_ref": { "type": "string", "minLength": 3 },
     "readiness_result": { "enum": ["PASS", "CONCERNS"] },
     "allowed_execution_scope": { "enum": ["ready_work_units_only", "all_ready_work_units"] },
@@ -64,6 +66,7 @@
       "type": "object",
       "required": [
         "validated_product_creation_plan_required",
+        "validated_decomposition_coverage_review_required",
         "validated_product_implementation_readiness_required",
         "only_ready_work_units_materialized",
         "failed_or_blocked_readiness_blocks_packet_creation",
@@ -73,6 +76,7 @@
       ],
       "properties": {
         "validated_product_creation_plan_required": { "const": true },
+        "validated_decomposition_coverage_review_required": { "const": true },
         "validated_product_implementation_readiness_required": { "const": true },
         "only_ready_work_units_materialized": { "const": true },
         "failed_or_blocked_readiness_blocks_packet_creation": { "const": true },
@@ -336,9 +340,15 @@
             },
             "embedded_payloads": {
               "type": "object",
-              "required": ["product_creation_plan", "product_implementation_readiness", "current_work_unit"],
+              "required": [
+                "product_creation_plan",
+                "decomposition_coverage_review",
+                "product_implementation_readiness",
+                "current_work_unit"
+              ],
               "properties": {
                 "product_creation_plan": { "type": "object" },
+                "decomposition_coverage_review": { "type": "object" },
                 "product_implementation_readiness": { "type": "object" },
                 "current_work_unit": { "type": "object" }
               },

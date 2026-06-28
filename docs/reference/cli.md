@@ -277,10 +277,13 @@ BDD, discovery/research, security-first, design-first, legacy diagnosis and
 incident-first. A method label alone cannot authorize execution.
 `product-creation-plan` turns the Method Contract into a complete
 product decomposition with work units, proof ids, blockers, stop rules,
-reconciliation and the next readiness gate, while keeping execution blocked.
-`product-implementation-readiness` checks that Product Creation Plan work units
-are aligned enough to materialize only explicit ready units, or blocks with
-named owners and human decisions.
+reconciliation and the next coverage review, while keeping execution blocked.
+`decomposition-coverage-review` checks that every work unit has an owner,
+reviewer, required participant signoffs, evidence and dependency coverage. A
+single reviewer cannot approve the whole decomposition alone.
+`product-implementation-readiness` checks a PASS Product Creation Plan plus a
+PASS Decomposition Coverage Review before it can materialize only explicit ready
+units.
 `ready-work-unit-packets` turns those explicit `ready_work_units` into
 deterministic execution requests without mutating live Hermes, without exposing
 private refs and without allowing any complete-product claim from a bounded

@@ -277,6 +277,7 @@
       "required": [
         "full_scope_coverage_required",
         "product_creation_plan_required",
+        "decomposition_coverage_review_required",
         "execution_blocked_until_ready_gate",
         "raw_private_evidence_must_stay_external",
         "operator_must_not_choose_internal_method"
@@ -284,6 +285,7 @@
       "properties": {
         "full_scope_coverage_required": { "const": true },
         "product_creation_plan_required": { "const": true },
+        "decomposition_coverage_review_required": { "const": true },
         "execution_blocked_until_ready_gate": { "const": true },
         "raw_private_evidence_must_stay_external": { "const": true },
         "operator_must_not_choose_internal_method": { "const": true }
