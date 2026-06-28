@@ -40,13 +40,18 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
 
+def normalize_text(text: str) -> str:
+    return " ".join(text.split())
+
+
 def require_phrases(path: Path, phrases: list[str], label: str, errors: list[str]) -> None:
     if not path.exists():
         errors.append(f"{label}: missing file {path}")
         return
     text = read_text(path)
+    normalized = normalize_text(text)
     for phrase in phrases:
-        if phrase not in text:
+        if phrase not in text and normalize_text(phrase) not in normalized:
             errors.append(f"{label}: {path} missing phrase: {phrase}")
 
 
