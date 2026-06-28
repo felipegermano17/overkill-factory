@@ -54,6 +54,19 @@ For material decisions, the operator-facing message must point to:
 
 A bare chat question is not enough for a material human gate.
 
+## Language Rule
+
+Operator-facing communication uses the operator's primary language.
+
+This includes Telegram messages, status updates, decision questions, decision
+packages, owner-readable Markdown/PDF attachments and Hermes Kanban card titles
+or summaries. If the operator is speaking Portuguese, the manager speaks
+Portuguese and the Kanban cards visible to the operator are Portuguese.
+
+Internal factory surfaces may stay in English when they are machine contracts:
+schema keys, record types, phase ids, step keys, worker ids, profile ids,
+technical artifact ids, internal reasoning and machine logs.
+
 ## Proactive Status Rule
 
 The factory should push status when:

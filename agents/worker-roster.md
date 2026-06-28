@@ -33,7 +33,9 @@ The roster has 40 public-safe operators:
 The gateway profile `overkill-factory-gerente` is official, but it is not
 counted as a worker. It is an operator-interface profile: it talks to the
 operator through the selected primary channel, pushes status and registers
-intent through Hermes without executing product work.
+intent through Hermes without executing product work. Its user-facing messages
+and visible Kanban card titles/summaries follow the operator's primary language;
+internal factory ids and machine logs may remain English.
 
 That number is intentionally split by ownership. It is not meant to create 40
 parallel personalities. A card should call only the operators whose surface,

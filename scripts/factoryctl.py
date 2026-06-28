@@ -618,6 +618,26 @@ SOLANA_AI_KIT_SOURCE = "https://github.com/solanabr/solana-ai-kit"
 SOLANA_AI_KIT_PINNED_REF = "v2.0.2"
 SOLANA_AI_KIT_PINNED_COMMIT = "4fb9d3d619467e068c1cf3120d3933aa933aeb21"
 PRIMARY_OPERATOR_INTERFACES = {"telegram", "discord", "cockpit", "codex_bridge", "cli", "api"}
+USER_FACING_LANGUAGE_SURFACES = [
+    "operator_messages",
+    "operator_status",
+    "decision_questions",
+    "decision_packages",
+    "operator_markdown_pdf",
+    "kanban_card_titles",
+    "kanban_card_summaries",
+]
+INTERNAL_FACTORY_LANGUAGE_SURFACES = [
+    "schema_keys",
+    "record_type",
+    "phase_id",
+    "step_key",
+    "worker_id",
+    "profile_id",
+    "technical_artifact_ids",
+    "agent_internal_reasoning",
+    "machine_logs",
+]
 INTAKE_REQUEST_TYPE_ALIASES = {
     "new_product": "product_new",
     "product": "product_new",
@@ -9363,6 +9383,14 @@ def build_operator_interface_profile(
         "created_at": created_at or utc_now(),
         "primary_interface": interface,
         "primary_language": language,
+        "language_policy": {
+            "user_facing_surfaces_follow_primary_language": True,
+            "kanban_cards_follow_primary_language": True,
+            "decision_packages_follow_primary_language": True,
+            "internal_factory_surfaces_may_use_english": True,
+            "user_facing_surfaces": USER_FACING_LANGUAGE_SURFACES,
+            "internal_surfaces": INTERNAL_FACTORY_LANGUAGE_SURFACES,
+        },
         "interface_capabilities": {
             **capabilities,
             "supports_push_notifications": True,
@@ -9433,6 +9461,26 @@ def validate_operator_interface_profile(profile: dict[str, Any]) -> list[str]:
     errors.extend(validate_node(schema, profile, "operator_interface_profile", schemas=schemas, root_schema=schema))
 
     interface = str(profile.get("primary_interface") or "").strip()
+    primary_language = str(profile.get("primary_language") or "").strip()
+    if len(primary_language) < 2:
+        errors.append("operator_interface_profile primary_language is required")
+    language_policy = profile.get("language_policy") if isinstance(profile.get("language_policy"), dict) else {}
+    if language_policy.get("user_facing_surfaces_follow_primary_language") is not True:
+        errors.append("operator_interface_profile user-facing surfaces must follow primary_language")
+    if language_policy.get("kanban_cards_follow_primary_language") is not True:
+        errors.append("operator_interface_profile Kanban cards must follow primary_language")
+    if language_policy.get("decision_packages_follow_primary_language") is not True:
+        errors.append("operator_interface_profile decision packages must follow primary_language")
+    if language_policy.get("internal_factory_surfaces_may_use_english") is not True:
+        errors.append("operator_interface_profile internal factory surfaces may use English")
+    user_surfaces = set(_list_items(language_policy.get("user_facing_surfaces")))
+    missing_user_surfaces = sorted({"operator_messages", "decision_packages", "kanban_card_titles"} - user_surfaces)
+    if missing_user_surfaces:
+        errors.append("operator_interface_profile language_policy missing user-facing surfaces: " + ", ".join(missing_user_surfaces))
+    internal_surfaces = set(_list_items(language_policy.get("internal_surfaces")))
+    missing_internal_surfaces = sorted({"schema_keys", "record_type", "phase_id", "step_key", "worker_id"} - internal_surfaces)
+    if missing_internal_surfaces:
+        errors.append("operator_interface_profile language_policy missing internal surfaces: " + ", ".join(missing_internal_surfaces))
     capabilities = profile.get("interface_capabilities") if isinstance(profile.get("interface_capabilities"), dict) else {}
     if interface == "telegram":
         if capabilities.get("supports_file_attachments") is not True:

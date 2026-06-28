@@ -28,6 +28,7 @@ SOURCE_ENVELOPE_SCHEMA = "https://overkill-factory.dev/schemas/factory-bridge-so
 START_REQUEST_SCHEMA = "https://overkill-factory.dev/schemas/factory-bridge-start-request.schema.json"
 FACTORY_GATEWAY_PROFILE = "overkill-factory-gerente"
 FACTORY_ORCHESTRATOR_WORKER = "factory-orchestrator"
+DEFAULT_OPERATOR_LANGUAGE = "pt-BR"
 
 EVENTS_FILE = "events.jsonl"
 PENDING_FILE = "pending.jsonl"
@@ -664,6 +665,7 @@ def build_source_envelope(
     existing_board_ref: str | None = None,
     created_by: str = "operator",
     created_at: str | None = None,
+    operator_language: str = DEFAULT_OPERATOR_LANGUAGE,
 ) -> dict[str, Any]:
     mode = normalized_project_mode(project_mode)
     return {
@@ -674,6 +676,13 @@ def build_source_envelope(
         "project_mode": mode,
         "created_by": created_by,
         "created_at": created_at or utc_now(),
+        "operator_language_policy": {
+            "primary_language": operator_language,
+            "user_facing_surfaces_follow_primary_language": True,
+            "kanban_cards_follow_primary_language": True,
+            "decision_packages_follow_primary_language": True,
+            "internal_factory_surfaces_may_use_english": True,
+        },
         "source_items": source_items(source_refs),
         "source_handling": {
             "sealed_raw_materials": True,
@@ -711,6 +720,7 @@ def build_start_request(
     run_record_ref: str | None = None,
     created_by: str = "operator",
     created_at: str | None = None,
+    operator_language: str = DEFAULT_OPERATOR_LANGUAGE,
 ) -> dict[str, Any]:
     mode = normalized_project_mode(project_mode)
     return {
@@ -723,6 +733,13 @@ def build_start_request(
         "created_at": created_at or utc_now(),
         "source_envelope_ref": safe_ref(source_envelope_ref),
         "run_record_ref": safe_ref(run_record_ref or "external:operator:bridge-run-record"),
+        "operator_language_policy": {
+            "primary_language": operator_language,
+            "user_facing_surfaces_follow_primary_language": True,
+            "kanban_cards_follow_primary_language": True,
+            "decision_packages_follow_primary_language": True,
+            "internal_factory_surfaces_may_use_english": True,
+        },
         "handoff_to_factory": factory_start_recipient(),
         "target_board_policy": build_target_board_policy(mode, existing_board_ref),
         "bridge_limits": {
@@ -806,6 +823,7 @@ def command_source_envelope(args: argparse.Namespace) -> int:
         source_refs=args.source_ref,
         existing_board_ref=args.existing_board_ref,
         created_by=args.created_by,
+        operator_language=args.operator_language,
     )
     write_json(args.out, record)
     return 0
@@ -820,6 +838,7 @@ def command_start_request(args: argparse.Namespace) -> int:
         existing_board_ref=args.existing_board_ref,
         run_record_ref=args.run_record_ref,
         created_by=args.created_by,
+        operator_language=args.operator_language,
     )
     write_json(args.out, record)
     return 0
@@ -919,6 +938,7 @@ def build_parser() -> argparse.ArgumentParser:
     envelope.add_argument("--source-ref", action="append", default=[], required=True)
     envelope.add_argument("--existing-board-ref")
     envelope.add_argument("--created-by", default="operator")
+    envelope.add_argument("--operator-language", default=DEFAULT_OPERATOR_LANGUAGE)
     envelope.add_argument("--out", type=Path)
     envelope.set_defaults(func=command_source_envelope)
 
@@ -933,6 +953,7 @@ def build_parser() -> argparse.ArgumentParser:
     start_request.add_argument("--existing-board-ref")
     start_request.add_argument("--run-record-ref")
     start_request.add_argument("--created-by", default="operator")
+    start_request.add_argument("--operator-language", default=DEFAULT_OPERATOR_LANGUAGE)
     start_request.add_argument("--out", type=Path)
     start_request.set_defaults(func=command_start_request)
 

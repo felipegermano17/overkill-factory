@@ -75,6 +75,12 @@ briefing packages, but it must not choose specialists at all; it may only
 display or forward specialists resolved by PhaseGraph and the worker registry.
 It must not execute material work or mark cards done.
 
+The gerente must use the operator's primary language on every human-facing
+surface: chat, status, decision request, owner-readable package and Kanban card
+title/summary. Internal ids, schema keys, phase ids, step keys, worker ids and
+machine logs may remain English because those are factory contracts, not human
+copy.
+
 ## Builder Layer
 
 The factory has surface-specific builders so product execution is not handled

@@ -80,6 +80,77 @@ FACTORY_RUNTIME_MANTRA = (
 FACTORY_RUN_GRAPH_NO_IDLE_ROLE = "integrity_auditor_not_route_authority"
 FACTORY_WORKFLOW_CATALOG_PATH = ROOT / "docs" / "factory-workflow.catalog.json"
 FACTORY_RUN_GRAPH_DEFAULT_ASSIGNEE = "factory-orchestrator"
+DEFAULT_OPERATOR_LANGUAGE = "pt-BR"
+PHASE_TITLES_BY_LANGUAGE = {
+    "pt-BR": {
+        "F0": "Pre-inicio / envelope de fontes selado",
+        "F1": "Entrada",
+        "F2": "Registro de fontes",
+        "F3": "Resolucao de fontes",
+        "F4": "Outcome do produto e descoberta",
+        "F5": "SOT do produto",
+        "F6": "Roteador de metodo agentic",
+        "F7": "Contrato de metodo",
+        "F8": "Selecao de packs e experiencia do produto",
+        "F9": "Riscos e limites de autoridade",
+        "F10": "Arquitetura de seguranca",
+        "F11": "Planos executaveis",
+        "F12": "Prontidao de autonomia",
+        "F13": "Gate de prontidao",
+        "F15": "Execucao em runtime",
+        "F16": "Resultados dos workers",
+        "F17": "Verificacao",
+        "F18": "Revisao independente",
+        "F20": "Resumo de fechamento",
+        "F21": "Receipt Five",
+        "F22": "Auditoria de conclusao",
+        "F23": "Operacoes de producao",
+        "F24": "Release ou bloqueio",
+        "F25": "Suporte de monitoramento",
+        "F26": "Learnback",
+        "F27": "Auditoria de maturidade da fabrica",
+    }
+}
+
+
+def explicit_operator_language(value: Any) -> str:
+    return str(value or "").strip()
+
+
+def operator_language_policy(primary_language: str) -> dict[str, Any]:
+    return {
+        "primary_language": primary_language,
+        "user_facing_surfaces_follow_primary_language": True,
+        "kanban_cards_follow_primary_language": True,
+        "decision_packages_follow_primary_language": True,
+        "internal_factory_surfaces_may_use_english": True,
+    }
+
+
+def operator_language_from_start(
+    start_request: dict[str, Any],
+    source_envelope: dict[str, Any] | None,
+) -> str:
+    for source in (start_request, source_envelope or {}):
+        policy = source.get("operator_language_policy") if isinstance(source.get("operator_language_policy"), dict) else {}
+        language = explicit_operator_language(policy.get("primary_language") or source.get("primary_language"))
+        if language:
+            return language
+    return DEFAULT_OPERATOR_LANGUAGE
+
+
+def localized_phase_name(phase_id: str, fallback: str, language: str) -> str:
+    return PHASE_TITLES_BY_LANGUAGE.get(language, {}).get(phase_id, fallback)
+
+
+def localized_phase_title(phase_id: str, fallback: str, language: str) -> str:
+    return f"{phase_id} - {localized_phase_name(phase_id, fallback, language)}"
+
+
+def factory_start_title(run_id: str, language: str) -> str:
+    if language == "pt-BR":
+        return f"F1 - Inicio da fabrica: {run_id}"
+    return f"Factory start: {run_id}"
 
 
 def slugify_phase_node(value: Any) -> str:
@@ -87,7 +158,11 @@ def slugify_phase_node(value: Any) -> str:
     return slug or "phase"
 
 
-def load_factory_run_graph_backbone_from_catalog(path: Path = FACTORY_WORKFLOW_CATALOG_PATH) -> tuple[dict[str, Any], ...]:
+def load_factory_run_graph_backbone_from_catalog(
+    path: Path = FACTORY_WORKFLOW_CATALOG_PATH,
+    *,
+    language: str = "en-US",
+) -> tuple[dict[str, Any], ...]:
     catalog = json.loads(path.read_text(encoding="utf-8"))
     phases = catalog.get("phases")
     if not isinstance(phases, list) or not phases:
@@ -102,6 +177,7 @@ def load_factory_run_graph_backbone_from_catalog(path: Path = FACTORY_WORKFLOW_C
         if phase_id in {"F0", "F1"}:
             continue
         phase_name = str(phase.get("phase_name") or phase_id).strip()
+        display_phase_name = localized_phase_name(phase_id, phase_name, language)
         node_id = f"{phase_id}-{slugify_phase_node(phase_name)}"
         required_artifacts = phase.get("required_artifacts") if isinstance(phase.get("required_artifacts"), list) else []
         required_workers = phase.get("required_workers") if isinstance(phase.get("required_workers"), list) else []
@@ -111,7 +187,7 @@ def load_factory_run_graph_backbone_from_catalog(path: Path = FACTORY_WORKFLOW_C
             "node_id": node_id,
             "phase_id": phase_id,
             "step_key": node_id,
-            "title": f"{phase_id} - {phase_name}",
+            "title": f"{phase_id} - {display_phase_name}",
             "assignee": assignee or FACTORY_RUN_GRAPH_DEFAULT_ASSIGNEE,
             "required_output": required_output,
             "activation_rule": f"{previous_node_id} done",
@@ -4206,18 +4282,23 @@ def build_factory_run_graph(
     source_envelope_ref: str | None,
 ) -> dict[str, Any]:
     run_id = str(start_request["run_id"])
+    operator_language = operator_language_from_start(start_request, source_envelope)
+    language_policy = operator_language_policy(operator_language)
+    backbone = load_factory_run_graph_backbone_from_catalog(language=operator_language)
     graph_seed = {
         "run_id": run_id,
         "start_request_digest": contract_digest(start_request),
         "source_envelope_digest": contract_digest(source_envelope or {}),
-        "backbone": FACTORY_RUN_GRAPH_BACKBONE,
+        "operator_language": operator_language,
+        "operator_language_policy": language_policy,
+        "backbone": backbone,
     }
     graph_id = f"factory-run-graph:{bridge_start_board_slug(run_id)}:{idempotency_digest_fragment(contract_digest(graph_seed))}"
     root_node = {
         "node_id": "F1-intake",
         "phase_id": "F1",
         "step_key": FACTORY_KANBAN_DEFAULT_STEP_KEY,
-        "title": "F1 - Intake",
+        "title": localized_phase_title("F1", "Intake", operator_language),
         "assignee": BRIDGE_START_DEFAULT_ASSIGNEE,
         "required_output": "universal_signal_intake",
         "activation_rule": "factory_bridge_start_request validated",
@@ -4225,7 +4306,7 @@ def build_factory_run_graph(
         "task_role": BRIDGE_START_ROOT_TASK_TYPE,
     }
     backbone_nodes: list[dict[str, Any]] = []
-    for node in FACTORY_RUN_GRAPH_BACKBONE:
+    for node in backbone:
         materialized_node = dict(node)
         materialized_node.setdefault("node_kind", "backbone")
         materialized_node["task_role"] = FACTORY_RUN_GRAPH_NODE_PACKET_TYPE
@@ -4247,6 +4328,8 @@ def build_factory_run_graph(
         "agent_may_choose_phase": False,
         "no_idle_role": FACTORY_RUN_GRAPH_NO_IDLE_ROLE,
         "watchdog_role": "guardrail_not_primary_scheduler",
+        "operator_language": operator_language,
+        "operator_language_policy": language_policy,
         "start_request_ref": start_request_ref,
         "source_envelope_ref": source_envelope_ref or start_request.get("source_envelope_ref"),
         "nodes": all_nodes,
@@ -4280,6 +4363,11 @@ def factory_run_graph_node_body(
         "dependency_semantics": "native Hermes todo dependency wait; dispatcher promotes to ready when parent is done; never page human",
         "no_idle_role": graph["no_idle_role"],
         "operating_mantra": graph["operating_mantra"],
+        "operator_language": graph.get("operator_language", DEFAULT_OPERATOR_LANGUAGE),
+        "operator_language_policy": graph.get(
+            "operator_language_policy",
+            operator_language_policy(DEFAULT_OPERATOR_LANGUAGE),
+        ),
     }
     if node.get("node_kind") == "bounded_expander":
         body["expander_policy"] = {
@@ -4348,6 +4436,11 @@ def bridge_start_root_body(
         "factory_bridge_start_request": start_request,
         "source_envelope": source_envelope,
         "factory_run_graph": factory_run_graph,
+        "operator_language": factory_run_graph.get("operator_language", DEFAULT_OPERATOR_LANGUAGE),
+        "operator_language_policy": factory_run_graph.get(
+            "operator_language_policy",
+            operator_language_policy(DEFAULT_OPERATOR_LANGUAGE),
+        ),
         "runtime_boundary": {
             "runtime_authority": "hermes_kanban",
             "local_state_authority": False,
@@ -4438,7 +4531,7 @@ def materialize_bridge_start(args: argparse.Namespace, runner: Runner = default_
         factory_run_graph=factory_run_graph,
     )
     idempotency_key = f"overkill:bridge-start:{bridge_start_board_slug(run_id)}:{idempotency_digest_fragment(contract_digest(start_request))}"
-    title = str(args.title or f"Factory start: {run_id}").strip()
+    title = str(args.title or factory_start_title(run_id, str(factory_run_graph.get("operator_language") or DEFAULT_OPERATOR_LANGUAGE))).strip()
     board_created = False
     main_task_id: str | None = None
     factory_run_graph_task_ids: dict[str, str] = {}

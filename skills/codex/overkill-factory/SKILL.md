@@ -28,6 +28,10 @@ different runtime.
 8. If the work touches the public GitHub repository, treat GitHub as a product
    surface for an external operator with their own Hermes, not as an archive of
    this workspace.
+9. Match the operator's language on every user-facing surface: chat, status,
+   decision questions, owner-readable documents and Kanban card titles/summaries.
+   Keep only internal machine surfaces such as schema keys, ids, step keys,
+   worker ids and logs in English when useful.
 
 ## Factory Spine
 

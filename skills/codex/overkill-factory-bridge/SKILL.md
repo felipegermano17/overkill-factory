@@ -27,6 +27,10 @@ responses and hands those responses back to the factory through normal gates.
 7. For `status_bridge`, resolve the explicit factory runtime target before
    reading Hermes. Do not treat an ambient/default Hermes store as proof that
    a run is missing.
+8. Preserve the operator's primary language in bridge outputs and start
+   contracts. User-facing chat, status, decision packages and Kanban card
+   titles/summaries follow the operator language; internal ids, schema keys and
+   logs may remain English.
 
 ## Bridge Modes
 

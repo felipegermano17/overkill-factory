@@ -164,6 +164,10 @@ class FactoryBridgeTest(unittest.TestCase):
         self.assertFalse(envelope["handoff_to_factory"]["bridge_may_create_hermes_board"])
         self.assertEqual(envelope["handoff_to_factory"]["gateway_profile"], "overkill-factory-gerente")
         self.assertEqual(envelope["handoff_to_factory"]["orchestrator_worker"], "factory-orchestrator")
+        self.assertEqual(envelope["operator_language_policy"]["primary_language"], "pt-BR")
+        self.assertTrue(envelope["operator_language_policy"]["kanban_cards_follow_primary_language"])
+        self.assertEqual(start["operator_language_policy"]["primary_language"], "pt-BR")
+        self.assertTrue(start["operator_language_policy"]["decision_packages_follow_primary_language"])
         self.assertTrue(start["bridge_limits"]["bridge_must_not_create_hermes_board"])
         self.assertTrue(start["bridge_limits"]["bridge_must_not_create_hermes_cards"])
         self.assertEqual(start["requested_factory_action"]["owner"], "factory-orchestrator")
@@ -257,6 +261,8 @@ class FactoryBridgeTest(unittest.TestCase):
 
         self.assertEqual(envelope["record_type"], "factory_bridge_source_envelope")
         self.assertEqual(start["record_type"], "factory_bridge_start_request")
+        self.assertEqual(envelope["operator_language_policy"]["primary_language"], "pt-BR")
+        self.assertEqual(start["operator_language_policy"]["primary_language"], "pt-BR")
         self.assertTrue(start["bridge_limits"]["bridge_must_not_create_hermes_board"])
         self.assertEqual(start["handoff_to_factory"]["gateway_profile"], "overkill-factory-gerente")
 

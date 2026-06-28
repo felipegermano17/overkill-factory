@@ -200,8 +200,10 @@ class FakeHermes:
             body = argv[argv.index("--body") + 1] if "--body" in argv else "{}"
             assignee = argv[argv.index("--assignee") + 1] if "--assignee" in argv else None
             workspace_ref = argv[argv.index("--workspace") + 1] if "--workspace" in argv else "scratch"
+            title = argv[5] if len(argv) > 5 else ""
             task = {
                 "id": task_id,
+                "title": title,
                 "status": initial_status,
                 "events": [],
                 "body": body,
@@ -1048,6 +1050,14 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
             any(node["phase_id"] == "F10" and "Security Architecture" in node["title"] for node in adapter.FACTORY_RUN_GRAPH_BACKBONE)
         )
 
+    def test_factory_run_graph_backbone_localizes_user_facing_card_titles(self) -> None:
+        backbone = adapter.load_factory_run_graph_backbone_from_catalog(language="pt-BR")
+
+        self.assertEqual(backbone[0]["node_id"], "F2-source-ledger")
+        self.assertEqual(backbone[0]["title"], "F2 - Registro de fontes")
+        self.assertTrue(any(node["phase_id"] == "F10" and node["title"] == "F10 - Arquitetura de seguranca" for node in backbone))
+        self.assertTrue(any(node["phase_id"] == "F18" and node["title"] == "F18 - Revisao independente" for node in backbone))
+
     def test_materialize_bridge_start_releases_and_dispatches_root_by_default(self) -> None:
         fake = FakeHermes()
         with tempfile.TemporaryDirectory() as tmp:
@@ -1062,6 +1072,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                         "operator_goal": "Start a new sample product project.",
                         "project_mode": "new_project",
                         "source_envelope_ref": "external:operator:source-envelope",
+                        "operator_language_policy": {
+                            "primary_language": "pt-BR",
+                            "user_facing_surfaces_follow_primary_language": True,
+                            "kanban_cards_follow_primary_language": True,
+                            "decision_packages_follow_primary_language": True,
+                            "internal_factory_surfaces_may_use_english": True,
+                        },
                         "handoff_to_factory": {
                             "gateway_profile": "overkill-factory-gerente",
                             "orchestrator_worker": "factory-orchestrator",
@@ -1102,6 +1119,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
                     {
                         "record_type": "factory_bridge_source_envelope",
                         "run_id": "sample-new-project-20260622-161302",
+                        "operator_language_policy": {
+                            "primary_language": "pt-BR",
+                            "user_facing_surfaces_follow_primary_language": True,
+                            "kanban_cards_follow_primary_language": True,
+                            "decision_packages_follow_primary_language": True,
+                            "internal_factory_surfaces_may_use_english": True,
+                        },
                         "source_items": [
                             {
                                 "source_ref": "external:operator:sample-brief",
@@ -1148,6 +1172,7 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertTrue(any(call[4] == "dispatch" for call in fake.calls if len(call) > 4))
         self.assertIn(["hermes", "kanban", "boards", "create", "sample-new-project-20260622-161302"], [call[:5] for call in fake.calls])
         task = fake.tasks["t_" + "00000001"]
+        self.assertEqual(task["title"], "F1 - Inicio da fabrica: sample-new-project-20260622-161302")
         self.assertEqual(task["status"], "running")
         self.assertEqual(task["assignee"], "factory-orchestrator")
         body = json.loads(str(task["body"]))
@@ -1158,6 +1183,9 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         self.assertFalse(body["deterministic_phase_contract"]["agent_may_choose_phase"])
         self.assertEqual(body["deterministic_phase_contract"]["initial_frontier"], "intake")
         self.assertEqual(body["factory_run_graph"]["record_type"], "factory_run_graph")
+        self.assertEqual(body["operator_language_policy"]["primary_language"], "pt-BR")
+        self.assertEqual(body["factory_run_graph"]["operator_language"], "pt-BR")
+        self.assertTrue(body["factory_run_graph"]["operator_language_policy"]["kanban_cards_follow_primary_language"])
         self.assertEqual(body["factory_run_graph"]["runtime_shape"], adapter.FACTORY_RUN_GRAPH_RUNTIME_SHAPE)
         self.assertEqual(body["factory_run_graph"]["no_idle_role"], adapter.FACTORY_RUN_GRAPH_NO_IDLE_ROLE)
         self.assertFalse(body["factory_run_graph"]["agent_may_choose_phase"])
@@ -1171,11 +1199,13 @@ class HermesLiveKanbanAdapterTest(unittest.TestCase):
         graph_tasks = {task_id: task for task_id, task in fake.tasks.items() if task_id != root_task_id}
         self.assertEqual(len(graph_tasks), len(adapter.FACTORY_RUN_GRAPH_BACKBONE))
         first_graph_task = fake.tasks[first_backbone_task_id]
+        self.assertEqual(first_graph_task["title"], "F2 - Registro de fontes")
         self.assertEqual(first_graph_task["status"], "todo")
         self.assertEqual(first_graph_task["parents"], [root_task_id])
         first_graph_body = json.loads(str(first_graph_task["body"]))
         self.assertEqual(first_graph_body["packet_type"], adapter.FACTORY_RUN_GRAPH_NODE_PACKET_TYPE)
         self.assertEqual(first_graph_body["node_id"], "F2-source-ledger")
+        self.assertEqual(first_graph_body["operator_language_policy"]["primary_language"], "pt-BR")
         self.assertEqual(first_graph_body["dependency_mechanism"], "hermes_task_links_parent_child")
         self.assertFalse(first_graph_body["agent_may_choose_phase"])
         self.assertEqual(first_graph_body["no_idle_role"], adapter.FACTORY_RUN_GRAPH_NO_IDLE_ROLE)

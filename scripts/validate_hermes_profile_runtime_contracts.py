@@ -102,7 +102,7 @@ def validate_profiles_root(profiles_root: Path, errors: list[str]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--profiles-root", type=Path, help="Hermes profiles root to validate, e.g. /srv/hermes/home/profiles")
+    parser.add_argument("--profiles-root", type=Path, help="Hermes profiles root to validate, e.g. <hermes-home>/profiles")
     args = parser.parse_args(argv)
 
     errors: list[str] = []

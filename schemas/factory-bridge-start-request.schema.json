@@ -34,6 +34,24 @@
     "created_at": { "type": "string", "minLength": 10 },
     "source_envelope_ref": { "type": "string", "minLength": 3 },
     "run_record_ref": { "type": "string", "minLength": 3 },
+    "operator_language_policy": {
+      "type": "object",
+      "required": [
+        "primary_language",
+        "user_facing_surfaces_follow_primary_language",
+        "kanban_cards_follow_primary_language",
+        "decision_packages_follow_primary_language",
+        "internal_factory_surfaces_may_use_english"
+      ],
+      "properties": {
+        "primary_language": { "type": "string", "minLength": 2 },
+        "user_facing_surfaces_follow_primary_language": { "const": true },
+        "kanban_cards_follow_primary_language": { "const": true },
+        "decision_packages_follow_primary_language": { "const": true },
+        "internal_factory_surfaces_may_use_english": { "const": true }
+      },
+      "additionalProperties": true
+    },
     "handoff_to_factory": {
       "type": "object",
       "required": [

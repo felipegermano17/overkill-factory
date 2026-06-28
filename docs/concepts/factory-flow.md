@@ -144,6 +144,11 @@ attachments; Telegram rich cards, rich drafts, media groups and table-rendered
 bot messages are not the primary decision package because Telegram Desktop may
 render them as unsupported messages.
 
+Operator-facing language follows the operator's primary language. That covers
+chat, status, decision packages and Hermes Kanban card titles/summaries. Machine
+surfaces such as schema keys, record types, phase ids, step keys, worker ids and
+logs may remain in English.
+
 ## What Blocks A Card
 
 A card should stay blocked when:

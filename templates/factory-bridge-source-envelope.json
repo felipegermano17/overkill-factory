@@ -6,6 +6,13 @@
   "project_mode": "new_project",
   "created_by": "operator",
   "created_at": "2026-06-19T00:00:00Z",
+  "operator_language_policy": {
+    "primary_language": "pt-BR",
+    "user_facing_surfaces_follow_primary_language": true,
+    "kanban_cards_follow_primary_language": true,
+    "decision_packages_follow_primary_language": true,
+    "internal_factory_surfaces_may_use_english": true
+  },
   "source_items": [
     {
       "source_ref": "external:operator:brief",

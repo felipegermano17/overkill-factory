@@ -160,6 +160,12 @@ class OperatorExperienceTest(unittest.TestCase):
             profile = json.loads(out.read_text(encoding="utf-8"))
 
         self.assertEqual(profile["primary_interface"], "telegram")
+        self.assertEqual(profile["primary_language"], "pt-BR")
+        self.assertTrue(profile["language_policy"]["user_facing_surfaces_follow_primary_language"])
+        self.assertTrue(profile["language_policy"]["kanban_cards_follow_primary_language"])
+        self.assertTrue(profile["language_policy"]["decision_packages_follow_primary_language"])
+        self.assertTrue(profile["language_policy"]["internal_factory_surfaces_may_use_english"])
+        self.assertIn("kanban_card_titles", profile["language_policy"]["user_facing_surfaces"])
         self.assertEqual(profile["interface_capabilities"]["message_rendering_mode"], "plain_text")
         self.assertFalse(profile["interface_capabilities"]["rich_bot_messages_allowed"])
         self.assertTrue(profile["interface_capabilities"]["standard_file_attachments_only"])
